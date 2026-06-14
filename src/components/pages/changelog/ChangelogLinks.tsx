@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ChevronRight, ExternalLink } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
@@ -18,6 +18,7 @@ const INTERNAL_MARKETING_ROUTES = new Set<MarketingPagePath>([
   '/startups',
   '/community',
   '/changelog',
+  '/blog',
 ])
 
 function normalizePath(href: string): string {
@@ -78,6 +79,45 @@ export function ChangelogLink({
     )
   }
 
+  if (href.startsWith('/blog/post/')) {
+    const slug = href.slice('/blog/post/'.length).replace(/\/+$/, '')
+    return (
+      <Link
+        to="/blog/post/$slug"
+        params={{ slug }}
+        className={linkClassName}
+      >
+        {children}
+      </Link>
+    )
+  }
+
+  if (href.startsWith('/blog/category/')) {
+    const category = href.slice('/blog/category/'.length).replace(/\/+$/, '')
+    return (
+      <Link
+        to="/blog/category/$category"
+        params={{ category }}
+        className={linkClassName}
+      >
+        {children}
+      </Link>
+    )
+  }
+
+  if (href.startsWith('/blog/author/')) {
+    const author = href.slice('/blog/author/'.length).replace(/\/+$/, '')
+    return (
+      <Link
+        to="/blog/author/$author"
+        params={{ author }}
+        className={linkClassName}
+      >
+        {children}
+      </Link>
+    )
+  }
+
   const normalizedPath = normalizePath(href)
   if (INTERNAL_MARKETING_ROUTES.has(normalizedPath as MarketingPagePath)) {
     return (
@@ -107,17 +147,6 @@ export function ChangelogLink({
   )
 }
 
-function isExternalChangelogHref(href: string): boolean {
-  return (
-    href.startsWith('http') ||
-    href.startsWith('//') ||
-    (!href.startsWith('/docs') &&
-      !href.startsWith('/changelog') &&
-      !INTERNAL_MARKETING_ROUTES.has(normalizePath(href) as MarketingPagePath) &&
-      href.startsWith('/'))
-  )
-}
-
 export const CHANGELOG_RESOURCE_LINK_GROUP_CLASSES = [
   '[&_.changelog-resource-link]:mt-8',
   '[&_.changelog-resource-link]:overflow-hidden',
@@ -144,45 +173,36 @@ export const CHANGELOG_RESOURCE_LINK_GROUP_CLASSES = [
 export function ChangelogArrowLink({
   href,
   children,
+  textClassName,
 }: {
   href?: string
   children?: ReactNode
+  textClassName?: string
 }) {
   if (!href) return null
-
-  const external = isExternalChangelogHref(href)
 
   return (
     <div className="changelog-resource-link group not-prose transition-colors duration-150 hover:bg-muted/40">
       <ChangelogLink
         href={href}
         className={cn(
-          'flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left',
-          'text-[13px] font-medium text-foreground',
+          'relative block w-full px-6 py-5 pr-12 text-left',
+          textClassName ??
+            'text-[13px] font-medium leading-5 text-foreground',
         )}
       >
         <span
           className={cn(
-            'min-w-0 leading-5',
-            'transition-[text-decoration-thickness,text-decoration-color] duration-150',
-            'group-hover:underline group-hover:decoration-dotted group-hover:decoration-muted-foreground/60',
-            'group-hover:underline-offset-[3px] group-hover:[text-decoration-thickness:1px]',
+            'min-w-0',
             '[&_p]:m-0 [&_p]:inline [&_p]:text-inherit',
           )}
         >
           {children}
         </span>
-        {external ? (
-          <ExternalLink
-            className="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
-        ) : (
-          <ChevronRight
-            className="size-4 shrink-0 text-muted-foreground opacity-70 transition-transform duration-150 group-hover:translate-x-0.5"
-            aria-hidden
-          />
-        )}
+        <ArrowUpRight
+          className="absolute top-5 right-6 size-3.5 shrink-0 text-muted-foreground transition-[color,transform] duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground"
+          aria-hidden
+        />
       </ChangelogLink>
     </div>
   )

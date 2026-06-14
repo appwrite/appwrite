@@ -1,0 +1,62 @@
+---
+layout: post
+title: "Introducing the Appwrite plugin for Claude Code: Skills and MCP servers in one install"
+description: The Appwrite plugin for Claude Code bundles agent skills and MCP servers into a single install, so your Claude Code agent can build with Appwrite out of the box.
+date: 2026-04-20
+cover: /images/blog/announcing-appwrite-claude-code-plugin/cover.avif
+timeToRead: 4
+author: atharva
+category: announcement
+featured: false
+faqs:
+  - question: "What does the Appwrite plugin for Claude Code include?"
+    answer: "Three things in one install: the Appwrite API MCP server (pre-registered, configured through the plugins menu), the Appwrite Docs MCP server (no credentials needed, for live documentation lookup), and eleven agent skills covering the Appwrite CLI and every major SDK (TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, Swift)."
+  - question: "How do I install the Appwrite plugin for Claude Code?"
+    answer: "Run `claude plugins marketplace add appwrite/claude-plugin` followed by `claude plugins install appwrite@appwrite`. Then open `/plugins` in Claude Code, go to the Installed tab, configure your Appwrite endpoint, project ID, and API key, and run `/reload-plugins` to apply changes to your current session."
+  - question: "Do I need both MCP servers and Skills, or just one?"
+    answer: "They complement each other. MCP servers let Claude Code take live actions against your project (create users, run queries, deploy functions). Skills give the agent up-to-date SDK reference so the code it writes uses current Appwrite APIs instead of whatever was in its training data. The plugin bundles both."
+  - question: "Is the Appwrite plugin for Claude Code open source?"
+    answer: "Yes. The plugin source is on GitHub at [appwrite/claude-plugin](https://github.com/appwrite/claude-plugin). You can audit the MCP server configuration, fork it, or use it as a reference for building your own Claude Code plugin against another service."
+  - question: "Can I use the same MCP servers without Claude Code?"
+    answer: "Yes. The [Appwrite API MCP server](/docs/tooling/mcp/api) and Docs MCP server are independent of Claude Code. Any MCP-compatible client (Cursor, Claude Desktop, VS Code, etc.) can connect to them. The plugin is just a convenience layer that pre-registers them with Claude Code's plugin system."
+  - question: "Where can I learn more about Appwrite Skills?"
+    answer: "Check the [Appwrite Skills documentation](/docs/tooling/ai/skills), which explains what skills are, how the AI agent loads them, and how to use them with other AI tools beyond Claude Code. The plugin bundles eleven of these skills out of the box."
+---
+
+Claude Code is built around a specific workflow: a terminal-resident agent that reads, writes, and runs code against your project. Using it with Appwrite has worked for a while, but getting there meant hand-registering MCP servers with `claude mcp add-json`, pasting your project credentials into a JSON payload, and relying on whatever SDK knowledge the underlying model was trained on.
+
+Today, we are announcing the **Appwrite plugin for Claude Code**. Two commands and your agent is set up to build with Appwrite using up-to-date SDK patterns and live access to your project.
+
+# What installing the plugin gives you
+
+The plugin ships three things in a single install:
+
+- **The Appwrite API MCP server:** Pre-registered with Claude Code. You configure your endpoint, project ID, and API key through the plugins menu instead of a JSON payload.
+- **The Appwrite Docs MCP server:** No credentials required. Your agent can look up Appwrite's current documentation as it works, rather than relying on what the model was trained on.
+- **Eleven agent skills:** Written as Markdown files for the Appwrite CLI and every major Appwrite SDK: TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift. Claude Code loads the relevant skill on its own when a task calls for it.
+
+# Setup the plugin
+
+In your terminal, run:
+
+```bash
+claude plugins marketplace add appwrite/claude-plugin
+claude plugins install appwrite@appwrite
+```
+
+Then run Claude Code, enter `/plugins`, move to the **Installed** tab, open **Appwrite**, and select **Configure options**. Enter your endpoint, project ID, and API key. Run `/reload-plugins` to apply the changes to your current session.
+
+# A prompt to try first
+
+Once the plugin is active, try a prompt like:
+
+`Create a new user in my Appwrite project with the email abc@example.com.`
+
+The agent uses the API MCP server to create the user in your project directly, with no code written on your side.
+
+# Resources
+
+- [Claude Code plugin docs](/docs/tooling/ai/ai-dev-tools/claude-code)
+- [Plugin source code on GitHub](https://github.com/appwrite/claude-plugin)
+- [Appwrite Skills](/docs/tooling/ai/skills)
+- [Discord community](https://appwrite.io/discord)

@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { BLOG_BODY_TEXT_SIZE_CLASS, type MarkdocProseVariant } from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
 
 type TabsContextValue = {
@@ -14,9 +15,17 @@ export function useTabsContext() {
   return useContext(TabsContext)
 }
 
-export function Tabs({ children }: { children: ReactNode }) {
+export function Tabs({
+  children,
+  proseVariant = 'docs',
+}: {
+  children: ReactNode
+  proseVariant?: MarkdocProseVariant
+}) {
   const [activeId, setActiveId] = useState('')
   const [tabs, setTabs] = useState<Array<{ id: string; title: string }>>([])
+  const tabTextClass =
+    proseVariant === 'blog' ? BLOG_BODY_TEXT_SIZE_CLASS : 'text-[13px]'
 
   const value = useMemo(
     () => ({
@@ -45,7 +54,8 @@ export function Tabs({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={() => setActiveId(tab.id)}
                 className={cn(
-                  'shrink-0 cursor-pointer border-b-2 px-3 py-2 text-[13px] transition-colors',
+                  'shrink-0 cursor-pointer border-b-2 px-3 py-2 transition-colors',
+                  tabTextClass,
                   activeId === tab.id
                     ? 'border-white text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground',

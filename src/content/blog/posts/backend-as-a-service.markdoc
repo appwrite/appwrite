@@ -1,0 +1,87 @@
+---
+layout: post
+title: "Backend as a service (BaaS)"
+metaTitle: "Backend as a Service (BaaS): Firebase vs Supabase vs Appwrite"
+description: "Compare BaaS platforms: Firebase, Supabase, Appwrite, Amplify. Open source, self-hosting, pricing, lock-in. Technical overview for senior developers."
+cover: /images/blog/baas-backend-as-a-service/cover.avif
+timeToRead: 12
+date: 2024-10-09
+author: aditya-oberai
+category: product
+lastUpdated: 2026-05-04
+faqs:
+  - question: "What is backend as a service (BaaS)?"
+    answer: "BaaS is a model where a vendor runs common backend primitives (authentication, databases, file storage, APIs, and often serverless functions), and you integrate through SDKs and HTTP APIs instead of provisioning and operating that infrastructure yourself."
+  - question: "How does BaaS differ from a custom backend?"
+    answer: "A custom backend gives you full control over runtime, data layout, and networking at the cost of build time and operational load. BaaS trades some control and compositional freedom for speed, standardized APIs, and managed scaling, until you hit edge requirements that outgrow the platform abstractions."
+  - question: "Is Firebase open source?"
+    answer: "No. Firebase is a proprietary Google product. Client SDKs are open source, but the server implementation is not something you can self-host as a full Firebase-equivalent stack."
+  - question: "Can you self-host Appwrite?"
+    answer: "Yes. Appwrite publishes server code and supports self-hosted deployments, typically via Docker, in addition to its managed cloud offering."
+---
+
+**Backend as a service (BaaS)** is the model where a vendor runs the common primitives (auth, databases, file storage, functions, and APIs), and you integrate through SDKs and HTTP instead of provisioning, scaling, and patching that stack yourself. The tradeoff is concrete: you trade some control over runtime, schema, and query semantics for faster time-to-product, predictable integration surfaces, and managed scaling, until edge requirements outgrow the platform's abstractions. This post compares **Appwrite, Firebase, Supabase, and AWS Amplify** on the dimensions that actually decide the choice (**open source posture, self-hosting, pricing model, and lock-in**) and frames when BaaS is the right call versus when a custom backend earns its cost.
+
+# What BaaS includes
+
+Typical BaaS bundles expose these capabilities through HTTP APIs and SDKs:
+
+- **Auth:** accounts, sessions, OAuth, MFA, password recovery, and sometimes SAML/SCIM on enterprise tiers.
+- **Database:** managed logical data store with per-row/collection permissions: SQL (Postgres) or document/NoSQL APIs depending on vendor.
+- **Storage:** object/file storage with signed URLs, access rules, and often image transforms.
+- **Functions:** event-driven or HTTP-invoked compute for business logic and integrations.
+- **APIs:** REST and/or GraphQL surfaces generated or maintained by the platform, plus realtime channels where offered.
+
+# When to use BaaS vs a custom backend
+
+| Dimension | BaaS | Custom backend |
+| --- | --- | --- |
+| **Time to value** | Low: auth, DB, storage available day one | High: you own design, deployment, patching |
+| **Control** | Bounded by product APIs and quotas | Full control over runtime, schema, networking |
+| **Performance** | Good for typical CRUD + functions; hot paths may need dedicated services | Tune end-to-end when you control the stack |
+| **Scaling** | Vendor handles horizontal scaling patterns you stay within | You design autoscaling, caches, and data partitioning |
+| **Compliance / data residency** | Depends on vendor regions and contracts; self-hostable BaaS adds options | You implement controls explicitly |
+
+**Use BaaS** when product risk dominates infra risk: MVPs, internal tools, standard mobile/web apps, and teams that want predictable integration surfaces.
+
+**Prefer custom** when you need exotic latency guarantees, bespoke multi-region topologies, kernel-level tuning, or regulations that conflict with shared multitenant assumptions (often later-stage, not on day zero).
+
+# BaaS platform comparison
+
+High-level, **scannable** tradeoffs. Check each vendor’s current docs and pricing before you commit.
+
+| Dimension | Appwrite | Firebase | Supabase | AWS Amplify | Convex |
+| --- | --- | --- | --- | --- | --- |
+| **Open source** | Yes (full server) | No (SDKs only) | Yes (major server components) | Gen1: partial; Gen2 ties to AWS CDK/Lambda, not a single OSS monolith like Appwrite/Supabase | Yes, under an FSL Apache 2.0 License |
+| **Self-hosting** | Yes (Docker, well-documented single install path) | No for Firebase server stack | Yes (Docker/K8s; more moving parts) | No true self-host of “Amplify the product”; you deploy your app into your AWS account | Yes (`convex-backend` is self-hostable), but cloud is the supported path |
+| **Pricing model** | Cloud plans + resource caps; predictable tiers; self-host infra is yours | Pay-as-you-go per read/write/storage/function; can spike with traffic | Generous free tier; paid cloud + usage; self-host costs are yours | AWS service billing (Lambda, Cognito, AppSync, S3…); complexity in forecasting | Usage-based on cloud (function calls, storage, bandwidth) with tiered plans; self-host infra is yours |
+| **Lock-in risk** | Lower with OSS + self-host + portable APIs | High (Firestore rules model, proprietary stack) | Medium (Postgres is portable; platform APIs still migrate) | High to AWS IAM/service graph; deep AWS coupling | Medium-to-High: data is portable, but the reactive document model and TypeScript-only runtime do not transfer |
+| **Key strengths** | Unified console; many function runtimes; messaging; sites hosting in one product; OSS + cloud parity goal | Mature mobile ecosystem; Google-scale ops; FCM | Postgres + SQL ergonomics; realtime; Edge Functions | Tight AWS integration; enterprise IAM; broad AWS surface area | Reactive document DB with automatic realtime sync; end-to-end TypeScript types; transactional functions |
+| **Limitations** | Younger third-party ecosystem than Firebase in some niches | No self-host; pricing surprises; Google roadmap risk | Self-host ops burden; fewer first-class runtimes than Appwrite for functions | Steeper learning curve; “Amplify” spans many AWS products; not a minimalist BaaS | TypeScript-only functions; document-only data model; smaller third-party ecosystem; cloud-recommended ops |
+
+# How Appwrite compares to Firebase and Supabase
+
+**Firebase** optimizes for the fastest path on Google-managed infrastructure: strong mobile SDKs, Firestore, Auth, Cloud Functions, and FCM, at the cost of **no first-party self-host** and **high lock-in** to Google’s data model and pricing.
+
+**Supabase** centers on **PostgreSQL**: SQL-first workflows, Row Level Security, and Edge Functions (TypeScript). You can self-host, but operational complexity is higher than single-console BaaS setups; some features differ between cloud and self-hosted tiers.
+
+**Appwrite** is **BSD 3-Clause licensed**, ships as a **single platform** (auth, databases, storage, functions, messaging, realtime, sites), and targets teams that want **managed cloud or self-host** with **API-level portability** and less vendor-specific query DSL than Firestore-only stacks.
+
+For a narrower functions comparison across vendors, see [Appwrite vs Supabase vs Firebase serverless functions](/blog/post/appwrite-vs-firebase-vs-supabase-functions-comparison). For **Firebase vs Appwrite** in depth, see [open source Firebase alternative](/blog/post/open-source-firebase-alternative). For **Supabase vs Appwrite**, see [Appwrite compared to Supabase](/blog/post/appwrite-compared-to-supabase).
+
+
+# Why teams pick Appwrite (technical view)
+
+- **Source-available server:** you can inspect behavior, fork, and run the same APIs on your metal.
+- **Self-host or cloud:** same feature direction; useful for regulated workloads, air-gapped environments, or cost control at scale.
+- **Infra ownership:** when the abstraction leaks, you can debug down to the container boundary instead of stopping at a black-box API.
+- **Many function runtimes:** Node, Bun, Deno, Go, Python (incl. ML), Dart, PHP, Ruby, .NET, Java, Swift, Kotlin. Match each piece of business logic to the language it already wants.
+- **Permissions on the resource, not in a DSL:** per-table and per-row ACLs you set with the same APIs, without a separate rules language to learn, lint, or unit-test.
+- **Realtime built in:** WebSocket subscriptions on database, storage, and account events without standing up a separate pub/sub layer.
+- **First-party migration paths:** documented [importers from Firebase, Supabase, and Nhost](/docs/advanced/migrations), plus self-hosted ↔ cloud; the off-ramp is part of the product.
+
+# Getting started
+
+Create a project in [Appwrite Cloud](https://cloud.appwrite.io/console) or follow [self-hosting](/docs/advanced/self-hosting), then use the [Quick starts](/docs/quick-starts) for your framework. Core API references live under [REST](/docs/apis/rest) and [Realtime](/docs/apis/realtime).
+
+**Related on this site:** [Best backend as a service platforms](/blog/post/best-backend-as-a-service-platforms) · [BaaS vs custom backend](/blog/post/baas-vs-custom-backend) · [Leveraging BaaS tools to scale faster](/blog/post/leveraging-baas-tools-to-scale-faster)

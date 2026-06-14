@@ -4,6 +4,7 @@
  *
  * Node-only: do not import this module from client components.
  */
+import { getBlogPrerenderPaths, getBlogPrerenderPathsFromClient, isBlogPrerenderPath } from '../blog/prerender-paths'
 import {
   getChangelogEntryPrerenderPaths,
   getChangelogEntryPrerenderPathsFromClient,
@@ -18,8 +19,11 @@ export function getAllMarketingPrerenderPaths(
   const changelogPaths = clientDirectory
     ? getChangelogEntryPrerenderPathsFromClient(clientDirectory)
     : getChangelogEntryPrerenderPaths()
+  const blogPaths = clientDirectory
+    ? getBlogPrerenderPathsFromClient(clientDirectory)
+    : getBlogPrerenderPaths()
 
-  return [...MARKETING_PRERENDER_PATHS, ...changelogPaths]
+  return [...MARKETING_PRERENDER_PATHS, ...changelogPaths, ...blogPaths]
 }
 
 export function isMarketingPrerenderPath(path: string): boolean {
@@ -28,7 +32,11 @@ export function isMarketingPrerenderPath(path: string): boolean {
     return true
   }
 
-  return normalized.startsWith('/changelog/entry/')
+  if (normalized.startsWith('/changelog/entry/')) {
+    return true
+  }
+
+  return isBlogPrerenderPath(normalized)
 }
 
 /** Prerendered HTML pages (excludes llms txt exports). */

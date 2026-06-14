@@ -29,6 +29,7 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
@@ -37,6 +38,7 @@ import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
+import { Route as BlogPageRouteImport } from './routes/blog.$page'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
@@ -55,6 +57,9 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
+import { Route as BlogPostSlugRouteImport } from './routes/blog.post.$slug'
+import { Route as BlogCategoryCategoryRouteImport } from './routes/blog.category.$category'
+import { Route as BlogAuthorAuthorRouteImport } from './routes/blog.author.$author'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
@@ -375,6 +380,11 @@ const ChangelogIndexRoute = ChangelogIndexRouteImport.update({
   path: '/changelog/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -414,6 +424,11 @@ const DocsSplatRoute = DocsSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => DocsRoute,
+} as any)
+const BlogPageRoute = BlogPageRouteImport.update({
+  id: '/blog/$page',
+  path: '/blog/$page',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   id: '/upgrade',
@@ -504,6 +519,21 @@ const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
 const ChangelogEntryEntryRoute = ChangelogEntryEntryRouteImport.update({
   id: '/changelog/entry/$entry',
   path: '/changelog/entry/$entry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogPostSlugRoute = BlogPostSlugRouteImport.update({
+  id: '/blog/post/$slug',
+  path: '/blog/post/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogCategoryCategoryRoute = BlogCategoryCategoryRouteImport.update({
+  id: '/blog/category/$category',
+  path: '/blog/category/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogAuthorAuthorRoute = BlogAuthorAuthorRouteImport.update({
+  id: '/blog/author/$author',
+  path: '/blog/author/$author',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
@@ -2017,6 +2047,7 @@ export interface FileRoutesByFullPath {
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/blog/$page': typeof BlogPageRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
@@ -2025,6 +2056,7 @@ export interface FileRoutesByFullPath {
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/': typeof PublicIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2036,6 +2068,9 @@ export interface FileRoutesByFullPath {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/blog/author/$author': typeof BlogAuthorAuthorRoute
+  '/blog/category/$category': typeof BlogCategoryCategoryRoute
+  '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/account/': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
@@ -2282,6 +2317,7 @@ export interface FileRoutesByTo {
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/blog/$page': typeof BlogPageRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
@@ -2290,6 +2326,7 @@ export interface FileRoutesByTo {
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/': typeof PublicIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2299,6 +2336,9 @@ export interface FileRoutesByTo {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/blog/author/$author': typeof BlogAuthorAuthorRoute
+  '/blog/category/$category': typeof BlogCategoryCategoryRoute
+  '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/account': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
@@ -2521,6 +2561,7 @@ export interface FileRoutesById {
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
+  '/blog/$page': typeof BlogPageRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
@@ -2529,6 +2570,7 @@ export interface FileRoutesById {
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/_public/': typeof PublicIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2540,6 +2582,9 @@ export interface FileRoutesById {
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
+  '/blog/author/$author': typeof BlogAuthorAuthorRoute
+  '/blog/category/$category': typeof BlogCategoryCategoryRoute
+  '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
@@ -2790,6 +2835,7 @@ export interface FileRouteTypes {
     | '/init'
     | '/reset'
     | '/upgrade'
+    | '/blog/$page'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
@@ -2798,6 +2844,7 @@ export interface FileRouteTypes {
     | '/llms/txt'
     | '/products/$productId'
     | '/'
+    | '/blog'
     | '/changelog'
     | '/docs/'
     | '/account/billing-addresses'
@@ -2809,6 +2856,9 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
+    | '/blog/author/$author'
+    | '/blog/category/$category'
+    | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/account/'
     | '/init/calendar/$eventSlug'
@@ -3055,6 +3105,7 @@ export interface FileRouteTypes {
     | '/init'
     | '/reset'
     | '/upgrade'
+    | '/blog/$page'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
@@ -3063,6 +3114,7 @@ export interface FileRouteTypes {
     | '/llms/txt'
     | '/products/$productId'
     | '/'
+    | '/blog'
     | '/changelog'
     | '/docs'
     | '/account/billing-addresses'
@@ -3072,6 +3124,9 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/blog/author/$author'
+    | '/blog/category/$category'
+    | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/account'
     | '/init/calendar/$eventSlug'
@@ -3293,6 +3348,7 @@ export interface FileRouteTypes {
     | '/_public/init'
     | '/_public/reset'
     | '/_public/upgrade'
+    | '/blog/$page'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
@@ -3301,6 +3357,7 @@ export interface FileRouteTypes {
     | '/llms/txt'
     | '/products/$productId'
     | '/_public/'
+    | '/blog/'
     | '/changelog/'
     | '/docs/'
     | '/_public/account/billing-addresses'
@@ -3312,6 +3369,9 @@ export interface FileRouteTypes {
     | '/_public/debug/org-setup-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
+    | '/blog/author/$author'
+    | '/blog/category/$category'
+    | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/_public/account/'
     | '/_api/init/calendar/$eventSlug'
@@ -3549,10 +3609,15 @@ export interface RootRouteChildren {
   StartupsRoute: typeof StartupsRoute
   TermsRoute: typeof TermsRoute
   ApiHelloRoute: typeof ApiHelloRoute
+  BlogPageRoute: typeof BlogPageRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ChangelogIndexRoute: typeof ChangelogIndexRoute
+  BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
+  BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
+  BlogPostSlugRoute: typeof BlogPostSlugRoute
   ChangelogEntryEntryRoute: typeof ChangelogEntryEntryRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
@@ -3700,6 +3765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChangelogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_public/': {
       id: '/_public/'
       path: '/'
@@ -3755,6 +3827,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/$'
       preLoaderRoute: typeof DocsSplatRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/blog/$page': {
+      id: '/blog/$page'
+      path: '/blog/$page'
+      fullPath: '/blog/$page'
+      preLoaderRoute: typeof BlogPageRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_public/upgrade': {
       id: '/_public/upgrade'
@@ -3880,6 +3959,27 @@ declare module '@tanstack/react-router' {
       path: '/changelog/entry/$entry'
       fullPath: '/changelog/entry/$entry'
       preLoaderRoute: typeof ChangelogEntryEntryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/post/$slug': {
+      id: '/blog/post/$slug'
+      path: '/blog/post/$slug'
+      fullPath: '/blog/post/$slug'
+      preLoaderRoute: typeof BlogPostSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/category/$category': {
+      id: '/blog/category/$category'
+      path: '/blog/category/$category'
+      fullPath: '/blog/category/$category'
+      preLoaderRoute: typeof BlogCategoryCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/author/$author': {
+      id: '/blog/author/$author'
+      path: '/blog/author/$author'
+      fullPath: '/blog/author/$author'
+      preLoaderRoute: typeof BlogAuthorAuthorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/projects/$projectId': {
@@ -6698,10 +6798,15 @@ const rootRouteChildren: RootRouteChildren = {
   StartupsRoute: StartupsRoute,
   TermsRoute: TermsRoute,
   ApiHelloRoute: ApiHelloRoute,
+  BlogPageRoute: BlogPageRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ChangelogIndexRoute: ChangelogIndexRoute,
+  BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
+  BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,
+  BlogPostSlugRoute: BlogPostSlugRoute,
   ChangelogEntryEntryRoute: ChangelogEntryEntryRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,

@@ -1,0 +1,203 @@
+---
+layout: post
+title: "Appwrite Webhooks: triggering events the right way"
+description: Learn how to configure Appwrite Webhooks, select the right events, verify payloads with HMAC-SHA1, and build reliable real-world integrations.
+date: 2026-03-25
+cover: /images/blog/appwrite-webhooks/cover.avif
+timeToRead: 4
+author: aditya-oberai
+category: product, tutorial
+featured: false
+unlisted: true
+faqs:
+  - question: "What are Appwrite Webhooks?"
+    answer: "Appwrite Webhooks are HTTP POST callbacks that your project sends to a URL you control whenever a subscribed event fires. They let your server react to things like user signups, file uploads, or row updates without polling the API. Webhooks are configured per project from the Console under Settings."
+  - question: "How do I verify that a webhook request actually came from Appwrite?"
+    answer: "Appwrite signs every webhook payload with HMAC-SHA1 using a secret key, and includes the signature in the X-Appwrite-Webhook-Signature header. On your server, recompute the HMAC over the endpoint URL plus the raw request body using the same secret, then compare it to the header value with a constant-time comparison. Reject requests where the signatures do not match."
+  - question: "Can I subscribe to events from a specific resource?"
+    answer: "Yes. Event patterns support wildcards or specific resource IDs, so you can subscribe to all rows in a table or only a particular table, bucket, or function. Keeping subscriptions specific avoids flooding your endpoint with traffic from unrelated resources on busy projects."
+  - question: "What happens if my webhook endpoint is down or returns an error?"
+    answer: "Appwrite will retry failed deliveries, so your handler needs to be idempotent. Design it so processing the same event twice produces the same result, typically by checking the event ID or the resource state before applying changes. Returning a 2xx response quickly and doing slow work asynchronously is the safest pattern."
+  - question: "What does a webhook payload contain?"
+    answer: "The body is JSON that mirrors the API response for the event type. For a row create event you get the full row object, and for a user create event you get the user object. Appwrite also sends headers identifying the webhook ID, the matching events, the project ID, the user who triggered the event, and the HMAC signature."
+---
+
+Webhooks are the simplest way to react to things happening in your Appwrite project without polling. A user signs up. A file gets uploaded. A database row is updated. Appwrite fires an HTTP POST to a URL you control, and your server handles it.
+
+The mechanics are straightforward, but there are details worth getting right: which events to subscribe to, how to verify that a request actually came from Appwrite, and how to structure your handler to handle retries gracefully.
+
+# Setting up a webhook
+
+Webhooks are configured at the project level in the Appwrite Console:
+
+1. Open your project and go to **Settings**.
+2. Click **Webhooks** in the sidebar.
+3. Click **Add Webhook**.
+4. Give it a name, enter your endpoint URL, and select the events you want to subscribe to.
+5. Optionally, enable **HTTP Basic Authentication** to add an extra credential layer on your endpoint.
+6. Click **Create**.
+
+That's it. Appwrite will now send a POST request to your URL every time one of the selected events fires.
+
+You can also configure webhooks to send requests with a custom HTTP signature for verification, covered in the security section below.
+
+# Choosing events
+
+Appwrite's [event system](/docs/advanced/platform/events) covers everything that happens in your project. Events are grouped by resource type:
+
+{% accordion %}
+{% accordion_item title="Authentication events" %}
+{% partial file="auth-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Databases events" %}
+{% partial file="databases-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Storage events" %}
+{% partial file="storage-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Functions events" %}
+{% partial file="functions-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Messaging events" %}
+{% partial file="messaging-events.md" /%}
+{% /accordion_item %}
+{% /accordion %}
+
+The `*` wildcard matches any resource ID. You can use specific IDs instead of wildcards to subscribe only to events from a particular table, bucket, or function.
+
+For example, to trigger only when rows are created in a specific table:
+
+```
+databases.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.create
+```
+
+Keep your subscriptions specific. Subscribing to `*` (all events) on a busy project will result in a high volume of requests to your endpoint.
+
+# What the webhook payload looks like
+
+The webhook body is JSON. The payload mirrors the API response for the event type. For a row create event, you get the full row object. For a user create event, you get the user object.
+
+Example payload for a `users.*.create` event:
+
+```json
+{
+  "$id": "user_abc123",
+  "$createdAt": "2026-03-26T10:00:00.000+00:00",
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "status": true,
+  "emailVerification": false,
+  "labels": []
+}
+```
+
+Appwrite also sends several headers with every webhook request:
+
+| Header | Description |
+|--------|-------------|
+| `X-Appwrite-Webhook-Id` | The webhook's ID in your project |
+| `X-Appwrite-Webhook-Events` | Comma-separated list of matching events |
+| `X-Appwrite-Webhook-Name` | The name you gave the webhook |
+| `X-Appwrite-Webhook-User-Id` | ID of the user who triggered the event (if any) |
+| `X-Appwrite-Webhook-Project-Id` | Your Appwrite project ID |
+| `X-Appwrite-Webhook-Signature` | HMAC-SHA1 signature for verification |
+| `User-Agent` | Always `Appwrite-Server` |
+
+# Verifying webhook signatures
+
+Anyone who knows your endpoint URL could send fake webhook requests. Appwrite signs every webhook payload with HMAC-SHA1 using a secret key, and you should verify this signature on every request.
+
+The signature is computed as:
+
+```
+HMAC-SHA1(webhookUrl + rawBody, signingKey)
+```
+
+Where `webhookUrl` is the full URL of your endpoint (including protocol and path), `rawBody` is the raw request body string, and `signingKey` is the signing key shown in the webhook's configuration in the Appwrite Console.
+
+Here's how to verify in Node.js:
+
+```js
+const crypto = require('crypto');
+
+function verifyWebhookSignature(req, signingKey) {
+  const receivedSignature = req.headers['x-appwrite-webhook-signature'];
+  const webhookUrl = 'https://yourapp.com/webhooks/appwrite'; // must match exactly
+  const rawBody = req.rawBody; // ensure you have the raw body, not parsed JSON
+
+  const expectedSignature = crypto
+    .createHmac('sha1', signingKey)
+    .update(webhookUrl + rawBody)
+    .digest('base64');
+
+  return receivedSignature === expectedSignature;
+}
+
+app.post('/webhooks/appwrite', express.raw({ type: 'application/json' }), (req, res) => {
+  const rawBody = req.body.toString('utf8');
+
+  if (!verifyWebhookSignature({ headers: req.headers, rawBody }, process.env.WEBHOOK_SIGNING_KEY)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  const payload = JSON.parse(rawBody);
+  const events = req.headers['x-appwrite-webhook-events'];
+
+  // handle the event
+  handleWebhookEvent(events, payload);
+
+  res.status(200).json({ received: true });
+});
+```
+
+Two things to watch for:
+
+- Use the **raw body** before JSON parsing. Once parsed, the byte-for-byte representation may differ.
+- The URL must match exactly, including any trailing slash.
+
+Always return a `200` response quickly. Appwrite will retry failed deliveries, so if your handler takes too long or returns a non-2xx status, you'll receive duplicate events. Acknowledge receipt immediately and process asynchronously if needed.
+
+# Real use cases
+
+**CDN cache invalidation**: Subscribe to `storage.buckets.*.files.*.update` and purge the CDN cache for the affected file URL when an asset is updated.
+
+**Slack notifications**: Subscribe to `users.*.create` and post a message to a Slack channel whenever a new user signs up. Useful for tracking growth in early-stage apps.
+
+```js
+async function handleWebhookEvent(events, payload) {
+  if (events.includes('users') && events.includes('create')) {
+    await fetch('https://hooks.slack.com/services/...', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: `New user: ${payload.name} (${payload.email})`
+      })
+    });
+  }
+}
+```
+
+**Data sync to external systems**: Subscribe to row create, update, and delete events and mirror changes to an external analytics database, a search index like Meilisearch or Algolia, or a data warehouse.
+
+**Automated emails**: Subscribe to `users.*.sessions.*.create` and send a "new sign-in" security notification via your email provider when a session is created from a new location.
+
+**Audit logging**: Subscribe broadly across databases and storage events and write every event to an append-only audit log table with the user ID from `X-Appwrite-Webhook-User-Id`.
+
+# Debugging webhooks
+
+If your endpoint isn't receiving requests, check:
+
+1. The webhook is enabled in the Appwrite Console (there's an active/inactive toggle).
+2. Your endpoint URL is publicly reachable. Localhost won't work unless you're using a tunnel like ngrok or Cloudflare Tunnel.
+3. The events you subscribed to are actually firing. Use the Appwrite Console to manually trigger an action and confirm the event matches your subscription.
+4. Your server returns a 2xx response. Non-2xx responses are treated as failures.
+
+For local development, tools like [ngrok](https://ngrok.com) or [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) give your local server a public HTTPS URL you can paste directly into the webhook configuration.
+
+# Add webhooks to your Appwrite project
+
+Webhooks connect Appwrite events to any external system without polling. Configure them in the Console, verify signatures to ensure authenticity, and return fast responses to handle retries cleanly.
+
+- [Appwrite Webhooks docs](/docs/advanced/platform/webhooks)
+- [Appwrite Events reference](/docs/advanced/platform/events)
+- [Start building on Appwrite Cloud](https://cloud.appwrite.io)

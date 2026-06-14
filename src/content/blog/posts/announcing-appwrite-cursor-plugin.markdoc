@@ -1,0 +1,75 @@
+---
+layout: post
+title: "Introducing the Appwrite plugin for Cursor: Skills, MCP, and commands in one install"
+description: The Appwrite plugin for Cursor bundles agent skills, MCP servers, and deployment commands into a single install, so your AI agents can build with Appwrite out of the box.
+date: 2026-04-06
+cover: /images/blog/announcing-appwrite-cursor-plugin/cover.avif
+timeToRead: 4
+author: atharva
+category: announcement
+featured: false
+faqs:
+  - question: "What is the Appwrite plugin for Cursor?"
+    answer: "It is a single install on the Cursor Marketplace that bundles 10 [Appwrite Skills](/docs/tooling/ai/skills), the Appwrite API and Docs MCP servers, and CLI commands for deploying Functions and Sites. Once added, Cursor's agents have everything they need to generate accurate Appwrite code and interact with your project without separate configuration."
+  - question: "Do I still need to configure MCP servers manually after installing the plugin?"
+    answer: "No. The plugin includes both the Appwrite API MCP server and the Appwrite Docs MCP server out of the box, so you do not have to edit JSON config files. Sign in on the Cursor Marketplace, click **Add to Cursor**, and the servers are wired up automatically."
+  - question: "Which Appwrite SDKs do the bundled skills cover?"
+    answer: "The plugin ships skills for the Appwrite CLI and the TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, and Swift SDKs. Cursor's agents load the right skill based on the language you are working in, so you get correct method signatures without specifying one explicitly."
+  - question: "What is the difference between Appwrite Skills and the Cursor plugin?"
+    answer: "[Skills](/docs/tooling/ai/skills) are language-specific Markdown files that teach AI agents how to write Appwrite code, and they work with any compatible agent. The Cursor plugin is a Cursor-specific bundle that ships those skills plus MCP servers and deployment commands so you do not have to install each piece separately."
+  - question: "Can I use the Appwrite plugin with self-hosted Appwrite?"
+    answer: "Yes. The MCP servers in the plugin accept a custom endpoint, so you can point them at a self-hosted Appwrite instance instead of Appwrite Cloud. You will need an API key from your self-hosted project for the API MCP server to authenticate."
+  - question: "How do MCP servers differ from agent skills?"
+    answer: "MCP servers give the agent runtime access to your Appwrite project so it can create users, query databases, or read docs on demand. Skills give the agent static, curated knowledge about how to write Appwrite code correctly. The plugin includes both because agents need accurate context for code generation and live access for project operations."
+---
+
+Earlier this year, we launched [Appwrite Skills](/docs/tooling/ai/skills), open-source Markdown files that give AI agents deep, language-specific knowledge of Appwrite SDKs. Skills solved a real problem: agents were generating Appwrite code that looked right but used the wrong method signatures, outdated patterns, or missing parameters. With skills installed, agents generate correct, idiomatic Appwrite code without needing documentation pasted into every prompt.
+
+Today, we are taking a step further.
+
+# Introducing the Appwrite plugin for Cursor
+
+The Appwrite plugin for Cursor bundles all the tools your AI agents need to work with Appwrite into a single installation. Instead of manually configuring MCP servers and installing skills separately, you visit the [Cursor Marketplace](https://cursor.com/marketplace/appwrite), click a button, and your agents are ready to build with Appwrite.
+
+The plugin packages three types of resources into one install:
+
+## 10 agent skills
+
+Skills for the Appwrite CLI and all major Appwrite SDKs, including TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, and Swift. Each skill gives agents accurate method signatures, usage patterns, and best practices for that specific SDK. Cursor's agents discover and load these skills automatically when they are relevant, so you get precise code generation without wasting context.
+
+## 2 MCP servers
+
+The plugin includes both the Appwrite API MCP server and the Appwrite Docs MCP server. The API MCP server lets agents interact directly with your Appwrite project: creating users, managing databases, uploading files, and more. The Docs MCP server gives agents access to the full Appwrite documentation, so they can look up guides, API references, and examples on the fly.
+
+## 2 commands
+
+Built-in commands for deploying functions and sites using the Appwrite CLI, directly from the agent chat.
+
+# Why developers should use the plugin
+
+Before the plugin, setting up Appwrite in Cursor required manually adding MCP server configurations, installing agent skills separately, and wiring everything together. While it worked, it added unnecessary friction to the initial setup experience.
+
+The plugin removes this friction entirely:
+
+- **One-click install**: Visit the marketplace, sign in, and the plugin appears in your editor. No config files need to be edited.
+- **Everything in one place**: Skills, MCP servers, and commands are bundled together and stay in sync.
+- **Automatic skill discovery**: Cursor's agents load the right skill for your language and framework without you needing to specify anything.
+
+# How to install
+
+Installing the plugin takes less than a minute:
+
+1. Visit the [Appwrite plugin](https://cursor.com/marketplace/appwrite) on the Cursor Marketplace.
+2. Sign in with your Cursor account.
+3. Click on **Add to Cursor**.
+4. The plugin will be added to your editor automatically.
+
+Once installed, open an agent chat and start building. Try a prompt like `Create a new Appwrite project with auth enabled and a users table` and watch the agent use the right SDK patterns, API calls, and best practices without any extra setup.
+
+# Resources
+
+- [Appwrite plugin on the Cursor Marketplace](https://cursor.com/marketplace/appwrite)
+- [Plugin source code on GitHub](https://github.com/appwrite/cursor-plugin)
+- [Cursor integration docs](/docs/tooling/ai/ai-dev-tools/cursor)
+- [Skills documentation](/docs/tooling/ai/skills)
+- [Discord community](https://appwrite.io/discord)

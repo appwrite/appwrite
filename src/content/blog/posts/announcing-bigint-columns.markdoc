@@ -1,0 +1,486 @@
+---
+layout: post
+title: "Announcing BigInt columns: Store 64-bit integers for counters, IDs, and timestamps"
+description: A new column type for values that overflow the 32-bit integer range, with the same constraints, defaults, and atomic operations you already use.
+date: 2026-05-12
+cover: /images/blog/announcing-bigint-columns/cover.avif
+timeToRead: 5
+author: arnab-chatterjee
+category: announcement
+featured: false
+callToAction: true
+faqs:
+  - question: "What is a BigInt column in Appwrite Databases?"
+    answer: "BigInt is a column type that stores 64-bit signed integers natively. It accepts any value from -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807, which is roughly 4 billion times the range of the 32-bit integer column. Use it whenever a numeric value can exceed the ±2.1 billion limit of a regular integer."
+  - question: "When should I use BigInt instead of integer?"
+    answer: "Stick with the integer type if your values will always fit in the 32-bit signed range. Reach for BigInt when you expect values larger than about 2.1 billion in either direction, when you import IDs from systems that use 64-bit keys, when a counter or accumulator grows unbounded over time, or when you store high-resolution timestamps. If the upper bound is uncertain, BigInt is the safer default."
+  - question: "Does BigInt work with Appwrite's Operators?"
+    answer: "Yes. BigInt columns work with every numeric operator, including Operator.increment, Operator.decrement, Operator.multiply, and Operator.divide. The change is applied atomically on the server under concurrency control, respects any min or max bounds you set on the column, and returns the updated value without needing to fetch the row first."
+  - question: "Can I migrate an existing integer column to BigInt?"
+    answer: "There is no automatic migration between integer and BigInt today. The recommended approach is to add a new BigInt column, backfill data from the existing integer column, and then drop the old column once the cutover is complete. Picking BigInt up front when the upper bound is unclear saves a future schema change."
+  - question: "Which Appwrite SDKs support BigInt columns?"
+    answer: "BigInt is available in every Server SDK that ships with Appwrite, including Node.js, Python, PHP, Ruby, Dart, Kotlin, Java, Swift, .NET, Go, and Rust. Each SDK exposes a createBigIntColumn (or language-equivalent) method on the TablesDB service, with optional min, max, and default parameters."
+  - question: "Where can I create a BigInt column from the Appwrite Console?"
+    answer: "Open the table you want to extend, head to the Columns tab, and click Create column. Pick BigInt from the type dropdown, give the column a key, and optionally set min, max, and default values. The column is ready to read and write the moment the request returns."
+---
+
+A 32-bit signed integer caps out at roughly **-2.1 billion** on the low end and **+2.1 billion** on the high end. The moment your column needs to hold a value outside that range, in either direction, the existing integer type stops being enough.
+
+To close this gap, we’re introducing **BigInt columns** in Appwrite Databases.
+
+BigInt is a new column type that stores 64-bit signed integers natively, with the same `min`, `max`, and `default` parameters you already use with regular integer columns. Previously, the only way to store 64-bit values was to set `size: 8` on an integer column, which was easy to miss and felt out of place on a type called integer. BigInt makes the intent explicit: if your data fits in a 32-bit integer, you don’t need to change anything; if it doesn’t, BigInt is the column type you reach for.
+
+# What BigInt gives you
+
+A BigInt column accepts any value in the 64-bit signed integer range, from **-9,223,372,036,854,775,808** to **9,223,372,036,854,775,807**. That’s roughly 4 billion times the range of a 32-bit integer column, and enough to cover the data types where 32-bit was always the wrong size:
+
+- **Large counters and accumulators**: lifetime views, total bytes processed, cumulative API calls, retry counters that keep climbing across years of operation.
+- **External IDs**: account IDs, message IDs, or transaction IDs imported from systems that use 64-bit keys.
+- **High-resolution timestamps**: nanosecond or microsecond epochs, monotonic clocks, sequence numbers from event logs.
+- **Financial values in minor units**: balances, totals, or ledger entries stored as integers in the smallest currency unit, where you want to avoid floating-point rounding entirely.
+
+# Works with Operators
+
+BigInt columns plug straight into [Operators](/docs/products/databases/operators), so you can update a 64-bit value directly on the server without fetching the row first. `Operator.increment`, `Operator.decrement`, and the rest of the numeric operators treat BigInt the same way they treat integer and float columns: the change is applied atomically under concurrency control, respects any `min` or `max` bounds you set, and returns the new value.
+
+This means a counter like `total_views` can sit at 12 billion, get hammered with concurrent `+1` requests across regions, and stay consistent without any client-side coordination.
+
+{% multicode %}
+
+```server-nodejs
+const result = await tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: {
+        total_views: sdk.Operator.increment(1)
+    }
+});
+```
+
+```server-python
+result = tables_db.update_row(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    row_id = '<ROW_ID>',
+    data = { 'total_views': Operator.increment(1) }
+)
+```
+
+```server-php
+$result = $tablesDB->updateRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: [ 'total_views' => Operator::increment(1) ]
+);
+```
+
+```server-ruby
+result = tables_db.update_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'total_views' => Operator.increment(1) }
+)
+```
+
+```server-dart
+await tablesDB.updateRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: {
+        'total_views': Operator.increment(1)
+    },
+);
+```
+
+```server-kotlin
+val response = tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf("total_views" to Operator.increment(1))
+)
+```
+
+```server-java
+tablesDB.updateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Map.of("total_views", Operator.increment(1)),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+        System.out.println(result);
+    })
+);
+```
+
+```server-swift
+_ = try await tablesDB.updateRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    data: [
+        "total_views": Operator.increment(1)
+    ]
+)
+```
+
+```server-dotnet
+await tablesDB.UpdateRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    data: new Dictionary<string, object>
+    {
+        { "total_views", Operator.Increment(1) }
+    }
+);
+```
+
+```server-go
+_, err := tablesDB.UpdateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesDB.WithUpdateRowData(map[string]any{
+        "total_views": operator.Increment(1),
+    }),
+)
+```
+
+```server-rust
+tables_db.update_row(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Some(json!({
+        "total_views": operator::increment_by(1)
+    })),
+    None,
+    None,
+).await?;
+```
+
+{% /multicode %}
+
+# Creating a BigInt column
+
+You can create a BigInt column from the Appwrite Console or programmatically using any of the [Server SDKs](/docs/sdks#server).
+
+## From the Console
+
+In the Appwrite Console, open your table, head to the **Columns** tab, and click **Create column**. Pick **BigInt** from the type dropdown, give it a key, and optionally set `min`, `max`, and `default`. The column is ready to read and write the moment the request returns.
+
+![Creating a BigInt column in the Appwrite Console](/images/blog/announcing-bigint-columns/console-create-bigint.avif)
+
+## From a Server SDK
+
+Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys) with `tables.write` (or `collections.write` for the legacy API).
+
+{% multicode %}
+
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.createBigIntColumn({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    key: 'total_views',
+    required: false,
+    min: 0,
+    max: 9223372036854775807n,
+    xdefault: 0
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+tables_db = TablesDB(client)
+
+result = tables_db.create_big_int_column(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    key = 'total_views',
+    required = False,
+    min = 0,
+    max = 9223372036854775807,
+    default = 0
+)
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$tablesDB = new TablesDB($client);
+
+$result = $tablesDB->createBigIntColumn(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    key: 'total_views',
+    required: false,
+    min: 0,
+    max: 9223372036854775807,
+    default: 0
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+tables_db = TablesDB.new(client)
+
+result = tables_db.create_big_int_column(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    key: 'total_views',
+    required: false,
+    min: 0,
+    max: 9223372036854775807,
+    default: 0
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+TablesDB tablesDB = TablesDB(client);
+
+ColumnBigint result = await tablesDB.createBigIntColumn(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    key: 'total_views',
+    xrequired: false,
+    min: 0,
+    max: 9223372036854775807,
+    xdefault: 0,
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val tablesDB = TablesDB(client)
+
+val response = tablesDB.createBigIntColumn(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    key = "total_views",
+    required = false,
+    min = 0,
+    max = 9223372036854775807,
+    default = 0
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.createBigIntColumn(
+    "<DATABASE_ID>", // databaseId
+    "<TABLE_ID>", // tableId
+    "total_views", // key
+    false, // required
+    0L, // min
+    9223372036854775807L, // max
+    0L, // default
+    false, // array
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+        System.out.println(result);
+    })
+);
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let tablesDB = TablesDB(client)
+
+let columnBigint = try await tablesDB.createBigIntColumn(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    key: "total_views",
+    required: false,
+    min: 0,
+    max: 9223372036854775807,
+    default: 0
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+TablesDB tablesDB = new TablesDB(client);
+
+ColumnBigint result = await tablesDB.CreateBigIntColumn(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    key: "total_views",
+    required: false,
+    min: 0,
+    max: 9223372036854775807,
+    default: 0
+);
+```
+
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tablesdb"
+)
+
+func main() {
+    cli := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        client.WithProject("<YOUR_PROJECT_ID>"),
+        client.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := tablesdb.New(cli)
+
+    response, err := service.CreateBigIntColumn(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "total_views",
+        false,
+        service.WithCreateBigIntColumnMin(0),
+        service.WithCreateBigIntColumnMax(9223372036854775807),
+        service.WithCreateBigIntColumnDefault(0),
+    )
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(response)
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::TablesDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<YOUR_PROJECT_ID>") // Your project ID
+        .set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.create_big_int_column(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "total_views",
+        false,
+        Some(0),
+        Some(9_223_372_036_854_775_807i64),
+        Some(0),
+        Some(false),
+    ).await?;
+
+    println!("{:?}", result);
+
+    Ok(())
+}
+```
+
+{% /multicode %}
+
+# When to use BigInt over integer
+
+The simple rule: if the values your column holds will always fit in 32-bit signed range (-2,147,483,648 to 2,147,483,647), stick with integer. It’s a smaller type, slightly cheaper to store, and matches the most common case.
+
+Reach for BigInt when any of the following is true:
+
+- You expect values larger than ~2.1 billion at any point in the column’s lifetime.
+- You’re importing IDs from a system that already uses 64-bit keys.
+- The column stores cumulative metrics that grow unbounded over time.
+- You want headroom for a counter that might run for years across many users.
+
+There is no automatic migration between integer and BigInt, so picking the right type up front saves you a schema change later. If you’re unsure, BigInt is a safe default for any counter, ID, or timestamp where the upper bound isn’t obvious.
+
+# Get started
+
+BigInt columns are available on **Appwrite Cloud** today.
+
+You can create your first BigInt column directly from the Console, or roll it out programmatically through any of the Server SDKs above. The new column type works with every TablesDB feature you already use, including Operators, indexes, and full schema creation.
+
+# More resources
+
+- [Read the Databases documentation](/docs/products/databases/tables#columns)
+- [Announcing Database Operators](/blog/post/announcing-db-operators)
+- [Announcing Full Schema Creation](/blog/post/announcing-full-schema-creation)

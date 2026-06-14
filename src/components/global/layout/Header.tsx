@@ -119,8 +119,8 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
   { label: 'Domains', href: '/domains' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Enterprise', href: '/enterprise' },
-  { label: 'Customers', href: 'https://appwrite.io/blog/category/customer-stories' },
-  { label: 'Blog', href: 'https://appwrite.io/blog' },
+  { label: 'Customers', href: '/blog/category/customer-stories' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Changelog', href: '/changelog' },
 ] as const
 
@@ -270,12 +270,32 @@ export function ConsoleHeader({
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
-  const marketingNavItems =
+  const marketingNavItems = (
     marketingNav === true
       ? DEFAULT_MARKETING_HEADER_NAV
       : marketingNav
         ? marketingNav
         : []
+  ).map((item) => {
+    if (item.label === 'Blog') {
+      return { ...item, href: getMarketingPageUrl('/blog', features.marketing) }
+    }
+    if (item.label === 'Customers') {
+      return {
+        ...item,
+        href: features.marketing
+          ? '/blog/category/customer-stories'
+          : 'https://appwrite.io/blog/category/customer-stories',
+      }
+    }
+    if (item.label === 'Docs') {
+      return { ...item, href: getMarketingPageUrl('/docs', features.marketing) }
+    }
+    if (item.label === 'Changelog') {
+      return { ...item, href: getMarketingPageUrl('/changelog', features.marketing) }
+    }
+    return item
+  })
   const showMarketingNav = marketingNavItems.length > 0
   const showAIAssistant = overrides.showAIAssistant && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)

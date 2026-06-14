@@ -1,0 +1,5 @@
+---
+layout: category
+name: Architecture
+description: Deep dives into designing scalable and maintainable systems built on Appwrite.
+---

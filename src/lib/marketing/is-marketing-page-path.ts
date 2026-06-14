@@ -24,6 +24,10 @@ export function isMarketingPagePath(pathname: string): boolean {
     return true
   }
 
+  if (normalized === '/blog' || normalized.startsWith('/blog/')) {
+    return true
+  }
+
   if (normalized.startsWith('/products/')) {
     return true
   }

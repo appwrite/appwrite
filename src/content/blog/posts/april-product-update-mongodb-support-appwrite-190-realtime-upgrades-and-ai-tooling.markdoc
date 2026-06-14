@@ -1,0 +1,162 @@
+---
+layout: post
+title: "April Product update: MongoDB support, Appwrite 1.9.0, Realtime upgrades and AI tooling"
+description: Get a full recap of everything shipped across Appwrite in April, including the official MongoDB partnership in Appwrite 1.9.0, Terraform support, Realtime upgrades, performance improvements, new infrastructure APIs, and deeper AI integrations for Claude Code, Cursor, and MCP workflows.
+date: 2026-05-08
+cover: /images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/cover.avif
+timeToRead: 5
+author: aishwari
+category: product
+featured: false
+faqs:
+  - question: "What's new in Appwrite 1.9.0?"
+    answer: "Appwrite 1.9.0 adds MongoDB as a supported database option for self-hosted deployments, better handling of large integers, new string column types, configurable caching, and improved database observability. Real-time, auth, and infrastructure all got updates too."
+  - question: "Can I now use MongoDB with Appwrite?"
+    answer: "Yes, on self-hosted Appwrite starting with version 1.9.0. You can run Appwrite directly on your existing MongoDB infrastructure while keeping the same SDKs and APIs. Backups, monitoring, and scaling tools you've built around MongoDB carry over."
+  - question: "How does the new message-based Realtime work?"
+    answer: "Realtime now uses a single persistent WebSocket with a message-based protocol. You can manage multiple subscriptions on one connection, update them without reconnecting, and avoid URL length limits. This makes [Realtime](/docs/products/databases) more predictable for production workloads."
+  - question: "What is the Webhooks API for?"
+    answer: "It lets you create, update, and delete webhooks programmatically from any Appwrite Server SDK. You can also configure signing secrets in code, which is useful for CI/CD pipelines and multi-tenant systems where webhooks are provisioned dynamically."
+  - question: "Is the Appwrite Terraform provider production-ready?"
+    answer: "The provider supports databases, storage, functions, auth, messaging, and more via HCL. It works with both Appwrite Cloud and self-hosted setups, so you can apply infrastructure changes consistently across environments."
+  - question: "What does the Appwrite plugin for Claude Code do?"
+    answer: "It gives Claude Code first-class awareness of Appwrite APIs, so the agent can scaffold and modify Appwrite-backed apps without you pasting docs into the prompt. There's a matching plugin for Cursor and an updated MCP Server (2.0) for other MCP-compatible tools."
+---
+
+Welcome back to the product update. April was packed with major releases across Appwrite. From our official MongoDB partnership and Appwrite 1.9.0 to new infrastructure APIs, Realtime improvements, performance upgrades, and deeper AI integrations, we shipped updates focused on helping you build faster, scale more reliably, and integrate Appwrite more deeply into your workflows.
+
+Here is a quick overview of what we shipped:
+
+- Appwrite and MongoDB partnership in Appwrite 1.9.0
+- Terraform provider for Appwrite
+- Message based Realtime over a single WebSocket
+- List response caching with TTL
+- Introducing the Webhooks API
+- Official Appwrite Rust Server SDK
+- Appwrite MCP Server 2.0
+- Appwrite plugin for Claude Code
+- Appwrite plugin now available on Cursor
+
+Let's dive in.
+
+![1200x628-2.jpg](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/1200x628-2.avif)
+
+# Appwrite and MongoDB join forces in Appwrite 1.9.0
+
+Appwrite and MongoDB are now official partners. Starting with Appwrite 1.9.0, MongoDB is supported as a database option for self hosted deployments.
+
+You can run Appwrite directly on your existing MongoDB infrastructure while keeping the same APIs and SDKs. No breaking changes. No rewrites.
+
+Reuse your existing backups, monitoring, and scaling setup while staying fully open source and self hosted.
+
+This release also includes improvements across Databases, Realtime, Auth, and infrastructure. You get better handling of large integers, new string column types, configurable caching, and improved observability for database usage.
+
+[Read the announcement](https://appwrite.io/blog/post/appwrite-mongodb-partnership-self-hosted)
+
+![LinkedIn.png](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/LinkedIn.avif)
+
+# Terraform provider for Appwrite
+
+You can now manage your Appwrite infrastructure using Terraform.
+
+Define databases, storage, functions, auth, messaging, and more using HCL, and apply changes consistently across environments.
+
+Works with both Appwrite Cloud and self-hosted setups.
+
+[Read the announcement](https://appwrite.io/blog/post/introducing-terraform-provider-for-appwrite)
+
+![realtime subscriptions final.png](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/realtime_subscriptions_final.avif)
+
+# Message-based Realtime over a single WebSocket
+
+Realtime has been reworked to use a message-based protocol over a single persistent WebSocket connection.
+
+You can now manage multiple subscriptions on one connection, update them without reconnecting, and avoid URL length limits entirely. This makes Realtime more predictable and scalable for production workloads.
+
+[Learn more](https://appwrite.io/blog/post/announcing-message-based-realtime-sdk)
+
+![ttl caching@0.75x.png](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/ttl_caching0.75x.avif)
+
+# List response caching with TTL
+
+You can now cache list query responses in memory using a configurable TTL.
+
+Repeated reads skip the database entirely until the cache expires, improving performance for feeds, dashboards, and frequently accessed data.
+
+Caching is permission-aware, so users only see data they are allowed to access.
+
+[Learn more](https://appwrite.io/blog/post/announcing-list-cache-ttl)
+
+![Twitter, LinkedIn, Facebook.png](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/Twitter_LinkedIn_Facebook.avif)
+
+# Introducing the Webhooks API
+
+Webhooks can now be fully managed through the Appwrite Server SDKs.
+
+Create, update, and delete webhooks directly from code, configure signing secrets, and automate workflows for CI/CD or multi-tenant systems.
+
+Available across all major Server SDKs.
+
+[Learn more](https://appwrite.io/blog/post/announcing-webhooks-api)
+
+![Announcing Webhooks API](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/hhhhh.avif)
+
+# Introducing the Appwrite Rust SDK
+
+Appwrite now has an official Server SDK for Rust.
+
+It is async-first, type-safe, and designed for backend services and infrastructure use cases, covering all major Appwrite services. No raw HTTP calls, just a clean and idiomatic Rust API.
+
+[Learn more](https://appwrite.io/blog/post/announcing-appwrite-rust-sdk)
+
+![announcing appwrite mcp server.png](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/announcing_appwrite_mcp_server.avif)
+
+# Appwrite MCP Server 2.0
+
+We have rebuilt the Appwrite MCP server with a simpler architecture.
+
+Instead of passing service flags, everything is now enabled by default. The server exposes two tools: one to search the full Appwrite tool catalog, and one to execute operations. This reduces complexity and uses less of the model's context.
+
+[Read the announcement](https://appwrite.io/blog/post/announcing-appwrite-mcp-server-2)
+
+![Claude plugin cover-2.jpg](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/Claude_plugin_cover-2.avif)
+
+# Appwrite plugin for Claude Code
+
+Connecting Claude Code to a real backend usually takes manual setup and extra context.
+
+The Appwrite plugin removes that. With a single install, your agent can interact with your Appwrite project using the right context from the start, with built-in skills and MCP servers included.
+
+[Learn more](https://appwrite.io/blog/post/announcing-appwrite-claude-code-plugin)
+
+![app.jpg](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/app.avif)
+
+# Appwrite plugin now available on Cursor
+
+The Appwrite plugin is now live on the Cursor marketplace.
+
+No need to configure MCP servers or install skills separately. Just install and start building with support for the Appwrite CLI and major SDKs.
+
+[Install from the Cursor marketplace](https://cursor.com/marketplace/appwrite)
+
+![Image.png](/images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/Image.avif)
+
+# Community Recognitions
+
+We are excited to feature Abid as part of our monthly Community Recognitions for April 2026. Abid created a wrapper around an earlier version of the Appwrite MCP server to reduce token and context usage, an idea that later inspired improvements in Appwrite MCP Server 2.0.
+
+If you would like to participate in next month's Community Recognitions, [join our Discord server](https://discord.gg/3nfbe6NhkE) and showcase your project.
+
+# Engineering Resources
+
+- [5 Claude hacks you need to try right now](https://appwrite.io/blog/post/5-claude-hacks-you-need-to-try-right-now)
+- [Claude Mythos preview: the model too powerful to release](https://appwrite.io/blog/post/claude-mythos-preview)
+- [Did Claude Design just kill Lovable?](https://appwrite.io/blog/post/did-claude-design-kill-lovable)
+- [6 practical ways developers use AI to build faster](https://appwrite.io/blog/post/6-practical-ways-developers-use-ai-to-build-faster)
+- [How to add a backend to apps built with Claude Code](https://appwrite.io/blog/post/backend-for-claude-code-apps)
+
+# What's to come
+
+We are just getting started with MongoDB and AI integrations. Expect deeper database flexibility, more tools for AI-assisted development, and continued improvements across performance and developer experience.
+
+Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.

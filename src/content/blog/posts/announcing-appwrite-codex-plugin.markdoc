@@ -1,0 +1,78 @@
+---
+layout: post
+title: "Introducing the Appwrite plugin for Codex: Skills and MCP in one install"
+description: The Appwrite plugin for Codex bundles agent skills and the Appwrite Docs MCP server into a single install, so Codex can build with Appwrite out of the box.
+date: 2026-05-11
+cover: /images/blog/announcing-appwrite-codex-plugin/cover.avif
+timeToRead: 4
+author: aditya-oberai
+category: announcement
+featured: false
+faqs:
+  - question: "What does the Appwrite plugin for Codex include?"
+    answer: "The plugin ships thirteen [agent skills](/docs/tooling/ai/skills) (covering the [Appwrite CLI](/docs/tooling/command-line/installation), every major Appwrite SDK, and two guided deployment skills for [Sites](/docs/products/sites) and [Functions](/docs/products/functions)) plus the [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers/docs). Codex loads the relevant skill on its own when a task matches."
+  - question: "How do I install the Appwrite plugin for Codex?"
+    answer: "Run `codex plugin marketplace add appwrite/codex-plugin` in your terminal to add the Appwrite marketplace, start Codex, run `/plugins`, select Appwrite from the marketplace listing, and confirm the install. The skills and the `appwrite-docs` MCP server are wired up automatically. See the [Codex docs](/docs/tooling/ai/ai-dev-tools/codex) for the full setup walkthrough."
+  - question: "Why isn't the Appwrite API MCP server bundled with the plugin?"
+    answer: "The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers/api) needs three values to talk to your project: your endpoint, project ID, and API key. Codex plugins don't currently expose a way to prompt for and inject per-install configuration like that in the CLI, so shipping it inside the plugin would mean hard-coding credentials. The [docs MCP](/docs/tooling/ai/mcp-servers/docs), which doesn't need credentials, is bundled."
+  - question: "How do I add the Appwrite API MCP server to Codex?"
+    answer: "Run `codex mcp add appwrite-api --env APPWRITE_PROJECT_ID=your-project-id --env APPWRITE_API_KEY=your-api-key --env APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1 -- uvx mcp-server-appwrite` with your own endpoint, project ID, and API key. `uv` must be installed on your system for `uvx` to work. The [Codex docs](/docs/tooling/ai/ai-dev-tools/codex#step-3) walk through the manual setup."
+  - question: "Which Appwrite SDKs are covered by the plugin's skills?"
+    answer: "The plugin includes language skills for TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift, along with a skill for the [Appwrite CLI](/docs/tooling/command-line/installation). Codex picks the right one based on the language and task you're working on. See the [Appwrite SDKs](/docs/sdks) page for the full SDK reference."
+  - question: "Do I still need to install Appwrite Skills separately if I use the Codex plugin?"
+    answer: "No. The plugin bundles the same [Appwrite language and CLI skills](/docs/tooling/ai/skills), so installing the plugin gives Codex everything it needs in one step. You only need to install skills separately if you want to use them with another [AI IDE, CLI, or dev tool](/docs/tooling/ai) that doesn't have its own Appwrite plugin yet."
+---
+
+Codex is OpenAI's terminal-resident coding agent. It reads, writes, and runs code against your project, and it has been steadily picking up the building blocks needed to work well with platforms like Appwrite: skills for language-specific context, MCP servers for live tool and documentation access, and a marketplace for distributing them. Using Codex with Appwrite has worked for a while, but getting set up meant copying skill files into `~/.codex/skills/`, hand-editing `~/.codex/config.toml` to register the docs MCP, and stitching everything together yourself.
+
+Today, we are announcing the **Appwrite plugin for Codex**. Add the marketplace, install the plugin, and your agent is ready to build with Appwrite using up-to-date SDK patterns and live access to the Appwrite documentation.
+
+# What installing the plugin gives you
+
+The plugin ships two things in a single install:
+
+- **The Appwrite Docs MCP server:** No credentials required. Codex can search the Appwrite documentation as it works, instead of relying on whatever it was trained on.
+- **Thirteen agent skills:** Markdown skills covering the Appwrite CLI and every major Appwrite SDK (TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift), plus two guided deployment skills for shipping Appwrite Sites and Functions with the Appwrite CLI. Codex loads the relevant skill on its own when a task calls for it.
+
+# Setup the plugin
+
+1. Add the Appwrite marketplace to Codex by running the following command in your terminal:
+
+    ```bash
+    codex plugin marketplace add appwrite/codex-plugin
+    ```
+
+2. Start Codex by running `codex`.
+3. Open the plugins menu with `/plugins`.
+4. Select **Appwrite** from the marketplace listing and confirm the install.
+
+The skills and the `appwrite-docs` MCP server are wired up automatically.
+
+## Why the API MCP server isn't bundled
+
+The Appwrite API MCP server needs three values to talk to your project: your endpoint, project ID, and API key. Codex plugins don't currently expose a way to prompt for and inject per-install configuration like that in the CLI, so shipping the API MCP inside the plugin would mean hard-coding credentials, which isn't something we want to do. The docs MCP, which doesn't need credentials, is bundled.
+
+To add the API MCP server, run this in your terminal:
+
+```bash
+codex mcp add appwrite-api \
+  --env APPWRITE_PROJECT_ID=your-project-id \
+  --env APPWRITE_API_KEY=your-api-key \
+  --env APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1 \
+  -- uvx mcp-server-appwrite
+```
+
+# A prompt to try first
+
+Once the plugin is active, try a prompt like:
+
+`Scaffold a Next.js app that uses Appwrite for email/password auth and a "todos" table.`
+
+Codex picks up the `appwrite-typescript` and `appwrite-cli` skills, queries the Appwrite Docs MCP server when it needs to confirm specifics, and generates code that uses the right SDK calls instead of guessed ones. When you are ready to ship, ask it to deploy with the Appwrite CLI and the `appwrite-deploy-site` skill kicks in to walk it through the steps.
+
+# Resources
+
+- [Codex plugin docs](/docs/tooling/ai/ai-dev-tools/codex)
+- [Plugin source code on GitHub](https://github.com/appwrite/codex-plugin)
+- [Appwrite Skills](/docs/tooling/ai/skills)
+- [Discord community](https://appwrite.io/discord)

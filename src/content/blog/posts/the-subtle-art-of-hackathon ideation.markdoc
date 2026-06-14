@@ -1,0 +1,74 @@
+---
+layout: post
+title: The subtle art of hackathon ideation
+description: Find out why it is important to ideate in a hackathon and how you can make this process easier for yourself.
+date: 2024-01-08
+cover: /images/blog/the-subtle-art-of-hackathon ideation/cover.avif
+timeToRead: 4
+author: aditya-oberai
+category: hackathon
+faqs:
+  - question: "What is a hackathon?"
+    answer: "A hackathon is a development marathon where teams build innovative products or solutions within a limited timeframe. It pushes participants to combine creativity, problem-solving, and technical skills, usually around an externally provided or self-chosen problem."
+  - question: "Why is ideation important in a hackathon?"
+    answer: "A hackathon is fundamentally about solving a real problem, not just writing the best code. If the early ideation step is weak, the rest of the project, including design, build, and pitch, suffer too. A strong idea sets up everything that follows."
+  - question: "How do I come up with a good hackathon idea?"
+    answer: "Pick a problem you personally relate to, understand how widely it affects others, evaluate multiple possible solutions, and then choose the one that can sustain itself without depending on systems you do not have access to. Emotional connection and scale together drive winning ideas."
+  - question: "How long should I spend on ideation in a hackathon?"
+    answer: "There is no universal number, but treat ideation as critical work, not overhead. Spending a few focused hours up front to test the problem, scale, and solution will save you from rewrites and pivots later in the hackathon when time is most precious."
+  - question: "Can I use Appwrite for a hackathon project?"
+    answer: "Yes. Appwrite is a popular choice for hackathons because [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), and [Functions](/docs/products/functions) are ready out of the box, so you can focus on your unique feature instead of plumbing. The free Appwrite Cloud tier is enough for most hackathon projects."
+  - question: "How do I know if my hackathon idea is too ambitious?"
+    answer: "Look at the time you have and the smallest demoable version of your idea. If you cannot describe a working core feature you could ship in the hackathon window, the scope is too big. Trim until you can demo something real at the end."
+---
+
+Hackathons have been an immense part of my journey as a developer and a student, providing me with some of the best growth opportunities I could have hoped for. Participating in hackathons was immensely rewarding for me in terms of learning, work output, networking as well as the occasional prizes.
+
+Yes, I did have a few hackathon wins in my time, and one thing I did notice to be common in every single one of those instances was the quality of the idea I chose to work on. Ideating in a hackathon is critical; however, its significance can often be lost on hackers, especially since not enough people discuss the importance and impact of ideation.
+
+Therefore, in this blog, I will discuss why it is important to ideate in a hackathon and how you can make this process easier for yourself.
+
+# What is a hackathon?
+
+Before discussing the importance of ideation in a hackathon, it is important to understand what a hackathon is in the first place. Here is how I define a hackathon:
+
+> A hackathon is essentially a development marathon designed to push developers past the limits of their creativity, imagination, and technical know-how to create innovative products and solutions.
+>
+
+Simply put, a hackathon is a race to build the best solution to an externally-provided or self-decided problem within a given timeframe.
+
+# Flow of a hacker’s journey
+
+Typically, hackers go through a similar flow every time they participate in a hackathon. They form a **team**, **ideate** the problem and solution they want to focus on, **design** their solution, **develop** their project, **test** whether it works, and finish with a **demonstration** of the work.
+
+# How does ideation fit in the puzzle?
+
+Ideation is a crucial part of the hackathon journey because the primary focus of a hackathon is to enable problem-solving. You aren’t there just to write the best code but first to solve a problem that impacts people. This includes choosing an important problem, creating humanly-usable UI/UX, developing functioning software, and demonstrating how all of these come together in the final pitch. In truth, this flow is just like dominoes; if an early domino (like ideation) falls, the rest of the dominos fall too.
+
+# How to start ideating a hackathon project?
+
+Now that we have discussed the importance of ideation for a hackathon project, let’s understand how exactly you should ideate at a hackathon. Personally speaking, I like to treat ideation as a 4-step process. They are as follows:
+
+## Step 1: Pick a problem you personally relate with
+
+The first step is to choose a problem that may have impacted you or is one you care about. The reason I say so is because emotional connections can be major motivators and keep us committed. This substantially improves your chances of seeing your project through till the end, as well as ensuring focus throughout.
+
+## Step 2: Understand the scale of your problem in your surroundings
+
+Once you have picked a problem you care about, the next step is to evaluate how many more people this problem affects. This can be achieved by performing online research, discussing on social media, or more substantial user research. The higher the scale of your problem is, the more value your solution will hold.
+
+## Step 3: Evaluate potential solutions to this problem
+
+Once your problem is picked, it is necessary to brainstorm how you will solve it. Each problem will have multiple ways to navigate. You want to ensure you place all possible ideas on the table before starting to build and discard ones that don’t make sense. If you don’t do this, you may discover halfway along the hackathon that your method to solve the problem is not ideal, which only leads to a lot of wasted time.
+
+## Step 4: Choose the most self-sustainable solution
+
+Once you have sifted through your potential solutions, make sure to pick one that can sustain itself rather than be dependent on people or systems you don’t already have access. Remember, you are aiming to build a solution at the end of the day, not just infrastructure for a process or a system that may or may not be possible to execute. If you can pick a solution that can run on its own to a problem that has a wide scale, you pretty much hold a golden egg in your hands for the hackathon world.
+
+# Conclusion
+
+One of the most important parts of that journey was working to solve problems that were important to me rather than focusing on problems imposed by other individuals or circumstances. Hackathons are very special spaces that let you create real solutions to real problems in a safe environment. As long as you spend that time learning and growing while working on problems you care about, you will go a lot further than you can possibly imagine!
+
+- [Appwrite GitHub](https://github.com/appwrite)
+- [Appwrite Docs](/docs)
+- [Discord Community](https://appwrite.io/discord)

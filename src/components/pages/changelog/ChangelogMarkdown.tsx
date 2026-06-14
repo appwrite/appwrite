@@ -29,10 +29,15 @@ import {
 } from '@/components/pages/docs/markdoc/Nodes'
 import { Tabs, TabsItem } from '@/components/pages/docs/markdoc/Tabs'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
+import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
+import {
+  BLOG_BODY_TEXT_SIZE_CLASS,
+  BLOG_PROSE_DETAIL_CLASSES,
+  type MarkdocProseVariant,
+} from '@/lib/blog/prose-typography'
 import {
   DOCS_BODY_TEXT_CLASS,
   DOCS_PROSE_DETAIL_CLASSES,
-  DOCS_PROSE_WRAPPER_CLASS,
 } from '@/lib/docs/prose-typography'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
@@ -115,20 +120,95 @@ const markdocComponents = {
 type ChangelogMarkdownProps = {
   content: string
   className?: string
+  bodyTextClass?: string
+  linkClassName?: string
+  arrowLinkTextClass?: string
+  proseVariant?: MarkdocProseVariant
 }
 
-export function ChangelogMarkdown({ content, className }: ChangelogMarkdownProps) {
+export function ChangelogMarkdown({
+  content,
+  className,
+  bodyTextClass,
+  linkClassName,
+  arrowLinkTextClass,
+  proseVariant = 'docs',
+}: ChangelogMarkdownProps) {
+  const proseBodyClass = bodyTextClass ?? DOCS_BODY_TEXT_CLASS
+  const proseLinkClass = linkClassName ?? DOCS_PROSE_LINK_CLASS
+  const proseDetailClasses =
+    proseVariant === 'blog' ? BLOG_PROSE_DETAIL_CLASSES : DOCS_PROSE_DETAIL_CLASSES
+
   const rendered = useMemo(() => {
     const ast = Markdoc.parse(content)
     const transformed = Markdoc.transform(ast, docsMarkdocConfig)
-    return Markdoc.renderers.react(transformed, React, { components: markdocComponents })
-  }, [content])
+    return Markdoc.renderers.react(transformed, React, {
+      components: {
+        ...markdocComponents,
+        Link: (props: { href?: string; children?: ReactNode; className?: string }) => (
+          <ChangelogLink {...props} className={props.className ?? proseLinkClass} />
+        ),
+        ArrowLink: ({ href, children }: { href?: string; children?: ReactNode }) => (
+          <ChangelogArrowLink href={href} textClassName={arrowLinkTextClass}>
+            {children}
+          </ChangelogArrowLink>
+        ),
+        Heading: (props: { level?: number; id?: string; children?: ReactNode }) => (
+          <Heading {...props} proseVariant={proseVariant} />
+        ),
+        Blockquote: (props: { children?: ReactNode }) => (
+          <Blockquote {...props} proseVariant={proseVariant} />
+        ),
+        Info: (props: { title: string; children?: ReactNode }) => (
+          <Info {...props} proseVariant={proseVariant} />
+        ),
+        Tabs: (props: { children?: ReactNode }) => (
+          <Tabs {...props} proseVariant={proseVariant} />
+        ),
+        MarkdocTableCell: (props: { children?: ReactNode }) => (
+          <MarkdocTableCell {...props} proseVariant={proseVariant} />
+        ),
+        AccordionItem: ({
+          title,
+          children: itemChildren,
+        }: {
+          title?: string
+          children?: React.ReactNode
+        }) => (
+          <AccordionItem value={title ?? 'item'} className="rounded-lg border border-border px-4">
+            <AccordionTrigger className={cn(proseBodyClass, 'font-medium hover:no-underline')}>
+              {title}
+            </AccordionTrigger>
+            <AccordionContent className={proseBodyClass}>{itemChildren}</AccordionContent>
+          </AccordionItem>
+        ),
+        CallToAction: ({ href, title }: { href?: string; title?: string }) => (
+          <div className="not-prose my-6">
+            <a
+              href={href?.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${href}` : href}
+              className={cn(
+                'inline-flex items-center rounded-lg bg-[var(--brand-cta)] px-4 py-2 font-medium text-white hover:opacity-90',
+                proseVariant === 'blog'
+                  ? BLOG_BODY_TEXT_SIZE_CLASS
+                  : 'text-[13px]',
+              )}
+              target={href?.startsWith('/') ? '_blank' : undefined}
+              rel={href?.startsWith('/') ? 'noopener noreferrer' : undefined}
+            >
+              {title}
+            </a>
+          </div>
+        ),
+      },
+    })
+  }, [content, proseBodyClass, proseLinkClass, arrowLinkTextClass, proseVariant])
 
   return (
     <div
       className={cn(
-        DOCS_PROSE_WRAPPER_CLASS,
-        ...DOCS_PROSE_DETAIL_CLASSES,
+        'docs-prose',
+        proseBodyClass,
+        ...proseDetailClasses,
         ...CHANGELOG_RESOURCE_LINK_GROUP_CLASSES,
         className,
       )}

@@ -15,6 +15,11 @@ import {
   DOCS_TABLE_CELL_TEXT_CLASS,
 } from '@/lib/docs/prose-typography'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
+import {
+  BLOG_BODY_TEXT_CLASS,
+  BLOG_TABLE_CELL_TEXT_CLASS,
+  type MarkdocProseVariant,
+} from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
 import { DocsHeadingLink } from './DocsHeadingLink'
 import { DocsMarkdocInTableProvider } from './DocsImage'
@@ -22,10 +27,6 @@ import { DocsRouteLink } from '../DocsRouteLink'
 
 const tableHeadClassName =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-normal'
-const tableCellClassName = cn(
-  'px-4 py-3 align-top whitespace-normal',
-  DOCS_TABLE_CELL_TEXT_CLASS,
-)
 
 function extractText(children: ReactNode): string {
   if (typeof children === 'string') return children
@@ -42,11 +43,13 @@ export function Heading({
   id,
   children,
   compact = false,
+  proseVariant = 'docs',
 }: {
   level?: number
   id?: string
   children: ReactNode
   compact?: boolean
+  proseVariant?: MarkdocProseVariant
 }) {
   const text = extractText(children)
   const { title, id: headingId } = resolveHeadingId(text, id)
@@ -68,15 +71,25 @@ export function Heading({
           level >= 4 &&
             'mb-1.5 mt-3 text-[12px] font-semibold @[480px]:text-[13px]',
         ]
-      : [
-          level === 1 &&
-            'mb-4 mt-8 text-[20px] font-normal leading-[1.3] first:mt-0 @[640px]:text-[22px]',
-          level === 2 &&
-            'mb-3 mt-7 text-[17px] font-semibold leading-snug @[640px]:text-[18px]',
-          level === 3 &&
-            'mb-2 mt-6 text-[16px] font-semibold @[640px]:text-[17px]',
-          level >= 4 && 'mb-2 mt-5 text-[15px] font-semibold',
-        ],
+      : proseVariant === 'blog'
+        ? [
+            level === 1 &&
+              'mb-4 mt-8 text-[21px] font-normal leading-[1.3] first:mt-0 @[640px]:text-[23px]',
+            level === 2 &&
+              'mb-3 mt-7 text-[18px] font-semibold leading-snug @[640px]:text-[19px]',
+            level === 3 &&
+              'mb-2 mt-6 text-[17px] font-semibold @[640px]:text-[18px]',
+            level >= 4 && 'mb-2 mt-5 text-[16px] font-semibold @[640px]:text-[17px]',
+          ]
+        : [
+            level === 1 &&
+              'mb-4 mt-8 text-[20px] font-normal leading-[1.3] first:mt-0 @[640px]:text-[22px]',
+            level === 2 &&
+              'mb-3 mt-7 text-[17px] font-semibold leading-snug @[640px]:text-[18px]',
+            level === 3 &&
+              'mb-2 mt-6 text-[16px] font-semibold @[640px]:text-[17px]',
+            level >= 4 && 'mb-2 mt-5 text-[15px] font-semibold',
+          ],
   )
 
   const headingProps = { id: headingId, className: cn(className, 'group') }
@@ -160,12 +173,18 @@ export function OnlyDark({ children }: { children?: ReactNode }) {
   return <>{children}</>
 }
 
-export function Blockquote({ children }: { children?: ReactNode }) {
+export function Blockquote({
+  children,
+  proseVariant = 'docs',
+}: {
+  children?: ReactNode
+  proseVariant?: MarkdocProseVariant
+}) {
   return (
     <blockquote
       className={cn(
         'my-5 border-l-2 border-[var(--brand-cta)] pl-4 italic',
-        DOCS_BODY_TEXT_CLASS,
+        proseVariant === 'blog' ? BLOG_BODY_TEXT_CLASS : DOCS_BODY_TEXT_CLASS,
       )}
     >
       {children}
@@ -265,12 +284,21 @@ export function MarkdocTableHead({ children }: { children?: ReactNode }) {
   )
 }
 
-export function MarkdocTableCell({ children }: { children?: ReactNode }) {
+export function MarkdocTableCell({
+  children,
+  proseVariant = 'docs',
+}: {
+  children?: ReactNode
+  proseVariant?: MarkdocProseVariant
+}) {
+  const cellTextClass =
+    proseVariant === 'blog' ? BLOG_TABLE_CELL_TEXT_CLASS : DOCS_TABLE_CELL_TEXT_CLASS
+
   return (
     <TableCell
       className={cn(
-        tableCellClassName,
-        'whitespace-normal',
+        'px-4 py-3 align-top whitespace-normal',
+        cellTextClass,
         '[&_strong]:font-semibold [&_strong]:text-foreground',
       )}
     >

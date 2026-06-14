@@ -1,0 +1,124 @@
+---
+layout: post
+title: "Appwrite vs Convex for AI apps and agent workflows"
+description: "Compare Appwrite vs Convex for AI apps and agent workflows, from agent primitives to Auth, TablesDB, Realtime, Storage, Functions, and MCP."
+date: 2026-04-28
+cover: /images/blog/appwrite-vs-convex-ai-agents/cover.avif
+timeToRead: 9
+author: atharva
+unlisted: true
+category: comparisons
+faqs:
+  - question: "What is the main difference between Appwrite and Convex for AI agents?"
+    answer: "Convex centers on a dedicated Agent component with threads, messages, RAG, and workflow primitives, on a TypeScript-first platform with a document-style database. Appwrite is a broader open-source backend covering Auth, TablesDB, Storage, Functions, Realtime, Sites, Messaging, and MCP, where agents sit on the same primitives that power any application."
+  - question: "Does Convex include first-party authentication?"
+    answer: "Convex Auth is documented as beta, and the Convex docs point to Clerk, WorkOS AuthKit, or Auth0 as the more complete path for production identity. Appwrite ships first-party Auth with email, OAuth, phone, anonymous, and MFA, plus Teams and roles, with no third-party dependency required on day one."
+  - question: "How does Convex's function model differ from Appwrite Functions?"
+    answer: "Convex splits backend logic into queries, mutations, and actions, where only actions can call external APIs. Appwrite Functions run on Node, Python, Go, Ruby, Deno, PHP, and more, with HTTP, event, and CRON triggers, and any function can call external services. Appwrite's multi-language surface gives agents more room to reach for libraries in Python, Go, or other ecosystems."
+  - question: "Is Convex open source and self-hostable?"
+    answer: "Convex offers self-hosting under an FSL Apache 2.0 license that converts to Apache 2.0 after two years. The license blocks running a competing hosted Convex product. Appwrite is open source under a standard license with unrestricted self-hosting, plus Appwrite Cloud with the same API surface."
+  - question: "Where does Convex's data model differ from Appwrite TablesDB?"
+    answer: "Convex's database is document-oriented with optional schemas. Teams that want structured tables, typed columns, and relational queries use schema and ID-reference patterns to get there. Appwrite TablesDB is relational-style with databases, tables, typed columns, rows, relationships, indexes, queries, and transactions, which fits agent state, message history, and RAG metadata naturally."
+  - question: "How do AI coding agents interact with each platform?"
+    answer: "Appwrite ships official MCP servers for the API and docs, plus Agent Skills for the CLI and SDKs across TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift, with editor plugins for Claude Code and Cursor. Convex exposes component-level tool calls from agents and is geared around an all-TypeScript platform."
+---
+
+Picking a backend for AI apps and agent workflows is not the same decision it was two years ago. You are no longer just choosing a database and an auth service. You are choosing where threads live, how tool calls get durably retried, how files attach to chat history, how realtime updates reach every client, and how coding agents talk to your backend through MCP.
+
+Two platforms come up in this conversation frequently: Convex, which has leaned hard into an Agent component with message persistence, RAG, and workflow primitives, and Appwrite, a broader open-source backend that covers Auth, TablesDB, Storage, Functions, Realtime, Sites, and MCP. This post is the appwrite vs convex breakdown for teams evaluating a Convex alternative for AI agents and for teams deciding where to host their AI product end to end.
+
+# How Convex positions itself for AI agents
+
+Convex's agent story is centered on its Agent component. The docs describe it as a building block that manages threads and messages for agents that can cooperate in static or dynamic workflows, with hybrid vector and text search for past messages and automatic context assembly on each LLM call.
+
+Around that, Convex layers a broader platform:
+
+- Functions split into queries, mutations, and actions, where only actions can call external APIs.
+- HTTP actions for webhook endpoints and custom clients.
+- A document-style database with optional schemas, indexes, and paginated queries.
+- Realtime that is automatic as long as you read data through query functions and client libraries.
+- File Storage with upload, store, serve, and delete, referenced from database documents.
+- Scheduled Functions and Cron Jobs for durable scheduling, plus higher-level Workpool, Workflow, and Cron components for larger scale.
+- Authentication via Clerk, WorkOS AuthKit, Auth0, Custom OIDC, or the beta Convex Auth library.
+- Self-hosting under an FSL Apache 2.0 license that converts to Apache 2.0 after two years.
+
+Convex has done a good job of giving agent builders a clean mental model. Threads, messages, tools, workflows, and RAG each have their own documented component. If you are already writing your backend in TypeScript and want an opinionated stack, that is attractive.
+
+# Where Convex creates trade-offs for AI teams
+
+A few things show up once you look closely at the Convex agent stack:
+
+- **Auth is mostly delegated.** Convex's own documentation describes Convex Auth as beta and points to Clerk, WorkOS, or Auth0 as the more complete path. If identity, sessions, and organization roles matter in your AI app, you are usually wiring up a separate auth vendor from day one.
+- **Agent features are components, not unified products.** Threads, workflows, RAG, rate limiting, and usage tracking each live as installable components. That modularity is the point, but it also means more surfaces to version and configure as your agent stack grows.
+- **Function model splits based on what you can do.** Queries and mutations cannot call external APIs. Only actions can call OpenAI, Stripe, or any outside service. That split is fine once you learn it, but it affects how you structure any agent logic that mixes reads, writes, and LLM calls.
+- **Single-database-style model.** Convex's database is document-oriented with optional schemas. Teams that want structured tables, typed columns, and relational queries often have to lean on the schema and ID-reference patterns to get there.
+- **Self-hosting has license constraints.** The FSL Apache 2.0 license blocks you from running a competing hosted Convex product, with a two-year conversion to Apache 2.0. Not a blocker for most teams, worth flagging for anyone building platforms.
+
+# How Appwrite positions itself for AI apps and agents
+
+Appwrite takes a different angle. Instead of treating agents as a dedicated product line, Appwrite ships a broad backend where AI workloads sit naturally on top of the same primitives that power any app:
+
+- **Auth** with email, OAuth, phone, anonymous, and MFA, plus Teams and roles, without a third-party service.
+- **TablesDB** with databases, tables, rows, typed columns, relationships, queries, indexes, and transactions. You model agent state, thread metadata, message history, tool results, and user profiles as rows in tables.
+- **Storage** with buckets, permissions, antivirus scanning, and image transformations for files attached to agent sessions, RAG sources, and user uploads.
+- **Functions** on Node, Python, Go, Ruby, Deno, PHP, and more, for tool calls, orchestration, LLM integrations, and webhooks.
+- **Sites** for hosting the frontend of your AI app with source control deploys, custom domains, env vars, and rollbacks.
+- **Realtime** channels that subscribe to row changes, user events, and custom events, which is how you push token updates, tool call results, and agent status to every connected client.
+- **Messaging** for email, SMS, and push, useful for human-in-the-loop approval and async notifications from long-running agents.
+- **Appwrite MCP servers**, both the API MCP (for acting on Appwrite resources) and the Docs MCP (for Appwrite context), so coding agents can build and operate against Appwrite directly.
+- **Agent Skills** for the Appwrite CLI and every major SDK including TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift, so agents generate idiomatic Appwrite code without docs in the prompt.
+- **Editor plugins** for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) that bundle the API MCP, Docs MCP, and skills into one install.
+- **Self-hosting** under an open-source license, or **Appwrite Cloud** with the same API surface.
+
+The point is not that Appwrite has a dedicated Agent component that matches Convex's one-to-one. The point is that once you have Auth, tables, rows, storage, functions, realtime, and MCP, you already have what an agent needs: identity, durable state, memory, tool hosting, live updates to clients, and a way for coding agents to operate on your backend.
+
+# Appwrite vs Convex: side by side
+
+| Capability | Convex | Appwrite |
+|---|---|---|
+| Agent primitives | Agent component with threads, messages, tools, streaming, playground | Tables, rows, functions, realtime, storage composed into agent workflows |
+| Thread and message persistence | Built-in with hybrid vector and text search | Modeled in TablesDB with relationships, indexes, and queries |
+| RAG | RAG component with namespaces, chunking, and embeddings | Build on TablesDB plus Functions for chunking and any embedding provider |
+| Database model | Document-style with optional schemas | Relational-style TablesDB: databases, tables, typed columns, rows, relationships, transactions |
+| Auth | Third-party (Clerk, WorkOS, Auth0) or Convex Auth (beta) | First-party Auth with email, OAuth, phone, anonymous, MFA, Teams, roles |
+| Backend logic | Queries, mutations, actions, HTTP actions in TypeScript | Functions in Node, Python, Go, Ruby, Deno, PHP, and more |
+| Scheduling | Scheduled Functions, Cron Jobs, Workpool/Workflow/Cron components | Functions with CRON schedules and event triggers |
+| Realtime | Automatic through query subscriptions | Realtime channels for rows, events, and custom channels |
+| File handling | File Storage with upload, serve, delete, metadata | Storage with buckets, permissions, antivirus, and image transformations |
+| Frontend hosting | Not part of the backend platform | Sites with deploys, custom domains, env vars, rollbacks |
+| MCP, Skills, and editor plugins | Component-level tool calls from agents | Appwrite API MCP, Appwrite Docs MCP, Agent Skills for CLI and 10 SDKs, Claude Code and Cursor plugins |
+| Licensing | FSL Apache 2.0 that converts to Apache 2.0 after two years | Open source with unrestricted self-hosting and Appwrite Cloud |
+| Language surface | TypeScript and JavaScript | Multi-language SDKs across web, mobile, and server |
+
+# Where Appwrite fits
+
+Appwrite is the right pick when:
+
+- You need a broad backend that handles Auth, TablesDB, Storage, Functions, Realtime, Sites, Messaging, and MCP without stitching multiple vendors together.
+- You want relational-style tables, typed columns, and queries for thread state, message history, and RAG metadata, with permissions on rows that the platform enforces.
+- You want first-party auth with Teams and roles from day one, not a third-party dependency.
+- You want coding agents to act on your backend through a first-party MCP, with Agent Skills for your SDK and editor plugins for Claude Code and Cursor that install the whole agent surface in one step.
+- You care about self-hosting under a standard open-source license or the option to move between Appwrite Cloud and your own infrastructure.
+
+Convex is the tighter fit for an all-TypeScript team that wants a dedicated Agent component, is happy to add Clerk, WorkOS, or Auth0 for auth, and prefers a document-style data model.
+
+# How teams usually split the decision
+
+Most AI products that reach users are broader apps where the agent is one feature among many: a CRM with an AI assistant, an e-commerce product with an AI concierge, a SaaS tool with agents on the side. They also need user accounts, teams, permissions, file uploads, notifications, scheduled jobs, webhooks, a hosted frontend, and the ability for coding agents to operate on your backend through MCP. That is where Appwrite's breadth pays off. You are not spending the first month wiring up four vendors before you get to the AI part.
+
+The narrower case is a pure TypeScript AI app where the agent itself is the entire product, like a support agent, a coding copilot, or a writing tool. Convex's Agent component is shaped for that. Even there, modeling threads and tool calls as rows in TablesDB and pushing updates over Realtime gives you the same primitives without committing to a TypeScript-only backend.
+
+# Agent workflows come down to primitives, not labels
+
+The useful question is not "does this platform have an agent product?" It is "does this platform give me identity, durable state, event triggers, realtime, storage, tool hosting, and a way for coding agents to act on my backend?"
+
+Convex answers that with an Agent component plus a narrower TypeScript-centric platform. Appwrite answers it with a broader open-source backend where Auth, TablesDB, Storage, Functions, Realtime, Sites, and MCP line up with what agents need, without making you adopt a dedicated agent abstraction before your product shape is clear.
+
+If you want to explore Appwrite for an AI app or agent workflow, start with [Appwrite Cloud](https://cloud.appwrite.io), read the [AI tooling hub](/docs/tooling/ai), and check the [API MCP server](/docs/tooling/ai/mcp-servers/api), [Agent Skills](/docs/tooling/ai/skills), and the editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor).
+
+- [Appwrite TablesDB](/docs/products/databases)
+- [Appwrite Functions](/docs/products/functions)
+- [Appwrite Auth](/docs/products/auth)
+- [Appwrite Realtime](/docs/apis/realtime)
+- [Appwrite Storage](/docs/products/storage)
+- [Appwrite AI tooling](/docs/tooling/ai)

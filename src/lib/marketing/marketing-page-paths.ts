@@ -13,6 +13,7 @@ export const MARKETING_PAGE_PATHS = [
   '/enterprise',
   '/community',
   '/changelog',
+  '/blog',
   '/assets',
   '/products/auth',
   '/products/databases',
