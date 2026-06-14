@@ -2,7 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import {
   consoleAccountQueryOptions,
+  ensureConsoleAccountQueryData,
   isConsoleAccountQuerySettled,
+  refreshConsoleAccountAfterAuth,
+  shouldRevalidateConsoleAccount,
 } from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_public')({
@@ -13,8 +16,9 @@ export const Route = createFileRoute('/_public')({
       const accountQuery = consoleAccountQueryOptions()
 
       if (isOptionalAuthPage(location.pathname)) {
-        // Init is public-first: render immediately; account loads in the background.
-        if (!isConsoleAccountQuerySettled(queryClient)) {
+        if (shouldRevalidateConsoleAccount(queryClient)) {
+          void refreshConsoleAccountAfterAuth(queryClient).catch(() => {})
+        } else if (!isConsoleAccountQuerySettled(queryClient)) {
           void queryClient.prefetchQuery(accountQuery).catch(() => {})
         }
         return { currentUser: null }
@@ -22,9 +26,7 @@ export const Route = createFileRoute('/_public')({
 
       // Load account (and prefs) before child loaders so e.g. Tables DB rows can
       // match `tableRowsQueryOptions` keys to saved column prefs without a layout shift.
-      await queryClient.ensureQueryData(accountQuery).catch(() => {
-        // Unauthenticated, MFA, etc. — RequireAuth / useAuth handle UX.
-      })
+      await ensureConsoleAccountQueryData(queryClient)
     }
     return {
       currentUser: null,

@@ -12,7 +12,9 @@
  * are redirected to their org main page.
  */
 
-import { ID } from '@appwrite.io/console'
+import { ID, type Models } from '@appwrite.io/console'
+import { setConsoleAccountCache } from '@/lib/console-account-cache'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { createConsoleProject } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { createOrganization } from '@/lib/react-query/hooks/organizations'
@@ -25,6 +27,32 @@ import {
 
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
+
+/** Preferred org from account prefs when still accessible, otherwise ensure a valid org. */
+export async function resolvePostAuthOrganizationId(
+  account?: Awaited<ReturnType<typeof fetchConsoleAccount>>,
+): Promise<string> {
+  const resolved = account ?? (await fetchConsoleAccount())
+  const prefs = (resolved.prefs || {}) as Record<string, unknown>
+  const fromPrefs = prefs.organization as string | undefined
+
+  if (fromPrefs) {
+    const response = await fetchOrganizations()
+    const exists = response.teams?.some((org) => org.$id === fromPrefs)
+    if (exists) return fromPrefs
+
+    const { organization: _removed, ...restPrefs } = prefs
+    const updatedAccount = await updateAccountPrefs(restPrefs)
+    if (updatedAccount && typeof updatedAccount === 'object' && '$id' in updatedAccount) {
+      setConsoleAccountCache(
+        updatedAccount as Models.User,
+        getConsoleAccountQueryRevision(),
+      )
+    }
+  }
+
+  return await ensurePersonalOrgAndFirstProject()
+}
 
 export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
   const account = await fetchConsoleAccount()

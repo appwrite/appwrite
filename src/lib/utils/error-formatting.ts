@@ -30,6 +30,19 @@ export function isHttpForbiddenError(error: unknown): boolean {
   return e.code === 403 || e.status === 403
 }
 
+/** True when the API responded with HTTP 404 (resource missing or inaccessible). */
+export function isHttpNotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: number; status?: number; name?: string; message?: string }
+  if (e.code === 404 || e.status === 404 || e.name === 'NotFoundError') return true
+  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  return (
+    message.includes('not found') ||
+    message.includes('404') ||
+    message.includes('does not exist')
+  )
+}
+
 /** True when the API responded with HTTP 401 (no active console session). */
 export function isHttpUnauthorizedError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false

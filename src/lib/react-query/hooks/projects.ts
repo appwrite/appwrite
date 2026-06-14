@@ -28,6 +28,7 @@ import {
 } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
+import { registerProjectRegionsFromProjects } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   ensureFingerprintServerTimeSynced,
@@ -178,8 +179,11 @@ export async function fetchActiveProjects(
     total: true,
   })
 
+  const projects = response.projects || []
+  registerProjectRegionsFromProjects(projects)
+
   return {
-    projects: response.projects || [],
+    projects,
     total: response.total || 0,
   }
 }
@@ -223,6 +227,7 @@ export async function fetchProjectsByIds(
   const projects: unknown[] = validIds
     .map((id) => byId.get(id))
     .filter((p): p is NonNullable<typeof p> => p != null)
+  registerProjectRegionsFromProjects(projects as Array<{ $id?: string; region?: string }>)
   return { projects }
 }
 

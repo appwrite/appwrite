@@ -1,85 +1,61 @@
 import {
   createFileRoute,
-  useNavigate,
-  useLocation,
+  redirect,
+  isRedirect,
 } from '@tanstack/react-router'
-import { useEffect, useRef } from 'react'
 import { Loader2 } from 'lucide-react'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
-import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
+import {
+  resolvePostAuthOrganizationId,
+} from '@/lib/ensure-personal-org'
+import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
+import {
+  ensureConsoleAccountQueryData,
+} from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_public/')({
-  component: RootRedirect,
-})
+  loader: async ({ context, location }) => {
+    if (typeof window === 'undefined') return
 
-function RootRedirect() {
-  const { account, accountAccessBlocked, isLoading, isMfaRequired } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const hasRedirectedRef = useRef(false)
-  const isEnsuringOrgRef = useRef(false)
-
-  useEffect(() => {
-    if (hasRedirectedRef.current) return
-
-    if (accountAccessBlocked) return
-
+    const account = await ensureConsoleAccountQueryData(context.queryClient)
     if (!account) return
 
-    // OAuth callback: persist GitHub as last login method
     const urlParams = searchParamsFromRouterLocation(location)
     const isOAuthCallback =
       urlParams.has('project') ||
       urlParams.has('key') ||
       location.pathname.includes('callback')
-    if (isOAuthCallback && account) {
+    if (isOAuthCallback) {
       const hasGitHubIdentity = account.identities?.some(
-        (identity: unknown) => identity.provider === 'github',
+        (identity) => identity.provider === 'github',
       )
       if (hasGitHubIdentity) {
         setLastLoginMethod('github')
       }
     }
 
-    const orgId = account.prefs?.organization as string | undefined
-
-    if (orgId) {
-      hasRedirectedRef.current = true
-      navigate({
+    try {
+      const orgId = await resolvePostAuthOrganizationId(account)
+      await prefetchOrganizationOverviewData(context.queryClient, orgId)
+      throw redirect({
         to: '/organizations/$orgId',
         params: { orgId },
         replace: true,
       })
-      return
+    } catch (error) {
+      if (isRedirect(error)) throw error
+      throw redirect({ to: '/account', replace: true })
     }
+  },
+  component: RootRedirect,
+})
 
-    // No org in prefs: ensure personal org + first project, then redirect to org
-    if (isEnsuringOrgRef.current) return
-    isEnsuringOrgRef.current = true
-    ensurePersonalOrgAndFirstProject()
-      .then((newOrgId) => {
-        hasRedirectedRef.current = true
-        navigate({
-          to: '/organizations/$orgId',
-          params: { orgId: newOrgId },
-          replace: true,
-        })
-      })
-      .catch(() => {
-        hasRedirectedRef.current = true
-        navigate({ to: '/account', replace: true })
-      })
-  }, [
-    account,
-    accountAccessBlocked,
-    navigate,
-    location.pathname,
-    location.search,
-  ])
+function RootRedirect() {
+  const { accountAccessBlocked, isLoading, isMfaRequired } = useAuth()
 
   if (!isLoading && accountAccessBlocked) {
     return (
@@ -98,6 +74,7 @@ function RootRedirect() {
     )
   }
 
-  // Blank screen while redirecting - root shows branded loader; never show "Loading..." here
+  // Authenticated users are redirected from the loader after org data is prefetched.
+  // Blank screen while the loader runs; root fullscreen loader covers this route.
   return <div className="fixed inset-0 bg-background" aria-hidden />
 }

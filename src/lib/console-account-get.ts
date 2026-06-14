@@ -15,7 +15,30 @@ import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 
 type RawConsoleAccountGet = () => Promise<Models.User>
 
+const CONSOLE_SESSION_KEY = 'a_session_console'
+
 let rawConsoleAccountGet: RawConsoleAccountGet | null = null
+
+/**
+ * Lightweight session probe (no SDK import) so we can bypass cached guest 401s
+ * after `createEmailPasswordSession` / OAuth when a cookie already exists.
+ */
+export function hasLikelyConsoleSession(): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const cookieFallback = window.localStorage.getItem('cookieFallback')
+    if (cookieFallback) {
+      const parsed = JSON.parse(cookieFallback) as Record<string, string>
+      const session = parsed[CONSOLE_SESSION_KEY]
+      if (typeof session === 'string' && session.trim()) return true
+    }
+  } catch {
+    /* private mode / invalid JSON */
+  }
+
+  return document.cookie.includes(`${CONSOLE_SESSION_KEY}=`)
+}
 
 /** Called once from `sdk.ts` so every `account.get` shares the same singleton. */
 export function registerConsoleAccountGet(fn: RawConsoleAccountGet): void {
@@ -53,7 +76,7 @@ export async function fetchConsoleAccount(
     if (cached) return cached
 
     const cachedUnauthenticated = getConsoleAccountUnauthenticatedError(revision)
-    if (cachedUnauthenticated) {
+    if (cachedUnauthenticated && !hasLikelyConsoleSession()) {
       throw cachedUnauthenticated
     }
   } else {

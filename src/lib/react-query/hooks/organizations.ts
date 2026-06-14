@@ -362,10 +362,11 @@ export function organizationFailedInvoicePresenceQueryOptions(
 export function useOrganizationFailedInvoicePresence(
   organizationId: string | null | undefined,
 ) {
-  const billingEnabled = getActiveProfileFeatures().billing
+  const { access } = useOrganizationScopes(organizationId)
+  const canFetchInvoices = canSeeOrganizationBilling(access)
   return useQuery({
     ...organizationFailedInvoicePresenceQueryOptions(organizationId),
-    enabled: !!organizationId && billingEnabled,
+    enabled: !!organizationId && canFetchInvoices,
   })
 }
 
@@ -1359,6 +1360,36 @@ export function organizationScopesQueryOptions(
   })
 }
 
+/** Invoice list APIs require `billing.read` when org roles are enabled. */
+export function canSeeOrganizationBilling(access: ConsoleAccess): boolean {
+  const features = getActiveProfileFeatures()
+  return !!(features.billing && (!features.orgRoles || access.canSeeBilling))
+}
+
+export async function resolveOrganizationAccess(
+  queryClient: QueryClient,
+  organizationId: string,
+): Promise<ConsoleAccess> {
+  const features = getActiveProfileFeatures()
+  if (!features.orgRoles) return FULL_ACCESS
+  const data = await queryClient.ensureQueryData(
+    organizationScopesQueryOptions(organizationId),
+  )
+  return deriveAccessFromRolesScopes(data.roles, data.scopes)
+}
+
+export async function prefetchOrganizationInvoiceDataIfAllowed(
+  queryClient: QueryClient,
+  organizationId: string,
+): Promise<void> {
+  if (!getActiveProfileFeatures().billing) return
+  const access = await resolveOrganizationAccess(queryClient, organizationId)
+  if (!canSeeOrganizationBilling(access)) return
+  await queryClient
+    .ensureQueryData(organizationFailedInvoicePresenceQueryOptions(organizationId))
+    .catch(() => {})
+}
+
 /**
  * Query options for fetching all available billing plans
  *
@@ -1854,9 +1885,12 @@ export function useOrganizationInvoices(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery(
-    organizationInvoicesQueryOptions(organizationId, page, limit, queries),
-  )
+  const { access } = useOrganizationScopes(organizationId)
+  const canFetchInvoices = canSeeOrganizationBilling(access)
+  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
+    ...organizationInvoicesQueryOptions(organizationId, page, limit, queries),
+    enabled: !!organizationId && canFetchInvoices,
+  })
 
   return {
     invoices: data?.invoices || [],

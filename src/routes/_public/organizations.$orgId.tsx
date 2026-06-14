@@ -6,20 +6,7 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import {
-  organizationsQueryOptions,
-  organizationQueryOptions,
-  organizationPlanQueryOptions,
-  organizationFailedInvoicePresenceQueryOptions,
-  organizationScopesQueryOptions,
-  activeProjectsQueryOptions,
-  organizationMembershipsQueryOptions,
-  consoleTeamQueryOptions,
-  pinnedProjectsQueryOptions,
-} from '@/lib/react-query/hooks'
-import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { z } from 'zod'
 
 const searchSchema = z
@@ -43,58 +30,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     // Order: console team → pinned IDs → active projects list key matches OrgOverview (exclude pinned).
     if (orgId) {
       try {
-        const features = getActiveProfileFeatures()
-        await queryClient.ensureQueryData(organizationsQueryOptions())
-        await queryClient.ensureQueryData(organizationQueryOptions(orgId))
-        if (features.billing) {
-          await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
-          await queryClient
-            .ensureQueryData(
-              organizationFailedInvoicePresenceQueryOptions(orgId),
-            )
-            .catch(() => {})
-        }
-
-        await queryClient.ensureQueryData(consoleTeamQueryOptions(orgId))
-        const team = queryClient.getQueryData(
-          consoleTeamQueryOptions(orgId).queryKey,
-        ) as { prefs?: Record<string, unknown> } | null | undefined
-        const pinnedIds = parsePinnedProjectIds(team?.prefs)
-
-        const parallel: Promise<unknown>[] = [
-          queryClient.ensureQueryData(
-            organizationMembershipsQueryOptions(
-              orgId,
-              0,
-              GRID_DEFAULT_PAGE_SIZE,
-              '',
-            ),
-          ),
-          queryClient.ensureQueryData(
-            activeProjectsQueryOptions(
-              orgId,
-              0,
-              GRID_DEFAULT_PAGE_SIZE,
-              '',
-              pinnedIds,
-            ),
-          ),
-        ]
-        if (features.orgRoles) {
-          parallel.push(
-            queryClient
-              .ensureQueryData(organizationScopesQueryOptions(orgId))
-              .catch(() => {}),
-          )
-        }
-        if (pinnedIds.length > 0) {
-          parallel.push(
-            queryClient.ensureQueryData(
-              pinnedProjectsQueryOptions(orgId, pinnedIds),
-            ),
-          )
-        }
-        await Promise.all(parallel)
+        await prefetchOrganizationOverviewData(queryClient, orgId)
       } catch (error) {
         console.warn('Failed to fetch organization data in loader:', error)
       }

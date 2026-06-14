@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createFileRoute,
   useNavigate,
@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { pageTitle } from '@/lib/utils/page-title'
+import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 
 const searchSchema = z.object({
   teamId: z.string().optional(),
@@ -81,6 +82,7 @@ function AcceptInviteContent() {
   const search = useSearch({ from: '/_auth/join' })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [teamName, setTeamName] = useState<string | null>(null)
@@ -128,6 +130,7 @@ function AcceptInviteContent() {
     onSuccess: async () => {
       setAccepted(true)
       toast.success('Successfully joined the organization!')
+      await refreshConsoleAccountAfterAuth(queryClient)
       // Invalidate router to refresh auth state
       await router.invalidate()
       // Redirect to the organization page after a short delay

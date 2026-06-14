@@ -48,7 +48,7 @@ import {
   organizationsQueryOptions,
   organizationQueryOptions,
   organizationPlanQueryOptions,
-  organizationFailedInvoicePresenceQueryOptions,
+  prefetchOrganizationInvoiceDataIfAllowed,
   organizationScopesQueryOptions,
   activeProjectsQueryOptions,
   deleteOrganization,
@@ -854,6 +854,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     },
   )
 
+  const { data: organizationDetail } = useQuery({
+    ...organizationQueryOptions(orgId),
+    placeholderData: keepPreviousData,
+  })
+
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
   const organizations = useMemo(() => {
@@ -891,9 +896,32 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Get selected organization from URL param (orgId)
   const selectedOrg = useMemo(() => {
-    if (!orgId || !organizations.length) return null
-    return organizations.find((org: Organization) => org.$id === orgId) || null
-  }, [orgId, organizations])
+    if (!orgId) return null
+    if (organizations.length > 0) {
+      const fromList = organizations.find(
+        (org: Organization) => org.$id === orgId,
+      )
+      if (fromList) return fromList
+    }
+    if (organizationDetail && organizationDetail.$id === orgId) {
+      const planName = getPlanNameFromTier(
+        organizationDetail.billingPlan ??
+          (organizationDetail.prefs as { tier?: string })?.tier ??
+          'free',
+      )
+      return {
+        $id: organizationDetail.$id,
+        name: organizationDetail.name,
+        slug: organizationDetail.name.toLowerCase().replace(/\s+/g, '-'),
+        avatar: undefined,
+        plan: planName as CanonicalPlanId,
+        members: organizationDetail.total || 0,
+        status: organizationDetail.status,
+        billingPlanDowngrade: organizationDetail.billingPlanDowngrade,
+      } satisfies Organization
+    }
+    return null
+  }, [orgId, organizations, organizationDetail])
 
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
@@ -1661,11 +1689,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               queryClient.ensureQueryData(
                 organizationPlanQueryOptions(nextOrgId),
               ),
-              queryClient
-                .ensureQueryData(
-                  organizationFailedInvoicePresenceQueryOptions(nextOrgId),
-                )
-                .catch(() => {}),
+              prefetchOrganizationInvoiceDataIfAllowed(
+                queryClient,
+                nextOrgId,
+              ),
             ]
           : []),
         ...(features.orgRoles

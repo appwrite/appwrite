@@ -9,6 +9,7 @@ import {
   bandwidthTopConsumersQueryOptions,
   requestsChartOverviewQueryOptions,
 } from '@/lib/react-query/hooks'
+import { ensureProjectRegion } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -28,6 +29,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
     if (!projectId) return undefined
 
     try {
+      // Parent layout loader may still be resolving region; register before project-scoped prefetch.
+      await ensureProjectRegion(queryClient, projectId)
+
       // Only block on API keys — project is prefetched by the parent layout.
       const apiKeysRaw = await queryClient
         .ensureQueryData(apiKeysQueryOptions(projectId))

@@ -11,9 +11,9 @@ import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/share
 import {
   fetchProject,
   organizationPlanQueryOptions,
-  organizationFailedInvoicePresenceQueryOptions,
   organizationScopesQueryOptions,
   organizationsQueryOptions,
+  prefetchOrganizationInvoiceDataIfAllowed,
   useProject,
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
@@ -23,6 +23,7 @@ import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-va
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
+import { registerProjectRegionFromProject } from '@/lib/project-region'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ProjectCliShellLayout } from '@/components/global/cli-shell/ProjectCliShellLayout'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
@@ -124,6 +125,8 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           .catch(() => {}),
       ])
 
+      registerProjectRegionFromProject(projectData)
+
       // Fetch organization plan if we have a teamId (critical for header/limit checking)
       if (projectData?.teamId) {
         const features = getActiveProfileFeatures()
@@ -131,13 +134,10 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           await queryClient
             .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
             .catch(() => {})
-          await queryClient
-            .ensureQueryData(
-              organizationFailedInvoicePresenceQueryOptions(
-                projectData.teamId,
-              ),
-            )
-            .catch(() => {})
+          await prefetchOrganizationInvoiceDataIfAllowed(
+            queryClient,
+            projectData.teamId,
+          )
         }
         if (features.orgRoles) {
           await queryClient

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { VerifyEmail } from '@/components/global/auth/VerifyEmail'
@@ -8,7 +8,11 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { pageTitle } from '@/lib/utils/page-title'
-import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
+import {
+  resolvePostAuthOrganizationId,
+} from '@/lib/ensure-personal-org'
+import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 
 function isValidRelativeRedirect(url: string): boolean {
@@ -54,6 +58,7 @@ function VerifyEmailPage() {
   const search = useSearch({ from: '/_auth/verify-email' })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const confirmMutation = useMutation({
     mutationFn: async (params: { userId: string; secret: string }) => {
@@ -65,7 +70,13 @@ function VerifyEmailPage() {
     onSuccess: async () => {
       toast.success('Email verified successfully')
       try {
-        const orgId = await ensurePersonalOrgAndFirstProject()
+        const account = await refreshConsoleAccountAfterAuth(queryClient)
+        await prefetchPostAuthDestination(
+          queryClient,
+          account,
+          search.redirect,
+        )
+        const orgId = await resolvePostAuthOrganizationId(account)
         await router.invalidate()
         if (search.redirect && isValidRelativeRedirect(search.redirect)) {
           navigate({ to: search.redirect })

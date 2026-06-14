@@ -2,8 +2,10 @@ import type { QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
-  consoleAccountQueryOptions,
+  ensureConsoleAccountQueryData,
   isConsoleAccountQuerySettled,
+  refreshConsoleAccountAfterAuth,
+  shouldRevalidateConsoleAccount,
 } from '@/lib/react-query/hooks/auth'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 
@@ -18,13 +20,26 @@ export async function prefetchOptionalAuthHeaderData(
 ) {
   if (typeof window === 'undefined') return
 
-  const accountQuery = consoleAccountQueryOptions()
+  if (shouldRevalidateConsoleAccount(queryClient)) {
+    try {
+      const account = await refreshConsoleAccountAfterAuth(queryClient)
+      const orgId = account.prefs?.organization as string | undefined
+      if (orgId) {
+        await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
+      }
+    } catch {
+      // Unauthenticated or optional fetch errors — header handles guest state.
+    }
+    return
+  }
+
   if (isConsoleAccountQuerySettled(queryClient)) {
     return
   }
 
   try {
-    const account = await queryClient.ensureQueryData(accountQuery)
+    const account = await ensureConsoleAccountQueryData(queryClient)
+    if (!account) return
     const orgId = account.prefs?.organization as string | undefined
     if (orgId) {
       await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))

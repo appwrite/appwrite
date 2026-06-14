@@ -15,13 +15,19 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { ProjectAuthMethodId } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { setConsoleAccountCache } from '@/lib/console-account-cache'
+import {
+  clearConsoleAccountCache,
+  getConsoleAccountUnauthenticatedError,
+  setConsoleAccountCache,
+} from '@/lib/console-account-cache'
 import {
   fetchConsoleAccount,
   getConsoleAccountFromSingleton,
+  hasLikelyConsoleSession,
   type FetchConsoleAccountOptions,
 } from '@/lib/console-account-get'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
+import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
   buildPostgresSqlEditorHeightPrefs,
@@ -134,10 +140,7 @@ export {
   fetchConsoleAccount,
   getConsoleAccountFromSingleton as getConsoleAccountSync,
 } from '@/lib/console-account-get'
-export {
-  clearConsoleAccountCache,
-  setConsoleAccountCache,
-} from '@/lib/console-account-cache'
+export { clearConsoleAccountCache, setConsoleAccountCache }
 
 function isConsoleAccountUser(value: unknown): value is Models.User {
   return !!value && typeof value === 'object' && '$id' in value
@@ -243,6 +246,82 @@ export function isConsoleAccountQuerySettled(
   const { queryKey } = consoleAccountQueryOptions({ revision })
   const state = queryClient.getQueryState(queryKey)
   return state?.status === 'success' || state?.status === 'error'
+}
+
+/** Guest 401 may be cached while a session cookie exists (e.g. right after sign-in). */
+export function shouldRevalidateConsoleAccount(
+  queryClient: QueryClient,
+  revision: number = getConsoleAccountQueryRevision(),
+): boolean {
+  if (getConsoleAccountUnauthenticatedError(revision)) return true
+
+  const { queryKey } = consoleAccountQueryOptions({ revision })
+  const state = queryClient.getQueryState(queryKey)
+  if (state?.status === 'error' && isHttpUnauthorizedError(state.error)) {
+    return true
+  }
+
+  return false
+}
+
+/** Auth routes: also fetch when a session exists but account is not in any cache yet. */
+export function shouldRevalidateConsoleAccountOnAuthRoute(
+  queryClient: QueryClient,
+  revision: number = getConsoleAccountQueryRevision(),
+): boolean {
+  if (shouldRevalidateConsoleAccount(queryClient, revision)) return true
+  if (!hasLikelyConsoleSession()) return false
+
+  const { queryKey } = consoleAccountQueryOptions({ revision })
+  const hasAccount =
+    getConsoleAccountFromSingleton(revision) ??
+    queryClient.getQueryData<Models.User>(queryKey)
+  return !hasAccount
+}
+
+/**
+ * Force a fresh `account.get`, then sync the module singleton and React Query.
+ * Use after sign-in, sign-up, MFA, and when clearing stale guest cache on auth pages.
+ */
+export async function refreshConsoleAccountAfterAuth(
+  queryClient: QueryClient,
+): Promise<Models.User> {
+  clearConsoleAccountCache()
+  queryClient.removeQueries({ queryKey: ['account', 'console'] })
+  const revision = getConsoleAccountQueryRevision()
+  const account = await fetchConsoleAccount({ revision, force: true })
+  commitConsoleAccountToCaches(queryClient, account, revision)
+  return account
+}
+
+export async function ensureConsoleAccountOnAuthRoute(
+  queryClient: QueryClient,
+): Promise<void> {
+  if (!shouldRevalidateConsoleAccountOnAuthRoute(queryClient)) return
+  try {
+    await refreshConsoleAccountAfterAuth(queryClient)
+  } catch {
+    // Guest on auth pages is expected.
+  }
+}
+
+/** Prefetch or refresh console account for protected route loaders. */
+export async function ensureConsoleAccountQueryData(
+  queryClient: QueryClient,
+): Promise<Models.User | undefined> {
+  if (shouldRevalidateConsoleAccount(queryClient)) {
+    try {
+      return await refreshConsoleAccountAfterAuth(queryClient)
+    } catch {
+      return undefined
+    }
+  }
+
+  try {
+    return await queryClient.ensureQueryData(consoleAccountQueryOptions())
+  } catch {
+    return undefined
+  }
 }
 
 // ============================================================================

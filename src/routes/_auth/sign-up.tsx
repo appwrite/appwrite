@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import {
   createFileRoute,
@@ -16,7 +16,9 @@ import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -47,6 +49,7 @@ function SignUpPage() {
   const search = useSearch({ from: '/_auth/sign-up' })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isGitHubLoading, setIsGitHubLoading] = useState(false)
 
   const handleGitHubLogin = async () => {
@@ -110,6 +113,12 @@ function SignUpPage() {
     },
     onSuccess: async () => {
       setLastLoginMethod('email')
+      const account = await refreshConsoleAccountAfterAuth(queryClient)
+      await prefetchPostAuthDestination(
+        queryClient,
+        account,
+        search.redirect,
+      )
       await router.invalidate()
 
       const features = getActiveProfileFeatures()
@@ -135,10 +144,9 @@ function SignUpPage() {
         return
       }
 
-      // No verification: ensure personal org + first project, then redirect to org
+      // No verification: org was ensured during prefetchPostAuthDestination
       try {
-        const orgId = await ensurePersonalOrgAndFirstProject()
-        await router.invalidate()
+        const orgId = await resolvePostAuthOrganizationId(account)
         if (search.redirect && isValidRelativeRedirect(search.redirect)) {
           navigate({ to: search.redirect })
         } else {

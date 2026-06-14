@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import {
   createFileRoute,
@@ -15,6 +15,9 @@ import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
+import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -45,6 +48,7 @@ function SignInPage() {
   const search = useSearch({ from: '/_auth/sign-in' })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isGitHubLoading, setIsGitHubLoading] = useState(false)
 
   const handleGitHubLogin = async () => {
@@ -105,13 +109,28 @@ function SignInPage() {
     },
     onSuccess: async () => {
       // Only called if account.get() succeeds (no MFA required)
-      // Store email as last login method
       setLastLoginMethod('email')
-      await router.invalidate()
-      if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-        navigate({ to: search.redirect })
-      } else {
-        navigate({ to: '/' })
+      try {
+        const account = await refreshConsoleAccountAfterAuth(queryClient)
+        await prefetchPostAuthDestination(
+          queryClient,
+          account,
+          search.redirect,
+        )
+        await router.invalidate()
+        if (search.redirect && isValidRelativeRedirect(search.redirect)) {
+          navigate({ to: search.redirect })
+        } else {
+          const orgId = await resolvePostAuthOrganizationId(account)
+          navigate({
+            to: '/organizations/$orgId',
+            params: { orgId },
+            replace: true,
+          })
+        }
+      } catch (error: unknown) {
+        console.error('Post sign-in navigation error:', error)
+        toast.error(getErrorMessage(error, 'Signed in but could not open the console'))
       }
     },
     onError: async (error: unknown) => {
