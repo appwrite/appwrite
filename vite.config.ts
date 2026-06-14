@@ -176,6 +176,16 @@ export default defineConfig(async () => {
         : process.env.SENTRY_AUTH_TOKEN
           ? 'hidden'
           : false,
+      rolldownOptions: {
+        // almostnode uses direct eval for Node vm/module emulation in the CLI shell.
+        onwarn(warning, defaultHandler) {
+          const sourceId = warning.id?.replace(/\\/g, '/')
+          if (warning.code === 'EVAL' && sourceId?.includes('almostnode')) {
+            return
+          }
+          defaultHandler(warning)
+        },
+      },
     },
     test: {
       globals: true,

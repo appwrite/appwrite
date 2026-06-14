@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { builtinModules, createRequire } from 'node:module'
 import path from 'node:path'
 import type { Plugin } from 'vite'
 import { patchAlmostnodeBundle } from './almostnode-patches'
@@ -37,12 +38,29 @@ function stripViteModuleId(id: string): string {
   return id.split('?')[0]?.split('#')[0] ?? id
 }
 
+function isAlmostnodeBundledFile(id: string): boolean {
+  const normalized = stripViteModuleId(id).replace(/\\/g, '/')
+  return (
+    normalized.includes('almostnode/dist/') ||
+    normalized.includes('.cache/almostnode/')
+  )
+}
+
 function isAlmostnodeMainEntry(id: string): boolean {
   const normalized = stripViteModuleId(id).replace(/\\/g, '/')
   return (
     normalized.includes('almostnode/dist/index.mjs') ||
     normalized.includes('.cache/almostnode/index.mjs')
   )
+}
+
+function isBareModuleId(source: string): boolean {
+  return !source.startsWith('.') && !source.startsWith('/') && !source.includes('\0')
+}
+
+function isNodeBuiltin(source: string): boolean {
+  const name = source.startsWith('node:') ? source.slice(5) : source
+  return builtinModules.includes(name)
 }
 
 function writeIfChanged(filePath: string, contents: string): void {
@@ -97,6 +115,12 @@ function readRuntimeWorkerSource(
  * rolldown-vite still tries to bundle that worker and fails because the path
  * points at almostnode's own build output. Rewrite the URL to a plain string
  * and emit the worker asset into the app bundle.
+ *
+ * The patched bundle also keeps bare imports to almostnode's own dependencies
+ * (pako, brotli-wasm, etc.). pnpm nests those as siblings in the virtual store,
+ * not under the symlinked `node_modules/almostnode/node_modules` tree, so imports
+ * from `.cache/almostnode` cannot resolve them without this hook. bun/npm hoist
+ * transitive deps to the project root and mask the issue locally.
  */
 export function almostnodeBuildPlugin(
   almostnodeDistDir: string,
@@ -104,11 +128,31 @@ export function almostnodeBuildPlugin(
 ): Plugin {
   const assetsDir = path.join(almostnodeDistDir, 'assets')
   const cacheAssetsDir = path.join(cacheDir, 'assets')
+  const almostnodeResolveEntry = fs.realpathSync(
+    path.join(almostnodeDistDir, 'index.mjs'),
+  )
+  const resolveAlmostnodeDependency = createRequire(almostnodeResolveEntry).resolve
   let workerFileName = findRuntimeWorkerAsset(assetsDir)
 
   return {
     name: 'almostnode-build-fix',
     enforce: 'pre',
+    resolveId(source, importer) {
+      if (
+        !importer ||
+        !isBareModuleId(source) ||
+        isNodeBuiltin(source) ||
+        !isAlmostnodeBundledFile(importer)
+      ) {
+        return null
+      }
+
+      try {
+        return resolveAlmostnodeDependency(source)
+      } catch {
+        return null
+      }
+    },
     buildStart() {
       const cached = ensureAlmostnodePatchCache(almostnodeDistDir, cacheDir)
       workerFileName = cached.workerFileName ?? workerFileName

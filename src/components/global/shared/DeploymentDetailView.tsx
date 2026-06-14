@@ -422,6 +422,12 @@ export function DeploymentDetailView({
   const urlCopyHideAfterCopyTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null)
+  /** Commit hash copy icon stays hidden after copy until pointer leaves that row. */
+  const [commitCopyHiddenUntilLeave, setCommitCopyHiddenUntilLeave] =
+    useState(false)
+  const commitCopyHideAfterCopyTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
 
   // Live elapsed seconds when deployment is processing/building (updates every second)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -510,6 +516,11 @@ export function DeploymentDetailView({
       urlCopyHideAfterCopyTimeoutRef.current = null
     }
     setUrlCopyHiddenUntilLeave(null)
+    if (commitCopyHideAfterCopyTimeoutRef.current) {
+      clearTimeout(commitCopyHideAfterCopyTimeoutRef.current)
+      commitCopyHideAfterCopyTimeoutRef.current = null
+    }
+    setCommitCopyHiddenUntilLeave(false)
   }, [deployment?.$id])
 
   useEffect(() => {
@@ -517,6 +528,10 @@ export function DeploymentDetailView({
       if (urlCopyHideAfterCopyTimeoutRef.current) {
         clearTimeout(urlCopyHideAfterCopyTimeoutRef.current)
         urlCopyHideAfterCopyTimeoutRef.current = null
+      }
+      if (commitCopyHideAfterCopyTimeoutRef.current) {
+        clearTimeout(commitCopyHideAfterCopyTimeoutRef.current)
+        commitCopyHideAfterCopyTimeoutRef.current = null
       }
     }
   }, [])
@@ -804,22 +819,69 @@ export function DeploymentDetailView({
               </p>
             ) : null}
             {deployment.providerCommitHash ? (
-              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <div
+                className="group flex min-w-0 items-center gap-1 pt-0.5"
+                onMouseLeave={() => {
+                  if (commitCopyHideAfterCopyTimeoutRef.current) {
+                    clearTimeout(commitCopyHideAfterCopyTimeoutRef.current)
+                    commitCopyHideAfterCopyTimeoutRef.current = null
+                  }
+                  setCommitCopyHiddenUntilLeave(false)
+                }}
+              >
                 <GitCommit className="h-3 w-3 shrink-0 text-muted-foreground" />
-                {resolvedCommitUrl ? (
-                  <a
-                    href={resolvedCommitUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-[11px] font-medium text-primary hover:underline"
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  {resolvedCommitUrl ? (
+                    <a
+                      href={resolvedCommitUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-w-0 truncate font-mono text-[11px] font-medium text-primary hover:underline"
+                      title={deployment.providerCommitHash}
+                    >
+                      {deployment.providerCommitHash.slice(0, 7)}
+                    </a>
+                  ) : (
+                    <span
+                      className="min-w-0 truncate font-mono text-[11px] font-medium text-foreground"
+                      title={deployment.providerCommitHash}
+                    >
+                      {deployment.providerCommitHash.slice(0, 7)}
+                    </span>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-6 w-6 shrink-0 p-0 text-muted-foreground transition-opacity duration-150',
+                      'hover:bg-muted/60 hover:text-foreground',
+                      commitCopyHiddenUntilLeave
+                        ? 'pointer-events-none opacity-0'
+                        : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100',
+                    )}
+                    aria-label="Copy commit hash"
+                    title="Copy commit hash"
+                    onClick={(e) => {
+                      const el = e.currentTarget as HTMLButtonElement
+                      void navigator.clipboard.writeText(
+                        deployment.providerCommitHash,
+                      )
+                      toast.success('Commit copied')
+                      el.blur()
+                      if (commitCopyHideAfterCopyTimeoutRef.current) {
+                        clearTimeout(commitCopyHideAfterCopyTimeoutRef.current)
+                      }
+                      commitCopyHideAfterCopyTimeoutRef.current =
+                        window.setTimeout(() => {
+                          commitCopyHideAfterCopyTimeoutRef.current = null
+                          setCommitCopyHiddenUntilLeave(true)
+                        }, URL_COPY_HIDE_DELAY_MS)
+                    }}
                   >
-                    {deployment.providerCommitHash.slice(0, 7)}
-                  </a>
-                ) : (
-                  <span className="font-mono text-[11px] font-medium text-foreground">
-                    {deployment.providerCommitHash.slice(0, 7)}
-                  </span>
-                )}
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             ) : null}
           </section>
@@ -965,6 +1027,7 @@ export function DeploymentDetailView({
     sidebarScreenshotTheme,
     sidebarScreenshotLoaded,
     urlCopyHiddenUntilLeave,
+    commitCopyHiddenUntilLeave,
     avifSupported,
   ])
 
