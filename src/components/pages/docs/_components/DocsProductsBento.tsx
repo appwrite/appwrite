@@ -75,7 +75,7 @@ export function DocsProductsBento() {
               <DocsProductTileHoverLight variant={index} />
               <div className="relative z-10">
                 <ProductTileIcon icon={Icon} />
-                <h3 className="mt-3 text-[14px] font-semibold text-foreground">
+                <h3 className="mt-3 text-[13px] font-medium text-foreground">
                   {product.title}
                 </h3>
                 <p className="mt-2 text-[13px] leading-5 text-muted-foreground">

@@ -108,7 +108,7 @@ export function DocsTutorialsScroll() {
                   />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-[14px] font-semibold text-foreground">
+                  <h3 className="text-[13px] font-medium text-foreground">
                     {tutorial.title}
                   </h3>
                   <p className="mt-2 text-[13px] leading-5 text-muted-foreground">

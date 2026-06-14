@@ -15,12 +15,14 @@ import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/date-utils'
 import {
   getAllBlogAuthors,
+  getPrimaryPostCategorySlug,
+  getPostCategoryLabel,
   getRelatedBlogPosts,
-  normalizeCategory,
   resolveBlogAuthors,
 } from '@/lib/blog/content'
 import type { BlogAuthor, BlogCategory, BlogPost, BlogPostMeta } from '@/lib/blog/types'
 import {
+  BLOG_CATEGORY_TITLE_CLASS,
   BLOG_PAGE_DESCRIPTION_CLASS,
   BLOG_PAGE_TITLE_CLASS,
 } from '@/lib/blog/prose-typography'
@@ -39,10 +41,8 @@ export function PostView({ post }: PostViewProps) {
   const authors = resolveBlogAuthors(post.author)
   const allAuthors = getAllBlogAuthors()
   const relatedPosts = getRelatedBlogPosts(post.slug)
-  const categorySlug = normalizeCategory(post.category)
-  const categoryLabel = post.category
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase())
+  const categorySlug = getPrimaryPostCategorySlug(post)
+  const categoryLabel = getPostCategoryLabel(post)
 
   return (
     <div className="relative bg-background">
@@ -183,7 +183,7 @@ export function CategoryView({ category, posts, authors }: CategoryViewProps) {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem className="min-w-0">
-                <BreadcrumbPage className="truncate font-aeonik-pro">
+                <BreadcrumbPage className="truncate">
                   {category.name}
                 </BreadcrumbPage>
               </BreadcrumbItem>
@@ -191,7 +191,7 @@ export function CategoryView({ category, posts, authors }: CategoryViewProps) {
           </Breadcrumb>
 
           <header className="mt-8 max-w-4xl border-y border-border py-6">
-            <h1 className={BLOG_PAGE_TITLE_CLASS}>{category.name}</h1>
+            <h1 className={BLOG_CATEGORY_TITLE_CLASS}>{category.name}</h1>
             <p className={BLOG_PAGE_DESCRIPTION_CLASS}>
               {category.description}
             </p>

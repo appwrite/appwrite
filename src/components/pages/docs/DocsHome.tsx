@@ -143,7 +143,7 @@ export function DocsHome({ variant = 'page' }: DocsHomeProps) {
               <div className="flex items-start gap-3">
                 <IntegrationIcon title={item.title} iconSrc={item.iconSrc} />
                 <div>
-                  <h3 className="text-[14px] font-semibold text-foreground">
+                  <h3 className="text-[13px] font-medium text-foreground">
                     {item.title}
                   </h3>
                   <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
@@ -174,7 +174,7 @@ export function DocsHome({ variant = 'page' }: DocsHomeProps) {
             <DocsRouteLink key={item.href} href={item.href} className={TEXT_CARD_CLASS}>
               <div className="flex items-center gap-2">
                 <MigrationIcon title={item.title} iconSrc={item.iconSrc} />
-                <h3 className="text-[14px] font-semibold text-foreground">
+                <h3 className="text-[13px] font-medium text-foreground">
                   {item.title}
                 </h3>
               </div>

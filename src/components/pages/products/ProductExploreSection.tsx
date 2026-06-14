@@ -1,6 +1,8 @@
-import { Link } from '@tanstack/react-router'
+'use client'
+
 import { ArrowRight } from 'lucide-react'
 import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
+import { scrollMarketingMainToTop } from '@/lib/marketing/MarketingScrollToTop'
 import { PRODUCT_IDS, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
@@ -19,8 +21,24 @@ function ProductExploreCard({
   const product = PRODUCT_REGISTRY[productId]
   const Icon = product.icon
 
-  const inner = (
-    <>
+  const cardClassName = cn(
+    'group flex items-start gap-3 rounded-xl border p-4 text-left transition-colors',
+    isCurrent
+      ? 'border-border bg-muted/30'
+      : 'border-border bg-card/45 hover:bg-accent/15',
+  )
+
+  return (
+    <a
+      href={product.path}
+      aria-current={isCurrent ? 'page' : undefined}
+      className={cardClassName}
+      onClick={(event) => {
+        if (!isCurrent) return
+        event.preventDefault()
+        scrollMarketingMainToTop('smooth')
+      }}
+    >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
         <Icon className="size-4 text-muted-foreground" aria-hidden />
       </span>
@@ -34,32 +52,7 @@ function ProductExploreCard({
           aria-hidden
         />
       ) : null}
-    </>
-  )
-
-  const cardClassName = cn(
-    'group flex items-start gap-3 rounded-xl border p-4 text-left transition-colors',
-    isCurrent
-      ? 'border-border bg-muted/30'
-      : 'border-border bg-card/45 hover:bg-accent/15',
-  )
-
-  if (isCurrent) {
-    return (
-      <article className={cardClassName} aria-current="page">
-        {inner}
-      </article>
-    )
-  }
-
-  return (
-    <Link
-      to="/products/$productId"
-      params={{ productId }}
-      className={cardClassName}
-    >
-      {inner}
-    </Link>
+    </a>
   )
 }
 

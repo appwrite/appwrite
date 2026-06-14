@@ -47,9 +47,16 @@ export type BlogCategory = {
   href: string
 }
 
+export type BlogCategorySpotlight = {
+  category: BlogCategory
+  posts: BlogPostMeta[]
+}
+
 export type BlogPostsPage = {
   posts: BlogPostMeta[]
   featured: BlogPostMeta | null
+  secondaryFeatured: BlogPostMeta[]
+  categorySpotlights: BlogCategorySpotlight[]
   authors: BlogAuthor[]
   categories: BlogCategory[]
   currentPage: number

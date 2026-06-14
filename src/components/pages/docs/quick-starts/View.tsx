@@ -46,7 +46,7 @@ export function View() {
                         className={cn('size-4', PUBLIC_ICON_MUTED_CLASSES)}
                       />
                     </span>
-                    <span className="text-[14px] font-medium text-foreground">
+                    <span className="text-[13px] font-medium text-foreground">
                       {item.title}
                     </span>
                   </DocsRouteLink>

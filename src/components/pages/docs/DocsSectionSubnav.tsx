@@ -12,6 +12,7 @@ import {
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavParent, DocsNavTree } from '@/lib/docs/types'
 import {
+  DOCS_NAV_SCROLL_CLASS,
   DOCS_SECTION_HEADER_CLASS,
   docsSidebarNavLinkClassName,
 } from '@/lib/docs/nav-styles'
@@ -172,7 +173,7 @@ export function DocsSectionSubnavPanel({
           <SectionParentLink parent={parent} />
         </div>
       ) : null}
-      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4">
+      <nav className={cn('min-h-0 flex-1 overflow-y-auto px-3 py-4', DOCS_NAV_SCROLL_CLASS)}>
         <SectionNavContent
           navigation={navigation}
           parent={null}
@@ -211,7 +212,7 @@ export function DocsSectionSubnavMobile({
               {parent?.label ?? 'Section'}
             </SheetTitle>
           </SheetHeader>
-          <div className="overflow-y-auto px-4 py-4">
+          <div className={cn('overflow-y-auto px-4 py-4', DOCS_NAV_SCROLL_CLASS)}>
             <SectionNavContent
               navigation={navigation}
               parent={parent}

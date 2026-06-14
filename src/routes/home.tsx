@@ -25,6 +25,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { MarketingProductPills } from '@/components/pages/marketing/MarketingProductPills'
 import { InitOrgPromoBanner } from '@/components/pages/organizations/$orgId/overview/_components/InitOrgPromoBanner'
 import { AiSection } from '@/components/pages/home/AiSection'
+import { InitSection } from '@/components/pages/home/InitSection'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
@@ -35,6 +36,7 @@ import {
 } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
 import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
+import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
@@ -148,6 +150,14 @@ const productBentoItems: {
     compact: true,
   },
 ]
+
+const productBentoHrefByTitle = Object.fromEntries(
+  [
+    ...marketingProductToolkit.build,
+    ...marketingProductToolkit.deploy,
+    ...marketingProductToolkit.protect,
+  ].map((item) => [item.label, item.href]),
+) as Record<string, string>
 
 const securityItems: {
   title: string
@@ -311,6 +321,8 @@ function HomePage() {
           </div>
         </section>
 
+        <InitSection />
+
         <section className="border-b border-border bg-background py-14 sm:py-16">
           <div className="mx-auto w-full max-w-6xl px-4 text-center sm:px-6">
             <h2 className="font-aeonik-pro text-[16px] font-normal tracking-tight text-foreground sm:text-[18px]">
@@ -389,15 +401,19 @@ function HomePage() {
             <div className="product-bento-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px]">
               {productBentoItems.map((item) => {
                 const Icon = item.icon
+                const href = productBentoHrefByTitle[item.title]
 
                 return (
                   <article
                     key={item.title}
-                    className={`${item.className} group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card/50 transition-colors hover:bg-accent/10 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
+                    className={`${item.className} group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card/50 transition-colors hover:bg-accent/10 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
                   >
+                    {href ? (
+                      <ProductBentoCardLink href={href} title={item.title} />
+                    ) : null}
                     <ProductBentoHoverLight tall={item.tall} />
                     <div
-                      className={`relative flex min-h-0 flex-1 flex-col lg:h-full ${item.tall ? 'lg:min-h-full' : ''}`}
+                      className={`pointer-events-none relative z-[2] flex min-h-0 flex-1 flex-col lg:h-full ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
                       <div
                         className={`relative z-10 shrink-0 px-4 pt-4 ${item.compact ? 'pb-2' : 'pb-2.5'}`}

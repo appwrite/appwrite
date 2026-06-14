@@ -15,6 +15,24 @@ export type ProductId =
 
 export type ProductGroup = 'build' | 'deploy'
 
+export type ProductNavGroup = ProductGroup | 'protect'
+
+export type ProductNavItemId =
+  | ProductId
+  | 'realtime'
+  | 'domains'
+  | 'firewall'
+  | 'advisor'
+
+export type ProductNavItem = {
+  id: ProductNavItemId
+  name: string
+  group: ProductNavGroup
+  href: string
+  icon: ProductIcon
+  tagline: string
+}
+
 export type ProductRegistryItem = {
   id: ProductId
   name: string

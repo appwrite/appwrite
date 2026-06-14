@@ -14,55 +14,74 @@ import {
 } from '@/components/ui/popover'
 import { SheetClose } from '@/components/ui/sheet'
 import {
-  PRODUCT_IDS,
-  PRODUCT_REGISTRY,
+  PRODUCT_NAV_CATEGORIES,
+  PRODUCT_NAV_REGISTRY,
+  isProductId,
 } from '@/lib/products/registry'
-import type { ProductId } from '@/lib/products/types'
+import type { ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
 
 const NAV_TRIGGER_CLASS =
-  'inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
+  'inline-flex h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
 
 type MarketingProductsNavPanelProps = {
-  activeProductId?: ProductId
+  activeNavItemId?: ProductNavItemId
   onNavigate?: () => void
   compact?: boolean
   closeSheet?: boolean
 }
 
-function getActiveProductId(pathname: string): ProductId | undefined {
-  const match = pathname.match(/^\/products\/([^/]+)/)
-  if (!match?.[1]) return undefined
-  const id = match[1]
-  return id in PRODUCT_REGISTRY ? (id as ProductId) : undefined
+function getActiveNavItemId(pathname: string): ProductNavItemId | undefined {
+  const productMatch = pathname.match(/^\/products\/([^/]+)/)
+  if (productMatch?.[1] && isProductId(productMatch[1])) {
+    return productMatch[1]
+  }
+
+  if (pathname === '/domains' || pathname.startsWith('/domains/')) {
+    return 'domains'
+  }
+
+  let bestMatch: ProductNavItemId | undefined
+  let bestLength = 0
+
+  for (const item of Object.values(PRODUCT_NAV_REGISTRY)) {
+    if (!item.href.startsWith('/docs')) continue
+    if (pathname === item.href || pathname.startsWith(`${item.href}/`)) {
+      if (item.href.length > bestLength) {
+        bestLength = item.href.length
+        bestMatch = item.id
+      }
+    }
+  }
+
+  return bestMatch
 }
 
 function ProductNavLink({
-  productId,
+  navItemId,
   isActive,
   onNavigate,
   variant = 'default',
   closeSheet = false,
 }: {
-  productId: ProductId
+  navItemId: ProductNavItemId
   isActive: boolean
   onNavigate?: () => void
   variant?: 'default' | 'compact' | 'dense'
   closeSheet?: boolean
 }) {
-  const product = PRODUCT_REGISTRY[productId]
-  const Icon = product.icon
+  const item = PRODUCT_NAV_REGISTRY[navItemId]
+  const Icon = item.icon
   const isDense = variant === 'dense'
   const isCompact = variant === 'compact'
 
   const link = (
     <Link
-      to="/products/$productId"
-      params={{ productId }}
+      to={item.href}
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'group block rounded-lg border border-transparent text-left transition-colors',
+        'group block cursor-pointer rounded-lg border border-transparent text-left transition-colors',
         isDense && 'flex items-center gap-2.5 px-2 py-2 hover:bg-accent/40',
         isCompact && 'flex items-start gap-3 px-3 py-2.5 hover:bg-accent/40',
         !isDense &&
@@ -93,7 +112,7 @@ function ProductNavLink({
             isDense ? 'text-[12px]' : 'text-[13px]',
           )}
         >
-          {product.name}
+          {item.name}
         </span>
         <span
           className={cn(
@@ -105,7 +124,7 @@ function ProductNavLink({
                 : 'mt-0.5 text-[12px] leading-5',
           )}
         >
-          {product.tagline}
+          {item.tagline}
         </span>
       </span>
 
@@ -125,11 +144,53 @@ function ProductNavLink({
   return link
 }
 
+function ProductsNavCategorySection({
+  label,
+  navItemIds,
+  activeNavItemId,
+  onNavigate,
+  variant = 'dense',
+  closeSheet = false,
+}: {
+  label: string
+  navItemIds: readonly ProductNavItemId[]
+  activeNavItemId?: ProductNavItemId
+  onNavigate?: () => void
+  variant?: 'dense' | 'compact'
+  closeSheet?: boolean
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <div
+        className={cn(
+          variant === 'dense'
+            ? 'grid grid-cols-3 gap-0.5'
+            : 'space-y-0.5',
+        )}
+      >
+        {navItemIds.map((navItemId) => (
+          <ProductNavLink
+            key={navItemId}
+            navItemId={navItemId}
+            isActive={navItemId === activeNavItemId}
+            onNavigate={onNavigate}
+            variant={variant}
+            closeSheet={closeSheet}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function DesktopProductsNavPanel({
-  activeProductId,
+  activeNavItemId,
   onNavigate,
 }: {
-  activeProductId?: ProductId
+  activeNavItemId?: ProductNavItemId
   onNavigate?: () => void
 }) {
   return (
@@ -141,14 +202,14 @@ function DesktopProductsNavPanel({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-0.5 p-3 sm:grid-cols-3">
-        {PRODUCT_IDS.map((productId) => (
-          <ProductNavLink
-            key={productId}
-            productId={productId}
-            isActive={productId === activeProductId}
+      <div className="space-y-4 p-3">
+        {PRODUCT_NAV_CATEGORIES.map((category) => (
+          <ProductsNavCategorySection
+            key={category.id}
+            label={category.label}
+            navItemIds={category.productIds}
+            activeNavItemId={activeNavItemId}
             onNavigate={onNavigate}
-            variant="dense"
           />
         ))}
       </div>
@@ -157,7 +218,7 @@ function DesktopProductsNavPanel({
         <Link
           to="/home"
           onClick={onNavigate}
-          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           View platform overview
           <ArrowRight className="size-3.5" aria-hidden />
@@ -168,32 +229,31 @@ function DesktopProductsNavPanel({
 }
 
 function MobileProductsNavPanel({
-  activeProductId,
+  activeNavItemId,
   closeSheet,
 }: {
-  activeProductId?: ProductId
+  activeNavItemId?: ProductNavItemId
   closeSheet?: boolean
 }) {
   return (
     <div className="space-y-4 px-1 pb-1">
-      <div className="space-y-0.5">
-        {PRODUCT_IDS.map((productId) => (
-          <ProductNavLink
-            key={productId}
-            productId={productId}
-            isActive={productId === activeProductId}
-            variant="compact"
-            closeSheet={closeSheet}
-          />
-        ))}
-      </div>
+      {PRODUCT_NAV_CATEGORIES.map((category) => (
+        <ProductsNavCategorySection
+          key={category.id}
+          label={category.label}
+          navItemIds={category.productIds}
+          activeNavItemId={activeNavItemId}
+          variant="compact"
+          closeSheet={closeSheet}
+        />
+      ))}
 
       {closeSheet ? (
         <div className="px-2 pt-1">
           <SheetClose asChild>
             <Link
               to="/home"
-              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               View platform overview
               <ArrowRight className="size-3.5" aria-hidden />
@@ -206,7 +266,7 @@ function MobileProductsNavPanel({
 }
 
 export function MarketingProductsNavPanel({
-  activeProductId,
+  activeNavItemId,
   onNavigate,
   compact = false,
   closeSheet = false,
@@ -214,7 +274,7 @@ export function MarketingProductsNavPanel({
   if (compact) {
     return (
       <MobileProductsNavPanel
-        activeProductId={activeProductId}
+        activeNavItemId={activeNavItemId}
         closeSheet={closeSheet}
       />
     )
@@ -222,7 +282,7 @@ export function MarketingProductsNavPanel({
 
   return (
     <DesktopProductsNavPanel
-      activeProductId={activeProductId}
+      activeNavItemId={activeNavItemId}
       onNavigate={onNavigate}
     />
   )
@@ -231,7 +291,7 @@ export function MarketingProductsNavPanel({
 export function MarketingProductsNavPopover() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
-  const activeProductId = useMemo(() => getActiveProductId(pathname), [pathname])
+  const activeNavItemId = useMemo(() => getActiveNavItemId(pathname), [pathname])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -252,10 +312,10 @@ export function MarketingProductsNavPopover() {
       <PopoverContent
         align="start"
         sideOffset={10}
-        className="w-[min(calc(100vw-2rem),720px)] overflow-hidden rounded-xl border border-border bg-popover p-0 shadow-lg"
+        className="w-[min(calc(100vw-2rem),720px)] overflow-hidden rounded-xl border border-border bg-popover p-0 shadow-lg md:w-[min(calc(100vw-2rem),840px)] lg:w-[min(calc(100vw-2rem),960px)] xl:w-[min(calc(100vw-2rem),1080px)]"
       >
         <MarketingProductsNavPanel
-          activeProductId={activeProductId}
+          activeNavItemId={activeNavItemId}
           onNavigate={() => setOpen(false)}
         />
       </PopoverContent>
@@ -265,7 +325,7 @@ export function MarketingProductsNavPopover() {
 
 export function MarketingProductsMobileNav() {
   const { pathname } = useLocation()
-  const activeProductId = useMemo(() => getActiveProductId(pathname), [pathname])
+  const activeNavItemId = useMemo(() => getActiveNavItemId(pathname), [pathname])
 
   return (
     <Accordion type="single" collapsible className="px-1">
@@ -275,7 +335,7 @@ export function MarketingProductsMobileNav() {
         </AccordionTrigger>
         <AccordionContent className="pb-2 pt-1">
           <MarketingProductsNavPanel
-            activeProductId={activeProductId}
+            activeNavItemId={activeNavItemId}
             compact
             closeSheet
           />

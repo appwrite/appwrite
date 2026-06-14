@@ -1,4 +1,5 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
+import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
@@ -10,6 +11,7 @@ import {
 
 export const Route = createFileRoute('/docs/$')({
   ssr: true,
+  notFoundComponent: NotFoundView,
   server: {
     handlers: {
       GET: async ({ params, next }) => {

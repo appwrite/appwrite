@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { Button } from '@/components/ui/button'
 import { NetworkGlobeMount } from './NetworkGlobeMount'
 
@@ -42,14 +43,14 @@ export function NetworkSection() {
             ))}
           </ul>
 
-          <Button variant="outline" className="mt-6 h-10 text-[13px]" asChild>
-            <a
-              href="https://appwrite.io/docs/products/network"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+          <Button
+            variant="outline"
+            className="relative z-30 mt-6 h-10 text-[13px]"
+            asChild
+          >
+            <DocsRouteLink href="/docs/products/network">
               More about the Appwrite Network
-            </a>
+            </DocsRouteLink>
           </Button>
         </div>
 

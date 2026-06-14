@@ -1,6 +1,11 @@
 import { extractDocsToc } from '@/lib/docs/toc'
 import type { DocsTocItem } from '@/lib/docs/types'
-import { BLOG_POSTS_PER_PAGE } from './constants'
+import {
+  BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
+  BLOG_POSTS_PER_PAGE,
+  BLOG_SECONDARY_FEATURED_COUNT,
+  BLOG_SPOTLIGHT_CATEGORY_SLUGS,
+} from './constants'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
   getFrontmatterAuthor,
@@ -12,6 +17,7 @@ import {
 import type {
   BlogAuthor,
   BlogCategory,
+  BlogCategorySpotlight,
   BlogPost,
   BlogPostMeta,
   BlogPostsPage,
@@ -198,6 +204,21 @@ export function postMatchesCategory(post: BlogPostMeta, categorySlug: string): b
   return normalizeCategory(post.category).includes(categorySlug)
 }
 
+export function getPrimaryPostCategorySlug(post: BlogPostMeta): string {
+  const firstCategory = post.category.split(',')[0]?.trim() ?? ''
+  return normalizeCategory(firstCategory)
+}
+
+export function getPostCategoryLabel(post: BlogPostMeta): string {
+  const slug = getPrimaryPostCategorySlug(post)
+  const category = getBlogCategory(slug)
+  if (category) return category.name
+
+  return slug
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
 export function postMatchesAuthor(post: BlogPostMeta, authorSlug: string): boolean {
   if (Array.isArray(post.author)) {
     return post.author.includes(authorSlug)
@@ -257,6 +278,64 @@ export function generateBlogPageNavigation(
   return range
 }
 
+function buildBlogIndexSpotlights(posts: BlogPostMeta[]): {
+  featured: BlogPostMeta | null
+  secondaryFeatured: BlogPostMeta[]
+  categorySpotlights: BlogCategorySpotlight[]
+  excludedSlugs: Set<string>
+} {
+  const featuredPosts = posts.filter((post) => post.featured)
+  const featured = featuredPosts[0] ?? null
+  const excludedSlugs = new Set<string>()
+
+  if (featured) {
+    excludedSlugs.add(featured.slug)
+  }
+
+  const secondaryFeatured = featuredPosts.slice(1, 1 + BLOG_SECONDARY_FEATURED_COUNT)
+
+  for (const post of secondaryFeatured) {
+    excludedSlugs.add(post.slug)
+  }
+
+  if (secondaryFeatured.length < BLOG_SECONDARY_FEATURED_COUNT) {
+    const fillers = posts
+      .filter((post) => !excludedSlugs.has(post.slug))
+      .slice(0, BLOG_SECONDARY_FEATURED_COUNT - secondaryFeatured.length)
+
+    for (const post of fillers) {
+      excludedSlugs.add(post.slug)
+      secondaryFeatured.push(post)
+    }
+  }
+
+  const categorySpotlights: BlogCategorySpotlight[] = []
+
+  for (const slug of BLOG_SPOTLIGHT_CATEGORY_SLUGS) {
+    const category = getBlogCategory(slug)
+    if (!category) continue
+
+    const categoryPosts = getPostsForCategory(slug)
+      .filter((post) => !excludedSlugs.has(post.slug))
+      .slice(0, BLOG_CATEGORY_SPOTLIGHT_POST_COUNT)
+
+    if (categoryPosts.length === 0) continue
+
+    for (const post of categoryPosts) {
+      excludedSlugs.add(post.slug)
+    }
+
+    categorySpotlights.push({ category, posts: categoryPosts })
+  }
+
+  return {
+    featured,
+    secondaryFeatured,
+    categorySpotlights,
+    excludedSlugs,
+  }
+}
+
 export function getBlogPostsPage(options: {
   page?: number
   search?: string
@@ -267,8 +346,20 @@ export function getBlogPostsPage(options: {
   const categoryQuery = options.category ? normalizeCategory(options.category) : ''
 
   let posts = getPublicBlogPosts()
-  const featured =
-    posts.find((post) => post.featured && !searchQuery && !categoryQuery) ?? null
+  const showSpotlights = currentPage === 1 && !searchQuery && !categoryQuery
+
+  let featured: BlogPostMeta | null = null
+  let secondaryFeatured: BlogPostMeta[] = []
+  let categorySpotlights: BlogCategorySpotlight[] = []
+  let excludedSlugs = new Set<string>()
+
+  if (showSpotlights) {
+    const spotlights = buildBlogIndexSpotlights(posts)
+    featured = spotlights.featured
+    secondaryFeatured = spotlights.secondaryFeatured
+    categorySpotlights = spotlights.categorySpotlights
+    excludedSlugs = spotlights.excludedSlugs
+  }
 
   if (searchQuery || categoryQuery) {
     posts = posts.filter((post) => {
@@ -280,14 +371,22 @@ export function getBlogPostsPage(options: {
     })
   }
 
-  const totalPages = Math.max(1, Math.ceil(posts.length / BLOG_POSTS_PER_PAGE))
+  const listPosts = showSpotlights
+    ? posts.filter((post) => !excludedSlugs.has(post.slug))
+    : featured
+      ? posts.filter((post) => post.slug !== featured.slug)
+      : posts
+
+  const totalPages = Math.max(1, Math.ceil(listPosts.length / BLOG_POSTS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
   const startIndex = (safePage - 1) * BLOG_POSTS_PER_PAGE
   const endIndex = safePage * BLOG_POSTS_PER_PAGE
 
   return {
-    posts: posts.slice(startIndex, endIndex),
+    posts: listPosts.slice(startIndex, endIndex),
     featured,
+    secondaryFeatured,
+    categorySpotlights,
     authors: allAuthors,
     categories: getFilteredBlogCategories(),
     currentPage: safePage,

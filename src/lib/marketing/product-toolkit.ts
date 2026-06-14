@@ -14,7 +14,7 @@ export const marketingProductToolkit = {
   ],
   deploy: [{ label: 'Sites', href: '/products/sites' }],
   protect: [
-    { label: 'Firewall', href: '/docs/products/network/firewall' },
+    { label: 'Firewall', href: '/docs/products/network/waf' },
     { label: 'Advisor', href: '/docs/products/network' },
   ],
 } as const satisfies {

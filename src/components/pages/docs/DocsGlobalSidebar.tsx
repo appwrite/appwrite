@@ -46,7 +46,7 @@ import {
 } from '@/components/ui/tooltip'
 import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
-import { DOCS_NAV_ACTIVE_BG_CLASS } from '@/lib/docs/nav-styles'
+import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
 import { DOCS_GLOBAL_NAV } from '@/lib/docs/navigation'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
@@ -384,7 +384,7 @@ export function DocsGlobalSidebar({
           )}
         >
           <nav
-            className="flex-1 space-y-6 overflow-y-auto px-3 py-4"
+            className={cn('flex-1 space-y-6 overflow-y-auto px-3 py-4', DOCS_NAV_SCROLL_CLASS)}
             role="navigation"
             aria-label="Docs navigation"
           >
@@ -438,7 +438,7 @@ export function DocsGlobalSidebar({
         </div>
 
         <nav
-          className="flex-1 space-y-6 overflow-y-auto px-4 py-2"
+          className={cn('flex-1 space-y-6 overflow-y-auto px-4 py-2', DOCS_NAV_SCROLL_CLASS)}
           role="navigation"
           aria-label="Mobile docs navigation"
         >

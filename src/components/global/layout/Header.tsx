@@ -117,7 +117,6 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
     menu: 'products',
   },
   { label: 'Docs', href: '/docs' },
-  { label: 'Domains', href: '/domains' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Enterprise', href: '/enterprise' },
   { label: 'Customers', href: '/blog/category/customer-stories' },

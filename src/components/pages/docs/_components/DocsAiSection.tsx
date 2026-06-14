@@ -77,7 +77,7 @@ function DocsAiToolColumn({
     <div className={cn('relative py-6 @[900px]:py-0', className)}>
       <AiTileSoftLight tone={tone} />
       <div className="relative space-y-1.5">
-        <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+        <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
         <p className="text-[13px] leading-5 text-muted-foreground">{description}</p>
       </div>
       <div className={cn('relative mt-4 grid gap-2', docsGridTwoCol)}>

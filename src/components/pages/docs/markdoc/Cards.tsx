@@ -114,10 +114,10 @@ export function CardsItem({
         {title ? (
           <h3
             className={cn(
-              'font-semibold text-foreground/90',
+              'font-medium text-foreground/90',
               compact
-                ? 'text-[15px] @[480px]:text-[16px]'
-                : 'text-[17px] @[640px]:text-[18px]',
+                ? 'text-[13px] @[480px]:text-[14px]'
+                : 'text-[15px] @[640px]:text-[16px]',
             )}
           >
             {title}

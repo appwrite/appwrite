@@ -2,7 +2,8 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { PostView } from '@/components/pages/blog/PostView'
 import {
   getBlogPost,
-  normalizeCategory,
+  getPostCategoryLabel,
+  getPrimaryPostCategorySlug,
   resolveBlogAuthors,
 } from '@/lib/blog/content'
 import {
@@ -43,8 +44,8 @@ export const Route = createFileRoute('/blog/post/$slug')({
           getBlogBreadcrumbSchema([
             { name: 'Blog', path: '/blog' },
             {
-              name: loaderData.post.category.replace(/-/g, ' '),
-              path: `/blog/category/${normalizeCategory(loaderData.post.category)}`,
+              name: getPostCategoryLabel(loaderData.post),
+              path: `/blog/category/${getPrimaryPostCategorySlug(loaderData.post)}`,
             },
             { name: loaderData.post.title, path: loaderData.post.href },
           ]),

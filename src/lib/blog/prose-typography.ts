@@ -16,6 +16,12 @@ export const BLOG_FAQ_QUESTION_CLASS = 'text-[14px] font-medium text-foreground'
 export const BLOG_PAGE_TITLE_CLASS =
   'font-aeonik-pro text-[28px] font-normal leading-[1.3] tracking-tight text-foreground sm:text-[34px] sm:leading-[1.25]'
 
+export const BLOG_CATEGORY_TITLE_CLASS =
+  'text-[28px] font-semibold leading-[1.3] tracking-tight text-foreground sm:text-[34px] sm:leading-[1.25]'
+
+export const BLOG_CATEGORY_CARD_TITLE_CLASS =
+  'text-[16px] font-semibold leading-snug text-foreground'
+
 export const BLOG_SECTION_TITLE_CLASS = BLOG_PAGE_TITLE_CLASS
 
 export const BLOG_PAGE_DESCRIPTION_CLASS = DOCS_PAGE_DESCRIPTION_CLASS

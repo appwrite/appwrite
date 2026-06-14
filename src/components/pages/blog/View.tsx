@@ -8,10 +8,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { normalizeCategory } from '@/lib/blog/content'
+import { buildBlogRouteSearch } from '@/lib/blog/search'
 import type { BlogPostsPage } from '@/lib/blog/types'
 import { cn } from '@/lib/utils'
+import { BlogCategorySpotlightsSection } from './BlogCategorySpotlightsSection'
+import { BlogFeaturedSection } from './BlogFeaturedSection'
 import { BlogPagination } from './BlogPagination'
 import { BlogPostCard } from './BlogPostCard'
+import { BlogSecondaryFeaturedSection } from './BlogSecondaryFeaturedSection'
 
 type BlogSearch = {
   search?: string
@@ -25,6 +29,8 @@ type ViewProps = BlogPostsPage & {
 export function View({
   posts,
   featured,
+  secondaryFeatured,
+  categorySpotlights,
   authors,
   categories,
   currentPage,
@@ -42,12 +48,12 @@ export function View({
 
   const handleSearch = () => {
     navigate({
-      to: currentPage <= 1 ? '/blog' : '/blog/$page',
-      ...(currentPage > 1 ? { params: { page: String(currentPage) } } : {}),
-      search: {
-        search: query.trim() || undefined,
-        category: selectedCategory !== 'Latest' ? selectedCategory : undefined,
-      },
+      to: '/blog',
+      search: () =>
+        buildBlogRouteSearch({
+          search: query,
+          category: selectedCategory,
+        }),
       replace: true,
     })
   }
@@ -55,12 +61,20 @@ export function View({
   const handleCategoryChange = (category: string) => {
     navigate({
       to: '/blog',
-      search: {
-        search: query.trim() || undefined,
-        category: category !== 'Latest' ? category : undefined,
-      },
+      search: () =>
+        buildBlogRouteSearch({
+          search: query,
+          category,
+        }),
     })
   }
+
+  const showSpotlights =
+    currentPage === 1 &&
+    !search?.search &&
+    selectedCategory === 'Latest'
+
+  const showFeatured = showSpotlights && featured
 
   return (
     <div className="relative overflow-x-hidden bg-background">
@@ -70,9 +84,32 @@ export function View({
         align="left"
       />
 
+      {showFeatured ? (
+        <BlogFeaturedSection post={featured} authors={authors} />
+      ) : null}
+
+      {showSpotlights && secondaryFeatured.length > 0 ? (
+        <BlogSecondaryFeaturedSection posts={secondaryFeatured} authors={authors} />
+      ) : null}
+
+      {showSpotlights && categorySpotlights.length > 0 ? (
+        <BlogCategorySpotlightsSection spotlights={categorySpotlights} />
+      ) : null}
+
       <section className="border-b border-border py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {showSpotlights ? (
+            <div className="border-b border-border pb-8">
+              <h2 className="font-aeonik-pro text-[22px] font-normal text-foreground">
+                All articles
+              </h2>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                Browse the full archive or filter by topic.
+              </p>
+            </div>
+          ) : null}
+
+          <div className={cn(showSpotlights ? 'mt-8' : undefined, 'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between')}>
             <div className="relative max-w-md flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -91,19 +128,26 @@ export function View({
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {['Latest', ...categories.map((category) => category.name)].map((label) => {
-              const value =
-                label === 'Latest' ? 'Latest' : normalizeCategory(label)
-              const isActive =
-                label === 'Latest'
-                  ? selectedCategory === 'Latest'
-                  : normalizeCategory(selectedCategory) === value
+            <button
+              type="button"
+              onClick={() => handleCategoryChange('Latest')}
+              className={cn(
+                'rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors',
+                selectedCategory === 'Latest'
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border bg-background text-muted-foreground hover:text-foreground',
+              )}
+            >
+              Latest
+            </button>
+            {categories.map((category) => {
+              const isActive = normalizeCategory(selectedCategory) === category.slug
 
               return (
                 <button
-                  key={label}
+                  key={category.slug}
                   type="button"
-                  onClick={() => handleCategoryChange(value)}
+                  onClick={() => handleCategoryChange(category.slug)}
                   className={cn(
                     'rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors',
                     isActive
@@ -111,22 +155,11 @@ export function View({
                       : 'border-border bg-background text-muted-foreground hover:text-foreground',
                   )}
                 >
-                  {label}
+                  {category.name}
                 </button>
               )
             })}
           </div>
-
-          {featured && currentPage === 1 && !search?.search && selectedCategory === 'Latest' ? (
-            <div className="mt-10 border-y border-border py-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Featured
-              </p>
-              <div className="mt-6">
-                <BlogPostCard post={featured} authors={authors} featured />
-              </div>
-            </div>
-          ) : null}
 
           {posts.length === 0 ? (
             <div className="py-16 text-center">
@@ -135,7 +168,9 @@ export function View({
                 Try adjusting your search or clearing filters.
               </p>
               <Button variant="outline" size="sm" className="mt-4 h-9 text-[13px]" asChild>
-                <Link to="/blog">Clear filters</Link>
+                <Link to="/blog" search={{}}>
+                  Clear filters
+                </Link>
               </Button>
             </div>
           ) : (

@@ -108,6 +108,25 @@ export function getInitOrgPromoBannerContent(options?: {
   return resolveInitOrgPromoBanner(getActiveLaunchEvent(options?.now), options)
 }
 
+/** True while launch week is in progress (not before or recap/after). */
+export function isInitEventDuring(options?: {
+  now?: Date
+  mockCurrentDay?: number | null
+}): boolean {
+  if (!getEnvProfileFeatures().init) return false
+
+  const event = getActiveLaunchEvent(options?.now)
+  if (!event?.featured || event.days.length === 0) return false
+
+  const phase = resolveInitOrgPromoPhase(
+    event,
+    options?.now ?? new Date(),
+    options?.mockCurrentDay ?? null,
+  )
+
+  return phase === 'during'
+}
+
 /** Static promo banner content (env profile + calendar only; no API or client hooks). */
 export function getStaticInitOrgPromoBannerContent(): InitOrgPromoBannerContent | null {
   if (!getEnvProfileFeatures().init) return null

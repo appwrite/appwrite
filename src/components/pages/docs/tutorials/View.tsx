@@ -38,7 +38,7 @@ export function View() {
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-[14px] font-medium text-foreground">
+                        <p className="text-[13px] font-medium text-foreground">
                           {tutorial.framework}
                         </p>
                         <Badge variant="inactive" className="text-[10px] shrink-0">
@@ -54,7 +54,7 @@ export function View() {
                       href={tutorial.href}
                       className="block rounded-xl border border-border bg-card/45 px-4 py-4 transition-colors hover:bg-accent/15"
                     >
-                      <p className="text-[14px] font-medium text-foreground">
+                      <p className="text-[13px] font-medium text-foreground">
                         {tutorial.framework}
                       </p>
                       <p className="mt-1 text-[12px] text-muted-foreground">

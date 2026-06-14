@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { buildBlogRouteSearch } from '@/lib/blog/search'
 import { cn } from '@/lib/utils'
 
 type BlogPaginationProps = {
@@ -14,8 +15,11 @@ type BlogPaginationProps = {
 
 function buildBlogPageHref(page: number, search?: string, category?: string): string {
   const params = new URLSearchParams()
-  if (search) params.set('search', search)
-  if (category) params.set('category', category)
+  const routeSearch = buildBlogRouteSearch({ search, category })
+
+  if (routeSearch.search) params.set('search', routeSearch.search)
+  if (routeSearch.category) params.set('category', routeSearch.category)
+
   const query = params.toString()
   const base = page <= 1 ? '/blog' : `/blog/${page}`
   return query ? `${base}?${query}` : base
@@ -30,6 +34,8 @@ export function BlogPagination({
   className,
 }: BlogPaginationProps) {
   if (totalPages <= 1) return null
+
+  const linkSearch = buildBlogRouteSearch({ search, category })
 
   return (
     <nav
@@ -47,10 +53,10 @@ export function BlogPagination({
           <Link
             to={currentPage === 2 ? '/blog' : '/blog/$page'}
             {...(currentPage === 2
-              ? { search: { search, category } }
+              ? { search: linkSearch }
               : {
                   params: { page: String(currentPage - 1) },
-                  search: { search, category },
+                  search: linkSearch,
                 })}
             aria-label="Previous page"
           >
@@ -82,10 +88,10 @@ export function BlogPagination({
               <Link
                 to={item === 1 ? '/blog' : '/blog/$page'}
                 {...(item === 1
-                  ? { search: { search, category } }
+                  ? { search: linkSearch }
                   : {
                       params: { page: String(item) },
-                      search: { search, category },
+                      search: linkSearch,
                     })}
               >
                 {item}
@@ -106,7 +112,7 @@ export function BlogPagination({
           <Link
             to="/blog/$page"
             params={{ page: String(currentPage + 1) }}
-            search={{ search, category }}
+            search={linkSearch}
             aria-label="Next page"
           >
             <ChevronRight className="h-4 w-4" />

@@ -1834,3 +1834,40 @@ pre.prism-code .token-line > span {
   box-shadow: none !important;
 }
 
+/* Overlay scrollbar — hidden until hover/focus; thin rounded thumb on Windows/Linux */
+.overlay-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.overlay-scrollbar::-webkit-scrollbar {
+  width: 0;
+}
+
+.overlay-scrollbar:hover,
+.overlay-scrollbar:focus-within {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.overlay-scrollbar:hover::-webkit-scrollbar,
+.overlay-scrollbar:focus-within::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overlay-scrollbar:hover::-webkit-scrollbar-track,
+.overlay-scrollbar:focus-within::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overlay-scrollbar:hover::-webkit-scrollbar-thumb,
+.overlay-scrollbar:focus-within::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}
+
+.overlay-scrollbar:hover::-webkit-scrollbar-thumb:hover,
+.overlay-scrollbar:focus-within::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}
+

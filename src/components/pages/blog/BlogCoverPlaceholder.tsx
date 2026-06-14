@@ -1,3 +1,4 @@
+import { BLOG_COVER_ASPECT_CLASS } from '@/lib/blog/constants'
 import { cn } from '@/lib/utils'
 
 type BlogCoverPlaceholderProps = {
@@ -9,8 +10,9 @@ export function BlogCoverPlaceholder({ title, className }: BlogCoverPlaceholderP
   return (
     <div
       className={cn(
-        'flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40',
+        'flex w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40',
         className,
+        BLOG_COVER_ASPECT_CLASS,
       )}
       aria-hidden
     >
