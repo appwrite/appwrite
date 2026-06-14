@@ -165,35 +165,50 @@ final class RequestTest extends TestCase
         $this->assertSame($secondRoute, $secondRequest->getRoute());
     }
 
-    public function testGetHeaderReturnsStringValue(): void
+    public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
 
-        $this->assertSame('https://example.com', $this->request->getHeader('referer'));
+        $this->assertSame('https://example.com', $this->request->getHeaderLine('referer'));
     }
 
-    public function testGetHeaderReturnsDefaultWhenMissing(): void
+    public function testGetHeaderLineReturnsDefaultWhenMissing(): void
     {
-        $this->assertSame('', $this->request->getHeader('referer'));
-        $this->assertSame('fallback', $this->request->getHeader('referer', 'fallback'));
+        $this->assertSame('', $this->request->getHeaderLine('referer'));
+        $this->assertSame('fallback', $this->request->getHeaderLine('referer', 'fallback'));
     }
 
-    public function testGetHeaderCoercesArrayToFirstElement(): void
+    public function testGetHeaderLineJoinsMultipleValues(): void
     {
         $swoole = new SwooleRequest();
         $swoole->header = ['referer' => ['https://a.example', 'https://b.example']];
         $request = new Request($swoole);
 
-        $this->assertSame('https://a.example', $request->getHeader('referer'));
+        $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
     }
 
-    public function testGetHeaderReturnsDefaultWhenValueNotString(): void
+    public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void
     {
+        // Swoole parses the Cookie header into its cookie jar, so getHeaders()
+        // must rebuild it for consumers that forward request headers onward
+        // (e.g. function/site executions).
         $swoole = new SwooleRequest();
-        $swoole->header = ['referer' => 123];
+        $swoole->header = ['host' => 'example.com'];
+        $swoole->cookie = ['custom-session-id' => 'abcd123', 'custom-user-id' => 'efgh456'];
         $request = new Request($swoole);
 
-        $this->assertSame('fallback', $request->getHeader('referer', 'fallback'));
+        $headers = $request->getHeaders();
+
+        $this->assertSame(['custom-session-id=abcd123; custom-user-id=efgh456'], $headers['cookie']);
+    }
+
+    public function testGetHeadersOmitsCookieHeaderWhenNoCookies(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $request = new Request($swoole);
+
+        $this->assertArrayNotHasKey('cookie', $request->getHeaders());
     }
 
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void

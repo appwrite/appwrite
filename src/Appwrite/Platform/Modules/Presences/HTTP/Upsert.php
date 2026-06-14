@@ -156,7 +156,7 @@ class Upsert extends PlatformAction
         if (empty($userInternalId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to resolve valid user internal ID.');
         }
-        $isGraphQL = $request->getHeader('x-appwrite-source') === 'graphql';
+        $isGraphQL = $request->getHeaderLine('x-appwrite-source') === 'graphql';
 
         $presenceData = [
             'userInternalId' => $userInternalId,
