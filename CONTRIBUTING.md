@@ -193,7 +193,7 @@ As Appwrite grows, we noticed approach of having all service endpoints in `app/c
 
 ### HTTP Endpoints
 
-Every endpoint file follows below structure, making it consistent with HTTP REST endpoint path:
+Every endpoint file follows the structure below, making it consistent with HTTP REST endpoint path:
 
 ```
 src/Appwrite/Platform/Modules/[service]/Http/[resource]/[action].php
