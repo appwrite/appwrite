@@ -130,6 +130,7 @@ export function MobileBucketSelector() {
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               size="sm"
               className="h-9 min-w-0 flex-1 justify-between gap-2 px-3 text-[13px] font-normal"

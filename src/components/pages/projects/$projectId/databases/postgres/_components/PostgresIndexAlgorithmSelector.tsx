@@ -46,6 +46,7 @@ export function PostgresIndexAlgorithmSelector({
           <PopoverTrigger asChild>
             <Button
               id="index-algorithm"
+              type="button"
               variant="outline"
               role="combobox"
               aria-expanded={open}
@@ -56,7 +57,7 @@ export function PostgresIndexAlgorithmSelector({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="z-[200] max-h-[min(360px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
+            className="max-h-[min(360px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
             align="start"
             onWheelCapture={(event) => {
               event.stopPropagation()

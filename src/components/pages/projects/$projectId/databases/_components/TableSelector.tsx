@@ -142,6 +142,7 @@ export function TableSelector({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            type="button"
             variant="outline"
             className={cn(
               'h-8 min-w-0 flex-1 justify-between gap-1.5 text-[13px] font-normal',

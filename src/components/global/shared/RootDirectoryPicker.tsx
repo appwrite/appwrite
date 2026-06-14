@@ -293,12 +293,13 @@ export function RootDirectoryPicker({
         {hasRepository && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px] shrink-0"
-                disabled={disabled}
-              >
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px] shrink-0"
+              disabled={disabled}
+            >
                 Select
               </Button>
             </DialogTrigger>
@@ -329,10 +330,18 @@ export function RootDirectoryPicker({
                 )}
               </div>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSelect} disabled={!selectedDir}>
+                <Button
+                  type="button"
+                  onClick={handleSelect}
+                  disabled={!selectedDir}
+                >
                   Select
                 </Button>
               </div>

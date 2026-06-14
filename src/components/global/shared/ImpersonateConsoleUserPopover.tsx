@@ -232,7 +232,7 @@ export function ImpersonateConsoleUserPopover() {
       </Tooltip>
       <PopoverContent
         align="end"
-        className="z-[200] w-[min(100vw-2rem,380px)] p-0"
+        className="w-[min(100vw-2rem,380px)] p-0"
       >
         <div className="border-b border-border px-4 py-3">
           <h3 className="text-[13px] font-semibold text-foreground">

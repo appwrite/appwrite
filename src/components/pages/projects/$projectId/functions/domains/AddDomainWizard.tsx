@@ -17,7 +17,6 @@ import { VerifyDomainContent } from '@/components/pages/projects/$projectId/sett
 import {
   useCreateFunctionDomainRule,
   useProjectFunction,
-  useRepositoryBranches,
   useProject,
   useVerifyDomain,
   useDeleteDomain,
@@ -35,11 +34,6 @@ export function AddDomainWizard() {
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
-  const { data: branchesData } = useRepositoryBranches(
-    projectId,
-    func?.installationId,
-    func?.providerRepositoryId,
-  )
 
   const createMutation = useCreateFunctionDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -65,7 +59,6 @@ export function AddDomainWizard() {
     deleteMutation.isPending
 
   const hasRepo = !!(func?.installationId && func?.providerRepositoryId)
-  const branches = branchesData?.branches ?? []
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -293,7 +286,9 @@ export function AddDomainWizard() {
           onRedirectUrlChange={setRedirectUrl}
           statusCode={statusCode}
           onStatusCodeChange={setStatusCode}
-          branches={branches}
+          projectId={projectId}
+          installationId={func?.installationId}
+          providerRepositoryId={func?.providerRepositoryId}
           hasRepository={hasRepo}
           disabled={createMutation.isPending}
         />

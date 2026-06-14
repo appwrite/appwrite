@@ -53,6 +53,7 @@ export function SortPopover({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           size="sm"
           className="h-9 shrink-0 gap-1.5 text-[13px]"
@@ -66,7 +67,7 @@ export function SortPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-[200] w-[220px] rounded-xl border-border p-1 shadow-lg"
+        className="w-[220px] rounded-xl border-border p-1 shadow-lg"
         align="start"
         side="bottom"
         sideOffset={8}

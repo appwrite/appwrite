@@ -689,6 +689,7 @@ export function CreateSiteView() {
             >
               <PopoverTrigger asChild>
                 <Button
+                  type="button"
                   variant="outline"
                   role="combobox"
                   aria-expanded={useCaseOpen}
@@ -740,6 +741,7 @@ export function CreateSiteView() {
             >
               <PopoverTrigger asChild>
                 <Button
+                  type="button"
                   variant="outline"
                   role="combobox"
                   aria-expanded={frameworkOpen}

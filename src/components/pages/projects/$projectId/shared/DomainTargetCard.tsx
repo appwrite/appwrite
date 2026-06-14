@@ -9,6 +9,7 @@ import { Rocket, GitBranch, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import {
   Select,
   SelectContent,
@@ -38,8 +39,10 @@ export interface DomainTargetCardProps {
   /** Status code when behaviour is 'redirect' */
   statusCode?: string
   onStatusCodeChange?: (v: string) => void
-  /** Branches for branch selector */
-  branches?: { name: string }[]
+  /** Repository context for searchable branch selector */
+  projectId?: string
+  installationId?: string | null
+  providerRepositoryId?: string | null
   /** Whether repo is connected (needed for branch option) */
   hasRepository?: boolean
   disabled?: boolean
@@ -54,7 +57,9 @@ export function DomainTargetCard({
   onRedirectUrlChange,
   statusCode = '302',
   onStatusCodeChange,
-  branches = [],
+  projectId,
+  installationId,
+  providerRepositoryId,
   hasRepository = false,
   disabled = false,
 }: DomainTargetCardProps) {
@@ -129,25 +134,17 @@ export function DomainTargetCard({
         </div>
 
         {behaviour === 'branch' && hasRepository && onBranchChange && (
-          <div>
-            <Label className="text-[12px]">Branch</Label>
-            <Select
-              value={branch}
-              onValueChange={onBranchChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="mt-1.5 h-9 w-full max-w-[200px]">
-                <SelectValue placeholder="Select branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((b) => (
-                  <SelectItem key={b.name} value={b.name}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <BranchSelector
+            projectId={projectId}
+            installationId={installationId}
+            providerRepositoryId={providerRepositoryId}
+            value={branch}
+            onChange={onBranchChange}
+            label="Branch"
+            placeholder="Select branch"
+            disabled={disabled}
+            className="max-w-[280px]"
+          />
         )}
 
         {behaviour === 'redirect' &&

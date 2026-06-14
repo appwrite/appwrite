@@ -140,6 +140,7 @@ export function PostgresColumnTypeSelector({
           <PopoverTrigger asChild>
             <Button
               id="postgres-column-type"
+              type="button"
               variant="outline"
               role="combobox"
               aria-expanded={open}
@@ -150,7 +151,7 @@ export function PostgresColumnTypeSelector({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="z-[200] max-h-[min(360px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
+            className="max-h-[min(360px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
             align="start"
             onWheelCapture={(event) => {
               event.stopPropagation()

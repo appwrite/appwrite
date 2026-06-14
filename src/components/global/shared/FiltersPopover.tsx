@@ -79,6 +79,7 @@ export function FiltersPopover({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           size="sm"
           className={cn(
@@ -98,7 +99,7 @@ export function FiltersPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-[200] max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
+        className="max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
         align="start"
         side="bottom"
         sideOffset={8}

@@ -7,8 +7,7 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  fetchRepositoryBranches,
-  DEFAULT_STALE_TIME,
+  repositoryBranchesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { RepositoryConfigView } from '@/components/pages/projects/$projectId/sites/create/RepositoryConfigView'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -24,12 +23,9 @@ export const Route = createFileRoute(
     const { projectId, installationId, repositoryId } = params
     const { queryClient } = context
     if (projectId && installationId && repositoryId) {
-      await queryClient.ensureQueryData({
-        queryKey: ['vcs', 'branches', projectId, installationId, repositoryId],
-        queryFn: () =>
-          fetchRepositoryBranches(projectId, installationId, repositoryId),
-        staleTime: DEFAULT_STALE_TIME,
-      })
+      await queryClient.ensureQueryData(
+        repositoryBranchesQueryOptions(projectId, installationId, repositoryId),
+      )
     }
   },
   component: RepositoryConfigPage,

@@ -513,6 +513,7 @@ export function CronScheduleEditor({
               <PopoverTrigger asChild>
                 <Button
                   id="schedule-preset"
+                  type="button"
                   variant="outline"
                   role="combobox"
                   className={cn(

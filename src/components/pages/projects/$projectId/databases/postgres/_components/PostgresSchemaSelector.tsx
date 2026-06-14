@@ -94,6 +94,7 @@ export function PostgresSchemaSelector({
         <PopoverTrigger asChild>
           <Button
             id={triggerId}
+            type="button"
             variant="outline"
             className={cn(
               'h-8 min-w-0 w-full justify-between gap-1.5 text-[13px] font-normal',

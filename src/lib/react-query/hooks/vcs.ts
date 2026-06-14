@@ -20,6 +20,8 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 
+export const REPOSITORY_BRANCHES_LIMIT = 100
+
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -63,12 +65,24 @@ export async function fetchRepository(
 }
 
 /**
+ * Sort branches with main/master first, then alphabetically.
+ */
+export function sortRepositoryBranches(branches: Models.Branch[]) {
+  return [...branches].sort((a, b) => {
+    if (a.name === 'main' || a.name === 'master') return -1
+    if (b.name === 'main' || b.name === 'master') return 1
+    return a.name.localeCompare(b.name)
+  })
+}
+
+/**
  * Query function to fetch repository branches
  */
 export async function fetchRepositoryBranches(
   projectId: string,
   installationId: string,
   providerRepositoryId: string,
+  search?: string,
 ): Promise<Models.BranchList> {
   if (!projectId || !installationId || !providerRepositoryId) {
     return { branches: [], total: 0 }
@@ -78,6 +92,8 @@ export async function fetchRepositoryBranches(
   return await projectSdk.vcs.listRepositoryBranches({
     installationId,
     providerRepositoryId,
+    search: search?.trim() || undefined,
+    queries: [Query.limit(REPOSITORY_BRANCHES_LIMIT)],
   })
 }
 
@@ -143,6 +159,45 @@ export async function fetchRepositoryContents(
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
+/**
+ * Query options for fetching repository branches.
+ *
+ * Pass an optional search term to query branches server-side (debounce in the UI).
+ */
+export function repositoryBranchesQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+  search?: string,
+) {
+  const normalizedSearch = search?.trim() || undefined
+
+  return queryOptions({
+    queryKey: [
+      'vcs',
+      'branches',
+      projectId,
+      installationId,
+      providerRepositoryId,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchRepositoryBranches(
+        projectId!,
+        installationId!,
+        providerRepositoryId!,
+        normalizedSearch,
+      ),
+    enabled: !!projectId && !!installationId && !!providerRepositoryId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function vcsInstallationsQueryOptions(
   projectId: string | null | undefined,
   page: number = 0,
@@ -260,24 +315,14 @@ export function useRepositoryBranches(
   projectId: string | null | undefined,
   installationId: string | null | undefined,
   providerRepositoryId: string | null | undefined,
+  search?: string,
 ) {
-  return useQuery({
-    queryKey: [
-      'vcs',
-      'branches',
-      projectId,
-      installationId,
-      providerRepositoryId,
-    ],
-    queryFn: () =>
-      fetchRepositoryBranches(
-        projectId!,
-        installationId!,
-        providerRepositoryId!,
-      ),
-    enabled: !!projectId && !!installationId && !!providerRepositoryId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(repositoryBranchesQueryOptions(
+    projectId,
+    installationId,
+    providerRepositoryId,
+    search,
+  ))
 }
 
 /**

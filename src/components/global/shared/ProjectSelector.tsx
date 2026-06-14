@@ -99,6 +99,7 @@ export function ProjectSelector({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           className={cn(
             'h-9 w-full justify-between text-[13px] font-normal',
