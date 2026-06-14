@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { View as PostgresSqlEditorView } from '@/components/pages/projects/$projectId/databases/postgres/SqlEditor'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import {
   postgresDatabaseConnectionsQueryOptions,
@@ -40,6 +39,5 @@ export const Route = createFileRoute(
 })
 
 function PostgresSqlEditorPage() {
-  const { databaseId } = Route.useParams()
-  return <PostgresSqlEditorView databaseId={databaseId} />
+  return null
 }

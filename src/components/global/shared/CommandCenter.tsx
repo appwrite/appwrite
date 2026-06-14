@@ -77,6 +77,8 @@ import { canSeeProjectNavItem } from '@/lib/console-access-checks'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
 import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
+import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
+import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import type {
@@ -305,6 +307,14 @@ export function CommandCenter({
     () => setPages((p) => [...p, 'docs']),
     [],
   )
+  const openFeedbackPage = useCallback(
+    () => setPages((p) => [...p, 'feedback']),
+    [],
+  )
+  const openSupportPage = useCallback(
+    () => setPages((p) => [...p, 'support']),
+    [],
+  )
 
   const { openDocsPreview } = useDocsPreview()
 
@@ -341,6 +351,8 @@ export function CommandCenter({
       closeCommandCenter,
       openShortcutsPage,
       openDocsSearchPage,
+      openFeedbackPage,
+      openSupportPage,
       handlers: {
         onProjectCreate: onCreateResource,
         onOrgInviteMember: onInviteMember,
@@ -360,6 +372,8 @@ export function CommandCenter({
       closeCommandCenter,
       openShortcutsPage,
       openDocsSearchPage,
+      openFeedbackPage,
+      openSupportPage,
       onCreateResource,
       onInviteMember,
       onOrgCreateProject,
@@ -369,7 +383,14 @@ export function CommandCenter({
 
   // When the command center is already open, Cmd/Ctrl+K and / refocus search.
   const focusSearchInput = useCallback(() => {
-    if (currentPage === 'shortcuts' || currentPage === 'functions') return
+    if (
+      currentPage === 'shortcuts' ||
+      currentPage === 'functions' ||
+      currentPage === 'feedback' ||
+      currentPage === 'support'
+    ) {
+      return
+    }
     if (currentPage === 'docs') {
       docsInputRef.current?.focus()
       return
@@ -390,7 +411,14 @@ export function CommandCenter({
       e.preventDefault()
       focusSearchInput()
     },
-    { enabled: open && currentPage !== 'shortcuts' && currentPage !== 'docs' },
+    {
+      enabled:
+        open &&
+        currentPage !== 'shortcuts' &&
+        currentPage !== 'docs' &&
+        currentPage !== 'feedback' &&
+        currentPage !== 'support',
+    },
   )
 
   // Load entries from registry, lift them into runtime commands.
@@ -1272,7 +1300,14 @@ export function CommandCenter({
         docsInputRef.current?.focus()
         return
       }
-      if (currentPage === 'shortcuts' || currentPage === 'functions') return
+      if (
+        currentPage === 'shortcuts' ||
+        currentPage === 'functions' ||
+        currentPage === 'feedback' ||
+        currentPage === 'support'
+      ) {
+        return
+      }
       inputRef.current?.focus()
     })
     return () => window.cancelAnimationFrame(id)
@@ -1348,9 +1383,13 @@ export function CommandCenter({
       ? 'Keyboard shortcuts'
       : currentPage === 'docs'
         ? 'Search documentation'
-        : currentPage === 'functions' && context === 'project'
-          ? 'Execute function'
-          : 'Command center'
+        : currentPage === 'feedback'
+          ? 'Send feedback'
+          : currentPage === 'support'
+            ? 'Support'
+            : currentPage === 'functions' && context === 'project'
+              ? 'Execute function'
+              : 'Command center'
 
   const placeholder = searchScope
     ? `Search ${searchScope}...`
@@ -1398,6 +1437,23 @@ export function CommandCenter({
             onKeyDown={handleKeyDown}
             onSelect={handleDocsSelect}
             onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
+          />
+        ) : currentPage === 'feedback' ? (
+          <CommandCenterFeedbackView
+            isMobile={isMobile}
+            orgId={orgId ?? project?.teamId}
+            projectId={projectId}
+            onBack={() => setPages([])}
+            onClose={() => onOpenChange(false)}
+            onKeyDown={handleKeyDown}
+          />
+        ) : currentPage === 'support' ? (
+          <CommandCenterSupportView
+            isMobile={isMobile}
+            orgId={orgId ?? project?.teamId}
+            onBack={() => setPages([])}
+            onClose={() => onOpenChange(false)}
+            onKeyDown={handleKeyDown}
           />
         ) : currentPage === 'functions' && context === 'project' ? (
           <Command

@@ -11,6 +11,7 @@ export type ProductToolsRealtimeExample = {
 export type ProductToolsCodeExample = {
   language: CodeBlockLanguage
   code: string
+  caption?: string
 }
 
 export type ProductToolsTerraformExample = {
@@ -133,22 +134,27 @@ console.log(file.$id);`,
   },
   functions: {
     codeExample: {
-      language: 'typescript',
-      code: `import { Client, Functions } from 'appwrite';
+      language: 'javascript',
+      caption: 'A typical function handler.',
+      code: `import { Client } from 'node-appwrite';
 
-const client = new Client()
-  .setEndpoint('${PRODUCT_TOOLS_ENDPOINT}')
-  .setProject('<PROJECT_ID>');
+export default async ({ req, res, log }) => {
+  log(\`\${req.method} \${req.path}\`);
 
-const functions = new Functions(client);
+  const { orderId } = JSON.parse(req.body);
+  if (!orderId) {
+    return res.json({ error: 'Missing orderId' }, 400);
+  }
 
-const execution = await functions.createExecution({
-  functionId: 'process-order',
-  body: JSON.stringify({ orderId: 'ord_123' }),
-  async: false,
-});
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers['x-appwrite-key']);
 
-console.log(execution.responseBody);`,
+  log(\`Processing \${orderId} (\${process.env.APPWRITE_FUNCTION_NAME})\`);
+
+  return res.json({ status: 'fulfilled', orderId });
+};`,
     },
     realtime: {
       channels: ['functions.*.executions.*'],
@@ -179,9 +185,10 @@ const messaging = new Messaging(client);
 
 await messaging.createEmail({
   messageId: ID.unique(),
-  subject: 'Your receipt is ready',
-  content: '<p>Thanks for your order.</p>',
-  topics: ['receipts'],
+  subject: 'Your verification code',
+  content: '<p>Your code is 482910. It expires in 10 minutes.</p>',
+  topics: [],
+  users: ['<USER_ID>'],
 });`,
     },
     realtime: {

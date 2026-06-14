@@ -1,11 +1,13 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect, useLocation } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
   postgresDatabaseQueryOptions,
   projectQueryOptions,
   isPostgresEngine,
 } from '@/lib/react-query/hooks'
+import { parsePostgresSqlWorkbenchRoute } from '@/lib/postgres-database-routes'
 import { PostgresSidebarProvider } from '@/components/pages/projects/$projectId/databases/postgres/_components/PostgresSidebarContext'
+import { PostgresSqlWorkbench } from '@/components/pages/projects/$projectId/databases/postgres/Workspace'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/postgres/$databaseId',
@@ -43,10 +45,24 @@ export const Route = createFileRoute(
 
 function PostgresDatabaseLayout() {
   const { databaseId } = Route.useParams()
+  const { pathname } = useLocation()
+  const workbenchRoute = parsePostgresSqlWorkbenchRoute(pathname)
 
   return (
     <PostgresSidebarProvider databaseId={databaseId}>
-      <Outlet />
+      {workbenchRoute ? (
+        <PostgresSqlWorkbench
+          databaseId={databaseId}
+          routeTableId={
+            workbenchRoute.mode === 'table-rows'
+              ? workbenchRoute.tableId
+              : undefined
+          }
+          databaseTab={workbenchRoute.mode === 'sql' ? 'sql' : undefined}
+        />
+      ) : (
+        <Outlet />
+      )}
     </PostgresSidebarProvider>
   )
 }

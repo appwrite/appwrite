@@ -7,6 +7,7 @@ import {
   parsePostgresTableId,
   postgresNav,
   postgresTableRows,
+  type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -24,20 +25,55 @@ import { PostgresTableRowsEmptyState } from './_components/PostgresTableRowsEmpt
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
 
-export type PostgresWorkspaceProps = {
+export type PostgresSqlWorkbenchProps = {
   databaseId: string
-  tableId: string
+  /** Table id from the `/tables/$tableId/rows` URL, when present. */
+  routeTableId?: string
+  /** Set when the URL is `/sql`. */
+  databaseTab?: PostgresDatabaseTab
 }
 
-export function Workspace({ databaseId, tableId }: PostgresWorkspaceProps) {
+export function PostgresSqlWorkbench({
+  databaseId,
+  routeTableId,
+  databaseTab,
+}: PostgresSqlWorkbenchProps) {
   return (
-    <PostgresShell databaseId={databaseId} tableId={tableId}>
-      <WorkspaceContent databaseId={databaseId} tableId={tableId} />
+    <PostgresShell
+      databaseId={databaseId}
+      tableId={routeTableId}
+      databaseTab={databaseTab}
+    >
+      <PostgresSqlWorkbenchContent
+        databaseId={databaseId}
+        routeTableId={routeTableId}
+      />
     </PostgresShell>
   )
 }
 
-function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
+/** @deprecated Use {@link PostgresSqlWorkbench} from the database layout. */
+export function Workspace({
+  databaseId,
+  tableId,
+}: {
+  databaseId: string
+  tableId: string
+}) {
+  return (
+    <PostgresSqlWorkbench databaseId={databaseId} routeTableId={tableId} />
+  )
+}
+
+type PostgresSqlWorkbenchContentProps = {
+  databaseId: string
+  routeTableId?: string
+}
+
+function PostgresSqlWorkbenchContent({
+  databaseId,
+  routeTableId,
+}: PostgresSqlWorkbenchContentProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const { account } = useAuth()
@@ -62,8 +98,9 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
   } = usePostgresSidebar()
 
   useEffect(() => {
-    openTableTab(tableId)
-  }, [openTableTab, tableId])
+    if (!routeTableId) return
+    openTableTab(routeTableId)
+  }, [openTableTab, routeTableId])
 
   const activeTableId = activeTab.tableId
   const selectedTable = activeTableId
@@ -135,7 +172,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
         return
       }
 
-      if (tab.tableId === tableId) return
+      if (tab.tableId === routeTableId) return
 
       navigate({
         ...postgresTableRows({
@@ -146,7 +183,7 @@ function WorkspaceContent({ databaseId, tableId }: PostgresWorkspaceProps) {
         replace: true,
       })
     },
-    [databaseId, navigate, projectId, setActiveTabId, tableId, tabs],
+    [databaseId, navigate, projectId, routeTableId, setActiveTabId, tabs],
   )
 
   const tableRowsPanel = selectedTable ? (

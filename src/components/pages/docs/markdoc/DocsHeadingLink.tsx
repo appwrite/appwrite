@@ -47,7 +47,7 @@ export function DocsHeadingLink({
         )}
         aria-label="Copy link"
       >
-        <Link2 className="size-full" aria-hidden />
+        <Link2 className="size-full -rotate-45" aria-hidden />
       </button>
     </span>
   )

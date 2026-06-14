@@ -122,7 +122,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
                   Developer and agent experience
                 </p>
                 <p className="mt-0.5 text-[12px] leading-5 text-muted-foreground">
-                  A typical integration in TypeScript.
+                  {codeExample.caption ?? 'A typical integration in TypeScript.'}
                 </p>
               </div>
               <ConnectCodeExample

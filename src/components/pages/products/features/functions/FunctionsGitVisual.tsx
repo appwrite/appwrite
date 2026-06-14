@@ -1,0 +1,78 @@
+import { GitBranch, GitCommitHorizontal } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+
+function MockField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 truncate font-mono text-[11px] text-foreground">{value}</p>
+    </div>
+  )
+}
+
+export function FunctionsGitVisual() {
+  return (
+    <ProductFeatureVisualFrame
+      tabs={[
+        { id: 'overview', label: 'Overview' },
+        { id: 'deployments', label: 'Deployments' },
+        { id: 'settings', label: 'Settings', active: true },
+      ]}
+    >
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-[13px] font-semibold text-foreground">Git repository</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">
+              Auto-build on push with branch and path filters.
+            </p>
+          </div>
+          <Badge variant="success" className="shrink-0 text-[10px]">
+            Connected
+          </Badge>
+        </div>
+
+        <MockField label="Repository" value="appwrite/backend" />
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <MockField label="Production branch" value="main" />
+          <MockField label="Root directory" value="functions/stripe-webhook" />
+        </div>
+
+        <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Build triggers
+          </p>
+          <div className="mt-2 space-y-1.5">
+            <div className="flex items-center gap-2 text-[11px] text-foreground">
+              <GitBranch className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="font-mono">main, release/*</span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-foreground">
+              <span className="font-mono text-muted-foreground">paths:</span>
+              <span className="font-mono">functions/**</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
+          <div className="flex min-w-0 items-center gap-2">
+            <GitCommitHorizontal className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-medium text-foreground">
+                feat: add webhook handler
+              </p>
+              <p className="text-[10px] text-muted-foreground">main · 2m ago</p>
+            </div>
+          </div>
+          <Badge variant="success" className="shrink-0 text-[10px]">
+            Active
+          </Badge>
+        </div>
+      </div>
+    </ProductFeatureVisualFrame>
+  )
+}

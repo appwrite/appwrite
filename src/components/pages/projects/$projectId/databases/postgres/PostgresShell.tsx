@@ -95,7 +95,11 @@ function PostgresShellLayout({
 
   const handleOpenTable = (nextTableId: string) => {
     openTableTab(nextTableId)
-    navigate(postgresTableRows({ projectId, databaseId, tableId: nextTableId }))
+    if (tableId === nextTableId) return
+    navigate({
+      ...postgresTableRows({ projectId, databaseId, tableId: nextTableId }),
+      replace: true,
+    })
   }
 
   const mainPanel = (

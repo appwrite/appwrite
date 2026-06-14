@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
-import { Workspace } from '@/components/pages/projects/$projectId/databases/postgres/Workspace'
 import {
   postgresColumnsQueryOptions,
   postgresDatabaseConnectionsQueryOptions,
@@ -106,6 +105,5 @@ export const Route = createFileRoute(
 })
 
 function PostgresRowsPage() {
-  const { databaseId, tableId } = Route.useParams()
-  return <Workspace databaseId={databaseId} tableId={tableId} />
+  return null
 }

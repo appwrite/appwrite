@@ -117,6 +117,65 @@ const singleSecondaryLightAlign = {
 
 export type SecondarySoftLightTone = keyof typeof singleSecondaryLightGradients
 
+/** Brand wash for product feature sections (e.g. providers grid). */
+const brandLightGradients = {
+  pink: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.2)_0%,rgba(253,54,110,0.07)_38%,transparent_72%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.04)_38%,transparent_72%)]',
+  ),
+  purple: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.17)_0%,rgba(124,103,254,0.06)_38%,transparent_72%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.04)_38%,transparent_72%)]',
+  ),
+  teal: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.17)_0%,rgba(133,219,216,0.06)_38%,transparent_72%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.11)_0%,rgba(133,219,216,0.04)_38%,transparent_72%)]',
+  ),
+  orange: cn(
+    'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.17)_0%,rgba(254,149,103,0.06)_38%,transparent_72%)]',
+    'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.11)_0%,rgba(254,149,103,0.04)_38%,transparent_72%)]',
+  ),
+} as const
+
+export type BrandLightTone = keyof typeof brandLightGradients
+
+const brandLightPositionClasses = {
+  top: cn(
+    'absolute top-[-32%] left-1/2 h-[560px] w-[min(1200px,140%)] -translate-x-1/2',
+    'sm:top-[-34%] sm:h-[640px]',
+  ),
+  bottom: cn(
+    'absolute bottom-[-32%] left-1/2 h-[560px] w-[min(1200px,140%)] -translate-x-1/2',
+    'sm:bottom-[-34%] sm:h-[640px]',
+  ),
+} as const
+
+export function SectionBrandLight({
+  tone = 'pink',
+  position = 'top',
+}: {
+  tone?: BrandLightTone
+  position?: keyof typeof brandLightPositionClasses
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+      <div className={cn(brandLightPositionClasses[position], brandLightGradients[tone])} />
+    </div>
+  )
+}
+
+export function SectionDottedBackground({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]',
+        className,
+      )}
+      aria-hidden
+    />
+  )
+}
+
 export function SectionSoftLight({
   tone = 'purple',
   position = 'right',

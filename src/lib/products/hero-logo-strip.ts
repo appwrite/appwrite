@@ -65,7 +65,7 @@ export const PRODUCT_HERO_LOGO_STRIPS: Partial<
   },
   functions: {
     variant: 'runtimes',
-    title: '15 runtimes. Your language. Your choice.',
+    title: '13+ runtimes. Develop locally, deploy when ready.',
     items: FUNCTIONS_RUNTIME_ITEMS,
   },
 }

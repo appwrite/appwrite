@@ -1,4 +1,5 @@
 import { ProductFeatureSection } from '@/components/pages/products/ProductFeatureSection'
+import { MessagingProviderCatalog } from '@/components/pages/products/features/messaging/MessagingProviderCatalog'
 import { getProductFeatures } from '@/lib/products/features'
 import { getProductFeatureVisual } from '@/lib/products/features/visuals'
 import type { ProductId } from '@/lib/products/types'
@@ -15,14 +16,20 @@ export function ProductFeatureSections({ productId }: ProductFeatureSectionsProp
     <>
       {features.map((feature, index) => {
         const Visual = getProductFeatureVisual(productId, feature.id)
-        if (!Visual) return null
+        const companion =
+          productId === 'messaging' && feature.id === 'providers' ? (
+            <MessagingProviderCatalog />
+          ) : undefined
+
+        if (!Visual && !companion && !feature.hideVisual) return null
 
         return (
           <ProductFeatureSection
             key={feature.id}
             feature={feature}
             index={index}
-            visual={<Visual />}
+            visual={Visual ? <Visual /> : undefined}
+            companion={companion}
           />
         )
       })}

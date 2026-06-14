@@ -1,4 +1,6 @@
 import { authProductFeatures } from '@/lib/products/features/auth'
+import { functionsProductFeatures } from '@/lib/products/features/functions'
+import { messagingProductFeatures } from '@/lib/products/features/messaging'
 import { storageProductFeatures } from '@/lib/products/features/storage'
 import type { ProductFeatureContent } from '@/lib/products/features/types'
 import type { ProductId } from '@/lib/products/types'
@@ -9,6 +11,10 @@ export function getProductFeatures(productId: ProductId): ProductFeatureContent[
       return authProductFeatures
     case 'storage':
       return storageProductFeatures
+    case 'functions':
+      return functionsProductFeatures
+    case 'messaging':
+      return messagingProductFeatures
     default:
       return null
   }
