@@ -50,4 +50,12 @@ export const authProductFeatures: ProductFeatureContent[] = [
     docsHref: '/docs/products/auth/mfa',
     docsLabel: 'MFA docs',
   },
+  {
+    id: 'presences',
+    title: 'Presence for team collaboration',
+    description:
+      'Show who is online, on the same page, or typing in team chat. Presences sync status and metadata over Realtime so you can add collaboration cues to shared docs, dashboards, and support tools without building sockets.',
+    docsHref: '/docs/products/auth/presences',
+    docsLabel: 'Presences docs',
+  },
 ]
