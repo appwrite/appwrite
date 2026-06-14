@@ -240,6 +240,16 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       icon: '/icons/youtube.svg',
     },
     {
+      label: 'LinkedIn',
+      href: 'https://www.linkedin.com/company/appwrite/',
+      icon: '/icons/linkedin.svg',
+    },
+    {
+      label: 'Instagram',
+      href: 'https://www.instagram.com/appwrite.io/',
+      icon: '/icons/instagram.svg',
+    },
+    {
       label: 'Discord',
       href: 'https://appwrite.io/discord',
       icon: '/icons/discord-simple.svg',

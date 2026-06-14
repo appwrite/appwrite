@@ -1,24 +1,27 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import type { DocsNavParent } from '@/lib/docs/types'
+import { Link } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
+import { formatDate } from '@/lib/date-utils'
+import type { BlogAuthor } from '@/lib/blog/types'
 import {
-  DOCS_PAGE_DESCRIPTION_CLASS,
-  DOCS_PAGE_EYEBROW_CLASS,
-  DOCS_PAGE_TITLE_CLASS,
-  DOCS_STICKY_TITLE_CLASS,
-} from '@/lib/docs/prose-typography'
+  BLOG_PAGE_DESCRIPTION_CLASS,
+  BLOG_PAGE_TITLE_CLASS,
+  BLOG_STICKY_TITLE_CLASS,
+} from '@/lib/blog/prose-typography'
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
 import { cn, findScrollParent } from '@/lib/utils'
-import { DocsRouteLink } from './DocsRouteLink'
+import { BlogPostShareActions } from './_components/BlogPostShareActions'
+import { BlogAvatarPlaceholder } from './BlogCoverPlaceholder'
 
-type DocsArticleHeaderProps = {
+type BlogArticleHeaderProps = {
+  slug: string
   title: string
-  description?: string
-  readingTimeMinutes?: number
-  parent?: DocsNavParent | null
-  actions?: ReactNode
-  className?: string
+  description: string
+  authors: BlogAuthor[]
+  date: string
+  timeToRead: number
+  lastUpdated: string
 }
 
 type StickyBounds = {
@@ -29,14 +32,17 @@ type StickyBounds = {
   contentWidth: number
 }
 
-export function DocsArticleHeader({
+const BLOG_TITLE_SUFFIX = <span className="text-[var(--brand-cta)]">_</span>
+
+export function BlogArticleHeader({
+  slug,
   title,
   description,
-  readingTimeMinutes,
-  parent,
-  actions,
-  className,
-}: DocsArticleHeaderProps) {
+  authors,
+  date,
+  timeToRead,
+  lastUpdated,
+}: BlogArticleHeaderProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const [stickyBounds, setStickyBounds] = useState<StickyBounds | null>(null)
@@ -108,6 +114,8 @@ export function DocsArticleHeader({
     }
   }, [title])
 
+  const shareActions = <BlogPostShareActions slug={slug} title={title} />
+
   return (
     <>
       {showStickyHeader && stickyBounds ? (
@@ -132,15 +140,11 @@ export function DocsArticleHeader({
             }}
           >
             <div className="flex w-full items-center justify-between gap-4">
-              <p className={DOCS_STICKY_TITLE_CLASS}>
+              <p className={BLOG_STICKY_TITLE_CLASS}>
                 {title}
-                <span className="text-[var(--brand-cta)]">_</span>
+                {BLOG_TITLE_SUFFIX}
               </p>
-              {actions ? (
-                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-                  {actions}
-                </div>
-              ) : null}
+              <div className="flex shrink-0 items-center justify-end">{shareActions}</div>
             </div>
           </div>
           <div
@@ -150,51 +154,47 @@ export function DocsArticleHeader({
         </header>
       ) : null}
 
-      <header className={cn('mb-12', className)}>
+      <header className="border-y border-border py-4">
         <div className="flex items-start justify-between gap-6">
-          <div className="min-w-0 max-w-3xl">
-            {parent ? (
-              <p className={DOCS_PAGE_EYEBROW_CLASS}>
-                <DocsRouteLink
-                  href={parent.href}
-                  className="text-muted-foreground transition-colors hover:text-foreground/85"
-                >
-                  {parent.label}
-                </DocsRouteLink>
-              </p>
-            ) : null}
-
-            <h1 className={cn(DOCS_PAGE_TITLE_CLASS, parent ? 'mt-3' : undefined)}>
+          <div className="min-w-0">
+            <h1 className={BLOG_PAGE_TITLE_CLASS}>
               {title}
-              <span className="text-[var(--brand-cta)]">_</span>
+              {BLOG_TITLE_SUFFIX}
             </h1>
             <div ref={sentinelRef} className="h-px w-full" aria-hidden />
 
-            {description ? (
-              <p className={DOCS_PAGE_DESCRIPTION_CLASS}>{description}</p>
-            ) : null}
+            <p className={BLOG_PAGE_DESCRIPTION_CLASS}>{description}</p>
 
-            {readingTimeMinutes ? (
-              <p className="mt-3 text-[12px] text-muted-foreground">
-                {readingTimeMinutes} min read
-              </p>
-            ) : null}
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              {authors.map((author) => (
+                <Link
+                  key={author.slug}
+                  to="/blog/author/$author"
+                  params={{ author: author.slug }}
+                  className="inline-flex items-center gap-2"
+                >
+                  <BlogAvatarPlaceholder name={author.name} />
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">{author.name}</p>
+                    {author.role ? (
+                      <p className="text-[12px] text-muted-foreground">{author.role}</p>
+                    ) : null}
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+              <time dateTime={date}>{formatDate(date)}</time>
+              {timeToRead > 0 ? <span>{timeToRead} min read</span> : null}
+              {lastUpdated !== date ? <span>Updated {formatDate(lastUpdated)}</span> : null}
+            </div>
           </div>
 
-          {actions ? (
-            <div className="hidden shrink-0 items-center gap-2 @[560px]:flex">
-              {actions}
-            </div>
-          ) : null}
+          <div className="hidden shrink-0 @[560px]:flex">{shareActions}</div>
         </div>
 
-        {actions ? (
-          <div className="mt-5 flex flex-wrap items-center gap-2 @[560px]:hidden">
-            {actions}
-          </div>
-        ) : null}
-
-        <div className="mt-10 h-px w-full bg-border" aria-hidden />
+        <div className="mt-5 @[560px]:hidden">{shareActions}</div>
       </header>
     </>
   )

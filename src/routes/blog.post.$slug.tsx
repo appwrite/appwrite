@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { PostView } from '@/components/pages/blog/PostView'
 import {
+  getBlogMarkdownExport,
   getBlogPost,
   getPostCategoryLabel,
   getPrimaryPostCategorySlug,
@@ -19,8 +20,35 @@ import { marketingPageLoader } from '@/lib/marketing/route-loader'
 export const Route = createFileRoute('/blog/post/$slug')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
+  server: {
+    handlers: {
+      GET: async ({ params, next }) => {
+        const slug = params.slug
+        if (!slug.endsWith('.md')) {
+          return next()
+        }
+
+        const postSlug = slug.slice(0, -3)
+        const markdown = getBlogMarkdownExport(postSlug)
+        if (!markdown) {
+          return new Response('Not found', { status: 404 })
+        }
+
+        return new Response(markdown, {
+          headers: {
+            'Content-Type': 'text/markdown; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        })
+      },
+    },
+  },
   loader: async ({ context, params }) => {
     await marketingPageLoader(context.queryClient)
+
+    if (params.slug.endsWith('.md')) {
+      throw notFound()
+    }
 
     const post = getBlogPost(params.slug)
     if (!post) {

@@ -158,6 +158,16 @@ export function getBlogPost(slug: string): BlogPost | null {
   return post
 }
 
+export function getBlogMarkdownExport(slug: string): string | null {
+  if (!getBlogPost(slug)) return null
+
+  const modulePath = Object.keys(postLoaders).find(
+    (path) => slugFromModulePath(path, 'posts') === slug,
+  )
+  if (!modulePath) return null
+  return postLoaders[modulePath] ?? null
+}
+
 export function getBlogAuthor(slug: string): BlogAuthor | null {
   return allAuthors.find((author) => author.slug === slug) ?? null
 }

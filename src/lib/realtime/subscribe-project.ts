@@ -79,17 +79,19 @@ function mergeDeploymentPayloadIntoCache(
   projectId: string,
   resourceType: DeploymentResourceType,
   payload: Record<string, unknown>,
-): void {
+): boolean {
   const id = payload.$id as string | undefined
-  if (!id) return
+  if (!id) return false
 
   const resourceId = payload.resourceId as string | undefined
-  if (!resourceId) return
+  if (!resourceId) return false
 
   const listPrefix =
     resourceType === 'site'
       ? ['deployments', 'site', projectId, resourceId]
       : ['deployments', 'function', projectId, resourceId]
+
+  let mergedInList = false
 
   queryClient.setQueriesData(
     { queryKey: listPrefix, exact: false },
@@ -100,6 +102,7 @@ function mergeDeploymentPayloadIntoCache(
       if (!data?.deployments || !Array.isArray(data.deployments)) return old
       const idx = data.deployments.findIndex((d) => d.$id === id)
       if (idx < 0) return old
+      mergedInList = true
       const next = [...data.deployments]
       next[idx] = { ...next[idx], ...payload }
       return { ...data, deployments: next }
@@ -115,6 +118,34 @@ function mergeDeploymentPayloadIntoCache(
     if (!old || typeof old !== 'object') return payload
     return { ...(old as Record<string, unknown>), ...payload }
   })
+
+  return mergedInList
+}
+
+function refetchDeploymentQueries(
+  queryClient: QueryClient,
+  projectId: string,
+  resourceType: DeploymentResourceType,
+  resourceId?: string,
+): void {
+  const listKey = resourceId
+    ? resourceType === 'site'
+      ? ['deployments', 'site', projectId, resourceId]
+      : ['deployments', 'function', projectId, resourceId]
+    : resourceType === 'site'
+      ? ['deployments', 'site', projectId]
+      : ['deployments', 'function', projectId]
+  const detailKey = resourceId
+    ? resourceType === 'site'
+      ? ['deployment', 'site', projectId, resourceId]
+      : ['deployment', 'function', projectId, resourceId]
+    : resourceType === 'site'
+      ? ['deployment', 'site', projectId]
+      : ['deployment', 'function', projectId]
+
+  // Lists use refetchOnMount: false; refetch so active views update immediately.
+  void queryClient.refetchQueries({ queryKey: listKey, exact: false })
+  void queryClient.refetchQueries({ queryKey: detailKey, exact: false })
 }
 
 function isDeploymentDeleteEvent(events: string[]): boolean {
@@ -166,25 +197,24 @@ function handleDeploymentRealtimeEvent(
     !isCreate &&
     !isDelete
 
+  let mergedInList = false
   if (canMerge) {
-    mergeDeploymentPayloadIntoCache(queryClient, projectId, resourceType, {
-      ...payload,
-      resourceId,
-    })
+    mergedInList = mergeDeploymentPayloadIntoCache(
+      queryClient,
+      projectId,
+      resourceType,
+      {
+        ...payload,
+        resourceId,
+      },
+    )
   }
 
-  const listKey =
-    resourceType === 'site'
-      ? ['deployments', 'site', projectId]
-      : ['deployments', 'function', projectId]
-  const detailKey =
-    resourceType === 'site'
-      ? ['deployment', 'site', projectId]
-      : ['deployment', 'function', projectId]
-
-  if (isCreate || isDelete || !canMerge) {
-    queryClient.invalidateQueries({ queryKey: listKey })
-    queryClient.invalidateQueries({ queryKey: detailKey })
+  // Refetch when the list cannot be patched in place: new builds, deletes, or
+  // updates for deployments that are not in the cached page (common when a build
+  // starts and the row has not appeared yet).
+  if (isCreate || isDelete || !canMerge || !mergedInList) {
+    refetchDeploymentQueries(queryClient, projectId, resourceType, resourceId)
   }
 
   queryClient.invalidateQueries({ queryKey: parentQueryKey })

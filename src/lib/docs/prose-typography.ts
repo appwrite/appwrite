@@ -18,7 +18,10 @@ export const DOCS_PAGE_EYEBROW_CLASS =
   'text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground'
 
 export const DOCS_PAGE_TITLE_CLASS =
-  'font-aeonik-pro text-balance text-[26px] font-normal leading-none tracking-tight text-foreground @[640px]:text-[30px]'
+  'font-aeonik-pro text-balance text-[30px] font-normal leading-[1.3] tracking-tight text-foreground @[640px]:text-[36px] @[640px]:leading-[1.25]'
+
+export const DOCS_STICKY_TITLE_CLASS =
+  'min-w-0 truncate font-aeonik-pro text-[17px] font-medium leading-snug text-foreground @[560px]:text-[19px]'
 
 export const DOCS_PAGE_DESCRIPTION_CLASS = cn(
   'mt-4 max-w-2xl',

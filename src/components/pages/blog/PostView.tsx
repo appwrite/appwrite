@@ -27,6 +27,7 @@ import {
   BLOG_PAGE_TITLE_CLASS,
 } from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
+import { BlogArticleHeader } from './BlogArticleHeader'
 import { BlogAvatarPlaceholder, BlogCoverPlaceholder } from './BlogCoverPlaceholder'
 import { BlogFaqSection } from './BlogFaqSection'
 import { BlogMarkdown } from './BlogMarkdown'
@@ -74,41 +75,15 @@ export function PostView({ post }: PostViewProps) {
 
           <div className="mt-8 grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,56rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
             <article className="min-w-0">
-              <header className="border-y border-border py-4">
-                <h1 className={BLOG_PAGE_TITLE_CLASS}>{post.title}</h1>
-                <p className={BLOG_PAGE_DESCRIPTION_CLASS}>
-                  {post.description}
-                </p>
-
-                <div className="mt-6 flex flex-wrap items-center gap-4">
-                  {authors.map((author) => (
-                    <Link
-                      key={author.slug}
-                      to="/blog/author/$author"
-                      params={{ author: author.slug }}
-                      className="inline-flex items-center gap-2"
-                    >
-                      <BlogAvatarPlaceholder name={author.name} />
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-foreground">
-                          {author.name}
-                        </p>
-                        {author.role ? (
-                          <p className="text-[12px] text-muted-foreground">{author.role}</p>
-                        ) : null}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                  <time dateTime={post.date}>{formatDate(post.date)}</time>
-                  {post.timeToRead > 0 ? <span>{post.timeToRead} min read</span> : null}
-                  {post.lastUpdated !== post.date ? (
-                    <span>Updated {formatDate(post.lastUpdated)}</span>
-                  ) : null}
-                </div>
-              </header>
+              <BlogArticleHeader
+                slug={post.slug}
+                title={post.title}
+                description={post.description}
+                authors={authors}
+                date={post.date}
+                timeToRead={post.timeToRead}
+                lastUpdated={post.lastUpdated}
+              />
 
               <div className="mt-8">
                 <BlogCoverPlaceholder title={post.title} />
