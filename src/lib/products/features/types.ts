@@ -21,4 +21,8 @@ export type ProductFeatureContent = {
   dottedBackground?: boolean
   /** Use full section width (max-w-7xl) for companion content below stacked title. */
   wideCompanion?: boolean
+  /** Hide the docs link below companion content (when CTA is inline). */
+  hideDocsLink?: boolean
+  /** Remove bottom section padding so companion content can meet the section border. */
+  flushBottom?: boolean
 }

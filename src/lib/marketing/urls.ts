@@ -14,6 +14,7 @@ export type MarketingPagePath =
   | '/community'
   | '/docs'
   | '/changelog'
+  | '/domains'
   | '/home'
 
 /**

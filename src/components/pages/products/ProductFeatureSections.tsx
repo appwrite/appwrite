@@ -1,5 +1,9 @@
 import { ProductFeatureSection } from '@/components/pages/products/ProductFeatureSection'
 import { MessagingProviderCatalog } from '@/components/pages/products/features/messaging/MessagingProviderCatalog'
+import { SitesDeployOptions } from '@/components/pages/products/features/sites/SitesDeployOptions'
+import { SitesDomainManagement } from '@/components/pages/products/features/sites/SitesDomainManagement'
+import { SitesGitProviders } from '@/components/pages/products/features/sites/SitesGitProviders'
+import { SitesNetworkSection } from '@/components/pages/products/features/sites/SitesNetworkSection'
 import { getProductFeatures } from '@/lib/products/features'
 import { getProductFeatureVisual } from '@/lib/products/features/visuals'
 import type { ProductId } from '@/lib/products/types'
@@ -19,6 +23,14 @@ export function ProductFeatureSections({ productId }: ProductFeatureSectionsProp
         const companion =
           productId === 'messaging' && feature.id === 'providers' ? (
             <MessagingProviderCatalog />
+          ) : productId === 'sites' && feature.id === 'git-previews' ? (
+            <SitesGitProviders />
+          ) : productId === 'sites' && feature.id === 'deploy-methods' ? (
+            <SitesDeployOptions />
+          ) : productId === 'sites' && feature.id === 'domains' ? (
+            <SitesDomainManagement />
+          ) : productId === 'sites' && feature.id === 'network' ? (
+            <SitesNetworkSection />
           ) : undefined
 
         if (!Visual && !companion && !feature.hideVisual) return null

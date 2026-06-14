@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { cn } from '@/lib/utils'
 
 type ProductFeatureVisualFrameProps = {
   eyebrow?: string
   title?: string
+  headerIconSrc?: string
   tabs?: { id: string; label: string; active?: boolean }[]
   className?: string
   contentClassName?: string
@@ -13,6 +15,7 @@ type ProductFeatureVisualFrameProps = {
 export function ProductFeatureVisualFrame({
   eyebrow,
   title,
+  headerIconSrc,
   tabs,
   className,
   contentClassName,
@@ -42,17 +45,22 @@ export function ProductFeatureVisualFrame({
           ))}
         </div>
       ) : title || eyebrow ? (
-        <div className="border-b border-border bg-muted/15 px-4 py-2.5">
-          {eyebrow ? (
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {eyebrow}
-            </p>
+        <div className="flex items-center gap-2.5 border-b border-border bg-muted/15 px-4 py-2.5">
+          {headerIconSrc ? (
+            <ProductFeaturePublicIcon src={headerIconSrc} className="size-5 shrink-0" />
           ) : null}
-          {title ? (
-            <p className={cn('text-[13px] font-semibold text-foreground', eyebrow && 'mt-0.5')}>
-              {title}
-            </p>
-          ) : null}
+          <div className="min-w-0">
+            {eyebrow ? (
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {eyebrow}
+              </p>
+            ) : null}
+            {title ? (
+              <p className={cn('text-[13px] font-semibold text-foreground', eyebrow && 'mt-0.5')}>
+                {title}
+              </p>
+            ) : null}
+          </div>
         </div>
       ) : null}
       <div className={cn('p-4 sm:p-5', contentClassName)}>{children}</div>

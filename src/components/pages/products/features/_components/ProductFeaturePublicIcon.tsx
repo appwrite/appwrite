@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 export function productFeaturePublicIconMaskStyle(iconSrc: string): CSSProperties {
   return {
     maskImage: `url(${iconSrc})`,
+    maskMode: 'alpha',
     maskRepeat: 'no-repeat',
     maskPosition: 'center',
     maskSize: 'contain',

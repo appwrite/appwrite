@@ -17,6 +17,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as EnterpriseRouteImport } from './routes/enterprise'
 import { Route as EducationRouteImport } from './routes/education'
+import { Route as DomainsRouteImport } from './routes/domains'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as CompanyRouteImport } from './routes/company'
@@ -32,6 +33,7 @@ import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
@@ -316,6 +318,11 @@ const EducationRoute = EducationRouteImport.update({
   path: '/education',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DomainsRoute = DomainsRouteImport.update({
+  id: '/domains',
+  path: '/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -387,6 +394,11 @@ const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
   id: '/llms-full/txt',
   path: '/llms-full/txt',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DomainsContinueRoute = DomainsContinueRouteImport.update({
+  id: '/continue',
+  path: '/continue',
+  getParentRoute: () => DomainsRoute,
 } as any)
 const DocsTutorialsRoute = DocsTutorialsRouteImport.update({
   id: '/tutorials',
@@ -1980,6 +1992,7 @@ export interface FileRoutesByFullPath {
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRouteWithChildren
+  '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
   '/home': typeof HomeRoute
@@ -2007,6 +2020,7 @@ export interface FileRoutesByFullPath {
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
+  '/domains/continue': typeof DomainsContinueRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -2244,6 +2258,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
   '/home': typeof HomeRoute
@@ -2270,6 +2285,7 @@ export interface FileRoutesByTo {
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
+  '/domains/continue': typeof DomainsContinueRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -2480,6 +2496,7 @@ export interface FileRoutesById {
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRouteWithChildren
+  '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
   '/home': typeof HomeRoute
@@ -2507,6 +2524,7 @@ export interface FileRoutesById {
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
+  '/domains/continue': typeof DomainsContinueRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -2747,6 +2765,7 @@ export interface FileRouteTypes {
     | '/company'
     | '/cookies'
     | '/docs'
+    | '/domains'
     | '/education'
     | '/enterprise'
     | '/home'
@@ -2774,6 +2793,7 @@ export interface FileRouteTypes {
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
+    | '/domains/continue'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
@@ -3011,6 +3031,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/company'
     | '/cookies'
+    | '/domains'
     | '/education'
     | '/enterprise'
     | '/home'
@@ -3037,6 +3058,7 @@ export interface FileRouteTypes {
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
+    | '/domains/continue'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
@@ -3246,6 +3268,7 @@ export interface FileRouteTypes {
     | '/company'
     | '/cookies'
     | '/docs'
+    | '/domains'
     | '/education'
     | '/enterprise'
     | '/home'
@@ -3273,6 +3296,7 @@ export interface FileRouteTypes {
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
+    | '/domains/continue'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
@@ -3515,6 +3539,7 @@ export interface RootRouteChildren {
   CompanyRoute: typeof CompanyRoute
   CookiesRoute: typeof CookiesRoute
   DocsRoute: typeof DocsRouteWithChildren
+  DomainsRoute: typeof DomainsRouteWithChildren
   EducationRoute: typeof EducationRoute
   EnterpriseRoute: typeof EnterpriseRoute
   HomeRoute: typeof HomeRoute
@@ -3589,6 +3614,13 @@ declare module '@tanstack/react-router' {
       path: '/education'
       fullPath: '/education'
       preLoaderRoute: typeof EducationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/domains': {
+      id: '/domains'
+      path: '/domains'
+      fullPath: '/domains'
+      preLoaderRoute: typeof DomainsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -3695,6 +3727,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/llms-full/txt'
       preLoaderRoute: typeof LlmsFullTxtRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/domains/continue': {
+      id: '/domains/continue'
+      path: '/continue'
+      fullPath: '/domains/continue'
+      preLoaderRoute: typeof DomainsContinueRouteImport
+      parentRoute: typeof DomainsRoute
     }
     '/docs/tutorials': {
       id: '/docs/tutorials'
@@ -6628,6 +6667,17 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
+interface DomainsRouteChildren {
+  DomainsContinueRoute: typeof DomainsContinueRoute
+}
+
+const DomainsRouteChildren: DomainsRouteChildren = {
+  DomainsContinueRoute: DomainsContinueRoute,
+}
+
+const DomainsRouteWithChildren =
+  DomainsRoute._addFileChildren(DomainsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
@@ -6638,6 +6688,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompanyRoute: CompanyRoute,
   CookiesRoute: CookiesRoute,
   DocsRoute: DocsRouteWithChildren,
+  DomainsRoute: DomainsRouteWithChildren,
   EducationRoute: EducationRoute,
   EnterpriseRoute: EnterpriseRoute,
   HomeRoute: HomeRoute,

@@ -5,6 +5,11 @@ import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
+import {
+  marketingSiteTemplatesQueryOptions,
+  siteFrameworksQueryOptions,
+} from '@/lib/react-query/hooks/sites'
+import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/products/$productId')({
@@ -29,8 +34,22 @@ export const Route = createFileRoute('/products/$productId')({
       ],
     }
   },
-  loader: async ({ context }) => {
+  loader: async ({ params, context }) => {
     await marketingPageLoader(context.queryClient)
+
+    if (typeof window !== 'undefined' && params.productId === 'sites') {
+      const { queryClient } = context
+      await Promise.all([
+        queryClient
+          .ensureQueryData(
+            siteFrameworksQueryOptions(MARKETING_SITE_TEMPLATES_PROJECT_ID),
+          )
+          .catch(() => {}),
+        queryClient.ensureQueryData(marketingSiteTemplatesQueryOptions()).catch(
+          () => {},
+        ),
+      ])
+    }
   },
   component: ProductPage,
 })

@@ -16,6 +16,10 @@ import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  MARKETING_SITE_TEMPLATES_PROJECT_ID,
+  MARKETING_SITE_TEMPLATES_PAGE_SIZE,
+} from '@/lib/sites/site-template-wizard'
+import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
@@ -265,8 +269,10 @@ export async function fetchSiteFrameworks(projectId: string) {
     return { frameworks: [], total: 0 }
   }
 
-  const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.sites.listFrameworks()
+  const response =
+    projectId === MARKETING_SITE_TEMPLATES_PROJECT_ID
+      ? await sdk.forConsole.sites.listFrameworks()
+      : await sdk.forProject(projectId).sites.listFrameworks()
   return {
     frameworks: response.frameworks || [],
     total: response.total || 0,
@@ -1167,13 +1173,11 @@ export async function fetchSiteTemplates(
     return { templates: [], total: 0 }
   }
 
-  const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.sites.listTemplates({
-    frameworks,
-    useCases,
-    limit,
-    offset,
-  })
+  const listParams = { frameworks, useCases, limit, offset }
+  const response =
+    projectId === MARKETING_SITE_TEMPLATES_PROJECT_ID
+      ? await sdk.forConsole.sites.listTemplates(listParams)
+      : await sdk.forProject(projectId).sites.listTemplates(listParams)
 
   return {
     templates: response.templates ? [...response.templates] : [],
@@ -1244,6 +1248,24 @@ export function siteTemplatesQueryOptions(
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
+}
+
+/**
+ * Site templates for marketing visuals (public catalog via console project).
+ */
+export function marketingSiteTemplatesQueryOptions(
+  frameworks?: string[],
+  useCases?: string[],
+  limit: number = MARKETING_SITE_TEMPLATES_PAGE_SIZE,
+  offset: number = 0,
+) {
+  return siteTemplatesQueryOptions(
+    MARKETING_SITE_TEMPLATES_PROJECT_ID,
+    frameworks,
+    useCases,
+    limit,
+    offset,
+  )
 }
 
 /**

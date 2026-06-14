@@ -141,6 +141,8 @@ export interface PaginationProps {
   itemLabel?: string
   /** Show the "Show X per page" selector; set to false to fix page size (e.g. billing breakdown) */
   showPageSizeSelector?: boolean
+  /** Scroll the console main area to top when the page changes (default true) */
+  scrollToTopOnPageChange?: boolean
   /**
    * Inclusive 1-based range in the overall list for the summary text (`start–end of total`).
    * Use when the number of rendered rows on this page can differ from `pageSize` (e.g. API page
@@ -162,6 +164,7 @@ export function Pagination({
   showTotal = true,
   itemLabel = 'items',
   showPageSizeSelector = true,
+  scrollToTopOnPageChange = true,
   displayItemRange,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
@@ -180,7 +183,11 @@ export function Pagination({
   const prevPageRef = useRef(currentPage)
   const isUserInitiatedRef = useRef(false)
 
-  const scrollToTop = () => scrollConsoleMainToTop()
+  const scrollToTop = () => {
+    if (scrollToTopOnPageChange) {
+      scrollConsoleMainToTop()
+    }
+  }
 
   // Scroll to top when page changes programmatically (not via button clicks)
   useEffect(() => {

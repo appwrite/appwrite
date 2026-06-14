@@ -1,9 +1,12 @@
 import { ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { SectionBrandLight, SectionDottedBackground, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import type { ProductFeatureContent } from '@/lib/products/features/types'
 import { cn } from '@/lib/utils'
+
+const productFeatureDocsLinkClassName =
+  'inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground'
 
 type ProductFeatureSectionProps = {
   feature: ProductFeatureContent
@@ -24,20 +27,21 @@ export function ProductFeatureSection({
   const reversed = !stacked && index % 2 === 1
   const muted = index % 2 === 1
 
+  const hideDocsLink = feature.hideDocsLink
+  const flushBottom = feature.flushBottom
+
   const docsLink = (
-    <Link
-      to={feature.docsHref}
-      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-    >
+    <DocsRouteLink href={feature.docsHref} className={productFeatureDocsLinkClassName}>
       {feature.docsLabel}
       <ArrowUpRight className="size-3.5" aria-hidden />
-    </Link>
+    </DocsRouteLink>
   )
 
   return (
     <section
       className={cn(
-        'relative isolate border-b border-border py-16 sm:py-20',
+        'relative isolate border-b border-border',
+        flushBottom ? 'pt-16 pb-0 sm:pt-20' : 'py-16 sm:py-20',
         muted && 'bg-muted/15',
       )}
     >
@@ -63,14 +67,18 @@ export function ProductFeatureSection({
               <div
                 className={cn(
                   'relative z-[1] mx-auto mt-10 sm:mt-12',
+                  flushBottom && '-mx-4 mb-0 sm:-mx-6',
                   feature.brandLight || feature.wideCompanion ? 'max-w-7xl' : centered ? 'max-w-5xl' : 'max-w-4xl',
+                  flushBottom && 'max-w-none',
                 )}
               >
                 {companion}
               </div>
             ) : null}
 
-            {hideVisual || companion ? <div className="mt-8 text-center">{docsLink}</div> : null}
+            {!hideDocsLink && (hideVisual || companion) ? (
+              <div className="mt-8 text-center">{docsLink}</div>
+            ) : null}
           </>
         ) : null}
 

@@ -292,8 +292,8 @@ export function SchemaTablesSidebar({
                             className={cn(
                               'flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left transition-colors',
                               selectedTableId === id
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
+                                ? 'bg-accent text-foreground'
+                                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                             )}
                           >
                             <span className="truncate text-[13px] font-medium">

@@ -208,19 +208,21 @@ function PostgresSqlWorkbenchContent({
         />
       }
       footer={
-        <Pagination
-          currentPage={page}
-          totalItems={total}
-          pageSize={pageSize}
-          pageSizeOptions={[10, 25, 50, 100]}
-          onPageChange={setPage}
-          onPageSizeChange={(nextPageSize) => {
-            setPageSize(nextPageSize)
-            setPage(1)
-          }}
-          itemLabel="rows"
-          className="h-full min-h-0 border-0 mt-0 py-0"
-        />
+        total > pageSize ? (
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={pageSize}
+            pageSizeOptions={[10, 25, 50, 100]}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize)
+              setPage(1)
+            }}
+            itemLabel="rows"
+            className="h-full min-h-0 border-0 mt-0 py-0"
+          />
+        ) : undefined
       }
     />
   ) : (

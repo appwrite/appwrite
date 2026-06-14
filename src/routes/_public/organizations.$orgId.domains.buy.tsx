@@ -12,6 +12,8 @@ import {
 export const buyDomainSearchSchema = z.object({
   payment: z.enum(['purchase']).optional(),
   invoiceId: z.string().optional(),
+  domain: z.string().optional(),
+  stage: z.enum(['checkout']).optional(),
 })
 
 export type BuyDomainWizardSearch = z.infer<typeof buyDomainSearchSchema>

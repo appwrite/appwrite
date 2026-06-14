@@ -8,7 +8,6 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
-import { useTheme } from 'next-themes'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,48 +18,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   CreateWizardLeftColumn,
   CreateWizardRightColumn,
 } from '@/components/global/shared/CreateWizardColumns'
-import {
-  Pagination,
-  SimplePagination,
-} from '@/components/global/shared/Pagination'
+import { SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { SiteTemplateGallery } from '@/components/pages/projects/$projectId/sites/_components/SiteTemplateGallery'
 import {
   Search,
   Lock,
   Plus,
-  LayoutTemplate,
   RefreshCw,
-  ChevronsUpDown,
 } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepositories,
-  useSiteTemplates,
   useProject,
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
+
+const REPO_PAGE_SIZE = 7
+const DEFAULT_TEMPLATE_PAGE_SIZE = 9
 
 // Provider icons
 function GitHubIcon({ className }: { className?: string }) {
@@ -147,70 +131,10 @@ function RepositorySkeleton({
   )
 }
 
-// Template skeleton
-function TemplateSkeleton() {
-  return (
-    <div className="h-[180px] rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
-      <div className="px-3 pt-3 pb-1.5 h-[80px]">
-        <Skeleton className="h-3.5 w-24 mb-1.5" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-3/4 mt-0.5" />
-      </div>
-      <div className="relative flex-1 overflow-hidden">
-        <div className="absolute inset-x-3 top-4 transform -rotate-3">
-          <Skeleton className="w-full h-[120px] rounded-lg" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Fade-in image component
-function FadeImage({
-  src,
-  alt,
-  className,
-}: {
-  src: string
-  alt: string
-  className?: string
-}) {
-  const [loaded, setLoaded] = useState(false)
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className={cn(
-        className,
-        'transition-opacity duration-300',
-        loaded ? 'opacity-100' : 'opacity-0',
-      )}
-      onLoad={() => setLoaded(true)}
-    />
-  )
-}
-
-const REPO_PAGE_SIZE = 7
-const DEFAULT_TEMPLATE_PAGE_SIZE = 9
-
-// Use case options for template filtering (must match API enum values)
-const USE_CASE_OPTIONS = [
-  { value: 'all', label: 'All use cases' },
-  { value: 'starter', label: 'Starter' },
-  { value: 'ai', label: 'AI' },
-  { value: 'databases', label: 'Databases' },
-  { value: 'messaging', label: 'Messaging' },
-  { value: 'dev-tools', label: 'Dev tools' },
-  { value: 'utilities', label: 'Utilities' },
-]
-
 export function CreateSiteView() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const { theme, resolvedTheme } = useTheme()
-  const { installations, frameworks, updateFormData, setCurrentPath } =
-    useWizard()
+  const { installations, updateFormData, setCurrentPath } = useWizard()
 
   // Get project for region/endpoint
   const { project } = useProject(projectId)
@@ -242,19 +166,6 @@ export function CreateSiteView() {
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
-
-  // Template state (requestedPage drives fetch; displayedPage stays until new page is ready - no-flash pagination)
-  const [templateSearch, setTemplateSearch] = useState('')
-  const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState('')
-  const [templateRequestedPage, setTemplateRequestedPage] = useState(1)
-  const [templateDisplayedPage, setTemplateDisplayedPage] = useState(1)
-  const [templatePageSize, setTemplatePageSize] = useState(
-    DEFAULT_TEMPLATE_PAGE_SIZE,
-  )
-  const [selectedFramework, setSelectedFramework] = useState<string>('all')
-  const [selectedUseCase, setSelectedUseCase] = useState<string>('all')
-  const [useCaseOpen, setUseCaseOpen] = useState(false)
-  const [frameworkOpen, setFrameworkOpen] = useState(false)
 
   // Set current path
   useEffect(() => {
@@ -304,22 +215,6 @@ export function CreateSiteView() {
     return () => clearTimeout(timer)
   }, [repoSearch])
 
-  // Debounce template search (reset both pages on search change)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedTemplateSearch(templateSearch)
-      setTemplateRequestedPage(1)
-      setTemplateDisplayedPage(1)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [templateSearch])
-
-  // Theme for screenshots
-  const isDark = useMemo(() => {
-    if (typeof window === 'undefined') return true
-    return resolvedTheme === 'dark' || theme === 'dark'
-  }, [theme, resolvedTheme])
-
   // Fetch repositories
   const {
     data: repositoriesData,
@@ -340,78 +235,6 @@ export function CreateSiteView() {
   }, [repositoriesData])
 
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
-
-  // Fetch templates: requested page (triggers load) and displayed page (what we show until new page is ready)
-  const frameworkFilter =
-    selectedFramework !== 'all' ? [selectedFramework] : undefined
-  const useCaseFilter =
-    selectedUseCase !== 'all' ? [selectedUseCase] : undefined
-  const { isLoading: templatesLoading, isFetching: templatesFetching } =
-    useSiteTemplates(
-      projectId,
-      frameworkFilter,
-      useCaseFilter,
-      templatePageSize,
-      (templateRequestedPage - 1) * templatePageSize,
-    )
-
-  const {
-    templates: displayedTemplates,
-    total: templatesTotal,
-    isLoading: templatesDisplayedLoading,
-  } = useSiteTemplates(
-    projectId,
-    frameworkFilter,
-    useCaseFilter,
-    templatePageSize,
-    (templateDisplayedPage - 1) * templatePageSize,
-  )
-
-  // Update displayed page only when requested page data is ready (no flash)
-  useEffect(() => {
-    if (
-      !templatesFetching &&
-      templateRequestedPage !== templateDisplayedPage &&
-      !templatesLoading
-    ) {
-      setTemplateDisplayedPage(templateRequestedPage)
-    }
-  }, [
-    templatesFetching,
-    templatesLoading,
-    templateRequestedPage,
-    templateDisplayedPage,
-  ])
-
-  // Only show full loading when we have no data to display (initial load)
-  const showTemplatesLoading =
-    templatesDisplayedLoading && displayedTemplates.length === 0
-
-  // Filter templates by search (client-side since API may not support text search)
-  const filteredTemplates = useMemo(() => {
-    if (!debouncedTemplateSearch.trim()) return displayedTemplates
-    const searchLower = debouncedTemplateSearch.toLowerCase()
-    return displayedTemplates.filter(
-      (t) =>
-        t.name.toLowerCase().includes(searchLower) ||
-        (t.tagline && t.tagline.toLowerCase().includes(searchLower)),
-    )
-  }, [displayedTemplates, debouncedTemplateSearch])
-
-  // Get unique frameworks from the wizard context for the filter
-  const frameworkOptions = useMemo(() => {
-    const options = [{ value: 'all', label: 'All frameworks' }]
-    if (frameworks && frameworks.length > 0) {
-      frameworks.forEach((fw: unknown) => {
-        const key = typeof fw === 'string' ? fw : fw.key || fw.name || fw.id
-        const name = typeof fw === 'string' ? fw : fw.name || fw.key || fw.id
-        if (key && name) {
-          options.push({ value: key, label: name })
-        }
-      })
-    }
-    return options
-  }, [frameworks])
 
   const hasInstallations = installations.length > 0
   const selectedInstallation = installations.find(
@@ -455,10 +278,6 @@ export function CreateSiteView() {
         template: encodeURIComponent(template.key),
       },
     })
-  }
-
-  const getScreenshotUrl = (template: Models.TemplateSite) => {
-    return isDark ? template.screenshotDark : template.screenshotLight
   }
 
   return (
@@ -670,216 +489,14 @@ export function CreateSiteView() {
         </CreateWizardLeftColumn>
 
         <CreateWizardRightColumn title="Clone template">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[140px]">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <Input
-                value={templateSearch}
-                onChange={(e) => setTemplateSearch(e.target.value)}
-                placeholder="Search templates..."
-                className="h-9 pl-9 text-[13px]"
-              />
-            </div>
-            {/* Use case filter */}
-            <Popover
-              open={useCaseOpen}
-              onOpenChange={setUseCaseOpen}
-              modal={true}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={useCaseOpen}
-                  className="w-[150px] h-9 justify-between text-[13px] font-normal"
-                >
-                  {USE_CASE_OPTIONS.find((opt) => opt.value === selectedUseCase)
-                    ?.label || 'All use cases'}
-                  <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[200px] p-0"
-                align="start"
-                sideOffset={4}
-              >
-                <Command>
-                  <CommandInput
-                    placeholder="Search use cases..."
-                    className="h-9"
-                  />
-                  <CommandList>
-                    <CommandEmpty>No use case found.</CommandEmpty>
-                    <CommandGroup>
-                      {USE_CASE_OPTIONS.map((option) => (
-                        <CommandItem
-                          key={option.value}
-                          value={option.value}
-                          onSelect={() => {
-                            setSelectedUseCase(option.value)
-                            setTemplateRequestedPage(1)
-                            setTemplateDisplayedPage(1)
-                            setUseCaseOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-
-            {/* Framework filter */}
-            <Popover
-              open={frameworkOpen}
-              onOpenChange={setFrameworkOpen}
-              modal={true}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={frameworkOpen}
-                  className="w-[160px] h-9 justify-between text-[13px] font-normal"
-                >
-                  <span className="flex items-center gap-2 truncate">
-                    {selectedFramework !== 'all' && (
-                      <FrameworkIcon framework={selectedFramework} size="sm" />
-                    )}
-                    <span className="capitalize truncate">
-                      {frameworkOptions.find(
-                        (opt) => opt.value === selectedFramework,
-                      )?.label || 'All frameworks'}
-                    </span>
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[220px] p-0"
-                align="start"
-                sideOffset={4}
-              >
-                <Command>
-                  <CommandInput
-                    placeholder="Search frameworks..."
-                    className="h-9"
-                  />
-                  <CommandList>
-                    <CommandEmpty>No framework found.</CommandEmpty>
-                    <CommandGroup>
-                      {frameworkOptions.map((option) => (
-                        <CommandItem
-                          key={option.value}
-                          value={option.label}
-                          onSelect={() => {
-                            setSelectedFramework(option.value)
-                            setTemplateRequestedPage(1)
-                            setTemplateDisplayedPage(1)
-                            setFrameworkOpen(false)
-                          }}
-                        >
-                          {option.value !== 'all' && (
-                            <FrameworkIcon
-                              framework={option.value}
-                              size="sm"
-                              className="mr-2"
-                            />
-                          )}
-                          <span className="capitalize">{option.label}</span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Templates grid */}
-          {showTemplatesLoading ? (
-            <div className="grid gap-4 grid-cols-3">
-              {Array.from({ length: templatePageSize }).map((_, i) => (
-                <TemplateSkeleton key={i} />
-              ))}
-            </div>
-          ) : filteredTemplates.length > 0 ? (
-            <div
-              className={cn(
-                'grid gap-4 grid-cols-3',
-                templatesFetching && 'opacity-60 pointer-events-none',
-              )}
-            >
-              {filteredTemplates.map((template) => {
-                const screenshotUrl = getScreenshotUrl(template)
-                return (
-                  <button
-                    key={template.key}
-                    onClick={() => handleSelectTemplate(template)}
-                    className="group h-[180px] text-left rounded-2xl border border-border bg-card overflow-hidden transition-all cursor-pointer hover:border-border/80 flex flex-col"
-                  >
-                    <div className="px-4 pt-4 pb-2 h-[80px]">
-                      <h3 className="text-[14px] font-semibold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
-                        {template.name}
-                      </h3>
-                      {template.tagline && (
-                        <p className="text-[12px] text-muted-foreground line-clamp-2 mt-1.5 leading-snug">
-                          {template.tagline}
-                        </p>
-                      )}
-                    </div>
-                    {/* Screenshot slot: aspect-video reserves space to avoid layout shift when image loads */}
-                    <div className="relative flex-1 min-h-0 overflow-hidden">
-                      {screenshotUrl ? (
-                        <div className="absolute left-8 -right-4 top-4 aspect-video transform -rotate-3 transition-transform group-hover:-rotate-2">
-                          <div className="relative h-full w-full overflow-hidden rounded-lg ring-1 ring-border bg-muted/30">
-                            <FadeImage
-                              src={screenshotUrl}
-                              alt={template.name}
-                              className="absolute inset-0 h-full w-full object-cover object-top"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="absolute left-8 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
-                          <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="py-8 text-center">
-              <p className="text-[12px] text-muted-foreground">
-                {templateSearch
-                  ? 'No templates found'
-                  : 'No templates available'}
-              </p>
-            </div>
-          )}
-
-          {/* Template pagination */}
-          {templatesTotal > templatePageSize && (
-            <Pagination
-              currentPage={templateDisplayedPage}
-              totalItems={templatesTotal}
-              pageSize={templatePageSize}
+          {projectId ? (
+            <SiteTemplateGallery
+              projectId={projectId}
+              defaultPageSize={DEFAULT_TEMPLATE_PAGE_SIZE}
               pageSizeOptions={[12, 18, 36, 72]}
-              onPageChange={setTemplateRequestedPage}
-              onPageSizeChange={(size) => {
-                setTemplatePageSize(size)
-                setTemplateRequestedPage(1)
-                setTemplateDisplayedPage(1)
-              }}
+              onSelectTemplate={handleSelectTemplate}
             />
-          )}
+          ) : null}
         </CreateWizardRightColumn>
       </div>
 
