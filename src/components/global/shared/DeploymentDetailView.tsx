@@ -428,6 +428,12 @@ export function DeploymentDetailView({
   const commitCopyHideAfterCopyTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null)
+  /** Branch name copy icon stays hidden after copy until pointer leaves that row. */
+  const [branchCopyHiddenUntilLeave, setBranchCopyHiddenUntilLeave] =
+    useState(false)
+  const branchCopyHideAfterCopyTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
 
   // Live elapsed seconds when deployment is processing/building (updates every second)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -521,6 +527,11 @@ export function DeploymentDetailView({
       commitCopyHideAfterCopyTimeoutRef.current = null
     }
     setCommitCopyHiddenUntilLeave(false)
+    if (branchCopyHideAfterCopyTimeoutRef.current) {
+      clearTimeout(branchCopyHideAfterCopyTimeoutRef.current)
+      branchCopyHideAfterCopyTimeoutRef.current = null
+    }
+    setBranchCopyHiddenUntilLeave(false)
   }, [deployment?.$id])
 
   useEffect(() => {
@@ -532,6 +543,10 @@ export function DeploymentDetailView({
       if (commitCopyHideAfterCopyTimeoutRef.current) {
         clearTimeout(commitCopyHideAfterCopyTimeoutRef.current)
         commitCopyHideAfterCopyTimeoutRef.current = null
+      }
+      if (branchCopyHideAfterCopyTimeoutRef.current) {
+        clearTimeout(branchCopyHideAfterCopyTimeoutRef.current)
+        branchCopyHideAfterCopyTimeoutRef.current = null
       }
     }
   }, [])
@@ -892,22 +907,63 @@ export function DeploymentDetailView({
             <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Branch
             </h3>
-            <div className="flex min-w-0 items-center gap-1.5">
+            <div
+              className="group flex min-w-0 items-center gap-1"
+              onMouseLeave={() => {
+                if (branchCopyHideAfterCopyTimeoutRef.current) {
+                  clearTimeout(branchCopyHideAfterCopyTimeoutRef.current)
+                  branchCopyHideAfterCopyTimeoutRef.current = null
+                }
+                setBranchCopyHiddenUntilLeave(false)
+              }}
+            >
               <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground" />
-              {resolvedBranchUrl ? (
-                <a
-                  href={resolvedBranchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="truncate text-[11px] font-medium text-foreground hover:text-primary"
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+                {resolvedBranchUrl ? (
+                  <a
+                    href={resolvedBranchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-w-0 truncate text-[11px] font-medium text-foreground hover:text-primary"
+                  >
+                    {deployment.providerBranch}
+                  </a>
+                ) : (
+                  <span className="min-w-0 truncate text-[11px] font-medium text-foreground">
+                    {deployment.providerBranch}
+                  </span>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'h-6 w-6 shrink-0 p-0 text-muted-foreground transition-opacity duration-150',
+                    'hover:bg-muted/60 hover:text-foreground',
+                    branchCopyHiddenUntilLeave
+                      ? 'pointer-events-none opacity-0'
+                      : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100',
+                  )}
+                  aria-label="Copy branch name"
+                  title="Copy branch name"
+                  onClick={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement
+                    void navigator.clipboard.writeText(deployment.providerBranch)
+                    toast.success('Branch copied')
+                    el.blur()
+                    if (branchCopyHideAfterCopyTimeoutRef.current) {
+                      clearTimeout(branchCopyHideAfterCopyTimeoutRef.current)
+                    }
+                    branchCopyHideAfterCopyTimeoutRef.current =
+                      window.setTimeout(() => {
+                        branchCopyHideAfterCopyTimeoutRef.current = null
+                        setBranchCopyHiddenUntilLeave(true)
+                      }, URL_COPY_HIDE_DELAY_MS)
+                  }}
                 >
-                  {deployment.providerBranch}
-                </a>
-              ) : (
-                <span className="truncate text-[11px] font-medium text-foreground">
-                  {deployment.providerBranch}
-                </span>
-              )}
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           </section>
         ) : null}
@@ -1028,6 +1084,7 @@ export function DeploymentDetailView({
     sidebarScreenshotLoaded,
     urlCopyHiddenUntilLeave,
     commitCopyHiddenUntilLeave,
+    branchCopyHiddenUntilLeave,
     avifSupported,
   ])
 
