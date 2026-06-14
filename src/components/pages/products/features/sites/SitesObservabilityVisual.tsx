@@ -53,6 +53,7 @@ const METRICS: MetricConfig[] = [
     breakdown: [
       { label: '/', value: '42%' },
       { label: '/pricing', value: '18%' },
+      { label: '/docs', value: '11%' },
     ],
   },
   {
@@ -66,6 +67,7 @@ const METRICS: MetricConfig[] = [
     breakdown: [
       { label: 'Static assets', value: '61%' },
       { label: 'SSR responses', value: '24%' },
+      { label: 'Images', value: '9%' },
     ],
   },
   {
@@ -79,6 +81,7 @@ const METRICS: MetricConfig[] = [
     breakdown: [
       { label: 'Git push', value: '74%' },
       { label: 'Manual', value: '14%' },
+      { label: 'Rollback', value: '8%' },
     ],
   },
   {
@@ -92,6 +95,7 @@ const METRICS: MetricConfig[] = [
     breakdown: [
       { label: 'US East', value: '38%' },
       { label: 'EU West', value: '31%' },
+      { label: 'AP South', value: '19%' },
     ],
   },
 ]
@@ -150,7 +154,7 @@ function TrafficUsageChart({
   )
 
   return (
-    <div className="h-[132px] w-full min-w-0 text-muted-foreground">
+    <div className="h-[210px] w-full min-w-0 text-muted-foreground">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ ...CHART_MARGIN }}>
           <defs>
@@ -197,14 +201,60 @@ function TrafficUsageChart({
 }
 
 const SITE_LOGS = [
-  { id: '1', status: 200, path: '/pricing', duration: '124ms', selected: true },
-  { id: '2', status: 200, path: '/', duration: '89ms', selected: false },
-  { id: '3', status: 404, path: '/old-blog/post', duration: '12ms', selected: false },
-  { id: '4', status: 500, path: '/dashboard', duration: '1.2s', selected: false },
+  { id: '1', status: 200, method: 'GET', path: '/pricing', duration: '124ms', selected: true },
+  { id: '2', status: 200, method: 'GET', path: '/', duration: '89ms', selected: false },
+  { id: '3', status: 304, method: 'GET', path: '/assets/logo.svg', duration: '8ms', selected: false },
+  { id: '4', status: 404, method: 'GET', path: '/old-blog/post', duration: '12ms', selected: false },
+  { id: '5', status: 200, method: 'POST', path: '/api/contact', duration: '342ms', selected: false },
+  { id: '6', status: 500, method: 'GET', path: '/dashboard', duration: '1.2s', selected: false },
+  { id: '7', status: 200, method: 'GET', path: '/docs/quick-start', duration: '156ms', selected: false },
 ] as const
 
-const RESPONSE_LOG = `GET /pricing 200 · Rendered in 118ms
-[console] Loaded 12 products from catalog`
+const LOG_DETAILS: Record<
+  (typeof SITE_LOGS)[number]['id'],
+  { region: string; output: string }
+> = {
+  '1': {
+    region: 'US East',
+    output: `GET /pricing 200 · Rendered in 118ms
+[console] Loaded 12 products from catalog
+[console] Cached pricing tiers for 5m`,
+  },
+  '2': {
+    region: 'EU West',
+    output: `GET / 200 · Rendered in 84ms
+[console] Prefetched hero assets
+[console] ISR cache hit`,
+  },
+  '3': {
+    region: 'US East',
+    output: `GET /assets/logo.svg 304 · Not modified
+cache-control: public, max-age=31536000`,
+  },
+  '4': {
+    region: 'AP South',
+    output: `GET /old-blog/post 404 · Not found
+[console] Redirect rule skipped (no match)`,
+  },
+  '5': {
+    region: 'US East',
+    output: `POST /api/contact 200 · Rendered in 338ms
+[console] Validated form payload
+[console] Queued notification email`,
+  },
+  '6': {
+    region: 'EU West',
+    output: `GET /dashboard 500 · Internal error
+[console] TypeError: Cannot read properties of undefined
+[console] at DashboardPage (page.tsx:42)`,
+  },
+  '7': {
+    region: 'US East',
+    output: `GET /docs/quick-start 200 · Rendered in 151ms
+[console] Resolved MDX bundle
+[console] Generated TOC with 8 headings`,
+  },
+}
 
 function statusBadgeVariant(status: number) {
   if (status >= 500) return 'error' as const
@@ -247,7 +297,10 @@ function UsagePanel() {
         </div>
       </div>
 
-      <div className="min-w-0 px-3 pb-3 pt-2 sm:px-4">
+      <div className="min-w-0 px-3 pb-4 pt-2 sm:px-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-[10px] text-muted-foreground">Last 30 days</p>
+        </div>
         <TrafficUsageChart
           bars={metric.bars}
           periodTotal={metric.periodTotal}
@@ -259,10 +312,10 @@ function UsagePanel() {
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {metric.breakdownTitle}
           </p>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {metric.breakdown.map((row) => (
               <div key={row.label} className="flex items-center gap-2 text-[10px]">
-                <span className="w-16 shrink-0 truncate font-mono text-foreground">{row.label}</span>
+                <span className="w-20 shrink-0 truncate font-mono text-foreground">{row.label}</span>
                 <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-muted/50">
                   <div
                     className="h-full rounded-full bg-[var(--chart-brand)]/70 transition-[width] duration-300"
@@ -281,54 +334,98 @@ function UsagePanel() {
 
 function LogsPanel() {
   const selected = SITE_LOGS.find((log) => log.selected) ?? SITE_LOGS[0]
+  const details = LOG_DETAILS[selected.id]
 
   return (
     <div className="flex min-h-0 flex-col">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Status
-            </TableHead>
-            <TableHead className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Path
-            </TableHead>
-            <TableHead className="px-3 py-1.5 pr-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Time
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {SITE_LOGS.map((log) => (
-            <TableRow
-              key={log.id}
-              className={cn(
-                'border-b border-border',
-                log.selected ? 'bg-muted/60 hover:bg-muted/60' : 'hover:bg-muted/40',
-              )}
-            >
-              <TableCell className="px-3 py-1.5">
-                <Badge variant={statusBadgeVariant(log.status)} className="text-[10px]">
-                  {log.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="max-w-[7rem] truncate px-3 py-1.5 font-mono text-[10px] text-foreground">
-                {log.path}
-              </TableCell>
-              <TableCell className="px-3 py-1.5 pr-3 text-[10px] text-muted-foreground">
-                {log.duration}
-              </TableCell>
+      <div className="max-h-[11.5rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-2rem),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_calc(100%-2rem),transparent)]">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Status
+              </TableHead>
+              <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Method
+              </TableHead>
+              <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Path
+              </TableHead>
+              <TableHead className="px-3 py-2 pr-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Time
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {SITE_LOGS.map((log) => (
+              <TableRow
+                key={log.id}
+                className={cn(
+                  'border-b border-border',
+                  log.selected ? 'bg-muted/60 hover:bg-muted/60' : 'hover:bg-muted/40',
+                )}
+              >
+                <TableCell className="px-3 py-2">
+                  <Badge variant={statusBadgeVariant(log.status)} className="text-[10px]">
+                    {log.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="px-3 py-2 font-mono text-[10px] text-foreground">
+                  {log.method}
+                </TableCell>
+                <TableCell className="max-w-[6rem] truncate px-3 py-2 font-mono text-[10px] text-foreground">
+                  {log.path}
+                </TableCell>
+                <TableCell className="px-3 py-2 pr-3 text-[10px] text-muted-foreground">
+                  {log.duration}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <div className="border-t border-border bg-muted/10 p-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Request details
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant={statusBadgeVariant(selected.status)} className="text-[10px]">
+              {selected.status}
+            </Badge>
+            <Badge variant="outline" className="font-mono text-[10px]">
+              {selected.method}
+            </Badge>
+          </div>
+        </div>
+
+        <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
+          <div>
+            <dt className="text-muted-foreground">Path</dt>
+            <dd className="mt-0.5 truncate font-mono text-foreground">{selected.path}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Duration</dt>
+            <dd className="mt-0.5 font-medium text-foreground">{selected.duration}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Region</dt>
+            <dd className="mt-0.5 font-medium text-foreground">{details.region}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Cache</dt>
+            <dd className="mt-0.5 font-medium text-foreground">
+              {selected.status === 304 ? 'Hit' : selected.status === 200 ? 'Miss' : 'N/A'}
+            </dd>
+          </div>
+        </dl>
+
+        <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           SSR output
         </p>
         <pre className="mt-1.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-foreground">
-          {RESPONSE_LOG.replace('/pricing', selected.path)}
+          {details.output}
         </pre>
       </div>
     </div>
@@ -348,7 +445,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
 export function SitesObservabilityVisual() {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/45">
-      <div className="grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid min-h-[24rem] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="min-w-0 border-b border-border lg:border-b-0 lg:border-r">
           <SectionLabel>Traffic</SectionLabel>
           <UsagePanel />
