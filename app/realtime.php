@@ -9,6 +9,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Message\Dispatcher as MessageDispatcher;
 use Appwrite\Realtime\Message\Handlers\Authentication as AuthenticationHandler;
 use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
@@ -336,6 +337,9 @@ if (!function_exists('checkForProjectUsage')) {
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
+$eventTailRegistry = new EventTailRegistry(
+    rate: (int) System::getEnv('_APP_REALTIME_TAIL_RATE', 50)
+);
 
 $messageDispatcher = (new MessageDispatcher())
     ->addHandler(new PingHandler())
@@ -496,7 +500,7 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     }
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -524,6 +528,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
     $attempts = 0;
     $start = time();
+
+    // Flush coalesced console live-tail buffers to their connections (~150ms).
+    // Must run per-worker: the registry is mutated by this worker's subscribe handler
+    // and pub/sub ingest, which are not visible to the master process.
+    Timer::tick(150, function () use ($server, $eventTailRegistry) {
+        $eventTailRegistry->flush($server);
+    });
 
     Timer::tick(5000, function () use ($server, $realtime, $stats) {
         /**
@@ -634,7 +645,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry) {
                 $event = json_decode($payload, true);
 
                 $eventTimestamp = $event['data']['timestamp'] ?? null;
@@ -797,6 +808,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         triggerStats($metrics, $projectId);
                     }
+
+                }
+
+                // Console live event tail: runs for EVERY firehose event, regardless of
+                // whether it had regular subscribers ($total). The firehose is published
+                // unconditionally, so a project tailed from the console with no other
+                // realtime clients must still be observed here.
+                $src = $event['project'] ?? '';
+                if ($src !== '' && $src !== 'console' && $eventTailRegistry->isTailed($src)) {
+                    $eventTailRegistry->ingest($src, Realtime::toTailMetadata($event), \microtime(true));
                 }
             });
         } catch (Throwable $th) {
@@ -1085,7 +1106,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher, $eventTailRegistry) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1206,6 +1227,8 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('projectId', fn () => $projectId);
         $messageContainer->set('queueForEvents', fn () => getQueueForEvents());
         $messageContainer->set('queueForRealtime', fn () => getQueueForRealtime());
+        $messageContainer->set('eventTailRegistry', fn () => $eventTailRegistry);
+        $messageContainer->set('dbForConsole', fn () => getConsoleDB());
 
         $responsePayload = $messageDispatcher->dispatch($messageContainer, $message);
 
@@ -1281,7 +1304,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats, $register, $container, $presenceState) {
+$server->onClose(function (int $connection) use ($realtime, $stats, $register, $container, $presenceState, $eventTailRegistry) {
     $projectId = null;
     $userId = null;
     $subscriptionsBeforeClose = 0;
@@ -1425,6 +1448,13 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             $realtime->unsubscribe($connection);
         } catch (\Throwable $th) {
             Console::error('Realtime onClose unsubscribe error: ' . $th->getMessage());
+            Span::current()?->setError($th);
+        }
+
+        try {
+            $eventTailRegistry->removeConnection($connection);
+        } catch (\Throwable $th) {
+            Console::error('Realtime onClose tail cleanup error: ' . $th->getMessage());
             Span::current()?->setError($th);
         }
 

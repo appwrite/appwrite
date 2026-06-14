@@ -3,6 +3,7 @@
 namespace Appwrite\Realtime\Message\Handlers;
 
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Realtime\Message\Validators\UnsubscribePayload as UnsubscribePayloadValidator;
 use Utopia\Platform\Action;
@@ -21,6 +22,7 @@ class Unsubscribe extends Action
             ->inject('connectionId')
             ->inject('realtime')
             ->inject('register')
+            ->inject('eventTailRegistry')
             ->callback($this->action(...));
     }
 
@@ -33,6 +35,7 @@ class Unsubscribe extends Action
         int $connectionId,
         Realtime $realtime,
         Registry $register,
+        EventTailRegistry $eventTailRegistry,
     ): array {
         $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
 
@@ -43,6 +46,9 @@ class Unsubscribe extends Action
                 'subscriptionId' => $subscriptionId,
                 'removed' => $realtime->unsubscribeSubscription($connectionId, $subscriptionId),
             ];
+            // No-op if it wasn't a tail subscription. Connection-scoped: subscription
+            // IDs are only unique within a connection.
+            $eventTailRegistry->remove($connectionId, $subscriptionId);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
