@@ -217,7 +217,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'public-beta',
         label: 'Public beta announcement',
-        href: 'https://appwrite.io/blog/post/public-beta',
+        href: '/blog/post/public-beta',
         kind: 'blog',
       },
       {
@@ -249,19 +249,19 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'announcement',
         label: 'Rebrand announcement',
-        href: 'https://appwrite.io/blog/post/meet-the-new-appwrite',
+        href: '/blog/post/meet-the-new-appwrite',
         kind: 'blog',
       },
       {
         id: 'logo',
         label: 'The new logo',
-        href: 'https://appwrite.io/blog/post/the-journey-and-meaning-behind-our-new-logo',
+        href: '/blog/post/the-journey-and-meaning-behind-our-new-logo',
         kind: 'blog',
       },
       {
         id: 'website',
         label: 'Designing the new website',
-        href: 'https://appwrite.io/blog/post/designing-the-new-appwrite-website',
+        href: '/blog/post/designing-the-new-appwrite-website',
         kind: 'blog',
       },
     ],
@@ -277,7 +277,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'announcement',
         label: 'Messaging announcement',
-        href: 'https://appwrite.io/blog/post/announcing-appwrite-messaging',
+        href: '/blog/post/announcing-appwrite-messaging',
         kind: 'blog',
       },
       {
@@ -299,7 +299,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'announcement',
         label: 'Program announcement',
-        href: 'https://appwrite.io/blog/post/announcing-appwrite-startups-program',
+        href: '/blog/post/announcing-appwrite-startups-program',
         kind: 'blog',
       },
       {
@@ -391,7 +391,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'announcement',
         label: 'Arena announcement',
-        href: 'https://appwrite.io/blog/post/announcing-appwrite-arena',
+        href: '/blog/post/announcing-appwrite-arena',
         kind: 'blog',
       },
       {
@@ -413,7 +413,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'announcement',
         label: 'Presences announcement',
-        href: 'https://appwrite.io/blog/post/announcing-presences-api',
+        href: '/blog/post/announcing-presences-api',
         kind: 'blog',
       },
       {

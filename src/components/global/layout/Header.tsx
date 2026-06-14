@@ -92,6 +92,7 @@ import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
 import {
+  getBlogPageUrl,
   getMarketingPageUrl,
   isMarketingPageExternal,
 } from '@/lib/marketing/urls'
@@ -278,14 +279,12 @@ export function ConsoleHeader({
         : []
   ).map((item) => {
     if (item.label === 'Blog') {
-      return { ...item, href: getMarketingPageUrl('/blog', features.marketing) }
+      return { ...item, href: getBlogPageUrl('/blog', features.marketing) }
     }
     if (item.label === 'Customers') {
       return {
         ...item,
-        href: features.marketing
-          ? '/blog/category/customer-stories'
-          : 'https://appwrite.io/blog/category/customer-stories',
+        href: getBlogPageUrl('/blog/category/customer-stories', features.marketing),
       }
     }
     if (item.label === 'Docs') {

@@ -10,7 +10,9 @@ import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
 import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
+  getBlogPageUrl,
   getMarketingPageUrl,
+  isBlogPageExternal,
   isMarketingPageExternal,
 } from '@/lib/marketing/urls'
 
@@ -91,7 +93,7 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
   {
     title: 'Learn',
     links: [
-      { label: 'Blog', href: 'https://appwrite.io/blog', external: true },
+      { label: 'Blog', href: getBlogPageUrl('/blog', marketing), external: isBlogPageExternal(marketing) },
       { label: 'Docs', href: 'https://appwrite.io/docs', external: true },
       { label: 'Integrations', href: 'https://appwrite.io/integrations', external: true },
       { label: 'Community', href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
@@ -101,7 +103,11 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
       { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects', external: true },
       { label: 'Source code', href: 'https://github.com/appwrite/appwrite', external: true },
       { label: 'Arena', href: 'https://arena.appwrite.io/', external: true },
-      { label: 'Tech news', href: 'https://appwrite.io/blog/category/tech-news', external: true },
+      {
+        label: 'Tech news',
+        href: getBlogPageUrl('/blog/category/tech-news', marketing),
+        external: isBlogPageExternal(marketing),
+      },
     ],
   },
   {

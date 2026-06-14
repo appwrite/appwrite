@@ -170,7 +170,7 @@ export const startupsCaseStudies = [
     name: 'Hassan Ahmed',
     title: 'Engineer at DevKind',
     avatar: '/images/testimonials/hassan.avif',
-    storyUrl: 'https://appwrite.io/blog/post/customer-story-storealert',
+    storyUrl: '/blog/post/customer-story-storealert',
   },
   {
     id: 'langx',
@@ -180,7 +180,7 @@ export const startupsCaseStudies = [
     name: 'Xue',
     title: 'Founder at LangX',
     avatar: '/images/testimonials/xue.avif',
-    storyUrl: 'https://appwrite.io/blog/post/customer-stories-langx',
+    storyUrl: '/blog/post/customer-stories-langx',
   },
   {
     id: 'k-collect',
@@ -191,7 +191,7 @@ export const startupsCaseStudies = [
     name: "Ryan O'Connor",
     title: 'Founder at K-Collect',
     avatar: '/images/testimonials/ryan.avif',
-    storyUrl: 'https://appwrite.io/blog/post/customer-stories-kcollect',
+    storyUrl: '/blog/post/customer-stories-kcollect',
   },
 ] as const
 

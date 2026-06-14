@@ -50,7 +50,9 @@ import { DOCS_NAV_ACTIVE_BG_CLASS } from '@/lib/docs/nav-styles'
 import { DOCS_GLOBAL_NAV } from '@/lib/docs/navigation'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
+import { getBlogPageUrl, isBlogPageExternal, parseBlogPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DocsRouteLink } from './DocsRouteLink'
 
 const DOCS_MENU_ICON_STROKE = 1.25
@@ -125,17 +127,25 @@ function DocsGlobalNavItem({
   collapsed,
   isMobile = false,
   onNavigate,
+  marketingEnabled,
 }: {
   item: DocsNavLink
   pathname: string
   collapsed: boolean
   isMobile?: boolean
   onNavigate?: () => void
+  marketingEnabled: boolean
 }) {
-  const isActive = isDocsNavActive(item.href, pathname)
+  const blogPath = parseBlogPagePath(item.href)
+  const resolvedHref = blogPath
+    ? getBlogPageUrl(blogPath, marketingEnabled)
+    : item.href
+  const isActive = isDocsNavActive(resolvedHref, pathname)
   const CustomIcon = item.icon ? CUSTOM_ICON_MAP[item.icon] : null
   const Icon = item.icon && !CustomIcon ? ICON_MAP[item.icon] : null
-  const external = item.href.startsWith('http') || item.openInNewTab
+  const external =
+    (blogPath ? isBlogPageExternal(marketingEnabled) : resolvedHref.startsWith('http')) ||
+    item.openInNewTab
 
   const className = cn(
     'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
@@ -178,7 +188,7 @@ function DocsGlobalNavItem({
 
   const link = external ? (
     <a
-      href={item.href}
+      href={resolvedHref}
       target="_blank"
       rel="noopener noreferrer"
       onClick={onNavigate}
@@ -188,7 +198,7 @@ function DocsGlobalNavItem({
       {content}
     </a>
   ) : (
-    <DocsRouteLink href={item.href} onClick={onNavigate} className={className}>
+    <DocsRouteLink href={resolvedHref} onClick={onNavigate} className={className}>
       {content}
     </DocsRouteLink>
   )
@@ -219,6 +229,7 @@ function DocsGlobalNavCategory({
   collapsible = false,
   initiallyCollapsed = false,
   onNavigate,
+  marketingEnabled,
 }: {
   label?: string
   items: DocsNavLink[]
@@ -228,6 +239,7 @@ function DocsGlobalNavCategory({
   collapsible?: boolean
   initiallyCollapsed?: boolean
   onNavigate?: () => void
+  marketingEnabled: boolean
 }) {
   const [open, setOpen] = useState(!(initiallyCollapsed ?? false))
 
@@ -241,6 +253,7 @@ function DocsGlobalNavCategory({
           collapsed={collapsed}
           isMobile={isMobile}
           onNavigate={onNavigate}
+          marketingEnabled={marketingEnabled}
         />
       ))}
     </div>
@@ -299,12 +312,14 @@ function DocsGlobalNavTree({
   collapsed,
   isMobile = false,
   onNavigate,
+  marketingEnabled,
 }: {
   navigation: DocsNavTree
   pathname: string
   collapsed: boolean
   isMobile?: boolean
   onNavigate?: () => void
+  marketingEnabled: boolean
 }) {
   return (
     <div className="space-y-6">
@@ -320,6 +335,7 @@ function DocsGlobalNavTree({
             collapsible={entry.collapsible}
             initiallyCollapsed={entry.initiallyCollapsed}
             onNavigate={onNavigate}
+            marketingEnabled={marketingEnabled}
           />
         ) : (
           <DocsGlobalNavItem
@@ -329,6 +345,7 @@ function DocsGlobalNavTree({
             collapsed={collapsed}
             isMobile={isMobile}
             onNavigate={onNavigate}
+            marketingEnabled={marketingEnabled}
           />
         ),
       )}
@@ -348,6 +365,8 @@ export function DocsGlobalSidebar({
   const location = useLocation()
   const pathname = location.pathname
   const [collapsed, setCollapsed] = useState(false)
+  const { features } = useConsoleProfile()
+  const marketingEnabled = features.marketing
 
   return (
     <TooltipProvider>
@@ -373,6 +392,7 @@ export function DocsGlobalSidebar({
               navigation={DOCS_GLOBAL_NAV}
               pathname={pathname}
               collapsed={collapsed}
+              marketingEnabled={marketingEnabled}
             />
           </nav>
         </aside>
@@ -428,6 +448,7 @@ export function DocsGlobalSidebar({
             collapsed={false}
             isMobile
             onNavigate={onMobileClose}
+            marketingEnabled={marketingEnabled}
           />
         </nav>
       </aside>

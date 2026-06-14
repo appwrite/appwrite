@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
@@ -39,14 +40,12 @@ const CHAT_MESSAGES: ChatMessage[] = [
     content: (
       <>
         Hey Walter! Is this the message you get{' '}
-        <a
-          href="https://appwrite.io/blog/post/cors-error"
-          target="_blank"
-          rel="noopener noreferrer"
+        <BlogPageAnchor
+          href="/blog/post/cors-error"
           className={CHAT_LINK_CLASS}
         >
           &quot;Access blocked by CORS policy&quot;
-        </a>
+        </BlogPageAnchor>
         ?
       </>
     ),
@@ -69,14 +68,9 @@ const CHAT_MESSAGES: ChatMessage[] = [
     content: (
       <>
         You should be able to debug this with a few steps. Just follow this blog:{' '}
-        <a
-          href="https://appwrite.io/blog/post/cors-error"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={CHAT_LINK_CLASS}
-        >
-          https://appwrite.io/blog/post/cors-error
-        </a>
+        <BlogPageAnchor href="/blog/post/cors-error" className={CHAT_LINK_CLASS}>
+          /blog/post/cors-error
+        </BlogPageAnchor>
         . Let me know if this helps 🙂
       </>
     ),

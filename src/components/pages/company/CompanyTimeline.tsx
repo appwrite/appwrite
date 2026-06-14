@@ -22,6 +22,8 @@ import {
   scrollToTimelineYearFromHash,
 } from '@/lib/company/timeline-scroll'
 import { cn } from '@/lib/utils'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
+import { parseBlogPagePath } from '@/lib/marketing/urls'
 import {
   ArrowUpRight,
   BookOpen,
@@ -60,32 +62,59 @@ function MilestoneLinks({ links }: { links: readonly CompanyTimelineLink[] }) {
 
         return (
           <li key={link.id} className="border-b border-border last:border-b-0">
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-accent/30"
-            >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                {iconSrc ? (
-                  <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
-                ) : Icon ? (
-                  <Icon className="size-3.5" aria-hidden />
-                ) : null}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {typeLabel}
+            {parseBlogPagePath(link.href) ? (
+              <BlogPageAnchor
+                href={link.href}
+                className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-accent/30"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  {iconSrc ? (
+                    <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
+                  ) : Icon ? (
+                    <Icon className="size-3.5" aria-hidden />
+                  ) : null}
                 </span>
-                <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
-                  {link.label}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {typeLabel}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
+                    {link.label}
+                  </span>
                 </span>
-              </span>
-              <ArrowUpRight
-                className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-                aria-hidden
-              />
-            </a>
+                <ArrowUpRight
+                  className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+                  aria-hidden
+                />
+              </BlogPageAnchor>
+            ) : (
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-accent/30"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  {iconSrc ? (
+                    <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
+                  ) : Icon ? (
+                    <Icon className="size-3.5" aria-hidden />
+                  ) : null}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {typeLabel}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
+                    {link.label}
+                  </span>
+                </span>
+                <ArrowUpRight
+                  className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+                  aria-hidden
+                />
+              </a>
+            )}
           </li>
         )
       })}

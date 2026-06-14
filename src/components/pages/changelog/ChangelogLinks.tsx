@@ -2,8 +2,14 @@ import { Link } from '@tanstack/react-router'
 import { ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
-import { MARKETING_SITE_ORIGIN, type MarketingPagePath } from '@/lib/marketing/urls'
+import {
+  getBlogPageUrl,
+  MARKETING_SITE_ORIGIN,
+  parseBlogPagePath,
+  type MarketingPagePath,
+} from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
 const INTERNAL_MARKETING_ROUTES = new Set<MarketingPagePath>([
@@ -37,6 +43,11 @@ export function ChangelogLink({
   const linkClassName = className ?? DOCS_PROSE_LINK_CLASS
 
   if (!href) return <span className={className}>{children}</span>
+
+  const blogPath = parseBlogPagePath(href)
+  if (blogPath) {
+    href = getBlogPageUrl(blogPath, getActiveProfileFeatures().marketing)
+  }
 
   const external =
     href.startsWith('http') ||
@@ -182,11 +193,11 @@ export function ChangelogArrowLink({
   if (!href) return null
 
   return (
-    <div className="changelog-resource-link group not-prose transition-colors duration-150 hover:bg-muted/40">
+    <div className="changelog-resource-link not-prose">
       <ChangelogLink
         href={href}
         className={cn(
-          'relative block w-full px-6 py-5 pr-12 text-left',
+          'relative block w-full rounded-none px-4 py-4 pr-10 text-left transition-colors duration-150 hover:bg-muted/40',
           textClassName ??
             'text-[13px] font-medium leading-5 text-foreground',
         )}
@@ -200,7 +211,7 @@ export function ChangelogArrowLink({
           {children}
         </span>
         <ArrowUpRight
-          className="absolute top-5 right-6 size-3.5 shrink-0 text-muted-foreground transition-[color,transform] duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground"
+          className="absolute top-4 right-4 size-3.5 shrink-0 text-muted-foreground"
           aria-hidden
         />
       </ChangelogLink>

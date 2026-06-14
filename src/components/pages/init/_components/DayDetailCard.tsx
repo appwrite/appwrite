@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, BookOpen, FileText, Play } from 'lucide-react'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
+import { parseBlogPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
 const CARD_SHELL =
@@ -140,32 +142,46 @@ interface DayDetailCardProps {
 function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const type = resource.typeLabel.toLowerCase()
   const ResourceIcon = type === 'docs' ? BookOpen : FileText
+  const isBlogLink = Boolean(parseBlogPagePath(resource.href))
+  const rowClassName =
+    'group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30'
+  const rowContent = (
+    <>
+      <span className="flex w-[92px] shrink-0">
+        <Badge
+          variant="secondary"
+          className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+        >
+          <ResourceIcon className="size-3 text-muted-foreground" aria-hidden />
+          {resource.typeLabel}
+        </Badge>
+      </span>
+      <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+        {resource.title}
+      </span>
+      <span className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
+        {resource.actionLabel}
+        <ArrowUpRight className="size-3.5" aria-hidden />
+      </span>
+    </>
+  )
 
   return (
     <li>
-      <a
-        href={resource.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30"
-      >
-        <span className="flex w-[92px] shrink-0">
-          <Badge
-            variant="secondary"
-            className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-          >
-            <ResourceIcon className="size-3 text-muted-foreground" aria-hidden />
-            {resource.typeLabel}
-          </Badge>
-        </span>
-        <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
-          {resource.title}
-        </span>
-        <span className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
-          {resource.actionLabel}
-          <ArrowUpRight className="size-3.5" aria-hidden />
-        </span>
-      </a>
+      {isBlogLink ? (
+        <BlogPageAnchor href={resource.href} className={rowClassName}>
+          {rowContent}
+        </BlogPageAnchor>
+      ) : (
+        <a
+          href={resource.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={rowClassName}
+        >
+          {rowContent}
+        </a>
+      )}
     </li>
   )
 }

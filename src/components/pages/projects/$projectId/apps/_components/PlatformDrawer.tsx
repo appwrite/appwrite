@@ -23,6 +23,7 @@ import {
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { toast } from 'sonner'
 import { Trash2, ExternalLink } from 'lucide-react'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 interface PlatformDrawerProps {
   open: boolean
@@ -223,15 +224,13 @@ export function PlatformDrawer({
                           platform for each origin (e.g. localhost and
                           production).
                         </p>
-                        <a
-                          href="https://appwrite.io/blog/post/cors-error"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <BlogPageAnchor
+                          href="/blog/post/cors-error"
                           className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"
                         >
                           Troubleshoot CORS errors
                           <ExternalLink className="h-3 w-3 shrink-0" />
-                        </a>
+                        </BlogPageAnchor>
                       </div>
                     )}
 

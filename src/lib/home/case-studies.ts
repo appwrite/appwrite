@@ -16,8 +16,6 @@ export type HomeCaseStudy = {
   storyUrl: string
 }
 
-const APPWRITE_BLOG = 'https://appwrite.io'
-
 /** All homepage case-study cards; three are chosen at random on each visit. */
 export const allHomeCaseStudies: HomeCaseStudy[] = [
   {
@@ -32,7 +30,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Software Engineer',
     company: 'DevKind',
     avatar: '/images/testimonials/hassan.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-story-storealert`,
+    storyUrl: '/blog/post/customer-story-storealert',
   },
   {
     id: 'langx',
@@ -45,7 +43,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Founder',
     company: 'LangX',
     avatar: '/images/testimonials/xue.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-stories-langx`,
+    storyUrl: '/blog/post/customer-stories-langx',
   },
   {
     id: 'k-collect',
@@ -59,7 +57,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Founder',
     company: 'K-Collect',
     avatar: '/images/testimonials/ryan.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-stories-kcollect`,
+    storyUrl: '/blog/post/customer-stories-kcollect',
   },
   {
     id: 'majik-kids',
@@ -72,7 +70,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Development Lead',
     company: 'Majik Kids',
     avatar: '/images/testimonials/majik.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-stories-majik-kids`,
+    storyUrl: '/blog/post/customer-stories-majik-kids',
   },
   {
     id: 'myshoefitter',
@@ -86,7 +84,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'CTO',
     company: 'mySHOEFITTER',
     avatar: '/images/testimonials/marius-bolik2.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-stories-myshoefitter`,
+    storyUrl: '/blog/post/customer-stories-myshoefitter',
   },
   {
     id: 'socialaize',
@@ -99,7 +97,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Founder',
     company: 'Socialaize',
     avatar: '/images/testimonials/zach-handley.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-story-socialaize`,
+    storyUrl: '/blog/post/customer-story-socialaize',
   },
   {
     id: 'undo',
@@ -113,7 +111,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Co-founder',
     company: 'UNDO',
     avatar: '/images/testimonials/jonas-janssen.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-stories-undo`,
+    storyUrl: '/blog/post/customer-stories-undo',
   },
   {
     id: 'radar',
@@ -127,7 +125,7 @@ export const allHomeCaseStudies: HomeCaseStudy[] = [
     title: 'Founder',
     company: 'Paradox',
     avatar: '/images/testimonials/matt-martino.avif',
-    storyUrl: `${APPWRITE_BLOG}/blog/post/customer-story-radar`,
+    storyUrl: '/blog/post/customer-story-radar',
   },
 ]
 

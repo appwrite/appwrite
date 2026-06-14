@@ -16,6 +16,7 @@ import {
 } from '@/lib/company/team'
 import { cn } from '@/lib/utils'
 import { ArrowUpRight } from 'lucide-react'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 
 function TeamMetricCell({ value, label }: CompanyTeamMetric) {
   return (
@@ -190,15 +191,13 @@ function TeamCta() {
           </a>
         </Button>
         <Button variant="outline" asChild>
-          <a
+          <BlogPageAnchor
             href={companyTeamLinks.evolutionBlog}
-            target="_blank"
-            rel="noopener noreferrer"
             className="gap-1.5"
           >
             How we hire
             <ArrowUpRight className="size-3.5" aria-hidden />
-          </a>
+          </BlogPageAnchor>
         </Button>
       </div>
     </div>

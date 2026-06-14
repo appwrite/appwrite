@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { pickRandomHomeCaseStudies, type HomeCaseStudy } from '@/lib/home/case-studies'
@@ -258,15 +259,13 @@ function CaseStudyPanelContent({
             </p>
           </div>
 
-          <a
+          <BlogPageAnchor
             href={study.storyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className="group inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
           >
             Read customer story
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-          </a>
+          </BlogPageAnchor>
         </div>
       </div>
     </div>
@@ -496,15 +495,13 @@ export function TestimonialsSection() {
             {gridLogos.length > 0 ? <CustomerLogoGrid logos={gridLogos} /> : null}
 
             <div className="relative z-[1] col-span-6 mt-8 text-center lg:mt-10">
-              <a
-                href="https://appwrite.io/blog/category/customer-stories"
-                target="_blank"
-                rel="noopener noreferrer"
+              <BlogPageAnchor
+                href="/blog/category/customer-stories"
                 className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
               >
                 Read our case studies
                 <ArrowRight className="size-3.5" />
-              </a>
+              </BlogPageAnchor>
             </div>
           </div>
         ) : (

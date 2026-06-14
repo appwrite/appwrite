@@ -21,11 +21,8 @@ import {
 } from '@/lib/blog/content'
 import type { BlogAuthor, BlogCategory, BlogPost, BlogPostMeta } from '@/lib/blog/types'
 import {
-  BLOG_BREADCRUMB_LIST_CLASS,
-  BLOG_BREADCRUMB_PAGE_CLASS,
-  BLOG_PAGE_TITLE_CLASS,
   BLOG_PAGE_DESCRIPTION_CLASS,
-  BLOG_SECTION_TITLE_CLASS,
+  BLOG_PAGE_TITLE_CLASS,
 } from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
 import { BlogAvatarPlaceholder, BlogCoverPlaceholder } from './BlogCoverPlaceholder'
@@ -52,7 +49,7 @@ export function PostView({ post }: PostViewProps) {
       <section className="border-b border-border py-10 sm:py-14">
         <div className="@container mx-auto w-full max-w-7xl px-4 sm:px-6">
           <Breadcrumb>
-            <BreadcrumbList className={BLOG_BREADCRUMB_LIST_CLASS}>
+            <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link to="/blog" className="cursor-pointer">
@@ -72,20 +69,14 @@ export function PostView({ post }: PostViewProps) {
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem className="min-w-0">
-                <BreadcrumbPage className={cn(BLOG_BREADCRUMB_PAGE_CLASS, 'truncate')}>
-                  {post.title}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
 
-          <div className="mt-8 grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,52rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
+          <div className="mt-8 grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,56rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
             <article className="min-w-0">
               <header className="border-y border-border py-4">
                 <h1 className={BLOG_PAGE_TITLE_CLASS}>{post.title}</h1>
-                <p className={cn(BLOG_PAGE_DESCRIPTION_CLASS, 'mt-4')}>
+                <p className={BLOG_PAGE_DESCRIPTION_CLASS}>
                   {post.description}
                 </p>
 
@@ -182,7 +173,7 @@ export function CategoryView({ category, posts, authors }: CategoryViewProps) {
       <section className="border-b border-border py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Breadcrumb>
-            <BreadcrumbList className={BLOG_BREADCRUMB_LIST_CLASS}>
+            <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link to="/blog" className="cursor-pointer">
@@ -192,16 +183,16 @@ export function CategoryView({ category, posts, authors }: CategoryViewProps) {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem className="min-w-0">
-                <BreadcrumbPage className={cn(BLOG_BREADCRUMB_PAGE_CLASS, 'truncate')}>
+                <BreadcrumbPage className="truncate font-aeonik-pro">
                   {category.name}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
 
-          <header className="mt-8 max-w-3xl border-y border-border py-6">
-            <h1 className={BLOG_SECTION_TITLE_CLASS}>{category.name}</h1>
-            <p className={cn(BLOG_PAGE_DESCRIPTION_CLASS, 'mt-4')}>
+          <header className="mt-8 max-w-4xl border-y border-border py-6">
+            <h1 className={BLOG_PAGE_TITLE_CLASS}>{category.name}</h1>
+            <p className={BLOG_PAGE_DESCRIPTION_CLASS}>
               {category.description}
             </p>
           </header>
@@ -240,7 +231,7 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
       <section className="border-b border-border py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Breadcrumb>
-            <BreadcrumbList className={BLOG_BREADCRUMB_LIST_CLASS}>
+            <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link to="/blog" className="cursor-pointer">
@@ -250,7 +241,7 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem className="min-w-0">
-                <BreadcrumbPage className={cn(BLOG_BREADCRUMB_PAGE_CLASS, 'truncate')}>
+                <BreadcrumbPage className="truncate font-aeonik-pro">
                   {author.name}
                 </BreadcrumbPage>
               </BreadcrumbItem>
@@ -260,12 +251,12 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
           <header className="mt-8 flex flex-col items-start gap-4 border-y border-border py-8 sm:flex-row sm:items-center">
             <BlogAvatarPlaceholder name={author.name} className="size-20 text-[18px]" />
             <div>
-              <h1 className={BLOG_SECTION_TITLE_CLASS}>{author.name}</h1>
+              <h1 className={BLOG_PAGE_TITLE_CLASS}>{author.name}</h1>
               {author.role ? (
-                <p className={cn(BLOG_PAGE_DESCRIPTION_CLASS, 'mt-1')}>{author.role}</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">{author.role}</p>
               ) : null}
               {author.bio ? (
-                <p className={cn(BLOG_PAGE_DESCRIPTION_CLASS, 'mt-3 max-w-2xl font-normal')}>
+                <p className={cn(BLOG_PAGE_DESCRIPTION_CLASS, 'mt-3 font-normal')}>
                   {author.bio}
                 </p>
               ) : null}
