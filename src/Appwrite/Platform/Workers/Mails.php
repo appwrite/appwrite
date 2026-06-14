@@ -17,12 +17,15 @@ use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
 
 class Mails extends Action
 {
     protected int $previewMaxLen = 150;
 
     protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+
+    private ?Counter $sendCounter = null;
 
 
     public static function getName(): string
@@ -58,13 +61,15 @@ class Mails extends Action
      * @param Document $project
      * @param Registry $register
      * @param Log $log
-     * @param Telemetry $telemetry
+     * @param Telemetry|null $telemetry
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Log $log, ?Telemetry $telemetry = null): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+
+        $this->sendCounter ??= $telemetry?->createCounter('worker.mails.send');
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -219,6 +224,11 @@ class Mails extends Action
             $adapter->send($emailMessage);
         } catch (\Throwable $error) {
             Span::add('mail.status', 'failure');
+            $this->sendCounter?->add(1, [
+                'template' => $template,
+                'smtp_type' => $type,
+                'result' => 'failure',
+            ]);
 
             if ($type === 'smtp') {
                 throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
@@ -227,5 +237,10 @@ class Mails extends Action
         }
 
         Span::add('mail.status', 'success');
+        $this->sendCounter?->add(1, [
+            'template' => $template,
+            'smtp_type' => $type,
+            'result' => 'success',
+        ]);
     }
 }

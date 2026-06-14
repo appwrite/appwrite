@@ -418,7 +418,7 @@ class Create extends Action
                     recipient: $invitee->getAttribute('email'),
                     name: $invitee->getAttribute('name', ''),
                     subject: $subject,
-                    template: MAIL_TEMPLATE_INVITATION,
+                    template: 'invitation',
                     body: $body,
                     preview: $preview,
                     smtp: $smtpConfig,
