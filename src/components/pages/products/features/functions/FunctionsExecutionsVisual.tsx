@@ -128,22 +128,22 @@ export function FunctionsExecutionsVisual() {
               <Table className="min-w-[36rem]">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pl-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-4 sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pl-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
                       Execution ID
                     </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
                       Status
                     </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
                       Trigger
                     </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
                       Method
                     </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
                       Duration
                     </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pr-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:px-4 sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pr-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
                       Created
                     </TableHead>
                   </TableRow>

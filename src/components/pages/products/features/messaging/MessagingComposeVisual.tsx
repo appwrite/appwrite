@@ -25,7 +25,7 @@ function ChannelTab({
       className={cn(
         'inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] font-medium transition-colors',
         active
-          ? 'border-foreground/10 bg-background text-foreground shadow-sm'
+          ? 'border-foreground/10 bg-background text-foreground'
           : 'border-transparent bg-transparent text-muted-foreground',
       )}
     >

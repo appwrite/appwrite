@@ -32,6 +32,7 @@ export function getOAuth2ProviderDisplayName(providerId: string): string {
 /** Map provider id to existing `/public/icons/*.svg` asset; fall back when no dedicated asset exists. */
 export function getOAuth2ProviderIconPath(providerId: string): string {
   const map: Record<string, string> = {
+    [OAuthProvider.Discord]: 'discord-simple.svg',
     [OAuthProvider.Fusionauth]: 'auth0.svg',
     [OAuthProvider.Keycloak]: 'auth0.svg',
     [OAuthProvider.Kick]: 'twitch.svg',

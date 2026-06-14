@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { cn } from '@/lib/utils'
 
 export function MockSwitchRow({
@@ -75,17 +76,7 @@ export function MockProviderTile({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <img
-            src={iconSrc}
-            alt=""
-            className={cn(
-              'size-4 shrink-0 transition-all duration-300',
-              enabled
-                ? 'opacity-100 grayscale-0'
-                : 'opacity-60 grayscale group-hover/visual:opacity-100 group-hover/visual:grayscale-0 motion-reduce:opacity-100 motion-reduce:grayscale-0',
-            )}
-            aria-hidden
-          />
+          <ProductFeaturePublicIcon src={iconSrc} inactive={!enabled} />
           <span className="truncate text-[11px] font-medium text-foreground">{name}</span>
         </div>
         <Switch

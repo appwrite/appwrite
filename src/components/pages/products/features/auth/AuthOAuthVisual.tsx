@@ -1,12 +1,13 @@
 import { Badge } from '@/components/ui/badge'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { MockProviderTile } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
+import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 
 const POPULAR_PROVIDERS = [
   { id: 'google', name: 'Google', icon: '/icons/google.svg', enabled: true },
   { id: 'github', name: 'GitHub', icon: '/icons/github.svg', enabled: true },
   { id: 'apple', name: 'Apple', icon: '/icons/apple.svg', enabled: true },
-  { id: 'discord', name: 'Discord', icon: '/icons/discord.svg', enabled: false },
+  { id: 'discord', name: 'Discord', icon: '/icons/discord-simple.svg', enabled: false },
   { id: 'microsoft', name: 'Microsoft', icon: '/icons/microsoft.svg', enabled: false },
   { id: 'spotify', name: 'Spotify', icon: '/icons/spotify.svg', enabled: false },
 ] as const
@@ -67,9 +68,9 @@ export function AuthOAuthVisual() {
             {MORE_PROVIDERS.map((provider) => (
               <div
                 key={provider.id}
-                className="flex flex-col items-center gap-1 rounded-md border border-border bg-background/60 px-1.5 py-2 opacity-70 transition-opacity duration-300 group-hover/visual:opacity-100 motion-reduce:opacity-100"
+                className="flex flex-col items-center gap-1 rounded-lg border border-border bg-background/80 px-1.5 py-2"
               >
-                <img src={provider.icon} alt="" className="size-4" aria-hidden />
+                <ProductFeaturePublicIcon src={provider.icon} inactive />
                 <span className="truncate text-[9px] text-muted-foreground">{provider.name}</span>
               </div>
             ))}

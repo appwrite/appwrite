@@ -39,7 +39,7 @@ function UseCaseCard({
   return (
     <div
       className={cn(
-        'rounded-xl border border-border bg-card px-3.5 py-3 shadow-lg ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+        'rounded-xl border border-border bg-card px-3.5 py-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
         className,
       )}
     >
@@ -66,7 +66,7 @@ function ComparisonDivider({ className }: { className?: string }) {
       className={cn('flex shrink-0 items-center justify-center py-1', className)}
       aria-hidden
     >
-      <span className="rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shadow-sm">
+      <span className="rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         or
       </span>
     </div>
@@ -132,7 +132,7 @@ export function FunctionsTriggersVisual() {
 
 function ExecutionModesSubsection() {
   return (
-    <div className="mt-16 overflow-hidden rounded-xl border border-border bg-card/45 shadow-sm sm:mt-20">
+    <div className="mt-16 overflow-hidden rounded-xl border border-border bg-card/45 sm:mt-20">
       <div className="border-b border-border px-4 py-3 sm:px-5">
         <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Execution modes

@@ -48,8 +48,8 @@ export function StoragePermissionsVisual() {
         <div className="rounded-lg border border-border bg-background/80 p-3">
           <p className="text-[11px] font-semibold text-foreground">profile-128.webp</p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
-            <MockPermissionChip label="user:sarah/read" tone="accent" />
-            <MockPermissionChip label="user:alex/read" />
+            <MockPermissionChip label="user:paige/read" tone="accent" />
+            <MockPermissionChip label="user:toby/read" />
           </div>
           <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
             File-level rules override bucket defaults for sensitive assets.

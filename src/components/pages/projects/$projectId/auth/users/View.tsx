@@ -2385,7 +2385,7 @@ function IdentitiesTab({
       amazon: 'amazon.svg',
       bitbucket: 'bitbucket.svg',
       gitlab: 'gitlab.svg',
-      discord: 'discord.svg',
+      discord: 'discord-simple.svg',
       spotify: 'spotify.svg',
       slack: 'slack.svg',
       salesforce: 'salesforce.svg',

@@ -13,7 +13,7 @@ import { ProductFeatureVisualFrame } from '@/components/pages/products/features/
 const TARGETS = [
   {
     id: '68a4e2f91b0c',
-    label: 'sarah@acme.io',
+    label: 'walter@acme.io',
     type: 'email' as const,
     providerType: 'Email',
   },
@@ -50,11 +50,11 @@ export function MessagingTargetsVisual() {
         <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/15 px-3 py-2.5">
           <div className="flex items-start gap-2.5">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">
-              S
+              W
             </span>
             <div>
-              <p className="text-[13px] font-semibold text-foreground">Sarah Chen</p>
-              <p className="text-[11px] text-muted-foreground">sarah@acme.io · Auth user</p>
+              <p className="text-[13px] font-semibold text-foreground">Walter O'Brien</p>
+              <p className="text-[11px] text-muted-foreground">walter@acme.io · Auth user</p>
             </div>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">

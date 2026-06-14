@@ -48,13 +48,17 @@ export function AuthPasswordlessVisual() {
           })}
         </div>
 
-        <div className="rounded-md border border-border bg-muted/25 p-2.5 font-mono text-[10px] leading-relaxed opacity-80 transition-opacity duration-300 group-hover/visual:opacity-100 motion-reduce:opacity-100">
+        <div className="overflow-hidden rounded-md border border-border bg-muted/25 p-2.5 font-mono text-[10px] leading-relaxed opacity-80 transition-opacity duration-300 group-hover/visual:opacity-100 motion-reduce:opacity-100">
           <div>
             <Syn tone="keyword">await</Syn> <Syn tone="identifier">account</Syn>
+          </div>
+          <div className="pl-3">
             <Syn tone="punctuation">.</Syn>
             <Syn tone="function">createMagicURLToken</Syn>
             <Syn tone="punctuation">(</Syn>
-            <Syn tone="string">&apos;user@acme.io&apos;</Syn>
+          </div>
+          <div className="pl-6">
+            <Syn tone="string">&apos;paige@acme.io&apos;</Syn>
             <Syn tone="punctuation">)</Syn>
           </div>
         </div>

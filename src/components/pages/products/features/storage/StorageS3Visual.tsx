@@ -1,5 +1,6 @@
 import { Copy, Server } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 
 const COMPATIBLE_TOOLS = [
@@ -80,12 +81,7 @@ export function StorageS3Visual() {
                 className="flex min-w-0 items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1.5 transition-colors group-hover/visual:border-foreground/10 group-hover/visual:bg-muted/40"
               >
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30">
-                  <img
-                    src={tool.iconSrc}
-                    alt=""
-                    className="size-3.5 shrink-0"
-                    aria-hidden
-                  />
+                  <ProductFeaturePublicIcon src={tool.iconSrc} className="size-3.5" />
                 </span>
                 <span className="min-w-0 truncate text-[10px] font-medium text-foreground">
                   {tool.name}

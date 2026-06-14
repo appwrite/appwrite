@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
 const PEERS = [
-  { name: 'Maya Chen', color: 'var(--brand-cta)' },
-  { name: 'Sharon Lee', color: '#7C67FE' },
+  { name: 'Happy Quinn', color: 'var(--brand-cta)' },
+  { name: 'Paige Dineen', color: '#7C67FE' },
   { name: 'You', color: '#85DBD8' },
 ] as const
 
@@ -104,12 +104,12 @@ export function RealtimeProductVisual() {
 
             <div className={cn('relative mt-2.5 overflow-hidden p-3', productBentoContainer.panel)}>
               <PeerCursor
-                name="Maya Chen"
+                name="Happy Quinn"
                 color={PEERS[0].color}
                 className="left-[4%] top-[14%] translate-x-0 translate-y-0 group-hover:translate-x-14 group-hover:translate-y-2 group-hover:opacity-100 motion-reduce:translate-x-14 motion-reduce:translate-y-2 motion-reduce:opacity-100"
               />
               <PeerCursor
-                name="Sharon Lee"
+                name="Paige Dineen"
                 color={PEERS[1].color}
                 className="left-[4%] top-[50%] translate-x-0 translate-y-0 delay-150 group-hover:translate-x-12 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
               />

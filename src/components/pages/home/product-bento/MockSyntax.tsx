@@ -332,7 +332,7 @@ export function AuthMagicLinkSnippet() {
       <div className="pl-2">
         <Syn tone="property">email</Syn>
         <Syn tone="punctuation">: </Syn>
-        <Syn tone="string">&apos;sarah@acme.io&apos;</Syn>
+        <Syn tone="string">&apos;paige@acme.io&apos;</Syn>
         <Syn tone="punctuation">,</Syn>
       </div>
       <div className="pl-2">

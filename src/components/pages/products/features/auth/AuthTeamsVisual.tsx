@@ -29,20 +29,20 @@ export function AuthTeamsVisual() {
 
         <div className="space-y-2">
           <MockMemberRow
-            name="Sarah Chen"
-            email="sarah@acme.io"
+            name="Walter O'Brien"
+            email="walter@acme.io"
             role="Owner"
             delayMs={80}
           />
           <MockMemberRow
-            name="Alex Rivera"
-            email="alex@acme.io"
+            name="Paige Dineen"
+            email="paige@acme.io"
             role="Developer"
             delayMs={160}
           />
           <MockMemberRow
-            name="Jordan Lee"
-            email="jordan@acme.io"
+            name="Happy Quinn"
+            email="happy@acme.io"
             role="Member"
             delayMs={240}
           />
@@ -55,7 +55,7 @@ export function AuthTeamsVisual() {
           </div>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             <MockPermissionChip label="team:acme/read" tone="accent" />
-            <MockPermissionChip label="user:sarah/update" />
+            <MockPermissionChip label="user:walter/update" />
             <MockPermissionChip label="role:developer/read" />
           </div>
           <p className="mt-2 text-[10px] leading-5 text-muted-foreground">

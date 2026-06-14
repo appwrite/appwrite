@@ -21,7 +21,7 @@ export function ProductFeatureVisualFrame({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border border-border bg-card/45 shadow-sm',
+        'overflow-hidden rounded-xl border border-border bg-card/45',
         className,
       )}
     >
@@ -33,7 +33,7 @@ export function ProductFeatureVisualFrame({
               className={cn(
                 'shrink-0 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors sm:text-[12px]',
                 tab.active
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground'
                   : 'text-muted-foreground',
               )}
             >

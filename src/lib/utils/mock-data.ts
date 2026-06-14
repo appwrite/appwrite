@@ -218,8 +218,8 @@ export interface PlanDetails {
 // Current user
 export const currentConsoleUser = {
   $id: '507f1f77bcf86cd799439011',
-  name: 'Alex Morgan',
-  email: 'alex@appwrite.io',
+  name: "Walter O'Brien",
+  email: 'walter@example.com',
   avatar:
     'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
   role: 'Owner',
@@ -288,8 +288,8 @@ export interface TeamMember {
 export const orgMembers: TeamMember[] = [
   {
     $id: '507f1f77bcf86cd799439012',
-    name: 'Alex Morgan',
-    email: 'alex@appwrite.io',
+    name: "Walter O'Brien",
+    email: 'walter@example.com',
     avatar:
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
     role: 'owner',
@@ -298,8 +298,8 @@ export const orgMembers: TeamMember[] = [
   },
   {
     $id: '507f1f77bcf86cd799439013',
-    name: 'Sarah Chen',
-    email: 'sarah@example.com',
+    name: 'Paige Dineen',
+    email: 'paige@example.com',
     avatar:
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face',
     role: 'admin',
@@ -308,16 +308,16 @@ export const orgMembers: TeamMember[] = [
   },
   {
     $id: '507f1f77bcf86cd799439014',
-    name: 'Mike Johnson',
-    email: 'mike@example.com',
+    name: 'Toby Curtis',
+    email: 'toby@example.com',
     role: 'member',
     orgId: '507f191e810c19729de860ea',
     joinedAt: '2023-06-10T09:15:00Z',
   },
   {
     $id: '507f1f77bcf86cd799439015',
-    name: 'Emily Davis',
-    email: 'emily@example.com',
+    name: 'Happy Quinn',
+    email: 'happy@example.com',
     avatar:
       'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
     role: 'member',
@@ -326,8 +326,8 @@ export const orgMembers: TeamMember[] = [
   },
   {
     $id: '507f1f77bcf86cd799439016',
-    name: 'James Wilson',
-    email: 'james@example.com',
+    name: 'Cabe Gallo',
+    email: 'cabe@example.com',
     role: 'owner',
     orgId: '507f191e810c19729de860eb',
     joinedAt: '2022-11-01T08:00:00Z',
@@ -755,29 +755,29 @@ export const sites: Site[] = [
 export const users: User[] = [
   {
     $id: '507f1f77bcf86cd7994390a0',
-    name: 'John Doe',
-    email: 'john@example.com',
+    name: "Walter O'Brien",
+    email: 'walter@example.com',
     status: 'verified',
     createdAt: '2024-01-20T10:30:00Z',
   },
   {
     $id: '507f1f77bcf86cd7994390a1',
-    name: 'Sarah Wilson',
-    email: 'sarah@example.com',
+    name: 'Paige Dineen',
+    email: 'paige@example.com',
     status: 'verified',
     createdAt: '2024-02-15T14:45:00Z',
   },
   {
     $id: '507f1f77bcf86cd7994390a2',
-    name: 'Mike Chen',
-    email: 'mike@example.com',
+    name: 'Toby Curtis',
+    email: 'toby@example.com',
     status: 'unverified',
     createdAt: '2024-03-01T09:15:00Z',
   },
   {
     $id: '507f1f77bcf86cd7994390a3',
-    name: 'Emily Brown',
-    email: 'emily@example.com',
+    name: 'Happy Quinn',
+    email: 'happy@example.com',
     status: 'verified',
     createdAt: '2024-03-10T16:20:00Z',
   },
@@ -792,7 +792,7 @@ export const activityEvents: ActivityEvent[] = [
     resourceType: 'document',
     timestamp: '2024-03-15T14:32:00Z',
     userId: '507f1f77bcf86cd7994390a0',
-    userName: 'John Doe',
+    userName: "Walter O'Brien",
   },
   {
     $id: '507f1f77bcf86cd7994390b1',
@@ -801,7 +801,7 @@ export const activityEvents: ActivityEvent[] = [
     resourceType: 'file',
     timestamp: '2024-03-15T14:28:00Z',
     userId: '507f1f77bcf86cd7994390a1',
-    userName: 'Sarah Wilson',
+    userName: 'Paige Dineen',
   },
   {
     $id: '507f1f77bcf86cd7994390b2',
@@ -819,16 +819,16 @@ export const activityEvents: ActivityEvent[] = [
     resourceType: 'document',
     timestamp: '2024-03-15T14:20:00Z',
     userId: '507f1f77bcf86cd7994390a1',
-    userName: 'Sarah Wilson',
+    userName: 'Paige Dineen',
   },
   {
     $id: '507f1f77bcf86cd7994390b4',
     type: 'login',
-    resource: 'mike@example.com',
+    resource: 'toby@example.com',
     resourceType: 'user',
     timestamp: '2024-03-15T14:15:00Z',
     userId: '507f1f77bcf86cd7994390a2',
-    userName: 'Mike Chen',
+    userName: 'Toby Curtis',
   },
   {
     $id: '507f1f77bcf86cd7994390b5',
@@ -837,7 +837,7 @@ export const activityEvents: ActivityEvent[] = [
     resourceType: 'file',
     timestamp: '2024-03-15T14:10:00Z',
     userId: '507f1f77bcf86cd7994390a3',
-    userName: 'Emily Brown',
+    userName: 'Happy Quinn',
   },
   {
     $id: '507f1f77bcf86cd7994390b6',
@@ -846,7 +846,7 @@ export const activityEvents: ActivityEvent[] = [
     resourceType: 'collection',
     timestamp: '2024-03-15T14:05:00Z',
     userId: '507f1f77bcf86cd7994390a0',
-    userName: 'John Doe',
+    userName: "Walter O'Brien",
   },
   {
     $id: '507f1f77bcf86cd7994390b7',
@@ -1038,7 +1038,7 @@ export const paymentMethods: PaymentMethod[] = [
 
 export const billingAddress: BillingAddress = {
   $id: '507f1f77bcf86cd7994390e0',
-  name: 'Alex Morgan',
+  name: "Walter O'Brien",
   company: 'Acme Inc.',
   addressLine1: '123 Innovation Drive',
   addressLine2: 'Suite 400',

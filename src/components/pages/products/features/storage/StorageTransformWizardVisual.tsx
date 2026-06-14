@@ -42,7 +42,7 @@ const GRAVITY_ICONS = [
 ] as const
 
 const TRANSFORM_HANDLE_DOT_CLASS =
-  'h-5 w-5 shrink-0 rounded-full border-2 border-border bg-background shadow-sm'
+  'h-5 w-5 shrink-0 rounded-full border-2 border-border bg-background'
 
 const MOCK_RESIZE_HANDLES = [
   { id: 'nw', className: 'left-5 top-5' },
@@ -59,7 +59,7 @@ function MockTransformCropFrame() {
   return (
     <div className="relative shrink-0">
       <div className="group/frame relative h-[7.5rem] w-[11rem] sm:h-[8.5rem] sm:w-[12.5rem]">
-        <div className="relative h-full w-full overflow-hidden rounded-md bg-background shadow-sm">
+        <div className="relative h-full w-full overflow-hidden rounded-md bg-background">
           <div className="absolute inset-0 bg-gradient-to-br from-sky-300/70 via-indigo-300/50 to-violet-400/60" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/35 to-transparent px-2 py-1.5">
             <p className="text-[9px] font-medium text-white/90">640 × 360 · webp</p>
@@ -147,7 +147,7 @@ function MockAccordionSection({
 
 export function StorageTransformWizardVisual() {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card/45 shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card/45">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <p className="truncate text-[14px] font-semibold text-foreground">hero-banner.webp</p>
         <X className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -299,7 +299,7 @@ export function StorageTransformWizardVisual() {
                     <Label className="text-[11px] text-muted-foreground">Gravity</Label>
                     <span className="ml-auto font-mono text-[10px] text-muted-foreground">center</span>
                   </div>
-                  <div className="w-full max-w-[9.5rem] rounded-lg border border-border bg-muted/25 p-px shadow-inner">
+                  <div className="w-full max-w-[9.5rem] rounded-lg border border-border bg-muted/25 p-px">
                     <div className="grid grid-cols-3 gap-px bg-border/70">
                       {GRAVITY_ICONS.map((Icon, index) => {
                         const selected = index === 4

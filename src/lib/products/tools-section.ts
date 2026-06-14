@@ -38,7 +38,7 @@ const client = new Client()
 const account = new Account(client);
 
 const session = await account.createEmailPasswordSession({
-  email: 'user@example.com',
+  email: 'paige@example.com',
   password: 'password',
 });
 

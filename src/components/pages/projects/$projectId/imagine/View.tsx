@@ -22,7 +22,7 @@ const communityProjects = [
     id: '507f1f77bcf86cd799439500',
     title: 'Recipe manager',
     description: 'Organize and discover recipes with AI suggestions',
-    author: 'Sarah Chen',
+    author: 'Paige Dineen',
     likes: 234,
     views: 1.2,
     image:
@@ -32,7 +32,7 @@ const communityProjects = [
     id: '507f1f77bcf86cd799439501',
     title: 'Task flow',
     description: 'Kanban-style project management with automations',
-    author: 'Marcus Johnson',
+    author: 'Cabe Gallo',
     likes: 189,
     views: 0.9,
     image:
@@ -42,7 +42,7 @@ const communityProjects = [
     id: '507f1f77bcf86cd799439502',
     title: 'Budget buddy',
     description: 'Personal finance tracker with spending insights',
-    author: 'Emma Wilson',
+    author: 'Happy Quinn',
     likes: 312,
     views: 1.8,
     image:
@@ -52,7 +52,7 @@ const communityProjects = [
     id: '507f1f77bcf86cd799439503',
     title: 'Study notes',
     description: 'AI-powered note taking with flashcard generation',
-    author: 'Alex Rivera',
+    author: 'Toby Curtis',
     likes: 156,
     views: 0.7,
     image:

@@ -1056,7 +1056,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="px-4 py-3">John Doe</TableCell>
+              <TableCell className="px-4 py-3">Walter O&apos;Brien</TableCell>
               <TableCell className="px-4 py-3">Active</TableCell>
               <TableCell className="px-4 py-3">Admin</TableCell>
             </TableRow>

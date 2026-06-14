@@ -33,7 +33,7 @@ function MockEmailField({
   placeholder: string
   typeDelayMs?: number
 }) {
-  const typedText = 'sarah@acme.io'
+  const typedText = 'paige@acme.io'
   const cursorDelay = typeDelayMs + typedText.length * 55
 
   return (

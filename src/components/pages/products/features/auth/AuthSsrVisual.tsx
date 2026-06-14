@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { Syn } from '@/components/pages/home/product-bento/MockSyntax'
 
@@ -18,7 +19,7 @@ export function AuthSsrVisual() {
               key={framework.id}
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 px-2.5 py-1.5"
             >
-              <img src={framework.icon} alt="" className="size-3.5" aria-hidden />
+              <ProductFeaturePublicIcon src={framework.icon} className="size-3.5" />
               <span className="text-[11px] font-medium text-foreground">{framework.label}</span>
             </div>
           ))}

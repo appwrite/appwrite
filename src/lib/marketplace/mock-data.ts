@@ -83,8 +83,8 @@ export const MARKETPLACE_CREATORS_BY_ID: Record<
     { name: 'Torsten Dahlstrom', role: 'Engineering' },
   ],
   'app-auth0-bridge': [
-    { name: 'Maya Chen', role: 'Creator' },
-    { name: 'Jordan Lee', role: 'Maintainer' },
+    { name: 'Happy Quinn', role: 'Creator' },
+    { name: 'Paige Dineen', role: 'Maintainer' },
   ],
   'app-s3-mirror': [
     { name: 'Christy Jacob', role: 'Product' },
@@ -99,21 +99,21 @@ export const MARKETPLACE_CREATORS_BY_ID: Record<
     { name: 'Christy Jacob', role: 'Product' },
   ],
   'app-twilio-sms': [
-    { name: 'Sarah Mitchell', role: 'Partnerships' },
-    { name: 'Alex Rivera', role: 'SDK' },
+    { name: 'Megan O\'Brien', role: 'Partnerships' },
+    { name: 'Toby Curtis', role: 'SDK' },
   ],
   'app-github-deploy': [
-    { name: 'Sam Okonkwo', role: 'Creator' },
-    { name: 'Priya Nair', role: 'Maintainer' },
+    { name: 'Ray Spiewack', role: 'Creator' },
+    { name: 'Patricia Logan', role: 'Maintainer' },
   ],
   'app-sendgrid': [
-    { name: 'Chris Martinez', role: 'Integrations' },
-    { name: 'Emily Park', role: 'Engineering' },
+    { name: 'Drew Baker', role: 'Integrations' },
+    { name: 'Florence Tipton', role: 'Engineering' },
   ],
-  'app-clerk-sync': [{ name: 'Noah Williams', role: 'Creator' }],
+  'app-clerk-sync': [{ name: 'Ralph Dineen', role: 'Creator' }],
   'app-datadog': [
-    { name: 'Riley Chen', role: 'Product' },
-    { name: 'Morgan Blake', role: 'Engineering' },
+    { name: 'Sylvester Dodd', role: 'Product' },
+    { name: 'Mark Collins', role: 'Engineering' },
   ],
   'app-tables-backup': [
     { name: 'Matej Bačo', role: 'Engineering' },
@@ -132,20 +132,20 @@ export const MARKETPLACE_CREATORS_BY_ID: Record<
     { name: 'Christy Jacob', role: 'Product' },
   ],
   'app-slack-notify': [
-    { name: 'Taylor Brooks', role: 'Partnerships' },
-    { name: 'Casey Nguyen', role: 'Integrations' },
+    { name: 'Cabe Gallo', role: 'Partnerships' },
+    { name: 'Megan O\'Brien', role: 'Integrations' },
   ],
   'app-vercel-deploy': [
     { name: 'Guillermo Rauch', role: 'Product' },
     { name: 'Lee Robinson', role: 'Developer experience' },
   ],
   'app-r2-sync': [
-    { name: 'Avery Kim', role: 'Integrations' },
-    { name: 'Jordan Hayes', role: 'Engineering' },
+    { name: 'Happy Quinn', role: 'Integrations' },
+    { name: 'Ray Spiewack', role: 'Engineering' },
   ],
   'app-paddle-billing': [
-    { name: 'Olivia Grant', role: 'Product' },
-    { name: 'Marcus Webb', role: 'Engineering' },
+    { name: 'Katherine Cooper', role: 'Product' },
+    { name: 'Toby Curtis', role: 'Engineering' },
   ],
   'app-linear-sync': [
     { name: 'Karri Saarinen', role: 'Product' },
@@ -156,10 +156,10 @@ export const MARKETPLACE_CREATORS_BY_ID: Record<
     { name: 'Daniela Amodei', role: 'Partnerships' },
   ],
   'app-acme-webhooks': [
-    { name: 'Alex Morgan', role: 'Lead' },
-    { name: 'Jamie Park', role: 'Engineering' },
+    { name: "Walter O'Brien", role: 'Lead' },
+    { name: 'Paige Dineen', role: 'Engineering' },
   ],
-  'app-acme-onboarding': [{ name: 'Alex Morgan', role: 'Creator' }],
+  'app-acme-onboarding': [{ name: "Walter O'Brien", role: 'Creator' }],
 }
 
 export function formatMarketplaceCreators(

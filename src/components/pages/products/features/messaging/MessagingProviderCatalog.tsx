@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import {
   Bell,
   Globe,
@@ -9,13 +8,13 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { cn } from '@/lib/utils'
 
 type MessagingProviderItem = {
   id: string
   name: string
   icon?: string
-  maskIcon?: string
 }
 
 type MessagingChannelTile = {
@@ -60,7 +59,7 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
     comingSoon: true,
     providers: [
       { id: 'slack', name: 'Slack', icon: '/icons/slack.svg' },
-      { id: 'discord', name: 'Discord', maskIcon: '/icons/discord-simple.svg' },
+      { id: 'discord', name: 'Discord', icon: '/icons/discord-simple.svg' },
       { id: 'whatsapp', name: 'WhatsApp', icon: '/icons/whatsapp.svg' },
     ],
   },
@@ -94,19 +93,6 @@ const chatTile = MESSAGING_CHANNEL_TILES[2]
 const inAppTile = MESSAGING_CHANNEL_TILES[3]
 const smsTile = MESSAGING_CHANNEL_TILES[4]
 
-function iconMaskStyle(iconPath: string): CSSProperties {
-  return {
-    maskImage: `url(${iconPath})`,
-    maskRepeat: 'no-repeat',
-    maskPosition: 'center',
-    maskSize: 'contain',
-    WebkitMaskImage: `url(${iconPath})`,
-    WebkitMaskRepeat: 'no-repeat',
-    WebkitMaskPosition: 'center',
-    WebkitMaskSize: 'contain',
-  }
-}
-
 function ChannelTileIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
     <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
@@ -116,25 +102,8 @@ function ChannelTileIcon({ icon: Icon }: { icon: LucideIcon }) {
 }
 
 function ProviderLogo({ provider }: { provider: MessagingProviderItem }) {
-  if (provider.maskIcon) {
-    return (
-      <span
-        className="size-4 shrink-0 bg-foreground"
-        style={iconMaskStyle(provider.maskIcon)}
-        aria-hidden
-      />
-    )
-  }
-
   if (provider.icon) {
-    return (
-      <img
-        src={provider.icon}
-        alt=""
-        className="size-4 shrink-0 object-contain"
-        aria-hidden
-      />
-    )
+    return <ProductFeaturePublicIcon src={provider.icon} />
   }
 
   return <Globe className="size-4 shrink-0 text-muted-foreground" aria-hidden />
