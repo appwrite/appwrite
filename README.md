@@ -2,10 +2,10 @@
 
 <br />
 <p align="center">
-    <h1>Appwrite</h1>
-    <b>Appwrite is an open-source, all-in-one development platform. Use built-in backend infrastructure and web hosting, all from a single place.</b>
-    <br />
-    <br />
+  <h1>Appwrite</h1>
+  <b>Appwrite is an open-source, all-in-one development platform. Use built-in backend infrastructure and web hosting, all from a single place.</b>
+  <br />
+  <br />
 </p>
 
 [![Discord](https://img.shields.io/badge/chat-5865F2?style=flat-square&logo=discord&logoColor=white)](https://appwrite.io/discord)
@@ -25,16 +25,16 @@ Table of Contents:
 - [Products](#products)
 - [Installation \& Setup](#installation--setup)
 - [Self-Hosting](#self-hosting)
-  - [Unix](#unix)
-  - [Windows](#windows)
-    - [CMD](#cmd)
-    - [PowerShell](#powershell)
-  - [Upgrade from an Older Version](#upgrade-from-an-older-version)
+ - [Unix](#unix)
+ - [Windows](#windows)
+  - [CMD](#cmd)
+  - [PowerShell](#powershell)
+ - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
-  - [SDKs](#sdks)
-    - [Client](#client)
-    - [Server](#server)
+ - [SDKs](#sdks)
+  - [Client](#client)
+  - [Server](#server)
 - [Architecture](#architecture)
 - [Contributing](#contributing)
 - [Security](#security)
@@ -71,11 +71,11 @@ Before running the installation command, make sure you have [Docker](https://www
 
 ```bash
 docker run -it --rm \
-    --publish 20080:20080 \
-    --volume /var/run/docker.sock:/var/run/docker.sock \
-    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
-    --entrypoint="install" \
-    appwrite/appwrite:1.9.0
+  --publish 20080:20080 \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+  --entrypoint="install" \
+  appwrite/appwrite:1.9.0
 ```
 
 ### Windows
@@ -84,22 +84,22 @@ docker run -it --rm \
 
 ```cmd
 docker run -it --rm ^
-    --publish 20080:20080 ^
-    --volume //var/run/docker.sock:/var/run/docker.sock ^
-    --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
-    --entrypoint="install" ^
-    appwrite/appwrite:1.9.0
+  --publish 20080:20080 ^
+  --volume //var/run/docker.sock:/var/run/docker.sock ^
+  --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
+  --entrypoint="install" ^
+  appwrite/appwrite:1.9.0
 ```
 
 #### PowerShell
 
 ```powershell
 docker run -it --rm `
-    --publish 20080:20080 `
-    --volume /var/run/docker.sock:/var/run/docker.sock `
-    --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
-    --entrypoint="install" `
-    appwrite/appwrite:1.9.0
+  --publish 20080:20080 `
+  --volume /var/run/docker.sock:/var/run/docker.sock `
+  --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
+  --entrypoint="install" `
+  appwrite/appwrite:1.9.0
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
@@ -117,55 +117,55 @@ In addition to running Appwrite locally, you can also launch Appwrite using a pr
 Choose from one of the providers below:
 
 <table border="0">
-  <tr>
-    <td align="center" width="100" height="100">
-      <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
-          <br /><sub><b>DigitalOcean</b></sub></a>
-        </a>
-    </td>
-    <td align="center" width="100" height="100">
-      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
-        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>
-      </a>
-    </td>
-    <td align="center" width="100" height="100">
-      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
-        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
-          <br /><sub><b>AWS Marketplace</b></sub></a>
-      </a>
-    </td>
-  </tr>
+ <tr>
+  <td align="center" width="100" height="100">
+   <a href="https://marketplace.digitalocean.com/apps/appwrite">
+    <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+     <br /><sub><b>DigitalOcean</b></sub></a>
+    </a>
+  </td>
+  <td align="center" width="100" height="100">
+   <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
+    <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+     <br /><sub><b>Akamai Compute</b></sub></a>
+   </a>
+  </td>
+  <td align="center" width="100" height="100">
+   <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+    <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+     <br /><sub><b>AWS Marketplace</b></sub></a>
+   </a>
+  </td>
+ </tr>
 </table>
 
 ## Getting Started
 
 Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
-| Platform              | Technology                                                                         |
+| Platform       | Technology                                     |
 | --------------------- | ---------------------------------------------------------------------------------- |
-| **Web app**           | [Quick start for Web](https://appwrite.io/docs/quick-starts/web)                   |
-|                       | [Quick start for Next.js](https://appwrite.io/docs/quick-starts/nextjs)            |
-|                       | [Quick start for React](https://appwrite.io/docs/quick-starts/react)               |
-|                       | [Quick start for Vue.js](https://appwrite.io/docs/quick-starts/vue)                |
-|                       | [Quick start for Nuxt](https://appwrite.io/docs/quick-starts/nuxt)                 |
-|                       | [Quick start for SvelteKit](https://appwrite.io/docs/quick-starts/sveltekit)       |
-|                       | [Quick start for Refine](https://appwrite.io/docs/quick-starts/refine)             |
-|                       | [Quick start for Angular](https://appwrite.io/docs/quick-starts/angular)           |
+| **Web app**      | [Quick start for Web](https://appwrite.io/docs/quick-starts/web)          |
+|            | [Quick start for Next.js](https://appwrite.io/docs/quick-starts/nextjs)      |
+|            | [Quick start for React](https://appwrite.io/docs/quick-starts/react)        |
+|            | [Quick start for Vue.js](https://appwrite.io/docs/quick-starts/vue)        |
+|            | [Quick start for Nuxt](https://appwrite.io/docs/quick-starts/nuxt)         |
+|            | [Quick start for SvelteKit](https://appwrite.io/docs/quick-starts/sveltekit)    |
+|            | [Quick start for Refine](https://appwrite.io/docs/quick-starts/refine)       |
+|            | [Quick start for Angular](https://appwrite.io/docs/quick-starts/angular)      |
 | **Mobile and Native** | [Quick start for React Native](https://appwrite.io/docs/quick-starts/react-native) |
-|                       | [Quick start for Flutter](https://appwrite.io/docs/quick-starts/flutter)           |
-|                       | [Quick start for Apple](https://appwrite.io/docs/quick-starts/apple)               |
-|                       | [Quick start for Android](https://appwrite.io/docs/quick-starts/android)           |
-| **Server**            | [Quick start for Node.js](https://appwrite.io/docs/quick-starts/node)              |
-|                       | [Quick start for Python](https://appwrite.io/docs/quick-starts/python)             |
-|                       | [Quick start for .NET](https://appwrite.io/docs/quick-starts/dotnet)               |
-|                       | [Quick start for Dart](https://appwrite.io/docs/quick-starts/dart)                 |
-|                       | [Quick start for Ruby](https://appwrite.io/docs/quick-starts/ruby)                 |
-|                       | [Quick start for Deno](https://appwrite.io/docs/quick-starts/deno)                 |
-|                       | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)                   |
-|                       | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)             |
-|                       | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)               |
+|            | [Quick start for Flutter](https://appwrite.io/docs/quick-starts/flutter)      |
+|            | [Quick start for Apple](https://appwrite.io/docs/quick-starts/apple)        |
+|            | [Quick start for Android](https://appwrite.io/docs/quick-starts/android)      |
+| **Server**      | [Quick start for Node.js](https://appwrite.io/docs/quick-starts/node)       |
+|            | [Quick start for Python](https://appwrite.io/docs/quick-starts/python)       |
+|            | [Quick start for .NET](https://appwrite.io/docs/quick-starts/dotnet)        |
+|            | [Quick start for Dart](https://appwrite.io/docs/quick-starts/dart)         |
+|            | [Quick start for Ruby](https://appwrite.io/docs/quick-starts/ruby)         |
+|            | [Quick start for Deno](https://appwrite.io/docs/quick-starts/deno)         |
+|            | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)          |
+|            | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)       |
+|            | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)        |
 
 ### SDKs
 
