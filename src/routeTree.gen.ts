@@ -75,7 +75,6 @@ import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_publ
 import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
-import { Route as PublicProjectsProjectIdReportsRouteImport } from './routes/_public/projects.$projectId.reports'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
@@ -88,6 +87,7 @@ import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_publi
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
+import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
 import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_public/organizations.$orgId.support'
 import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
@@ -622,12 +622,6 @@ const PublicProjectsProjectIdSettingsRoute =
     path: '/settings',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdReportsRoute =
-  PublicProjectsProjectIdReportsRouteImport.update({
-    id: '/reports',
-    path: '/reports',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
 const PublicProjectsProjectIdRealtimeRoute =
   PublicProjectsProjectIdRealtimeRouteImport.update({
     id: '/realtime',
@@ -698,6 +692,12 @@ const PublicProjectsProjectIdAnalyticsRoute =
   PublicProjectsProjectIdAnalyticsRouteImport.update({
     id: '/analytics',
     path: '/analytics',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdAdvisorRoute =
+  PublicProjectsProjectIdAdvisorRouteImport.update({
+    id: '/advisor',
+    path: '/advisor',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdActivityRoute =
@@ -2090,6 +2090,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
+  '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -2102,7 +2103,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
-  '/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRoute
@@ -2357,6 +2357,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
+  '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -2364,7 +2365,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
-  '/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRoute
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -2606,6 +2606,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
+  '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -2618,7 +2619,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
-  '/_public/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/_public/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRoute
@@ -2881,6 +2881,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings'
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
+    | '/projects/$projectId/advisor'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -2893,7 +2894,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
     | '/projects/$projectId/realtime'
-    | '/projects/$projectId/reports'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
@@ -3148,6 +3148,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings'
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
+    | '/projects/$projectId/advisor'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -3155,7 +3156,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
-    | '/projects/$projectId/reports'
     | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
     | '/organizations/$orgId'
@@ -3396,6 +3396,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings'
     | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
+    | '/_public/projects/$projectId/advisor'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
     | '/_public/projects/$projectId/apps'
@@ -3408,7 +3409,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
     | '/_public/projects/$projectId/realtime'
-    | '/_public/projects/$projectId/reports'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
     | '/_public/projects/$projectId/stores'
@@ -4101,13 +4101,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/reports': {
-      id: '/_public/projects/$projectId/reports'
-      path: '/reports'
-      fullPath: '/projects/$projectId/reports'
-      preLoaderRoute: typeof PublicProjectsProjectIdReportsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
     '/_public/projects/$projectId/realtime': {
       id: '/_public/projects/$projectId/realtime'
       path: '/realtime'
@@ -4190,6 +4183,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/projects/$projectId/analytics'
       preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/advisor': {
+      id: '/_public/projects/$projectId/advisor'
+      path: '/advisor'
+      fullPath: '/projects/$projectId/advisor'
+      preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/activity': {
@@ -6672,6 +6672,7 @@ const PublicProjectsProjectIdSitesCreateRouteWithChildren =
 
 interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
+  PublicProjectsProjectIdAdvisorRoute: typeof PublicProjectsProjectIdAdvisorRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -6684,7 +6685,6 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
-  PublicProjectsProjectIdReportsRoute: typeof PublicProjectsProjectIdReportsRoute
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
   PublicProjectsProjectIdStoresRoute: typeof PublicProjectsProjectIdStoresRoute
@@ -6699,6 +6699,7 @@ interface PublicProjectsProjectIdRouteChildren {
 const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren =
   {
     PublicProjectsProjectIdActivityRoute: PublicProjectsProjectIdActivityRoute,
+    PublicProjectsProjectIdAdvisorRoute: PublicProjectsProjectIdAdvisorRoute,
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
@@ -6719,7 +6720,6 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdOnboardingRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
-    PublicProjectsProjectIdReportsRoute: PublicProjectsProjectIdReportsRoute,
     PublicProjectsProjectIdSettingsRoute:
       PublicProjectsProjectIdSettingsRouteWithChildren,
     PublicProjectsProjectIdStorageRoute:
