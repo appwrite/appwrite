@@ -1,0 +1,1 @@
+Create a new Appwrite Push provider. Appwrite Push is Appwrite's own MQTT-based delivery channel for mobile devices — a self-hosted alternative to Firebase Cloud Messaging that keeps a single low-power persistent connection per device.

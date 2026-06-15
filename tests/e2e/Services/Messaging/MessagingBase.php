@@ -835,6 +835,14 @@ trait MessagingBase
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
             ],
+            'appwrite' => [
+                'providerId' => ID::unique(),
+                'name' => 'AppwritePush1',
+                'endpoint' => 'push.example.com:8883',
+                'signingKey' => 'unit-test-signing-key',
+                'tls' => true,
+                'messageExpiry' => 86400,
+            ],
         ];
 
         foreach ($providersParams as $key => $params) {
@@ -850,6 +858,12 @@ trait MessagingBase
             switch ($key) {
                 case 'apns':
                     $this->assertEquals(false, $response['body']['options']['sandbox']);
+                    break;
+                case 'appwrite':
+                    $this->assertEquals('appwrite', $response['body']['provider']);
+                    $this->assertEquals(true, $response['body']['options']['tls']);
+                    $this->assertEquals(86400, $response['body']['options']['messageExpiry']);
+                    $this->assertEquals('push.example.com:8883', $response['body']['credentials']['endpoint']);
                     break;
             }
         }
@@ -921,6 +935,13 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
+            ],
+            'appwrite' => [
+                'name' => 'AppwritePush2',
+                'endpoint' => 'push.example.com:1883',
+                'signingKey' => 'rotated-key',
+                'tls' => false,
+                'messageExpiry' => 3600,
             ],
         ];
 

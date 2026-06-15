@@ -25,6 +25,7 @@ use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
@@ -865,6 +866,12 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
+            'appwrite' => new AppwritePush(
+                endpoint: $credentials['endpoint'] ?? System::getEnv('_APP_PUSH_ENDPOINT', ''),
+                signingKey: $credentials['signingKey'] ?? System::getEnv('_APP_PUSH_SIGNING_KEY', ''),
+                tls: $options['tls'] ?? true,
+                messageExpiry: $options['messageExpiry'] ?? 86400,
+            ),
             default => null
         };
     }

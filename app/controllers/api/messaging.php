@@ -1149,6 +1149,90 @@ Http::post('/v1/messaging/providers/apns')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
+Http::post('/v1/messaging/providers/appwrite')
+    ->desc('Create Appwrite Push provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createAppwriteProvider',
+        description: '/docs/references/messaging/create-appwrite-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('endpoint', '', new Text(256, 0), 'Appwrite Push broker endpoint (host[:port]). Defaults to the bundled broker if omitted.', true)
+    ->param('signingKey', '', new Text(0, 0), 'HMAC key used to sign device JWTs. Defaults to project key if omitted.', true)
+    ->param('tls', true, new Boolean(), 'Connect to the broker over TLS.', true)
+    ->param('messageExpiry', 86400, new Range(1, 2592000), 'Per-message expiry in seconds (default 86400, max 30 days). After this the broker drops undelivered messages.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $endpoint, string $signingKey, bool $tls, int $messageExpiry, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($endpoint)) {
+            $credentials['endpoint'] = $endpoint;
+        }
+        if (!empty($signingKey)) {
+            $credentials['signingKey'] = $signingKey;
+        }
+
+        $defaultEndpoint = System::getEnv('_APP_PUSH_ENDPOINT', '');
+        $defaultSigningKey = System::getEnv('_APP_PUSH_SIGNING_KEY', '');
+
+        $hasEndpoint = !empty($credentials['endpoint']) || !empty($defaultEndpoint);
+        $hasSigningKey = !empty($credentials['signingKey']) || !empty($defaultSigningKey);
+
+        if ($enabled === true && $hasEndpoint && $hasSigningKey) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $options = [
+            'tls' => $tls,
+            'messageExpiry' => $messageExpiry,
+        ];
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'appwrite',
+            'type' => MESSAGE_TYPE_PUSH,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+            'options' => $options,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 Http::get('/v1/messaging/providers')
     ->desc('List providers')
     ->groups(['api', 'messaging'])
@@ -2556,6 +2640,100 @@ Http::patch('/v1/messaging/providers/apns/:providerId')
                     \array_key_exists('teamId', $credentials) &&
                     \array_key_exists('bundleId', $credentials)
                 ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
+            } else {
+                $provider->setAttribute('enabled', false);
+            }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+Http::patch('/v1/messaging/providers/appwrite/:providerId')
+    ->desc('Update Appwrite Push provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateAppwriteProvider',
+        description: '/docs/references/messaging/update-appwrite-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('endpoint', '', new Text(256, 0), 'Appwrite Push broker endpoint.', true)
+    ->param('signingKey', '', new Text(0, 0), 'HMAC key used to sign device JWTs.', true)
+    ->param('tls', null, new Nullable(new Boolean()), 'Connect to the broker over TLS.', true)
+    ->param('messageExpiry', null, new Nullable(new Range(1, 2592000)), 'Per-message expiry in seconds.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $endpoint, string $signingKey, ?bool $tls, ?int $messageExpiry, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($provider->getAttribute('provider') !== 'appwrite') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        if (!empty($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $credentials = $provider->getAttribute('credentials', []);
+
+        if (!empty($endpoint)) {
+            $credentials['endpoint'] = $endpoint;
+        }
+        if (!empty($signingKey)) {
+            $credentials['signingKey'] = $signingKey;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        $options = $provider->getAttribute('options', []);
+
+        if (!\is_null($tls)) {
+            $options['tls'] = $tls;
+        }
+        if (!\is_null($messageExpiry)) {
+            $options['messageExpiry'] = $messageExpiry;
+        }
+
+        $provider->setAttribute('options', $options);
+
+        $defaultEndpoint = System::getEnv('_APP_PUSH_ENDPOINT', '');
+        $defaultSigningKey = System::getEnv('_APP_PUSH_SIGNING_KEY', '');
+        $hasEndpoint = !empty($credentials['endpoint']) || !empty($defaultEndpoint);
+        $hasSigningKey = !empty($credentials['signingKey']) || !empty($defaultSigningKey);
+
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if ($hasEndpoint && $hasSigningKey) {
                     $provider->setAttribute('enabled', true);
                 } else {
                     throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);

@@ -4752,6 +4752,101 @@ Http::delete('/v1/account/targets/:targetId/push')
 
         $response->noContent();
     });
+
+Http::post('/v1/account/targets/:targetId/push/session')
+    ->desc('Issue Appwrite Push broker session')
+    ->groups(['api', 'account'])
+    ->label('scope', 'targets.write')
+    ->label('audits.event', 'target.session')
+    ->label('audits.resource', 'target/{request.$targetId}')
+    ->label('event', 'users.[userId].targets.[targetId].push.session')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'pushTargets',
+        name: 'createPushSession',
+        description: '/docs/references/account/create-push-session.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PUSH_SESSION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->param('targetId', '', new UID(), 'Target ID for the device registered via createPushTarget.')
+    ->param('expirySeconds', 86400, new Range(60, 604800), 'How long the broker session token is valid for (seconds). Default 24h, max 7d.', true)
+    ->inject('project')
+    ->inject('user')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('authorization')
+    ->action(function (string $targetId, int $expirySeconds, Document $project, Document $user, Response $response, Database $dbForProject, Authorization $authorization) {
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+        if ($user->getSequence() !== $target->getAttribute('userInternalId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+        if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        $providerId = $target->getAttribute('providerId');
+        if (empty($providerId)) {
+            $defaultProvider = $authorization->skip(fn () => $dbForProject->findOne('providers', [
+                Utopia\Database\Query::equal('type', [MESSAGE_TYPE_PUSH]),
+                Utopia\Database\Query::equal('provider', ['appwrite']),
+                Utopia\Database\Query::equal('enabled', [true]),
+            ]));
+            if (!$defaultProvider || $defaultProvider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
+            $provider = $defaultProvider;
+        } else {
+            $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            if ($provider->isEmpty() || $provider->getAttribute('provider') !== 'appwrite') {
+                throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+            }
+        }
+
+        $credentials = $provider->getAttribute('credentials', []);
+        $options = $provider->getAttribute('options', []);
+        $endpoint = $credentials['endpoint'] ?? System::getEnv('_APP_PUSH_ENDPOINT', '');
+        $signingKey = $credentials['signingKey'] ?? System::getEnv('_APP_PUSH_SIGNING_KEY', '');
+        $tls = $options['tls'] ?? true;
+        $keepAlive = (int)System::getEnv('_APP_PUSH_KEEPALIVE', 1800);
+
+        if ($endpoint === '' || $signingKey === '') {
+            throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+        }
+
+        $deviceId = $target->getAttribute('identifier');
+        $tokens = new \Appwrite\Push\Token($signingKey);
+        $jwt = $tokens->issueForDevice(
+            deviceId: $deviceId,
+            userId: $user->getId(),
+            projectId: $project->getId(),
+            expirySeconds: $expirySeconds,
+        );
+
+        $session = new Document([
+            'endpoint' => $endpoint,
+            'tls' => (bool)$tls,
+            'topic' => \Appwrite\Push\Token::topicForDevice($deviceId),
+            'clientId' => $deviceId,
+            'token' => $jwt,
+            'keepAlive' => $keepAlive,
+            'expiresAt' => DateTime::formatTz(DateTime::format(new \DateTime('@' . (\time() + $expirySeconds)))),
+        ]);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($session, Response::MODEL_PUSH_SESSION);
+    });
+
 Http::get('/v1/account/identities')
     ->desc('List identities')
     ->groups(['api', 'account'])

@@ -182,6 +182,7 @@ class Response extends SwooleResponse
     public const MODEL_SUBSCRIBER_LIST = 'subscriberList';
     public const MODEL_TARGET = 'target';
     public const MODEL_TARGET_LIST = 'targetList';
+    public const MODEL_PUSH_SESSION = 'pushSession';
 
     // Teams
     public const MODEL_TEAM = 'team';
