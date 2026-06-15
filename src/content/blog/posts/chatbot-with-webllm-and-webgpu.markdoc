@@ -24,7 +24,7 @@ Local LLMs running inside the browser were nearly impossible just a year ago. Bu
 
 In this guide, we'll build a local chatbot that runs entirely in the browser. No backend. No API keys. By the end, you should have a good understanding of [WebLLM](https://webllm.mlc.ai/) and [WebGPU](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API), and will have built an app that looks and functions like this:
 
-![WebLLM and WebGPU chat app demo](/images/blog/chatbot-with-webllm-and-webgpu/webllm-webgpu-chat-app-demo.gif)
+![WebLLM and WebGPU chat app demo](/images/blog/chatbot-with-webllm-and-webgpu/webllm-webgpu-chat-app-demo.avif)
 
 You can also try out the app using this [live URL](https://ebenezerdon.github.io/simple-webllm-chat/).
 
@@ -486,7 +486,7 @@ select:focus {
 
 Next, open the `index.html` file in your browser and you should see something like this:
 
-![WebLLM and WebGPU chat app demo](/images/blog/chatbot-with-webllm-and-webgpu/webllm-webgpu-chat-app-demo.gif)
+![WebLLM and WebGPU chat app demo](/images/blog/chatbot-with-webllm-and-webgpu/webllm-webgpu-chat-app-demo.avif)
 
 Try loading a model and chatting with the AI. To be sure that this all runs locally, you can also turn off your internet connection and see if the app still works after initial model download.
 

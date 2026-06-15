@@ -267,14 +267,14 @@ function AcceptInviteContent() {
           By accepting this invitation, you agree to our{' '}
           <a
             href="#"
-            className="underline underline-offset-4 hover:text-primary"
+            className="link-neutral"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="#"
-            className="underline underline-offset-4 hover:text-primary"
+            className="link-neutral"
           >
             Privacy Policy
           </a>

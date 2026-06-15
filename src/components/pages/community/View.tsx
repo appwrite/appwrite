@@ -210,7 +210,7 @@ export function View({ issues }: ViewProps) {
                             href={issue.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[13px] font-medium text-foreground hover:underline"
+                            className="text-[13px] font-medium link-neutral"
                           >
                             {issue.title}
                           </a>

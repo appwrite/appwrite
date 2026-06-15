@@ -288,7 +288,7 @@ export function TerraformConnectSection({
             href={TERRAFORM_REGISTRY_PROVIDER_DOCS}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
           >
             <TerraformIcon />
             Provider docs on Terraform Registry
@@ -298,7 +298,7 @@ export function TerraformConnectSection({
             href={TERRAFORM_PROVIDER_REPO}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
           >
             <GitHubIcon className="h-4 w-4" />
             appwrite/terraform-provider-appwrite

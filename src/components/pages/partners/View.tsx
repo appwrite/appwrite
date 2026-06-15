@@ -8,6 +8,8 @@ import {
   MarketingStatGrid,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
+import { CARD_LINK_HINT_CLASS } from '@/lib/link-styles'
+import { cn } from '@/lib/utils'
 import { submitPartnerApplication } from '@/lib/marketing/growth-forms'
 import {
   PARTNERS_FORM_ID,
@@ -110,7 +112,7 @@ export function View() {
                 href={way.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-start gap-3 rounded-xl border border-border bg-card/50 p-5 transition-colors hover:bg-accent/50 sm:p-6"
+                className="group link-unstyled flex items-start gap-3 rounded-xl border border-border bg-card/50 p-5 transition-colors hover:bg-accent/50 sm:p-6"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                   {way.title === 'Experts' ? (
@@ -124,7 +126,7 @@ export function View() {
                   <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
                     {way.description}
                   </p>
-                  <span className="mt-4 inline-flex items-center text-[13px] font-medium text-[var(--brand-cta)]">
+                  <span className={cn('mt-4 text-[13px]', CARD_LINK_HINT_CLASS)}>
                     {way.label}
                     <ChevronRight className="ml-0.5 size-4" aria-hidden />
                   </span>

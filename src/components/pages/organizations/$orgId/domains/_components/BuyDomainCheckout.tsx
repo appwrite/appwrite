@@ -490,7 +490,7 @@ export function BuyDomainCheckout({
             )}
             <Link
               to="/account/billing-addresses"
-              className="inline-block text-[13px] text-primary underline-offset-4 hover:underline"
+              className="link-neutral inline-block text-[13px]"
             >
               Manage addresses in account settings
             </Link>

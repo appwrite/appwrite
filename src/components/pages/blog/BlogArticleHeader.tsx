@@ -12,7 +12,7 @@ import {
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
 import { cn, findScrollParent } from '@/lib/utils'
 import { BlogPostShareActions } from './_components/BlogPostShareActions'
-import { BlogAvatarPlaceholder } from './BlogCoverPlaceholder'
+import { BlogAvatar } from './BlogCoverPlaceholder'
 
 type BlogArticleHeaderProps = {
   slug: string
@@ -155,17 +155,17 @@ export function BlogArticleHeader({
       ) : null}
 
       <header className="border-y border-border py-4">
-        <div className="flex items-start justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className={BLOG_PAGE_TITLE_CLASS}>
-              {title}
-              {BLOG_TITLE_SUFFIX}
-            </h1>
-            <div ref={sentinelRef} className="h-px w-full" aria-hidden />
+        <div className="min-w-0">
+          <h1 className={BLOG_PAGE_TITLE_CLASS}>
+            {title}
+            {BLOG_TITLE_SUFFIX}
+          </h1>
+          <div ref={sentinelRef} className="h-px w-full" aria-hidden />
 
-            <p className={BLOG_PAGE_DESCRIPTION_CLASS}>{description}</p>
+          <p className={BLOG_PAGE_DESCRIPTION_CLASS}>{description}</p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-4">
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               {authors.map((author) => (
                 <Link
                   key={author.slug}
@@ -173,7 +173,7 @@ export function BlogArticleHeader({
                   params={{ author: author.slug }}
                   className="inline-flex items-center gap-2"
                 >
-                  <BlogAvatarPlaceholder name={author.name} />
+                  <BlogAvatar name={author.name} avatar={author.avatar} />
                   <div className="min-w-0">
                     <p className="text-[13px] font-medium text-foreground">{author.name}</p>
                     {author.role ? (
@@ -184,17 +184,16 @@ export function BlogArticleHeader({
               ))}
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              <time dateTime={date}>{formatDate(date)}</time>
-              {timeToRead > 0 ? <span>{timeToRead} min read</span> : null}
-              {lastUpdated !== date ? <span>Updated {formatDate(lastUpdated)}</span> : null}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <time dateTime={date}>{formatDate(date)}</time>
+                {timeToRead > 0 ? <span>{timeToRead} min read</span> : null}
+                {lastUpdated !== date ? <span>Updated {formatDate(lastUpdated)}</span> : null}
+              </div>
+              {shareActions}
             </div>
           </div>
-
-          <div className="hidden shrink-0 @[560px]:flex">{shareActions}</div>
         </div>
-
-        <div className="mt-5 @[560px]:hidden">{shareActions}</div>
       </header>
     </>
   )

@@ -250,7 +250,7 @@ export function CreateCliDeploymentModal({
                 href={CLI_INSTALL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 install the CLI
               </a>{' '}
@@ -259,7 +259,7 @@ export function CreateCliDeploymentModal({
                 href={CLI_LOGIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 log in to your account
               </a>{' '}

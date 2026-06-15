@@ -7605,19 +7605,19 @@ Choose the deployment method that best fits your needs:
 For custom deployments on major cloud providers:
 
 {% cards %}
-{% cards_item href="/docs/advanced/self-hosting/platforms/aws" title="Amazon Web Services" icon="icon-aws" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/aws" title="Amazon Web Services" %}
 One-click AWS Marketplace deployment with custom configuration options.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/self-hosting/platforms/digitalocean" title="DigitalOcean" icon="icon-digitalocean" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/digitalocean" title="DigitalOcean" %}
 Marketplace installation with simple Droplet configuration.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/self-hosting/platforms/google-cloud" title="Google Cloud" icon="icon-google" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/google-cloud" title="Google Cloud" %}
 Deploy using Cloud Run, Compute Engine, or other Google Cloud services.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/self-hosting/platforms/azure" title="Microsoft Azure" icon="icon-microsoft" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/azure" title="Microsoft Azure" %}
 Deploy using Container Apps, Virtual Machines, or other Azure services.
 {% /cards_item %}
 {% /cards %}
@@ -7627,7 +7627,7 @@ Deploy using Container Apps, Virtual Machines, or other Azure services.
 Deploy Appwrite on modern PaaS platforms for simplified management:
 
 {% cards %}
-{% cards_item href="/docs/advanced/self-hosting/platforms/coolify" title="Coolify" icon="icon-coolify" %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/coolify" title="Coolify" %}
 Open-source platform for easy self-hosting with one-click deployments.
 {% /cards_item %}
 {% /cards %}
@@ -38176,12 +38176,23 @@ Some real-world scenarios where offline sync is useful are:
 
 ### Integrate offline sync in your apps
 
+{% only_light %}
 {% cards %}
 
-{% cards_item href="/integrations/replication-rxdb" title="RxDB" icon="icon-rxdb" %}
+{% cards_item href="/integrations/replication-rxdb" title="RxDB" image="/images/docs/databases/offline/logos/rxdb.svg" %}
 {% /cards_item %}
 
 {% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="/integrations/replication-rxdb" title="RxDB" image="/images/docs/databases/offline/logos/dark/rxdb.svg" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
 
 ### How does offline sync work?
 
@@ -60362,7 +60373,7 @@ While still in beta, Appwrite Cloud has limited support for Cloud runtimes. As w
 {% tabsitem #all title="All runtimes" %}
 {% table %}
 * &nbsp; {% width=48 %}
-* Name {% width=140 %}
+* Name {% width=100 %}
 * Versions
 * Architectures
 ---
@@ -60506,7 +60517,7 @@ While still in beta, Appwrite Cloud has limited support for Cloud runtimes. As w
 {% tabsitem #available-on-cloud title="Available on Cloud" %}
 {% table %}
 * &nbsp; {% width=48 %}
-* Name {% width=140 %}
+* Name {% width=120 %}
 * Versions
 * Architectures
 ---
@@ -60754,13 +60765,13 @@ Send push notifications to your user's devices.
 
 URL: https://appwrite.io/docs/products/messaging/apns
 
-Apple Push Notification service (APNS) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices.
-APNS is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again.
-APNS will save the last message for 30 days or less and attempt delivery as soon as it's online.
+Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices.
+APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again.
+APNs will save the last message for 30 days or less and attempt delivery as soon as it's online.
 
 {% section #add-provider step=1 title="Add provider" %}
 
-To add APNS as a provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**.
+To add APNs as a provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**.
 
 {% only_dark %}
 ![Add a FCM provider](/images/docs/messaging/providers/apns/dark/provider.avif)
@@ -60816,7 +60827,7 @@ Head to **Apple Developer Member Center** > **Program resources** > **Certificat
 {% /only_light %}
 {% /accordion_item %}
 {% accordion_item title="Sandbox" %}
-Enable sandbox mode for testing on apps signed with development provisioning profiles. APNS offers two environments, **Development** (sandbox) and **Production**. Development builds on XCode signed with a development provisioning profile will use the development environment. Production builds signed with a production provisioning profile will use the production environment.
+Enable sandbox mode for testing on apps signed with development provisioning profiles. APNs offers two environments, **Development** (sandbox) and **Production**. Development builds on XCode signed with a development provisioning profile will use the development environment. Production builds signed with a production provisioning profile will use the production environment.
 {% /accordion_item %}
 {% /accordion %}
 
@@ -61213,7 +61224,7 @@ Some additional configuration is required to enable push notifications in your m
 1. Register and download your `GoogleService-Info.plist` and add it to the root of your project.
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
-1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNS authentication key** > click **Upload**. Upload your key here.
+1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNs authentication key** > click **Upload**. Upload your key here.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 1. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 {% /tabsitem %}
@@ -61238,7 +61249,7 @@ void main() async {
 ```
 1. **For iOS**:
    - Enable push notifications and background modes in XCode by opening `ios/Runner.xcworkspace` and adding the **Push Notifications** capability and **Background Modes** (Background fetch and Remote notifications)
-   - Upload your APNS authentication key to Firebase console under **Cloud Messaging** settings
+   - Upload your APNs authentication key to Firebase console under **Cloud Messaging** settings
    - Request notification permission at runtime using `FirebaseMessaging.instance.requestPermission()`
 1. **For Android**: FCM requires devices running Android 5.0 or higher with Google Play services installed.
 1. **For Web**: Add a `firebase-messaging-sw.js` file in your `web/` directory that imports the Firebase messaging SDK and handles background messages.
@@ -64128,7 +64139,7 @@ Send push notifications, which are little notification messages that appear on a
 of events or updates. Configure one of the following providers to send push notifications.
 {% cards %}
 {% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
-Send push notifications to apps on Apple devices through Apple Push Notification service (APNS).
+Send push notifications to apps on Apple devices through Apple Push Notification service (APNs).
 {% /cards_item %}
 {% cards_item href="/docs/products/messaging/fcm" title="FCM" icon="web-icon-firebase" %}
 Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).
@@ -65394,7 +65405,7 @@ You must configure these services before you can send your first push notificati
 
 {% cards %}
 {% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
-Configure APNS for push notification to Apple devices.
+Configure APNs for push notification to Apple devices.
 {% /cards_item %}
 {% cards_item href="/docs/products/messaging/fcm" title="FCM" icon="web-icon-firebase" %}
 Configure FCM for push notification to Android and Apple devices.
@@ -65407,7 +65418,7 @@ Before sending your first push notification, your application must register itse
 then provide the device token to Appwrite.
 
 {% tabs %}
-{% tabsitem #apple-apns title="APNS for Apple" %}
+{% tabsitem #apple-apns title="APNs for Apple" %}
 First, enable push notification in your app.
 Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 
@@ -65552,10 +65563,10 @@ Before you can send push notifications using FCM, make sure you'd followed the s
 After adding Firebase to your iOS project and adding the `GoogleService-Info.plist` to the root of your project.
 
 
-Next, add your APNS key to Firebase.
+Next, add your APNs key to Firebase.
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
-1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNS authentication key** > click **Upload**. Upload your key here.
+1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNs authentication key** > click **Upload**. Upload your key here.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 1. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 
@@ -65618,7 +65629,7 @@ func login() async {
 ```
 
 If you have disabled method swizzling, or you are building a SwiftUI app,
-you'll need to explicitly map your APNS token to the FCM registration token.
+you'll need to explicitly map your APNs token to the FCM registration token.
 Implement the `didRegisterForRemoteNotificationsWithDeviceToken` method to get the device token and save it to FCM.
 ```swift
 func application(
@@ -65636,7 +65647,7 @@ func application(
 Your app must ask for permission to receive push notification from the user.
 
 {% tabs %}
-{% tabsitem #apple-apns title="Apple with APNS" %}
+{% tabsitem #apple-apns title="Apple with APNs" %}
 Before your app can receive push notifications, you need to request the user for permissions.
 Appwrite provides a utility to help request permissions to display notificaitons.
 
@@ -65688,7 +65699,7 @@ Messaging.messaging().autoInitEnabled = true
 You can send messages in both the Appwrite Console and programmatically using the Appwrite Server SDK.
 
 {% info title="Sandbox" %}
-If you enabled **Sandbox** on your APNS provider, Appwrite will send push notifications to the development APNS environment.
+If you enabled **Sandbox** on your APNs provider, Appwrite will send push notifications to the development APNs environment.
 This requires you to use a **Development profile** in XCode.
 
 If XCode is not default to a development profile,
@@ -68484,7 +68495,7 @@ Push notifications require configuration on both the Appwrite platform and your 
 1. Register and download your `google-services.json` config file.
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
-1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNS authentication key** > click **Upload**. Upload your key here.
+1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNs authentication key** > click **Upload**. Upload your key here.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 1. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 
@@ -68507,7 +68518,7 @@ Push notifications require configuration on both the Appwrite platform and your 
 ```
 {% /tabsitem %}
 
-{% tabsitem #APNS-ios title="iOS with APNS" %}
+{% tabsitem #APNs-ios title="iOS with APNs" %}
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
@@ -75147,19 +75158,19 @@ Use your first site as a springboard to explore the flexible and powerful featur
 
 {% cards %}
 
-{% cards_item href="/docs/products/sites/templates" title="Templates" icon="icon-document-text" %}
+{% cards_item href="/docs/products/sites/templates" title="Templates" %}
 Get a template site up and running with a single click.
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/develop" title="Develop" icon="icon-code-bracket" %}
+{% cards_item href="/docs/products/sites/develop" title="Develop" %}
 Learn about developing your own Appwrite Site.
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/deploy-from-git" title="Deploy" icon="icon-rocket-launch" %}
+{% cards_item href="/docs/products/sites/deploy-from-git" title="Deploy" %}
 Configure and deploy your Appwrite Site from Git.
 {% /cards_item %}
 
-{% cards_item href="/docs/products/sites/frameworks" title="Frameworks" icon="icon-squares-2x2" %}
+{% cards_item href="/docs/products/sites/frameworks" title="Frameworks" %}
 Learn which frameworks are supported by Appwrite Sites.
 {% /cards_item %}
 
@@ -85006,38 +85017,38 @@ The Appwrite SDK works with your favorite Web frameworks.
 
 Learn to use Appwrite by adding authentication to a simple web app.
 {% cards %}
-{% cards_item href="/docs/quick-starts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% cards_item href="/docs/quick-starts/nextjs" title="Next.js" %}
 Get started with Appwrite and Next.js
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/react" title="React" icon="icon-react" %}
+{% cards_item href="/docs/quick-starts/react" title="React" %}
 Get started with Appwrite and React
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/vue" title="Vue.js" icon="web-icon-vue" %}
+{% cards_item href="/docs/quick-starts/vue" title="Vue.js" %}
 Get started with Appwrite and Vue.js
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/nuxt" title="Nuxt" icon="icon-nuxt" %}
+{% cards_item href="/docs/quick-starts/nuxt" title="Nuxt" %}
 Get started with Appwrite and Nuxt
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/sveltekit" title="SvelteKit" icon="icon-svelte" %}
+{% cards_item href="/docs/quick-starts/sveltekit" title="SvelteKit" %}
 Get started with Appwrite and SvelteKit
 {% /cards_item %}
-{% cards_item href="/docs/quick-starts/angular" title="Angular" icon="icon-angular" %}
+{% cards_item href="/docs/quick-starts/angular" title="Angular" %}
 Get started with Appwrite and Angular
 {% /cards_item %}
 {% /cards %}
 
 Learn to use Appwrite by building an idea tracker app.
 {% cards %}
-{% cards_item href="/docs/tutorials/react" title="React" icon="icon-react" %}
+{% cards_item href="/docs/tutorials/react" title="React" %}
 Get started with Appwrite and React
 {% /cards_item %}
-{% cards_item href="/docs/tutorials/vue" title="Vue.js" icon="web-icon-vue" %}
+{% cards_item href="/docs/tutorials/vue" title="Vue.js" %}
 Get started with Appwrite and Vue.js
 {% /cards_item %}
-{% cards_item href="/docs/tutorials/nuxt" title="Nuxt" icon="icon-nuxt" %}
+{% cards_item href="/docs/tutorials/nuxt" title="Nuxt" %}
 Get started with Appwrite and Nuxt
 {% /cards_item %}
-{% cards_item href="/docs/tutorials/sveltekit" title="SvelteKit" icon="icon-svelte" %}
+{% cards_item href="/docs/tutorials/sveltekit" title="SvelteKit" %}
 Get started with Appwrite and SvelteKit
 {% /cards_item %}
 {% /cards %}
@@ -85603,7 +85614,7 @@ Client libraries for integrating with Appwrite to build client-based application
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * GitHub Repository
 * &nbsp; {% width=80 %}
 ---
@@ -85644,7 +85655,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * GitHub Repository
 * &nbsp; {% width=80 %}
 ---
@@ -85725,7 +85736,7 @@ Integrate with the Appwrite Realtime API
 Integrate with the Appwrite REST API
 {% /cards_item %}
 
-{% cards_item href="/docs/apis/graphql" title="GraphQL API" icon="icon-graphql" %}
+{% cards_item href="/docs/apis/graphql" title="GraphQL API" %}
 Integrate with the Appwrite GraphQL API
 {% /cards_item %}
 {% /cards %}
@@ -85902,7 +85913,7 @@ You can discover the available enums in each SDK at the source.
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * Enums
 * &nbsp; {% width=80 %}
 
@@ -85944,7 +85955,7 @@ You can discover the available enums in each SDK at the source.
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * Enums
 * &nbsp; {% width=80 %}
 ---
@@ -86036,53 +86047,105 @@ Appwrite provides a comprehensive set of tools and resources to help you build w
 
 AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project.
 
+{% only_light %}
 {% cards %}
 
-{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="icon-claude" %}
+{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" image="/images/docs/mcp/logos/claude.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="icon-codex" %}
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" image="/images/docs/mcp/logos/openai.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="icon-cursor-ai" %}
+{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" image="/images/docs/mcp/logos/cursor-ai.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" icon="icon-vscode" %}
+{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" image="/images/docs/mcp/logos/vscode.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" icon="icon-zed" %}
+{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" image="/images/docs/mcp/logos/zed.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" icon="icon-opencode" %}
+{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" image="/images/docs/mcp/logos/opencode.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" icon="icon-google-antigravity" %}
+{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" image="/images/docs/mcp/logos/google-antigravity.svg" %}
 {% /cards_item %}
 
 {% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" image="/images/docs/mcp/logos/dark/claude.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" image="/images/docs/mcp/logos/dark/openai.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" image="/images/docs/mcp/logos/dark/vscode.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" image="/images/docs/mcp/logos/dark/zed.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" image="/images/docs/mcp/logos/dark/opencode.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" image="/images/docs/mcp/logos/dark/google-antigravity.svg" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
 
 ### Vibe coding {% #vibe-coding %}
 
 Vibe coding platforms let you build applications through natural language. Describe what you want to build and the AI generates the application for you.
 
+{% only_light %}
 {% cards %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" icon="icon-claude" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" image="/images/docs/mcp/logos/claude.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" icon="icon-lovable" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" image="/images/docs/mcp/logos/lovable.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" icon="icon-emergent" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" image="/images/docs/mcp/logos/emergent.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" icon="icon-bolt" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" image="/images/docs/mcp/logos/bolt.svg" %}
 {% /cards_item %}
 
-{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" icon="icon-zenflow" %}
+{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" image="/images/docs/mcp/logos/zenflow.svg" %}
 {% /cards_item %}
 
 {% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" image="/images/docs/mcp/logos/dark/claude.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" image="/images/docs/mcp/logos/dark/lovable.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" image="/images/docs/mcp/logos/dark/emergent.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" image="/images/docs/mcp/logos/dark/bolt.svg" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" image="/images/docs/mcp/logos/dark/zenflow.svg" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
 
 ### Tooling {% #tooling %}
 
@@ -86718,15 +86781,29 @@ Update the `mcp.json` file to include the docs server:
 
 You can also **directly add the MCP servers to Cursor** using the following links:
 
+{% only_light %}
 {% cards %}
 
-{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" icon="icon-cursor-ai" %}
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" image="/images/docs/mcp/logos/cursor-ai.svg" %}
 {% /cards_item %}
 
-{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" icon="icon-cursor-ai" %}
+{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" image="/images/docs/mcp/logos/cursor-ai.svg" %}
 {% /cards_item %}
 
 {% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=docs" title="API server" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% cards_item href="https://apwr.dev/docs-mcp-cursor?ref=docs" title="Docs server" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
 
 Once you save the details, Cursor will connect with the MCP server(s) and load all available tools. You may need to restart Cursor if it is unable to start the MCP server.
 

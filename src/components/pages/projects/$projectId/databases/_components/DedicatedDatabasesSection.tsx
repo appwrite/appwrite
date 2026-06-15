@@ -242,7 +242,7 @@ export function DedicatedDatabasesSection({
                       <TableCell className="px-4 py-3">
                         {link ? (
                           <Link {...link} className="block min-w-0 group">
-                            <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                            <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
                               {db.name}
                             </p>
                             <div className="mt-0.5">

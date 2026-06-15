@@ -261,7 +261,7 @@ function CaseStudyPanelContent({
 
           <BlogPageAnchor
             href={study.storyUrl}
-            className="group inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
+            className="group link-neutral inline-flex shrink-0 items-center gap-1.5 text-[13px]"
           >
             Read customer story
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -497,7 +497,7 @@ export function TestimonialsSection() {
             <div className="relative z-[1] col-span-6 mt-8 text-center lg:mt-10">
               <BlogPageAnchor
                 href="/blog/category/customer-stories"
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
+                className="link-neutral inline-flex items-center gap-1.5 text-[13px]"
               >
                 Read our case studies
                 <ArrowRight className="size-3.5" />

@@ -483,7 +483,7 @@ export function MarketingInvolvementCards({
                 {...(item.external
                   ? { target: '_blank', rel: 'noopener noreferrer' }
                   : {})}
-                className={cardClassName}
+                className={cn(cardClassName, 'link-unstyled')}
               >
                 {inner}
               </a>

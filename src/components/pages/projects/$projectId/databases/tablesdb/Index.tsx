@@ -387,7 +387,7 @@ export function IndexDrawer({
                     onClick={() =>
                       setFormData((prev) => ({ ...prev, key: suggestedKey }))
                     }
-                    className="text-primary hover:underline"
+                    className="link-neutral"
                   >
                     {suggestedKey}
                   </button>

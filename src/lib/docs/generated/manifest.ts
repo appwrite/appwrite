@@ -1384,7 +1384,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/messaging/apns",
     "title": "Apple Push Notification service",
-    "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNS) using Appwrite Messaging.",
+    "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
     "layout": "article",
     "readingTimeMinutes": 3
   },

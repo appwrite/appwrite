@@ -331,7 +331,7 @@ export function GitConfigurationCard({
                                       href={providerUrl}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-[13px] font-medium text-foreground hover:underline"
+                                      className="text-[13px] font-medium link-neutral"
                                     >
                                       {installation.organization}
                                     </a>

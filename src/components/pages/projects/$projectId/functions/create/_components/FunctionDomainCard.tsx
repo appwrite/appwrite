@@ -63,7 +63,7 @@ export function FunctionDomainCard({
             href={NETWORK_REGIONS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground hover:underline font-medium"
+            className="link-neutral font-medium"
           >
             Region
           </a>
@@ -72,7 +72,7 @@ export function FunctionDomainCard({
             href={NETWORK_EDGES_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground hover:underline font-medium"
+            className="link-neutral font-medium"
           >
             Edge
           </a>
@@ -141,7 +141,7 @@ export function FunctionDomainCard({
             href={FUNCTION_DOMAINS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground hover:underline font-medium"
+            className="link-neutral font-medium"
           >
             Learn more
           </a>

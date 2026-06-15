@@ -28,6 +28,7 @@ import {
   OnlyLight,
 } from '@/components/pages/docs/markdoc/Nodes'
 import { Tabs, TabsItem } from '@/components/pages/docs/markdoc/Tabs'
+import { MarkdocYoutube } from '@/components/pages/docs/markdoc/Youtube'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
 import {
@@ -40,6 +41,7 @@ import {
   DOCS_PROSE_DETAIL_CLASSES,
 } from '@/lib/docs/prose-typography'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
+import { ImagePreviewGalleryProvider } from '@/components/global/shared/ImagePreviewGallery'
 import { cn } from '@/lib/utils'
 import {
   CHANGELOG_RESOURCE_LINK_GROUP_CLASSES,
@@ -104,17 +106,7 @@ const markdocComponents = {
       <video src={src} controls className="w-full" title={title} />
     </div>
   ),
-  Youtube: ({ id, title }: { id?: string; title?: string }) => (
-    <div className="not-prose my-6 aspect-video overflow-hidden rounded-xl border border-border">
-      <iframe
-        src={`https://www.youtube.com/embed/${id}`}
-        title={title ?? 'YouTube video'}
-        className="h-full w-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
-    </div>
-  ),
+  Youtube: MarkdocYoutube,
 }
 
 type ChangelogMarkdownProps = {
@@ -204,16 +196,18 @@ export function ChangelogMarkdown({
   }, [content, proseBodyClass, proseLinkClass, arrowLinkTextClass, proseVariant])
 
   return (
-    <div
-      className={cn(
-        'docs-prose',
-        proseBodyClass,
-        ...proseDetailClasses,
-        ...CHANGELOG_RESOURCE_LINK_GROUP_CLASSES,
-        className,
-      )}
-    >
-      {rendered}
-    </div>
+    <ImagePreviewGalleryProvider>
+      <div
+        className={cn(
+          'docs-prose',
+          proseBodyClass,
+          ...proseDetailClasses,
+          ...CHANGELOG_RESOURCE_LINK_GROUP_CLASSES,
+          className,
+        )}
+      >
+        {rendered}
+      </div>
+    </ImagePreviewGalleryProvider>
   )
 }

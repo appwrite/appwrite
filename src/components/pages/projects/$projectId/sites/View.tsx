@@ -831,7 +831,7 @@ export function View() {
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
                                       {siteData.name || 'Unnamed Site'}
                                     </p>
                                   </div>

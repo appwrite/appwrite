@@ -881,7 +881,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                       href={`http://localhost:${manualBlocks.port}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-2 hover:underline"
+                      className="link-neutral inline-flex items-center gap-1"
                     >
                       http://localhost:{manualBlocks.port}
                       <ExternalLink

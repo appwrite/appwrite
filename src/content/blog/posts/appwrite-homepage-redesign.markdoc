@@ -72,7 +72,7 @@ We simplified our messaging further and focused on showing, not just telling, wh
 
 While the main aim was to improve the story that we were trying to convey, we also further improved our visual language. We did a few iterations to further simplify our visuals and worked on an animation style that feels more natural. In our old page, we had animations based on scroll behavior that slightly hijacked user control, something developers disliked. The new animations and microinteractions make the page feel alive without taking away from the main purpose: understanding the story of Appwrite.
 
-![Scene](/images/blog/appwrite-homepage-redesign/scene.gif)
+![Scene](/images/blog/appwrite-homepage-redesign/scene.avif)
 
 With all these changes, we moved into a final design iteration: the version that’s now live.
 

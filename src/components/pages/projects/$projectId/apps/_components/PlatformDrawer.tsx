@@ -226,7 +226,7 @@ export function PlatformDrawer({
                         </p>
                         <BlogPageAnchor
                           href="/blog/post/cors-error"
-                          className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"
+                          className="inline-flex items-center gap-1 link-neutral text-[12px]"
                         >
                           Troubleshoot CORS errors
                           <ExternalLink className="h-3 w-3 shrink-0" />

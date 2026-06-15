@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { resolveBlogAuthors } from '@/lib/blog/content'
 import type { BlogAuthor, BlogPostMeta } from '@/lib/blog/types'
 import { formatDate } from '@/lib/date-utils'
-import { BlogAvatarPlaceholder, BlogCoverPlaceholder } from './BlogCoverPlaceholder'
+import { BlogAvatar, BlogCover } from './BlogCoverPlaceholder'
 
 type BlogFeaturedSectionProps = {
   post: BlogPostMeta
@@ -26,35 +26,36 @@ export function BlogFeaturedSection({ post, authors }: BlogFeaturedSectionProps)
             params={{ slug: post.slug }}
             className="block overflow-hidden rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
           >
-            <BlogCoverPlaceholder
+            <BlogCover
               title={post.title}
+              cover={post.cover}
               className="rounded-none border-0"
             />
           </Link>
 
           <div className="flex flex-col">
-            {primaryAuthor ? (
-              <Link
-                to="/blog/author/$author"
-                params={{ author: primaryAuthor.slug }}
-                className="inline-flex w-fit items-center gap-2"
-              >
-                <BlogAvatarPlaceholder name={primaryAuthor.name} />
-                <span className="text-[12px] text-muted-foreground hover:text-foreground">
-                  {postAuthors.map((author) => author.name).join(', ')}
-                </span>
-              </Link>
-            ) : null}
-
             <Link
               to="/blog/post/$slug"
               params={{ slug: post.slug }}
-              className="mt-4 block"
+              className="block"
             >
               <h2 className="font-aeonik-pro text-[24px] font-normal leading-[1.3] text-foreground transition-colors group-hover:text-foreground/80 sm:text-[28px]">
                 {post.title}
               </h2>
             </Link>
+
+            {primaryAuthor ? (
+              <Link
+                to="/blog/author/$author"
+                params={{ author: primaryAuthor.slug }}
+                className="mt-3 inline-flex w-fit items-center gap-2"
+              >
+                <BlogAvatar name={primaryAuthor.name} avatar={primaryAuthor.avatar} />
+                <span className="text-[12px] text-muted-foreground hover:text-foreground">
+                  {postAuthors.map((author) => author.name).join(', ')}
+                </span>
+              </Link>
+            ) : null}
 
             <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
               {post.description}

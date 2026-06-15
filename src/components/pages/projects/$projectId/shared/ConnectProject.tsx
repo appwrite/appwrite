@@ -1654,7 +1654,7 @@ export function ConnectProject({
                           href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                          className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                         >
                           Server setup guide
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -1667,7 +1667,7 @@ export function ConnectProject({
                   href={APPWRITE_DOCS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                 >
                   Read the docs
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -1824,7 +1824,7 @@ export function ConnectProject({
                   href={APPWRITE_CLI_INSTALL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                 >
                   Full installation guide
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -1891,7 +1891,7 @@ export function ConnectProject({
                 href={APPWRITE_CLI_DOCS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
               >
                 CLI commands
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -1945,7 +1945,7 @@ export function ConnectProject({
                     href={APPWRITE_SKILLS_DOCS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                    className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                   >
                     Docs
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -2007,7 +2007,7 @@ export function ConnectProject({
                       href={APPWRITE_AGENT_SKILLS_REPO}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                      className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                     >
                       <GitHubIcon className="h-4 w-4" />
                       appwrite/agent-skills

@@ -65,7 +65,7 @@ export function VerifyEmail({
                   <Link
                     to="/sign-in"
                     search={redirect ? { redirect } : undefined}
-                    className="text-primary hover:underline"
+                    className="link-neutral"
                   >
                     Sign in
                   </Link>

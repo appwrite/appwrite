@@ -478,7 +478,7 @@ export function CreateSiteView() {
                 </p>
                 <a
                   href={getGitHubAuthUrl}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
                 >
                   <GitHubIcon className="h-3.5 w-3.5" />
                   Update GitHub permissions
@@ -507,7 +507,7 @@ export function CreateSiteView() {
           <Link
             to="/projects/$projectId/sites/create/manual"
             params={{ projectId: projectId! }}
-            className="text-foreground hover:underline"
+            className="link-neutral"
           >
             Upload your website manually
           </Link>

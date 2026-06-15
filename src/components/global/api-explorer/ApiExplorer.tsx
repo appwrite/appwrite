@@ -927,7 +927,7 @@ function MethodListPanel({
               {service.description && (
                 <MethodDescriptionMarkdown
                   content={service.description}
-                  className="rounded-md border border-border/60 bg-muted/15 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground [&_a]:text-[12px] [&_code]:text-[11px] [&_ol]:my-2 [&_p]:my-0 [&_p+p]:mt-2 [&_p]:text-[12px] [&_p]:leading-relaxed [&_ul]:my-2"
+                  className="rounded-md border border-border/60 bg-muted/15 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground prose-links-neutral [&_a]:text-[12px] [&_code]:text-[11px] [&_ol]:my-2 [&_p]:my-0 [&_p+p]:mt-2 [&_p]:text-[12px] [&_p]:leading-relaxed [&_ul]:my-2"
                 />
               )}
               {resourceGroups.map((group) => (

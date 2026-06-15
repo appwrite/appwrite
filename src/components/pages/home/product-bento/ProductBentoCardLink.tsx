@@ -4,7 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const linkClassName =
-  'absolute inset-0 z-[1] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+  'link-unstyled absolute inset-0 z-[1] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
 type ProductBentoCardLinkProps = {
   href: string

@@ -774,11 +774,11 @@ export function DeploymentDetailView({
                         target="_blank"
                         rel="noopener noreferrer"
                         title={`Open ${domain} in new tab`}
-                        className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden font-mono text-[11px] text-foreground hover:text-primary"
+                        className="link-neutral flex min-w-0 flex-1 items-center gap-1 overflow-hidden font-mono text-[11px]"
                       >
                         <span className="min-w-0 truncate">{domain}</span>
                         <ExternalLink
-                          className="h-3 w-3 shrink-0 text-muted-foreground opacity-70 group-hover:opacity-100 group-hover:text-primary"
+                          className="h-3 w-3 shrink-0 text-muted-foreground opacity-70 group-hover:opacity-100 group-hover:text-foreground"
                           aria-hidden
                         />
                       </a>
@@ -851,7 +851,7 @@ export function DeploymentDetailView({
                       href={resolvedCommitUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-w-0 truncate font-mono text-[11px] font-medium text-primary hover:underline"
+                      className="min-w-0 truncate font-mono text-[11px] link-neutral"
                       title={deployment.providerCommitHash}
                     >
                       {deployment.providerCommitHash.slice(0, 7)}
@@ -924,7 +924,7 @@ export function DeploymentDetailView({
                     href={resolvedBranchUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-w-0 truncate text-[11px] font-medium text-foreground hover:text-primary"
+                    className="link-neutral min-w-0 truncate text-[11px]"
                   >
                     {deployment.providerBranch}
                   </a>
@@ -984,7 +984,7 @@ export function DeploymentDetailView({
                   href={repositoryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="truncate text-[11px] font-medium text-foreground hover:text-primary"
+                  className="link-neutral truncate text-[11px]"
                 >
                   {deployment.providerRepositoryOwner}/
                   {deployment.providerRepositoryName}
@@ -1561,7 +1561,7 @@ export function DeploymentDetailView({
                 params={
                   { projectId, [parentResourceParam]: resourceId } as unknown
                 }
-                className="text-primary hover:underline font-medium"
+                className="link-neutral font-medium"
               >
                 {parentResource.name}
               </Link>

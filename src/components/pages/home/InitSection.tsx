@@ -16,6 +16,7 @@ import {
   isLaunchEventDayLocked,
   type LaunchEventDayView,
 } from '@/lib/init/types'
+import { CARD_LINK_HINT_CLASS } from '@/lib/link-styles'
 import { cn } from '@/lib/utils'
 
 function HomeInitDayCard({
@@ -31,7 +32,7 @@ function HomeInitDayCard({
         to="/init"
         hash={getInitDayCardId(day.day)}
         className={cn(
-          'flex min-h-full flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-left transition-colors',
+          'link-unstyled flex min-h-full flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-left transition-colors',
           'hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         )}
       >
@@ -60,7 +61,7 @@ function HomeInitDayCard({
       to="/init"
       hash={getInitDayCardId(day.day)}
       className={cn(
-        'flex min-h-full flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
+        'link-unstyled group flex min-h-full flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
         'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         day.isLive
           ? 'border-[color-mix(in_srgb,var(--brand-cta)_45%,var(--border))]'
@@ -84,7 +85,7 @@ function HomeInitDayCard({
       <p className="mt-3 min-h-[2lh] flex-1 line-clamp-2 text-[12px] leading-normal text-muted-foreground">
         {day.description}
       </p>
-      <span className="mt-4 inline-flex items-center gap-1 text-[12px] font-medium text-[var(--brand-cta)]">
+      <span className={cn('mt-4 text-[12px]', CARD_LINK_HINT_CLASS)}>
         View day {day.day}
         <ArrowRight className="size-3.5" aria-hidden />
       </span>

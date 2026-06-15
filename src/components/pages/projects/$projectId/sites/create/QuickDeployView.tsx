@@ -533,7 +533,7 @@ export function QuickDeployView({
               href="https://appwrite.io/docs/products/sites/domains"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-foreground hover:underline font-medium"
+              className="link-neutral font-medium"
             >
               Learn more →
             </a>

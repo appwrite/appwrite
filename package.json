@@ -16,6 +16,7 @@
     "generate:routes": "tsr generate",
     "import:docs": "bun run scripts/import-docs.ts && bun run scripts/generate-docs-manifest.ts && bun run scripts/generate-docs-section-nav.ts && bun run scripts/generate-docs-static-exports.ts",
     "import:blog": "bun run scripts/import-blog.ts",
+    "convert:content-images": "bun run scripts/convert-content-images-to-avif.ts",
     "generate:docs": "bun run scripts/generate-docs-manifest.ts && bun run scripts/generate-docs-section-nav.ts && bun run scripts/generate-docs-static-exports.ts",
     "generate:docs-exports": "bun run scripts/generate-docs-static-exports.ts",
     "generate:sitemap": "bun run scripts/generate-sitemap.ts",

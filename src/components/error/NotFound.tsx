@@ -122,14 +122,14 @@ function NotFoundContent({
           {docsExternal ? (
             <a
               href={docsHref}
-              className="font-medium text-primary hover:underline"
+              className="link-neutral"
             >
               Browse documentation
             </a>
           ) : (
             <Link
               to={docsHref}
-              className="font-medium text-primary hover:underline"
+              className="link-neutral"
             >
               Browse documentation
             </Link>

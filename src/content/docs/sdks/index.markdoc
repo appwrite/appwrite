@@ -14,7 +14,7 @@ Client libraries for integrating with Appwrite to build client-based application
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * GitHub Repository
 * &nbsp; {% width=80 %}
 ---
@@ -55,7 +55,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * GitHub Repository
 * &nbsp; {% width=80 %}
 ---
@@ -136,7 +136,7 @@ Integrate with the Appwrite Realtime API
 Integrate with the Appwrite REST API
 {% /cards_item %}
 
-{% cards_item href="/docs/apis/graphql" title="GraphQL API" icon="icon-graphql" %}
+{% cards_item href="/docs/apis/graphql" title="GraphQL API" %}
 Integrate with the Appwrite GraphQL API
 {% /cards_item %}
 {% /cards %}
@@ -313,7 +313,7 @@ You can discover the available enums in each SDK at the source.
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * Enums
 * &nbsp; {% width=80 %}
 
@@ -355,7 +355,7 @@ You can discover the available enums in each SDK at the source.
 
 {% table %}
 * &nbsp; {% width=48 %}
-* Platform {% width=200 %}
+* Platform
 * Enums
 * &nbsp; {% width=80 %}
 ---

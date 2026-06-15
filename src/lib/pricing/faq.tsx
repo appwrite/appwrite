@@ -7,7 +7,7 @@ export type FaqItem = {
 }
 
 const linkClassName =
-  'text-foreground underline underline-offset-4 hover:text-[var(--brand-cta)]'
+  'link-neutral'
 
 export const pricingFaqItems: readonly FaqItem[] = [
   {

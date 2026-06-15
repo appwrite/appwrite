@@ -129,7 +129,7 @@ export function DenyFreeEmailCard({
             href={EMAIL_POLICIES_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:underline"
+            className="link-neutral"
           >
             Learn more
           </a>

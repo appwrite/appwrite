@@ -1232,7 +1232,7 @@ function MobileProjectSelectorContent({
               </span>
               <button
                 onClick={() => setActiveTab('teams')}
-                className="ml-auto cursor-pointer text-[12px] text-primary hover:underline dark:text-muted-foreground"
+                className="ml-auto cursor-pointer link-neutral text-[12px] dark:text-muted-foreground"
               >
                 Change
               </button>

@@ -400,7 +400,7 @@ export function UpdatePasswordSection() {
             <div className="text-sm">
               <Link
                 to="/recovery"
-                className="text-primary hover:underline text-[13px]"
+                className="link-neutral text-[13px]"
               >
                 Forgot your password?
               </Link>

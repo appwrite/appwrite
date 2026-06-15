@@ -470,7 +470,7 @@ function FunctionTemplateDetailDrawer({
                   Documentation
                 </p>
                 <div
-                  className="text-[13px] leading-relaxed text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2"
+                  className="text-[13px] leading-relaxed text-muted-foreground prose-links-neutral"
                   dangerouslySetInnerHTML={{ __html: t.instructions }}
                 />
               </div>
@@ -592,7 +592,7 @@ function FunctionTemplateDetailDrawer({
                             </div>
                             {v.description ? (
                               <div
-                                className="mt-1.5 text-[12px] leading-snug text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a]:underline"
+                                className="mt-1.5 text-[12px] leading-snug text-muted-foreground prose-links-neutral"
                                 dangerouslySetInnerHTML={{
                                   __html: v.description,
                                 }}
@@ -963,7 +963,7 @@ function TemplateCatalogFilters({
           href="https://github.com/appwrite/templates"
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex max-w-full items-center gap-1.5 pt-0.5 text-[13px] font-medium text-foreground transition-colors hover:underline"
+          className="link-neutral inline-flex max-w-full items-center gap-1.5 pt-0.5 text-[13px]"
         >
           <GitHubIcon className="h-4 w-4 shrink-0" />
           appwrite/templates on GitHub

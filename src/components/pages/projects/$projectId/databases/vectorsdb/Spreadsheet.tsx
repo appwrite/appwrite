@@ -5120,7 +5120,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
                 href="https://appwrite.io/docs/products/databases/permissions"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 Learn more
               </a>

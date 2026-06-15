@@ -3,8 +3,7 @@ import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
-const CHAT_LINK_CLASS =
-  'font-medium text-[var(--brand-cta)] underline-offset-2 hover:underline'
+const CHAT_LINK_CLASS = 'link-neutral'
 
 const INCOMING_NAME_CLASS = 'text-[13px] font-medium text-[#19191D]'
 const INCOMING_TIME_CLASS = 'text-[11px] text-[#616161]'

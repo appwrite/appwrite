@@ -8,6 +8,7 @@ import {
   DOCS_PROSE_DETAIL_CLASSES,
   DOCS_PROSE_WRAPPER_CLASS,
 } from '@/lib/docs/prose-typography'
+import { ImagePreviewGalleryProvider } from '@/components/global/shared/ImagePreviewGallery'
 import { cn } from '@/lib/utils'
 import { Cards, CardsItem } from './markdoc/Cards'
 import { Fence } from './markdoc/Fence'
@@ -30,6 +31,7 @@ import {
   OnlyLight,
 } from './markdoc/Nodes'
 import { Tabs, TabsItem } from './markdoc/Tabs'
+import { MarkdocYoutube } from './markdoc/Youtube'
 import {
   Accordion,
   AccordionContent,
@@ -75,17 +77,7 @@ const baseMarkdocComponents = {
       <video src={src} controls className="w-full" title={title} />
     </div>
   ),
-  Youtube: ({ id, title }: { id?: string; title?: string }) => (
-    <div className="not-prose my-6 aspect-video overflow-hidden rounded-xl border border-border">
-      <iframe
-        src={`https://www.youtube.com/embed/${id}`}
-        title={title ?? 'YouTube video'}
-        className="h-full w-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
-    </div>
-  ),
+  Youtube: MarkdocYoutube,
 }
 
 function createMarkdocComponents(compact: boolean) {
@@ -146,14 +138,16 @@ export function DocsMarkdown({ content, compact = false }: DocsMarkdownProps) {
   }, [content, compact])
 
   return (
-    <div
-      className={cn(
-        DOCS_PROSE_WRAPPER_CLASS,
-        ...DOCS_PROSE_DETAIL_CLASSES,
-        compact && 'text-[14px] leading-[1.65] @[480px]:text-[15px]',
-      )}
-    >
-      {rendered}
-    </div>
+    <ImagePreviewGalleryProvider>
+      <div
+        className={cn(
+          DOCS_PROSE_WRAPPER_CLASS,
+          ...DOCS_PROSE_DETAIL_CLASSES,
+          compact && 'text-[14px] leading-[1.65] @[480px]:text-[15px]',
+        )}
+      >
+        {rendered}
+      </div>
+    </ImagePreviewGalleryProvider>
   )
 }

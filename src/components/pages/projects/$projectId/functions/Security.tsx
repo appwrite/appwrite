@@ -150,7 +150,7 @@ export function View() {
                   href="https://appwrite.io/docs/advanced/platform/api-keys#scopes"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline"
+                  className="link-neutral"
                 >
                   Learn more
                 </a>

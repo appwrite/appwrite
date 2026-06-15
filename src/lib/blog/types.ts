@@ -19,6 +19,7 @@ export type BlogPostMeta = {
   unlisted?: boolean
   draft?: boolean
   metaTitle?: string
+  cover?: string
   hasCover: boolean
 }
 
@@ -33,6 +34,7 @@ export type BlogAuthor = {
   name: string
   role: string
   bio: string
+  avatar?: string
   hasAvatar: boolean
   twitter?: string
   linkedin?: string

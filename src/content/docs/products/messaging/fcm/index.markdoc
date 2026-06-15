@@ -71,7 +71,7 @@ Some additional configuration is required to enable push notifications in your m
 1. Register and download your `GoogleService-Info.plist` and add it to the root of your project.
 1. Head to **Apple Developer Member Center** > **Program resources** > **Certificates, Identifiers & Profiles** > **Keys**. The key needs **Apple Push Notification Service** enabled.
 1. Create a new key, note down the key ID and download your key.
-1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNS authentication key** > click **Upload**. Upload your key here.
+1. In Firebase console, go to *Settings** > **Cloud Messaging** > **APNs authentication key** > click **Upload**. Upload your key here.
 1. Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 1. If using SwiftUI, disable swizzling by setting `FirebaseAppDelegateProxyEnabled` to `NO` in your `Info.plist`.
 {% /tabsitem %}
@@ -96,7 +96,7 @@ void main() async {
 ```
 1. **For iOS**:
    - Enable push notifications and background modes in XCode by opening `ios/Runner.xcworkspace` and adding the **Push Notifications** capability and **Background Modes** (Background fetch and Remote notifications)
-   - Upload your APNS authentication key to Firebase console under **Cloud Messaging** settings
+   - Upload your APNs authentication key to Firebase console under **Cloud Messaging** settings
    - Request notification permission at runtime using `FirebaseMessaging.instance.requestPermission()`
 1. **For Android**: FCM requires devices running Android 5.0 or higher with Google Play services installed.
 1. **For Web**: Add a `firebase-messaging-sw.js` file in your `web/` directory that imports the Firebase messaging SDK and handles background messages.

@@ -398,7 +398,7 @@ export function FileSecurity({
           href="https://appwrite.io/docs/permissions"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
+          className="link-neutral"
         >
           Learn more
         </a>
@@ -439,7 +439,7 @@ export function FileSecurity({
           href="https://appwrite.io/docs/products/storage/file-tokens"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
+          className="link-neutral"
         >
           Learn more
         </a>

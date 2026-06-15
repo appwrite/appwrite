@@ -49,7 +49,9 @@ export function getBlogPostMetaTags(post: BlogPost) {
   const resolvedTitle = getBlogPostTitle(post)
   const title = getBlogPageTitle(resolvedTitle)
   const canonical = getBlogCanonicalUrl(post.href)
-  const ogImage = post.hasCover ? BLOG_OG_IMAGE : getBlogPostOgImageUrl(post)
+  const ogImage = post.cover
+    ? getBlogCanonicalUrl(post.cover)
+    : getBlogPostOgImageUrl(post)
 
   return [
     { title },

@@ -191,7 +191,7 @@ function TemplateCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[14px] font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
+          <h3 className="truncate text-[14px] font-semibold text-foreground leading-tight group-hover:text-foreground transition-colors">
             {template.name}
           </h3>
           {template.tagline && (
@@ -593,7 +593,7 @@ export function CreateFunctionView() {
                   Missing a repository?{' '}
                   <a
                     href={getGitHubAuthUrl}
-                    className="inline-flex items-center gap-1 text-foreground font-medium hover:underline"
+                    className="link-neutral inline-flex items-center gap-1 font-medium"
                   >
                     Check your permissions
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -624,7 +624,7 @@ export function CreateFunctionView() {
               <Link
                 to="/projects/$projectId/functions/templates"
                 params={{ projectId: projectId! }}
-                className="shrink-0 text-[12px] font-medium text-foreground hover:underline"
+                className="shrink-0 text-[12px] font-medium link-neutral"
               >
                 View all templates
               </Link>
@@ -659,7 +659,7 @@ export function CreateFunctionView() {
           <Link
             to="/projects/$projectId/functions/create/manual"
             params={{ projectId: projectId! }}
-            className="text-foreground hover:underline"
+            className="link-neutral"
           >
             create a function manually
           </Link>
@@ -667,7 +667,7 @@ export function CreateFunctionView() {
           <Link
             to="/projects/$projectId/functions/create/deploy"
             params={{ projectId: projectId! }}
-            className="text-foreground hover:underline"
+            className="link-neutral"
           >
             deploy from URL
           </Link>
@@ -676,7 +676,7 @@ export function CreateFunctionView() {
             href="https://appwrite.io/docs/functions"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground hover:underline"
+            className="link-neutral"
           >
             Learn more
           </a>

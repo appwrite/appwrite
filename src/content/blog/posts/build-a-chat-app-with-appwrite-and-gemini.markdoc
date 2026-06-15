@@ -28,7 +28,7 @@ If you're looking to build a chat app that doesn't just handle basic messages bu
 
 Appwrite takes care of the backend so you can focus on the functionality, while Google's Gemini provides the AI that will give your app the ability to respond to user messages in real-time. By the end, you'll have a working chat app that does more than just send and receive messages, but interacts with users in a way that feels almost human.
 
-![Gif of the chat app in action](/images/blog/build-a-chat-app-with-appwrite-and-gemini/chat-gemini-demo.gif)
+![Gif of the chat app in action](/images/blog/build-a-chat-app-with-appwrite-and-gemini/chat-gemini-demo.avif)
 
 This project is practical for anyone interested in enhancing their apps with intelligent, real-time interactions without getting too deep into managing servers or infrastructure. Let's get started!
 
@@ -508,7 +508,7 @@ This will start the Appwrite function in your local environment. You should see 
 
 Open the link provided by the Appwrite CLI in your browser. You should see the chat interface with the message input field. Try sending a message to the AI, and you should receive a response in the chat box!
 
-![Gif of the chat app in action](/images/blog/build-a-chat-app-with-appwrite-and-gemini/chat-gemini-demo.gif)
+![Gif of the chat app in action](/images/blog/build-a-chat-app-with-appwrite-and-gemini/chat-gemini-demo.avif)
 
 You can also use cURL or Postman to test the serverless function by sending a POST request with a sample prompt:
 

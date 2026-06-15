@@ -470,7 +470,7 @@ export function WebhookDrawer({
                           href="https://appwrite.io/docs/advanced/platform/webhooks#verification"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline inline-flex items-center gap-1"
+                          className="link-neutral inline-flex items-center gap-1"
 >
                           Learn more
                           <ExternalLink className="h-3 w-3 shrink-0" />

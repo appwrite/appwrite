@@ -83,7 +83,7 @@ export function EventEditor({
               href={DOCS_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary underline hover:no-underline"
+              className="link-neutral"
             >
               Learn more
             </a>

@@ -1871,3 +1871,37 @@ pre.prism-code .token-line > span {
   background-color: var(--muted-foreground);
 }
 
+@layer components {
+  /* Neutral inline links — dashed underline, no brand pink. */
+  .link-neutral,
+  :is(.docs-prose, .policy-prose, .prose-links-neutral) a[href]:not(.link-unstyled) {
+    font-weight: 500;
+    color: color-mix(in oklch, var(--foreground) 85%, transparent);
+    text-decoration-line: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: text-decoration-color 150ms, color 150ms;
+  }
+
+  .link-neutral:hover,
+  :is(.docs-prose, .policy-prose, .prose-links-neutral) a[href]:not(.link-unstyled):hover {
+    color: var(--foreground);
+    text-decoration-color: color-mix(in oklch, var(--muted-foreground) 90%, var(--foreground));
+  }
+
+  /* Nav chrome, cards, and buttons — no default dashed underline. */
+  .link-unstyled,
+  .link-unstyled a[href] {
+    font-weight: inherit;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .link-unstyled a[href]:hover {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+

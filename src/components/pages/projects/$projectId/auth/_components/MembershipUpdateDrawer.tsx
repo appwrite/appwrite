@@ -300,7 +300,7 @@ export function MembershipUpdateDrawer({
                         href="https://appwrite.io/docs/advanced/platform/permissions"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                        className="link-neutral"
                       >
                         Learn more about permissions
                       </a>

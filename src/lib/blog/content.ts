@@ -89,6 +89,7 @@ function buildBlogPost(modulePath: string, raw: string): BlogPost {
     unlisted: parseBoolean(frontmatter.unlisted),
     draft: parseBoolean(frontmatter.draft),
     metaTitle: getFrontmatterString(frontmatter, 'metaTitle'),
+    cover,
     hasCover: Boolean(cover),
     content,
     faqs: getFrontmatterFaqs(frontmatter),
@@ -118,6 +119,7 @@ function buildBlogAuthor(modulePath: string, raw: string): BlogAuthor {
     name: getFrontmatterString(frontmatter, 'name') ?? slug,
     role: getFrontmatterString(frontmatter, 'role') ?? '',
     bio: getFrontmatterString(frontmatter, 'bio') ?? '',
+    avatar,
     hasAvatar: Boolean(avatar),
     twitter: getFrontmatterString(frontmatter, 'twitter'),
     linkedin: getFrontmatterString(frontmatter, 'linkedin'),
@@ -206,6 +208,7 @@ export function toBlogPostMeta(post: BlogPost | BlogPostMeta): BlogPostMeta {
     unlisted: post.unlisted,
     draft: post.draft,
     metaTitle: post.metaTitle,
+    cover: post.cover,
     hasCover: post.hasCover,
   }
 }

@@ -102,7 +102,7 @@ export function UploadProgress({
                           bucketId: upload.bucketId,
                         }}
                         search={{ file: upload.fileId }}
-                        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary hover:underline"
+                        className="inline-flex items-center gap-1 text-[12px] link-neutral"
                       >
                         View file
                         <ExternalLink className="h-3 w-3" />

@@ -65,7 +65,7 @@ export function MethodDescriptionMarkdown({
         '[&_p]:my-0 [&_p+p]:mt-3',
         '[&_strong]:font-semibold [&_strong]:text-foreground',
         '[&_em]:text-foreground/90',
-        '[&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-[3px] hover:[&_a]:text-primary/80',
+        'prose-links-neutral',
         '[&_code]:rounded-sm [&_code]:bg-background/80 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[12px] [&_code]:text-foreground [&_code]:ring-1 [&_code]:ring-border/60',
         '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5',
         '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-5',

@@ -23,7 +23,15 @@ export const docsMarkdocConfig: Config = {
     accordion: { render: 'Accordion' },
     accordion_item: { render: 'AccordionItem', attributes: { title: { type: String } } },
     video: { render: 'Video', attributes: { src: { type: String }, title: { type: String } } },
-    youtube: { render: 'Youtube', attributes: { id: { type: String }, title: { type: String } } },
+    youtube: {
+      render: 'Youtube',
+      attributes: {
+        id: { type: String },
+        src: { type: String },
+        thumbnail: { type: String },
+        title: { type: String },
+      },
+    },
     arrow_link: { render: 'ArrowLink', attributes: { href: { type: String }, title: { type: String } } },
     call_to_action: { render: 'CallToAction', attributes: { href: { type: String }, title: { type: String } } },
     blockquote: { render: 'Blockquote' },

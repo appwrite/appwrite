@@ -779,7 +779,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                             <Link
                               to="/projects/$projectId/usage"
                               params={{ projectId: project.projectId }}
-                              className="flex items-center gap-1 text-[11px] text-primary hover:underline mt-2"
+                              className="flex items-center gap-1 text-[11px] link-neutral mt-2"
                             >
                               Usage details
                               <ExternalLink className="h-3 w-3" />

@@ -226,7 +226,7 @@ export function SignIn({
                           search={
                             emailValue ? { email: emailValue } : undefined
                           }
-                          className="text-sm text-primary hover:underline"
+                          className="link-neutral text-sm"
                         >
                           Forgot your password?
                         </Link>
@@ -254,7 +254,7 @@ export function SignIn({
                 <Link
                   to={mode === 'sign-in' ? '/sign-up' : '/sign-in'}
                   search={redirect ? { redirect } : undefined}
-                  className="text-primary hover:underline"
+                  className="link-neutral"
                 >
                   {mode === 'sign-in' ? 'Sign up' : 'Sign in'}
                 </Link>

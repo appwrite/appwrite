@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { Github, Linkedin } from 'lucide-react'
 import {
   MarketingCtaSection,
 } from '@/components/pages/marketing/MarketingSections'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,7 +28,7 @@ import {
 } from '@/lib/blog/prose-typography'
 import { cn } from '@/lib/utils'
 import { BlogArticleHeader } from './BlogArticleHeader'
-import { BlogAvatarPlaceholder, BlogCoverPlaceholder } from './BlogCoverPlaceholder'
+import { BlogAvatar, BlogCover } from './BlogCoverPlaceholder'
 import { BlogFaqSection } from './BlogFaqSection'
 import { BlogMarkdown } from './BlogMarkdown'
 import { BlogPostCard } from './BlogPostCard'
@@ -86,7 +86,7 @@ export function PostView({ post }: PostViewProps) {
               />
 
               <div className="mt-8">
-                <BlogCoverPlaceholder title={post.title} />
+                <BlogCover title={post.title} cover={post.cover} />
               </div>
 
               <div className="mt-8 min-w-0 overflow-x-hidden">
@@ -201,6 +201,26 @@ type AuthorViewProps = {
 }
 
 export function AuthorView({ author, posts, authors }: AuthorViewProps) {
+  const authorSocialLinks = [
+    {
+      href: author.github,
+      icon: '/icons/github.svg',
+      label: 'Author GitHub',
+    },
+    {
+      href: author.twitter,
+      icon: '/icons/x.svg',
+      label: 'Author on X',
+    },
+    {
+      href: author.linkedin,
+      icon: '/icons/linkedin.svg',
+      label: 'Author LinkedIn',
+    },
+  ].filter((link): link is { href: string; icon: string; label: string } =>
+    Boolean(link.href),
+  )
+
   return (
     <div className="relative overflow-x-hidden bg-background">
       <section className="border-b border-border py-10 sm:py-14">
@@ -224,7 +244,7 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
           </Breadcrumb>
 
           <header className="mt-8 flex flex-col items-start gap-4 border-y border-border py-8 sm:flex-row sm:items-center">
-            <BlogAvatarPlaceholder name={author.name} className="size-20 text-[18px]" />
+            <BlogAvatar name={author.name} avatar={author.avatar} className="size-20 text-[18px]" />
             <div>
               <h1 className={BLOG_PAGE_TITLE_CLASS}>{author.name}</h1>
               {author.role ? (
@@ -235,29 +255,28 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
                   {author.bio}
                 </p>
               ) : null}
-              <div className="mt-4 flex items-center gap-2">
-                {author.github ? (
-                  <a
-                    href={author.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
-                    aria-label="Author GitHub"
+              <div className="mt-4 flex items-center gap-1">
+                {authorSocialLinks.map((link) => (
+                  <Button
+                    key={link.label}
+                    variant="outline"
+                    size="sm"
+                    className="size-9 shrink-0 p-0 text-muted-foreground"
+                    asChild
                   >
-                    <Github className="h-4 w-4" />
-                  </a>
-                ) : null}
-                {author.linkedin ? (
-                  <a
-                    href={author.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
-                    aria-label="Author LinkedIn"
-                  >
-                    <Linkedin className="h-4 w-4" />
-                  </a>
-                ) : null}
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={link.label}
+                    >
+                      <ProductFeaturePublicIcon
+                        src={link.icon}
+                        tone="muted-foreground"
+                      />
+                    </a>
+                  </Button>
+                ))}
               </div>
             </div>
           </header>

@@ -97,7 +97,7 @@ function SectionParentLink({
     <DocsRouteLink
       href={parent.href}
       onClick={onNavigate}
-      className="flex items-center gap-1.5 px-2 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-[var(--brand-cta)]"
+      className="flex items-center gap-1.5 px-2 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:text-foreground/80"
     >
       <ChevronLeft className="size-3.5" strokeWidth={DOCS_MENU_ICON_STROKE} />
       {parent.label}

@@ -439,7 +439,7 @@ export function RepositoryPicker({
               Can't find a repository?{' '}
               <a
                 href={getGitHubAuthUrl}
-                className="font-medium text-primary hover:underline"
+                className="link-neutral"
               >
                 Update GitHub permissions
               </a>{' '}

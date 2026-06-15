@@ -152,7 +152,7 @@ export function SiteDomainsView() {
                             href={`https://${ruleData.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-[13px] text-foreground hover:underline"
+                            className="inline-flex items-center gap-1.5 font-mono text-[13px] link-neutral"
                           >
                             {ruleData.domain}
                             <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />

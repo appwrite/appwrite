@@ -54,7 +54,7 @@ function SectionHeader({
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-foreground hover:underline underline-offset-4"
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium link-neutral underline-offset-4"
         >
           {actionLabel}
           <ChevronRight className="h-3.5 w-3.5" />

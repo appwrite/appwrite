@@ -443,7 +443,7 @@ export function SupportWizardFullscreen() {
                 <AlertTitle>
                   We're sorry - we couldn't submit your support request
                 </AlertTitle>
-                <AlertDescription className="text-[13px] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
+                <AlertDescription className="text-[13px] prose-links-neutral">
                   <p>
                     We're having a temporary issue with the support portal,
                     and our engineering team are aware. In the meantime,

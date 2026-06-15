@@ -125,7 +125,7 @@ export function BucketSecurity() {
                 href="https://appwrite.io/docs/permissions"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 Learn more
               </a>

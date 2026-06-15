@@ -198,7 +198,7 @@ export function ComparisonCellValue({ value }: { value: ComparisonCell }) {
     return (
       <a
         href={value.href.startsWith('http') ? value.href : `https://appwrite.io${value.href}`}
-        className="text-[13px] text-foreground underline underline-offset-4 hover:text-[var(--brand-cta)]"
+        className="text-[13px] link-neutral"
         target="_blank"
         rel="noopener noreferrer"
       >

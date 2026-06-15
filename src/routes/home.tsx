@@ -365,7 +365,7 @@ function HomePage() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-foreground hover:underline"
+                  className="link-neutral text-[12px]"
                 >
                   {link.label}
                 </a>

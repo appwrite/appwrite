@@ -386,7 +386,7 @@ function renderControl(
             type="button"
             id={inputId}
             onClick={() => onChange('{}')}
-            className="font-mono text-[13px] text-primary/90 underline underline-offset-2 hover:text-primary"
+            className="link-neutral font-mono text-[13px]"
           >
             Add object
           </button>
@@ -639,7 +639,7 @@ function ArrayStringInput({
       <button
         type="button"
         onClick={addItem}
-        className="font-mono text-[13px] text-primary/90 underline underline-offset-2 hover:text-primary"
+        className="link-neutral font-mono text-[13px]"
       >
         Add array
       </button>
@@ -674,7 +674,7 @@ function ArrayStringInput({
       <button
         type="button"
         onClick={addItem}
-        className="font-mono text-[12px] text-primary/90 underline underline-offset-2 hover:text-primary"
+        className="link-neutral font-mono text-[12px]"
       >
         Add item
       </button>

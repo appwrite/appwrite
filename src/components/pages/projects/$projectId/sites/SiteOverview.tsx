@@ -378,7 +378,7 @@ export function SiteOverviewView() {
                                 href={`https://${rule.domain}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 font-mono text-[11px] text-primary hover:underline"
+                                className="inline-flex items-center gap-1.5 font-mono text-[11px] link-neutral"
                               >
                                 {rule.domain}
                                 <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -400,7 +400,7 @@ export function SiteOverviewView() {
                             <Button
                               variant="link"
                               size="sm"
-                              className="h-auto p-0 text-[13px] font-medium text-primary"
+                              className="h-auto p-0 text-[13px] font-medium"
                               asChild
                             >
                               <Link
@@ -425,7 +425,7 @@ export function SiteOverviewView() {
                             <Button
                               variant="link"
                               size="sm"
-                              className="h-auto p-0 text-[13px] font-medium text-primary"
+                              className="h-auto p-0 text-[13px] font-medium"
                               asChild
                             >
                               <Link
@@ -450,7 +450,7 @@ export function SiteOverviewView() {
                           <Button
                             variant="link"
                             size="sm"
-                            className="h-auto p-0 text-[13px] font-medium text-primary"
+                            className="h-auto p-0 text-[13px] font-medium"
                             asChild
                           >
                             <Link
@@ -467,7 +467,7 @@ export function SiteOverviewView() {
                           <Button
                             variant="link"
                             size="sm"
-                            className="h-auto p-0 text-[13px] font-medium text-primary"
+                            className="h-auto p-0 text-[13px] font-medium"
                             asChild
                           >
                             <Link
@@ -578,7 +578,7 @@ export function SiteOverviewView() {
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
                               >
                                 <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
+                                <span className="text-[12px] font-mono text-foreground group-hover:text-foreground flex-1 truncate">
                                   {rule.domain}
                                 </span>
                                 <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
@@ -603,7 +603,7 @@ export function SiteOverviewView() {
               <Link
                 to="/projects/$projectId/sites/$siteId/deployments"
                 params={{ projectId: projectId!, siteId: siteId! }}
-                className="text-[13px] text-primary hover:underline"
+                className="link-neutral text-[13px]"
               >
                 View all
               </Link>

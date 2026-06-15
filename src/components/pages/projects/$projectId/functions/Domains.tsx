@@ -211,7 +211,7 @@ export function View() {
                             href={`https://${rule.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
+                            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
                           >
                             {rule.domain}
                             <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />

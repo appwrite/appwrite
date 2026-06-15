@@ -128,7 +128,7 @@ export function Recovery({
 
               <p className="text-center text-sm text-muted-foreground">
                 Remember your password?{' '}
-                <Link to="/sign-in" className="text-primary hover:underline">
+                <Link to="/sign-in" className="link-neutral">
                   Sign in
                 </Link>
               </p>

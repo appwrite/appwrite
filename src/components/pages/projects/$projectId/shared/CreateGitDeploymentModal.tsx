@@ -281,7 +281,7 @@ export function CreateGitDeploymentModal({
                       href={repository.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline mt-1"
+                      className="inline-flex items-center gap-1 link-neutral text-[12px] mt-1"
                     >
                       Open <ExternalLink className="h-3 w-3" />
                     </a>
@@ -336,7 +336,7 @@ export function CreateGitDeploymentModal({
                 href={docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"
+                className="inline-flex items-center gap-1 link-neutral text-[12px]"
               >
                 Deployment docs <ExternalLink className="h-3 w-3" />
               </a>

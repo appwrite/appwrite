@@ -18,10 +18,7 @@ export function UpgradePlanLink({
   children = 'Upgrade your plan',
   className,
 }: UpgradePlanLinkProps) {
-  const linkClassName = cn(
-    'font-medium text-foreground underline hover:no-underline',
-    className,
-  )
+  const linkClassName = cn('link-neutral', className)
 
   if (!getActiveProfileFeatures().billing) {
     return <span className={linkClassName}>{children}</span>

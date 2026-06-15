@@ -198,7 +198,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
                       href={siteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 flex items-center gap-1.5 text-[12px] text-primary hover:underline"
+                      className="mt-2 flex items-center gap-1.5 link-neutral text-[12px]"
                     >
                       <Globe className="h-3.5 w-3.5 shrink-0" />
                       <span className="min-w-0 truncate">{primaryDomain}</span>

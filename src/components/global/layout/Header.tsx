@@ -160,7 +160,7 @@ function MarketingNavLink({
     <a
       href={item.href}
       className={cn(
-        'inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+        'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
         className,
       )}
       {...(item.href === '/changelog' && showChangelogBadge
@@ -186,7 +186,7 @@ function MarketingMobileNavLink({
     <SheetClose asChild>
       <a
         href={item.href}
-        className="flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="link-unstyled flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         {...(item.href === '/changelog' && showChangelogBadge
           ? { 'aria-label': 'Changelog, new updates' }
           : {})}

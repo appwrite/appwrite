@@ -41,6 +41,8 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   azure: 'microsoft.svg',
   openai: 'chatgpt.svg',
   codex: 'chatgpt.svg',
+  gemini: 'google.svg',
+  imagine: 'imagine.svg',
   'icon-node_js': 'node.svg',
   'icon-js': 'js.svg',
   'icon-dotnet': 'dotnet.svg',
@@ -253,9 +255,21 @@ export function resolveMarkdocCardIcon({
   return resolveMarkdocCardIconFromHref(href)
 }
 
-/** Maps legacy /images/platforms/* and /images/docs/* logo paths to /icons/*. */
+/** Maps legacy /images/docs/* logo paths to /icons/*. Never serves imported docs SVGs. */
 export function resolveMarkdocIconImageSrc(src: string | undefined): string | null {
   if (!src) return null
+
+  if (src.startsWith('/images/docs/') && src.endsWith('.svg')) {
+    const filename = src.split('/').pop()?.replace(/\.svg$/i, '')
+    if (!filename) return null
+
+    const iconFile = getMarkdocIconFile(filename)
+    if (iconFile) {
+      return `/icons/${iconFile}`
+    }
+
+    return null
+  }
 
   const filename = src.split('/').pop()?.replace(/\.svg$/i, '')
   if (!filename) return null

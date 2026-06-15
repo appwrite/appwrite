@@ -11,7 +11,7 @@ Send push notifications, which are little notification messages that appear on a
 of events or updates. Configure one of the following providers to send push notifications.
 {% cards %}
 {% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
-Send push notifications to apps on Apple devices through Apple Push Notification service (APNS).
+Send push notifications to apps on Apple devices through Apple Push Notification service (APNs).
 {% /cards_item %}
 {% cards_item href="/docs/products/messaging/fcm" title="FCM" icon="web-icon-firebase" %}
 Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).

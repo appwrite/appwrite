@@ -1,15 +1,13 @@
 'use client'
 
 import { ImageIcon, Maximize2 } from 'lucide-react'
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { ThinkingBubble } from '@/components/global/shared/ThinkingBubble'
-import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  ImagePreviewGalleryDialog,
+  useImagePreviewGallery,
+} from '@/components/global/shared/ImagePreviewGallery'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const DocsMarkdocInTableContext = createContext(false)
@@ -36,9 +34,15 @@ type DocsImageProps = {
 
 export function DocsImage({ src, alt = '', title }: DocsImageProps) {
   const inTable = useContext(DocsMarkdocInTableContext)
+  const gallery = useImagePreviewGallery()
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [localPreviewOpen, setLocalPreviewOpen] = useState(false)
+
+  useEffect(() => {
+    if (!gallery || !src || inTable || AUDIO_SRC_RE.test(src)) return
+    return gallery.registerItem({ src, alt })
+  }, [gallery, src, alt, inTable])
 
   if (!src) return null
 
@@ -66,18 +70,25 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
   }
 
   const imageClassName = cn(
-    'h-full w-full transition-opacity duration-300',
+    'h-full w-full object-contain transition-opacity duration-300',
     loaded ? 'opacity-100' : 'opacity-0',
-    contain ? 'object-contain p-3 @[480px]:p-4' : 'object-cover',
+    contain && 'p-3 @[480px]:p-4',
   )
+
+  const openPreview = () => {
+    if (gallery) {
+      gallery.openItem({ src, alt })
+      return
+    }
+    setLocalPreviewOpen(true)
+  }
 
   return (
     <figure className="not-prose group relative my-8 w-full">
       <div className="overflow-hidden rounded-xl border border-border bg-card/40 shadow-sm">
         <div
           className={cn(
-            'relative w-full bg-muted/25',
-            contain ? 'min-h-[12rem]' : 'aspect-video',
+            'relative aspect-video w-full bg-muted/25',
           )}
         >
           <div
@@ -119,33 +130,16 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
           )}
 
           {!error ? (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon"
-                  className="absolute right-3 bottom-3 size-8 border border-border/80 bg-background/90 opacity-70 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 focus-visible:opacity-100"
-                  aria-label="Expand image"
-                >
-                  <Maximize2 className="size-3.5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent
-                showCloseButton
-                overlayClassName="bg-background/95"
-                className="max-h-[92dvh] w-[min(96vw,1200px)] max-w-[min(96vw,1200px)] gap-0 overflow-hidden border-0 bg-transparent p-0 shadow-none"
-              >
-                <DialogTitle className="sr-only">
-                  {alt.trim() ? alt : 'Expanded image'}
-                </DialogTitle>
-                <img
-                  src={src}
-                  alt={alt}
-                  className="max-h-[85dvh] w-full rounded-lg object-contain"
-                />
-              </DialogContent>
-            </Dialog>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="absolute right-3 bottom-3 size-8 border border-border/80 bg-background/90 opacity-70 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 focus-visible:opacity-100"
+              aria-label="Expand image"
+              onClick={openPreview}
+            >
+              <Maximize2 className="size-3.5" />
+            </Button>
           ) : null}
         </div>
       </div>
@@ -154,6 +148,14 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
         <figcaption className="mt-2.5 text-center text-[12px] leading-5 text-muted-foreground">
           {alt}
         </figcaption>
+      ) : null}
+
+      {!gallery && !error ? (
+        <ImagePreviewGalleryDialog
+          items={[{ src, alt }]}
+          activeIndex={localPreviewOpen ? 0 : null}
+          onActiveIndexChange={(index) => setLocalPreviewOpen(index !== null)}
+        />
       ) : null}
     </figure>
   )

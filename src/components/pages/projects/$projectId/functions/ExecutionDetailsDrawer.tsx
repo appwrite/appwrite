@@ -676,7 +676,7 @@ export function ExecutionDetailsDrawer({
                                   href="https://appwrite.io/docs"
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
+                                  className="link-neutral"
                                 >
                                   Check the docs
                                 </a>{' '}
@@ -746,7 +746,7 @@ export function ExecutionDetailsDrawer({
                                 href="https://appwrite.io/docs"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[12px] text-primary hover:underline"
+                                className="link-neutral text-[12px]"
                               >
                                 Learn more →
                               </a>
@@ -822,7 +822,7 @@ export function ExecutionDetailsDrawer({
                                 href="https://appwrite.io/docs"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[12px] text-primary hover:underline"
+                                className="link-neutral text-[12px]"
                               >
                                 Learn more →
                               </a>
@@ -925,7 +925,7 @@ export function ExecutionDetailsDrawer({
                                   href="https://appwrite.io/docs"
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
+                                  className="link-neutral"
                                 >
                                   Check the docs
                                 </a>{' '}
@@ -1002,7 +1002,7 @@ export function ExecutionDetailsDrawer({
                                   href="https://appwrite.io/docs"
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
+                                  className="link-neutral"
                                 >
                                   Learn more
                                 </a>

@@ -148,7 +148,7 @@ function VerifyEmailPage() {
               href="https://appwrite.io/terms"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline underline-offset-4 hover:text-primary"
+              className="link-neutral"
             >
               Terms of Service
             </a>{' '}
@@ -157,7 +157,7 @@ function VerifyEmailPage() {
               href="https://appwrite.io/privacy"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline underline-offset-4 hover:text-primary"
+              className="link-neutral"
             >
               Privacy Policy
             </a>
@@ -185,7 +185,7 @@ function VerifyEmailPage() {
             href="https://appwrite.io/terms"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-4 hover:text-primary"
+            className="link-neutral"
           >
             Terms of Service
           </a>{' '}
@@ -194,7 +194,7 @@ function VerifyEmailPage() {
             href="https://appwrite.io/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-4 hover:text-primary"
+            className="link-neutral"
           >
             Privacy Policy
           </a>

@@ -23,6 +23,36 @@ export function BlogCoverPlaceholder({ title, className }: BlogCoverPlaceholderP
   )
 }
 
+type BlogCoverProps = {
+  title: string
+  cover?: string
+  className?: string
+}
+
+export function BlogCover({ title, cover, className }: BlogCoverProps) {
+  if (!cover) {
+    return <BlogCoverPlaceholder title={title} className={className} />
+  }
+
+  return (
+    <div
+      className={cn(
+        'relative w-full overflow-hidden rounded-xl border border-border bg-muted/40',
+        className,
+        BLOG_COVER_ASPECT_CLASS,
+      )}
+    >
+      <img
+        src={cover}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="size-full object-cover"
+      />
+    </div>
+  )
+}
+
 type BlogAvatarPlaceholderProps = {
   name: string
   className?: string
@@ -45,5 +75,30 @@ export function BlogAvatarPlaceholder({ name, className }: BlogAvatarPlaceholder
     >
       {initials || '?'}
     </div>
+  )
+}
+
+type BlogAvatarProps = {
+  name: string
+  avatar?: string
+  className?: string
+}
+
+export function BlogAvatar({ name, avatar, className }: BlogAvatarProps) {
+  if (!avatar) {
+    return <BlogAvatarPlaceholder name={name} className={className} />
+  }
+
+  return (
+    <img
+      src={avatar}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className={cn(
+        'size-10 shrink-0 rounded-full border border-border bg-muted object-cover opacity-95',
+        className,
+      )}
+    />
   )
 }

@@ -920,7 +920,7 @@ export function View() {
                                 href={repoUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="truncate hover:underline text-foreground"
+                                className="truncate link-neutral"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {label}
@@ -992,7 +992,7 @@ export function View() {
                               href="https://appwrite.io/docs/products/network/cdn"
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
+                              className="link-neutral text-[11px] mt-1.5 inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Learn more →
@@ -1039,7 +1039,7 @@ export function View() {
                               href="https://appwrite.io/docs/products/network"
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
+                              className="link-neutral text-[11px] mt-1.5 inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Learn more →
@@ -1071,7 +1071,7 @@ export function View() {
                             href={`https://${rule.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[13px] font-mono text-foreground hover:underline"
+                            className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
                           >
                             {rule.domain}
                             <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -1092,7 +1092,7 @@ export function View() {
                         <Button
                           variant="link"
                           size="sm"
-                          className="h-auto p-0 text-[13px] font-medium text-primary"
+                          className="h-auto p-0 text-[13px] font-medium"
                           asChild
                         >
                           <Link
@@ -1117,7 +1117,7 @@ export function View() {
                         <Button
                           variant="link"
                           size="sm"
-                          className="h-auto p-0 text-[13px] font-medium text-primary"
+                          className="h-auto p-0 text-[13px] font-medium"
                           asChild
                         >
                           <Link
@@ -1142,7 +1142,7 @@ export function View() {
                       <Button
                         variant="link"
                         size="sm"
-                        className="h-auto p-0 text-[13px] font-medium text-primary"
+                        className="h-auto p-0 text-[13px] font-medium"
                         asChild
                       >
                         <Link
@@ -1159,7 +1159,7 @@ export function View() {
                       <Button
                         variant="link"
                         size="sm"
-                        className="h-auto p-0 text-[13px] font-medium text-primary"
+                        className="h-auto p-0 text-[13px] font-medium"
                         asChild
                       >
                         <Link
@@ -1490,7 +1490,7 @@ export function View() {
                                             href={repoUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="truncate hover:underline"
+                                            className="link-neutral truncate"
                                             onClick={(e) => e.stopPropagation()}
                                           >
                                             {label}
@@ -1562,7 +1562,7 @@ export function View() {
                                             href={commitUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="hover:underline"
+                                            className="link-neutral"
                                             onClick={(e) => e.stopPropagation()}
                                             title={
                                               commitMessage.length > 30

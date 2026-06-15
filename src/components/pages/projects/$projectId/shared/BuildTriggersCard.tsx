@@ -219,7 +219,7 @@ export function BuildTriggersCard({
             href={docsLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary underline hover:no-underline"
+            className="link-neutral"
           >
             Learn more
           </a>
@@ -235,7 +235,7 @@ export function BuildTriggersCard({
                 <Link
                   to={gitSettingsTo}
                   params={gitSettingsParams}
-                  className="text-primary underline hover:no-underline"
+                  className="link-neutral"
                 >
                   Git settings
                 </Link>
@@ -263,7 +263,7 @@ export function BuildTriggersCard({
                     <Link
                       to={gitSettingsTo}
                       params={gitSettingsParams}
-                      className="text-primary underline hover:no-underline"
+                      className="link-neutral"
                     >
                       Git
                     </Link>

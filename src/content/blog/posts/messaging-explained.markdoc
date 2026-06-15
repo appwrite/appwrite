@@ -28,7 +28,7 @@ Recently, Appwrite launched its newest product, [Appwrite Messaging](https://app
 
 To give you a quick refresher, Messaging covers three communication channels under one unified API, allowing you to send email, SMS, and push notifications from your Appwrite project. It connects with a variety of third-party providers, such as Vonage, Twilio, Mailgun, and more, to deliver your messages. Our [documentation](https://appwrite.io/docs/products/messaging) provides a full overview of providers. 
 
-![Messaging features](/images/blog/messaging-explained/features.gif)
+![Messaging features](/images/blog/messaging-explained/features.avif)
 
 # Messaging concepts
 

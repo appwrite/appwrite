@@ -70,7 +70,7 @@ export function EnterpriseSuccessManager({
             <p className="text-[13px] text-muted-foreground">{manager.title}</p>
             <a
               href={`mailto:${manager.email}`}
-              className="mt-1 inline-flex items-center gap-1.5 text-[12px] text-primary hover:underline"
+              className="mt-1 inline-flex items-center gap-1.5 link-neutral text-[12px]"
             >
               <Mail className="h-3 w-3" />
               {manager.email}
@@ -121,7 +121,7 @@ export function EnterpriseSuccessManager({
         <p className="mt-4 text-[12px] text-muted-foreground">
           Your dedicated Slack channel is monitored during business hours
           (9am–6pm EST). For urgent issues, please use our{' '}
-          <a href="#" className="text-primary hover:underline">
+          <a href="#" className="link-neutral">
             priority support portal
           </a>
           .

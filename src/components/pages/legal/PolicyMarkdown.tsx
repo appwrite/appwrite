@@ -90,7 +90,7 @@ export function PolicyMarkdown({ content, className }: PolicyMarkdownProps) {
         '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:ps-5',
         '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:ps-5',
         '[&_li]:my-0',
-        '[&_a]:text-[var(--brand-cta)] [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-[var(--brand-cta)]/80',
+        'prose-links-neutral',
         '[&_strong]:font-semibold [&_strong]:text-foreground',
         className,
       )}

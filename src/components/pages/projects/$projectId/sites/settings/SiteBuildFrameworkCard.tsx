@@ -89,7 +89,7 @@ function AdapterOptionCard({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-block text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            className="mt-3 inline-block text-[13px] link-neutral"
             onClick={(e) => e.stopPropagation()}
           >
             Learn more

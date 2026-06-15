@@ -177,7 +177,12 @@ export function View({
             <>
               <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-3">
                 {posts.map((post) => (
-                  <BlogPostCard key={post.slug} post={post} authors={authors} />
+                  <BlogPostCard
+                    key={post.slug}
+                    post={post}
+                    authors={authors}
+                    showDescription={false}
+                  />
                 ))}
               </div>
 

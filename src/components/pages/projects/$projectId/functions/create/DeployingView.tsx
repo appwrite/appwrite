@@ -282,7 +282,7 @@ export function DeployingView({
                             href={functionUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                            className="mt-2 flex items-center gap-1 link-neutral text-[12px]"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                             {primaryDomain || 'Function URL'}

@@ -1076,7 +1076,7 @@ export function Browser({}: BrowserProps) {
                       <Icon
                         className={cn(
                           'h-5 w-5 text-muted-foreground transition-colors',
-                          !isSelected && 'group-hover:text-primary',
+                          !isSelected && 'group-hover:text-foreground',
                         )}
                       />
                     </div>
@@ -1084,7 +1084,7 @@ export function Browser({}: BrowserProps) {
                       <div
                         className={cn(
                           'text-[12px] font-medium text-foreground truncate transition-colors',
-                          !isSelected && 'group-hover:text-primary',
+                          !isSelected && 'group-hover:text-foreground',
                         )}
                       >
                         {resource.name}

@@ -5,6 +5,10 @@
 import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { convertImagesToAvif } from './lib/convert-images-to-avif.ts'
+import { copyContentImagesFromWebsite } from './lib/copy-content-images.ts'
+import { removeImportedContentSvgs } from './lib/remove-content-svgs.ts'
+import { rewriteImportedDocsCardIcons } from './lib/rewrite-markdoc-card-icons.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = resolve(__dirname, '..')
@@ -87,6 +91,36 @@ async function main() {
   const pages = await copyMarkdocFiles(DOCS_SRC, DOCS_DEST)
   const partialCount = await copyPartials()
   const promptCount = await copyPromptFiles()
+
+  const iconsRewritten = await rewriteImportedDocsCardIcons(DOCS_DEST, PARTIALS_DEST)
+  if (iconsRewritten > 0) {
+    console.log(
+      `Rewrote ${iconsRewritten} docs file(s) to use icon= instead of website SVG image paths`,
+    )
+  }
+
+  const imageResults = await copyContentImagesFromWebsite(['docs', 'changelog'])
+  for (const { section, copied } of imageResults) {
+    console.log(
+      copied
+        ? `Imported images for ${section}`
+        : `Skipped missing ${section} images`,
+    )
+  }
+
+  const svgsRemoved = await removeImportedContentSvgs(['docs', 'changelog'])
+  if (svgsRemoved > 0) {
+    console.log(`Removed ${svgsRemoved} SVG file(s) from imported content images`)
+  }
+
+  const { converted, referencesUpdated } = await convertImagesToAvif({
+    sections: ['docs', 'changelog'],
+  })
+  if (converted > 0 || referencesUpdated > 0) {
+    console.log(
+      `Converted ${converted} ${converted === 1 ? 'image' : 'images'} to AVIF, updated ${referencesUpdated} content file(s)`,
+    )
+  }
 
   console.log(`Imported ${pages.length} doc pages`)
   console.log(`Imported ${partialCount} partials`)

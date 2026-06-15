@@ -449,7 +449,7 @@ export function ApiKeyDrawer({
                         href="https://appwrite.io/docs/advanced/platform/api-keys"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                        className="link-neutral"
                       >
                         Learn more about API key scopes
                       </a>

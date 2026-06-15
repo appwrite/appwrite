@@ -15,7 +15,7 @@ const docsNoteContentClassName = cn(
   '[&_ul]:my-2 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-4',
   '[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-4',
   '[&_li]:leading-[1.65]',
-  '[&_a]:font-medium [&_a]:text-foreground/85 [&_a]:underline [&_a]:decoration-dotted [&_a]:decoration-muted-foreground/60 [&_a]:underline-offset-[3px] [&_a]:[text-decoration-thickness:1px] hover:[&_a]:text-foreground/90 hover:[&_a]:decoration-muted-foreground hover:[&_a]:[text-decoration-thickness:2px]',
+  'prose-links-neutral',
 )
 
 const blogNoteContentClassName = cn(
@@ -25,7 +25,7 @@ const blogNoteContentClassName = cn(
   '[&_ul]:my-2 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-4',
   '[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-4',
   '[&_li]:leading-[1.65]',
-  '[&_a]:font-medium [&_a]:text-foreground/85 [&_a]:underline [&_a]:decoration-dotted [&_a]:decoration-muted-foreground/60 [&_a]:underline-offset-[3px] [&_a]:[text-decoration-thickness:1px] hover:[&_a]:text-foreground/90 hover:[&_a]:decoration-muted-foreground hover:[&_a]:[text-decoration-thickness:2px]',
+  'prose-links-neutral',
 )
 
 export function Info({

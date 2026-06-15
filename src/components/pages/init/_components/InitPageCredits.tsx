@@ -4,8 +4,7 @@ const APPWRITE_PRESENCES_DOCS_URL = 'https://appwrite.io/docs/apis/realtime/pres
 const ACETERNITY_GLOBE_URL = 'https://ui.aceternity.com/components/github-globe'
 
 const CREDIT_LINE_CLASS = 'text-[12px] leading-relaxed text-muted-foreground'
-const CREDIT_LINK_CLASS =
-  'font-medium text-foreground underline-offset-4 hover:underline'
+const CREDIT_LINK_CLASS = 'link-neutral'
 
 interface InitPageCreditsProps {
   showPresenceCredit?: boolean

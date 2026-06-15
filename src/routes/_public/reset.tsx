@@ -66,7 +66,7 @@ function ResetPage() {
             <div className="flex gap-2 justify-center">
               <Link
                 to="/recovery"
-                className="text-primary hover:underline text-sm"
+                className="link-neutral text-sm"
               >
                 Request new reset link
               </Link>
@@ -92,14 +92,14 @@ function ResetPage() {
           By clicking continue, you agree to our{' '}
           <a
             href="#"
-            className="underline underline-offset-4 hover:text-primary"
+            className="link-neutral"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="#"
-            className="underline underline-offset-4 hover:text-primary"
+            className="link-neutral"
           >
             Privacy Policy
           </a>

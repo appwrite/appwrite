@@ -18,12 +18,23 @@ Some real-world scenarios where offline sync is useful are:
 
 # Integrate offline sync in your apps
 
+{% only_light %}
 {% cards %}
 
-{% cards_item href="/integrations/replication-rxdb" title="RxDB" icon="icon-rxdb" %}
+{% cards_item href="/integrations/replication-rxdb" title="RxDB" icon="rxdb" %}
 {% /cards_item %}
 
 {% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="/integrations/replication-rxdb" title="RxDB" icon="rxdb" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
 
 # How does offline sync work?
 

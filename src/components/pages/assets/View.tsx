@@ -355,7 +355,7 @@ export function View() {
                   href="https://appwrite.io/contact-us"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[var(--brand-cta)] underline underline-offset-2"
+                  className="link-neutral"
                 >
                   contact us
                 </a>

@@ -145,6 +145,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   zenflow: 'zenflow.svg',
   windsurf: 'windsurf.svg',
   zed: 'zed.svg',
+  gemini: 'google.svg',
+  imagine: 'imagine.svg',
   'zed-industries': 'zed.svg',
 
   // Messaging & email providers

@@ -1,16 +1,16 @@
 ---
 layout: article
 title: Apple Push Notification service
-description: Send push notifications to apps on Apple devices through Apple Push Notification service (APNS) using Appwrite Messaging.
+description: Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.
 back: /docs/
 ---
-Apple Push Notification service (APNS) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices.
-APNS is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again.
-APNS will save the last message for 30 days or less and attempt delivery as soon as it's online.
+Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices.
+APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again.
+APNs will save the last message for 30 days or less and attempt delivery as soon as it's online.
 
 {% section #add-provider step=1 title="Add provider" %}
 
-To add APNS as a provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**.
+To add APNs as a provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**.
 
 {% only_dark %}
 ![Add a FCM provider](/images/docs/messaging/providers/apns/dark/provider.avif)
@@ -66,7 +66,7 @@ Head to **Apple Developer Member Center** > **Program resources** > **Certificat
 {% /only_light %}
 {% /accordion_item %}
 {% accordion_item title="Sandbox" %}
-Enable sandbox mode for testing on apps signed with development provisioning profiles. APNS offers two environments, **Development** (sandbox) and **Production**. Development builds on XCode signed with a development provisioning profile will use the development environment. Production builds signed with a production provisioning profile will use the production environment.
+Enable sandbox mode for testing on apps signed with development provisioning profiles. APNs offers two environments, **Development** (sandbox) and **Production**. Development builds on XCode signed with a development provisioning profile will use the development environment. Production builds signed with a production provisioning profile will use the production environment.
 {% /accordion_item %}
 {% /accordion %}
 

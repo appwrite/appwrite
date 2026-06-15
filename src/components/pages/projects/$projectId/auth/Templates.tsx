@@ -674,7 +674,7 @@ function TemplateEditor({
               href="https://appwrite.io/docs/advanced/platform/message-templates"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:underline"
+              className="link-neutral inline-flex items-center gap-1 text-xs"
             >
               Learn more about message templates
               <ExternalLink className="h-3 w-3" />

@@ -730,7 +730,7 @@ export function PasswordDictionaryCard({
                 href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 10k most commonly used passwords
               </a>
@@ -1230,7 +1230,7 @@ export function MockPhoneNumbersCard({
                 href="https://appwrite.io/docs/products/auth/security#mock-phone-numbers"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 Learn more
               </a>
@@ -1501,7 +1501,7 @@ export function PrivacyCard({
                 href="https://appwrite.io/docs/products/auth/security#memberships-privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="link-neutral"
               >
                 Learn more
               </a>

@@ -26,7 +26,7 @@ If you're building an app that developers will use, adding GitHub login makes th
 
 We'll go step by step, starting with setting up OAuth on GitHub, configuring Appwrite, and then connecting everything in your app. Even if you've never worked with OAuth or Appwrite before, at the end of this tutorial, you'll have a fully functional login system that you can easily integrate into any project.
 
-![Appwrite GitHub auth demo](/images/blog/implement-sign-in-with-github/appwrite-github-auth.gif)
+![Appwrite GitHub auth demo](/images/blog/implement-sign-in-with-github/appwrite-github-auth.avif)
 
 Let's get started!
 
@@ -323,7 +323,7 @@ This will start the development server. Open your browser and go to the URL disp
 - After logging in, you'll be redirected back to the app, and you should see a welcome message with your GitHub username.
 - Click the **Logout** button to end the session and return to the login screen.
 
-![Appwrite GitHub auth demo](/images/blog/implement-sign-in-with-github/appwrite-github-auth.gif)
+![Appwrite GitHub auth demo](/images/blog/implement-sign-in-with-github/appwrite-github-auth.avif)
 
  # **Conclusion**
 

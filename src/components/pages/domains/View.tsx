@@ -23,14 +23,14 @@ function DomainsAuthFooter() {
     <p>
       <Link
         {...buildSignUpForDomainPath()}
-        className="font-medium text-foreground underline-offset-4 hover:underline"
+        className="link-neutral"
       >
         Create an account
       </Link>{' '}
       or{' '}
       <Link
         {...buildSignInForDomainPath()}
-        className="font-medium text-foreground underline-offset-4 hover:underline"
+        className="link-neutral"
       >
         sign in
       </Link>{' '}

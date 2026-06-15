@@ -26,7 +26,7 @@ Managing personal finances is a common need, and building an expense tracker is 
 
 Users will be able to sign up, log their expenses, and categorize them to view spending patterns. By the end, you will have built an app that looks and functions like this:
 
-![Expense app demo](/images/blog/build-fullstack-svelte-appwrite/expense-app-demo.gif)
+![Expense app demo](/images/blog/build-fullstack-svelte-appwrite/expense-app-demo.avif)
 
 You can also try out the app using this [live URL](https://expense-appwrite-svelte.netlify.app/). We'll use SvelteKit with JavaScript for our frontend so that we can take advantage of its built-in routing. For styling, we'll use Tailwind CSS. And on the backend, we'll use Appwrite to handle user authentication and database operations.
 

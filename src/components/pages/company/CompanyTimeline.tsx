@@ -1,12 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ImagePreviewGalleryDialog } from '@/components/global/shared/ImagePreviewGallery'
 import {
   companyTimelineIntro,
   companyTimelineMilestones,
@@ -27,8 +22,6 @@ import { parseBlogPagePath } from '@/lib/marketing/urls'
 import {
   ArrowUpRight,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   Github,
   Megaphone,
   Newspaper,
@@ -127,9 +120,6 @@ function MilestoneImages({ images }: { images: readonly CompanyTimelineImage[] }
 
   if (images.length === 0) return null
 
-  const previewImage = previewIndex !== null ? images[previewIndex] : null
-  const hasMultiple = images.length > 1
-
   return (
     <>
       <ul className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
@@ -153,64 +143,11 @@ function MilestoneImages({ images }: { images: readonly CompanyTimelineImage[] }
         ))}
       </ul>
 
-      <Dialog
-        open={previewIndex !== null}
-        onOpenChange={(open) => {
-          if (!open) setPreviewIndex(null)
-        }}
-      >
-        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-4xl">
-          {previewImage ? (
-            <>
-              <DialogTitle className="sr-only">{previewImage.alt}</DialogTitle>
-              <div className="relative bg-muted/20">
-                {hasMultiple && previewIndex !== null && previewIndex > 0 ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="absolute left-3 top-1/2 z-[1] size-8 -translate-y-1/2 rounded-full shadow-sm"
-                    onClick={() =>
-                      setPreviewIndex((current) =>
-                        current !== null ? current - 1 : current,
-                      )
-                    }
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft className="size-4" aria-hidden />
-                  </Button>
-                ) : null}
-                <img
-                  src={previewImage.src}
-                  alt={previewImage.alt}
-                  className="max-h-[85dvh] w-full object-contain"
-                />
-                {hasMultiple &&
-                previewIndex !== null &&
-                previewIndex < images.length - 1 ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="absolute right-3 top-1/2 z-[1] size-8 -translate-y-1/2 rounded-full shadow-sm"
-                    onClick={() =>
-                      setPreviewIndex((current) =>
-                        current !== null ? current + 1 : current,
-                      )
-                    }
-                    aria-label="Next image"
-                  >
-                    <ChevronRight className="size-4" aria-hidden />
-                  </Button>
-                ) : null}
-              </div>
-              <p className="border-t border-border px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
-                {previewImage.alt}
-              </p>
-            </>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <ImagePreviewGalleryDialog
+        items={images}
+        activeIndex={previewIndex}
+        onActiveIndexChange={setPreviewIndex}
+      />
     </>
   )
 }

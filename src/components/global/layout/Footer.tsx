@@ -185,7 +185,7 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
             {...(link.external
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
-            className="text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
+            className="link-unstyled text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >
             {link.label}
           </a>
@@ -303,7 +303,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {link.label}
                 </a>
@@ -344,7 +344,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             href="https://appwrite.io/docs/advanced/security"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[920px]:flex"
+            className="link-unstyled hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[920px]:flex"
           >
             <ShieldCheck
               className="h-3.5 w-3.5 shrink-0 opacity-70"
@@ -367,7 +367,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                   {...(link.external
                     ? { target: '_blank', rel: 'noopener noreferrer' }
                     : {})}
-                  className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {link.label}
                 </a>

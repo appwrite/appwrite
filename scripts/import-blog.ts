@@ -5,6 +5,9 @@
 import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { convertImagesToAvif } from './lib/convert-images-to-avif.ts'
+import { copyContentImagesFromWebsite } from './lib/copy-content-images.ts'
+import { removeImportedContentSvgs } from './lib/remove-content-svgs.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = resolve(__dirname, '..')
@@ -65,6 +68,29 @@ async function main() {
     join(BLOG_SRC, 'author'),
     join(BLOG_DEST, 'authors'),
   )
+
+  const imageResults = await copyContentImagesFromWebsite(['blog', 'avatars'])
+  for (const { section, copied } of imageResults) {
+    console.log(
+      copied
+        ? `Imported images for ${section}`
+        : `Skipped missing ${section} images`,
+    )
+  }
+
+  const svgsRemoved = await removeImportedContentSvgs(['blog', 'avatars'])
+  if (svgsRemoved > 0) {
+    console.log(`Removed ${svgsRemoved} SVG file(s) from imported content images`)
+  }
+
+  const { converted, referencesUpdated } = await convertImagesToAvif({
+    sections: ['blog', 'avatars'],
+  })
+  if (converted > 0 || referencesUpdated > 0) {
+    console.log(
+      `Converted ${converted} ${converted === 1 ? 'image' : 'images'} to AVIF, updated ${referencesUpdated} content file(s)`,
+    )
+  }
 
   console.log(`Imported ${posts.length} posts`)
   console.log(`Imported ${categories.length} categories`)
