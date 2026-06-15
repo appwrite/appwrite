@@ -182,6 +182,17 @@ class Update extends Base
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
 
+        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
+        if ($isConnected && $providerRepositoryId === null) {
+            $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
+            $installationId = $site->getAttribute('installationId', '');
+            $providerBranch = $providerBranch ?: $site->getAttribute('providerBranch', '');
+            $providerRootDirectory = $providerRootDirectory ?: $site->getAttribute('providerRootDirectory', '');
+            $repositoryId = $site->getAttribute('repositoryId', '');
+            $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+        }
+
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForPlatform->find('repositories', [

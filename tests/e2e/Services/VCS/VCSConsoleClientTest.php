@@ -672,6 +672,68 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
+    public function testUpdateFunctionOmitProviderRepositoryIdPreservesVcs(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+
+        // Omit providerRepositoryId entirely — should preserve VCS connection, not clear it
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 10,
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['providerRepositoryId']);
+        $this->assertNotEmpty($function['body']['installationId']);
+        $this->assertNotEmpty($function['body']['providerBranch']);
+    }
+
+    public function testUpdateSiteOmitProviderRepositoryIdPreservesVcs(): void
+    {
+        $installationId = $this->setupInstallation();
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'siteId' => ID::unique(),
+            'name' => 'Test Site VCS',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId3,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $siteId = $site['body']['$id'];
+
+        // Omit providerRepositoryId — should preserve VCS connection, not clear it
+        $updated = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test Site VCS',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertNotEmpty($updated['body']['providerRepositoryId']);
+        $this->assertNotEmpty($updated['body']['installationId']);
+        $this->assertNotEmpty($updated['body']['providerBranch']);
+
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+    }
+
     public function testCreateRepository(): void
     {
         $installationId = $this->setupInstallation();
