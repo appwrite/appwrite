@@ -3,9 +3,9 @@ import { cn } from '@/lib/utils'
 /** Global CSS class — defined in styles.css @layer components. */
 export const LINK_NEUTRAL_CLASS = 'link-neutral'
 
-/** Subtle dashed underline for inline text links. */
+/** Subtle dotted underline for inline text links. */
 export const LINK_DASHED_DECORATION_CLASS =
-  'underline decoration-dashed decoration-muted-foreground/60 underline-offset-[3px] [text-decoration-thickness:1px] hover:decoration-muted-foreground transition-[text-decoration-color,color] duration-150'
+  'underline decoration-dotted decoration-muted-foreground/38 underline-offset-[3px] [text-decoration-thickness:1px] hover:decoration-muted-foreground/58 transition-[text-decoration-color,color] duration-150'
 
 /** Default inline link: neutral foreground with a dashed underline. */
 export const INLINE_LINK_CLASS = LINK_NEUTRAL_CLASS

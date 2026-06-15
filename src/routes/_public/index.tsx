@@ -3,6 +3,7 @@ import {
   redirect,
   isRedirect,
 } from '@tanstack/react-router'
+import { AppwriteException } from '@appwrite.io/console'
 import { Loader2 } from 'lucide-react'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -13,7 +14,9 @@ import {
 } from '@/lib/ensure-personal-org'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
+import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 import {
+  consoleAccountQueryOptions,
   ensureConsoleAccountQueryData,
 } from '@/lib/react-query/hooks/auth'
 
@@ -22,7 +25,19 @@ export const Route = createFileRoute('/_public/')({
     if (typeof window === 'undefined') return
 
     const account = await ensureConsoleAccountQueryData(context.queryClient)
-    if (!account) return
+    if (!account) {
+      const { queryKey } = consoleAccountQueryOptions()
+      const queryError = context.queryClient.getQueryState(queryKey)?.error
+      const isMfaRequired =
+        queryError instanceof AppwriteException &&
+        queryError.type === 'user_more_factors_required'
+      const isAccountBlocked =
+        !!queryError && isHttpForbiddenError(queryError)
+      if (!isMfaRequired && !isAccountBlocked) {
+        throw redirect({ to: '/home', replace: true })
+      }
+      return
+    }
 
     const urlParams = searchParamsFromRouterLocation(location)
     const isOAuthCallback =

@@ -23,6 +23,8 @@ const CARD_HOVER_LIGHT_POSITIONS = [
   'absolute -right-[14%] bottom-[-24%] h-[165px] w-[215px]',
 ] as const
 
+const CARD_LINK_CLASS = 'link-unstyled block h-full'
+
 function getCardLightVariant(seed: string, fallbackIndex: number): number {
   if (!seed) return fallbackIndex % CARD_HOVER_LIGHTS.length
 
@@ -146,11 +148,20 @@ export function CardsItem({
 
   if (href.startsWith('http') || href.startsWith('//')) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={CARD_LINK_CLASS}
+      >
         {content}
       </a>
     )
   }
 
-  return <DocsRouteLink href={href}>{content}</DocsRouteLink>
+  return (
+    <DocsRouteLink href={href} className={CARD_LINK_CLASS}>
+      {content}
+    </DocsRouteLink>
+  )
 }

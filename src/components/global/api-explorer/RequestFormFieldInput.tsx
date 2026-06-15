@@ -193,7 +193,7 @@ function ParameterNameLabel({
       className={cn(
         'truncate font-mono text-[13px] font-normal text-foreground/85',
         description &&
-          'cursor-help underline decoration-dashed decoration-muted-foreground/40 underline-offset-[3px] hover:decoration-muted-foreground/70',
+          'cursor-help underline decoration-dotted decoration-muted-foreground/38 underline-offset-[3px] hover:decoration-muted-foreground/58',
       )}
     >
       {name}

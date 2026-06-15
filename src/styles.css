@@ -1872,14 +1872,14 @@ pre.prism-code .token-line > span {
 }
 
 @layer components {
-  /* Neutral inline links — dashed underline, no brand pink. */
+  /* Neutral inline links — dotted underline, no brand pink. */
   .link-neutral,
   :is(.docs-prose, .policy-prose, .prose-links-neutral) a[href]:not(.link-unstyled) {
     font-weight: 500;
     color: color-mix(in oklch, var(--foreground) 85%, transparent);
     text-decoration-line: underline;
-    text-decoration-style: dashed;
-    text-decoration-color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+    text-decoration-style: dotted;
+    text-decoration-color: color-mix(in oklch, var(--muted-foreground) 38%, transparent);
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
     transition: text-decoration-color 150ms, color 150ms;
@@ -1888,7 +1888,19 @@ pre.prism-code .token-line > span {
   .link-neutral:hover,
   :is(.docs-prose, .policy-prose, .prose-links-neutral) a[href]:not(.link-unstyled):hover {
     color: var(--foreground);
-    text-decoration-color: color-mix(in oklch, var(--muted-foreground) 90%, var(--foreground));
+    text-decoration-color: color-mix(in oklch, var(--muted-foreground) 58%, transparent);
+  }
+
+  /* Card / block UI inside prose — wrapper links, not inline text links. */
+  :is(.docs-prose, .policy-prose, .prose-links-neutral) .not-prose a[href]:not(.link-neutral) {
+    font-weight: inherit;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  :is(.docs-prose, .policy-prose, .prose-links-neutral) .not-prose a[href]:not(.link-neutral):hover {
+    color: inherit;
+    text-decoration: none;
   }
 
   /* Nav chrome, cards, and buttons — no default dashed underline. */
