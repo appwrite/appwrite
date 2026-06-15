@@ -20,10 +20,12 @@ import {
   CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX,
   CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX,
   CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
+  CLI_SHELL_SESSIONS_STRIP_MAX_WIDTH_PX,
   CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX,
   computeTwoPanelHorizontalLayout,
 } from '@/lib/resizable-layout'
 import { cn } from '@/lib/utils'
+import { CliTerminalLayoutProvider } from './CliTerminalLayoutContext'
 
 const HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
@@ -83,8 +85,16 @@ export function CliTerminalResizableLayout({
     )
   }, [containerWidth, sidebarWidthPx])
 
+  const isStripLayout =
+    containerWidth > 0 && containerWidth < CLI_SHELL_SESSIONS_STRIP_MAX_WIDTH_PX
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || containerWidth <= 0) return
+    window.dispatchEvent(new Event('resize'))
+  }, [containerWidth, isStripLayout])
+
   const panelLayout = useMemo(() => {
-    if (containerWidth <= 0) return null
+    if (isStripLayout || containerWidth <= 0) return null
     return computeTwoPanelHorizontalLayout({
       containerWidth,
       firstPx: containerWidth - effectiveSidebarPx,
@@ -95,7 +105,7 @@ export function CliTerminalResizableLayout({
       firstMaxPx: containerWidth - CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
       secondMinPx: CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
     })
-  }, [containerWidth, effectiveSidebarPx])
+  }, [containerWidth, effectiveSidebarPx, isStripLayout])
 
   const persistTimerRef = useRef<number | null>(null)
   const lastPersistedPxRef = useRef(sidebarWidthPx)
@@ -176,31 +186,50 @@ export function CliTerminalResizableLayout({
     }
   }, [])
 
+  if (isStripLayout) {
+    return (
+      <CliTerminalLayoutProvider mode="strip">
+        <div
+          ref={containerRef}
+          className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+        >
+          <div className="shrink-0">{sidebar}</div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {main}
+          </div>
+        </div>
+      </CliTerminalLayoutProvider>
+    )
+  }
+
   if (!panelLayout) {
     return (
-      <div
-        ref={containerRef}
-        className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
-      >
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          {main}
-        </div>
+      <CliTerminalLayoutProvider mode="sidebar">
         <div
-          className="flex min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-muted/20"
-          style={{ width: sidebarWidthPx }}
+          ref={containerRef}
+          className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
         >
-          {sidebar}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {main}
+          </div>
+          <div
+            className="flex min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-muted/20"
+            style={{ width: sidebarWidthPx }}
+          >
+            {sidebar}
+          </div>
         </div>
-      </div>
+      </CliTerminalLayoutProvider>
     )
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
-    >
-      <ResizablePanelGroup
+    <CliTerminalLayoutProvider mode="sidebar">
+      <div
+        ref={containerRef}
+        className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
+      >
+        <ResizablePanelGroup
         direction="horizontal"
         className="h-full min-h-0 min-w-0 flex-1"
         onLayout={handleLayout}
@@ -230,7 +259,8 @@ export function CliTerminalResizableLayout({
             {sidebar}
           </div>
         </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
+        </ResizablePanelGroup>
+      </div>
+    </CliTerminalLayoutProvider>
   )
 }

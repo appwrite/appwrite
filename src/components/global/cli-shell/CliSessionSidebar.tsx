@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/core'
 import {
   SortableContext,
+  horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -39,6 +40,7 @@ import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
 import { cn } from '@/lib/utils'
 import { MAX_CLI_SHELL_SESSION_NAME_LENGTH } from '@/lib/user-prefs-keys'
 import { useCliShell } from './CliShellProvider'
+import { useCliTerminalSessionsLayoutMode } from './CliTerminalLayoutContext'
 
 type SessionRowProps = {
   session: CliShellSession
@@ -52,6 +54,7 @@ type SessionRowProps = {
   editingName: string
   editInputRef: RefObject<HTMLInputElement | null>
   canRemoveRoot: boolean
+  layout: 'sidebar' | 'strip'
   onSelect: () => void
   onSplit: () => void
   onCloseSplit: () => void
@@ -83,6 +86,7 @@ function SessionRow({
   editingName,
   editInputRef,
   canRemoveRoot,
+  layout,
   onSelect,
   onSplit,
   onCloseSplit,
@@ -93,6 +97,7 @@ function SessionRow({
   onCancelRename,
   dragHandleProps,
 }: SessionRowProps) {
+  const isStrip = layout === 'strip'
   const isHighlighted = isNested
     ? isRunning
     : isActive || isFocused || isInSplitPane
@@ -100,14 +105,24 @@ function SessionRow({
   return (
     <div
       className={cn(
-        'group flex h-11 items-center gap-0.5',
-        isRoot && 'pl-1 pr-1',
-        !isNested && 'hover:bg-muted/60',
-        !isNested && isFocused && 'bg-muted/60',
-        isRoot && isActive && !isFocused && 'bg-muted/40',
+        'group flex items-center gap-0.5',
+        isStrip
+          ? cn(
+              'h-7 max-w-[180px] shrink-0 rounded-md border px-0.5',
+              isHighlighted
+                ? 'border-border bg-background text-foreground shadow-sm'
+                : 'border-transparent text-muted-foreground hover:bg-muted/60',
+            )
+          : cn(
+              'h-11',
+              isRoot && 'pl-1 pr-1',
+              !isNested && 'hover:bg-muted/60',
+              !isNested && isFocused && 'bg-muted/60',
+              isRoot && isActive && !isFocused && 'bg-muted/40',
+            ),
       )}
     >
-      {isRoot && dragHandleProps ? (
+      {isRoot && dragHandleProps && !isStrip ? (
         <button
           type="button"
           ref={dragHandleProps.ref}
@@ -137,8 +152,8 @@ function SessionRow({
           }
         }}
         className={cn(
-          'flex h-11 min-w-0 flex-1 items-center gap-2 rounded-md text-left text-foreground transition-colors',
-          isNested ? 'px-0' : 'px-2',
+          'flex min-w-0 flex-1 items-center gap-2 rounded-md text-left text-foreground transition-colors',
+          isStrip ? 'h-7 px-1.5' : cn('h-11', isNested ? 'px-0' : 'px-2'),
           !isEditing && 'cursor-pointer',
         )}
         aria-current={!isNested && isFocused ? 'true' : undefined}
@@ -202,7 +217,12 @@ function SessionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        className={cn(
+          'h-7 w-7 shrink-0 text-muted-foreground',
+          isStrip
+            ? cn(isHighlighted && 'opacity-100', !isHighlighted && 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100')
+            : 'opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100',
+        )}
         onClick={(event) => {
           event.stopPropagation()
           onSplit()
@@ -218,7 +238,12 @@ function SessionRow({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          className={cn(
+            'h-7 w-7 shrink-0 text-muted-foreground',
+            isStrip
+              ? cn(isHighlighted && 'opacity-100', !isHighlighted && 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100')
+              : 'opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100',
+          )}
           onClick={(event) => {
             event.stopPropagation()
             onCloseSplit()
@@ -233,7 +258,12 @@ function SessionRow({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          className={cn(
+            'h-7 w-7 shrink-0 text-muted-foreground',
+            isStrip
+              ? cn(isHighlighted && 'opacity-100', !isHighlighted && 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100')
+              : 'opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100',
+          )}
           onClick={(event) => {
             event.stopPropagation()
             onRemoveRoot()
@@ -251,7 +281,8 @@ function SessionRow({
 type RootSessionGroupBodyProps = {
   session: CliShellSession
   children: ReactNode
-  rowProps: Omit<SessionRowProps, 'session' | 'isRoot' | 'dragHandleProps'>
+  layout: 'sidebar' | 'strip'
+  rowProps: Omit<SessionRowProps, 'session' | 'isRoot' | 'dragHandleProps' | 'layout'>
   canReorder: boolean
   dragHandleProps?: SessionRowProps['dragHandleProps']
 }
@@ -259,6 +290,7 @@ type RootSessionGroupBodyProps = {
 function RootSessionGroupBody({
   session,
   children,
+  layout,
   rowProps,
   canReorder,
   dragHandleProps,
@@ -268,6 +300,7 @@ function RootSessionGroupBody({
       <SessionRow
         session={session}
         isRoot={true}
+        layout={layout}
         dragHandleProps={canReorder ? dragHandleProps : undefined}
         {...rowProps}
       />
@@ -279,13 +312,15 @@ function RootSessionGroupBody({
 type SortableRootSessionGroupProps = {
   session: CliShellSession
   children: ReactNode
+  layout: 'sidebar' | 'strip'
   canReorder: boolean
-  rowProps: Omit<SessionRowProps, 'session' | 'isRoot' | 'dragHandleProps'>
+  rowProps: Omit<SessionRowProps, 'session' | 'isRoot' | 'dragHandleProps' | 'layout'>
 }
 
 function SortableRootSessionGroup({
   session,
   children,
+  layout,
   canReorder,
   rowProps,
 }: SortableRootSessionGroupProps) {
@@ -311,24 +346,52 @@ function SortableRootSessionGroup({
       }
 
   return (
-    <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-0')}>
-      <RootSessionGroupBody
-        session={session}
-        rowProps={rowProps}
-        canReorder={canReorder}
-        dragHandleProps={{
-          ref: setActivatorNodeRef,
-          ...attributes,
-          ...listeners,
-        }}
-      >
-        {children}
-      </RootSessionGroupBody>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        isDragging && 'opacity-0',
+        layout === 'strip' && 'flex shrink-0 items-center gap-1',
+      )}
+    >
+      {layout === 'strip' && canReorder ? (
+        <div
+          ref={setActivatorNodeRef}
+          className="flex shrink-0 cursor-grab touch-none items-center gap-1 active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <RootSessionGroupBody
+            session={session}
+            layout={layout}
+            rowProps={rowProps}
+            canReorder={canReorder}
+          >
+            {children}
+          </RootSessionGroupBody>
+        </div>
+      ) : (
+        <RootSessionGroupBody
+          session={session}
+          layout={layout}
+          rowProps={rowProps}
+          canReorder={canReorder}
+          dragHandleProps={{
+            ref: setActivatorNodeRef,
+            ...attributes,
+            ...listeners,
+          }}
+        >
+          {children}
+        </RootSessionGroupBody>
+      )}
     </div>
   )
 }
 
 export function CliSessionSidebar() {
+  const layout = useCliTerminalSessionsLayoutMode()
+  const isStrip = layout === 'strip'
   const {
     sessions,
     activeSessionId,
@@ -430,8 +493,9 @@ export function CliSessionSidebar() {
     return (
       <div
         className={cn(
-          'border-l border-border/80 pl-3',
-          canReorder ? 'ml-8' : 'ml-5',
+          isStrip ? undefined : 'border-l border-border/80 pl-3',
+          !isStrip && (canReorder ? 'ml-8' : 'ml-5'),
+          isStrip && 'flex shrink-0 items-center gap-1',
         )}
       >
         {children.map((child) => {
@@ -442,6 +506,7 @@ export function CliSessionSidebar() {
               session={child}
               isRoot={false}
               isNested={true}
+              layout={layout}
               isActive={activeSessionId === parentSessionId}
               isFocused={focusedSessionId === child.id}
               isInSplitPane={splitPaneSessionIds.includes(child.id)}
@@ -468,7 +533,7 @@ export function CliSessionSidebar() {
   const buildRootRowProps = (
     session: CliShellSession,
     childCount: number,
-  ): Omit<SessionRowProps, 'session' | 'isRoot' | 'dragHandleProps'> => {
+  ): Omit<SessionRowProps, 'session' | 'isRoot' | 'dragHandleProps' | 'layout'> => {
     const isEditing = editingSessionId === session.id
     return {
       isActive: activeSessionId === session.id,
@@ -492,10 +557,21 @@ export function CliSessionSidebar() {
 
   return (
     <div
-      className="flex h-full min-w-0 w-full flex-col bg-muted/20 pb-1"
+      className={cn(
+        'flex min-w-0 bg-muted/20',
+        isStrip
+          ? 'h-11 w-full shrink-0 flex-row border-b border-border'
+          : 'h-full w-full flex-col pb-1',
+      )}
       aria-label="Terminal sessions"
     >
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        className={cn(
+          isStrip
+            ? 'flex min-w-0 flex-1 items-center overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+            : 'min-h-0 flex-1 overflow-y-auto',
+        )}
+      >
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -505,32 +581,49 @@ export function CliSessionSidebar() {
         >
           <SortableContext
             items={rootSessions.map((session) => session.id)}
-            strategy={verticalListSortingStrategy}
+            strategy={
+              isStrip
+                ? horizontalListSortingStrategy
+                : verticalListSortingStrategy
+            }
             disabled={!canReorder}
           >
-            {rootSessions.map((session) => {
-              const splitChildren = getCliShellSplitChildren(
-                session.id,
-                sessions,
-              )
+            <div
+              className={cn(
+                isStrip && 'flex min-w-max items-center gap-1 py-1.5',
+              )}
+            >
+              {rootSessions.map((session) => {
+                const splitChildren = getCliShellSplitChildren(
+                  session.id,
+                  sessions,
+                )
 
-              return (
-                <SortableRootSessionGroup
-                  key={session.id}
-                  session={session}
-                  canReorder={canReorder}
-                  rowProps={buildRootRowProps(session, splitChildren.length)}
-                >
-                  {renderSplitChildren(session.id)}
-                </SortableRootSessionGroup>
-              )
-            })}
+                return (
+                  <SortableRootSessionGroup
+                    key={session.id}
+                    session={session}
+                    layout={layout}
+                    canReorder={canReorder}
+                    rowProps={buildRootRowProps(session, splitChildren.length)}
+                  >
+                    {renderSplitChildren(session.id)}
+                  </SortableRootSessionGroup>
+                )
+              })}
+            </div>
           </SortableContext>
           <DragOverlay dropAnimation={null}>
             {activeDragSession ? (
-              <div className="w-full rounded-md bg-muted/60 shadow-md ring-1 ring-border">
+              <div
+                className={cn(
+                  'rounded-md bg-muted/60 shadow-md ring-1 ring-border',
+                  isStrip ? 'w-auto' : 'w-full',
+                )}
+              >
                 <RootSessionGroupBody
                   session={activeDragSession}
+                  layout={layout}
                   canReorder={canReorder}
                   rowProps={buildRootRowProps(
                     activeDragSession,

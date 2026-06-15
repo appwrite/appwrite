@@ -23,6 +23,8 @@ export const CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX = 176
 export const CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX = 320
 export const CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX = 208
 export const CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX = 240
+/** Below this width, sessions render as a horizontal strip above output instead of a right sidebar. */
+export const CLI_SHELL_SESSIONS_STRIP_MAX_WIDTH_PX = 640
 
 const LEGACY_SIDEBAR_PERCENT_MAX = 60
 
