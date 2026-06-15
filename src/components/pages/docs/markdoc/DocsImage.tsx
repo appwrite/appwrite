@@ -70,7 +70,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
   }
 
   const imageClassName = cn(
-    'h-full w-full object-contain transition-opacity duration-300',
+    'h-full w-full rounded-lg object-contain transition-opacity duration-300',
     loaded ? 'opacity-100' : 'opacity-0',
     contain && 'p-3 @[480px]:p-4',
   )
@@ -85,17 +85,12 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
 
   return (
     <figure className="not-prose group relative my-8 w-full">
-      <div className="overflow-hidden rounded-xl border border-border bg-card/40 shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border bg-card/40 p-3 shadow-sm">
         <div
           className={cn(
-            'relative aspect-video w-full bg-muted/25',
+            'relative aspect-video w-full overflow-hidden rounded-lg bg-muted/25',
           )}
         >
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--foreground)_5%,transparent),transparent_68%)]"
-            aria-hidden
-          />
-
           {!loaded && !error ? (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
               <ThinkingBubble

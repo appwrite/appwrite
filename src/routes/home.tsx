@@ -34,6 +34,7 @@ import {
   ProductBentoHoverLight,
   ProductBentoSoftLights,
 } from '@/components/pages/home/HomeSoftLights'
+import { HomeHashScroll } from '@/components/pages/home/HomeHashScroll'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
 import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
@@ -235,6 +236,7 @@ function HomePage() {
         showFooter
         footer={{ expanded: true }}
       >
+        <HomeHashScroll />
         <section className="relative isolate overflow-hidden border-b border-border bg-background">
           <HomeSoftLights />
           <div

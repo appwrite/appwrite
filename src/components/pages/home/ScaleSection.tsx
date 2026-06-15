@@ -137,24 +137,22 @@ function ScaleChartBackground() {
 
 function ScaleStatCards() {
   return (
-    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
-      <div className="grid min-w-[50rem] grid-cols-7 gap-2 sm:min-w-0 min-[1200px]:gap-3">
-        {SORTED_SCALE_STATS.map((stat) => (
-          <ScaleStatCard
-            key={stat.label}
-            value={stat.value}
-            suffix={stat.suffix}
-            label={stat.label}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7 min-[1200px]:gap-3">
+      {SORTED_SCALE_STATS.map((stat) => (
+        <ScaleStatCard
+          key={stat.label}
+          value={stat.value}
+          suffix={stat.suffix}
+          label={stat.label}
+        />
+      ))}
     </div>
   )
 }
 
 function ScaleChart() {
   return (
-    <div className="relative left-1/2 w-screen -translate-x-1/2">
+    <div className="relative left-1/2 w-[100dvw] -translate-x-1/2">
       <div className="relative min-h-[22rem] w-full overflow-hidden bg-transparent sm:min-h-[26rem] lg:min-h-[28rem]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <ScaleChartBackground />
@@ -167,7 +165,10 @@ function ScaleChart() {
 
 export function ScaleSection() {
   return (
-    <section id="scale" className="border-t border-border bg-background py-16 sm:py-20">
+    <section
+      id="scale"
+      className="scroll-mt-28 border-t border-border bg-background py-16 sm:py-20"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
           Over half a million developers scale with Appwrite
