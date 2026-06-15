@@ -1,11 +1,13 @@
 /**
- * Generates static docs exports for SEO and LLM crawlers (llms.txt, llms-full.txt, sitemap.xml).
+ * Generates static docs exports for SEO and LLM crawlers (llms.txt, llms-full.txt).
+ * Sitemaps are generated via scripts/generate-sitemap.ts (also run from generate:docs-exports).
  * Not part of the build. Run manually when docs change: bun run generate:docs-exports
  */
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DOCS_PAGES } from '../src/lib/docs/generated/manifest'
+import { generateSitemapFiles } from '../src/lib/sitemap/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -13,15 +15,6 @@ const PUBLIC_DIR = join(VIBES_ROOT, 'public')
 const DOCS_DIR = join(VIBES_ROOT, 'src', 'content', 'docs')
 
 const SITE_ORIGIN = process.env.VITE_SITE_ORIGIN ?? 'https://appwrite.io'
-
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-}
 
 function stripFrontmatter(text: string): string {
   return text.replace(/^---[\s\S]*?---\s*/m, '')
@@ -92,44 +85,38 @@ async function generateLlmsFullTxt(): Promise<string> {
   return sections.join('\n\n---\n\n') + '\n'
 }
 
-function generateSitemapXml(): string {
-  const urls = [
-    { loc: `${SITE_ORIGIN}/docs`, priority: '0.9' },
-    ...DOCS_PAGES.map((page) => ({
-      loc: page.slug ? `${SITE_ORIGIN}/docs/${page.slug}` : `${SITE_ORIGIN}/docs`,
-      priority: page.layout === 'tutorial' ? '0.7' : '0.8',
-    })),
-  ]
+async function writeSitemapFiles(): Promise<{
+  totalUrls: number
+  sectionCount: number
+}> {
+  const sitemapDir = join(PUBLIC_DIR, 'sitemap')
+  const { indexXml, sectionFiles, totalUrls } = generateSitemapFiles()
 
-  const body = urls
-    .map(
-      (url) => `  <url>
-    <loc>${escapeXml(url.loc)}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>${url.priority}</priority>
-  </url>`,
-    )
-    .join('\n')
+  await mkdir(sitemapDir, { recursive: true })
+  await writeFile(join(PUBLIC_DIR, 'sitemap.xml'), indexXml, 'utf-8')
+  await Promise.all(
+    Object.entries(sectionFiles).map(([sectionId, xml]) =>
+      writeFile(join(sitemapDir, `${sectionId}.xml`), xml, 'utf-8'),
+    ),
+  )
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${body}
-</urlset>
-`
+  return { totalUrls, sectionCount: Object.keys(sectionFiles).length }
 }
 
 async function main() {
   await mkdir(PUBLIC_DIR, { recursive: true })
 
   const llmsFullTxt = await generateLlmsFullTxt()
+  const { totalUrls, sectionCount } = await writeSitemapFiles()
 
   await Promise.all([
     writeFile(join(PUBLIC_DIR, 'llms.txt'), generateLlmsTxt(), 'utf-8'),
     writeFile(join(PUBLIC_DIR, 'llms-full.txt'), llmsFullTxt, 'utf-8'),
-    writeFile(join(PUBLIC_DIR, 'sitemap.xml'), generateSitemapXml(), 'utf-8'),
   ])
 
-  console.log(`Generated llms.txt, llms-full.txt, and sitemap.xml (${DOCS_PAGES.length + 1} URLs)`)
+  console.log(
+    `Generated llms.txt, llms-full.txt, and sitemaps (${totalUrls} URLs across ${sectionCount} sections)`,
+  )
 }
 
 main().catch((err) => {

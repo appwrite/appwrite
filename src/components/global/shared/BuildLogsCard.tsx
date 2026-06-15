@@ -3,7 +3,7 @@
  * Used by sites and functions create deploying views.
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
@@ -51,38 +51,58 @@ export function BuildLogsCard({
 }: BuildLogsCardProps) {
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const hasUserScrolledRef = useRef(false)
+  const isFollowingRef = useRef(false)
   const [logsSearch, setLogsSearch] = useState('')
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
 
-  useEffect(() => {
-    const shouldFollow = !hasUserScrolledRef.current || isAtBottom
-    if (!shouldFollow || !logsContainerRef.current) return
-    const el = logsContainerRef.current
-    el.scrollTop = el.scrollHeight
-  }, [buildLogs, isAtBottom])
-
-  const updateScrollPosition = useCallback(() => {
+  const readScrollPosition = useCallback(() => {
     const el = logsContainerRef.current
     if (!el) return
-    hasUserScrolledRef.current = true
     const { scrollTop, scrollHeight, clientHeight } = el
     const threshold = 10
-    setIsAtTop(scrollTop <= threshold)
-    setIsAtBottom(scrollTop + clientHeight >= scrollHeight - threshold)
+    const atTop = scrollTop <= threshold
+    const atBottom = scrollTop + clientHeight >= scrollHeight - threshold
+    setIsAtTop((prev) => (prev === atTop ? prev : atTop))
+    setIsAtBottom((prev) => (prev === atBottom ? prev : atBottom))
   }, [])
+
+  const handleUserScroll = useCallback(() => {
+    if (isFollowingRef.current) {
+      readScrollPosition()
+      return
+    }
+    hasUserScrolledRef.current = true
+    readScrollPosition()
+  }, [readScrollPosition])
 
   useEffect(() => {
     const el = logsContainerRef.current
     if (!el) return
-    updateScrollPosition()
-    el.addEventListener('scroll', updateScrollPosition)
-    window.addEventListener('resize', updateScrollPosition)
+    readScrollPosition()
+    el.addEventListener('scroll', handleUserScroll, { passive: true })
+    window.addEventListener('resize', readScrollPosition)
     return () => {
-      el.removeEventListener('scroll', updateScrollPosition)
-      window.removeEventListener('resize', updateScrollPosition)
+      el.removeEventListener('scroll', handleUserScroll)
+      window.removeEventListener('resize', readScrollPosition)
     }
-  }, [updateScrollPosition, buildLogs])
+  }, [handleUserScroll, readScrollPosition])
+
+  useLayoutEffect(() => {
+    const el = logsContainerRef.current
+    if (!el) return
+    const shouldFollow = !hasUserScrolledRef.current || isAtBottom
+    if (shouldFollow) {
+      isFollowingRef.current = true
+      el.scrollTop = el.scrollHeight
+      readScrollPosition()
+      requestAnimationFrame(() => {
+        isFollowingRef.current = false
+      })
+      return
+    }
+    readScrollPosition()
+  }, [buildLogs, isAtBottom, readScrollPosition])
 
   const handleScrollToTop = useCallback(() => {
     logsContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
@@ -193,7 +213,7 @@ export function BuildLogsCard({
       <div className="relative">
         <div
           ref={logsContainerRef}
-          className="h-[400px] overflow-y-auto overflow-x-auto pr-16"
+          className="h-[400px] overflow-y-scroll overflow-x-hidden pr-16 [scrollbar-gutter:stable]"
         >
           <BuildLogsView
             buildLogs={buildLogs}
