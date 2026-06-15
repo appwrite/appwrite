@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type PostgresCopyableFieldProps = {
   label: string
   value: string
   mono?: boolean
   masked?: boolean
+  isLoading?: boolean
 }
 
 export function PostgresCopyableField({
@@ -16,15 +19,31 @@ export function PostgresCopyableField({
   value,
   mono = true,
   masked = false,
+  isLoading = false,
 }: PostgresCopyableFieldProps) {
   const [copied, setCopied] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div>
+        <Skeleton className="mb-1.5 h-3 w-16" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    )
+  }
 
   if (!value) return null
 
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      toast.success(`${label} copied`)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Failed to copy')
+    }
   }
 
   return (
@@ -36,24 +55,41 @@ export function PostgresCopyableField({
         <Input
           value={value}
           readOnly
-          type={masked ? 'password' : 'text'}
+          type={masked && !revealed ? 'password' : 'text'}
           className={cn(
-            'h-9 border-border bg-muted/30 pr-10 text-[13px] shadow-none',
+            'h-9 border-border bg-muted/30 text-[13px] shadow-none focus-visible:ring-inset',
             mono && 'font-mono',
+            masked ? 'pr-16' : 'pr-10',
           )}
         />
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md transition-colors hover:bg-accent"
-          aria-label={`Copy ${label}`}
-        >
-          {copied ? (
-            <Check className="h-4 w-4 text-emerald-500" />
-          ) : (
-            <Copy className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
+        <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+          {masked ? (
+            <button
+              type="button"
+              onClick={() => setRevealed((current) => !current)}
+              className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent"
+              aria-label={revealed ? 'Hide password' : 'Show password'}
+            >
+              {revealed ? (
+                <EyeOff className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void handleCopy()}
+            className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent"
+            aria-label={`Copy ${label}`}
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <Copy className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

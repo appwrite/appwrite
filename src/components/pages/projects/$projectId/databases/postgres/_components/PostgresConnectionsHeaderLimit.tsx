@@ -9,7 +9,7 @@ import {
   usePostgresActiveConnections,
   usePostgresDatabase,
 } from '@/lib/react-query/hooks'
-import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
   Tooltip,
   TooltipContent,
@@ -22,13 +22,13 @@ type PostgresConnectionsHeaderLimitProps = {
   databaseId: string
 }
 
-function getConnectionUsageBadgeVariant(
+function getConnectionUsageTone(
   percentage: number | null,
-): 'info' | 'warning' | 'error' {
-  if (percentage == null) return 'info'
-  if (percentage >= 90) return 'error'
+): 'normal' | 'warning' | 'critical' {
+  if (percentage == null) return 'normal'
+  if (percentage >= 90) return 'critical'
   if (percentage >= 75) return 'warning'
-  return 'info'
+  return 'normal'
 }
 
 export function PostgresConnectionsHeaderLimit({
@@ -71,15 +71,7 @@ export function PostgresConnectionsHeaderLimit({
     return null
   }
 
-  const badgeVariant = getConnectionUsageBadgeVariant(usagePercent)
-  const badgeLabel =
-    maxConnections != null
-      ? isLoading
-        ? `— / ${maxConnections}`
-        : `${clientConnectionCount} / ${maxConnections}`
-      : isSharedLimit
-        ? 'Shared limit'
-        : connectionsLimitLabel
+  const usageTone = getConnectionUsageTone(usagePercent)
 
   const tooltipText =
     maxConnections != null
@@ -90,17 +82,31 @@ export function PostgresConnectionsHeaderLimit({
         ? 'This database uses a shared connection pool. There is no fixed per-instance limit.'
         : `Connection limit for this compute tier: ${connectionsLimitLabel}.`
 
+  const inlineLabel =
+    maxConnections != null
+      ? isLoading
+        ? `— / ${maxConnections.toLocaleString()}`
+        : `${clientConnectionCount.toLocaleString()} / ${maxConnections.toLocaleString()}`
+      : isSharedLimit
+        ? isLoading
+          ? '—'
+          : clientConnectionCount.toLocaleString()
+        : connectionsLimitLabel
+
   return (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge
-            variant={badgeVariant}
-            className="shrink-0 text-[10px] tabular-nums"
+          <span
+            className={cn(
+              'shrink-0 text-[13px] font-normal tabular-nums',
+              usageTone === 'critical' && 'text-red-500',
+              usageTone === 'warning' && 'text-amber-600 dark:text-amber-500',
+              usageTone === 'normal' && 'text-muted-foreground',
+            )}
           >
-            {badgeLabel}
-            {maxConnections != null ? ' connections' : null}
-          </Badge>
+            {inlineLabel}
+          </span>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-xs text-[12px]">
           <p>{tooltipText}</p>

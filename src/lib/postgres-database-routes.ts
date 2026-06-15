@@ -16,7 +16,6 @@ export type PostgresDatabaseTab =
   | 'insights'
   | 'backups'
   | 'connections'
-  | 'connect'
   | 'settings'
 
 export const POSTGRES_DATABASE_TAB_LABELS: Record<
@@ -29,7 +28,6 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
   insights: 'Insights',
   backups: 'Backups',
   connections: 'Connections',
-  connect: 'Connect',
   settings: 'Settings',
 }
 
@@ -149,12 +147,6 @@ export function postgresNav(params: PostgresNavBase) {
     connections() {
       return {
         to: '/projects/$projectId/databases/postgres/$databaseId/connections' as const,
-        params: base,
-      }
-    },
-    connect() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/connect' as const,
         params: base,
       }
     },

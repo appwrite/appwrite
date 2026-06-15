@@ -364,7 +364,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             {!hideTitle && (
               <div
                 className={cn(
-                  'flex flex-col gap-1 px-4 pt-6 sm:px-6',
+                  'flex flex-col gap-1 overflow-visible px-4 pt-6 sm:px-6',
                   hasTabs ? 'pb-4' : contentAfterBorder ? 'pb-4' : 'pb-6',
                   fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
                   fullWidthBorder && fullWidth && 'w-full',
@@ -396,14 +396,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 <div
                   className={cn(
                     SERVICE_HEADER_TITLE_CONTAINER,
-                    'flex min-w-0 flex-col gap-3 @[720px]:flex-row @[720px]:items-center @[720px]:justify-between @[720px]:gap-x-4',
+                    'flex min-w-0 flex-row items-center justify-between gap-x-4',
                   )}
                 >
-                  <h1 className="min-w-0 text-[17px] font-semibold text-foreground @[720px]:flex-1">
+                  <h1 className="min-w-0 flex-1 truncate text-[17px] font-semibold leading-tight text-foreground">
                     {title}
                   </h1>
                   {titleRightContent ? (
-                    <div className="flex min-w-0 max-w-full items-center justify-end gap-2 @[560px]:gap-3">
+                    <div className="flex shrink-0 items-center justify-end gap-2 overflow-visible @[560px]:gap-3">
                       {titleRightContent}
                     </div>
                   ) : null}

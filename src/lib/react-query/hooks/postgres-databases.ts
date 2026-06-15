@@ -500,6 +500,36 @@ export function postgresDatabaseCredentialsQueryOptions(
   })
 }
 
+export async function fetchPostgresDatabasePooler(
+  projectId: string,
+  databaseId: string,
+): Promise<Models.DedicatedDatabasePooler | null> {
+  try {
+    return await sdk.forProject(projectId).compute.getDatabasePooler({
+      databaseId,
+    })
+  } catch {
+    return null
+  }
+}
+
+export function postgresDatabasePoolerQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['postgres-database-pooler', 'project', projectId, databaseId],
+    queryFn: () => fetchPostgresDatabasePooler(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function postgresTableColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -847,6 +877,22 @@ export function usePostgresDatabaseCredentials(
   )
   return {
     credentials: data ?? null,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresDatabasePooler(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresDatabasePoolerQueryOptions(projectId, databaseId),
+  )
+  return {
+    pooler: data ?? null,
     isLoading,
     isFetching,
     error,

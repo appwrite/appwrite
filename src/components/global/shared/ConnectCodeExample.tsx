@@ -32,6 +32,7 @@ type ConnectCodePanelProps = {
   /** Omit outer border when the parent already provides the frame. */
   headless?: boolean
   className?: string
+  wrapLines?: boolean
 }
 
 /** Syntax-highlighted block — framed or headless inside a parent wrapper. */
@@ -41,6 +42,7 @@ export function ConnectCodePanel({
   fixedHeight,
   headless = false,
   className,
+  wrapLines = false,
 }: ConnectCodePanelProps) {
   return (
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
@@ -50,6 +52,7 @@ export function ConnectCodePanel({
         variant={headless ? 'headless' : 'default'}
         showCopy={false}
         fixedHeight={fixedHeight}
+        wrapLines={wrapLines}
         className="flex min-h-0 w-full flex-1 flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0 [&>div:last-child]:border-0"
       />
     </div>

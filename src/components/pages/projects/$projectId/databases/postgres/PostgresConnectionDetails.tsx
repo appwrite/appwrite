@@ -518,14 +518,6 @@ export function PostgresConnectionDetails({
           ) : filteredConnections.length > 0 ? (
             <>
               <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
-                {isFetching ? (
-                  <div
-                    className="pointer-events-none absolute right-4 top-2.5 z-20 sm:right-6"
-                    aria-hidden
-                  >
-                    <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                  </div>
-                ) : null}
                 <Table withScrollContainer={false} className={connectionsTableClassName}>
                   <ConnectionsTableColGroup />
                   <ConnectionsTableHead />

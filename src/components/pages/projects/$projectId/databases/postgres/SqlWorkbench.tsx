@@ -11,6 +11,7 @@ import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/Ser
 import { PostgresSqlEditorContainer } from './PostgresSqlEditorContainer'
 import { PostgresSqlCodeEditor } from './PostgresSqlCodeEditor'
 import type { PostgresSqlCodeEditorRef } from './PostgresSqlCodeEditor'
+import { PostgresConnectHeaderButton } from './_components/PostgresConnectHeaderButton'
 import { SqlEditorActionBar } from './_components/SqlEditorActionBar'
 import { SqlEditorTabBar } from './_components/SqlEditorTabBar'
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
@@ -104,6 +105,7 @@ export function SqlWorkbench({
               fullWidthBorder
               fullWidth
               hideTitle={isHeaderCollapsed}
+              titleRightContent={<PostgresConnectHeaderButton />}
               contentAfterBorder={
                 <div
                   className={cn(

@@ -8,6 +8,7 @@ import type { ReactNode } from 'react'
 import { TableViewResizableLayout } from '@/components/pages/projects/$projectId/databases/_components/TableViewResizableLayout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
+import { PostgresConnectDialogProvider } from './_components/PostgresConnectDialogContext'
 import { PostgresDatabaseHeader } from './_components/PostgresDatabaseHeader'
 import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
@@ -57,16 +58,21 @@ export function PostgresShell({
   }
 
   return (
-    <PostgresShellLayout
+    <PostgresConnectDialogProvider
       projectId={projectId}
       databaseId={databaseId}
-      tableId={tableId}
-      databaseTab={databaseTab}
-      database={database}
-      showDesktopSidebar={showDesktopSidebar}
     >
-      {children}
-    </PostgresShellLayout>
+      <PostgresShellLayout
+        projectId={projectId}
+        databaseId={databaseId}
+        tableId={tableId}
+        databaseTab={databaseTab}
+        database={database}
+        showDesktopSidebar={showDesktopSidebar}
+      >
+        {children}
+      </PostgresShellLayout>
+    </PostgresConnectDialogProvider>
   )
 }
 

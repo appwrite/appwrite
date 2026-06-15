@@ -3,6 +3,7 @@ import {
   POSTGRES_DATABASE_TAB_LABELS,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
+import { PostgresConnectHeaderButton } from './PostgresConnectHeaderButton'
 import { PostgresConnectionsHeaderLimit } from './PostgresConnectionsHeaderLimit'
 
 type PostgresDatabaseHeaderProps = {
@@ -16,9 +17,23 @@ export function PostgresDatabaseHeader({
   databaseId,
   databaseTab,
 }: PostgresDatabaseHeaderProps) {
+  const titleLabel = POSTGRES_DATABASE_TAB_LABELS[databaseTab]
+
   return (
     <ServiceHeader
-      title={POSTGRES_DATABASE_TAB_LABELS[databaseTab]}
+      title={
+        databaseTab === 'connections' ? (
+          <span className="inline-flex min-w-0 items-baseline gap-2">
+            <span className="truncate">{titleLabel}</span>
+            <PostgresConnectionsHeaderLimit
+              projectId={projectId}
+              databaseId={databaseId}
+            />
+          </span>
+        ) : (
+          titleLabel
+        )
+      }
       fullWidthBorder
       fullWidth={
         databaseTab === 'sql' ||
@@ -26,14 +41,7 @@ export function PostgresDatabaseHeader({
         databaseTab === 'monitor' ||
         databaseTab === 'connections'
       }
-      titleRightContent={
-        databaseTab === 'connections' ? (
-          <PostgresConnectionsHeaderLimit
-            projectId={projectId}
-            databaseId={databaseId}
-          />
-        ) : undefined
-      }
+      titleRightContent={<PostgresConnectHeaderButton />}
     />
   )
 }

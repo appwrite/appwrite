@@ -1,3 +1,5 @@
+import type { Models } from '@appwrite.io/console'
+
 const MASKED_PASSWORD = '••••••••'
 
 /**
@@ -35,5 +37,48 @@ export function maskPostgresConnectionStringPassword(
       /^(postgres(?:ql)?(?:\+[\w-]+)?:\/\/[^:/@\s]+:)([^@\s/]+)(@)/i,
       `$1${MASKED_PASSWORD}$3`,
     )
+  }
+}
+
+type PostgresConnectionStringCredentials = Pick<
+  Models.DedicatedDatabaseCredentials,
+  | 'connectionString'
+  | 'host'
+  | 'port'
+  | 'username'
+  | 'password'
+  | 'database'
+  | 'tcpHost'
+  | 'tcpPort'
+  | 'tcpDatabase'
+  | 'ssl'
+>
+
+/**
+ * Builds a direct TCP connection string for migrations and schema tools.
+ * Preserves SSL query params from the primary connection string when present.
+ */
+export function buildPostgresDirectConnectionString(
+  credentials: PostgresConnectionStringCredentials,
+): string | null {
+  if (!credentials.connectionString) return null
+
+  const host = credentials.tcpHost || credentials.host
+  const port = credentials.tcpPort || credentials.port
+  const database = credentials.tcpDatabase || credentials.database
+
+  if (!host || !port || !database) return null
+
+  try {
+    const parsed = new URL(credentials.connectionString)
+    parsed.username = credentials.username
+    parsed.password = credentials.password
+    parsed.hostname = host
+    parsed.port = String(port)
+    parsed.pathname = `/${database}`
+    return parsed.toString()
+  } catch {
+    const sslQuery = credentials.ssl ? '?sslmode=require' : ''
+    return `postgresql://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${String(port)}/${database}${sslQuery}`
   }
 }
