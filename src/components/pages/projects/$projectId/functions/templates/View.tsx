@@ -20,6 +20,7 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   RESOURCE_CARD_GRID_WIDE_CLASSNAME,
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
   RESOURCE_CARD_PADDED_CLASSNAME,
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../../shared/ResourceCard'
@@ -1488,7 +1489,12 @@ function TemplateCard({
           </p>
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3">
+        <div
+          className={cn(
+            RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+            'mt-auto flex items-center justify-between gap-2',
+          )}
+        >
           <div className="flex min-w-0 items-center gap-1">
             {displayed.map((r) => (
               <div

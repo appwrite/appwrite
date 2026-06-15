@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Copy, CheckCircle2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 type CopyableIdSize = 'xs' | 'sm' | 'md'
@@ -23,6 +24,8 @@ interface CopyableIdProps {
   constrainToContainer?: boolean
   /** When true, the copy icon is hidden until hover. Defaults to true for inline. */
   showCopyOnHover?: boolean
+  /** Shows a toast on copy, e.g. "Endpoint" → "Endpoint copied". */
+  copyToastLabel?: string
 }
 
 const sizeStyles: Record<
@@ -41,8 +44,8 @@ const sizeStyles: Record<
   },
   md: {
     text: 'text-[12px]',
-    icon: 'h-3.5 w-3.5',
-    padding: 'px-2 py-1',
+    icon: 'h-3 w-3',
+    padding: 'px-2.5 py-1.5',
   },
 }
 
@@ -55,6 +58,7 @@ export function CopyableId({
   maxWidth = 140,
   constrainToContainer = false,
   showCopyOnHover,
+  copyToastLabel,
 }: CopyableIdProps) {
   const [copied, setCopied] = useState(false)
   const shown = displayText ?? id
@@ -65,6 +69,9 @@ export function CopyableId({
     e.stopPropagation()
     e.preventDefault()
     navigator.clipboard.writeText(id)
+    if (copyToastLabel) {
+      toast.success(`${copyToastLabel} copied`)
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

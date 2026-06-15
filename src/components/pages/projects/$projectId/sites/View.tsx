@@ -953,12 +953,7 @@ export function View() {
                 </p>
               </div>
             ) : paginatedSites.length > 0 ? (
-              <div
-                className={cn(
-                  RESOURCE_CARD_GRID_4_COL_CLASSNAME,
-                  '[&>*]:h-full',
-                )}
-              >
+              <div className={RESOURCE_CARD_GRID_4_COL_CLASSNAME}>
                 {paginatedSites.map((site) => {
                   const siteData = site as Models.Site
                   if (!siteData?.$id) return null
@@ -1014,9 +1009,14 @@ export function View() {
                       <Link
                         to="/projects/$projectId/sites/$siteId/"
                         params={{ projectId, siteId: siteData.$id }}
-                        className="block h-full min-w-0 group"
+                        className="block min-w-0 group"
                       >
-                        <div className={RESOURCE_CARD_MEDIA_SHELL_CLASSNAME}>
+                        <div
+                          className={cn(
+                            RESOURCE_CARD_MEDIA_SHELL_CLASSNAME,
+                            'h-auto',
+                          )}
+                        >
                           {/* Preview Image */}
                           <div className="p-1.5 pb-0">
                             <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border/60 bg-muted">
@@ -1066,13 +1066,16 @@ export function View() {
                             </div>
                           </div>
                           {/* Card Content */}
-                          <div className="flex flex-1 flex-col p-4">
+                          <div className="px-4 pt-4 pb-0">
                             <div className="min-w-0">
                               <h3 className="truncate text-[14px] font-medium text-foreground">
                                 {siteData.name || 'Unnamed Site'}
                               </h3>
                               {runtimeImageLabel ? (
-                                <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
+                                <p
+                                  className="mt-0.5 text-[12px] leading-snug text-muted-foreground"
+                                  title={runtimeImageLabel}
+                                >
                                   {runtimeImageLabel}
                                 </p>
                               ) : null}

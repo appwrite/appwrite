@@ -27,6 +27,7 @@ import {
   deleteProject,
   useProject,
   useOrganizations,
+  PROJECT_NAME_MAX_LENGTH,
 } from '@/lib/react-query/hooks'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -358,8 +359,13 @@ export function ProjectSettingsOverview({
     mutationFn: async (name: string) => {
       // Validate name length (1-128 chars)
       const trimmedName = name.trim()
-      if (trimmedName.length < 1 || trimmedName.length > 128) {
-        throw new Error('Name must be between 1 and 128 characters')
+      if (
+        trimmedName.length < 1 ||
+        trimmedName.length > PROJECT_NAME_MAX_LENGTH
+      ) {
+        throw new Error(
+          `Name must be between 1 and ${PROJECT_NAME_MAX_LENGTH} characters`,
+        )
       }
       await updateConsoleProject({ projectId, name: trimmedName })
     },
@@ -766,6 +772,7 @@ export function ProjectSettingsOverview({
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               placeholder="Enter name"
+              maxLength={PROJECT_NAME_MAX_LENGTH}
               className="mt-2 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
             />
           </div>
@@ -777,7 +784,7 @@ export function ProjectSettingsOverview({
                 projectName === project.name ||
                 !projectName.trim() ||
                 projectName.trim().length < 1 ||
-                projectName.trim().length > 128 ||
+                projectName.trim().length > PROJECT_NAME_MAX_LENGTH ||
                 updateNameMutation.isPending
               }
               onClick={() => {
@@ -786,7 +793,7 @@ export function ProjectSettingsOverview({
                   trimmedName &&
                   trimmedName !== project.name &&
                   trimmedName.length >= 1 &&
-                  trimmedName.length <= 128
+                  trimmedName.length <= PROJECT_NAME_MAX_LENGTH
                 ) {
                   updateNameMutation.mutate(trimmedName)
                 }

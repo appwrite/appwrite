@@ -1894,7 +1894,7 @@ export type ServiceListViewMode = 'list' | 'grid'
 
 export const SERVICE_LIST_VIEW_MODE_DEFAULT: ServiceListViewMode = 'grid'
 
-export type ServiceListViewModeScope = 'functions' | 'sites'
+export type ServiceListViewModeScope = 'functions' | 'sites' | 'projects'
 
 /** Full key: `console.functions.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE =
@@ -1903,10 +1903,19 @@ export const USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE =
 /** Full key: `console.sites.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_SITES_LIST_VIEW_MODE = 'console.sites.listViewMode'
 
+/** Full key: `console.organizations.projects.listViewMode` - org projects tab. */
+export const USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE =
+  'console.organizations.projects.listViewMode'
+
 function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
-  return scope === 'functions'
-    ? USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE
-    : USER_PREFS_KEY_SITES_LIST_VIEW_MODE
+  switch (scope) {
+    case 'functions':
+      return USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE
+    case 'sites':
+      return USER_PREFS_KEY_SITES_LIST_VIEW_MODE
+    case 'projects':
+      return USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE
+  }
 }
 
 export function parseServiceListViewMode(

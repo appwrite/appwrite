@@ -6,9 +6,9 @@ import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { getStatusColor, type StatusType } from '@/lib/utils/status-badge'
 
-/** Divider + spacing for compact grid card metadata/footer rows (use with ResourceCard or matching cards). */
+/** Full-bleed footer for p-4 resource cards. Pair with `pb-0` on the padded card body so bottom inset comes from the footer (avoids clipping with overflow-hidden shells). */
 export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME =
-  'mt-2 min-w-0 border-t border-border pt-2'
+  '-mx-4 mt-2 min-w-0 border-t border-border px-4 pt-2.5 pb-4'
 
 /**
  * Base shell for resource grid cards (matches org project list cards).
@@ -118,6 +118,7 @@ export function ResourceCard({
       className={cn(
         RESOURCE_CARD_PADDED_CLASSNAME,
         interactive && RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+        metadata && metadata.length > 0 && 'pb-0',
         className,
       )}
     >

@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-router'
 import {
   Plus,
-  Globe,
   Folder,
   Search,
   ChevronDown,
@@ -35,11 +34,9 @@ import {
   ChevronRight,
   Pin,
   PinOff,
-  PauseCircle,
 } from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
-import { RegionFlag } from '@/components/global/shared/RegionFlag'
 import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,6 +66,7 @@ import {
   useUpdateMembershipRole,
   useRemoveTeamMember,
   syncConsoleAccountAfterMutation,
+  mapProjectToListItem,
 } from '@/lib/react-query/hooks'
 import {
   parsePinnedProjectIds,
@@ -100,6 +98,11 @@ import {
 } from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
+import {
+  ProjectListCardFooter,
+  ProjectListCardMain,
+} from './_components/ProjectListCardContent'
+import { ProjectsListTable } from './_components/ProjectsListTable'
 import { LightningCollectorGame } from './_components/LightningCollectorGame'
 import { InitOrgPromoBanner } from './_components/InitOrgPromoBanner'
 
@@ -199,7 +202,6 @@ import {
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
   RESOURCE_CARD_PADDED_CLASSNAME,
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -207,6 +209,8 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ComingSoonView } from '@/components/global/shared/ComingSoonView'
 import { GripVertical } from 'lucide-react'
+import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
+import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
@@ -325,48 +329,6 @@ function EmptyMemberAvatarSlot({
   )
 }
 
-// Component to display project platforms and API keys
-function ProjectCardFooter({
-  platformsCount,
-  apiKeysCount,
-  paused,
-}: {
-  platformsCount: number
-  apiKeysCount: number
-  paused?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-        'flex flex-wrap items-center gap-2',
-      )}
-    >
-      {paused && (
-        <Badge variant="error" className="gap-1.5 text-[10px] shrink-0">
-          <PauseCircle className="h-3 w-3" />
-          Paused
-        </Badge>
-      )}
-      {/* Platforms Label */}
-      <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
-        <Globe className="h-3 w-3" />
-        {platformsCount > 0
-          ? `${platformsCount} app${platformsCount !== 1 ? 's' : ''}`
-          : 'No apps'}
-      </Badge>
-
-      {/* API Keys Label */}
-      <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
-        <Key className="h-3 w-3" />
-        {apiKeysCount > 0
-          ? `${apiKeysCount} API key${apiKeysCount !== 1 ? 's' : ''}`
-          : 'No API keys'}
-      </Badge>
-    </div>
-  )
-}
-
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
 interface OrgOverviewProps {
@@ -392,8 +354,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
   const { features, isCloud } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
-  const supportsMultiRegion = features.multiRegion
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
+  const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
+    useServiceListViewMode('projects')
 
   const { data: failedInvoicePresence } =
     useOrganizationFailedInvoicePresence(orgId)
@@ -1292,18 +1255,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return pinnedIds
       .map((id) => byId.get(id))
       .filter((p): p is Models.Project => p != null)
-      .map((project) => ({
-        $id: project.$id,
-        name: project.name,
-        teamId: project.teamId,
-        region: project.region || 'unknown',
-        createdAt: project.$createdAt || new Date().toISOString(),
-        icon: project.name.charAt(0).toUpperCase(),
-        archived: project.status === 'archived',
-        paused: project.status === 'paused',
-        platformsCount: 0,
-        apiKeysCount: 0,
-      }))
+      .map(mapProjectToListItem)
   }, [pinnedProjectsData, pinnedIds])
 
   const canPinProjectsResult = canPinProjects(access, features)
@@ -1441,18 +1393,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
 
-    return activeProjectsData.projects.map((project: Models.Project) => ({
-      $id: project.$id,
-      name: project.name,
-      teamId: project.teamId,
-      region: project.region || 'unknown',
-      createdAt: project.$createdAt || new Date().toISOString(),
-      icon: project.name.charAt(0).toUpperCase(),
-      archived: project.status === 'archived',
-      paused: project.status === 'paused',
-      platformsCount: 0,
-      apiKeysCount: 0,
-    }))
+    return activeProjectsData.projects.map((project: Models.Project) =>
+      mapProjectToListItem(project),
+    )
   }, [activeProjectsData])
 
   // Group active projects by team (non-pinned only)
@@ -2365,7 +2308,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <>
                         {/* Toolbar: Search + Filters + Create */}
                         <div className="mb-4 flex items-center gap-3">
-                          <div className="relative w-64">
+                          <div className="relative min-w-0 flex-1 sm:max-w-xs">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               placeholder="Search projects..."
@@ -2375,13 +2318,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             />
                           </div>
 
+                          <ServiceListViewToggle
+                            viewMode={projectsViewMode}
+                            onViewModeChange={setProjectsViewMode}
+                          />
+
+                          <div className="ml-auto flex shrink-0 items-center gap-2">
                           {(() => {
                             if (!canCreateProject(access, features)) {
                               return (
                                 <TooltipProvider delayDuration={0}>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="ml-auto">
+                                      <span>
                                         <Button
                                           variant="brandCta"
                                           className="h-9 gap-2 text-[13px] font-medium opacity-50 cursor-not-allowed"
@@ -2406,7 +2355,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               return (
                                 <Button
                                   variant="brandCta"
-                                  className="ml-auto h-9 gap-2 text-[13px] font-medium"
+                                  className="h-9 gap-2 text-[13px] font-medium"
                                   onClick={() =>
                                     setCreateProjectDialogOpen(true)
                                   }
@@ -2434,7 +2383,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="ml-auto">
+                                    <div>
                                       <Button
                                         variant="brandCta"
                                         className="h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -2460,6 +2409,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               </TooltipProvider>
                             )
                           })()}
+                          </div>
                         </div>
 
                         {/* Loading placeholder - same layout as grid to prevent shift */}
@@ -2478,6 +2428,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
                                     Pinned
                                   </h2>
+                                  {projectsViewMode === 'list' ? (
+                                    <ProjectsListTable
+                                      projects={pinnedProjects}
+                                      showProjectSettingsTab={
+                                        showProjectSettingsTab
+                                      }
+                                      canDeleteProject={canManageProjects}
+                                      onProjectDeleted={handleProjectDeleted}
+                                      showFailedInvoiceOrgAlert={
+                                        showFailedInvoiceOrgAlert
+                                      }
+                                      orgBillingReadonlyForFailedInvoice={
+                                        orgBillingReadonlyForFailedInvoice
+                                      }
+                                    />
+                                  ) : (
                                   <div className={RESOURCE_CARD_GRID_CLASSNAME}>
                                     {pinnedProjects.map((project, index) => {
                                       const isDragActive =
@@ -2511,7 +2477,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             className={cn(
                                               RESOURCE_CARD_PADDED_CLASSNAME,
                                               RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                                              'relative transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out',
+                                              'pb-0',
+                                              'group relative transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out',
                                               !isDragActive && 'border-border',
                                               isDragSource &&
                                                 'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
@@ -2541,63 +2508,44 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 : undefined
                                             }
                                           >
-                                            <div className="flex items-start gap-1">
-                                              <Link
-                                                to="/projects/$projectId"
-                                                params={{
-                                                  projectId: project.$id,
-                                                }}
-                                                className="min-w-0 flex-1"
+                                            <Link
+                                              to="/projects/$projectId"
+                                              params={{
+                                                projectId: project.$id,
+                                              }}
+                                              className={cn(
+                                                'block min-w-0',
+                                                (canReorderPinned ||
+                                                  canPinProjectsResult) &&
+                                                  'pr-10',
+                                              )}
+                                            >
+                                              <ProjectListCardMain
+                                                project={project}
+                                                failedInvoiceWarning={
+                                                  <FailedInvoiceWarningIcon
+                                                    show={
+                                                      showFailedInvoiceOrgAlert
+                                                    }
+                                                    orgBillingReadonly={
+                                                      orgBillingReadonlyForFailedInvoice
+                                                    }
+                                                    className="shrink-0"
+                                                  />
+                                                }
+                                              />
+                                            </Link>
+                                            <ProjectListCardFooter
+                                              project={project}
+                                            />
+                                            {(canReorderPinned ||
+                                              canPinProjectsResult) && (
+                                              <div
+                                                className={cn(
+                                                  'absolute right-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+                                                  isDragActive && 'opacity-100',
+                                                )}
                                               >
-                                                <div className="min-w-0">
-                                                  <div className="flex min-w-0 items-center gap-1.5">
-                                                    <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                      {project.name}
-                                                    </h3>
-                                                    <FailedInvoiceWarningIcon
-                                                      show={
-                                                        showFailedInvoiceOrgAlert
-                                                      }
-                                                      orgBillingReadonly={
-                                                        orgBillingReadonlyForFailedInvoice
-                                                      }
-                                                      className="shrink-0"
-                                                    />
-                                                  </div>
-                                                  {supportsMultiRegion &&
-                                                    project.region && (
-                                                      <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                        <RegionFlag
-                                                          region={
-                                                            project.region
-                                                          }
-                                                          className="shrink-0"
-                                                        />
-                                                        <span className="truncate">
-                                                          {project.region}
-                                                        </span>
-                                                      </div>
-                                                    )}
-                                                </div>
-                                                <ProjectCardFooter
-                                                  platformsCount={
-                                                    project.platformsCount || 0
-                                                  }
-                                                  apiKeysCount={
-                                                    project.apiKeysCount || 0
-                                                  }
-                                                  paused={project.paused}
-                                                />
-                                              </Link>
-                                              {(canReorderPinned ||
-                                                canPinProjectsResult) && (
-                                                <div
-                                                  className={cn(
-                                                    'flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
-                                                    isDragActive &&
-                                                      'opacity-100',
-                                                  )}
-                                                >
                                                   {canPinProjectsResult ? (
                                                     <TooltipProvider
                                                       delayDuration={0}
@@ -2672,14 +2620,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </Tooltip>
                                                     </TooltipProvider>
                                                   ) : null}
-                                                </div>
-                                              )}
-                                            </div>
+                                              </div>
+                                            )}
                                           </div>
                                         </ProjectContextMenu>
                                       )
                                     })}
                                   </div>
+                                  )}
                                 </div>
                               )}
 
@@ -2697,6 +2645,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           All projects
                                         </h2>
                                       )}
+                                    {projectsViewMode === 'list' ? (
+                                      <ProjectsListTable
+                                        projects={projects}
+                                        showProjectSettingsTab={
+                                          showProjectSettingsTab
+                                        }
+                                        canDeleteProject={canManageProjects}
+                                        onProjectDeleted={handleProjectDeleted}
+                                        showFailedInvoiceOrgAlert={
+                                          showFailedInvoiceOrgAlert
+                                        }
+                                        orgBillingReadonlyForFailedInvoice={
+                                          orgBillingReadonlyForFailedInvoice
+                                        }
+                                      />
+                                    ) : (
                                     <div
                                       className={RESOURCE_CARD_GRID_CLASSNAME}
                                     >
@@ -2719,62 +2683,42 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               className={cn(
                                                 RESOURCE_CARD_PADDED_CLASSNAME,
                                                 RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                                                'relative',
+                                                'group relative pb-0',
                                               )}
                                               data-project-card
                                             >
-                                              <div className="flex items-start gap-1">
-                                                <Link
-                                                  to="/projects/$projectId"
-                                                  params={{
-                                                    projectId: project.$id,
-                                                  }}
-                                                  className="min-w-0 flex-1"
-                                                >
-                                                  <div className="min-w-0">
-                                                    <div className="flex min-w-0 items-center gap-1.5">
-                                                      <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                        {project.name}
-                                                      </h3>
-                                                      <FailedInvoiceWarningIcon
-                                                        show={
-                                                          showFailedInvoiceOrgAlert
-                                                        }
-                                                        orgBillingReadonly={
-                                                          orgBillingReadonlyForFailedInvoice
-                                                        }
-                                                        className="shrink-0"
-                                                      />
-                                                    </div>
-                                                    {supportsMultiRegion &&
-                                                      project.region && (
-                                                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                          <RegionFlag
-                                                            region={
-                                                              project.region
-                                                            }
-                                                            className="shrink-0"
-                                                          />
-                                                          <span className="truncate">
-                                                            {project.region}
-                                                          </span>
-                                                        </div>
-                                                      )}
-                                                  </div>
-                                                  <ProjectCardFooter
-                                                    platformsCount={
-                                                      project.platformsCount ||
-                                                      0
-                                                    }
-                                                    apiKeysCount={
-                                                      project.apiKeysCount || 0
-                                                    }
-                                                    paused={project.paused}
-                                                  />
-                                                </Link>
-                                                {canPin &&
-                                                  canPinProjectsResult && (
-                                                    <div className="flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+                                              <Link
+                                                to="/projects/$projectId"
+                                                params={{
+                                                  projectId: project.$id,
+                                                }}
+                                                className={cn(
+                                                  'block min-w-0',
+                                                  canPin &&
+                                                    canPinProjectsResult &&
+                                                    'pr-10',
+                                                )}
+                                              >
+                                                <ProjectListCardMain
+                                                  project={project}
+                                                  failedInvoiceWarning={
+                                                    <FailedInvoiceWarningIcon
+                                                      show={
+                                                        showFailedInvoiceOrgAlert
+                                                      }
+                                                      orgBillingReadonly={
+                                                        orgBillingReadonlyForFailedInvoice
+                                                      }
+                                                      className="shrink-0"
+                                                    />
+                                                  }
+                                                />
+                                              </Link>
+                                              <ProjectListCardFooter
+                                                project={project}
+                                              />
+                                              {canPin && canPinProjectsResult && (
+                                                <div className="absolute right-2 top-2 z-10 flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
                                                       <TooltipProvider
                                                         delayDuration={0}
                                                       >
@@ -2805,14 +2749,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           </TooltipContent>
                                                         </Tooltip>
                                                       </TooltipProvider>
-                                                    </div>
-                                                  )}
-                                              </div>
+                                                </div>
+                                              )}
                                             </div>
                                           </ProjectContextMenu>
                                         )
                                       })}
                                     </div>
+                                    )}
                                   </div>
                                 ),
                               )}

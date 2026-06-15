@@ -26,7 +26,7 @@ import {
   createConsoleProject,
   listConsoleProjects,
 } from '@/lib/appwrite/console-projects'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { registerProjectRegionsFromProjects } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -52,6 +52,42 @@ const PROJECT_LIST_SELECT = [
   '$createdAt',
   'status',
 ] as const
+
+/** Appwrite project name max length (see organization.createProject). */
+export const PROJECT_NAME_MAX_LENGTH = 128
+
+export type ProjectListItem = {
+  $id: string
+  name: string
+  teamId: string
+  region: string
+  createdAt: string
+  icon: string
+  archived?: boolean
+  paused?: boolean
+}
+
+/** Map console project list rows to org overview / selector card shape. */
+export function mapProjectToListItem(project: Models.Project): ProjectListItem {
+  return {
+    $id: project.$id,
+    name: project.name,
+    teamId: project.teamId,
+    region: project.region || 'unknown',
+    createdAt: project.$createdAt || new Date().toISOString(),
+    icon: project.name.charAt(0).toUpperCase(),
+    archived: project.status === 'archived',
+    paused: project.status === 'paused',
+  }
+}
+
+export function getProjectListItemEndpoint(
+  project: Pick<ProjectListItem, 'region'>,
+): string {
+  return getApiEndpoint(
+    project.region !== 'unknown' ? project.region : undefined,
+  )
+}
 
 function getProjectStatusQueries(): string[] {
   return getActiveProfileFeatures().billing
@@ -1448,15 +1484,21 @@ export function useCreateProject(teamId: string | null | undefined) {
       if (!teamId) {
         throw new Error('Team ID is required')
       }
-      if (!name.trim()) {
+      const trimmedName = name.trim()
+      if (!trimmedName) {
         throw new Error('Project name is required')
+      }
+      if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
+        throw new Error(
+          `Project name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`,
+        )
       }
 
       const finalProjectId = projectId || ID.unique()
 
       return await createConsoleProject({
         projectId: finalProjectId,
-        name: name.trim(),
+        name: trimmedName,
         teamId,
         region: region as Region | undefined,
       })

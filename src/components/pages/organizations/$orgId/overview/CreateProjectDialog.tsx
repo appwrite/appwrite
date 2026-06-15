@@ -16,6 +16,7 @@ import {
   useCreateProject,
   useRegions,
   useOrganizationPlan,
+  PROJECT_NAME_MAX_LENGTH,
 } from '@/lib/react-query/hooks'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -154,8 +155,11 @@ export function CreateProjectDialog({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!name.trim()) {
+    const trimmedName = name.trim()
+    if (!trimmedName) {
       newErrors.name = 'Name is required'
+    } else if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
+      newErrors.name = `Name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`
     }
 
     setErrors(newErrors)
@@ -230,6 +234,7 @@ export function CreateProjectDialog({
                   }
                 }}
                 disabled={createProjectMutation.isPending}
+                maxLength={PROJECT_NAME_MAX_LENGTH}
                 className={errors.name ? 'border-destructive' : ''}
                 autoFocus
               />
@@ -416,6 +421,7 @@ export function CreateProjectDialog({
               disabled={
                 createProjectMutation.isPending ||
                 !name.trim() ||
+                name.trim().length > PROJECT_NAME_MAX_LENGTH ||
                 (supportsMultiRegion && !selectedRegion)
               }
             >
