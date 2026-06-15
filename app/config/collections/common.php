@@ -981,7 +981,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('geoConnectionType'),
+                '$id' => ID::custom('connectionType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 255,
@@ -992,7 +992,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('geoUserType'),
+                '$id' => ID::custom('connectionUsageType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 255,
@@ -1003,7 +1003,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('geoOrganization'),
+                '$id' => ID::custom('connectionOrganization'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 255,
