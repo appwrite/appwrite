@@ -26,7 +26,7 @@ import { PostgresQueriesSidebarPanel } from './_components/PostgresQueriesSideba
 import { PostgresSchemaSelector } from './_components/PostgresSchemaSelector'
 import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
-import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
+import { POSTGRES_TOP_HEADER_BAR_CLASS, POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS } from './_components/postgres-chrome'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -189,19 +189,19 @@ export function SchemaTablesSidebar({
         >
           <ToggleGroupItem
             value="schemas"
-            className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
+            className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
           >
             Data
           </ToggleGroupItem>
           <ToggleGroupItem
             value="queries"
-            className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
+            className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
           >
             Queries
           </ToggleGroupItem>
           <ToggleGroupItem
             value="history"
-            className="h-8 flex-1 px-1.5 text-[11px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground sm:text-[12px]"
+            className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
           >
             History
           </ToggleGroupItem>

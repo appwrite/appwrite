@@ -1,18 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
-import { PostgresConnectionDetails } from '@/components/pages/projects/$projectId/databases/postgres/PostgresConnectionDetails'
+import { PostgresConnect } from '@/components/pages/projects/$projectId/databases/postgres/PostgresConnect'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
-import { postgresActiveConnectionsQueryOptions } from '@/lib/react-query/hooks'
+import {
+  postgresDatabaseConnectionsQueryOptions,
+  postgresDatabaseCredentialsQueryOptions,
+} from '@/lib/react-query/hooks'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/databases/postgres/$databaseId/connections',
+  '/_public/projects/$projectId/databases/postgres/$databaseId/connect',
 )({
   head: () => ({
     meta: [
       {
-        title: pageTitle(POSTGRES_DATABASE_TAB_LABELS.connections, 'Databases'),
+        title: pageTitle(POSTGRES_DATABASE_TAB_LABELS.connect, 'Databases'),
       },
     ],
   }),
@@ -24,22 +27,24 @@ export const Route = createFileRoute(
       projectId,
       databaseId,
     )
-    await context.queryClient.ensureQueryData(
-      postgresActiveConnectionsQueryOptions(projectId, databaseId),
-    )
+    await Promise.all([
+      context.queryClient.ensureQueryData(
+        postgresDatabaseConnectionsQueryOptions(projectId, databaseId),
+      ),
+      context.queryClient.ensureQueryData(
+        postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
+      ),
+    ])
     return database
   },
-  component: PostgresConnectionsPage,
+  component: PostgresConnectPage,
 })
 
-function PostgresConnectionsPage() {
+function PostgresConnectPage() {
   const { projectId, databaseId } = Route.useParams()
   return (
-    <PostgresShell databaseId={databaseId} databaseTab="connections">
-      <PostgresConnectionDetails
-        projectId={projectId}
-        databaseId={databaseId}
-      />
+    <PostgresShell databaseId={databaseId} databaseTab="connect">
+      <PostgresConnect projectId={projectId} databaseId={databaseId} />
     </PostgresShell>
   )
 }

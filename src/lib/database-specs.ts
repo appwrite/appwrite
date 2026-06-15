@@ -190,6 +190,15 @@ export function mapDedicatedDatabaseSpecifications(
   return (specifications ?? []).map(dedicatedDatabaseSpecificationToSpecOption)
 }
 
+/** Parse a spec connections label into a numeric max, when applicable. */
+export function parseDatabaseMaxConnections(
+  connections: string | null | undefined,
+): number | null {
+  if (!connections || connections === '—' || connections === 'Shared') return null
+  const parsed = Number.parseInt(connections, 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
 /** First enabled spec slug, if any. */
 export function getDefaultEnabledSpecId(specs: SpecOption[]): string | null {
   return specs.find((spec) => !spec.comingSoon)?.id ?? null

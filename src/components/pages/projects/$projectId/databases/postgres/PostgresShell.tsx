@@ -113,7 +113,11 @@ function PostgresShellLayout({
       ) : null}
       {databaseTab && databaseTab !== 'sql' ? (
         <div className="shrink-0 bg-background">
-          <PostgresDatabaseHeader databaseTab={databaseTab} />
+          <PostgresDatabaseHeader
+            projectId={projectId}
+            databaseId={databaseId}
+            databaseTab={databaseTab}
+          />
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

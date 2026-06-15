@@ -158,7 +158,8 @@ export function DocsFeedback() {
                   Thank you for your feedback
                 </p>
                 <p className="mt-1 text-[13px] text-muted-foreground">
-                  Your response helps us improve the documentation.
+                  Once approved, our agents will automatically apply
+                  improvements based on your feedback.
                 </p>
               </div>
             </motion.div>
@@ -176,7 +177,8 @@ export function DocsFeedback() {
                     Was this page helpful?
                   </p>
                   <p className="mt-1 text-[13px] text-muted-foreground">
-                    Your feedback helps us improve the documentation.
+                    Share what worked or what we should fix. Once approved, our
+                    agents automatically apply suggested updates to the docs.
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -252,7 +254,8 @@ export function DocsFeedback() {
                           className="min-h-[100px] resize-none text-[13px]"
                         />
                         <p className="text-[12px] text-muted-foreground">
-                          {comment.length}/{MAX_COMMENT_LENGTH}
+                          {comment.length}/{MAX_COMMENT_LENGTH}. Approved
+                          feedback is applied automatically by our agents.
                         </p>
                       </div>
 

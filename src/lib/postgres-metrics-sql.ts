@@ -76,6 +76,40 @@ ORDER BY count DESC
 LIMIT 12
 `.trim()
 
+export const POSTGRES_ACTIVE_CONNECTIONS_SQL = `
+SELECT
+  pid,
+  backend_type,
+  (backend_type = 'client backend') AS is_client_backend,
+  usename AS username,
+  datname AS database,
+  NULLIF(application_name, '') AS application_name,
+  COALESCE(host(client_addr), '') AS client_host,
+  client_port,
+  state,
+  wait_event_type,
+  wait_event,
+  backend_start,
+  query_start,
+  state_change,
+  query
+FROM pg_stat_activity
+WHERE pid != pg_backend_pid()
+ORDER BY
+  CASE backend_type
+    WHEN 'client backend' THEN 0
+    ELSE 1
+  END,
+  CASE state
+    WHEN 'active' THEN 0
+    WHEN 'idle in transaction' THEN 1
+    WHEN 'idle in transaction (aborted)' THEN 2
+    ELSE 3
+  END,
+  query_start NULLS LAST,
+  pid ASC
+`.trim()
+
 export const POSTGRES_METRICS_TABLE_ACTIVITY_SQL = `
 SELECT
   schemaname,

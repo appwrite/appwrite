@@ -1,13 +1,58 @@
-import type { Models } from '@appwrite.io/console'
-import { AlertCircle, Users } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
-  usePostgresDatabase,
-  usePostgresDatabaseConnections,
+  AlertCircle,
+  Cable,
+  RefreshCw,
+  StopCircle,
+  Unplug,
+} from 'lucide-react'
+import {
+  useCancelPostgresBackend,
+  useOrganizationScopes,
+  usePostgresActiveConnections,
+  useProject,
+  useTerminatePostgresBackend,
+  useTerminatePostgresIdleInTransaction,
 } from '@/lib/react-query/hooks'
+import { canCreateDatabase } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { postgresNav } from '@/lib/postgres-database-routes'
+import {
+  backendTypeBadgeVariant,
+  connectionStateBadgeVariant,
+  formatPostgresApplicationName,
+  formatPostgresBackendTypeLabel,
+  formatPostgresClientAddress,
+  formatPostgresConnectionDatabase,
+  formatPostgresConnectionStateLabel,
+  formatPostgresConnectionUsername,
+  formatPostgresDurationSince,
+  formatPostgresWaitEvent,
+  isLongRunningConnection,
+  isPostgresClientBackend,
+  matchesPostgresConnectionBackendScope,
+  matchesPostgresConnectionStateFilter,
+  type PostgresActiveConnectionRow,
+  type PostgresConnectionBackendScope,
+  type PostgresConnectionStateFilter,
+} from '@/lib/postgres-metrics'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Table,
   TableBody,
@@ -16,30 +61,172 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { PostgresCopyableField } from './_components/PostgresCopyableField'
-import { PostgresConnectionCredentialFields } from './_components/PostgresConnectionCredentialFields'
+import { usePostgresSidebar } from './_components/PostgresSidebarContext'
+import { PostgresConnectionDrawer } from './_components/PostgresConnectionDrawer'
+import { PostgresConnectionRowActionsMenu } from './_components/PostgresConnectionRowActionsMenu'
+import {
+  POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS,
+  POSTGRES_SEGMENTED_TOGGLE_TRACK_CLASS,
+} from './_components/postgres-chrome'
 
 type PostgresConnectionDetailsProps = {
   projectId: string
   databaseId: string
-  /** Center content vertically when shown in the SQL workbench results panel. */
   centerInPanel?: boolean
 }
 
-function connectionRoleVariant(
-  role: string,
-): 'info' | 'success' | 'warning' {
-  switch (role.toLowerCase()) {
-    case 'readonly':
-      return 'info'
-    case 'readwrite':
-      return 'success'
-    default:
-      return 'warning'
-  }
+type PendingConnectionAction =
+  | { type: 'cancel'; connection: PostgresActiveConnectionRow }
+  | { type: 'terminate'; connection: PostgresActiveConnectionRow }
+  | { type: 'terminate-idle' }
+
+const BACKEND_SCOPES: Array<{
+  id: PostgresConnectionBackendScope
+  label: string
+}> = [
+  { id: 'clients', label: 'Clients' },
+  { id: 'backends', label: 'Backends' },
+]
+
+const STATE_FILTERS: Array<{
+  id: PostgresConnectionStateFilter
+  label: string
+}> = [
+  { id: 'all', label: 'All' },
+  { id: 'active', label: 'Active' },
+  { id: 'idle', label: 'Idle' },
+  { id: 'idle in transaction', label: 'Idle in transaction' },
+  { id: 'long-running', label: 'Long-running' },
+]
+
+function truncateQuery(query: string | null, maxLength = 72): string {
+  if (!query) return '—'
+  const trimmed = query.replace(/\s+/g, ' ').trim()
+  if (trimmed.length <= maxLength) return trimmed
+  return `${trimmed.slice(0, maxLength)}…`
+}
+
+const connectionsTableClassName = 'w-full min-w-[80rem] table-fixed'
+
+function ConnectionsTableColGroup() {
+  return (
+    <colgroup>
+      <col className="w-[5%]" />
+      <col className="w-[8%]" />
+      <col className="w-[8%]" />
+      <col className="w-[9%]" />
+      <col className="w-[9%]" />
+      <col className="w-[10%]" />
+      <col className="w-[8%]" />
+      <col className="w-[7%]" />
+      <col className="w-[9%]" />
+      <col className="" />
+      <col className="w-[10%]" />
+      <col className="w-[100px]" />
+    </colgroup>
+  )
+}
+
+function ConnectionsTableHead() {
+  return (
+    <TableHeader>
+      <TableRow className="border-b border-border hover:bg-transparent">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pl-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:pl-8">
+          PID
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Type
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          User
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Database
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Application
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Client
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          State
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Duration
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Wait
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Query
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
+          Started
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 w-[100px] bg-background px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]" />
+      </TableRow>
+    </TableHeader>
+  )
+}
+
+function ConnectionsSkeletonRows({ rowCount }: { rowCount: number }) {
+  return (
+    <>
+      {Array.from({ length: rowCount }, (_, index) => (
+        <TableRow
+          key={index}
+          className="pointer-events-none hover:bg-transparent"
+          aria-hidden
+        >
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 pl-6 sm:pl-8">
+            <Skeleton className="h-3.5 w-10" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-5 w-14 rounded px-1.5" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-16" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-20" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-16" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-24" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-5 w-14 rounded px-1.5" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-10" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-16" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-full max-w-[12rem]" />
+          </TableCell>
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+            <Skeleton className="h-3.5 w-[6.5rem]" />
+          </TableCell>
+          <TableCell className="min-w-0 px-4 py-3 text-right">
+            <Skeleton className="ml-auto h-8 w-8 rounded-md" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  )
 }
 
 export function PostgresConnectionDetails({
@@ -47,32 +234,190 @@ export function PostgresConnectionDetails({
   databaseId,
   centerInPanel = false,
 }: PostgresConnectionDetailsProps) {
-  const { database } = usePostgresDatabase(projectId, databaseId)
+  const navigate = useNavigate()
+  const { openQueryTab } = usePostgresSidebar()
+  const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { access } = useOrganizationScopes(project?.teamId)
+
+  const [backendScope, setBackendScope] =
+    useState<PostgresConnectionBackendScope>('clients')
+  const [stateFilter, setStateFilter] =
+    useState<PostgresConnectionStateFilter>('all')
+  const [selectedConnection, setSelectedConnection] =
+    useState<PostgresActiveConnectionRow | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [pendingAction, setPendingAction] =
+    useState<PendingConnectionAction | null>(null)
+
   const {
     connections,
-    isLoading: connectionsLoading,
+    isLoading,
+    isFetching,
     error,
-  } = usePostgresDatabaseConnections(projectId, databaseId)
+    refetch,
+  } = usePostgresActiveConnections(projectId, databaseId)
+
+  const cancelMutation = useCancelPostgresBackend(projectId, databaseId)
+  const terminateMutation = useTerminatePostgresBackend(projectId, databaseId)
+  const terminateIdleMutation = useTerminatePostgresIdleInTransaction(
+    projectId,
+    databaseId,
+  )
+
+  const canManageConnections = canCreateDatabase(access, features)
+  const manageDisabledTooltip = canManageConnections
+    ? undefined
+    : "You don't have permission to manage connections."
+
+  const scopedConnections = useMemo(
+    () =>
+      connections.filter((connection) =>
+        matchesPostgresConnectionBackendScope(connection, backendScope),
+      ),
+    [connections, backendScope],
+  )
+
+  const filteredConnections = useMemo(
+    () =>
+      scopedConnections.filter((connection) =>
+        matchesPostgresConnectionStateFilter(connection, stateFilter),
+      ),
+    [scopedConnections, stateFilter],
+  )
+
+  const clientConnectionCount = useMemo(
+    () => connections.filter(isPostgresClientBackend).length,
+    [connections],
+  )
+
+  const backendConnectionCount = useMemo(
+    () => connections.filter((connection) => !isPostgresClientBackend(connection)).length,
+    [connections],
+  )
+
+  const idleInTransactionCount = useMemo(
+    () =>
+      connections.filter(
+        (connection) =>
+          isPostgresClientBackend(connection) &&
+          matchesPostgresConnectionStateFilter(
+            connection,
+            'idle in transaction',
+          ),
+      ).length,
+    [connections],
+  )
+
+  const filterCounts = useMemo(() => {
+    const counts: Record<PostgresConnectionStateFilter, number> = {
+      all: scopedConnections.length,
+      active: 0,
+      idle: 0,
+      'idle in transaction': 0,
+      'long-running': 0,
+    }
+    for (const connection of scopedConnections) {
+      if (connection.state?.toLowerCase() === 'active') counts.active += 1
+      if (connection.state?.toLowerCase() === 'idle') counts.idle += 1
+      if (
+        matchesPostgresConnectionStateFilter(connection, 'idle in transaction')
+      ) {
+        counts['idle in transaction'] += 1
+      }
+      if (isLongRunningConnection(connection)) counts['long-running'] += 1
+    }
+    return counts
+  }, [scopedConnections])
 
   const errorMessage = error ? getErrorMessage(error) : null
+  const actionPending =
+    cancelMutation.isPending ||
+    terminateMutation.isPending ||
+    terminateIdleMutation.isPending
 
-  if (!database) return null
+  const openDrawer = useCallback((connection: PostgresActiveConnectionRow) => {
+    setSelectedConnection(connection)
+    setDrawerOpen(true)
+  }, [])
+
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false)
+    setSelectedConnection(null)
+  }, [])
+
+  const openInSqlEditor = useCallback(
+    (sql: string) => {
+      openQueryTab(sql)
+      navigate({
+        ...postgresNav({ projectId, databaseId }).sql(),
+      })
+    },
+    [databaseId, navigate, openQueryTab, projectId],
+  )
+
+  const runPendingAction = useCallback(async () => {
+    if (!pendingAction) return
+
+    try {
+      if (pendingAction.type === 'cancel') {
+        await cancelMutation.mutateAsync(pendingAction.connection.pid)
+      } else if (pendingAction.type === 'terminate') {
+        await terminateMutation.mutateAsync(pendingAction.connection.pid)
+      } else {
+        await terminateIdleMutation.mutateAsync()
+      }
+      if (
+        pendingAction.type !== 'terminate-idle' &&
+        selectedConnection?.pid === pendingAction.connection.pid
+      ) {
+        closeDrawer()
+      }
+    } finally {
+      setPendingAction(null)
+    }
+  }, [
+    cancelMutation,
+    closeDrawer,
+    pendingAction,
+    selectedConnection?.pid,
+    terminateIdleMutation,
+    terminateMutation,
+  ])
+
+  const bulkTerminateButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="h-9 shrink-0 text-[13px]"
+      disabled={
+        !canManageConnections ||
+        idleInTransactionCount === 0 ||
+        actionPending
+      }
+      onClick={() => setPendingAction({ type: 'terminate-idle' })}
+    >
+      <Unplug className="mr-1.5 h-3.5 w-3.5" />
+      Terminate idle in transaction
+    </Button>
+  )
 
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col overflow-y-auto',
+        'flex min-h-0 flex-1 flex-col overflow-hidden',
         centerInPanel && 'items-center justify-center',
       )}
     >
       <div
         className={cn(
-          'mx-auto w-full max-w-7xl px-4 py-4 sm:px-6',
-          centerInPanel && 'my-auto shrink-0',
+          'flex min-h-0 w-full flex-1 flex-col overflow-hidden',
+          centerInPanel && 'my-auto max-h-full shrink-0',
         )}
       >
-        <div className="space-y-6">
-          {errorMessage ? (
+        {errorMessage ? (
+          <div className="shrink-0 px-4 pb-4 pt-4 sm:px-6">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Failed to load connections</AlertTitle>
@@ -80,159 +425,488 @@ export function PostgresConnectionDetails({
                 {errorMessage}
               </AlertDescription>
             </Alert>
-          ) : null}
-
-          <div className="overflow-hidden rounded-xl border border-border bg-card/50">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Connection endpoint
-              </h3>
-              <p className="mt-2 text-[13px] text-muted-foreground">
-                Host, port, credentials, and DSN for connecting external clients,
-                ORMs, and CLI tools.
-              </p>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4 @container">
-              <div className="flex flex-col gap-6 @[600px]:flex-row">
-                <div className="shrink-0 @[600px]:w-64">
-                  <p className="text-[13px] text-muted-foreground">
-                    Configure clients field by field, or copy the DSN for tools
-                    that accept a single connection URI.
-                  </p>
-                  {database.engine ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Badge variant="info" className="shrink-0 text-[10px]">
-                        {database.engine}
-                      </Badge>
-                      {database.version ? (
-                        <Badge variant="info" className="shrink-0 text-[10px]">
-                          v{database.version}
-                        </Badge>
-                      ) : null}
-                      {database.replicas > 0 ? (
-                        <Badge variant="info" className="shrink-0 text-[10px]">
-                          {database.replicas} replica
-                          {database.replicas === 1 ? '' : 's'}
-                        </Badge>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
-                      <PostgresCopyableField
-                        label="Host"
-                        value={database.hostname}
-                      />
-                      <PostgresCopyableField
-                        label="Port"
-                        value={
-                          database.connectionPort
-                            ? String(database.connectionPort)
-                            : ''
-                        }
-                      />
-                    </div>
-                    <PostgresConnectionCredentialFields
-                      projectId={projectId}
-                      databaseId={databaseId}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
+        ) : null}
 
-          <div className="overflow-hidden rounded-xl border border-border bg-card/50">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Database users
-              </h3>
-              <p className="mt-2 text-[13px] text-muted-foreground">
-                User accounts provisioned for this database instance.
-              </p>
+        <div className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className={POSTGRES_SEGMENTED_TOGGLE_TRACK_CLASS}>
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  size="sm"
+                  value={backendScope}
+                  onValueChange={(value) => {
+                    if (value === 'clients' || value === 'backends') {
+                      setBackendScope(value)
+                      setStateFilter('all')
+                    }
+                  }}
+                  className="shrink-0"
+                  aria-label="Connection scope"
+                >
+                  {BACKEND_SCOPES.map((scope) => (
+                    <ToggleGroupItem
+                      key={scope.id}
+                      value={scope.id}
+                      className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
+                    >
+                      {scope.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+              {backendScope === 'clients' ? (
+                <>
+                  <div
+                    className="hidden h-4 w-px shrink-0 bg-border sm:block"
+                    aria-hidden
+                  />
+                  {STATE_FILTERS.map((filter) => {
+                    const count = filterCounts[filter.id]
+                    const active = stateFilter === filter.id
+                    return (
+                      <Button
+                        key={filter.id}
+                        type="button"
+                        variant={active ? 'secondary' : 'outline'}
+                        size="sm"
+                        className="h-8 text-[12px]"
+                        onClick={() => setStateFilter(filter.id)}
+                      >
+                        {filter.label}
+                        <span className="ml-1.5 text-muted-foreground">
+                          {count}
+                        </span>
+                      </Button>
+                    )
+                  })}
+                </>
+              ) : null}
             </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              {connections.length === 0 && !connectionsLoading ? (
-                <EmptyState
-                  icon={Users}
-                  title="No database users yet"
-                  description="User connections will appear here once they are created."
-                  isEmpty
-                  variant="card"
-                  iconSize="md"
-                />
+            <div className="flex flex-wrap items-center gap-2">
+              {!canManageConnections ? (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">{bulkTerminateButton}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="text-[12px]">{manageDisabledTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b border-border hover:bg-transparent">
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Username
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Database
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Role
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Created
-                      </TableHead>
-                      <TableHead className="w-[100px] px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {connections.map(
-                      (connection: Models.DedicatedDatabaseConnection) => (
-                        <TableRow key={connection.$id}>
-                          <TableCell className="px-4 py-3">
-                            <span className="text-[13px] font-medium">
-                              {connection.username}
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <span className="font-mono text-[13px] text-muted-foreground">
-                              {connection.database}
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Badge
-                              variant={connectionRoleVariant(connection.role)}
-                              className="shrink-0 text-[10px] capitalize"
-                            >
-                              {connection.role || 'Unknown'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {connection.$createdAt ? (
-                              <DateTooltip date={connection.$createdAt} />
-                            ) : (
-                              <span className="text-[13px] text-muted-foreground">
-                                Unknown
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-right">
-                            <CopyableId
-                              id={connection.$id}
-                              variant="inline"
-                              size="xs"
-                              maxWidth={72}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ),
-                    )}
-                  </TableBody>
-                </Table>
+                bulkTerminateButton
               )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 text-[13px]"
+                disabled={isFetching}
+                onClick={() => void refetch()}
+              >
+                <RefreshCw
+                  className={cn(
+                    'mr-1.5 h-3.5 w-3.5',
+                    isFetching && 'animate-spin',
+                  )}
+                />
+                Refresh
+              </Button>
             </div>
           </div>
         </div>
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {isLoading && connections.length === 0 ? (
+            <div
+              className="relative min-h-0 min-w-0 flex-1 overflow-auto"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+              aria-label="Loading connections"
+            >
+              <Table withScrollContainer={false} className={connectionsTableClassName}>
+                <ConnectionsTableColGroup />
+                <ConnectionsTableHead />
+                <TableBody>
+                  <ConnectionsSkeletonRows rowCount={8} />
+                </TableBody>
+              </Table>
+            </div>
+          ) : filteredConnections.length > 0 ? (
+            <>
+              <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+                {isFetching ? (
+                  <div
+                    className="pointer-events-none absolute right-4 top-2.5 z-20 sm:right-6"
+                    aria-hidden
+                  >
+                    <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : null}
+                <Table withScrollContainer={false} className={connectionsTableClassName}>
+                  <ConnectionsTableColGroup />
+                  <ConnectionsTableHead />
+                  <TableBody>
+                    {filteredConnections.map((connection) => {
+                      const longRunning = isLongRunningConnection(connection)
+                      const clientAddress = formatPostgresClientAddress(
+                        connection.clientHost,
+                        connection.clientPort,
+                      )
+                      const startedAt =
+                        connection.queryStart ?? connection.backendStart
+                      const usernameLabel = formatPostgresConnectionUsername(
+                        connection.username,
+                        connection.backendType,
+                      )
+                      const databaseLabel = formatPostgresConnectionDatabase(
+                        connection.database,
+                      )
+                      const applicationLabel = formatPostgresApplicationName(
+                        connection.applicationName,
+                      )
+                      const stateLabel = formatPostgresConnectionStateLabel(
+                        connection.state,
+                        connection.backendType,
+                      )
+                      const typeLabel = formatPostgresBackendTypeLabel(
+                        connection.backendType,
+                      )
+
+                      return (
+                        <TableRow
+                          key={connection.pid}
+                          role="button"
+                          tabIndex={0}
+                          data-state={
+                            drawerOpen &&
+                            selectedConnection?.pid === connection.pid
+                              ? 'selected'
+                              : undefined
+                          }
+                          aria-label={`Open connection details for PID ${connection.pid}`}
+                          className={cn(
+                            'cursor-pointer',
+                            longRunning && 'bg-amber-500/5 hover:bg-amber-500/10',
+                            drawerOpen &&
+                              selectedConnection?.pid === connection.pid &&
+                              'bg-muted/60 hover:bg-muted/60',
+                          )}
+                          onClick={() => openDrawer(connection)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openDrawer(connection)
+                            }
+                          }}
+                        >
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 pl-6 sm:pl-8">
+                            <span className="font-mono text-[13px] text-foreground">
+                              {connection.pid}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <Badge
+                              variant={backendTypeBadgeVariant(
+                                connection.backendType,
+                              )}
+                              className="shrink-0 text-[10px]"
+                            >
+                              {typeLabel}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span
+                              className={cn(
+                                'block truncate text-[13px]',
+                                usernameLabel === 'System'
+                                  ? 'text-muted-foreground'
+                                  : 'font-medium text-foreground',
+                              )}
+                              title={usernameLabel}
+                            >
+                              {usernameLabel}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span
+                              className={cn(
+                                'block truncate font-mono text-[13px]',
+                                databaseLabel === '—'
+                                  ? 'text-muted-foreground'
+                                  : 'text-foreground',
+                              )}
+                              title={databaseLabel}
+                            >
+                              {databaseLabel}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span
+                              className="block truncate text-[13px] text-muted-foreground"
+                              title={applicationLabel}
+                            >
+                              {applicationLabel}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span
+                              className="block truncate font-mono text-[13px] text-muted-foreground"
+                              title={clientAddress}
+                            >
+                              {clientAddress}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              {stateLabel === '—' ? (
+                                <span className="text-[13px] text-muted-foreground">
+                                  —
+                                </span>
+                              ) : (
+                                <Badge
+                                  variant={connectionStateBadgeVariant(
+                                    connection.state,
+                                    connection.backendType,
+                                  )}
+                                  className="shrink-0 text-[10px]"
+                                >
+                                  {stateLabel}
+                                </Badge>
+                              )}
+                              {longRunning ? (
+                                <Badge
+                                  variant="warning"
+                                  className="shrink-0 text-[10px]"
+                                >
+                                  Long-running
+                                </Badge>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span className="text-[13px] text-muted-foreground">
+                              {formatPostgresDurationSince(
+                                connection.queryStart ??
+                                  connection.backendStart,
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span
+                              className="block truncate text-[13px] text-muted-foreground"
+                              title={formatPostgresWaitEvent(
+                                connection.waitEventType,
+                                connection.waitEvent,
+                              )}
+                            >
+                              {formatPostgresWaitEvent(
+                                connection.waitEventType,
+                                connection.waitEvent,
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            <span
+                              className="block truncate font-mono text-[12px] text-muted-foreground"
+                              title={connection.query ?? undefined}
+                            >
+                              {truncateQuery(connection.query)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                            {startedAt ? (
+                              <DateTooltip
+                                date={startedAt}
+                                className="text-[12px] text-muted-foreground"
+                              />
+                            ) : (
+                              <span className="text-[12px] text-muted-foreground">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell
+                            className="px-4 py-3 text-right"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <div className="flex justify-end">
+                              <PostgresConnectionRowActionsMenu
+                                connection={connection}
+                                canManageConnections={canManageConnections}
+                                onOpenDetails={() => openDrawer(connection)}
+                                onOpenInSqlEditor={openInSqlEditor}
+                                onCancelQuery={() =>
+                                  setPendingAction({
+                                    type: 'cancel',
+                                    connection,
+                                  })
+                                }
+                                onTerminateConnection={() =>
+                                  setPendingAction({
+                                    type: 'terminate',
+                                    connection,
+                                  })
+                                }
+                              />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
+                <div className="flex h-full items-center justify-between gap-3 py-3">
+                  <p className="text-[13px] text-muted-foreground">
+                    {filteredConnections.length === scopedConnections.length
+                      ? `${scopedConnections.length} connection${scopedConnections.length === 1 ? '' : 's'}`
+                      : `${filteredConnections.length} of ${scopedConnections.length} connections`}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground">
+                    Refreshes every 30 seconds
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              icon={Cable}
+              title={
+                backendScope === 'clients' &&
+                clientConnectionCount === 0 &&
+                backendConnectionCount > 0
+                  ? 'No client connections'
+                  : backendScope === 'backends' &&
+                      backendConnectionCount === 0 &&
+                      clientConnectionCount > 0
+                    ? 'No system backends'
+                    : stateFilter === 'all' && backendScope === 'clients'
+                      ? 'No active connections'
+                      : undefined
+              }
+              description={
+                backendScope === 'clients' &&
+                clientConnectionCount === 0 &&
+                backendConnectionCount > 0
+                  ? 'Only PostgreSQL system backends are running. Switch to Backends to inspect them.'
+                  : backendScope === 'backends' &&
+                      backendConnectionCount === 0 &&
+                      clientConnectionCount > 0
+                    ? 'Switch to Clients to inspect application sessions.'
+                    : stateFilter === 'all' && backendScope === 'clients'
+                      ? 'Client sessions will appear here when applications connect to this instance.'
+                      : undefined
+              }
+              isEmpty={
+                backendScope === 'clients'
+                  ? clientConnectionCount === 0
+                  : backendConnectionCount === 0
+              }
+              hasFilters={
+                (backendScope === 'clients' && stateFilter !== 'all') ||
+                (backendScope === 'clients' &&
+                  clientConnectionCount > 0 &&
+                  filteredConnections.length === 0)
+              }
+              variant="centered"
+            />
+          )}
+        </div>
       </div>
+
+      <PostgresConnectionDrawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setDrawerOpen(true)
+            return
+          }
+          closeDrawer()
+        }}
+        connection={selectedConnection}
+        canManageConnections={canManageConnections}
+        manageDisabledTooltip={manageDisabledTooltip}
+        onCancelQuery={(connection) =>
+          setPendingAction({ type: 'cancel', connection })
+        }
+        onTerminateConnection={(connection) =>
+          setPendingAction({ type: 'terminate', connection })
+        }
+        isCancelPending={cancelMutation.isPending}
+        isTerminatePending={
+          terminateMutation.isPending || terminateIdleMutation.isPending
+        }
+      />
+
+      <AlertDialog
+        open={pendingAction != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingAction(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction?.type === 'cancel'
+                ? 'Cancel query?'
+                : pendingAction?.type === 'terminate'
+                  ? 'Terminate connection?'
+                  : 'Terminate idle in transaction connections?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px]">
+              {pendingAction?.type === 'cancel' ? (
+                <>
+                  Cancel the active query for PID{' '}
+                  <span className="font-mono">
+                    {pendingAction.connection.pid}
+                  </span>
+                  . The client session will stay connected.
+                </>
+              ) : pendingAction?.type === 'terminate' ? (
+                <>
+                  Terminate the client session for PID{' '}
+                  <span className="font-mono">
+                    {pendingAction.connection.pid}
+                  </span>
+                  . The client will need to reconnect.
+                </>
+              ) : (
+                <>
+                  Terminate {idleInTransactionCount} connection
+                  {idleInTransactionCount === 1 ? '' : 's'} currently idle in
+                  transaction. Open transactions will be rolled back.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionPending}>Cancel</AlertDialogCancel>
+            <Button
+              disabled={actionPending}
+              onClick={() => void runPendingAction()}
+            >
+              {pendingAction?.type === 'cancel' ? (
+                <>
+                  <StopCircle className="mr-1.5 h-3.5 w-3.5" />
+                  Cancel query
+                </>
+              ) : (
+                <>
+                  <Unplug className="mr-1.5 h-3.5 w-3.5" />
+                  Terminate
+                </>
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

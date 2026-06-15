@@ -5,6 +5,7 @@ import {
   BarChart3,
   Cable,
   Network,
+  Plug,
   SearchCode,
   Settings,
 } from 'lucide-react'
@@ -89,6 +90,13 @@ export function PostgresDatabaseNav({
       >
         <Cable className="h-3.5 w-3.5 shrink-0" />
         <span>Connections</span>
+      </Link>
+      <Link
+        {...nav.connect()}
+        className={navLinkClass(activeTab === 'connect')}
+      >
+        <Plug className="h-3.5 w-3.5 shrink-0" />
+        <span>Connect</span>
       </Link>
       {showSettings ? (
         <Link
