@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
   Accordion,
   AccordionContent,
@@ -16,6 +17,16 @@ import {
   isBlogPageExternal,
   isMarketingPageExternal,
 } from '@/lib/marketing/urls'
+import {
+  FOOTER_CONTAINER,
+  footerCompactPaddingX,
+  footerShowLegalDot,
+  footerShowLegalLinks,
+  footerShowSeparatorLg,
+  footerShowSeparatorMd,
+  footerShowSocialIcons,
+  footerShowTrustBadge,
+} from '@/components/global/layout/footer-container'
 
 type FooterLink = {
   label: string
@@ -297,15 +308,19 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
 
   const compactFooter = (
     <div className="flex min-h-[54px] items-center">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 overflow-visible px-4 sm:px-6">
-        {/* Left section: Logo, Resource Links, and Social Icons */}
-        <div className="flex min-w-0 flex-shrink items-center gap-2">
-          {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}
+      <div
+        className={cn(
+          'mx-auto flex w-full max-w-7xl items-center justify-between gap-2',
+          footerCompactPaddingX,
+        )}
+      >
+        {/* Left: logo, resource links, social icons (social hidden on narrow containers) */}
+        <div className="flex min-w-0 shrink items-center gap-2">
           <div
             className={
               isLegacyTheme
-                ? 'flex flex-shrink-0 items-center py-1.5 pe-2.5 ps-0'
-                : 'flex flex-shrink-0 items-center py-1.5 pe-2.5 ps-0 text-foreground opacity-60'
+                ? 'flex shrink-0 items-center py-1.5 pe-2.5 ps-0'
+                : 'flex shrink-0 items-center py-1.5 pe-2.5 ps-0 text-foreground opacity-60'
             }
           >
             {isLegacyTheme ? (
@@ -315,11 +330,9 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             )}
           </div>
 
-          {/* Separator */}
-          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[520px]:block" />
+          <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorMd)} />
 
-          {/* Resource Links */}
-          <nav className="flex flex-shrink-0 items-center">
+          <nav className="flex shrink-0 items-center">
             {resourceLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
@@ -332,17 +345,15 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                   {link.label}
                 </a>
                 {index < resourceLinks.length - 1 && (
-                  <span className="hidden text-border @[520px]:inline">·</span>
+                  <span className={cn('text-border', footerShowLegalDot)}>·</span>
                 )}
               </div>
             ))}
           </nav>
 
-          {/* Separator */}
-          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
+          <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorLg)} />
 
-          {/* Social Icons */}
-          <div className="hidden flex-shrink-0 items-center gap-1 @[680px]:flex">
+          <div className={cn('shrink-0 items-center gap-1', footerShowSocialIcons)}>
             {socialLinks.map((social) => (
               <a
                 key={social.label}
@@ -361,15 +372,17 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
           </div>
         </div>
 
-        {/* Right section: Trust badge, Legal Links, and Copyright */}
-        <div className="flex flex-shrink-0 items-center gap-2">
-          {/* Trust / Compliance badge */}
+        {/* Right: SOC 2 (hidden on narrow containers), legal links, copyright */}
+        <div className="flex shrink-0 items-center gap-2">
           <a
             href={getDocsPageUrl('/docs/advanced/security', features.marketing)}
             {...(isMarketingPageExternal(features.marketing)
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
-            className="link-unstyled hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[920px]:flex"
+            className={cn(
+              'link-unstyled rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+              footerShowTrustBadge,
+            )}
           >
             <ShieldCheck
               className="h-3.5 w-3.5 shrink-0 opacity-70"
@@ -380,11 +393,9 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             </span>
           </a>
 
-          {/* Separator */}
-          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[920px]:block" />
+          <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorLg)} />
 
-          {/* Legal Links */}
-          <nav className="hidden items-center @[520px]:flex">
+          <nav className={cn('items-center', footerShowLegalLinks)}>
             {legalLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
@@ -403,10 +414,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
             ))}
           </nav>
 
-          {/* Separator */}
-          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[520px]:block" />
+          <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorMd)} />
 
-          {/* Copyright */}
           <span className="whitespace-nowrap py-1.5 pe-0 ps-2.5 text-[13px] text-muted-foreground">
             © {currentYear} Appwrite
           </span>
@@ -417,14 +426,24 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
 
   if (!expanded) {
     return (
-      <footer className="@container shrink-0 border-t border-border">
+      <footer
+        className={cn(
+          FOOTER_CONTAINER,
+          'w-full shrink-0 border-t border-border',
+        )}
+      >
         {compactFooter}
       </footer>
     )
   }
 
   return (
-    <footer className="@container shrink-0 border-t border-border bg-background">
+    <footer
+      className={cn(
+        FOOTER_CONTAINER,
+        'w-full shrink-0 border-t border-border bg-background',
+      )}
+    >
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
         <Accordion type="multiple" className="md:hidden">
           {expandedFooterGroups.map((group) => (

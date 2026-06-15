@@ -169,9 +169,8 @@ export function ConsoleLayout({
         />
       )}
 
-      {/* Sidebar + Content below header - overflow-x-visible so sidebar collapse toggle isn't clipped */}
+      {/* Sidebar + content below header */}
       <div className="@container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
-        {/* Sidebar - only render if sidebar config provided */}
         {sidebar && (
           <ConsoleSidebar
             projectId={sidebar.projectId}
@@ -183,12 +182,11 @@ export function ConsoleLayout({
 
         {leftSidebar?.content}
 
-        {/* Main content area */}
         <main
           id="main-content"
           tabIndex={-1}
           className={cn(
-            'flex-1 min-w-0 bg-background flex flex-col min-h-0 outline-none',
+            'flex min-h-0 min-w-0 flex-1 flex-col bg-background outline-none',
             usesSplitMain ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto',
           )}
         >
