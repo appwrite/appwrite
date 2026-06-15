@@ -7,6 +7,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { fetchMFAFactors } from '@/lib/react-query/hooks'
+import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { pageTitle } from '@/lib/utils/page-title'
 
 function isValidRelativeRedirect(url: string): boolean {
@@ -47,10 +48,7 @@ function MFAPage() {
       try {
         await sdk.forConsole.account.get()
 
-        const target =
-          search.redirect && isValidRelativeRedirect(search.redirect)
-            ? search.redirect
-            : '/'
+        const target = resolvePostAuthRedirect(search.redirect) ?? '/'
         navigate({ to: target, replace: true })
         return
       } catch (error: unknown) {

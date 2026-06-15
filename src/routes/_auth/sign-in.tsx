@@ -16,7 +16,7 @@ import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
+import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
@@ -55,10 +55,10 @@ function SignInPage() {
     setIsGitHubLoading(true)
     try {
       // Build success and failure URLs
-      const successUrl =
-        search.redirect && isValidRelativeRedirect(search.redirect)
-          ? `${window.location.origin}${search.redirect}`
-          : `${window.location.origin}/`
+      const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
+      const successUrl = resolvedRedirect
+        ? `${window.location.origin}${resolvedRedirect}`
+        : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-in${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       // Store GitHub as last login method before redirecting
@@ -118,8 +118,9 @@ function SignInPage() {
           search.redirect,
         )
         await router.invalidate()
-        if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-          navigate({ to: search.redirect })
+        const targetRedirect = resolvePostAuthRedirect(search.redirect)
+        if (targetRedirect) {
+          navigate({ to: targetRedirect })
         } else {
           const orgId = await resolvePostAuthOrganizationId(account)
           navigate({
@@ -145,10 +146,7 @@ function SignInPage() {
         (error instanceof AppwriteException &&
           error.type === 'user_more_factors_required')
       ) {
-        const redirectUrl =
-          search.redirect && isValidRelativeRedirect(search.redirect)
-            ? search.redirect
-            : undefined
+        const redirectUrl = resolvePostAuthRedirect(search.redirect)
         navigate({
           to: '/mfa',
           search: redirectUrl ? { redirect: redirectUrl } : undefined,

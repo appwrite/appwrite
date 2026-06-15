@@ -36,6 +36,7 @@ import {
   useAuth,
   isOptionalAuthPage,
 } from '@/components/global/auth/RequireAuth'
+import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
@@ -360,7 +361,7 @@ export function ConsoleHeader({
   const optionalAuthPending = isOptionalAuth && !isAuthFetched
   const showGuestHeader =
     isOptionalAuth && isAuthFetched && !isAuthenticated
-  const authRedirect = location.pathname
+  const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
   const showChangelogBadge = useChangelogNavBadge()
   const docsHref = getMarketingPageUrl('/docs', features.marketing)
@@ -980,7 +981,10 @@ export function ConsoleHeader({
                 size="sm"
                 className="h-9 text-[13px]"
               >
-                <Link to="/sign-in" search={{ redirect: authRedirect }}>
+                <Link
+                  to="/sign-in"
+                  search={authRedirect ? { redirect: authRedirect } : undefined}
+                >
                   Sign in
                 </Link>
               </Button>
@@ -990,7 +994,10 @@ export function ConsoleHeader({
                 variant="brandCta"
                 className="h-9 text-[13px]"
               >
-                <Link to="/sign-up" search={{ redirect: authRedirect }}>
+                <Link
+                  to="/sign-up"
+                  search={authRedirect ? { redirect: authRedirect } : undefined}
+                >
                   Sign up
                 </Link>
               </Button>

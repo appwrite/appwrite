@@ -301,6 +301,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const bootstrapLastWrittenRef = useRef<string | null>(null)
   /** Bumped when bootstrap finishes or resets so throttled line timers are ignored. */
   const bootstrapEpochRef = useRef(0)
+  /** Incremented on each bootstrap attempt so stale async work is ignored after retry. */
+  const bootstrapRunIdRef = useRef(0)
   const authInitializedRef = useRef(false)
   const authInitInFlightRef = useRef<Promise<void> | null>(null)
   const heightBeforeFullscreenRef = useRef<number | null>(null)
@@ -424,8 +426,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         api.markWelcomeComplete?.()
 
         const isActiveRoot = sessionId === activeSessionIdRef.current
-        if (isActiveRoot && shouldShowPrompt && openRef.current) {
-          showInputPromptIfIdle(sessionId, true)
+        if (isActiveRoot && openRef.current) {
+          if (shouldShowPrompt || statusRef.current === 'bootstrapping') {
+            showInputPromptIfIdle(sessionId, true)
+          }
         } else if (!isActiveRoot) {
           showInputPromptIfIdle(sessionId)
         }
@@ -759,6 +763,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         setStatus('bootstrapping')
       }
 
+      const runId = ++bootstrapRunIdRef.current
+
       const promise = bootstrapCliRuntime(
         {
           projectId,
@@ -772,6 +778,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
         },
       )
         .then(async (container) => {
+          if (runId !== bootstrapRunIdRef.current) {
+            return container
+          }
+
           containerRef.current = container
           projectBootstrap.container = container
           projectBootstrap.promise = null
@@ -798,6 +808,10 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
           return container
         })
         .catch((error: unknown) => {
+          if (runId !== bootstrapRunIdRef.current) {
+            throw error
+          }
+
           projectBootstrap.container = null
           projectBootstrap.promise = null
           const message =
@@ -810,6 +824,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
           throw error
         })
         .finally(() => {
+          if (runId !== bootstrapRunIdRef.current) return
           bootstrapPromiseRef.current = null
           bootstrapSilentRef.current = false
         })
@@ -856,6 +871,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   }, [open, account, initializeCliAuth, isAccountLoading])
 
   const retryBootstrap = useCallback(() => {
+    bootstrapRunIdRef.current += 1
     containerRef.current = null
     bootstrapPromiseRef.current = null
     bootstrapReadyAnnouncedRef.current = false

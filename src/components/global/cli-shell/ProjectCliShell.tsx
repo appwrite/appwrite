@@ -349,7 +349,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
       >
         <CliShellHeaderTitle
           showBootstrapSpinner={isBootstrapping}
-          showRetry={status === 'error' || !!bootstrapError}
+          showRetry={status === 'error' || status === 'bootstrapping' || !!bootstrapError}
           onRetry={retryBootstrap}
         />
 

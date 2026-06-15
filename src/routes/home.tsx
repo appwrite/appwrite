@@ -218,7 +218,23 @@ const securityItems: {
 export const Route = createFileRoute('/home')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({ meta: [{ title: pageTitle('Home') }] }),
+  head: () => ({
+    meta: [{ title: pageTitle('Home') }],
+    links: [
+      {
+        rel: 'preload',
+        as: 'image',
+        href: '/images/heroes/console-app-light.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        rel: 'preload',
+        as: 'image',
+        href: '/images/heroes/console-app-dark.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  }),
   loader: async ({ context }) => {
     await marketingPageLoader(context.queryClient)
   },
@@ -293,8 +309,8 @@ function HomePage() {
 
           <div className="relative z-[1] mt-8 w-full sm:mt-10">
             <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
-              <div className="relative isolate z-[1] max-h-[400px] w-full overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10 sm:max-h-[500px] lg:max-h-[560px]">
-                <div className="relative z-10 flex h-10 items-center gap-2 text-left">
+              <div className="relative isolate z-[1] flex h-[400px] w-full flex-col overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10 sm:h-[500px] lg:h-[560px]">
+                <div className="relative z-10 flex h-10 shrink-0 items-center gap-2 text-left">
                   <div className="ml-2 flex items-center gap-1.5" aria-hidden>
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
@@ -308,16 +324,26 @@ function HomePage() {
                     <span className="truncate">First Appwrite project</span>
                   </div>
                 </div>
-                <img
-                  src="/images/heroes/console-app-light.png"
-                  alt="Appwrite console overview with usage charts, apps, and API keys"
-                  className="relative z-10 block w-full rounded-t-lg opacity-95 dark:hidden"
-                />
-                <img
-                  src="/images/heroes/console-app-dark.png"
-                  alt="Appwrite console overview with usage charts, apps, and API keys"
-                  className="relative z-10 hidden w-full rounded-t-lg opacity-95 dark:block"
-                />
+                <div className="relative z-10 min-h-0 flex-1 overflow-hidden">
+                  <img
+                    src="/images/heroes/console-app-light.png"
+                    alt="Appwrite console overview with usage charts, apps, and API keys"
+                    width={3200}
+                    height={2400}
+                    fetchPriority="high"
+                    decoding="async"
+                    className="block h-full w-full rounded-t-lg object-cover object-top opacity-95 dark:hidden"
+                  />
+                  <img
+                    src="/images/heroes/console-app-dark.png"
+                    alt="Appwrite console overview with usage charts, apps, and API keys"
+                    width={3200}
+                    height={2400}
+                    fetchPriority="high"
+                    decoding="async"
+                    className="hidden h-full w-full rounded-t-lg object-cover object-top opacity-95 dark:block"
+                  />
+                </div>
               </div>
             </div>
           </div>

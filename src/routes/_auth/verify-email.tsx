@@ -12,7 +12,7 @@ import {
   resolvePostAuthOrganizationId,
 } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
+import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 
 function isValidRelativeRedirect(url: string): boolean {
@@ -78,8 +78,9 @@ function VerifyEmailPage() {
         )
         const orgId = await resolvePostAuthOrganizationId(account)
         await router.invalidate()
-        if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-          navigate({ to: search.redirect })
+        const targetRedirect = resolvePostAuthRedirect(search.redirect)
+        if (targetRedirect) {
+          navigate({ to: targetRedirect })
         } else {
           navigate({
             to: '/organizations/$orgId',
@@ -88,11 +89,7 @@ function VerifyEmailPage() {
           })
         }
       } catch {
-        const target =
-          search.redirect && isValidRelativeRedirect(search.redirect)
-            ? search.redirect
-            : '/'
-        navigate({ to: target })
+        navigate({ to: '/' })
       }
     },
     onError: (error: unknown) => {

@@ -1,14 +1,50 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import {
   parseOrganizationIdFromPath,
   prefetchOrganizationOverviewData,
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
-function isValidRelativeRedirect(url: string): boolean {
+const AUTH_PAGE_PATHS = [
+  '/sign-in',
+  '/sign-up',
+  '/recovery',
+  '/reset',
+  '/join',
+  '/mfa',
+  '/verify-email',
+] as const
+
+export function isValidRelativeRedirect(url: string): boolean {
   return url.startsWith('/') && !url.includes('://')
+}
+
+function normalizeRedirectPathname(redirect: string): string {
+  const pathname = redirect.split('?')[0]?.split('#')[0] ?? redirect
+  return pathname.replace(/\/+$/, '') || '/'
+}
+
+function isAuthPagePath(pathname: string): boolean {
+  const normalized = normalizeRedirectPathname(pathname)
+  return (AUTH_PAGE_PATHS as readonly string[]).includes(normalized)
+}
+
+/**
+ * Returns a post-auth redirect only for console destinations. Marketing pages,
+ * auth pages, and `/` fall back to the default org console route.
+ */
+export function resolvePostAuthRedirect(redirect?: string): string | undefined {
+  if (!redirect || !isValidRelativeRedirect(redirect)) return undefined
+
+  const pathname = normalizeRedirectPathname(redirect)
+  if (pathname === '/') return undefined
+  if (isAuthPagePath(pathname)) return undefined
+  if (isMarketingPagePath(pathname)) return undefined
+
+  return redirect
 }
 
 async function prefetchOrganizationOverviewSafe(
@@ -32,8 +68,9 @@ export async function prefetchPostAuthDestination(
   account: Models.User,
   redirect?: string,
 ): Promise<void> {
-  if (redirect && isValidRelativeRedirect(redirect)) {
-    const orgIdFromPath = parseOrganizationIdFromPath(redirect)
+  const resolvedRedirect = resolvePostAuthRedirect(redirect)
+  if (resolvedRedirect) {
+    const orgIdFromPath = parseOrganizationIdFromPath(resolvedRedirect)
     if (orgIdFromPath) {
       await prefetchOrganizationOverviewSafe(queryClient, orgIdFromPath)
       return

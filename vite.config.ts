@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
@@ -16,6 +17,8 @@ import {
 } from './src/lib/marketing/prerender-paths'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+const resolveExportsCjsEntry = require.resolve('resolve.exports')
 const almostnodeDist = path.resolve(projectRoot, 'node_modules/almostnode/dist')
 const almostnodeCacheDir = path.resolve(projectRoot, '.cache/almostnode')
 const almostnodeEntry = ensureAlmostnodePatchCache(
@@ -28,6 +31,10 @@ const justBashBrowserEntry = fileURLToPath(
 const sprintfJsShim = path.resolve(
   projectRoot,
   'src/lib/cli-shell/shims/sprintf-js.ts',
+)
+const resolveExportsShim = path.resolve(
+  projectRoot,
+  'src/lib/cli-shell/shims/resolve-exports.ts',
 )
 const decimalJsLightShim = path.resolve(
   projectRoot,
@@ -81,7 +88,10 @@ export default defineConfig(async () => {
           : undefined,
       ),
       devtoolsJson(),
-      almostnodeBuildPlugin(almostnodeDist, almostnodeCacheDir),
+      almostnodeBuildPlugin(almostnodeDist, almostnodeCacheDir, {
+        projectRoot,
+        justBashBrowserEntry,
+      }),
       viteReact(),
       ...sentryPlugins,
     ],
@@ -108,6 +118,14 @@ export default defineConfig(async () => {
         {
           find: /^sprintf-js$/,
           replacement: sprintfJsShim,
+        },
+        {
+          find: /^resolve\.exports$/,
+          replacement: resolveExportsShim,
+        },
+        {
+          find: /^@cli-shell\/cjs\/resolve\.exports$/,
+          replacement: resolveExportsCjsEntry,
         },
         {
           find: /^just-bash$/,
@@ -143,6 +161,8 @@ export default defineConfig(async () => {
         'decimal.js-light',
         'sprintf-js',
         'sprintf-js/src/sprintf.js',
+        'resolve.exports',
+        '@cli-shell/cjs/resolve.exports',
         // Appwrite console SDK default-imports this CJS package from dist/esm/sdk.js.
         'json-bigint',
         // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work

@@ -21,6 +21,7 @@ import { ArrowLeft, Smartphone, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
+import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 
 interface MFAChallengeProps {
   factors: Models.MfaFactors & { recoveryCode?: boolean }
@@ -239,10 +240,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     onSuccess: async () => {
       setError(null)
 
-      const targetUrl =
-        redirect && redirect.startsWith('/') && !redirect.includes('://')
-          ? redirect
-          : '/'
+      const targetUrl = resolvePostAuthRedirect(redirect) ?? '/'
 
       queryClient.removeQueries({ queryKey: ['account', 'console'] })
       clearConsoleAccountCache()

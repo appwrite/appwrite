@@ -18,7 +18,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
+import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -56,10 +56,10 @@ function SignUpPage() {
     setIsGitHubLoading(true)
     try {
       // Build success and failure URLs
-      const successUrl =
-        search.redirect && isValidRelativeRedirect(search.redirect)
-          ? `${window.location.origin}${search.redirect}`
-          : `${window.location.origin}/`
+      const resolvedRedirect = resolvePostAuthRedirect(search.redirect)
+      const successUrl = resolvedRedirect
+        ? `${window.location.origin}${resolvedRedirect}`
+        : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       // Store GitHub as last login method before redirecting
@@ -147,8 +147,9 @@ function SignUpPage() {
       // No verification: org was ensured during prefetchPostAuthDestination
       try {
         const orgId = await resolvePostAuthOrganizationId(account)
-        if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-          navigate({ to: search.redirect })
+        const targetRedirect = resolvePostAuthRedirect(search.redirect)
+        if (targetRedirect) {
+          navigate({ to: targetRedirect })
         } else {
           navigate({
             to: '/organizations/$orgId',

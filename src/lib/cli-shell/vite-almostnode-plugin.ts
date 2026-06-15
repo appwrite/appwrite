@@ -109,6 +109,35 @@ function readRuntimeWorkerSource(
   )
 }
 
+type AlmostnodeBuildPluginOptions = {
+  projectRoot: string
+  justBashBrowserEntry: string
+}
+
+/**
+ * createRequire picks Node/CJS entry points that break named ESM imports in the
+ * browser. Map almostnode's bare imports to browser-safe paths instead.
+ */
+function buildBrowserDependencyResolutions(
+  resolvePkg: (id: string) => string,
+  options: AlmostnodeBuildPluginOptions,
+): Record<string, string> {
+  const comlinkUmd = resolvePkg('comlink')
+  const pakoEntry = resolvePkg('pako')
+  const brotliEntry = resolvePkg('brotli-wasm')
+
+  return {
+    'resolve.exports': path.join(
+      options.projectRoot,
+      'src/lib/cli-shell/shims/resolve-exports.ts',
+    ),
+    'just-bash': options.justBashBrowserEntry,
+    comlink: path.join(path.dirname(comlinkUmd), '../esm/comlink.mjs'),
+    pako: path.join(path.dirname(pakoEntry), 'dist/pako.esm.mjs'),
+    'brotli-wasm': path.join(path.dirname(brotliEntry), 'index.web.js'),
+  }
+}
+
 /**
  * almostnode ships a prebuilt dist that instantiates a worker via
  * `new URL(/* @vite-ignore *\/ "...", import.meta.url)`.
@@ -125,6 +154,7 @@ function readRuntimeWorkerSource(
 export function almostnodeBuildPlugin(
   almostnodeDistDir: string,
   cacheDir: string,
+  options: AlmostnodeBuildPluginOptions,
 ): Plugin {
   const assetsDir = path.join(almostnodeDistDir, 'assets')
   const cacheAssetsDir = path.join(cacheDir, 'assets')
@@ -132,6 +162,10 @@ export function almostnodeBuildPlugin(
     path.join(almostnodeDistDir, 'index.mjs'),
   )
   const resolveAlmostnodeDependency = createRequire(almostnodeResolveEntry).resolve
+  const browserDependencyResolutions = buildBrowserDependencyResolutions(
+    resolveAlmostnodeDependency,
+    options,
+  )
   let workerFileName = findRuntimeWorkerAsset(assetsDir)
 
   return {
@@ -145,6 +179,11 @@ export function almostnodeBuildPlugin(
         !isAlmostnodeBundledFile(importer)
       ) {
         return null
+      }
+
+      const browserResolution = browserDependencyResolutions[source]
+      if (browserResolution) {
+        return browserResolution
       }
 
       try {
