@@ -1887,6 +1887,49 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Service list view mode (account prefs, one key per page across all projects)
+// ---------------------------------------------------------------------------
+
+export type ServiceListViewMode = 'list' | 'grid'
+
+export const SERVICE_LIST_VIEW_MODE_DEFAULT: ServiceListViewMode = 'grid'
+
+export type ServiceListViewModeScope = 'functions' | 'sites'
+
+/** Full key: `console.functions.listViewMode` - `"list"` or `"grid"`. */
+export const USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE =
+  'console.functions.listViewMode'
+
+/** Full key: `console.sites.listViewMode` - `"list"` or `"grid"`. */
+export const USER_PREFS_KEY_SITES_LIST_VIEW_MODE = 'console.sites.listViewMode'
+
+function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
+  return scope === 'functions'
+    ? USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE
+    : USER_PREFS_KEY_SITES_LIST_VIEW_MODE
+}
+
+export function parseServiceListViewMode(
+  prefs: UserPrefs | null | undefined,
+  scope: ServiceListViewModeScope,
+): ServiceListViewMode {
+  const raw = prefs?.[getServiceListViewModeKey(scope)]
+  if (raw === 'list' || raw === 'grid') return raw
+  return SERVICE_LIST_VIEW_MODE_DEFAULT
+}
+
+export function mergeServiceListViewModeIntoPrefs(
+  prefs: UserPrefs,
+  scope: ServiceListViewModeScope,
+  mode: ServiceListViewMode,
+): UserPrefs {
+  return {
+    ...prefs,
+    [getServiceListViewModeKey(scope)]: mode,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
 // ---------------------------------------------------------------------------
 

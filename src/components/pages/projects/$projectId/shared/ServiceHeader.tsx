@@ -413,14 +413,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
 
             {/* Tabs Row - border extends full width, content is constrained */}
             {fullWidthBorder ? (
-              <div
-                className={cn(
-                  'w-full',
-                  (hasTabs || !contentAfterBorder) && 'border-b border-border',
-                )}
-              >
-                {tabsContent}
-              </div>
+              <div className="w-full border-b border-border">{tabsContent}</div>
             ) : hasTabs ? (
               <div
                 className="flex gap-0 overflow-x-auto border-b border-border px-4 sm:px-6"
@@ -482,7 +475,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   )
                 })}
               </div>
-            ) : contentAfterBorder ? null : (
+            ) : (
               <div className="border-b border-border" />
             )}
           </div>

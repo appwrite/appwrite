@@ -7,7 +7,7 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { Bell, Clock, Play, FileCode } from 'lucide-react'
+import { Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
@@ -15,6 +15,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
+import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import {
   useProjectFunctions,
   useProject,
@@ -54,8 +55,14 @@ import {
 } from '@/components/ui/tooltip'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
-import { formatCronExpression } from './CronScheduleEditor'
 import { FunctionContextMenu } from './_components/FunctionContextMenu'
+import {
+  FunctionsListTable,
+  getActiveDeploymentCreatedAt,
+  functionHasInProgressDeployment,
+} from './_components/FunctionsListTable'
+import { DeploymentResourceStatusBadges, resourceHasVisibleStatus } from '../shared/DeploymentResourceStatusBadges'
+import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 
 type FunctionsListSearch = {
@@ -66,81 +73,9 @@ type FunctionsListSearch = {
   sort?: string
 }
 
-/**
- * Get next scheduled execution time from cron expression
- * Returns null since cron-parser is not available in client-side code
- * TODO: Implement client-side cron parsing if needed
- */
-function getNextScheduledExecution(func: Models.Function): string | null {
-  if (!func.schedule) return null
-
-  // cron-parser is not available in client-side code
-  // Return null to avoid dependency resolution errors
-  return null
-}
-
-function getLastDeploymentCreatedAt(func: Models.Function): string | undefined {
-  const functionWithDeploymentDates = func as Models.Function & {
-    latestDeploymentCreatedAt?: string
-    deploymentCreatedAt?: string
-  }
-
-  return (
-    functionWithDeploymentDates.latestDeploymentCreatedAt ||
-    functionWithDeploymentDates.deploymentCreatedAt ||
-    undefined
-  )
-}
-
-function FunctionTriggerIndicators({
-  schedule,
-  eventCount,
-}: {
-  schedule?: string
-  eventCount: number
-}) {
-  if (!schedule && eventCount === 0) return null
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <span className="flex shrink-0 items-center gap-1">
-        {schedule ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted/50 text-muted-foreground"
-                aria-label="Has cron trigger"
-              >
-                <Clock className="h-3 w-3" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Cron trigger: {formatCronExpression(schedule)}</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : null}
-        {eventCount > 0 ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted/50 text-muted-foreground"
-                aria-label="Has event triggers"
-              >
-                <Bell className="h-3 w-3" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                {eventCount === 1
-                  ? '1 event trigger'
-                  : `${eventCount} event triggers`}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        ) : null}
-      </span>
-    </TooltipProvider>
-  )
+function formatRuntimeLabel(runtime: string) {
+  if (!runtime) return 'Unknown runtime'
+  return runtime.split('-').join(' ')
 }
 
 export function View() {
@@ -229,6 +164,7 @@ export function View() {
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const { viewMode, setViewMode } = useServiceListViewMode('functions')
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
@@ -314,6 +250,7 @@ export function View() {
     functions,
     total: displayedTotal,
     isLoading: displayedLoading,
+    refetch: refetchDisplayedFunctions,
   } = useProjectFunctions(
     projectId,
     displayedPage - 1,
@@ -361,6 +298,19 @@ export function View() {
     displayedSortOrder,
     displayedFilterQueryString,
   ])
+
+  const hasInProgressDeployment = useMemo(
+    () => functions.some((func) => functionHasInProgressDeployment(func)),
+    [functions],
+  )
+
+  useEffect(() => {
+    if (!hasInProgressDeployment) return
+    const interval = setInterval(() => {
+      void refetchDisplayedFunctions()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [hasInProgressDeployment, refetchDisplayedFunctions])
 
   const handleFunctionsSortChange = (
     sortBy: string,
@@ -611,6 +561,10 @@ export function View() {
     (displayedTotal ?? 0) === 0 &&
     !displayedLoading
 
+  const viewToggle = (
+    <ServiceListViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+  )
+
   if (error) {
     return (
       <div className="flex flex-col">
@@ -631,6 +585,7 @@ export function View() {
           }
           fullWidthBorder
           showFilters
+          rightContent={viewToggle}
           filterTrigger={
             <FiltersPopover
               open={filtersOpen}
@@ -702,6 +657,7 @@ export function View() {
         fullWidthBorder
         beforeCreateButtons={localEditorBeforeCreateButtons}
         showFilters
+        rightContent={viewToggle}
         filterTrigger={
           <FiltersPopover
             open={filtersOpen}
@@ -789,109 +745,75 @@ export function View() {
               />
             ) : (
               <>
-                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-                  {functions.map((func) => {
-                    const nextExecution = func.schedule
-                      ? getNextScheduledExecution(func as Models.Function)
-                      : null
-                    const lastDeploymentCreatedAt = getLastDeploymentCreatedAt(
-                      func as Models.Function,
-                    )
+                {viewMode === 'list' ? (
+                  <FunctionsListTable
+                    projectId={projectId!}
+                    functions={functions as Models.Function[]}
+                  />
+                ) : (
+                  <div className={RESOURCE_CARD_GRID_CLASSNAME}>
+                    {functions.map((func) => {
+                      const activeDeploymentCreatedAt =
+                        getActiveDeploymentCreatedAt(func as Models.Function)
 
-                    return (
-                      <FunctionContextMenu
-                        key={func.$id}
-                        projectId={projectId!}
-                        func={{ $id: func.$id, name: func.name }}
-                      >
-                        <Link
-                          to="/projects/$projectId/functions/$functionId"
-                          params={{
-                            projectId: projectId!,
-                            functionId: func.$id,
-                          }}
+                      return (
+                        <FunctionContextMenu
+                          key={func.$id}
+                          projectId={projectId!}
+                          func={{ $id: func.$id, name: func.name }}
                         >
-                          <ResourceCard
-                            title={func.name || 'Unnamed Function'}
-                            resourceId={func.$id}
-                            customIcon={
-                              <RuntimeIcon
-                                runtime={func.runtime || ''}
-                                size="md"
-                                className="h-5 w-5"
-                              />
-                            }
-                            iconColor="bg-muted text-muted-foreground"
-                            status={
-                              func.enabled === false ? 'error' : undefined
-                            }
-                            statusLabel={
-                              func.enabled === false ? 'Disabled' : undefined
-                            }
-                            metadata={[
-                              {
-                                label: 'Last deployed',
-                                value: lastDeploymentCreatedAt ? (
-                                  <DateTooltip date={lastDeploymentCreatedAt} />
-                                ) : (
-                                  'Never'
-                                ),
-                              },
-                              ...(func.schedule
-                                ? [
-                                    {
-                                      label: 'Schedule',
-                                      value: formatCronExpression(
-                                        func.schedule,
-                                      ),
-                                    },
-                                  ]
-                                : []),
-                              ...(nextExecution
-                                ? [
-                                    {
-                                      label: 'Next execution',
-                                      value: (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className="flex items-center gap-1">
-                                                <Clock className="h-3 w-3" />
-                                                {nextExecution}
-                                              </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>
-                                                Next execution: {nextExecution}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      ),
-                                    },
-                                  ]
-                                : []),
-                              ...(func.schedule || (func.events?.length ?? 0) > 0
-                                ? [
-                                    {
-                                      label: '',
-                                      value: (
-                                        <FunctionTriggerIndicators
-                                          schedule={func.schedule || undefined}
-                                          eventCount={func.events?.length ?? 0}
-                                        />
-                                      ),
-                                      align: 'right' as const,
-                                    },
-                                  ]
-                                : []),
-                            ]}
-                          />
-                        </Link>
-                      </FunctionContextMenu>
-                    )
-                  })}
-                </div>
+                          <Link
+                            to="/projects/$projectId/functions/$functionId"
+                            params={{
+                              projectId: projectId!,
+                              functionId: func.$id,
+                            }}
+                          >
+                            <ResourceCard
+                              title={func.name || 'Unnamed Function'}
+                              subtitle={formatRuntimeLabel(func.runtime || '')}
+                              resourceId={func.$id}
+                              customIcon={
+                                <RuntimeIcon
+                                  runtime={func.runtime || ''}
+                                  size="md"
+                                  className="h-5 w-5"
+                                />
+                              }
+                              iconColor="bg-muted text-muted-foreground"
+                              metadata={[
+                                ...(resourceHasVisibleStatus(func as Models.Function)
+                                  ? [
+                                      {
+                                        label: '',
+                                        value: (
+                                          <DeploymentResourceStatusBadges
+                                            resource={func as Models.Function}
+                                          />
+                                        ),
+                                      },
+                                    ]
+                                  : []),
+                                {
+                                  label: 'Deployed',
+                                  value: activeDeploymentCreatedAt ? (
+                                    <DateTooltip
+                                      date={activeDeploymentCreatedAt}
+                                      live
+                                      className="text-[12px] font-medium text-muted-foreground"
+                                    />
+                                  ) : (
+                                    'Never'
+                                  ),
+                                },
+                              ]}
+                            />
+                          </Link>
+                        </FunctionContextMenu>
+                      )
+                    })}
+                  </div>
+                )}
 
                 <Pagination
                   currentPage={displayedPage}

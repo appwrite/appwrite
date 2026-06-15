@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, Fragment } from 'react'
 import {
   useParams,
   useNavigate,
@@ -8,9 +8,10 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
-import { Globe, List, LayoutGrid } from 'lucide-react'
+import { Globe } from 'lucide-react'
 import {
   RESOURCE_CARD_GRID_4_COL_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../shared/ResourceCard'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -51,7 +52,6 @@ import { canCreateSite } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { useAvifSupport } from '@/lib/avif-support'
-import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -59,6 +59,15 @@ import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { ImageFormat, type Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { SiteContextMenu } from './_components/SiteContextMenu'
+import { SitesListPreviewCell } from './_components/SitesListPreviewCell'
+import {
+  DeploymentResourceStatusBadges,
+  getActiveDeploymentCreatedAt,
+  resourceHasInProgressDeployment,
+  resourceHasVisibleStatus,
+} from '../shared/DeploymentResourceStatusBadges'
+import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
+import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import {
   getSearch,
   getPage,
@@ -85,6 +94,11 @@ type SitesListSearch = {
   sort?: string
 }
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
+
+function formatRuntimeImageLabel(runtime: string | undefined) {
+  if (!runtime?.trim()) return undefined
+  return runtime.split('-').join(' ')
+}
 
 export function View() {
   const { projectId } = useParams({ strict: false })
@@ -152,7 +166,7 @@ export function View() {
 
   const [searchInput, setSearchInput] = useState('')
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
+  const { viewMode, setViewMode } = useServiceListViewMode('sites')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
@@ -393,6 +407,7 @@ export function View() {
     sites: apiSites,
     total: displayedTotal,
     isLoading: displayedLoading,
+    refetch: refetchDisplayedSites,
   } = useProjectSites(
     projectId,
     displayedPage - 1,
@@ -466,6 +481,22 @@ export function View() {
   })
 
   const paginatedSites = apiSites
+
+  const hasInProgressDeployment = useMemo(
+    () =>
+      paginatedSites.some((site) =>
+        resourceHasInProgressDeployment(site as Models.Site),
+      ),
+    [paginatedSites],
+  )
+
+  useEffect(() => {
+    if (!hasInProgressDeployment) return
+    const interval = setInterval(() => {
+      void refetchDisplayedSites()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [hasInProgressDeployment, refetchDisplayedSites])
 
   // Get project to get teamId for organization plan
   const { project } = useProject(projectId)
@@ -589,30 +620,7 @@ export function View() {
   }
 
   const ViewToggle = () => (
-    <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => setViewMode('list')}
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => setViewMode('grid')}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
-    </div>
+    <ServiceListViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
   )
 
   return (
@@ -723,7 +731,10 @@ export function View() {
                         Site
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Last deployment
+                        Status
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Last deployed
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                         Created
@@ -737,6 +748,9 @@ export function View() {
                     {paginatedSites.map((site) => {
                       const siteData = site as Models.Site
                       if (!siteData?.$id) return null
+                      const runtimeImageLabel = formatRuntimeImageLabel(
+                        siteData.buildRuntime,
+                      )
                       return (
                         <SiteContextMenu
                           key={siteData.$id}
@@ -778,36 +792,21 @@ export function View() {
                               />
                             </TableCell>
                             <TableCell className="px-4 py-3">
-                              {(() => {
-                                const screenshotUrl = getScreenshotUrl(siteData)
-                                const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                                const isLoaded =
-                                  loadedScreenshots.has(screenshotKey)
-                                if (screenshotUrl) {
-                                  return (
-                                    <img
-                                      src={screenshotUrl}
-                                      alt={`${siteData.name || 'Site'} preview`}
-                                      onLoad={() => {
-                                        setLoadedScreenshots((prev) =>
-                                          new Set(prev).add(screenshotKey),
-                                        )
-                                      }}
-                                      className={cn(
-                                        'h-12 w-20 rounded border border-border object-cover transition-opacity duration-500',
-                                        isLoaded ? 'opacity-100' : 'opacity-0',
-                                      )}
-                                    />
+                              <SitesListPreviewCell
+                                site={siteData}
+                                screenshotUrl={getScreenshotUrl(siteData)}
+                                screenshotKey={`${siteData.$id}-${isDark ? 'dark' : 'light'}`}
+                                isLoaded={loadedScreenshots.has(
+                                  `${siteData.$id}-${isDark ? 'dark' : 'light'}`,
+                                )}
+                                onLoad={() => {
+                                  setLoadedScreenshots((prev) =>
+                                    new Set(prev).add(
+                                      `${siteData.$id}-${isDark ? 'dark' : 'light'}`,
+                                    ),
                                   )
-                                }
-                                return (
-                                  <div className="flex h-12 w-20 items-center justify-center rounded border border-border/50 bg-gradient-to-br from-muted/40 to-muted/20 backdrop-blur-sm">
-                                    <p className="text-[10px] font-medium text-muted-foreground/60 text-center leading-tight px-1">
-                                      Preview not available
-                                    </p>
-                                  </div>
-                                )
-                              })()}
+                                }}
+                              />
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <Link
@@ -834,9 +833,17 @@ export function View() {
                                     <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
                                       {siteData.name || 'Unnamed Site'}
                                     </p>
+                                    {runtimeImageLabel ? (
+                                      <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
+                                        {runtimeImageLabel}
+                                      </p>
+                                    ) : null}
                                   </div>
                                 </div>
                               </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <DeploymentResourceStatusBadges resource={siteData} />
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <Link
@@ -847,22 +854,21 @@ export function View() {
                                 }}
                                 className="block"
                               >
-                                {siteData.latestDeploymentCreatedAt ? (
-                                  <span className="text-[12px] text-muted-foreground">
-                                    Deployed{' '}
-                                    {formatDistanceToNow(
-                                      new Date(
-                                        siteData.latestDeploymentCreatedAt,
-                                      ),
-                                      { addSuffix: false },
-                                    )}{' '}
-                                    ago
-                                  </span>
-                                ) : (
-                                  <span className="text-[12px] text-muted-foreground/50 italic">
-                                     - 
-                                  </span>
-                                )}
+                                {(() => {
+                                  const activeDeploymentCreatedAt =
+                                    getActiveDeploymentCreatedAt(siteData)
+                                  return activeDeploymentCreatedAt ? (
+                                    <DateTooltip
+                                      date={activeDeploymentCreatedAt}
+                                      live
+                                      className="text-[12px] text-muted-foreground"
+                                    />
+                                  ) : (
+                                    <span className="text-[12px] text-muted-foreground/50">
+                                      Never
+                                    </span>
+                                  )
+                                })()}
                               </Link>
                             </TableCell>
                             <TableCell className="px-4 py-3">
@@ -947,11 +953,47 @@ export function View() {
                 </p>
               </div>
             ) : paginatedSites.length > 0 ? (
-              <div className={RESOURCE_CARD_GRID_4_COL_CLASSNAME}>
+              <div
+                className={cn(
+                  RESOURCE_CARD_GRID_4_COL_CLASSNAME,
+                  '[&>*]:h-full',
+                )}
+              >
                 {paginatedSites.map((site) => {
                   const siteData = site as Models.Site
                   if (!siteData?.$id) return null
                   const screenshotUrl = getScreenshotUrl(siteData)
+                  const activeDeploymentCreatedAt =
+                    getActiveDeploymentCreatedAt(siteData)
+                  const runtimeImageLabel = formatRuntimeImageLabel(
+                    siteData.buildRuntime,
+                  )
+                  const metadataItems = [
+                    ...(resourceHasVisibleStatus(siteData)
+                      ? [
+                          {
+                            label: '',
+                            value: (
+                              <DeploymentResourceStatusBadges
+                                resource={siteData}
+                              />
+                            ),
+                          },
+                        ]
+                      : []),
+                    {
+                      label: 'Deployed',
+                      value: activeDeploymentCreatedAt ? (
+                        <DateTooltip
+                          date={activeDeploymentCreatedAt}
+                          live
+                          className="text-[12px] font-medium text-muted-foreground"
+                        />
+                      ) : (
+                        'Never'
+                      ),
+                    },
+                  ]
                   return (
                     <SiteContextMenu
                       key={siteData.$id}
@@ -961,77 +1003,111 @@ export function View() {
                       <Link
                         to="/projects/$projectId/sites/$siteId/"
                         params={{ projectId, siteId: siteData.$id }}
-                        className="block min-w-0 group"
+                        className="block h-full min-w-0 group"
                       >
                         <div
                           className={cn(
-                            'rounded-lg border border-border bg-card transition-all hover:border-border hover:bg-accent/50',
+                            'flex h-full flex-col rounded-lg border border-border bg-card transition-all hover:border-border hover:bg-accent/50',
                             RESOURCE_CARD_SHELL_CLASSNAME,
                           )}
                         >
                           {/* Preview Image */}
                           {screenshotUrl ? (
-                            <div className="aspect-video w-full overflow-hidden bg-muted">
-                              {(() => {
-                                const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                                const isLoaded =
-                                  loadedScreenshots.has(screenshotKey)
-                                return (
-                                  <img
-                                    src={screenshotUrl}
-                                    alt={`${siteData.name || 'Site'} preview`}
-                                    onLoad={() => {
-                                      setLoadedScreenshots((prev) =>
-                                        new Set(prev).add(screenshotKey),
-                                      )
-                                    }}
-                                    className={cn(
-                                      'h-full w-full object-cover transition-opacity duration-500',
-                                      isLoaded ? 'opacity-100' : 'opacity-0',
-                                    )}
-                                  />
-                                )
-                              })()}
+                            <div className="p-1.5 pb-0">
+                              <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border/60 bg-muted">
+                                {(() => {
+                                  const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
+                                  const isLoaded =
+                                    loadedScreenshots.has(screenshotKey)
+                                  return (
+                                    <>
+                                      {!isLoaded ? (
+                                        <div
+                                          className="absolute inset-0 animate-pulse bg-muted"
+                                          aria-hidden
+                                        />
+                                      ) : null}
+                                      <img
+                                        src={screenshotUrl}
+                                        alt={`${siteData.name || 'Site'} preview`}
+                                        onLoad={() => {
+                                          setLoadedScreenshots((prev) =>
+                                            new Set(prev).add(screenshotKey),
+                                          )
+                                        }}
+                                        className={cn(
+                                          'relative h-full w-full rounded-md object-cover object-top transition-opacity duration-500',
+                                          isLoaded ? 'opacity-100' : 'opacity-0',
+                                        )}
+                                      />
+                                    </>
+                                  )
+                                })()}
+                              </div>
                             </div>
                           ) : (
-                            <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 border-b border-border/50 relative overflow-hidden">
-                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
-                              <p className="relative text-[12px] font-medium text-muted-foreground/60">
-                                Preview not available
-                              </p>
+                            <div className="p-1.5 pb-0">
+                              <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-border/60 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
+                                <p className="relative text-[12px] font-medium text-muted-foreground/60">
+                                  Preview not available
+                                </p>
+                              </div>
                             </div>
                           )}
                           {/* Card Content */}
-                          <div className="p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-3 min-w-0 flex-1">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                  <FrameworkIcon
-                                    framework={
-                                      (siteData as unknown).buildFramework ||
-                                      (siteData as unknown).buildFrameworkId ||
-                                      (siteData as unknown).framework
-                                    }
-                                    size="md"
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="truncate text-[14px] font-medium text-foreground">
-                                    {siteData.name || 'Unnamed Site'}
-                                  </h3>
-                                  {siteData.latestDeploymentCreatedAt && (
-                                    <p className="mt-2 text-[11px] text-muted-foreground">
-                                      Deployed{' '}
-                                      {formatDistanceToNow(
-                                        new Date(
-                                          siteData.latestDeploymentCreatedAt,
-                                        ),
-                                        { addSuffix: false },
-                                      )}{' '}
-                                      ago
-                                    </p>
-                                  )}
-                                </div>
+                          <div className="flex flex-1 flex-col p-4">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <FrameworkIcon
+                                  framework={
+                                    (siteData as unknown).buildFramework ||
+                                    (siteData as unknown).buildFrameworkId ||
+                                    (siteData as unknown).framework
+                                  }
+                                  size="md"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="truncate text-[14px] font-medium text-foreground">
+                                  {siteData.name || 'Unnamed Site'}
+                                </h3>
+                                {runtimeImageLabel ? (
+                                  <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
+                                    {runtimeImageLabel}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
+                              <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                {metadataItems.map((item, index) => (
+                                  <Fragment key={index}>
+                                    {index > 0 && item.align !== 'right' ? (
+                                      <span
+                                        className="shrink-0 text-[10px] text-muted-foreground/40"
+                                        aria-hidden
+                                      >
+                                        ·
+                                      </span>
+                                    ) : null}
+                                    <div
+                                      className={cn(
+                                        'flex shrink-0 items-center gap-0.5',
+                                        item.align === 'right' && 'ml-auto',
+                                      )}
+                                    >
+                                      {item.label ? (
+                                        <span className="text-[12px] text-muted-foreground/70">
+                                          {item.label}
+                                        </span>
+                                      ) : null}
+                                      <span className="text-[12px] font-medium text-muted-foreground">
+                                        {item.value}
+                                      </span>
+                                    </div>
+                                  </Fragment>
+                                ))}
                               </div>
                             </div>
                           </div>

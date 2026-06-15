@@ -197,11 +197,11 @@ export function ResourceCard({
                   )}
                 >
                   {item.label ? (
-                    <span className="text-[10px] text-muted-foreground/70">
+                    <span className="text-[12px] text-muted-foreground/70">
                       {item.label}
                     </span>
                   ) : null}
-                  <span className="text-[10px] font-medium text-muted-foreground">
+                  <span className="text-[12px] font-medium text-muted-foreground">
                     {item.value}
                   </span>
                 </div>
