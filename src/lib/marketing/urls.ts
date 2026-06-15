@@ -73,3 +73,37 @@ export function getBlogPageUrl(path: string, marketingEnabled: boolean): string 
 export function isBlogPageExternal(marketingEnabled: boolean): boolean {
   return !marketingEnabled
 }
+
+function normalizeDocsPath(path: string): string {
+  const withoutHash = path.split('#')[0] ?? '/docs'
+  const normalized = withoutHash.replace(/\/+$/, '') || '/docs'
+  return normalized === '' ? '/docs' : normalized
+}
+
+/** Returns a `/docs…` path when `href` points at Appwrite docs, otherwise null. */
+export function parseDocsPagePath(href: string): string | null {
+  const trimmed = href.trim()
+
+  if (trimmed.startsWith('/docs')) {
+    return normalizeDocsPath(trimmed)
+  }
+
+  const match = trimmed.match(
+    /^https?:\/\/(?:www\.)?appwrite\.io(\/docs(?:\/.*)?)?(?:[?#].*)?$/i,
+  )
+  if (!match) return null
+
+  const path = match[1] ?? '/docs'
+  return normalizeDocsPath(path)
+}
+
+/**
+ * Resolves a docs path (or appwrite.io/docs URL) to a relative route when marketing
+ * is enabled, or to the production appwrite.io URL when marketing routes are disabled.
+ */
+export function getDocsPageUrl(path: string, marketingEnabled: boolean): string {
+  const docsPath = parseDocsPagePath(path)
+  if (!docsPath) return path
+
+  return marketingEnabled ? docsPath : `${MARKETING_SITE_ORIGIN}${docsPath}`
+}

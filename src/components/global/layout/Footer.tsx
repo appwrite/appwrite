@@ -11,6 +11,7 @@ import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBra
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
   getBlogPageUrl,
+  getDocsPageUrl,
   getMarketingPageUrl,
   isBlogPageExternal,
   isMarketingPageExternal,
@@ -31,26 +32,38 @@ type ConsoleFooterProps = {
   expanded?: boolean
 }
 
+function docsFooterLink(
+  label: string,
+  path: string,
+  marketing: boolean,
+): FooterLink {
+  return {
+    label,
+    href: getDocsPageUrl(path, marketing),
+    external: isMarketingPageExternal(marketing),
+  }
+}
+
 function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGroup[] {
   return [
   {
     title: 'Quick starts',
     links: [
-      { label: 'Web', href: 'https://appwrite.io/docs/quick-starts/web', external: true },
-      { label: 'Next.js', href: 'https://appwrite.io/docs/quick-starts/nextjs', external: true },
-      { label: 'React', href: 'https://appwrite.io/docs/quick-starts/react', external: true },
-      { label: 'Vue.js', href: 'https://appwrite.io/docs/quick-starts/vue', external: true },
-      { label: 'Nuxt', href: 'https://appwrite.io/docs/quick-starts/nuxt', external: true },
-      { label: 'SvelteKit', href: 'https://appwrite.io/docs/quick-starts/sveltekit', external: true },
-      { label: 'Refine', href: 'https://appwrite.io/docs/quick-starts/refine', external: true },
-      { label: 'Angular', href: 'https://appwrite.io/docs/quick-starts/angular', external: true },
-      { label: 'React Native', href: 'https://appwrite.io/docs/quick-starts/react-native', external: true },
-      { label: 'Flutter', href: 'https://appwrite.io/docs/quick-starts/flutter', external: true },
-      { label: 'Apple', href: 'https://appwrite.io/docs/quick-starts/apple', external: true },
-      { label: 'Android', href: 'https://appwrite.io/docs/quick-starts/android', external: true },
-      { label: 'Qwik', href: 'https://appwrite.io/docs/quick-starts/qwik', external: true },
-      { label: 'Astro', href: 'https://appwrite.io/docs/quick-starts/astro', external: true },
-      { label: 'Solid', href: 'https://appwrite.io/docs/quick-starts/solid', external: true },
+      docsFooterLink('Web', '/docs/quick-starts/web', marketing),
+      docsFooterLink('Next.js', '/docs/quick-starts/nextjs', marketing),
+      docsFooterLink('React', '/docs/quick-starts/react', marketing),
+      docsFooterLink('Vue.js', '/docs/quick-starts/vue', marketing),
+      docsFooterLink('Nuxt', '/docs/quick-starts/nuxt', marketing),
+      docsFooterLink('SvelteKit', '/docs/quick-starts/sveltekit', marketing),
+      docsFooterLink('Refine', '/docs/quick-starts/refine', marketing),
+      docsFooterLink('Angular', '/docs/quick-starts/angular', marketing),
+      docsFooterLink('React Native', '/docs/quick-starts/react-native', marketing),
+      docsFooterLink('Flutter', '/docs/quick-starts/flutter', marketing),
+      docsFooterLink('Apple', '/docs/quick-starts/apple', marketing),
+      docsFooterLink('Android', '/docs/quick-starts/android', marketing),
+      docsFooterLink('Qwik', '/docs/quick-starts/qwik', marketing),
+      docsFooterLink('Astro', '/docs/quick-starts/astro', marketing),
+      docsFooterLink('Solid', '/docs/quick-starts/solid', marketing),
     ],
   },
   {
@@ -94,7 +107,11 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
     title: 'Learn',
     links: [
       { label: 'Blog', href: getBlogPageUrl('/blog', marketing), external: isBlogPageExternal(marketing) },
-      { label: 'Docs', href: 'https://appwrite.io/docs', external: true },
+      {
+        label: 'Docs',
+        href: getMarketingPageUrl('/docs', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
       { label: 'Integrations', href: 'https://appwrite.io/integrations', external: true },
       { label: 'Community', href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Init', href: 'https://appwrite.io/init', external: true },
@@ -103,11 +120,7 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
       { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects', external: true },
       { label: 'Source code', href: 'https://github.com/appwrite/appwrite', external: true },
       { label: 'Arena', href: 'https://arena.appwrite.io/', external: true },
-      {
-        label: 'Tech news',
-        href: getBlogPageUrl('/blog/category/tech-news', marketing),
-        external: isBlogPageExternal(marketing),
-      },
+      { label: 'Tech news', href: 'https://refetch.io/', external: true },
     ],
   },
   {
@@ -218,10 +231,20 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(features.marketing)
 
   const resourceLinks = [
-    { label: 'Docs', href: 'https://appwrite.io/docs' },
-    { label: 'Store', href: 'https://store.appwrite.io/' },
+    {
+      label: 'Docs',
+      href: getMarketingPageUrl('/docs', features.marketing),
+      external: isMarketingPageExternal(features.marketing),
+    },
+    { label: 'Store', href: 'https://store.appwrite.io/', external: true },
     ...(cloudStatusEnabled
-      ? [{ label: 'Status' as const, href: 'https://status.appwrite.online' }]
+      ? [
+          {
+            label: 'Status' as const,
+            href: 'https://status.appwrite.online',
+            external: true,
+          },
+        ]
       : []),
   ]
 
@@ -301,8 +324,9 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               <div key={link.label} className="flex items-center">
                 <a
                   href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(link.external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
                   className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {link.label}
@@ -341,9 +365,10 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
         <div className="flex flex-shrink-0 items-center gap-2">
           {/* Trust / Compliance badge */}
           <a
-            href="https://appwrite.io/docs/advanced/security"
-            target="_blank"
-            rel="noopener noreferrer"
+            href={getDocsPageUrl('/docs/advanced/security', features.marketing)}
+            {...(isMarketingPageExternal(features.marketing)
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
             className="link-unstyled hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[920px]:flex"
           >
             <ShieldCheck
