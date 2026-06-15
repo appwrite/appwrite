@@ -732,7 +732,8 @@ class Builds extends Action
                             variables: $vars,
                             command: $command,
                             outputDirectory: $outputDirectory ?? '',
-                            cacheKey: $cacheKey
+                            // temporarily disable build cache
+                            // cacheKey: $cacheKey
                         );
 
                     } catch (ExecutorTimeout $error) {
