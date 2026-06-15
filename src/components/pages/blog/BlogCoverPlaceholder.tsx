@@ -1,4 +1,6 @@
+import { Link } from '@tanstack/react-router'
 import { BLOG_COVER_ASPECT_CLASS } from '@/lib/blog/constants'
+import type { BlogAuthor } from '@/lib/blog/types'
 import { cn } from '@/lib/utils'
 
 type BlogCoverPlaceholderProps = {
@@ -100,5 +102,76 @@ export function BlogAvatar({ name, avatar, className }: BlogAvatarProps) {
         className,
       )}
     />
+  )
+}
+
+type BlogAuthorStackProps = {
+  authors: Pick<BlogAuthor, 'slug' | 'name' | 'avatar'>[]
+  className?: string
+  avatarClassName?: string
+  linked?: boolean
+}
+
+export function BlogAuthorStack({
+  authors,
+  className,
+  avatarClassName,
+  linked = false,
+}: BlogAuthorStackProps) {
+  if (authors.length === 0) return null
+
+  if (authors.length === 1) {
+    const author = authors[0]
+    const avatar = (
+      <BlogAvatar name={author.name} avatar={author.avatar} className={avatarClassName} />
+    )
+
+    if (linked) {
+      return (
+        <Link
+          to="/blog/author/$author"
+          params={{ author: author.slug }}
+          className={className}
+          aria-label={author.name}
+        >
+          {avatar}
+        </Link>
+      )
+    }
+
+    return <div className={className}>{avatar}</div>
+  }
+
+  return (
+    <div
+      className={cn('flex -space-x-2', className)}
+      aria-label={authors.map((author) => author.name).join(', ')}
+    >
+      {authors.map((author) => {
+        const avatar = (
+          <BlogAvatar
+            name={author.name}
+            avatar={author.avatar}
+            className={cn('ring-2 ring-background', avatarClassName)}
+          />
+        )
+
+        if (linked) {
+          return (
+            <Link
+              key={author.slug}
+              to="/blog/author/$author"
+              params={{ author: author.slug }}
+              className="transition-opacity hover:opacity-80"
+              aria-label={author.name}
+            >
+              {avatar}
+            </Link>
+          )
+        }
+
+        return <span key={author.slug}>{avatar}</span>
+      })}
+    </div>
   )
 }

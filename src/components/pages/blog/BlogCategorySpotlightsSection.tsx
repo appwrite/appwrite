@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowUpRight } from 'lucide-react'
+import { SectionDottedBackground } from '@/components/pages/home/HomeSoftLights'
 import type { BlogCategorySpotlight, BlogPostMeta } from '@/lib/blog/types'
-import { BLOG_CATEGORY_CARD_TITLE_CLASS } from '@/lib/blog/prose-typography'
+import { BLOG_CATEGORY_CARD_TITLE_CLASS, BLOG_INDEX_CARD_TITLE_LINES_CLASS } from '@/lib/blog/prose-typography'
 import { formatDate } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
 
@@ -27,7 +28,7 @@ function BlogCategorySpotlightPostLink({
         className,
       )}
     >
-      <p className="line-clamp-2 text-[13px] font-medium leading-snug text-foreground transition-colors group-hover:text-foreground/80">
+      <p className={cn(BLOG_INDEX_CARD_TITLE_LINES_CLASS, 'text-[13px] font-medium leading-snug text-foreground transition-colors group-hover:text-foreground/80')}>
         {post.title}
       </p>
       <p className="mt-1 text-[11px] text-muted-foreground">
@@ -48,8 +49,9 @@ export function BlogCategorySpotlightsSection({
   if (spotlights.length === 0) return null
 
   return (
-    <section className="border-b border-border bg-muted/10 py-10 sm:py-14">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+    <section className="relative isolate border-b border-border py-10 sm:py-14">
+      <SectionDottedBackground />
+      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Explore by topic
         </p>

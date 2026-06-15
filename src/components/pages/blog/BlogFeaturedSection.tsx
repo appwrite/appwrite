@@ -1,8 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import { resolveBlogAuthors } from '@/lib/blog/content'
 import type { BlogAuthor, BlogPostMeta } from '@/lib/blog/types'
+import { BLOG_INDEX_CARD_TITLE_LINES_CLASS } from '@/lib/blog/prose-typography'
 import { formatDate } from '@/lib/date-utils'
-import { BlogAvatar, BlogCover } from './BlogCoverPlaceholder'
+import { cn } from '@/lib/utils'
+import { BlogCover } from './BlogCoverPlaceholder'
+import { BlogPostAuthors } from './_components/BlogPostAuthors'
 
 type BlogFeaturedSectionProps = {
   post: BlogPostMeta
@@ -11,7 +14,6 @@ type BlogFeaturedSectionProps = {
 
 export function BlogFeaturedSection({ post, authors }: BlogFeaturedSectionProps) {
   const postAuthors = resolveBlogAuthors(post.author, authors)
-  const primaryAuthor = postAuthors[0]
 
   return (
     <section className="border-b border-border bg-muted/15 py-10 sm:py-14">
@@ -39,23 +41,17 @@ export function BlogFeaturedSection({ post, authors }: BlogFeaturedSectionProps)
               params={{ slug: post.slug }}
               className="block"
             >
-              <h2 className="font-aeonik-pro text-[24px] font-normal leading-[1.3] text-foreground transition-colors group-hover:text-foreground/80 sm:text-[28px]">
+              <h2
+                className={cn(
+                  BLOG_INDEX_CARD_TITLE_LINES_CLASS,
+                  'font-aeonik-pro text-[24px] font-normal leading-[1.3] text-foreground transition-colors group-hover:text-foreground/80 sm:text-[28px]',
+                )}
+              >
                 {post.title}
               </h2>
             </Link>
 
-            {primaryAuthor ? (
-              <Link
-                to="/blog/author/$author"
-                params={{ author: primaryAuthor.slug }}
-                className="mt-3 inline-flex w-fit items-center gap-2"
-              >
-                <BlogAvatar name={primaryAuthor.name} avatar={primaryAuthor.avatar} />
-                <span className="text-[12px] text-muted-foreground hover:text-foreground">
-                  {postAuthors.map((author) => author.name).join(', ')}
-                </span>
-              </Link>
-            ) : null}
+            <BlogPostAuthors authors={postAuthors} className="mt-3" />
 
             <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
               {post.description}

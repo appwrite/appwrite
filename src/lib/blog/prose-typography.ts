@@ -24,6 +24,9 @@ export const BLOG_STICKY_TITLE_CLASS = DOCS_STICKY_TITLE_CLASS
 export const BLOG_CATEGORY_CARD_TITLE_CLASS =
   'text-[16px] font-semibold leading-snug text-foreground'
 
+/** Reserve two lines on blog index cards for consistent grid alignment. */
+export const BLOG_INDEX_CARD_TITLE_LINES_CLASS = 'line-clamp-2 min-h-[2lh]'
+
 export const BLOG_SECTION_TITLE_CLASS = BLOG_PAGE_TITLE_CLASS
 
 export const BLOG_PAGE_DESCRIPTION_CLASS = DOCS_PAGE_DESCRIPTION_CLASS
