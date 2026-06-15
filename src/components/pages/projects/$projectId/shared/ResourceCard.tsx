@@ -10,6 +10,34 @@ import { getStatusColor, type StatusType } from '@/lib/utils/status-badge'
 export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME =
   'mt-2 min-w-0 border-t border-border pt-2'
 
+/**
+ * Base shell for resource grid cards (matches org project list cards).
+ * Default: rounded-xl, bg-card/50, lifts to bg-card on hover when interactive.
+ */
+export const RESOURCE_CARD_BASE_CLASSNAME =
+  'group min-w-0 overflow-hidden rounded-xl border border-border bg-card/50 transition-all'
+
+/** Hover/focus shell for clickable resource cards in grids and lists. */
+export const RESOURCE_CARD_INTERACTIVE_CLASSNAME =
+  'cursor-pointer hover:border-border hover:bg-card'
+
+/** Standard padded resource card (ResourceCard default layout). */
+export const RESOURCE_CARD_PADDED_CLASSNAME = cn(
+  RESOURCE_CARD_BASE_CLASSNAME,
+  'p-4',
+)
+
+/** Apply to custom card shells inside resource grids when not using ResourceCard. */
+export const RESOURCE_CARD_SHELL_CLASSNAME = 'min-w-0 overflow-hidden'
+
+/** Custom card shell with preview/media above content (e.g. sites, storage files). */
+export const RESOURCE_CARD_MEDIA_SHELL_CLASSNAME = cn(
+  RESOURCE_CARD_BASE_CLASSNAME,
+  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+  'flex h-full flex-col',
+  RESOURCE_CARD_SHELL_CLASSNAME,
+)
+
 /** Three-column resource list grid; children shrink so long titles truncate instead of widening the page. */
 export const RESOURCE_CARD_GRID_CLASSNAME =
   'grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0'
@@ -25,9 +53,6 @@ export const RESOURCE_CARD_GRID_2_COL_CLASSNAME =
 /** Responsive grid with xl third column (e.g. marketplace, function templates). */
 export const RESOURCE_CARD_GRID_WIDE_CLASSNAME =
   'grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0'
-
-/** Apply to custom card shells inside resource grids when not using ResourceCard. */
-export const RESOURCE_CARD_SHELL_CLASSNAME = 'min-w-0 overflow-hidden'
 
 type ResourceCardMetadataItem = {
   label: string
@@ -50,6 +75,8 @@ interface ResourceCardProps {
   onClick?: () => void
   onMenuClick?: (e: React.MouseEvent) => void
   avatar?: string
+  /** When false, disables list hover treatment. Defaults to true. */
+  interactive?: boolean
   className?: string
 }
 
@@ -67,6 +94,7 @@ export function ResourceCard({
   onClick,
   onMenuClick,
   avatar,
+  interactive = true,
   className,
 }: ResourceCardProps) {
   const statusDotColors: Record<StatusType, string> = {
@@ -88,8 +116,8 @@ export function ResourceCard({
     <div
       onClick={onClick}
       className={cn(
-        'group min-w-0 overflow-hidden rounded-lg border border-border bg-card p-4 transition-all',
-        onClick && 'cursor-pointer hover:border-border hover:bg-accent/50',
+        RESOURCE_CARD_PADDED_CLASSNAME,
+        interactive && RESOURCE_CARD_INTERACTIVE_CLASSNAME,
         className,
       )}
     >

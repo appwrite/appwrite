@@ -198,7 +198,9 @@ import {
 } from '@/components/ui/table'
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
   RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+  RESOURCE_CARD_PADDED_CLASSNAME,
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -2507,7 +2509,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         >
                                           <div
                                             className={cn(
-                                              'group relative min-w-0 overflow-hidden rounded-xl border bg-card/50 p-4 transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out hover:border-border hover:bg-card',
+                                              RESOURCE_CARD_PADDED_CLASSNAME,
+                                              RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+                                              'relative transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out',
                                               !isDragActive && 'border-border',
                                               isDragSource &&
                                                 'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
@@ -2712,7 +2716,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             }
                                           >
                                             <div
-                                              className="group relative min-w-0 overflow-hidden rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                              className={cn(
+                                                RESOURCE_CARD_PADDED_CLASSNAME,
+                                                RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+                                                'relative',
+                                              )}
                                               data-project-card
                                             >
                                               <div className="flex items-start gap-1">

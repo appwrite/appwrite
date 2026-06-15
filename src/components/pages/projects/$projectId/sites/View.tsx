@@ -11,8 +11,8 @@ import { useTheme } from 'next-themes'
 import { Globe } from 'lucide-react'
 import {
   RESOURCE_CARD_GRID_4_COL_CLASSNAME,
+  RESOURCE_CARD_MEDIA_SHELL_CLASSNAME,
   RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-  RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../shared/ResourceCard'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -968,6 +968,17 @@ export function View() {
                   const runtimeImageLabel = formatRuntimeImageLabel(
                     siteData.buildRuntime,
                   )
+                  const siteFramework =
+                    (siteData as unknown).buildFramework ||
+                    (siteData as unknown).buildFrameworkId ||
+                    (siteData as unknown).framework
+                  const frameworkPreviewBadge = (
+                    <div className="absolute bottom-1.5 left-1.5 z-10">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 shadow-sm backdrop-blur-sm">
+                        <FrameworkIcon framework={siteFramework} size="sm" />
+                      </div>
+                    </div>
+                  )
                   const metadataItems = [
                     ...(resourceHasVisibleStatus(siteData)
                       ? [
@@ -1005,79 +1016,66 @@ export function View() {
                         params={{ projectId, siteId: siteData.$id }}
                         className="block h-full min-w-0 group"
                       >
-                        <div
-                          className={cn(
-                            'flex h-full flex-col rounded-lg border border-border bg-card transition-all hover:border-border hover:bg-accent/50',
-                            RESOURCE_CARD_SHELL_CLASSNAME,
-                          )}
-                        >
+                        <div className={RESOURCE_CARD_MEDIA_SHELL_CLASSNAME}>
                           {/* Preview Image */}
-                          {screenshotUrl ? (
-                            <div className="p-1.5 pb-0">
-                              <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border/60 bg-muted">
-                                {(() => {
-                                  const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                                  const isLoaded =
-                                    loadedScreenshots.has(screenshotKey)
-                                  return (
-                                    <>
-                                      {!isLoaded ? (
-                                        <div
-                                          className="absolute inset-0 animate-pulse bg-muted"
-                                          aria-hidden
+                          <div className="p-1.5 pb-0">
+                            <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border/60 bg-muted">
+                              {screenshotUrl ? (
+                                <>
+                                  {(() => {
+                                    const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
+                                    const isLoaded =
+                                      loadedScreenshots.has(screenshotKey)
+                                    return (
+                                      <>
+                                        {!isLoaded ? (
+                                          <div
+                                            className="absolute inset-0 animate-pulse bg-muted"
+                                            aria-hidden
+                                          />
+                                        ) : null}
+                                        <img
+                                          src={screenshotUrl}
+                                          alt={`${siteData.name || 'Site'} preview`}
+                                          onLoad={() => {
+                                            setLoadedScreenshots((prev) =>
+                                              new Set(prev).add(screenshotKey),
+                                            )
+                                          }}
+                                          className={cn(
+                                            'relative h-full w-full rounded-md object-cover object-top transition-opacity duration-500',
+                                            isLoaded
+                                              ? 'opacity-100'
+                                              : 'opacity-0',
+                                          )}
                                         />
-                                      ) : null}
-                                      <img
-                                        src={screenshotUrl}
-                                        alt={`${siteData.name || 'Site'} preview`}
-                                        onLoad={() => {
-                                          setLoadedScreenshots((prev) =>
-                                            new Set(prev).add(screenshotKey),
-                                          )
-                                        }}
-                                        className={cn(
-                                          'relative h-full w-full rounded-md object-cover object-top transition-opacity duration-500',
-                                          isLoaded ? 'opacity-100' : 'opacity-0',
-                                        )}
-                                      />
-                                    </>
-                                  )
-                                })()}
-                              </div>
+                                      </>
+                                    )
+                                  })()}
+                                </>
+                              ) : (
+                                <>
+                                  <div className="absolute inset-0 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20" />
+                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
+                                  <p className="relative flex h-full items-center justify-center text-[12px] font-medium text-muted-foreground/60">
+                                    Preview not available
+                                  </p>
+                                </>
+                              )}
+                              {frameworkPreviewBadge}
                             </div>
-                          ) : (
-                            <div className="p-1.5 pb-0">
-                              <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-border/60 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
-                                <p className="relative text-[12px] font-medium text-muted-foreground/60">
-                                  Preview not available
-                                </p>
-                              </div>
-                            </div>
-                          )}
+                          </div>
                           {/* Card Content */}
                           <div className="flex flex-1 flex-col p-4">
-                            <div className="flex min-w-0 items-start gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                <FrameworkIcon
-                                  framework={
-                                    (siteData as unknown).buildFramework ||
-                                    (siteData as unknown).buildFrameworkId ||
-                                    (siteData as unknown).framework
-                                  }
-                                  size="md"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="truncate text-[14px] font-medium text-foreground">
-                                  {siteData.name || 'Unnamed Site'}
-                                </h3>
-                                {runtimeImageLabel ? (
-                                  <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
-                                    {runtimeImageLabel}
-                                  </p>
-                                ) : null}
-                              </div>
+                            <div className="min-w-0">
+                              <h3 className="truncate text-[14px] font-medium text-foreground">
+                                {siteData.name || 'Unnamed Site'}
+                              </h3>
+                              {runtimeImageLabel ? (
+                                <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
+                                  {runtimeImageLabel}
+                                </p>
+                              ) : null}
                             </div>
                             <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
                               <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

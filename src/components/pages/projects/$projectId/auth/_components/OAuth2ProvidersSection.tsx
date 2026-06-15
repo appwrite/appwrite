@@ -29,6 +29,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+  RESOURCE_CARD_PADDED_CLASSNAME,
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
@@ -870,7 +872,9 @@ export function OAuth2ProvidersSection({
             type="button"
             onClick={() => openDrawerFor(row.$id)}
             className={cn(
-              'flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors hover:bg-card',
+              'flex w-full min-w-0 items-center justify-between gap-2 text-left',
+              RESOURCE_CARD_PADDED_CLASSNAME,
+              RESOURCE_CARD_INTERACTIVE_CLASSNAME,
               RESOURCE_CARD_SHELL_CLASSNAME,
             )}
           >

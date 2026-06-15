@@ -19,6 +19,8 @@ import {
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   RESOURCE_CARD_GRID_WIDE_CLASSNAME,
+  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+  RESOURCE_CARD_PADDED_CLASSNAME,
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../../shared/ResourceCard'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
@@ -1460,9 +1462,10 @@ function TemplateCard({
   const hiddenRuntimeNames = hidden.map((h) => h.name).join(', ')
 
   const cardClassName = cn(
-    'group flex w-full min-h-[160px] min-w-0 flex-col rounded-lg border border-border bg-card p-4 text-left transition-colors',
+    RESOURCE_CARD_PADDED_CLASSNAME,
+    RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+    'flex w-full min-h-[160px] min-w-0 flex-col text-left',
     RESOURCE_CARD_SHELL_CLASSNAME,
-    'cursor-pointer hover:border-border hover:bg-accent/50',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
   )
 

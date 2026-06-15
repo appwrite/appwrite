@@ -3,6 +3,7 @@ import { useLocation, Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_MEDIA_SHELL_CLASSNAME,
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../shared/ResourceCard'
 import { File, List, LayoutGrid, ArrowLeft, AlertCircle } from 'lucide-react'
@@ -634,8 +635,7 @@ export function BucketDetailView() {
                           <div
                             key={file.$id}
                             className={cn(
-                              'group min-w-0 cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/30',
-                              RESOURCE_CARD_SHELL_CLASSNAME,
+                              RESOURCE_CARD_MEDIA_SHELL_CLASSNAME,
                               pending && 'opacity-75',
                             )}
                             onClick={() => {

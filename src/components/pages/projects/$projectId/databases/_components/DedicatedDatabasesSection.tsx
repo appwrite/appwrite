@@ -100,6 +100,7 @@ function DedicatedDatabaseCard({
   const link = dedicatedDatabaseLink(projectId, db)
   const card = (
     <ResourceCard
+      interactive={!!link}
       title={db.name}
       resourceId={db.$id}
       icon={Cpu}
