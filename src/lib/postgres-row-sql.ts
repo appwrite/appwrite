@@ -202,28 +202,7 @@ export function buildPostgresDeleteRowSql(
   return `DELETE FROM ${qualified}\nWHERE ${whereClause}`
 }
 
-export function buildPostgresSearchWhereClause(
-  search: string,
-  textColumnNames: string[],
-): string | undefined {
-  const trimmed = search.trim()
-  if (!trimmed || textColumnNames.length === 0) return undefined
-
-  const pattern = `%${trimmed.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`
-  const patternLit = quotePostgresStringLiteral(pattern)
-  const conditions = textColumnNames.map(
-    (column) =>
-      `${quotePostgresIdentifier(column)}::text ILIKE ${patternLit} ESCAPE ${quotePostgresStringLiteral('\\')}`,
-  )
-  return `(${conditions.join(' OR ')})`
-}
-
-export function combinePostgresWhereClauses(
-  ...clauses: Array<string | undefined | null>
-): string | undefined {
-  const parts = clauses
-    .map((clause) => clause?.trim())
-    .filter((clause): clause is string => Boolean(clause))
-  if (parts.length === 0) return undefined
-  return parts.map((part) => `(${part})`).join(' AND ')
-}
+export {
+  buildPostgresTextSearchWhereClause as buildPostgresSearchWhereClause,
+  combinePostgresWhereClauses,
+} from '@/lib/table-filters/sql/postgres'

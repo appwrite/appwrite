@@ -23,7 +23,6 @@ import {
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
-import { Pagination } from '@/components/global/shared/Pagination'
 import { PostgresTableHeader } from './_components/PostgresTableHeader'
 import { PostgresRowsSpreadsheet } from './_components/PostgresRowsSpreadsheet'
 import { PostgresRowsEditSessionProvider } from './_components/PostgresRowsEditSession'
@@ -337,6 +336,7 @@ export function PostgresTableRowsView({
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <PostgresRowsSpreadsheet
+            databaseId={databaseId}
             tableId={tableId}
             columns={tableColumns}
             rows={displayedRows}
@@ -345,21 +345,13 @@ export function PostgresTableRowsView({
             isLoading={isLoading && rows.length === 0}
             emptyContent={emptyContent}
             onOpenRow={openRowInDrawer}
+            currentPage={displayedPage}
+            totalItems={requestedFetching ? total : (requestedTotal ?? total)}
+            pageSize={urlLimit}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
-
-        {total > 0 ? (
-          <div className="shrink-0 border-t border-border bg-background px-4 py-3 sm:px-6">
-            <Pagination
-              currentPage={displayedPage}
-              totalItems={requestedFetching ? total : (requestedTotal ?? total)}
-              pageSize={urlLimit}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              pageSizeOptions={[10, 25, 50, 100]}
-            />
-          </div>
-        ) : null}
 
         <PostgresRowEditDrawer
           open={drawerOpen}

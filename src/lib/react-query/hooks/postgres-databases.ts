@@ -43,10 +43,8 @@ import {
   buildPostgresCountRowsSql,
   buildPostgresDeleteRowSql,
   buildPostgresInsertRowSql,
-  buildPostgresSearchWhereClause,
   buildPostgresSelectRowsSql,
   buildPostgresUpdateRowSql,
-  combinePostgresWhereClauses,
   POSTGRES_ROW_CTID_COLUMN,
   type PostgresRowIdentity,
 } from '@/lib/postgres-row-sql'
@@ -56,7 +54,9 @@ import {
 } from '@/lib/postgres-row-edits'
 import type { RowCellValue } from '@/lib/database-row-inline-edits'
 import type { CompactFilterKey } from '@/lib/table-filters/types'
-import { buildPostgresFilterWhereClause } from '@/lib/postgres-row-filters'
+import {
+  buildPostgresRowsListWhereClause,
+} from '@/lib/postgres-row-filters'
 import {
   buildPostgresSavedQueriesPrefs,
   buildPostgresSavedQueriesScopePrefs,
@@ -354,27 +354,11 @@ async function resolvePostgresRowsWhereClause(
   params?: PostgresTableRowsListParams,
 ): Promise<string | undefined> {
   const columns = await fetchPostgresTableColumns(projectId, databaseId, tableId)
-  const filterWhere = params?.filterKeys?.length
-    ? buildPostgresFilterWhereClause(params.filterKeys, columns.columns)
-    : undefined
-
-  const textColumns = columns.columns
-    .filter((column) => {
-      const type = column.data_type.toLowerCase()
-      return (
-        type.includes('char') ||
-        type.includes('text') ||
-        type === 'uuid' ||
-        type.includes('json')
-      )
-    })
-    .map((column) => column.column_name)
-
-  const searchWhere = params?.search?.trim()
-    ? buildPostgresSearchWhereClause(params.search, textColumns)
-    : undefined
-
-  return combinePostgresWhereClauses(filterWhere, searchWhere)
+  return buildPostgresRowsListWhereClause(
+    params?.filterKeys,
+    params?.search,
+    columns.columns,
+  )
 }
 
 function buildPostgresRowsOrderClause(

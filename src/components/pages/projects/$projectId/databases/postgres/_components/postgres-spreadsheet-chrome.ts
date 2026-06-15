@@ -1,4 +1,63 @@
 import { parsePostgresIndexKeyColumns } from '@/lib/postgres-index-metadata'
+import { cn } from '@/lib/utils'
+import type { CSSProperties } from 'react'
+
+export const POSTGRES_ROWS_TABLE_EDGE_COL_PX = 40
+export const POSTGRES_ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
+export const POSTGRES_ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
+export const POSTGRES_ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640
+
+/** Sum of edge column + data column minimum widths (for table minWidth / horizontal scroll). */
+export function computePostgresRowsTableWidthPx(
+  columnKeys: readonly string[],
+  getColumnWidthPx: (columnKey: string) => number,
+): number {
+  let total = POSTGRES_ROWS_TABLE_EDGE_COL_PX
+  for (const key of columnKeys) {
+    if (!key) continue
+    total += getColumnWidthPx(key)
+  }
+  return total
+}
+
+export function getPostgresRowsDataColumnColStyle(
+  columnIndex: number,
+  columnCount: number,
+  widthPx: number,
+  isDragResize: boolean,
+): CSSProperties | undefined {
+  if (isDragResize) return undefined
+  const isLast = columnIndex === columnCount - 1
+  if (isLast) {
+    return { minWidth: widthPx }
+  }
+  return { width: widthPx, minWidth: widthPx, maxWidth: widthPx }
+}
+
+export function getPostgresRowsDataColumnHeaderStyle(
+  columnIndex: number,
+  columnCount: number,
+  widthPx: number,
+  isDragResize: boolean,
+): CSSProperties | undefined {
+  if (isDragResize) return undefined
+  const isLast = columnIndex === columnCount - 1
+  if (isLast) {
+    return { minWidth: widthPx }
+  }
+  return {
+    width: widthPx,
+    minWidth: widthPx,
+    maxWidth: widthPx,
+  }
+}
+
+export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
+  'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'hover:before:opacity-100',
+)
 
 export const POSTGRES_STICKY_THEAD_CLASS = 'sticky top-0 z-20 bg-background'
 export const POSTGRES_HEADER_CELL_BORDER_CLASS =

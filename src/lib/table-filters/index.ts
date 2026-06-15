@@ -79,6 +79,12 @@ export {
   type TableIndexForFilters,
 } from './filter-configs/rows'
 export { postgresRowsFilterColumns } from './filter-configs/postgres-rows'
+export {
+  buildPostgresFilterSqlCondition,
+  buildPostgresFilterWhereClause,
+  buildPostgresTextSearchWhereClause,
+  combinePostgresWhereClauses,
+} from './sql/postgres'
 
 export {
   SIZE_FILTER_UNITS,
