@@ -213,6 +213,24 @@ export type PostgresTableColumnRow = {
   foreign_keys: string | null
 }
 
+export function isPostgresPrimaryKeyColumn(
+  column: Pick<PostgresTableColumnRow, 'is_primary_key'>,
+): boolean {
+  return column.is_primary_key === true || column.is_primary_key === 'true'
+}
+
+export function sortPostgresTableColumns<T extends PostgresTableColumnRow>(
+  columns: T[],
+): T[] {
+  return [...columns].sort((a, b) => {
+    const aPrimary = isPostgresPrimaryKeyColumn(a)
+    const bPrimary = isPostgresPrimaryKeyColumn(b)
+    if (aPrimary !== bPrimary) return aPrimary ? -1 : 1
+
+    return Number(a.ordinal_position) - Number(b.ordinal_position)
+  })
+}
+
 export type PostgresTableIndexRow = {
   index_name: string
   index_definition: string
@@ -222,6 +240,25 @@ export type PostgresTableIndexRow = {
   index_condition: string | null
   index_include: string | null
   index_comment: string | null
+}
+
+export function isPostgresPrimaryIndex(
+  index: Pick<PostgresTableIndexRow, 'is_primary'>,
+): boolean {
+  const value = index.is_primary
+  return value === true || value === 'true' || value === 't'
+}
+
+export function sortPostgresTableIndexes<T extends PostgresTableIndexRow>(
+  indexes: T[],
+): T[] {
+  return [...indexes].sort((a, b) => {
+    const aPrimary = isPostgresPrimaryIndex(a)
+    const bPrimary = isPostgresPrimaryIndex(b)
+    if (aPrimary !== bPrimary) return aPrimary ? -1 : 1
+
+    return a.index_name.localeCompare(b.index_name)
+  })
 }
 
 export type PostgresTableInfoRow = {
@@ -318,7 +355,7 @@ LEFT JOIN (
 ) fkeys ON fkeys.column_name = c.column_name
 WHERE c.table_schema = ${schemaLit}
   AND c.table_name = ${tableLit}
-ORDER BY c.ordinal_position
+ORDER BY CASE WHEN pk.column_name IS NOT NULL THEN 0 ELSE 1 END, c.ordinal_position
 `.trim()
 }
 
@@ -350,7 +387,7 @@ JOIN pg_class i ON i.oid = ix.indexrelid
 JOIN pg_am am ON am.oid = i.relam
 WHERE n.nspname = ${schemaLit}
   AND t.relname = ${tableLit}
-ORDER BY i.relname
+ORDER BY ix.indisprimary DESC, i.relname
 `.trim()
 }
 

@@ -42,6 +42,8 @@ export interface EmptyStateProps {
    * Icon size variant (`xl` = larger hero-style empty state)
    */
   iconSize?: 'sm' | 'md' | 'lg' | 'xl'
+  /** Extra classes applied to the icon (e.g. `fill-current` for Play). */
+  iconClassName?: string
 }
 
 /**
@@ -62,6 +64,7 @@ export function EmptyState({
   className,
   variant = 'default',
   iconSize = 'sm',
+  iconClassName,
 }: EmptyStateProps) {
   // Default icon size classes
   const iconSizeClasses = {
@@ -145,7 +148,11 @@ export function EmptyState({
           )}
         >
           <Icon
-            className={cn('text-muted-foreground', iconSizeClasses[iconSize])}
+            className={cn(
+              'text-muted-foreground',
+              iconSizeClasses[iconSize],
+              iconClassName,
+            )}
           />
         </div>
       )}

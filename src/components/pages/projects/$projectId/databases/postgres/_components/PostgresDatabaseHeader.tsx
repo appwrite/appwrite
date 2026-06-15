@@ -3,7 +3,6 @@ import {
   POSTGRES_DATABASE_TAB_LABELS,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
-import { PostgresConnectHeaderButton } from './PostgresConnectHeaderButton'
 import { PostgresConnectionsHeaderLimit } from './PostgresConnectionsHeaderLimit'
 
 type PostgresDatabaseHeaderProps = {
@@ -41,7 +40,6 @@ export function PostgresDatabaseHeader({
         databaseTab === 'monitor' ||
         databaseTab === 'connections'
       }
-      titleRightContent={<PostgresConnectHeaderButton />}
     />
   )
 }

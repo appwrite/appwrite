@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import {
   POSTGRES_SQL_EDITOR_SURFACE_CLASS,
   POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+  POSTGRES_RUN_QUERY_PLAY_ICON_CLASS,
 } from './postgres-chrome'
 
 type SqlEditorActionBarProps = {
@@ -184,7 +185,7 @@ export function SqlEditorActionBar({
             {isRunning ? (
               <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
             ) : (
-              <Play className="h-3.5 w-3.5 shrink-0 fill-current" />
+              <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
             )}
             Run query
           </Button>

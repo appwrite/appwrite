@@ -16,8 +16,6 @@ import {
   wrapPostgresSqlForDisplay,
 } from '@/lib/postgres-execution-values'
 import {
-  buildPostgresCountSql,
-  buildPostgresSelectSql,
   executionResultRows,
   buildPostgresListSchemasCountSql,
   buildPostgresListSchemasSql,
@@ -37,8 +35,28 @@ import {
   type PostgresTableIndexRow,
   type PostgresTableInfoRow,
   type PostgresTableRow,
+  sortPostgresTableColumns,
+  sortPostgresTableIndexes,
 } from '@/lib/postgres-sql'
-import { parsePostgresTableId } from '@/lib/postgres-database-routes'
+import { parsePostgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
+import {
+  buildPostgresCountRowsSql,
+  buildPostgresDeleteRowSql,
+  buildPostgresInsertRowSql,
+  buildPostgresSearchWhereClause,
+  buildPostgresSelectRowsSql,
+  buildPostgresUpdateRowSql,
+  combinePostgresWhereClauses,
+  POSTGRES_ROW_CTID_COLUMN,
+  type PostgresRowIdentity,
+} from '@/lib/postgres-row-sql'
+import {
+  groupPostgresEditsByRow,
+  type PendingPostgresRowCellEdit,
+} from '@/lib/postgres-row-edits'
+import type { RowCellValue } from '@/lib/database-row-inline-edits'
+import type { CompactFilterKey } from '@/lib/table-filters/types'
+import { buildPostgresFilterWhereClause } from '@/lib/postgres-row-filters'
 import {
   buildPostgresSavedQueriesPrefs,
   buildPostgresSavedQueriesScopePrefs,
@@ -277,9 +295,12 @@ export async function fetchPostgresTableColumns(
     buildPostgresTableColumnsSql(schema, table),
   )
   const rows = executionResultRows<PostgresTableColumnRow>(execution)
+  const columns = sortPostgresTableColumns(
+    rows.filter((row) => row.column_name),
+  )
   return {
-    columns: rows.filter((row) => row.column_name),
-    total: rows.length,
+    columns,
+    total: columns.length,
   }
 }
 
@@ -295,9 +316,12 @@ export async function fetchPostgresTableIndexes(
     buildPostgresTableIndexesSql(schema, table),
   )
   const rows = executionResultRows<PostgresTableIndexRow>(execution)
+  const indexes = sortPostgresTableIndexes(
+    rows.filter((row) => row.index_name),
+  )
   return {
-    indexes: rows.filter((row) => row.index_name),
-    total: rows.length,
+    indexes,
+    total: indexes.length,
   }
 }
 
@@ -316,43 +340,117 @@ export async function fetchPostgresTableInfo(
   return rows[0] ?? null
 }
 
+export type PostgresTableRowsListParams = {
+  search?: string
+  filterKeys?: CompactFilterKey[]
+  orderBy?: string
+  orderDirection?: 'asc' | 'desc'
+}
+
+async function resolvePostgresRowsWhereClause(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  params?: PostgresTableRowsListParams,
+): Promise<string | undefined> {
+  const columns = await fetchPostgresTableColumns(projectId, databaseId, tableId)
+  const filterWhere = params?.filterKeys?.length
+    ? buildPostgresFilterWhereClause(params.filterKeys, columns.columns)
+    : undefined
+
+  const textColumns = columns.columns
+    .filter((column) => {
+      const type = column.data_type.toLowerCase()
+      return (
+        type.includes('char') ||
+        type.includes('text') ||
+        type === 'uuid' ||
+        type.includes('json')
+      )
+    })
+    .map((column) => column.column_name)
+
+  const searchWhere = params?.search?.trim()
+    ? buildPostgresSearchWhereClause(params.search, textColumns)
+    : undefined
+
+  return combinePostgresWhereClauses(filterWhere, searchWhere)
+}
+
+function buildPostgresRowsOrderClause(
+  columns: PostgresTableColumnRow[],
+  sortBy?: string,
+  orderDirection: 'asc' | 'desc' = 'asc',
+): string | undefined {
+  const direction = orderDirection === 'desc' ? 'DESC' : 'ASC'
+  const sortColumn = sortBy?.trim()
+  if (sortColumn && columns.some((column) => column.column_name === sortColumn)) {
+    return `${quotePostgresIdentifier(sortColumn)} ${direction}`
+  }
+  const pkColumns = columns.filter(
+    (column) =>
+      column.is_primary_key === true || column.is_primary_key === 'true',
+  )
+  if (pkColumns.length > 0) {
+    return pkColumns
+      .map((column) => `${quotePostgresIdentifier(column.column_name)} ${direction}`)
+      .join(', ')
+  }
+  return `${quotePostgresIdentifier(POSTGRES_ROW_CTID_COLUMN)} ${direction}`
+}
+
 export async function fetchPostgresTableRows(
   projectId: string,
   databaseId: string,
   tableId: string,
   page: number,
   limit: number,
+  params?: PostgresTableRowsListParams,
 ) {
-  const { schema, table } = parsePostgresTableId(tableId)
+  const columnsResult = await fetchPostgresTableColumns(
+    projectId,
+    databaseId,
+    tableId,
+  )
+  const whereClause = await resolvePostgresRowsWhereClause(
+    projectId,
+    databaseId,
+    tableId,
+    params,
+  )
+  const orderByClause = buildPostgresRowsOrderClause(
+    columnsResult.columns,
+    params?.orderBy,
+    params?.orderDirection ?? 'asc',
+  )
   const offset = page * limit
 
   const [dataExecution, countExecution] = await Promise.all([
     executePostgresDatabaseSql(
       projectId,
       databaseId,
-      buildPostgresSelectSql(schema, table, limit, offset),
+      buildPostgresSelectRowsSql(tableId, {
+        whereClause,
+        orderByClause,
+        limit,
+        offset,
+      }),
     ),
     executePostgresDatabaseSql(
       projectId,
       databaseId,
-      buildPostgresCountSql(schema, table),
+      buildPostgresCountRowsSql(tableId, whereClause),
     ),
   ])
 
   const rows = executionResultRows<Record<string, unknown>>(dataExecution)
-  const countRows = executionResultRows<{ total?: number | string }>(
-    countExecution,
-  )
-  const totalRaw = countRows[0]?.total
-  const total =
-    typeof totalRaw === 'number'
-      ? totalRaw
-      : Number.parseInt(String(totalRaw ?? rows.length), 10) || rows.length
+  const total = parsePostgresCountTotal(countExecution, rows.length)
 
   return {
     rows,
     total,
     columns: dataExecution.columns ?? [],
+    tableColumns: columnsResult.columns,
     durationMs: dataExecution.durationMs,
     truncated: dataExecution.truncated,
   }
@@ -610,7 +708,11 @@ export function postgresTableRowsQueryOptions(
   tableId: string | null | undefined,
   page: number = 0,
   limit: number = 25,
+  params?: PostgresTableRowsListParams,
 ) {
+  const filterKey = params?.filterKeys?.length
+    ? JSON.stringify(params.filterKeys)
+    : undefined
   return queryOptions({
     queryKey: [
       'postgres-table-rows',
@@ -620,16 +722,154 @@ export function postgresTableRowsQueryOptions(
       tableId,
       page,
       limit,
+      params?.search?.trim() || undefined,
+      filterKey,
+      params?.orderBy,
+      params?.orderDirection,
     ],
     queryFn: () =>
-      fetchPostgresTableRows(projectId!, databaseId!, tableId!, page, limit),
+      fetchPostgresTableRows(
+        projectId!,
+        databaseId!,
+        tableId!,
+        page,
+        limit,
+        params,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export async function updatePostgresTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  identity: PostgresRowIdentity,
+  changes: Record<string, RowCellValue>,
+) {
+  const sql = buildPostgresUpdateRowSql(tableId, identity, changes)
+  return executePostgresDatabaseSql(projectId, databaseId, sql)
+}
+
+export async function createPostgresTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  values: Record<string, RowCellValue>,
+) {
+  const sql = buildPostgresInsertRowSql(tableId, values)
+  return executePostgresDatabaseSql(projectId, databaseId, sql)
+}
+
+export async function deletePostgresTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  identity: PostgresRowIdentity,
+) {
+  const sql = buildPostgresDeleteRowSql(tableId, identity)
+  return executePostgresDatabaseSql(projectId, databaseId, sql)
+}
+
+export async function commitPostgresRowEdits(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  edits: PendingPostgresRowCellEdit[],
+) {
+  const grouped = groupPostgresEditsByRow(edits)
+  for (const [, { identity, changes }] of grouped) {
+    await updatePostgresTableRow(
+      projectId,
+      databaseId,
+      tableId,
+      identity,
+      changes,
+    )
+  }
+}
+
+export function useUpdatePostgresTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: {
+      identity: PostgresRowIdentity
+      changes: Record<string, RowCellValue>
+    }) =>
+      updatePostgresTableRow(
+        projectId,
+        databaseId,
+        tableId,
+        params.identity,
+        params.changes,
+      ),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+    },
+  })
+}
+
+export function useCreatePostgresTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (values: Record<string, RowCellValue>) =>
+      createPostgresTableRow(projectId, databaseId, tableId, values),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+    },
+  })
+}
+
+export function useDeletePostgresTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (identity: PostgresRowIdentity) =>
+      deletePostgresTableRow(projectId, databaseId, tableId, identity),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+    },
+  })
+}
+
+export function useCommitPostgresRowEdits(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (edits: PendingPostgresRowCellEdit[]) =>
+      commitPostgresRowEdits(projectId, databaseId, tableId, edits),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+    },
   })
 }
 
@@ -906,14 +1146,23 @@ export function usePostgresTableRows(
   tableId: string | null | undefined,
   page: number = 0,
   limit: number = 25,
+  params?: PostgresTableRowsListParams,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    postgresTableRowsQueryOptions(projectId, databaseId, tableId, page, limit),
+    postgresTableRowsQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      page,
+      limit,
+      params,
+    ),
   )
   return {
     rows: data?.rows ?? [],
     total: data?.total ?? 0,
     columns: data?.columns ?? [],
+    tableColumns: data?.tableColumns ?? [],
     durationMs: data?.durationMs,
     truncated: data?.truncated,
     isLoading,

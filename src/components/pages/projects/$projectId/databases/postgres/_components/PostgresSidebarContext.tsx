@@ -64,6 +64,7 @@ type PostgresSidebarContextValue = {
   activeTabId: string
   activeTab: SqlEditorTab
   openTableInEditor: (tableId: string) => void
+  openTableInSqlEditor: (tableId: string) => void
   focusTableRouteTab: (tableId: string) => void
   openQueryTab: (sql: string) => void
   createTab: () => void
@@ -433,7 +434,6 @@ export function PostgresSidebarProvider({
   const openTableInEditor = useCallback(
     (tableId: string) => {
       const normalizedTableId = normalizePostgresTableRouteId(tableId)
-      focusTableRouteTab(normalizedTableId)
       navigate({
         ...postgresTableRows({
           projectId,
@@ -443,7 +443,26 @@ export function PostgresSidebarProvider({
         replace: true,
       })
     },
-    [databaseId, focusTableRouteTab, navigate, projectId],
+    [databaseId, navigate, projectId],
+  )
+
+  const openTableInSqlEditor = useCallback(
+    (tableId: string) => {
+      const normalizedTableId = normalizePostgresTableRouteId(tableId)
+      focusTableRouteTab(normalizedTableId)
+      navigate({
+        ...postgresNav({ projectId, databaseId }).sql(),
+        replace: true,
+      })
+      schedulePendingActiveTab()
+    },
+    [
+      databaseId,
+      focusTableRouteTab,
+      navigate,
+      projectId,
+      schedulePendingActiveTab,
+    ],
   )
 
   const createTab = useCallback(() => {
@@ -517,6 +536,7 @@ export function PostgresSidebarProvider({
       activeTabId,
       activeTab,
       openTableInEditor,
+      openTableInSqlEditor,
       focusTableRouteTab,
       openQueryTab,
       createTab,
@@ -542,6 +562,7 @@ export function PostgresSidebarProvider({
       activeTabId,
       activeTab,
       openTableInEditor,
+      openTableInSqlEditor,
       focusTableRouteTab,
       openQueryTab,
       createTab,

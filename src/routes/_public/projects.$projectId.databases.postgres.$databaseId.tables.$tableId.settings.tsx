@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { TableStructureView } from '@/components/pages/projects/$projectId/databases/postgres/TableStructureView'
+import { TableStructureContent } from '@/components/pages/projects/$projectId/databases/postgres/TableStructureView'
 import { prefetchPostgresTableRouteData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-table-route-loader'
-import { postgresNav } from '@/lib/postgres-database-routes'
+import { normalizePostgresTableRouteId, postgresNav } from '@/lib/postgres-database-routes'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -37,10 +37,12 @@ export const Route = createFileRoute(
 
 function PostgresTableSettingsPage() {
   const { databaseId, tableId } = Route.useParams()
+  const normalizedTableId = normalizePostgresTableRouteId(tableId)
+
   return (
-    <TableStructureView
+    <TableStructureContent
       databaseId={databaseId}
-      tableId={tableId}
+      tableId={normalizedTableId}
       activeTab="settings"
     />
   )

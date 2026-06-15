@@ -23,6 +23,7 @@ type PostgresTableHeaderProps = {
   searchPlaceholder?: string
   searchValue?: string
   onSearchChange?: (value: string) => void
+  filterTrigger?: React.ReactNode
 }
 
 export function PostgresTableHeader({
@@ -42,6 +43,7 @@ export function PostgresTableHeader({
   searchPlaceholder,
   searchValue,
   onSearchChange,
+  filterTrigger,
 }: PostgresTableHeaderProps) {
   const { schema, table } = parsePostgresTableId(tableId)
   const nav = useMemo(
@@ -51,6 +53,7 @@ export function PostgresTableHeader({
 
   const tabs: Tab[] = useMemo(
     () => [
+      { id: 'rows', label: 'Rows', ...nav.rows() },
       {
         id: 'columns',
         label: 'Columns',
@@ -90,6 +93,7 @@ export function PostgresTableHeader({
       searchPlaceholder={searchPlaceholder}
       searchValue={searchValue}
       onSearchChange={onSearchChange}
+      filterTrigger={filterTrigger}
     />
   )
 }

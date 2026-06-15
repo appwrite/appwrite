@@ -9,6 +9,7 @@ import {
   type PostgresForeignKeyState,
 } from '@/lib/postgres-column-metadata'
 import { formatPostgresColumnType } from '@/lib/postgres-table-ddl'
+import { isPostgresPrimaryKeyColumn } from '@/lib/postgres-sql'
 import {
   postgresSchemasQueryOptions,
   postgresTableColumnsQueryOptions,
@@ -75,8 +76,7 @@ export function PostgresForeignKeySelector({
   const columnItems = useMemo(
     () =>
       (columnsData?.columns ?? []).map((column) => {
-        const isPrimaryKey =
-          column.is_primary_key === true || column.is_primary_key === 'true'
+        const isPrimaryKey = isPostgresPrimaryKeyColumn(column)
         return {
           value: column.column_name,
           label: column.column_name,

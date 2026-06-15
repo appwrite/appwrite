@@ -9,7 +9,6 @@ import {
   usePostgresTableIndexes,
 } from '@/lib/react-query/hooks'
 import type { PostgresTableTab } from '@/lib/postgres-database-routes'
-import { PostgresShell } from './PostgresShell'
 import { PostgresTableHeader } from './_components/PostgresTableHeader'
 import { PostgresTableColumnsPanel } from './_components/PostgresTableColumnsPanel'
 import { PostgresTableIndexesPanel } from './_components/PostgresTableIndexesPanel'
@@ -26,17 +25,15 @@ export function TableStructureView({
   activeTab,
 }: TableStructureViewProps) {
   return (
-    <PostgresShell databaseId={databaseId} tableId={tableId}>
-      <TableStructureContent
-        databaseId={databaseId}
-        tableId={tableId}
-        activeTab={activeTab}
-      />
-    </PostgresShell>
+    <TableStructureContent
+      databaseId={databaseId}
+      tableId={tableId}
+      activeTab={activeTab}
+    />
   )
 }
 
-function TableStructureContent({
+export function TableStructureContent({
   databaseId,
   tableId,
   activeTab,

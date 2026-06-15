@@ -10,18 +10,18 @@ import {
   postgresTablesQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import { postgresNav } from '@/lib/postgres-database-routes'
+import {
+  normalizePostgresTableRouteId,
+  postgresNav,
+} from '@/lib/postgres-database-routes'
 
-export async function prefetchPostgresTableRouteData(
+async function ensurePostgresTableExists(
   queryClient: QueryClient,
   projectId: string,
   databaseId: string,
   tableId: string,
 ) {
-  await queryClient.ensureQueryData(projectQueryOptions(projectId))
-  await queryClient.ensureQueryData(
-    postgresDatabaseQueryOptions(projectId, databaseId),
-  )
+  const normalizedTableId = normalizePostgresTableRouteId(tableId)
 
   let tablesData: { tables?: { table_schema: string; table_name: string }[] } | null =
     null
@@ -35,7 +35,7 @@ export async function prefetchPostgresTableRouteData(
 
   const tableExists = tablesData?.tables?.some((table) => {
     const id = `${table.table_schema}.${table.table_name}`
-    return id === tableId
+    return id === normalizedTableId
   })
 
   if (tablesData && !tableExists) {
@@ -45,6 +45,27 @@ export async function prefetchPostgresTableRouteData(
     })
   }
 
+  return normalizedTableId
+}
+
+export async function prefetchPostgresTableLayoutData(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  await queryClient.ensureQueryData(projectQueryOptions(projectId))
+  await queryClient.ensureQueryData(
+    postgresDatabaseQueryOptions(projectId, databaseId),
+  )
+
+  const normalizedTableId = await ensurePostgresTableExists(
+    queryClient,
+    projectId,
+    databaseId,
+    tableId,
+  )
+
   await Promise.allSettled([
     queryClient.ensureQueryData(
       postgresSchemasQueryOptions(projectId, databaseId),
@@ -52,14 +73,41 @@ export async function prefetchPostgresTableRouteData(
     queryClient.ensureQueryData(
       postgresColumnsQueryOptions(projectId, databaseId),
     ),
+  ])
+
+  return normalizedTableId
+}
+
+export async function prefetchPostgresTableRouteData(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const normalizedTableId = await prefetchPostgresTableLayoutData(
+    queryClient,
+    projectId,
+    databaseId,
+    tableId,
+  )
+
+  await Promise.all([
     queryClient.ensureQueryData(
-      postgresTableColumnsQueryOptions(projectId, databaseId, tableId),
+      postgresTableColumnsQueryOptions(
+        projectId,
+        databaseId,
+        normalizedTableId,
+      ),
     ),
     queryClient.ensureQueryData(
-      postgresTableIndexesQueryOptions(projectId, databaseId, tableId),
+      postgresTableIndexesQueryOptions(
+        projectId,
+        databaseId,
+        normalizedTableId,
+      ),
     ),
     queryClient.ensureQueryData(
-      postgresTableInfoQueryOptions(projectId, databaseId, tableId),
+      postgresTableInfoQueryOptions(projectId, databaseId, normalizedTableId),
     ),
   ])
 }

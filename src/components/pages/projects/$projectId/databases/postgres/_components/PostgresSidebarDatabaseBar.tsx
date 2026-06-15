@@ -1,18 +1,21 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useSwitchResourceInPlace } from '@/components/global/shared/ResourceTitleSwitcher'
+import { PostgresConnectButton } from './PostgresConnectButton'
 import { PostgresDatabaseSelector } from './PostgresDatabaseSelector'
 
 type PostgresSidebarDatabaseBarProps = {
   projectId: string
   databaseId: string
   databaseName: string
+  databaseSpecification?: string | null
 }
 
 export function PostgresSidebarDatabaseBar({
   projectId,
   databaseId,
   databaseName,
+  databaseSpecification,
 }: PostgresSidebarDatabaseBarProps) {
   const switchResource = useSwitchResourceInPlace()
 
@@ -31,16 +34,18 @@ export function PostgresSidebarDatabaseBar({
           Databases
         </span>
       </div>
-      <div className="flex min-w-0 items-center gap-2 px-2 py-2">
+      <div className="flex min-w-0 flex-col gap-2 px-2 py-2">
         <PostgresDatabaseSelector
           projectId={projectId}
           value={databaseId}
           selectedName={databaseName}
+          selectedSpecification={databaseSpecification}
           onSelect={(newDatabaseId) => {
             if (newDatabaseId === databaseId) return
             switchResource(databaseId, newDatabaseId)
           }}
         />
+        <PostgresConnectButton />
       </div>
     </div>
   )

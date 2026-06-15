@@ -7,7 +7,6 @@ import {
   normalizePostgresTableRouteId,
   parsePostgresTableId,
   postgresNav,
-  postgresTableRows,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
@@ -71,7 +70,7 @@ type PostgresSqlWorkbenchContentProps = {
   routeTableId?: string
 }
 
-function PostgresSqlWorkbenchContent({
+export function PostgresSqlWorkbenchContent({
   databaseId,
   routeTableId,
 }: PostgresSqlWorkbenchContentProps) {
@@ -161,7 +160,11 @@ function PostgresSqlWorkbenchContent({
   const handleRunSql = useCallback(async () => {
     const trimmed = editorActiveTab.sql.trim()
     if (!trimmed) return
-    setActiveTabResult(null, null)
+
+    if (editorActiveTab.error) {
+      setActiveTabResult(editorActiveTab.result, null)
+    }
+
     try {
       const result = await executeSql.mutateAsync(trimmed)
       setActiveTabResult(result, null)
@@ -171,6 +174,8 @@ function PostgresSqlWorkbenchContent({
     }
   }, [
     addRecentQuery,
+    editorActiveTab.error,
+    editorActiveTab.result,
     editorActiveTab.sql,
     executeSql,
     setActiveTabResult,
@@ -190,18 +195,12 @@ function PostgresSqlWorkbenchContent({
         return
       }
 
-      if (tab.tableId === routeTableId) return
-
       navigate({
-        ...postgresTableRows({
-          projectId,
-          databaseId,
-          tableId: tab.tableId,
-        }),
+        ...postgresNav({ projectId, databaseId }).sql(),
         replace: true,
       })
     },
-    [databaseId, navigate, projectId, routeTableId, setActiveTabId, tabs],
+    [databaseId, navigate, projectId, setActiveTabId, tabs],
   )
 
   const tableRowsPanel = selectedTable ? (

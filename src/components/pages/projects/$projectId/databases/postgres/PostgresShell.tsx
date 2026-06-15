@@ -110,6 +110,7 @@ function PostgresShellLayout({
           projectId={projectId}
           databaseId={databaseId}
           databaseName={database.name}
+          databaseSpecification={database.specification}
         />
       ) : null}
       {databaseTab && databaseTab !== 'sql' ? (
@@ -137,6 +138,7 @@ function PostgresShellLayout({
               projectId={projectId}
               databaseId={databaseId}
               databaseName={database.name}
+              databaseSpecification={database.specification}
               selectedTableId={selectedTableId}
               databaseTab={databaseTab}
               onSelectTable={handleOpenTable}

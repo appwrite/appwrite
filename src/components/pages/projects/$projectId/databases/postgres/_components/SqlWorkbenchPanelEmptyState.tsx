@@ -23,6 +23,7 @@ export function SqlWorkbenchPanelEmptyState({
       <EmptyState
         variant="centered"
         icon={Play}
+        iconClassName="fill-current"
         iconSize="md"
         title="No query results yet"
         description="Write SQL in the editor above and run your query. Results will appear in this panel."

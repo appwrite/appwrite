@@ -11,7 +11,6 @@ import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/Ser
 import { PostgresSqlEditorContainer } from './PostgresSqlEditorContainer'
 import { PostgresSqlCodeEditor } from './PostgresSqlCodeEditor'
 import type { PostgresSqlCodeEditorRef } from './PostgresSqlCodeEditor'
-import { PostgresConnectHeaderButton } from './_components/PostgresConnectHeaderButton'
 import { SqlEditorActionBar } from './_components/SqlEditorActionBar'
 import { SqlEditorTabBar } from './_components/SqlEditorTabBar'
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
@@ -87,6 +86,7 @@ export function SqlWorkbench({
       ? Object.keys(first).map((key) => ({ key, label: key }))
       : []
   }, [result?.columns, resultRows])
+  const showQueryResults = result != null || isRunning
 
   useEffect(() => {
     setCanUndo(false)
@@ -105,7 +105,6 @@ export function SqlWorkbench({
               fullWidthBorder
               fullWidth
               hideTitle={isHeaderCollapsed}
-              titleRightContent={<PostgresConnectHeaderButton />}
               contentAfterBorder={
                 <div
                   className={cn(
@@ -181,7 +180,7 @@ export function SqlWorkbench({
         </div>
       ) : null}
 
-      {result ? (
+      {showQueryResults ? (
         <ReadOnlyDataSpreadsheet
           className="min-h-0 flex-1"
           variant="studio"
@@ -189,14 +188,18 @@ export function SqlWorkbench({
           columns={resultColumns}
           rows={resultRows}
           getRowKey={(_, index) => `sql-result-${index}`}
+          isLoading={isRunning && !result}
+          loadingLabel="Running query…"
           emptyContent={<SqlWorkbenchPanelEmptyState variant="query-no-rows" />}
           header={
-            <PostgresQueryResultsMeta
-              title="Query results"
-              rowCount={result.rowCount}
-              durationMs={result.durationMs}
-              truncated={result.truncated}
-            />
+            result ? (
+              <PostgresQueryResultsMeta
+                title="Query results"
+                rowCount={result.rowCount}
+                durationMs={result.durationMs}
+                truncated={result.truncated}
+              />
+            ) : undefined
           }
         />
       ) : (

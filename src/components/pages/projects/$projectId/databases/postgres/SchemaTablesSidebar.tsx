@@ -15,7 +15,6 @@ import { Loader2, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { PostgresDatabaseNav } from './PostgresDatabaseNav'
-import { PostgresSpecificationCard } from './PostgresSpecificationCard'
 import { PostgresSegmentedToggle } from './_components/PostgresSegmentedToggle'
 import {
   usePostgresSidebar,
@@ -32,6 +31,7 @@ type SchemaTablesSidebarProps = {
   projectId: string
   databaseId: string
   databaseName: string
+  databaseSpecification?: string | null
   selectedTableId?: string
   databaseTab?: PostgresDatabaseTab
   onSelectTable: (tableId: string) => void
@@ -41,6 +41,7 @@ export function SchemaTablesSidebar({
   projectId,
   databaseId,
   databaseName,
+  databaseSpecification,
   selectedTableId,
   databaseTab,
   onSelectTable,
@@ -168,6 +169,7 @@ export function SchemaTablesSidebar({
         projectId={projectId}
         databaseId={databaseId}
         databaseName={databaseName}
+        databaseSpecification={databaseSpecification}
       />
       <PostgresSegmentedToggle
         variant="bar"
@@ -317,10 +319,6 @@ export function SchemaTablesSidebar({
         projectId={projectId}
         databaseId={databaseId}
         activeTab={databaseTab}
-      />
-      <PostgresSpecificationCard
-        projectId={projectId}
-        databaseId={databaseId}
       />
     </aside>
   )

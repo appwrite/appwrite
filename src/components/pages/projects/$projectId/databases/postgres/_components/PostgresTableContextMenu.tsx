@@ -24,8 +24,10 @@ import {
   Key,
   LayoutGrid,
   Link2,
+  Rows3,
   Settings,
   Square,
+  Terminal,
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -33,11 +35,11 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   parsePostgresTableId,
   postgresNav,
-  postgresTableId,
   type PostgresTableTab,
 } from '@/lib/postgres-database-routes'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { buildPostgresDropTableSql } from '@/lib/postgres-table-ddl'
+import { usePostgresSidebar } from './PostgresSidebarContext'
 
 type PostgresTableContextMenuProps = {
   projectId: string
@@ -51,9 +53,10 @@ type PostgresTableContextMenuProps = {
 const TABLE_TABS: {
   id: string
   label: string
-  path: Exclude<PostgresTableTab, 'rows'>
+  path: PostgresTableTab
   icon: typeof LayoutGrid
 }[] = [
+  { id: 'rows', label: 'Rows', path: 'rows', icon: Rows3 },
   { id: 'columns', label: 'Columns', path: 'columns', icon: LayoutGrid },
   { id: 'indexes', label: 'Indexes', path: 'indexes', icon: Key },
   { id: 'settings', label: 'Settings', path: 'settings', icon: Settings },
@@ -68,6 +71,7 @@ export function PostgresTableContextMenu({
   onDeleted,
 }: PostgresTableContextMenuProps) {
   const navigate = useNavigate()
+  const { openTableInSqlEditor } = usePostgresSidebar()
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
@@ -81,7 +85,11 @@ export function PostgresTableContextMenu({
     return `${window.location.origin}${path}`
   }, [projectId, databaseId, tableId])
 
-  const handleGoToTab = (path: Exclude<PostgresTableTab, 'rows'>) => {
+  const handleGoToTab = (path: PostgresTableTab) => {
+    if (path === 'rows') {
+      navigate({ ...nav.rows() })
+      return
+    }
     if (path === 'columns') {
       navigate({ ...nav.columns() })
       return
@@ -195,6 +203,13 @@ export function PostgresTableContextMenu({
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={() => openTableInSqlEditor(tableId)}>
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+              <Terminal className="size-4" />
+            </span>
+            Open in SQL editor
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
             onSelect={() =>

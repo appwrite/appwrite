@@ -12,3 +12,7 @@ export const POSTGRES_SQL_EDITOR_SURFACE_CLASS =
 
 /** Format document in the Postgres SQL editor (Shift+Alt+F). */
 export const POSTGRES_SQL_FORMAT_SHORTCUT_RAW = 'shift+alt+f'
+
+/** Filled play icon used for Run query and SQL editor entry points. */
+export const POSTGRES_RUN_QUERY_PLAY_ICON_CLASS =
+  'h-3.5 w-3.5 shrink-0 fill-current'

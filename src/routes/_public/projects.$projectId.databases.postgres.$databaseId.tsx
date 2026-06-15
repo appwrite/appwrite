@@ -51,15 +51,7 @@ function PostgresDatabaseLayout() {
   return (
     <PostgresSidebarProvider databaseId={databaseId}>
       {workbenchRoute ? (
-        <PostgresSqlWorkbench
-          databaseId={databaseId}
-          routeTableId={
-            workbenchRoute.mode === 'table-rows'
-              ? workbenchRoute.tableId
-              : undefined
-          }
-          databaseTab={workbenchRoute.mode === 'sql' ? 'sql' : undefined}
-        />
+        <PostgresSqlWorkbench databaseId={databaseId} databaseTab="sql" />
       ) : (
         <Outlet />
       )}

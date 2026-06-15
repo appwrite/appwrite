@@ -6,6 +6,7 @@ import {
   FileJson,
   Key,
   LayoutGrid,
+  Rows3,
   Settings,
   Square,
   X,
@@ -52,9 +53,10 @@ type SqlEditorTabContextMenuProps = {
 const TABLE_TABS: {
   id: string
   label: string
-  path: Exclude<PostgresTableTab, 'rows'>
+  path: PostgresTableTab
   icon: typeof LayoutGrid
 }[] = [
+  { id: 'rows', label: 'Rows', path: 'rows', icon: Rows3 },
   { id: 'columns', label: 'Columns', path: 'columns', icon: LayoutGrid },
   { id: 'indexes', label: 'Indexes', path: 'indexes', icon: Key },
   { id: 'settings', label: 'Settings', path: 'settings', icon: Settings },
@@ -93,8 +95,12 @@ export function SqlEditorTabContextMenu({
     )
   }, [databaseId, projectId, tableId])
 
-  const handleGoToTableTab = (path: Exclude<PostgresTableTab, 'rows'>) => {
+  const handleGoToTableTab = (path: PostgresTableTab) => {
     if (!tableNav) return
+    if (path === 'rows') {
+      navigate({ ...tableNav.rows() })
+      return
+    }
     if (path === 'columns') {
       navigate({ ...tableNav.columns() })
       return

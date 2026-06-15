@@ -40,7 +40,10 @@ import {
   parsePostgresIndexIncludeColumns,
 } from '@/lib/postgres-index-metadata'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { PostgresTableIndexRow } from '@/lib/postgres-sql'
+import {
+  isPostgresPrimaryIndex,
+  type PostgresTableIndexRow,
+} from '@/lib/postgres-sql'
 import { Key, Trash2 } from 'lucide-react'
 import { PostgresTableIndexDrawer } from './PostgresTableIndexDrawer'
 import {
@@ -65,7 +68,7 @@ function isTruthyFlag(value: boolean | string | undefined): boolean {
 }
 
 function getPostgresIndexDisplayType(index: PostgresTableIndexRow): string {
-  if (isTruthyFlag(index.is_primary)) return 'primary'
+  if (isPostgresPrimaryIndex(index)) return 'primary'
   if (isTruthyFlag(index.is_unique)) return 'unique'
   return 'key'
 }
@@ -294,7 +297,7 @@ export function PostgresTableIndexesPanel({
                 const condition = index.index_condition?.trim() ?? ''
                 const comment = index.index_comment?.trim() ?? ''
                 const isUnique =
-                  isTruthyFlag(index.is_unique) || isTruthyFlag(index.is_primary)
+                  isTruthyFlag(index.is_unique) || isPostgresPrimaryIndex(index)
 
                 return (
                   <tr

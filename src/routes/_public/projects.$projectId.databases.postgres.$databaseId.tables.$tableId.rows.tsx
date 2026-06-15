@@ -1,73 +1,71 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 import {
-  postgresColumnsQueryOptions,
-  postgresDatabaseConnectionsQueryOptions,
-  postgresDatabaseCredentialsQueryOptions,
-  postgresDatabaseQueryOptions,
-  postgresSchemasQueryOptions,
+  normalizePostgresTableRouteId,
+  postgresNav,
+} from '@/lib/postgres-database-routes'
+import {
+  postgresTableColumnsQueryOptions,
+  postgresTableIndexesQueryOptions,
   postgresTableRowsQueryOptions,
-  postgresTablesQueryOptions,
-  projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import { postgresNav } from '@/lib/postgres-database-routes'
+import { PostgresTableRowsView } from '@/components/pages/projects/$projectId/databases/postgres/PostgresTableRowsView'
+import { prefetchPostgresTableLayoutData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-table-route-loader'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  listSearchSchema,
+  parseListSearch,
+} from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
 
-async function prefetchPostgresRouteData(
+async function prefetchPostgresRowsRouteData(
   queryClient: QueryClient,
   projectId: string,
   databaseId: string,
   tableId: string,
+  routeSearch?: Record<string, unknown>,
 ) {
-  await queryClient.ensureQueryData(projectQueryOptions(projectId))
-  await queryClient.ensureQueryData(
-    postgresDatabaseQueryOptions(projectId, databaseId),
+  const normalizedTableId = await prefetchPostgresTableLayoutData(
+    queryClient,
+    projectId,
+    databaseId,
+    tableId,
   )
 
-  let tablesData: { tables?: { table_schema: string; table_name: string }[] } | null =
-    null
-  try {
-    tablesData = (await queryClient.ensureQueryData(
-      postgresTablesQueryOptions(projectId, databaseId),
-    )) as { tables?: { table_schema: string; table_name: string }[] }
-  } catch {
-    /* allow navigation; workspace handles empty/error state */
-  }
-
-  const tableExists = tablesData?.tables?.some((table) => {
-    const id = `${table.table_schema}.${table.table_name}`
-    return id === tableId
+  const { search, page, limit, filterMap } = parseListSearch(routeSearch, {
+    page: DEFAULT_PAGE,
+    limit: ROWS_DEFAULT_PAGE_SIZE,
   })
+  const filterKeys =
+    filterMap.size > 0 ? Array.from(filterMap.keys()) : undefined
+  const hasFilters = filterMap.size > 0
 
-  if (tablesData && !tableExists) {
-    throw redirect({
-      ...postgresNav({ projectId, databaseId }).sql(),
-      replace: true,
-    })
-  }
-
-  await Promise.allSettled([
+  await Promise.all([
     queryClient.ensureQueryData(
-      postgresSchemasQueryOptions(projectId, databaseId),
+      postgresTableColumnsQueryOptions(projectId, databaseId, normalizedTableId),
     ),
     queryClient.ensureQueryData(
-      postgresColumnsQueryOptions(projectId, databaseId),
+      postgresTableIndexesQueryOptions(projectId, databaseId, normalizedTableId),
     ),
-    queryClient.ensureQueryData(
-      postgresTableRowsQueryOptions(
-        projectId,
-        databaseId,
-        tableId,
-        DEFAULT_PAGE - 1,
-        ROWS_DEFAULT_PAGE_SIZE,
-      ),
-    ),
-    queryClient.ensureQueryData(
-      postgresDatabaseCredentialsQueryOptions(projectId, databaseId),
-    ),
+    ...(hasFilters
+      ? []
+      : [
+          queryClient.ensureQueryData(
+            postgresTableRowsQueryOptions(
+              projectId,
+              databaseId,
+              normalizedTableId,
+              page - 1,
+              limit,
+              {
+                search: search?.trim() || undefined,
+                filterKeys,
+              },
+            ),
+          ),
+        ]),
   ])
 }
 
@@ -85,25 +83,30 @@ export const Route = createFileRoute(
       })
     }
   },
+  validateSearch: listSearchSchema,
   head: () => ({
     meta: [{ title: pageTitle('PostgreSQL', 'Databases') }],
   }),
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, search: routeSearch }) => {
     if (typeof window === 'undefined') return
 
     const { projectId, databaseId, tableId } = params
-    const { queryClient } = context
-
-    await prefetchPostgresRouteData(
-      queryClient,
+    await prefetchPostgresRowsRouteData(
+      context.queryClient,
       projectId,
       databaseId,
       tableId,
+      routeSearch as Record<string, unknown> | undefined,
     )
   },
   component: PostgresRowsPage,
 })
 
 function PostgresRowsPage() {
-  return null
+  const { databaseId, tableId } = Route.useParams()
+  const normalizedTableId = normalizePostgresTableRouteId(tableId)
+
+  return (
+    <PostgresTableRowsView databaseId={databaseId} tableId={normalizedTableId} />
+  )
 }

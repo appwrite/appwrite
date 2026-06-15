@@ -15,7 +15,15 @@ import {
   CommandInput,
   CommandList,
 } from '@/components/ui/command'
-import { dedicatedDatabasesQueryOptions } from '@/lib/react-query/hooks'
+import {
+  getSpecOptionById,
+  mapDedicatedDatabaseSpecifications,
+  type SpecOption,
+} from '@/lib/database-specs'
+import {
+  dedicatedDatabasesQueryOptions,
+  useDatabaseSpecifications,
+} from '@/lib/react-query/hooks'
 import { isPostgresEngine } from '@/lib/react-query/hooks/postgres-databases'
 import { cn } from '@/lib/utils'
 
@@ -23,15 +31,61 @@ type PostgresDatabaseSelectorProps = {
   projectId: string
   value: string
   selectedName?: string
+  selectedSpecification?: string | null
   onSelect: (databaseId: string) => void
   placeholder?: string
   triggerClassName?: string
+}
+
+function resolveDatabaseSpecSummary(
+  specs: SpecOption[],
+  specSlug: string | null | undefined,
+): string | null {
+  const slug = specSlug?.trim()
+  if (!slug) return null
+
+  const spec =
+    specs.find((item) => item.id === slug) ?? getSpecOptionById(slug)
+  if (!spec) return slug
+
+  const { cpu, memory } = spec
+  if (cpu === 'Shared' && memory === 'Shared') return 'Shared'
+  if (cpu === '—' && memory === '—') return null
+  if (cpu === '—') return memory !== '—' ? memory : null
+  if (memory === '—') return cpu
+
+  return `${cpu} · ${memory}`
+}
+
+function DatabaseSelectorNameWithSpec({
+  name,
+  specSummary,
+  nameClassName,
+}: {
+  name: string
+  specSummary?: string | null
+  nameClassName?: string
+}) {
+  return (
+    <span className="flex min-w-0 items-baseline gap-1">
+      <span className={cn('truncate', nameClassName)}>{name}</span>
+      {specSummary ? (
+        <>
+          <span className="shrink-0 text-muted-foreground/60">·</span>
+          <span className="truncate text-[12px] text-muted-foreground">
+            {specSummary}
+          </span>
+        </>
+      ) : null}
+    </span>
+  )
 }
 
 export function PostgresDatabaseSelector({
   projectId,
   value,
   selectedName,
+  selectedSpecification,
   onSelect,
   placeholder = 'Select database',
   triggerClassName,
@@ -42,6 +96,14 @@ export function PostgresDatabaseSelector({
   useEffect(() => {
     if (!open) setSearch('')
   }, [open])
+
+  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+
+  const specs = useMemo(
+    () =>
+      mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
+    [specificationsData?.specifications],
+  )
 
   const { data, isFetching } = useQuery({
     ...dedicatedDatabasesQueryOptions(projectId),
@@ -54,22 +116,47 @@ export function PostgresDatabaseSelector({
     [data?.databases],
   )
 
+  const getSpecSummary = useMemo(
+    () => (specSlug: string | null | undefined) =>
+      resolveDatabaseSpecSummary(specs, specSlug),
+    [specs],
+  )
+
   const filteredDatabases = useMemo(() => {
     const query = search.trim().toLowerCase()
     if (!query) return postgresDatabases
-    return postgresDatabases.filter(
-      (db) =>
+    return postgresDatabases.filter((db) => {
+      const specSummary = getSpecSummary(db.specification)?.toLowerCase() ?? ''
+      const spec =
+        specs.find((item) => item.id === db.specification) ??
+        getSpecOptionById(db.specification ?? '')
+      const specSearch = [
+        specSummary,
+        spec?.cpu.toLowerCase(),
+        spec?.memory.toLowerCase(),
+        spec?.label.toLowerCase(),
+      ]
+        .filter(Boolean)
+        .join(' ')
+
+      return (
         db.name.toLowerCase().includes(query) ||
-        db.$id.toLowerCase().includes(query),
-    )
-  }, [postgresDatabases, search])
+        db.$id.toLowerCase().includes(query) ||
+        specSearch.includes(query)
+      )
+    })
+  }, [getSpecSummary, postgresDatabases, search, specs])
 
   const selectedDatabase = value
     ? postgresDatabases.find((db) => db.$id === value)
     : undefined
 
-  const displayValue =
+  const displayName =
     selectedName || selectedDatabase?.name || placeholder
+
+  const selectedSpecSummary = getSpecSummary(
+    selectedDatabase?.specification ?? selectedSpecification,
+  )
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -78,14 +165,18 @@ export function PostgresDatabaseSelector({
           type="button"
           variant="outline"
           className={cn(
-            'h-8 min-w-0 w-full justify-between gap-1.5 text-[13px] font-normal',
+            'h-9 min-w-0 w-full justify-between gap-1.5 text-[13px] font-normal',
             !value && 'text-muted-foreground',
             triggerClassName,
           )}
         >
-          <span className="flex min-w-0 items-center gap-1.5">
+          <span className="flex min-w-0 flex-1 items-center gap-1.5">
             <DatabaseTypeIcon engine={selectedDatabase?.engine ?? 'postgres'} />
-            <span className="truncate">{displayValue}</span>
+            <DatabaseSelectorNameWithSpec
+              name={displayName}
+              specSummary={selectedSpecSummary}
+              nameClassName={value ? 'font-medium text-foreground' : undefined}
+            />
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
@@ -119,23 +210,31 @@ export function PostgresDatabaseSelector({
               </CommandEmpty>
             )}
             <CommandGroup>
-              {filteredDatabases.map((db) => (
-                <button
-                  key={db.$id}
-                  type="button"
-                  onClick={() => {
-                    onSelect(db.$id)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                    db.$id === value && 'bg-accent/50',
-                  )}
-                >
-                  <DatabaseTypeIcon engine={db.engine} />
-                  <span className="truncate">{db.name}</span>
-                </button>
-              ))}
+              {filteredDatabases.map((db) => {
+                const specSummary = getSpecSummary(db.specification)
+
+                return (
+                  <button
+                    key={db.$id}
+                    type="button"
+                    onClick={() => {
+                      onSelect(db.$id)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                      db.$id === value && 'bg-accent/50',
+                    )}
+                  >
+                    <DatabaseTypeIcon engine={db.engine} />
+                    <DatabaseSelectorNameWithSpec
+                      name={db.name}
+                      specSummary={specSummary}
+                      nameClassName="text-[13px] font-medium text-foreground"
+                    />
+                  </button>
+                )
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

@@ -170,11 +170,9 @@ export function postgresTableRows(params: PostgresNavParams & { tableId: string 
   return postgresNav(params).table({ tableId: params.tableId }).rows()
 }
 
-export type PostgresSqlWorkbenchRoute =
-  | { mode: 'sql' }
-  | { mode: 'table-rows'; tableId: string }
+export type PostgresSqlWorkbenchRoute = { mode: 'sql' }
 
-/** Matches `/sql` and `/tables/$tableId/rows` so the SQL workbench can stay mounted. */
+/** Matches `/sql` so the SQL workbench can stay mounted while editing. */
 export function parsePostgresSqlWorkbenchRoute(
   pathname: string,
 ): PostgresSqlWorkbenchRoute | null {
@@ -182,16 +180,6 @@ export function parsePostgresSqlWorkbenchRoute(
     /\/projects\/[^/]+\/databases\/postgres\/[^/]+\/sql\/?$/.test(pathname)
   ) {
     return { mode: 'sql' }
-  }
-
-  const rowsMatch = pathname.match(
-    /\/projects\/[^/]+\/databases\/postgres\/[^/]+\/tables\/([^/]+)\/rows\/?$/,
-  )
-  if (rowsMatch) {
-    return {
-      mode: 'table-rows',
-      tableId: normalizePostgresTableRouteId(rowsMatch[1]),
-    }
   }
 
   return null

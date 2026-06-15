@@ -43,7 +43,10 @@ import {
   getPostgresColumnForeignKeyDisplay,
 } from '@/lib/postgres-column-metadata'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
+import {
+  isPostgresPrimaryKeyColumn,
+  type PostgresTableColumnRow,
+} from '@/lib/postgres-sql'
 import { CheckCircle2, Copy, Pencil, Trash2 } from 'lucide-react'
 import { PostgresTableColumnDrawer } from './PostgresTableColumnDrawer'
 import {
@@ -129,7 +132,7 @@ export function PostgresTableColumnsPanel({
   }
 
   const isPrimaryKey = (column: PostgresTableColumnRow) =>
-    column.is_primary_key === true || column.is_primary_key === 'true'
+    isPostgresPrimaryKeyColumn(column)
 
   const filteredColumns = useMemo(() => {
     return columns.filter((column) => {

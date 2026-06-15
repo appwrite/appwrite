@@ -5,7 +5,7 @@ import {
   BarChart3,
   Cable,
   Network,
-  SearchCode,
+  Play,
   Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ import {
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
+import { POSTGRES_RUN_QUERY_PLAY_ICON_CLASS } from './_components/postgres-chrome'
 
 type PostgresDatabaseNavProps = {
   projectId: string
@@ -46,7 +47,7 @@ export function PostgresDatabaseNav({
   return (
     <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
       <Link {...nav.sql()} className={navLinkClass(activeTab === 'sql')}>
-        <SearchCode className="h-3.5 w-3.5 shrink-0" />
+        <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
         <span>SQL editor</span>
       </Link>
       <Link

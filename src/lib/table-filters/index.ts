@@ -78,6 +78,7 @@ export {
   DOCUMENTS_DB_CUSTOM_ATTRIBUTE_FILTER_COLUMN_ID,
   type TableIndexForFilters,
 } from './filter-configs/rows'
+export { postgresRowsFilterColumns } from './filter-configs/postgres-rows'
 
 export {
   SIZE_FILTER_UNITS,
