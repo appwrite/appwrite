@@ -111,6 +111,8 @@ export function SqlWorkbench({
                   )}
                 >
                   <SqlEditorTabBar
+                    projectId={projectId}
+                    databaseId={databaseId}
                     tabs={tabs}
                     activeTabId={activeTabId}
                     onSelectTab={onSelectTab}

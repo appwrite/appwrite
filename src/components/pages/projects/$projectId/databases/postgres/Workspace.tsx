@@ -4,12 +4,13 @@ import {
 } from '@/lib/react-query/hooks'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
+  normalizePostgresTableRouteId,
   parsePostgresTableId,
   postgresNav,
   postgresTableRows,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
@@ -94,15 +95,32 @@ function PostgresSqlWorkbenchContent({
     closeTab,
     reorderTabs,
     addRecentQuery,
-    openTableTab,
+    focusTableRouteTab,
   } = usePostgresSidebar()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!routeTableId) return
-    openTableTab(routeTableId)
-  }, [openTableTab, routeTableId])
+    focusTableRouteTab(routeTableId)
+  }, [focusTableRouteTab, routeTableId])
 
-  const activeTableId = activeTab.tableId
+  const normalizedRouteTableId = routeTableId
+    ? normalizePostgresTableRouteId(routeTableId)
+    : undefined
+
+  const routeTableTab = useMemo(
+    () =>
+      normalizedRouteTableId
+        ? tabs.find((tab) => tab.tableId === normalizedRouteTableId)
+        : undefined,
+    [normalizedRouteTableId, tabs],
+  )
+
+  const editorActiveTabId = routeTableTab?.id ?? activeTabId
+  const editorActiveTab =
+    tabs.find((tab) => tab.id === editorActiveTabId) ?? activeTab
+
+  const activeTableId =
+    normalizedRouteTableId ?? editorActiveTab.tableId ?? null
   const selectedTable = activeTableId
     ? parsePostgresTableId(activeTableId)
     : undefined
@@ -141,7 +159,7 @@ function PostgresSqlWorkbenchContent({
         : []
 
   const handleRunSql = useCallback(async () => {
-    const trimmed = activeTab.sql.trim()
+    const trimmed = editorActiveTab.sql.trim()
     if (!trimmed) return
     setActiveTabResult(null, null)
     try {
@@ -152,8 +170,8 @@ function PostgresSqlWorkbenchContent({
       setActiveTabResult(null, error)
     }
   }, [
-    activeTab.sql,
     addRecentQuery,
+    editorActiveTab.sql,
     executeSql,
     setActiveTabResult,
   ])
@@ -235,8 +253,8 @@ function PostgresSqlWorkbenchContent({
         projectId={projectId}
         databaseId={databaseId}
         tabs={tabs}
-        activeTabId={activeTabId}
-        sql={activeTab.sql}
+        activeTabId={editorActiveTabId}
+        sql={editorActiveTab.sql}
         onSqlChange={updateActiveTabSql}
         onSelectTab={handleSelectTab}
         onCreateTab={createTab}
@@ -244,8 +262,8 @@ function PostgresSqlWorkbenchContent({
         onReorderTabs={reorderTabs}
         onRun={handleRunSql}
         isRunning={executeSql.isPending}
-        error={activeTab.error ?? executeSql.error}
-        result={activeTab.result}
+        error={editorActiveTab.error ?? executeSql.error}
+        result={editorActiveTab.result}
         account={account}
         teamId={teamId}
         canSaveTeam={canSaveTeam}

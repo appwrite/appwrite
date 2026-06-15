@@ -3,7 +3,12 @@ import {
   formatSpreadsheetCellValue,
   isSpreadsheetRtlText,
 } from '@/lib/spreadsheet-cell-formatting'
-import type { ReactNode } from 'react'
+import { cloneElement, useState, type ReactNode } from 'react'
+import {
+  SpreadsheetCellContextMenu,
+  type SpreadsheetCellValueDialogState,
+} from '@/components/global/shared/SpreadsheetCellContextMenu'
+import { SpreadsheetCellValueDialog } from '@/components/global/shared/SpreadsheetCellValueDialog'
 
 /** Matches database product spreadsheet table chrome (see tablesdb/Spreadsheet.tsx). */
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
@@ -36,6 +41,8 @@ export type ReadOnlyDataSpreadsheetProps = {
   showRowNumbers?: boolean
   /** Starting index for the row number column (e.g. pagination offset). */
   rowNumberOffset?: number
+  /** Right-click menu on data cells (copy, view full value). Defaults to studio variant. */
+  enableCellContextMenu?: boolean
 }
 
 function normalizeColumns(
@@ -63,9 +70,13 @@ export function ReadOnlyDataSpreadsheet({
   variant = 'default',
   showRowNumbers = false,
   rowNumberOffset = 0,
+  enableCellContextMenu,
 }: ReadOnlyDataSpreadsheetProps) {
   const normalizedColumns = normalizeColumns(columns)
   const isStudio = variant === 'studio'
+  const showCellContextMenu = enableCellContextMenu ?? isStudio
+  const [cellValueDialog, setCellValueDialog] =
+    useState<SpreadsheetCellValueDialogState | null>(null)
 
   if (isLoading && rows.length === 0) {
     return (
@@ -172,9 +183,10 @@ export function ReadOnlyDataSpreadsheet({
                         row[column.key],
                       )
                       const isRtl = isSpreadsheetRtlText(full)
-                      return (
+                      const rowNumber = rowNumberOffset + rowIndex + 1
+                      const cell = (
                         <td
-                          key={column.key}
+                          data-column={column.key}
                           className={cn(
                             isStudio ? 'px-4 py-2.5' : 'px-3 py-1.5',
                             bodyCellBorderClass,
@@ -192,6 +204,30 @@ export function ReadOnlyDataSpreadsheet({
                           </span>
                         </td>
                       )
+
+                      if (!showCellContextMenu) {
+                        return cloneElement(cell, { key: column.key })
+                      }
+
+                      return (
+                        <SpreadsheetCellContextMenu
+                          key={column.key}
+                          value={row[column.key]}
+                          full={full}
+                          display={display}
+                          isNull={isNull}
+                          onViewFullValue={() =>
+                            setCellValueDialog({
+                              columnLabel: column.label,
+                              rowNumber,
+                              value: row[column.key],
+                              full,
+                            })
+                          }
+                        >
+                          {cell}
+                        </SpreadsheetCellContextMenu>
+                      )
                     })}
                   </tr>
                 )
@@ -208,6 +244,13 @@ export function ReadOnlyDataSpreadsheet({
           </div>
         </div>
       ) : null}
+
+      <SpreadsheetCellValueDialog
+        state={cellValueDialog}
+        onOpenChange={(open) => {
+          if (!open) setCellValueDialog(null)
+        }}
+      />
     </div>
   )
 }

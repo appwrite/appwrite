@@ -1,7 +1,7 @@
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { usePostgresDatabase } from '@/lib/react-query/hooks'
-import { postgresTableRows, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import type { PostgresDatabaseTab } from '@/lib/postgres-database-routes'
+import { useParams } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { ReactNode } from 'react'
@@ -89,17 +89,12 @@ function PostgresShellLayout({
   showDesktopSidebar,
   children,
 }: PostgresShellLayoutProps) {
-  const navigate = useNavigate()
-  const { activeTab, openTableTab } = usePostgresSidebar()
-  const selectedTableId = databaseTab ? undefined : activeTab.tableId ?? tableId
+  const { activeTab, openTableInEditor } = usePostgresSidebar()
+  const selectedTableId =
+    databaseTab ? undefined : activeTab.tableId ?? tableId
 
   const handleOpenTable = (nextTableId: string) => {
-    openTableTab(nextTableId)
-    if (tableId === nextTableId) return
-    navigate({
-      ...postgresTableRows({ projectId, databaseId, tableId: nextTableId }),
-      replace: true,
-    })
+    openTableInEditor(nextTableId)
   }
 
   const mainPanel = (

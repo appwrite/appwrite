@@ -51,6 +51,15 @@ export function parsePostgresTableId(tableId: string): {
   }
 }
 
+/** Normalize table ids from URL params and sidebar selection to the same string. */
+export function normalizePostgresTableRouteId(tableId: string): string {
+  try {
+    return decodeURIComponent(tableId)
+  } catch {
+    return tableId
+  }
+}
+
 export function quotePostgresIdentifier(identifier: string): string {
   return `"${identifier.replace(/"/g, '""')}"`
 }
@@ -189,7 +198,7 @@ export function parsePostgresSqlWorkbenchRoute(
   if (rowsMatch) {
     return {
       mode: 'table-rows',
-      tableId: decodeURIComponent(rowsMatch[1]),
+      tableId: normalizePostgresTableRouteId(rowsMatch[1]),
     }
   }
 

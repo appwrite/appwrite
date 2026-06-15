@@ -4,8 +4,15 @@ import {
   type PostgresQueryHistoryEntry,
   type SavedPostgresQuery,
 } from '@/lib/user-prefs-keys'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  normalizePostgresTableRouteId,
+  parsePostgresTableId,
+  postgresNav,
+  postgresTableRows,
+} from '@/lib/postgres-database-routes'
+import { buildPostgresSelectSql } from '@/lib/postgres-sql'
 import {
   usePostgresQueryHistory,
   usePostgresSavedQueryScope,
@@ -13,8 +20,6 @@ import {
 } from '@/lib/react-query/hooks/postgres-databases'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { parsePostgresTableId } from '@/lib/postgres-database-routes'
-import { buildPostgresSelectSql } from '@/lib/postgres-sql'
 import {
   createContext,
   useCallback,
@@ -24,6 +29,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { flushSync } from 'react-dom'
 
 const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
 
@@ -57,10 +63,13 @@ type PostgresSidebarContextValue = {
   tabs: SqlEditorTab[]
   activeTabId: string
   activeTab: SqlEditorTab
-  openTableTab: (tableId: string) => void
+  openTableInEditor: (tableId: string) => void
+  focusTableRouteTab: (tableId: string) => void
   openQueryTab: (sql: string) => void
   createTab: () => void
   closeTab: (tabId: string) => void
+  closeOtherTabs: (tabId: string) => void
+  duplicateQueryTab: (sql: string) => void
   reorderTabs: (activeId: string, overId: string) => void
   setActiveTabId: (tabId: string) => void
   updateActiveTabSql: (sql: string) => void
@@ -118,6 +127,114 @@ function createInitialTabState() {
   return { tabs: [initialTab], activeTabId: initialTab.id }
 }
 
+type SqlEditorTabState = ReturnType<typeof createInitialTabState>
+
+function openQueryInEditorState(
+  state: SqlEditorTabState,
+  sql: string,
+): SqlEditorTabState | null {
+  const trimmed = sql.trim()
+  if (!trimmed) return null
+
+  const existing = state.tabs.find((tab) => tab.sql === trimmed)
+  if (existing) {
+    return { ...state, activeTabId: existing.id }
+  }
+
+  const newTab: SqlEditorTab = {
+    id: crypto.randomUUID(),
+    title: queryPreviewLabel(trimmed),
+    sql: trimmed,
+    result: null,
+    error: null,
+  }
+
+  return {
+    tabs: [...state.tabs, newTab],
+    activeTabId: newTab.id,
+  }
+}
+
+function openTableInEditorState(
+  state: SqlEditorTabState,
+  tableId: string,
+): SqlEditorTabState {
+  const normalizedTableId = normalizePostgresTableRouteId(tableId)
+  const existing = state.tabs.find(
+    (tab) => tab.tableId === normalizedTableId,
+  )
+  if (existing) {
+    return { ...state, activeTabId: existing.id }
+  }
+
+  const newTab = createTableTab(normalizedTableId)
+  return {
+    tabs: [...state.tabs, newTab],
+    activeTabId: newTab.id,
+  }
+}
+
+function createBlankEditorTabState(state: SqlEditorTabState): SqlEditorTabState {
+  const newTab = createBlankTab(state.tabs.length)
+  return {
+    tabs: [...state.tabs, newTab],
+    activeTabId: newTab.id,
+  }
+}
+
+function duplicateQueryInEditorState(
+  state: SqlEditorTabState,
+  sql: string,
+): SqlEditorTabState {
+  const trimmed = sql.trim()
+  const newTab: SqlEditorTab = {
+    id: crypto.randomUUID(),
+    title: queryPreviewLabel(trimmed || DEFAULT_SQL),
+    sql: trimmed || DEFAULT_SQL,
+    result: null,
+    error: null,
+  }
+
+  return {
+    tabs: [...state.tabs, newTab],
+    activeTabId: newTab.id,
+  }
+}
+
+function closeOtherEditorTabsState(
+  state: SqlEditorTabState,
+  tabId: string,
+): SqlEditorTabState | null {
+  const tab = state.tabs.find((entry) => entry.id === tabId)
+  if (!tab || state.tabs.length <= 1) return null
+
+  return {
+    tabs: [tab],
+    activeTabId: tabId,
+  }
+}
+
+function closeEditorTabState(
+  state: SqlEditorTabState,
+  tabId: string,
+): SqlEditorTabState {
+  if (state.tabs.length <= 1) return state
+
+  const index = state.tabs.findIndex((tab) => tab.id === tabId)
+  if (index < 0) return state
+
+  const tabs = state.tabs.filter((tab) => tab.id !== tabId)
+  if (tabId !== state.activeTabId) {
+    return { ...state, tabs }
+  }
+
+  const nextIndex = Math.min(index, tabs.length - 1)
+  return {
+    tabs,
+    activeTabId: tabs[nextIndex]?.id ?? tabs[0].id,
+  }
+}
+
 type PostgresSidebarProviderProps = {
   databaseId: string
   children: ReactNode
@@ -128,6 +245,7 @@ export function PostgresSidebarProvider({
   children,
 }: PostgresSidebarProviderProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
+  const navigate = useNavigate()
   const { account } = useAuth()
   const { project } = useProject(projectId)
   const teamId = project?.teamId ?? null
@@ -144,36 +262,109 @@ export function PostgresSidebarProvider({
   const [panel, setPanel] = useState<PostgresSidebarPanel>('schemas')
   const [selectedQueryKey, setSelectedQueryKey] = useState<string | null>(null)
   const initialTabStateRef = useRef(createInitialTabState())
-  const [tabs, setTabs] = useState(initialTabStateRef.current.tabs)
-  const [activeTabId, setActiveTabId] = useState(
-    initialTabStateRef.current.activeTabId,
-  )
+  const pendingActiveTabIdRef = useRef<string | null>(null)
+  const [editorTabState, setEditorTabState] = useState(initialTabStateRef.current)
+  const { tabs, activeTabId } = editorTabState
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? tabs[0],
     [activeTabId, tabs],
   )
 
+  const applyPendingActiveTab = useCallback(() => {
+    const tabId = pendingActiveTabIdRef.current
+    if (!tabId) return
+
+    flushSync(() => {
+      setEditorTabState((prev) => {
+        if (!prev.tabs.some((tab) => tab.id === tabId)) {
+          pendingActiveTabIdRef.current = null
+          return prev
+        }
+        if (prev.activeTabId === tabId) {
+          pendingActiveTabIdRef.current = null
+          return prev
+        }
+        pendingActiveTabIdRef.current = null
+        return { ...prev, activeTabId: tabId }
+      })
+    })
+  }, [])
+
+  const schedulePendingActiveTab = useCallback(() => {
+    queueMicrotask(() => applyPendingActiveTab())
+    requestAnimationFrame(() => applyPendingActiveTab())
+  }, [applyPendingActiveTab])
+
+  const commitEditorTabState = useCallback(
+    (
+      updater: (state: SqlEditorTabState) => SqlEditorTabState | null,
+      options?: { focusTab?: boolean },
+    ) => {
+      let nextActiveTabId: string | null = null
+
+      flushSync(() => {
+        setEditorTabState((prev) => {
+          const next = updater(prev)
+          if (!next) return prev
+          if (options?.focusTab !== false) {
+            nextActiveTabId = next.activeTabId
+          }
+          return next
+        })
+      })
+
+      if (nextActiveTabId) {
+        pendingActiveTabIdRef.current = nextActiveTabId
+      }
+
+      return nextActiveTabId
+    },
+    [],
+  )
+
+  const focusTableRouteTab = useCallback(
+    (tableId: string) => {
+      const normalizedTableId = normalizePostgresTableRouteId(tableId)
+      commitEditorTabState((prev) =>
+        openTableInEditorState(prev, normalizedTableId),
+      )
+    },
+    [commitEditorTabState],
+  )
+
+  const setActiveTabId = useCallback((tabId: string) => {
+    pendingActiveTabIdRef.current = null
+    setEditorTabState((prev) => {
+      if (!prev.tabs.some((tab) => tab.id === tabId)) return prev
+      return prev.activeTabId === tabId ? prev : { ...prev, activeTabId: tabId }
+    })
+  }, [])
+
   const updateActiveTabSql = useCallback((sql: string) => {
-    setTabs((prev) =>
-      prev.map((tab) =>
-        tab.id === activeTabId ? { ...tab, sql, result: null, error: null } : tab,
+    setEditorTabState((prev) => ({
+      ...prev,
+      tabs: prev.tabs.map((tab) =>
+        tab.id === prev.activeTabId
+          ? { ...tab, sql, result: null, error: null }
+          : tab,
       ),
-    )
-  }, [activeTabId])
+    }))
+  }, [])
 
   const setActiveTabResult = useCallback(
     (
       result: Models.DedicatedDatabaseExecution | null,
       error: unknown = null,
     ) => {
-      setTabs((prev) =>
-        prev.map((tab) =>
-          tab.id === activeTabId ? { ...tab, result, error } : tab,
+      setEditorTabState((prev) => ({
+        ...prev,
+        tabs: prev.tabs.map((tab) =>
+          tab.id === prev.activeTabId ? { ...tab, result, error } : tab,
         ),
-      )
+      }))
     },
-    [activeTabId],
+    [],
   )
 
   const addRecentQuery = useCallback(
@@ -202,27 +393,26 @@ export function PostgresSidebarProvider({
     )
   }, [persistRecentQueries])
 
-  const openQueryTab = useCallback((sql: string) => {
-    const trimmed = sql.trim()
-    if (!trimmed) return
+  const openQueryTab = useCallback(
+    (sql: string) => {
+      const nextActiveTabId = commitEditorTabState((prev) =>
+        openQueryInEditorState(prev, sql),
+      )
+      if (!nextActiveTabId) return
 
-    setTabs((prev) => {
-      const existing = prev.find((tab) => tab.sql === trimmed)
-      if (existing) {
-        setActiveTabId(existing.id)
-        return prev
-      }
-      const newTab: SqlEditorTab = {
-        id: crypto.randomUUID(),
-        title: queryPreviewLabel(trimmed),
-        sql: trimmed,
-        result: null,
-        error: null,
-      }
-      setActiveTabId(newTab.id)
-      return [...prev, newTab]
-    })
-  }, [])
+      navigate({
+        ...postgresNav({ projectId, databaseId }).sql(),
+      })
+      schedulePendingActiveTab()
+    },
+    [
+      commitEditorTabState,
+      databaseId,
+      navigate,
+      projectId,
+      schedulePendingActiveTab,
+    ],
+  )
 
   const selectRecentQuery = useCallback(
     (query: PostgresRecentQuery) => {
@@ -240,55 +430,74 @@ export function PostgresSidebarProvider({
     [openQueryTab],
   )
 
-  const openTableTab = useCallback((tableId: string) => {
-    setTabs((prev) => {
-      const existing = prev.find((tab) => tab.tableId === tableId)
-      if (existing) {
-        setActiveTabId(existing.id)
-        return prev
-      }
-      const newTab = createTableTab(tableId)
-      setActiveTabId(newTab.id)
-      return [...prev, newTab]
-    })
-  }, [])
+  const openTableInEditor = useCallback(
+    (tableId: string) => {
+      const normalizedTableId = normalizePostgresTableRouteId(tableId)
+      focusTableRouteTab(normalizedTableId)
+      navigate({
+        ...postgresTableRows({
+          projectId,
+          databaseId,
+          tableId: normalizedTableId,
+        }),
+        replace: true,
+      })
+    },
+    [databaseId, focusTableRouteTab, navigate, projectId],
+  )
 
   const createTab = useCallback(() => {
-    let newTabId = ''
-    setTabs((prev) => {
-      const newTab = createBlankTab(prev.length)
-      newTabId = newTab.id
-      return [...prev, newTab]
-    })
-    setActiveTabId(newTabId)
+    commitEditorTabState((prev) => createBlankEditorTabState(prev))
     setSelectedQueryKey(null)
-  }, [])
+    schedulePendingActiveTab()
+  }, [commitEditorTabState, schedulePendingActiveTab])
 
-  const closeTab = useCallback((tabId: string) => {
-    setTabs((prev) => {
-      if (prev.length <= 1) return prev
-      const index = prev.findIndex((tab) => tab.id === tabId)
-      if (index < 0) return prev
+  const closeTab = useCallback(
+    (tabId: string) => {
+      commitEditorTabState((prev) => closeEditorTabState(prev, tabId), {
+        focusTab: false,
+      })
+    },
+    [commitEditorTabState],
+  )
 
-      const next = prev.filter((tab) => tab.id !== tabId)
-      if (tabId === activeTabId) {
-        const nextIndex = Math.min(index, next.length - 1)
-        setActiveTabId(next[nextIndex]?.id ?? next[0].id)
-      }
-      return next
-    })
-  }, [activeTabId])
+  const closeOtherTabs = useCallback(
+    (tabId: string) => {
+      commitEditorTabState((prev) => closeOtherEditorTabsState(prev, tabId), {
+        focusTab: false,
+      })
+    },
+    [commitEditorTabState],
+  )
+
+  const duplicateQueryTab = useCallback(
+    (sql: string) => {
+      commitEditorTabState((prev) => duplicateQueryInEditorState(prev, sql))
+      setSelectedQueryKey(null)
+      navigate({
+        ...postgresNav({ projectId, databaseId }).sql(),
+      })
+      schedulePendingActiveTab()
+    },
+    [
+      commitEditorTabState,
+      databaseId,
+      navigate,
+      projectId,
+      schedulePendingActiveTab,
+    ],
+  )
 
   const reorderTabs = useCallback((activeId: string, overId: string) => {
-    setTabs((prev) => {
-      const oldIndex = prev.findIndex((tab) => tab.id === activeId)
-      const newIndex = prev.findIndex((tab) => tab.id === overId)
+    setEditorTabState((prev) => {
+      const oldIndex = prev.tabs.findIndex((tab) => tab.id === activeId)
+      const newIndex = prev.tabs.findIndex((tab) => tab.id === overId)
       if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prev
 
-      const next = [...prev]
-      const [moved] = next.splice(oldIndex, 1)
-      next.splice(newIndex, 0, moved)
-      return next
+      const tabs = [...prev.tabs]
+      const [moved] = tabs.splice(oldIndex, 1)
+      tabs.splice(newIndex, 0, moved)
+      return { ...prev, tabs }
     })
   }, [])
 
@@ -307,10 +516,13 @@ export function PostgresSidebarProvider({
       tabs,
       activeTabId,
       activeTab,
-      openTableTab,
+      openTableInEditor,
+      focusTableRouteTab,
       openQueryTab,
       createTab,
       closeTab,
+      closeOtherTabs,
+      duplicateQueryTab,
       reorderTabs,
       setActiveTabId,
       updateActiveTabSql,
@@ -329,10 +541,13 @@ export function PostgresSidebarProvider({
       tabs,
       activeTabId,
       activeTab,
-      openTableTab,
+      openTableInEditor,
+      focusTableRouteTab,
       openQueryTab,
       createTab,
       closeTab,
+      closeOtherTabs,
+      duplicateQueryTab,
       reorderTabs,
       updateActiveTabSql,
       setActiveTabResult,

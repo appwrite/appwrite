@@ -1,6 +1,7 @@
-import { Cable, StopCircle, Unplug } from 'lucide-react'
+import { useCallback } from 'react'
+import { Cable, Copy, SearchCode, StopCircle, Unplug } from 'lucide-react'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
-import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { copyToClipboard } from '@/lib/utils/context-menu'
 import {
   backendTypeBadgeVariant,
   connectionStateBadgeVariant,
@@ -34,25 +36,49 @@ type PostgresConnectionDrawerProps = {
   connection: PostgresActiveConnectionRow | null
   canManageConnections: boolean
   manageDisabledTooltip?: string
+  onOpenInSqlEditor: (sql: string) => void
   onCancelQuery: (connection: PostgresActiveConnectionRow) => void
   onTerminateConnection: (connection: PostgresActiveConnectionRow) => void
   isCancelPending: boolean
   isTerminatePending: boolean
 }
 
+function DetailSection({
+  title,
+  children,
+  bodyClassName,
+}: {
+  title: string
+  children: React.ReactNode
+  bodyClassName?: string
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-card/40">
+      <div className="border-b border-border bg-muted/20 px-4 py-2.5">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </h3>
+      </div>
+      <div className={cn('px-4 py-3', bodyClassName)}>{children}</div>
+    </section>
+  )
+}
+
 function DetailField({
   label,
   children,
+  className,
 }: {
   label: string
   children: React.ReactNode
+  className?: string
 }) {
   return (
-    <div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+    <div className={cn('min-w-0', className)}>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
-      <div className="mt-1.5 text-[13px] text-foreground">{children}</div>
+      <div className="mt-1">{children}</div>
     </div>
   )
 }
@@ -63,17 +89,26 @@ export function PostgresConnectionDrawer({
   connection,
   canManageConnections,
   manageDisabledTooltip,
+  onOpenInSqlEditor,
   onCancelQuery,
   onTerminateConnection,
   isCancelPending,
   isTerminatePending,
 }: PostgresConnectionDrawerProps) {
+  const handleCopyPid = useCallback(() => {
+    if (!connection) return
+    void copyToClipboard('PID', String(connection.pid))
+  }, [connection])
+
   if (!connection) return null
 
   const longRunning = isLongRunningConnection(connection)
   const isClient = isPostgresClientBackend(connection)
   const canCancel = isClient && connection.state?.toLowerCase() === 'active'
   const canTerminate = isClient
+  const actionPending = isCancelPending || isTerminatePending
+  const query = connection.query?.trim() || null
+
   const clientAddress = formatPostgresClientAddress(
     connection.clientHost,
     connection.clientPort,
@@ -93,8 +128,14 @@ export function PostgresConnectionDrawer({
     connection.backendType,
   )
   const typeLabel = formatPostgresBackendTypeLabel(connection.backendType)
+  const waitEventLabel = formatPostgresWaitEvent(
+    connection.waitEventType,
+    connection.waitEvent,
+  )
 
-  const renderActionButton = (
+  const showActionFooter = isClient && (canCancel || canTerminate)
+
+  const renderManageButton = (
     label: string,
     icon: React.ReactNode,
     onClick: () => void,
@@ -106,7 +147,7 @@ export function PostgresConnectionDrawer({
         variant="outline"
         size="sm"
         className="h-9 text-[13px]"
-        disabled={disabled || isCancelPending || isTerminatePending}
+        disabled={disabled || actionPending}
         onClick={onClick}
       >
         {icon}
@@ -116,13 +157,13 @@ export function PostgresConnectionDrawer({
 
     if (!canManageConnections && manageDisabledTooltip) {
       return (
-        <TooltipProvider key={label} delayDuration={0}>
+        <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="inline-flex">{button}</span>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <p className="text-[12px]">{manageDisabledTooltip}</p>
+            <TooltipContent side="top" className="max-w-xs text-[12px]">
+              <p>{manageDisabledTooltip}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -132,158 +173,259 @@ export function PostgresConnectionDrawer({
     return button
   }
 
-  const actionButtons = (
-    <div className="flex flex-wrap gap-2">
-      {canCancel
-        ? renderActionButton(
-            'Cancel query',
-            <StopCircle className="mr-1.5 h-3.5 w-3.5" />,
-            () => onCancelQuery(connection),
-            !canManageConnections,
-          )
-        : null}
-      {canTerminate
-        ? renderActionButton(
-            'Terminate connection',
-            <Unplug className="mr-1.5 h-3.5 w-3.5" />,
-            () => onTerminateConnection(connection),
-            !canManageConnections,
-          )
-        : null}
-    </div>
-  )
-
   return (
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
       title="Connection details"
-      description={`PID ${connection.pid} · ${usernameLabel}`}
+      description={`Details for connection PID ${connection.pid}`}
       maxWidth="sm:max-w-xl"
-      headerLeading={
-        <div
-          className={cn(
-            'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
-            'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-          )}
-        >
-          <Cable className="h-4 w-4" />
-        </div>
+      side="right"
+      contentClassName="overflow-hidden"
+      headerActions={
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 shrink-0 p-0"
+                onClick={handleCopyPid}
+              >
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">Copy PID</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Copy PID</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       }
-      headerActions={actionButtons}
     >
-      <div className="space-y-6 px-1 pb-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge
-            variant={backendTypeBadgeVariant(connection.backendType)}
-            className="shrink-0 text-[10px]"
-          >
-            {typeLabel}
-          </Badge>
-          {stateLabel === '—' ? null : (
-            <Badge
-              variant={connectionStateBadgeVariant(
-                connection.state,
-                connection.backendType,
-              )}
-              className="shrink-0 text-[10px]"
-            >
-              {stateLabel}
-            </Badge>
-          )}
-          {longRunning ? (
-            <Badge variant="warning" className="shrink-0 text-[10px]">
-              Long-running
-            </Badge>
+      <>
+        <div className="shrink-0 border-t border-border" />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="space-y-5 px-6 py-6">
+              <div className="rounded-xl border border-border bg-gradient-to-br from-muted/40 via-background to-background p-4">
+                <div className="flex flex-wrap items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Cable className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[16px] font-semibold tracking-tight text-foreground">
+                        PID {connection.pid}
+                      </span>
+                      <Badge
+                        variant={backendTypeBadgeVariant(connection.backendType)}
+                        className="shrink-0 text-[10px]"
+                      >
+                        {typeLabel}
+                      </Badge>
+                      {stateLabel === '—' ? null : (
+                        <Badge
+                          variant={connectionStateBadgeVariant(
+                            connection.state,
+                            connection.backendType,
+                          )}
+                          className="shrink-0 text-[10px]"
+                        >
+                          {stateLabel}
+                        </Badge>
+                      )}
+                      {longRunning ? (
+                        <Badge variant="warning" className="shrink-0 text-[10px]">
+                          Long-running
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-1.5 text-[13px] text-muted-foreground">
+                      <span
+                        className={cn(
+                          usernameLabel !== 'System' &&
+                            usernameLabel !== '—' &&
+                            'font-medium text-foreground',
+                        )}
+                      >
+                        {usernameLabel}
+                      </span>
+                      {databaseLabel !== '—' ? (
+                        <>
+                          <span className="mx-1.5 text-border">·</span>
+                          <span className="font-mono">{databaseLabel}</span>
+                        </>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 font-mono text-[12px] text-muted-foreground">
+                      {clientAddress}
+                    </p>
+                    {connection.backendStart ? (
+                      <p className="mt-3 text-[12px] text-muted-foreground">
+                        <DateTooltip
+                          date={connection.backendStart}
+                          showFormattedDate
+                          className="text-[12px]"
+                        />
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <DetailSection title="Session">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="PID">
+                    <CopyableId
+                      id={String(connection.pid)}
+                      size="xs"
+                      maxWidth={220}
+                    />
+                  </DetailField>
+                  <DetailField label="Type">
+                    <Badge
+                      variant={backendTypeBadgeVariant(connection.backendType)}
+                      className="text-[10px]"
+                    >
+                      {typeLabel}
+                    </Badge>
+                  </DetailField>
+                  <DetailField label="User">
+                    <p
+                      className={cn(
+                        'text-[13px]',
+                        usernameLabel === 'System' || usernameLabel === '—'
+                          ? 'text-muted-foreground'
+                          : 'font-medium text-foreground',
+                      )}
+                    >
+                      {usernameLabel}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Database">
+                    <p className="font-mono text-[12px] text-muted-foreground">
+                      {databaseLabel}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Application">
+                    <p className="text-[13px] text-muted-foreground">
+                      {applicationLabel}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Client">
+                    <CopyableId
+                      id={clientAddress}
+                      displayText={clientAddress}
+                      size="xs"
+                      maxWidth={280}
+                      className="max-w-full"
+                    />
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Activity">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="State">
+                    {stateLabel === '—' ? (
+                      <p className="text-[13px] text-muted-foreground">—</p>
+                    ) : (
+                      <Badge
+                        variant={connectionStateBadgeVariant(
+                          connection.state,
+                          connection.backendType,
+                        )}
+                        className="text-[10px]"
+                      >
+                        {stateLabel}
+                      </Badge>
+                    )}
+                  </DetailField>
+                  <DetailField label="Wait event">
+                    <p className="font-mono text-[12px] text-muted-foreground">
+                      {waitEventLabel}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Query duration">
+                    <p className="text-[13px] text-foreground">{queryDuration}</p>
+                  </DetailField>
+                  <DetailField label="Connection age">
+                    <p className="text-[13px] text-foreground">{connectionAge}</p>
+                  </DetailField>
+                  <DetailField label="Backend start">
+                    {connection.backendStart ? (
+                      <DateTooltip date={connection.backendStart} />
+                    ) : (
+                      <p className="text-[13px] text-muted-foreground">—</p>
+                    )}
+                  </DetailField>
+                  <DetailField label="Query start">
+                    {connection.queryStart ? (
+                      <DateTooltip date={connection.queryStart} />
+                    ) : (
+                      <p className="text-[13px] text-muted-foreground">—</p>
+                    )}
+                  </DetailField>
+                  <DetailField label="State change" className="sm:col-span-2">
+                    {connection.stateChange ? (
+                      <DateTooltip date={connection.stateChange} />
+                    ) : (
+                      <p className="text-[13px] text-muted-foreground">—</p>
+                    )}
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Query" bodyClassName="p-0">
+                {query ? (
+                  <ConnectCodeExample
+                    code={query}
+                    language="sql"
+                    headless
+                    actions={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 shrink-0 gap-1 text-[12px] text-muted-foreground"
+                        onClick={() => onOpenInSqlEditor(query)}
+                      >
+                        <SearchCode className="h-3.5 w-3.5" />
+                        Open in SQL editor
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <p className="px-4 py-3 text-[13px] text-muted-foreground">
+                    No query running on this connection.
+                  </p>
+                )}
+              </DetailSection>
+            </div>
+          </div>
+
+          {showActionFooter ? (
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
+              {canCancel
+                ? renderManageButton(
+                    'Cancel query',
+                    <StopCircle className="mr-1.5 h-3.5 w-3.5" />,
+                    () => onCancelQuery(connection),
+                    !canManageConnections,
+                  )
+                : null}
+              {canTerminate
+                ? renderManageButton(
+                    'Terminate connection',
+                    <Unplug className="mr-1.5 h-3.5 w-3.5" />,
+                    () => onTerminateConnection(connection),
+                    !canManageConnections,
+                  )
+                : null}
+            </div>
           ) : null}
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailField label="PID">
-            <CopyableId
-              id={String(connection.pid)}
-              variant="inline"
-              size="md"
-            />
-          </DetailField>
-          <DetailField label="Type">
-            <span>{typeLabel}</span>
-          </DetailField>
-          <DetailField label="User">
-            <span
-              className={cn(
-                usernameLabel === 'System'
-                  ? 'text-muted-foreground'
-                  : 'font-medium',
-              )}
-            >
-              {usernameLabel}
-            </span>
-          </DetailField>
-          <DetailField label="Database">
-            <span className="font-mono text-[13px]">{databaseLabel}</span>
-          </DetailField>
-          <DetailField label="Application">
-            <span className="text-muted-foreground">{applicationLabel}</span>
-          </DetailField>
-          <DetailField label="Client">
-            <CopyableId
-              id={clientAddress}
-              displayText={clientAddress}
-              variant="inline"
-              size="md"
-              maxWidth={240}
-            />
-          </DetailField>
-          <DetailField label="Wait event">
-            <span className="font-mono text-[12px] text-muted-foreground">
-              {formatPostgresWaitEvent(
-                connection.waitEventType,
-                connection.waitEvent,
-              )}
-            </span>
-          </DetailField>
-          <DetailField label="Query duration">
-            <span>{queryDuration}</span>
-          </DetailField>
-          <DetailField label="Connection age">
-            <span>{connectionAge}</span>
-          </DetailField>
-          <DetailField label="Backend start">
-            {connection.backendStart ? (
-              <DateTooltip date={connection.backendStart} />
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </DetailField>
-          <DetailField label="Query start">
-            {connection.queryStart ? (
-              <DateTooltip date={connection.queryStart} />
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </DetailField>
-          <DetailField label="State change">
-            {connection.stateChange ? (
-              <DateTooltip date={connection.stateChange} />
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </DetailField>
-        </div>
-
-        <DetailField label="Query">
-          {connection.query ? (
-            <CodeBlock
-              code={connection.query}
-              language="sql"
-              className="max-h-[240px] overflow-auto text-[12px]"
-            />
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </DetailField>
-      </div>
+      </>
     </BaseDrawer>
   )
 }

@@ -13,10 +13,10 @@ import {
 } from '@/lib/react-query/hooks/postgres-databases'
 import { Loader2, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Button } from '@/components/ui/button'
 import { PostgresDatabaseNav } from './PostgresDatabaseNav'
 import { PostgresSpecificationCard } from './PostgresSpecificationCard'
+import { PostgresSegmentedToggle } from './_components/PostgresSegmentedToggle'
 import {
   usePostgresSidebar,
   type PostgresSidebarPanel,
@@ -26,7 +26,7 @@ import { PostgresQueriesSidebarPanel } from './_components/PostgresQueriesSideba
 import { PostgresSchemaSelector } from './_components/PostgresSchemaSelector'
 import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
-import { POSTGRES_TOP_HEADER_BAR_CLASS, POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS } from './_components/postgres-chrome'
+import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -169,44 +169,18 @@ export function SchemaTablesSidebar({
         databaseId={databaseId}
         databaseName={databaseName}
       />
-      <div className={cn('flex px-2', POSTGRES_TOP_HEADER_BAR_CLASS)}>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          value={panel}
-          onValueChange={(value) => {
-            if (
-              value === 'schemas' ||
-              value === 'queries' ||
-              value === 'history'
-            ) {
-              setPanel(value as PostgresSidebarPanel)
-            }
-          }}
-          className="w-full"
-          aria-label="Sidebar panel"
-        >
-          <ToggleGroupItem
-            value="schemas"
-            className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
-          >
-            Data
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="queries"
-            className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
-          >
-            Queries
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="history"
-            className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
-          >
-            History
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <PostgresSegmentedToggle
+        variant="bar"
+        className={POSTGRES_TOP_HEADER_BAR_CLASS}
+        value={panel}
+        onValueChange={(value) => setPanel(value as PostgresSidebarPanel)}
+        ariaLabel="Sidebar panel"
+        options={[
+          { value: 'schemas', label: 'Data' },
+          { value: 'queries', label: 'Queries' },
+          { value: 'history', label: 'History' },
+        ]}
+      />
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-2">
         {panel === 'schemas' ? (
           showSchemasLoading ? (

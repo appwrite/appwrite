@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import {
   CodeBlock,
   getCodeLanguageLabel,
@@ -65,6 +66,10 @@ type ConnectCodeExampleProps = {
   selectorVariant?: 'tabs' | 'dropdown'
   fixedHeight?: string
   className?: string
+  /** Extra toolbar actions rendered before the copy button (e.g. Open in SQL editor). */
+  actions?: ReactNode
+  /** Omit outer border when nested inside another framed container. */
+  headless?: boolean
 }
 
 /** Toolbar (optional language selector + copy) and code — connect modal SDK code panel. */
@@ -77,6 +82,8 @@ export function ConnectCodeExample({
   selectorVariant = 'tabs',
   fixedHeight,
   className,
+  actions,
+  headless = false,
 }: ConnectCodeExampleProps) {
   const displayCode = normalizeCodeBlockContent(code)
   const showSelector = Boolean(tabs && tabs.length > 1)
@@ -85,7 +92,8 @@ export function ConnectCodeExample({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col overflow-hidden rounded-xl border border-border',
+        'flex min-w-0 flex-col overflow-hidden',
+        !headless && 'rounded-xl border border-border',
         fixedHeight && 'min-h-0',
         className,
       )}
@@ -144,7 +152,10 @@ export function ConnectCodeExample({
             </span>
           )}
         </div>
-        <CodeSnippetCopyButton content={displayCode} />
+        <div className="flex shrink-0 items-center gap-1">
+          {actions}
+          <CodeSnippetCopyButton content={displayCode} />
+        </div>
       </div>
       <ConnectCodePanel
         code={displayCode}

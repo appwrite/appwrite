@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import {
   AlertCircle,
   Cable,
@@ -17,7 +16,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { postgresNav } from '@/lib/postgres-database-routes'
 import {
   backendTypeBadgeVariant,
   connectionStateBadgeVariant,
@@ -52,7 +50,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Table,
   TableBody,
@@ -71,11 +68,9 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
 import { PostgresConnectionDrawer } from './_components/PostgresConnectionDrawer'
+import { PostgresConnectionContextMenu } from './_components/PostgresConnectionContextMenu'
 import { PostgresConnectionRowActionsMenu } from './_components/PostgresConnectionRowActionsMenu'
-import {
-  POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS,
-  POSTGRES_SEGMENTED_TOGGLE_TRACK_CLASS,
-} from './_components/postgres-chrome'
+import { PostgresSegmentedToggle } from './_components/PostgresSegmentedToggle'
 
 type PostgresConnectionDetailsProps = {
   projectId: string
@@ -234,7 +229,6 @@ export function PostgresConnectionDetails({
   databaseId,
   centerInPanel = false,
 }: PostgresConnectionDetailsProps) {
-  const navigate = useNavigate()
   const { openQueryTab } = usePostgresSidebar()
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
@@ -349,11 +343,8 @@ export function PostgresConnectionDetails({
   const openInSqlEditor = useCallback(
     (sql: string) => {
       openQueryTab(sql)
-      navigate({
-        ...postgresNav({ projectId, databaseId }).sql(),
-      })
     },
-    [databaseId, navigate, openQueryTab, projectId],
+    [openQueryTab],
   )
 
   const runPendingAction = useCallback(async () => {
@@ -431,32 +422,19 @@ export function PostgresConnectionDetails({
         <div className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              <div className={POSTGRES_SEGMENTED_TOGGLE_TRACK_CLASS}>
-                <ToggleGroup
-                  type="single"
-                  variant="outline"
-                  size="sm"
-                  value={backendScope}
-                  onValueChange={(value) => {
-                    if (value === 'clients' || value === 'backends') {
-                      setBackendScope(value)
-                      setStateFilter('all')
-                    }
-                  }}
-                  className="shrink-0"
-                  aria-label="Connection scope"
-                >
-                  {BACKEND_SCOPES.map((scope) => (
-                    <ToggleGroupItem
-                      key={scope.id}
-                      value={scope.id}
-                      className={POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS}
-                    >
-                      {scope.label}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
+              <PostgresSegmentedToggle
+                variant="inline"
+                value={backendScope}
+                onValueChange={(value) => {
+                  setBackendScope(value)
+                  setStateFilter('all')
+                }}
+                ariaLabel="Connection scope"
+                options={BACKEND_SCOPES.map((scope) => ({
+                  value: scope.id,
+                  label: scope.label,
+                }))}
+              />
               {backendScope === 'clients' ? (
                 <>
                   <div
@@ -579,32 +557,50 @@ export function PostgresConnectionDetails({
                       )
 
                       return (
-                        <TableRow
+                        <PostgresConnectionContextMenu
                           key={connection.pid}
-                          role="button"
-                          tabIndex={0}
-                          data-state={
-                            drawerOpen &&
-                            selectedConnection?.pid === connection.pid
-                              ? 'selected'
-                              : undefined
+                          connection={connection}
+                          canManageConnections={canManageConnections}
+                          onOpenDetails={() => openDrawer(connection)}
+                          onOpenInSqlEditor={openInSqlEditor}
+                          onCancelQuery={() =>
+                            setPendingAction({
+                              type: 'cancel',
+                              connection,
+                            })
                           }
-                          aria-label={`Open connection details for PID ${connection.pid}`}
-                          className={cn(
-                            'cursor-pointer',
-                            longRunning && 'bg-amber-500/5 hover:bg-amber-500/10',
-                            drawerOpen &&
-                              selectedConnection?.pid === connection.pid &&
-                              'bg-muted/60 hover:bg-muted/60',
-                          )}
-                          onClick={() => openDrawer(connection)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault()
-                              openDrawer(connection)
-                            }
-                          }}
+                          onTerminateConnection={() =>
+                            setPendingAction({
+                              type: 'terminate',
+                              connection,
+                            })
+                          }
                         >
+                          <TableRow
+                            role="button"
+                            tabIndex={0}
+                            data-state={
+                              drawerOpen &&
+                              selectedConnection?.pid === connection.pid
+                                ? 'selected'
+                                : undefined
+                            }
+                            aria-label={`Open connection details for PID ${connection.pid}`}
+                            className={cn(
+                              'cursor-pointer',
+                              longRunning && 'bg-amber-500/5 hover:bg-amber-500/10',
+                              drawerOpen &&
+                                selectedConnection?.pid === connection.pid &&
+                                'bg-muted/60 hover:bg-muted/60',
+                            )}
+                            onClick={() => openDrawer(connection)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault()
+                                openDrawer(connection)
+                              }
+                            }}
+                          >
                           <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 pl-6 sm:pl-8">
                             <span className="font-mono text-[13px] text-foreground">
                               {connection.pid}
@@ -756,7 +752,8 @@ export function PostgresConnectionDetails({
                               />
                             </div>
                           </TableCell>
-                        </TableRow>
+                          </TableRow>
+                        </PostgresConnectionContextMenu>
                       )
                     })}
                   </TableBody>
@@ -833,6 +830,7 @@ export function PostgresConnectionDetails({
         connection={selectedConnection}
         canManageConnections={canManageConnections}
         manageDisabledTooltip={manageDisabledTooltip}
+        onOpenInSqlEditor={openInSqlEditor}
         onCancelQuery={(connection) =>
           setPendingAction({ type: 'cancel', connection })
         }

@@ -27,8 +27,11 @@ import {
 } from '@/components/ui/tooltip'
 import { ChevronUp, Plus, X } from 'lucide-react'
 import type { SqlEditorTab } from './PostgresSidebarContext'
+import { SqlEditorTabContextMenu } from './SqlEditorTabContextMenu'
 
 type SqlEditorTabBarProps = {
+  projectId: string
+  databaseId: string
   tabs: SqlEditorTab[]
   activeTabId: string
   onSelectTab: (tabId: string) => void
@@ -40,17 +43,23 @@ type SqlEditorTabBarProps = {
 }
 
 type SortableTabProps = {
+  projectId: string
+  databaseId: string
   tab: SqlEditorTab
   isActive: boolean
   canClose: boolean
+  hasOtherTabs: boolean
   onSelectTab: (tabId: string) => void
   onCloseTab: (tabId: string) => void
 }
 
 function SortableTab({
+  projectId,
+  databaseId,
   tab,
   isActive,
   canClose,
+  hasOtherTabs,
   onSelectTab,
   onCloseTab,
 }: SortableTabProps) {
@@ -82,42 +91,52 @@ function SortableTab({
       data-tab-id={tab.id}
       className={cn('shrink-0', isDragging && 'opacity-0')}
     >
-      <div
-        className={cn(
-          'group relative flex max-w-[220px] items-center rounded-t-md border-x border-b-0 transition-opacity',
-          isActive
-            ? 'z-[1] -mb-px h-10 border-border border-b-background bg-background text-foreground shadow-[inset_0_1px_0_0_var(--border)]'
-            : 'h-10 border-border/45 text-muted-foreground/70 opacity-85 shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--border)_40%,transparent)] hover:opacity-100 hover:border-border/65 hover:bg-background/50 hover:text-muted-foreground',
-        )}
+      <SqlEditorTabContextMenu
+        projectId={projectId}
+        databaseId={databaseId}
+        tab={tab}
+        canClose={canClose}
+        hasOtherTabs={hasOtherTabs}
+        onSelectTab={onSelectTab}
+        onCloseTab={onCloseTab}
       >
-        <button
-          ref={setActivatorNodeRef}
-          type="button"
-          onClick={() => onSelectTab(tab.id)}
-          className="flex h-full min-w-0 flex-1 cursor-grab items-center px-2.5 text-left active:cursor-grabbing"
-          title={tab.title}
-          {...attributes}
-          {...listeners}
+        <div
+          className={cn(
+            'group relative flex max-w-[220px] items-center rounded-t-md border-x border-b-0 transition-opacity',
+            isActive
+              ? 'z-[1] -mb-px h-10 border-border border-b-background bg-background text-foreground shadow-[inset_0_1px_0_0_var(--border)]'
+              : 'h-10 border-border/45 text-muted-foreground/70 opacity-85 shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--border)_40%,transparent)] hover:opacity-100 hover:border-border/65 hover:bg-background/50 hover:text-muted-foreground',
+          )}
         >
-          <span className="truncate text-[12px] font-medium">{tab.title}</span>
-        </button>
-        {canClose ? (
           <button
+            ref={setActivatorNodeRef}
             type="button"
-            onClick={() => onCloseTab(tab.id)}
-            onPointerDown={(event) => event.stopPropagation()}
-            className={cn(
-              'mr-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground',
-              isActive
-                ? 'opacity-70 hover:opacity-100'
-                : 'opacity-0 group-hover:opacity-70 group-hover:hover:opacity-100',
-            )}
-            aria-label={`Close ${tab.title}`}
+            onClick={() => onSelectTab(tab.id)}
+            className="flex h-full min-w-0 flex-1 cursor-grab items-center px-2.5 text-left active:cursor-grabbing"
+            title={tab.title}
+            {...attributes}
+            {...listeners}
           >
-            <X className="h-3 w-3" />
+            <span className="truncate text-[12px] font-medium">{tab.title}</span>
           </button>
-        ) : null}
-      </div>
+          {canClose ? (
+            <button
+              type="button"
+              onClick={() => onCloseTab(tab.id)}
+              onPointerDown={(event) => event.stopPropagation()}
+              className={cn(
+                'mr-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground',
+                isActive
+                  ? 'opacity-70 hover:opacity-100'
+                  : 'opacity-0 group-hover:opacity-70 group-hover:hover:opacity-100',
+              )}
+              aria-label={`Close ${tab.title}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          ) : null}
+        </div>
+      </SqlEditorTabContextMenu>
     </div>
   )
 }
@@ -137,6 +156,8 @@ function TabPreview({ tab, isActive }: { tab: SqlEditorTab; isActive: boolean })
 }
 
 export function SqlEditorTabBar({
+  projectId,
+  databaseId,
   tabs,
   activeTabId,
   onSelectTab,
@@ -154,10 +175,20 @@ export function SqlEditorTabBar({
   useEffect(() => {
     const container = tabListRef.current
     if (!container) return
-    const activeTabEl = container.querySelector<HTMLElement>(
-      `[data-tab-id="${activeTabId}"]`,
-    )
-    activeTabEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+
+    const scrollActiveTabIntoView = () => {
+      const activeTabEl = container.querySelector<HTMLElement>(
+        `[data-tab-id="${activeTabId}"]`,
+      )
+      activeTabEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
+
+    const frame = requestAnimationFrame(() => {
+      scrollActiveTabIntoView()
+      requestAnimationFrame(scrollActiveTabIntoView)
+    })
+
+    return () => cancelAnimationFrame(frame)
   }, [activeTabId, tabs.length])
 
   const sensors = useSensors(
@@ -205,9 +236,12 @@ export function SqlEditorTabBar({
       {tabs.map((tab) => (
         <SortableTab
           key={tab.id}
+          projectId={projectId}
+          databaseId={databaseId}
           tab={tab}
           isActive={tab.id === activeTabId}
           canClose={canClose}
+          hasOtherTabs={canClose}
           onSelectTab={onSelectTab}
           onCloseTab={onCloseTab}
         />
