@@ -160,6 +160,7 @@ class Create extends Action
                 'installCommand' => '',
                 'buildCommand' => '',
                 'outputDirectory' => '',
+                'adapter' => '',
             ]);
 
             $detector = new Framework($packager);
@@ -203,6 +204,10 @@ class Create extends Action
                 $framework = 'other';
             }
             $output->setAttribute('framework', $framework);
+
+            $frameworkConfig = $frameworks[$framework] ?? [];
+            $defaultAdapter = \array_key_first($frameworkConfig['adapters'] ?? []) ?? '';
+            $output->setAttribute('adapter', $defaultAdapter);
         } else {
             $output = new Document([
                 'runtime' => '',
