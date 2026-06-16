@@ -715,6 +715,98 @@ final class VCSConsoleClientTest extends Scope
         ], $this->getHeaders()));
     }
 
+    public function testCrossProjectInstallationRejected(): void
+    {
+        $installationId = $this->setupInstallation();
+
+        // Create a second project
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], ['teamId' => ID::unique(), 'name' => 'Cross Project Team']);
+
+        $project2 = $this->client->call(Client::METHOD_POST, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'projectId' => ID::unique(),
+            'name' => 'Cross Project Test',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+
+        $this->assertEquals(201, $project2['headers']['status-code']);
+        $project2Id = $project2['body']['$id'];
+
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'keyId' => ID::unique(),
+            'name' => 'Test Key',
+            'scopes' => ['functions.write', 'sites.write'],
+        ]);
+
+        $headers2 = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2Id,
+            'x-appwrite-key' => $key['body']['secret'],
+        ];
+
+        // createFunction with installation from project 1 → should fail
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
+            'functionId' => ID::unique(),
+            'name' => 'Test Cross',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $function['headers']['status-code']);
+
+        // createSite with installation from project 1 → should fail
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
+            'siteId' => ID::unique(),
+            'name' => 'Test Cross Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId3,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $site['headers']['status-code']);
+
+        // Create a function in project 2 (no VCS), then try updateFunction with cross-project installation
+        $fn = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
+            'functionId' => ID::unique(),
+            'name' => 'Test No VCS',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]);
+
+        $this->assertEquals(201, $fn['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/functions/' . $fn['body']['$id'], $headers2, [
+            'name' => 'Test No VCS',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $updated['headers']['status-code']);
+    }
+
     public function testCreateRepository(): void
     {
         $installationId = $this->setupInstallation();
