@@ -73,6 +73,30 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
     }
 
+    public function test_run_uses_cloud_lock_ttl_and_acquire_timeout(): void
+    {
+        $ttl = null;
+        $timeout = null;
+
+        $lock = new Lock(
+            function (string $key, int $lockTtl, \Closure $callback, float $lockTimeout) use (&$ttl, &$timeout): mixed {
+                $ttl = $lockTtl;
+                $timeout = $lockTimeout;
+
+                return (new MemoryLock($key, $this->heldLocks))->withLock($callback, $lockTimeout);
+            },
+            new NoTelemetry(),
+            $this->log,
+            null,
+            $this->project,
+        );
+
+        $lock->run('keys', 'k1', fn () => null);
+
+        $this->assertSame(1800, $ttl);
+        $this->assertSame(1500.0, $timeout);
+    }
+
     public function test_run_throws_on_contention(): void
     {
         $key = self::KEY_PREFIX.'keys:k1';

@@ -15,9 +15,12 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 final class Lock
 {
-    private const TTL_SECONDS = 600;
+    /**
+     * Keep defaults aligned with Cloud's distributed database worker lock.
+     */
+    private const TTL_SECONDS = 1800;
 
-    private const WAIT_SECONDS = 0.0;
+    private const WAIT_SECONDS = 1500.0;
 
     private const REPORT_RATE_LIMIT_SECONDS = 60;
 
