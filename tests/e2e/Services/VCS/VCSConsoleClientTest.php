@@ -725,35 +725,39 @@ final class VCSConsoleClientTest extends Scope
             'x-appwrite-project' => 'console',
         ];
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
-            'teamId' => ID::unique(),
-            'name' => 'Cross Project Team',
-        ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
-
-        $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
-            'projectId' => ID::unique(),
-            'name' => 'Cross Project Test',
-            'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default'),
-        ]);
-        $this->assertEquals(201, $project2['headers']['status-code']);
-        $project2Id = $project2['body']['$id'];
-
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', $consoleHeaders, [
-            'keyId' => ID::unique(),
-            'name' => 'Test Key',
-            'scopes' => ['functions.write', 'sites.write'],
-        ]);
-        $this->assertEquals(201, $key['headers']['status-code']);
-
-        $headers2 = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2Id,
-            'x-appwrite-key' => $key['body']['secret'],
-        ];
+        $teamId = null;
+        $project2Id = null;
 
         try {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
+                'teamId' => ID::unique(),
+                'name' => 'Cross Project Team',
+            ]);
+            $this->assertEquals(201, $team['headers']['status-code']);
+            $teamId = $team['body']['$id'];
+
+            $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
+                'projectId' => ID::unique(),
+                'name' => 'Cross Project Test',
+                'teamId' => $teamId,
+                'region' => System::getEnv('_APP_REGION', 'default'),
+            ]);
+            $this->assertEquals(201, $project2['headers']['status-code']);
+            $project2Id = $project2['body']['$id'];
+
+            $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', $consoleHeaders, [
+                'keyId' => ID::unique(),
+                'name' => 'Test Key',
+                'scopes' => ['functions.write', 'sites.write'],
+            ]);
+            $this->assertEquals(201, $key['headers']['status-code']);
+
+            $headers2 = [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project2Id,
+                'x-appwrite-key' => $key['body']['secret'],
+            ];
+
             // createFunction with installation from project 1 → should fail
             $function = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
                 'functionId' => ID::unique(),
@@ -816,8 +820,12 @@ final class VCSConsoleClientTest extends Scope
             ]);
             $this->assertEquals(404, $updatedSite['headers']['status-code']);
         } finally {
-            $this->client->call(Client::METHOD_DELETE, '/projects/' . $project2Id, $consoleHeaders);
-            $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], $consoleHeaders);
+            if ($project2Id !== null) {
+                $this->client->call(Client::METHOD_DELETE, '/projects/' . $project2Id, $consoleHeaders);
+            }
+            if ($teamId !== null) {
+                $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, $consoleHeaders);
+            }
         }
     }
 
