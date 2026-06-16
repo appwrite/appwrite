@@ -1645,21 +1645,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     showProjectUsageCharts,
   )
 
-  const gridProjectIds = useMemo(() => {
-    if (projectsViewMode !== 'grid') return []
-    return [
+  const projectListPlatformIds = useMemo(
+    () => [
       ...new Set([
         ...pinnedProjects.map((project) => project.$id),
         ...displayedProjectsByTeam.flatMap(({ projects }) =>
           projects.map((project) => project.$id),
         ),
       ]),
-    ]
-  }, [projectsViewMode, pinnedProjects, displayedProjectsByTeam])
+    ],
+    [pinnedProjects, displayedProjectsByTeam],
+  )
 
   const projectPlatformsById = useProjectListPlatforms(
-    gridProjectIds,
-    projectsViewMode === 'grid',
+    projectListPlatformIds,
+    projectListPlatformIds.length > 0,
   )
 
   const prefetchOrganizationSwitchData = useCallback(
@@ -2485,6 +2485,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
                                       }
+                                      projectPlatformsById={
+                                        projectPlatformsById
+                                      }
                                     />
                                   ) : (
                                   <div className={RESOURCE_CARD_GRID_CLASSNAME}>
@@ -2719,6 +2722,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         showUsageCharts={showProjectUsageCharts}
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
+                                        }
+                                        projectPlatformsById={
+                                          projectPlatformsById
                                         }
                                       />
                                     ) : (

@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { PauseCircle } from '@/lib/icons'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Badge } from '@/components/ui/badge'
@@ -13,11 +13,17 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   type ProjectListItem,
+  type ProjectListPlatformsEntry,
 } from '@/lib/react-query/hooks/projects'
 import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
+import { cn } from '@/lib/utils'
 import { ProjectContextMenu } from './ProjectContextMenu'
 import { ProjectListIdentities } from './ProjectListIdentities'
 import { ProjectListName } from './ProjectListName'
+import {
+  PROJECT_LIST_TABLE_ROW_HEIGHT_CLASS,
+  ProjectListPlatformAvatars,
+} from './ProjectListPlatformAvatars'
 import { ProjectListTableRequestsCell } from './ProjectListRequestsChart'
 
 function getProjectListRegionLabel(project: ProjectListItem): string | null {
@@ -33,8 +39,47 @@ type ProjectsListTableProps = {
   showFailedInvoiceOrgAlert: boolean
   orgBillingReadonlyForFailedInvoice: boolean
   showUsageCharts?: boolean
-  projectRequestsUsageById?: Map<string, ProjectListRequestsUsageEntry>
+  projectRequestsUsageById: Map<string, ProjectListRequestsUsageEntry>
+  projectPlatformsById: Map<string, ProjectListPlatformsEntry>
 }
+
+function getProjectColumnWidth(
+  showRegionColumn: boolean,
+  showUsageCharts: boolean,
+): string {
+  if (showUsageCharts && showRegionColumn) return 'w-[20%]'
+  if (showUsageCharts) return 'w-[22%]'
+  if (showRegionColumn) return 'w-[28%]'
+  return 'w-[32%]'
+}
+
+function getRequestsColumnWidth(showRegionColumn: boolean): string {
+  return showRegionColumn ? 'w-[30%]' : 'w-[34%]'
+}
+
+function getPlatformsColumnWidth(
+  showRegionColumn: boolean,
+  showUsageCharts: boolean,
+): string {
+  if (showUsageCharts && showRegionColumn) return 'w-[12%]'
+  if (showUsageCharts) return 'w-[14%]'
+  if (showRegionColumn) return 'w-[14%]'
+  return 'w-[16%]'
+}
+
+function getActionsColumnWidth(
+  showRegionColumn: boolean,
+  showUsageCharts: boolean,
+): string {
+  if (showUsageCharts) return 'w-[30%]'
+  if (showRegionColumn) return 'w-[50%]'
+  return 'w-[52%]'
+}
+
+const listTableCellClassName = cn(
+  PROJECT_LIST_TABLE_ROW_HEIGHT_CLASS,
+  'overflow-hidden px-4',
+)
 
 export function ProjectsListTable({
   projects,
@@ -45,7 +90,9 @@ export function ProjectsListTable({
   orgBillingReadonlyForFailedInvoice,
   showUsageCharts = false,
   projectRequestsUsageById,
+  projectPlatformsById,
 }: ProjectsListTableProps) {
+  const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const showRegionColumn = features.multiRegion
 
@@ -55,50 +102,36 @@ export function ProjectsListTable({
         <TableHeader>
           <TableRow className="border-b border-border hover:bg-transparent">
             <TableHead
-              className={
-                showUsageCharts
-                  ? showRegionColumn
-                    ? 'w-[22%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-                    : 'w-[28%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-                  : showRegionColumn
-                    ? 'w-[32%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-                    : 'w-[40%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-              }
+              className={`${getProjectColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
             >
               Project
             </TableHead>
             {showRegionColumn ? (
-              <TableHead className="w-[10%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[8%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Region
               </TableHead>
             ) : null}
             {showUsageCharts ? (
               <TableHead
-                className={
-                  showRegionColumn
-                    ? 'w-[36%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-                    : 'w-[42%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-                }
+                className={`${getRequestsColumnWidth(showRegionColumn)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
               >
                 Requests
               </TableHead>
             ) : null}
             <TableHead
-              className={
-                showUsageCharts
-                  ? showRegionColumn
-                    ? 'w-[32%] px-4 py-3 text-right'
-                    : 'w-[30%] px-4 py-3 text-right'
-                  : showRegionColumn
-                    ? 'w-[58%] px-4 py-3 text-right'
-                    : 'w-[60%] px-4 py-3 text-right'
-              }
+              className={`${getPlatformsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
+            >
+              Platforms
+            </TableHead>
+            <TableHead
+              className={`${getActionsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-right`}
             />
           </TableRow>
         </TableHeader>
         <TableBody>
           {projects.map((project) => {
             const regionLabel = getProjectListRegionLabel(project)
+            const platformsEntry = projectPlatformsById.get(project.$id)
 
             return (
               <ProjectContextMenu
@@ -108,13 +141,17 @@ export function ProjectsListTable({
                 canDeleteProject={canDeleteProject}
                 onProjectDeleted={onProjectDeleted}
               >
-                <TableRow className="cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30">
-                  <TableCell className="max-w-0 px-4 py-3">
-                    <Link
-                      to="/projects/$projectId"
-                      params={{ projectId: project.$id }}
-                      className="block min-w-0"
-                    >
+                <TableRow
+                  className="cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30"
+                  onClick={() =>
+                    navigate({
+                      to: '/projects/$projectId',
+                      params: { projectId: project.$id },
+                    })
+                  }
+                >
+                  <TableCell className={cn(listTableCellClassName, 'max-w-0')}>
+                    <div className="flex h-full min-w-0 items-center">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <ProjectListName
                           name={project.name}
@@ -138,30 +175,42 @@ export function ProjectsListTable({
                           </Badge>
                         ) : null}
                       </div>
-                    </Link>
+                    </div>
                   </TableCell>
                   {showRegionColumn ? (
-                    <TableCell className="max-w-0 px-4 py-3">
-                      {regionLabel ? (
-                        <span className="truncate font-mono text-[12px] uppercase text-muted-foreground">
-                          {regionLabel}
-                        </span>
-                      ) : null}
+                    <TableCell className={cn(listTableCellClassName, 'max-w-0')}>
+                      <div className="flex h-full min-w-0 items-center">
+                        {regionLabel ? (
+                          <span className="truncate font-mono text-[12px] uppercase text-muted-foreground">
+                            {regionLabel}
+                          </span>
+                        ) : null}
+                      </div>
                     </TableCell>
                   ) : null}
-                  {showUsageCharts && projectRequestsUsageById ? (
-                    <TableCell className="max-w-0 px-4 py-3">
+                  {showUsageCharts ? (
+                    <TableCell className={cn(listTableCellClassName, 'max-w-0')}>
                       <ProjectListTableRequestsCell
                         projectId={project.$id}
                         usageByProjectId={projectRequestsUsageById}
                       />
                     </TableCell>
                   ) : null}
+                  <TableCell className={listTableCellClassName}>
+                    <div className="flex h-full items-center">
+                      <ProjectListPlatformAvatars
+                        projectId={project.$id}
+                        platforms={platformsEntry?.platforms ?? []}
+                        isLoading={platformsEntry?.isLoading ?? true}
+                        variant="table"
+                      />
+                    </div>
+                  </TableCell>
                   <TableCell
-                    className="px-4 py-3 text-right"
+                    className={cn(listTableCellClassName, 'text-right')}
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <div className="flex justify-end">
+                    <div className="flex h-full items-center justify-end">
                       <ProjectListIdentities project={project} />
                     </div>
                   </TableCell>

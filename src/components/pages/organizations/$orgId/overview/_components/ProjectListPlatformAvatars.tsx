@@ -10,10 +10,16 @@ import {
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { cn } from '@/lib/utils'
 
+/** Fixed row height for org project list table (matches size-8 avatars + vertical rhythm). */
+export const PROJECT_LIST_TABLE_ROW_HEIGHT_CLASS = 'h-14 py-0 align-middle'
+
+export const PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS = 'size-8'
+
 const MAX_VISIBLE_PLATFORMS = 4
 
 const avatarClassName = cn(
-  'grid size-8 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground ring-1 ring-background',
+  'grid shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground ring-1 ring-background',
+  PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
 )
 
 const emptyAvatarClassName = cn(
@@ -65,6 +71,46 @@ type ProjectListPlatformAvatarsProps = {
   platforms: Models.PlatformList['platforms']
   isLoading?: boolean
   className?: string
+  variant?: 'card' | 'table'
+}
+
+function PlatformAvatarsLoading({
+  className,
+  variant = 'card',
+}: {
+  className?: string
+  variant?: 'card' | 'table'
+}) {
+  if (variant === 'table') {
+    return (
+      <div
+        className={cn('flex items-center', PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS, className)}
+        aria-label="Loading platforms"
+        aria-busy
+      >
+        <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} aria-hidden />
+      </div>
+    )
+  }
+
+  return (
+    <ul
+      className={cn('inline-flex items-center pl-0', className)}
+      aria-label="Loading platforms"
+      aria-busy
+    >
+      {Array.from({ length: 3 }).map((_, index) => (
+        <li
+          key={index}
+          className={cn('relative shrink-0', index > 0 && '-ml-2')}
+          style={{ zIndex: index + 1 }}
+          aria-hidden
+        >
+          <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} />
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 export function ProjectListPlatformAvatars({
@@ -72,32 +118,22 @@ export function ProjectListPlatformAvatars({
   platforms,
   isLoading = false,
   className,
+  variant = 'card',
 }: ProjectListPlatformAvatarsProps) {
   if (isLoading) {
-    return (
-      <ul
-        className={cn('inline-flex items-center pl-0', className)}
-        aria-label="Loading platforms"
-        aria-busy
-      >
-        {Array.from({ length: 3 }).map((_, index) => (
-          <li
-            key={index}
-            className={cn('relative shrink-0', index > 0 && '-ml-2')}
-            style={{ zIndex: index + 1 }}
-            aria-hidden
-          >
-            <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} />
-          </li>
-        ))}
-      </ul>
-    )
+    return <PlatformAvatarsLoading className={className} variant={variant} />
   }
 
   const stackItems = groupPlatformsForStack(platforms)
   if (stackItems.length === 0) {
     return (
-      <div className={cn('inline-flex items-center', className)}>
+      <div
+        className={cn(
+          'inline-flex items-center',
+          variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
+          className,
+        )}
+      >
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
@@ -126,7 +162,11 @@ export function ProjectListPlatformAvatars({
 
   return (
     <ul
-      className={cn('inline-flex items-center pl-0', className)}
+      className={cn(
+        'inline-flex items-center pl-0',
+        variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
+        className,
+      )}
       aria-label={stackItems.map((item) => item.label).join(', ')}
     >
       {visibleItems.map((item, index) => (

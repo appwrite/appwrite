@@ -1,7 +1,9 @@
-import { useId, useMemo, type CSSProperties, type ReactNode } from 'react'
+import { useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from '@tanstack/react-router'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
+import type { TooltipProps } from 'recharts'
 import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
 import { RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import type { UsageChartPoint } from '@/lib/usage/usage-events-common'
@@ -21,6 +23,10 @@ export const PROJECT_LIST_REQUESTS_CONTENT_MIN_HEIGHT =
 /** Single-row table cell: value column + chart. */
 export const PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT =
   PROJECT_LIST_REQUESTS_TABLE_CHART_HEIGHT
+
+/** Reserved height for the requests table cell content (excludes cell padding). */
+export const PROJECT_LIST_REQUESTS_TABLE_CELL_HEIGHT =
+  PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT
 
 /** Section divider pt-2.5 + content block. */
 export const PROJECT_LIST_REQUESTS_SECTION_MIN_HEIGHT =
@@ -96,23 +102,97 @@ type ProjectListRequestsChartProps = {
   variant?: 'card' | 'table'
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  disabled,
+function ChartTooltipBody({
+  point,
 }: {
-  active?: boolean
-  payload?: Array<{ payload: UsageChartPoint & { value: number } }>
-  disabled?: boolean
+  point: UsageChartPoint & { value: number }
 }) {
-  if (disabled || !active || !payload?.length) return null
-  const point = payload[0].payload
   return (
-    <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-sm">
+    <>
       <p className="text-[12px] font-medium text-foreground">{point.date}</p>
       <p className="text-[12px] tabular-nums text-muted-foreground">
         {formatRequestsValue(point.total)} requests
       </p>
+    </>
+  )
+}
+
+function PortaledChartTooltip({
+  active,
+  coordinate,
+  portalContainerRef,
+  children,
+}: {
+  active?: boolean
+  coordinate?: TooltipProps<number, string>['coordinate']
+  portalContainerRef: RefObject<HTMLDivElement | null>
+  children: ReactNode
+}) {
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(
+    null,
+  )
+
+  useLayoutEffect(() => {
+    if (
+      !active ||
+      !coordinate ||
+      coordinate.x == null ||
+      coordinate.y == null ||
+      !portalContainerRef.current
+    ) {
+      setPosition(null)
+      return
+    }
+
+    const rect = portalContainerRef.current.getBoundingClientRect()
+    setPosition({
+      left: rect.left + coordinate.x,
+      top: rect.top + coordinate.y,
+    })
+  }, [active, coordinate, portalContainerRef])
+
+  if (!active || !position || typeof document === 'undefined') return null
+
+  return createPortal(
+    <div
+      className="pointer-events-none fixed z-[100] max-w-none -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-md"
+      style={{ left: position.left, top: position.top }}
+    >
+      {children}
+    </div>,
+    document.body,
+  )
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  coordinate,
+  disabled,
+  portalContainerRef,
+}: TooltipProps<number, string> & {
+  disabled?: boolean
+  portalContainerRef?: RefObject<HTMLDivElement | null>
+}) {
+  if (disabled || !active || !payload?.length) return null
+
+  const point = payload[0].payload as UsageChartPoint & { value: number }
+
+  if (portalContainerRef) {
+    return (
+      <PortaledChartTooltip
+        active={active}
+        coordinate={coordinate}
+        portalContainerRef={portalContainerRef}
+      >
+        <ChartTooltipBody point={point} />
+      </PortaledChartTooltip>
+    )
+  }
+
+  return (
+    <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-sm">
+      <ChartTooltipBody point={point} />
     </div>
   )
 }
@@ -123,6 +203,7 @@ type RequestsChartAreaProps = {
   isSkeleton?: boolean
   tooltipDisabled?: boolean
   height?: number
+  usePortalTooltip?: boolean
 }
 
 function RequestsChartArea({
@@ -131,7 +212,9 @@ function RequestsChartArea({
   isSkeleton = false,
   tooltipDisabled = false,
   height = PROJECT_LIST_REQUESTS_CHART_HEIGHT,
+  usePortalTooltip = false,
 }: RequestsChartAreaProps) {
+  const chartContainerRef = useRef<HTMLDivElement>(null)
   const strokeColor = isSkeleton ? SKELETON_CHART_STROKE : CHART_COLOR
   const fillTopColor = isSkeleton ? SKELETON_CHART_FILL : CHART_COLOR
   const fillTopOpacity = isSkeleton ? SKELETON_CHART_FILL_TOP_OPACITY : 0.22
@@ -141,10 +224,15 @@ function RequestsChartArea({
   const strokeWidth = isSkeleton ? 0.75 : 1.5
 
   return (
-    <div className="h-full w-full min-w-0 text-muted-foreground">
+    <div
+      ref={chartContainerRef}
+      className="h-full w-full min-w-0 text-muted-foreground"
+    >
       <ResponsiveContainer
         width="100%"
         height={height}
+        minHeight={height}
+        debounce={0}
         initialDimension={{
           width: 320,
           height,
@@ -170,7 +258,20 @@ function RequestsChartArea({
             </linearGradient>
           </defs>
           <Tooltip
-            content={<ChartTooltip disabled={tooltipDisabled} />}
+            content={
+              <ChartTooltip
+                disabled={tooltipDisabled}
+                portalContainerRef={
+                  usePortalTooltip ? chartContainerRef : undefined
+                }
+              />
+            }
+            allowEscapeViewBox={{ x: true, y: true }}
+            wrapperStyle={
+              usePortalTooltip
+                ? { visibility: 'hidden', pointerEvents: 'none' }
+                : { zIndex: 50, pointerEvents: 'none' }
+            }
             cursor={
               tooltipDisabled
                 ? false
@@ -204,12 +305,16 @@ function RequestsChartBlock({
   chartHeight,
   isLoading,
   isError,
+  animateReveal = true,
+  usePortalTooltip = false,
 }: {
   chartData: Array<UsageChartPoint & { value: number }>
   gradientId: string
   chartHeight: number
   isLoading: boolean
   isError: boolean
+  animateReveal?: boolean
+  usePortalTooltip?: boolean
 }) {
   if (isError) {
     return (
@@ -227,6 +332,7 @@ function RequestsChartBlock({
         isSkeleton
         tooltipDisabled
         height={chartHeight}
+        usePortalTooltip={usePortalTooltip}
       />
     )
   }
@@ -234,13 +340,18 @@ function RequestsChartBlock({
   return (
     <div
       key="loaded-chart"
-      className={cn('h-full', CHART_REVEAL_CLASS, CHART_REVEAL_DELAY_CLASS)}
+      className={cn(
+        'h-full',
+        animateReveal && CHART_REVEAL_CLASS,
+        animateReveal && CHART_REVEAL_DELAY_CLASS,
+      )}
     >
       <RequestsChartArea
         chartData={chartData}
         gradientId={gradientId}
         tooltipDisabled={false}
         height={chartHeight}
+        usePortalTooltip={usePortalTooltip}
       />
     </div>
   )
@@ -280,9 +391,14 @@ export function ProjectListRequestsChart({
     }))
   }, [chartPoints, hasPoints, isLoading])
 
+  const valueTextSizeClass = isTable ? 'text-[12px]' : 'text-[13px]'
+  const valueTextLayoutClass = isTable
+    ? 'block max-w-full truncate'
+    : 'shrink-0'
+
   const valueContent = isLoading ? (
     <span
-      className="h-3.5 w-8 shrink-0 rounded-sm bg-border/70"
+      className="block h-3.5 w-8 max-w-full shrink-0 rounded-sm bg-border/70"
       aria-hidden
     />
   ) : (
@@ -293,8 +409,9 @@ export function ProjectListRequestsChart({
       {isZeroUsage ? (
         <span
           className={cn(
+            valueTextLayoutClass,
             'font-medium leading-none text-muted-foreground',
-            isTable ? 'text-[12px]' : 'text-[13px]',
+            valueTextSizeClass,
           )}
         >
           N/A
@@ -302,8 +419,9 @@ export function ProjectListRequestsChart({
       ) : (
         <span
           className={cn(
+            valueTextLayoutClass,
             'font-medium leading-none tabular-nums text-foreground',
-            isTable ? 'text-[12px]' : 'text-[13px]',
+            valueTextSizeClass,
           )}
         >
           {formatRequestsTotal(totalRequests)}
@@ -342,23 +460,35 @@ export function ProjectListRequestsChart({
   if (isTable) {
     return (
       <div
-        className={cn('flex min-w-0 items-center gap-2', className)}
-        style={{ minHeight: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT }}
+        className={cn('flex h-full min-w-0 items-center gap-2', className)}
+        style={{
+          height: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT,
+          minHeight: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT,
+        }}
         aria-busy={isLoading}
         aria-label={isLoading ? 'Loading request usage' : undefined}
       >
-        <div className="w-11 shrink-0">{valueContent}</div>
+        <div className="flex h-full w-11 shrink-0 items-center">
+          {valueContent}
+        </div>
         <div
           className="relative min-w-0 flex-1 overflow-hidden"
-          style={{ height: chartHeight }}
+          style={{
+            height: chartHeight,
+            minHeight: chartHeight,
+          }}
         >
-          <RequestsChartBlock
-            chartData={chartData}
-            gradientId={gradientId}
-            chartHeight={chartHeight}
-            isLoading={isLoading}
-            isError={isError}
-          />
+          <div className="absolute inset-0">
+            <RequestsChartBlock
+              chartData={chartData}
+              gradientId={gradientId}
+              chartHeight={chartHeight}
+              isLoading={isLoading}
+              isError={isError}
+              animateReveal={false}
+              usePortalTooltip
+            />
+          </div>
         </div>
       </div>
     )
@@ -498,12 +628,20 @@ export function ProjectListTableRequestsCell({
   usageByProjectId,
 }: ProjectListTableRequestsCellProps) {
   return (
-    <ProjectRequestsChartLink projectId={projectId}>
-      <ProjectListRequestsChartFromUsage
-        projectId={projectId}
-        usageByProjectId={usageByProjectId}
-        variant="table"
-      />
-    </ProjectRequestsChartLink>
+    <div className="flex h-full w-full items-center">
+      <div
+        className="w-full"
+        style={{
+          height: PROJECT_LIST_REQUESTS_TABLE_CELL_HEIGHT,
+          minHeight: PROJECT_LIST_REQUESTS_TABLE_CELL_HEIGHT,
+        }}
+      >
+        <ProjectListRequestsChartFromUsage
+          projectId={projectId}
+          usageByProjectId={usageByProjectId}
+          variant="table"
+        />
+      </div>
+    </div>
   )
 }
