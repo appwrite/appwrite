@@ -14,7 +14,9 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Mails extends Action
 {
@@ -39,6 +41,7 @@ class Mails extends Action
             ->inject('project')
             ->inject('register')
             ->inject('log')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -55,10 +58,11 @@ class Mails extends Action
      * @param Document $project
      * @param Registry $register
      * @param Log $log
+     * @param Telemetry $telemetry
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Log $log): void
+    public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload();
@@ -81,6 +85,12 @@ class Mails extends Action
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
+        $template = $payload['template'] ?? 'unknown';
+        $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
+
+        Span::add('mail.template', $template);
+        Span::add('mail.smtp_type', $type);
+        Span::add('mail.recipient_domain', $recipientDomain);
         $variables = $payload['variables'];
         $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
@@ -150,6 +160,7 @@ class Mails extends Action
                 keepAlive: true,
                 timelimit: 30,
             );
+        $adapter->setTelemetry($telemetry);
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -202,14 +213,19 @@ class Mails extends Action
             attachments: $attachments,
             html: true,
         );
+        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
         try {
             $adapter->send($emailMessage);
         } catch (\Throwable $error) {
+            Span::add('mail.status', 'failure');
+
             if ($type === 'smtp') {
                 throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
             }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
+
+        Span::add('mail.status', 'success');
     }
 }

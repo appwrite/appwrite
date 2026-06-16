@@ -336,6 +336,7 @@ class Create extends Action
                     project: $project,
                     recipient: $user->getAttribute('email'),
                     subject: $subject,
+                    template: MAIL_TEMPLATE_MFA_CHALLENGE,
                     bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,
