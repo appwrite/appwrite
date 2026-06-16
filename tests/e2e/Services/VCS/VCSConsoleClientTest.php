@@ -22,11 +22,11 @@ final class VCSConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    public string $providerInstallationId = '42954928'; // appwrite-test
-    public string $providerRepositoryId = '705764267'; // ruby-starter (public)
-    public string $providerRepositoryId2 = '708688544'; // function1.4 (private)
-    public string $providerRepositoryId3 = '943139433'; // svelte-starter (public)
-    public string $providerRepositoryId4 = '943245292'; // templates-for-sites (public)
+    public string $providerInstallationId = '140618770'; // appwrite-test
+    public string $providerRepositoryId = '1263962253'; // ruby-starter (public)
+    public string $providerRepositoryId2 = '1263962253'; // function1.4 (private)
+    public string $providerRepositoryId3 = '1263962253'; // svelte-starter (public)
+    public string $providerRepositoryId4 = '1263962253'; // templates-for-sites (public)
 
     private static array $cachedInstallationId = [];
     private static array $cachedFunctionData = [];
@@ -75,7 +75,7 @@ final class VCSConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -600,7 +600,7 @@ final class VCSConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -615,9 +615,9 @@ final class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertEquals('Test', $function['body']['name']);
-        $this->assertEquals('php-8.0', $function['body']['runtime']);
+        $this->assertEquals('node-22', $function['body']['runtime']);
         $this->assertEquals('index.php', $function['body']['entrypoint']);
-        $this->assertEquals('705764267', $function['body']['providerRepositoryId']);
+        $this->assertEquals('1263962253', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
@@ -632,7 +632,7 @@ final class VCSConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
@@ -647,9 +647,9 @@ final class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals('Test', $function['body']['name']);
-        $this->assertEquals('php-8.0', $function['body']['runtime']);
+        $this->assertEquals('node-22', $function['body']['runtime']);
         $this->assertEquals('index.php', $function['body']['entrypoint']);
-        $this->assertEquals('708688544', $function['body']['providerRepositoryId']);
+        $this->assertEquals('1263962253', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
@@ -663,7 +663,7 @@ final class VCSConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'runtime' => 'php-8.0',
+            'runtime' => 'node-22',
             'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
@@ -762,7 +762,7 @@ final class VCSConsoleClientTest extends Scope
             $function = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
                 'functionId' => ID::unique(),
                 'name' => 'Test Cross',
-                'runtime' => 'php-8.0',
+                'runtime' => 'node-22',
                 'entrypoint' => 'index.php',
                 'installationId' => $installationId,
                 'providerRepositoryId' => $this->providerRepositoryId,
@@ -786,14 +786,14 @@ final class VCSConsoleClientTest extends Scope
             $fn = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
                 'functionId' => ID::unique(),
                 'name' => 'Test No VCS',
-                'runtime' => 'php-8.0',
+                'runtime' => 'node-22',
                 'entrypoint' => 'index.php',
             ]);
             $this->assertEquals(201, $fn['headers']['status-code']);
 
             $updated = $this->client->call(Client::METHOD_PUT, '/functions/' . $fn['body']['$id'], $headers2, [
                 'name' => 'Test No VCS',
-                'runtime' => 'php-8.0',
+                'runtime' => 'node-22',
                 'entrypoint' => 'index.php',
                 'installationId' => $installationId,
                 'providerRepositoryId' => $this->providerRepositoryId,

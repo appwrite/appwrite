@@ -165,10 +165,6 @@ class Update extends Base
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
@@ -186,6 +182,10 @@ class Update extends Base
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         // Omitted providerRepositoryId (null) on a connected function — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
@@ -195,6 +195,10 @@ class Update extends Base
             $repositoryId = $function->getAttribute('repositoryId', '');
             $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
             $installation = $dbForPlatform->getDocument('installations', $installationId);
+        }
+
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
