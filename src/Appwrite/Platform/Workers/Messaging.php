@@ -50,7 +50,6 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Telemetry\Counter;
 
 use function Swoole\Coroutine\batch;
 
@@ -58,7 +57,7 @@ class Messaging extends Action
 {
     private ?SMSAdapter $adapter = null;
 
-    private ?Counter $sendCounter = null;
+    private Telemetry $telemetry;
 
     public static function getName(): string
     {
@@ -104,7 +103,7 @@ class Messaging extends Action
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
 
-        $this->sendCounter = $telemetry->createCounter('worker.messaging.send');
+        $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -550,24 +549,6 @@ class Messaging extends Action
 
         $failed = $recipients - $delivered;
 
-        if ($delivered > 0) {
-            $this->sendCounter?->add($delivered, [
-                'type' => $provider->getAttribute('type'),
-                'provider' => $provider->getAttribute('provider'),
-                'origin' => MESSAGE_SEND_TYPE_EXTERNAL,
-                'result' => 'success',
-            ]);
-        }
-
-        if ($failed > 0) {
-            $this->sendCounter?->add($failed, [
-                'type' => $provider->getAttribute('type'),
-                'provider' => $provider->getAttribute('provider'),
-                'origin' => MESSAGE_SEND_TYPE_EXTERNAL,
-                'result' => 'failure',
-            ]);
-        }
-
         $usage = new UsageContext();
         $usage
             ->addMetric(METRIC_MESSAGES, $recipients)
@@ -793,12 +774,16 @@ class Messaging extends Action
         $messageData = clone $message;
         $messageData->setAttribute('to', $to);
 
-        return match ($providerType) {
+        $data = match ($providerType) {
             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
             MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
             default => throw new \Exception('Provider with the requested ID is of the incorrect type')
         };
+
+        $data->setOrigin(MESSAGE_SEND_TYPE_EXTERNAL);
+
+        return $data;
     }
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
@@ -837,28 +822,9 @@ class Messaging extends Action
             $message->getAttribute('data')['content'],
             $from
         );
+        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        $provider = \strtolower($this->adapter->getName());
-
-        try {
-            $this->adapter->send($sms);
-        } catch (\Throwable $error) {
-            $this->sendCounter?->add(\count($recipients), [
-                'type' => MESSAGE_TYPE_SMS,
-                'provider' => $provider,
-                'origin' => MESSAGE_SEND_TYPE_INTERNAL,
-                'result' => 'failure',
-            ]);
-
-            throw $error;
-        }
-
-        $this->sendCounter?->add(\count($recipients), [
-            'type' => MESSAGE_TYPE_SMS,
-            'provider' => $provider,
-            'origin' => MESSAGE_SEND_TYPE_INTERNAL,
-            'result' => 'success',
-        ]);
+        $this->adapter->send($sms);
     }
 
 
@@ -866,7 +832,7 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials');
 
-        return match ($provider->getAttribute('provider')) {
+        $adapter = match ($provider->getAttribute('provider')) {
             'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
             'twilio' => new Twilio(
                 $credentials['accountSid'] ?? '',
@@ -903,6 +869,12 @@ class Messaging extends Action
             ),
             default => null
         };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
     }
 
     protected function getPushAdapter(Document $provider): ?PushAdapter
@@ -910,7 +882,7 @@ class Messaging extends Action
         $credentials = $provider->getAttribute('credentials');
         $options = $provider->getAttribute('options');
 
-        return match ($provider->getAttribute('provider')) {
+        $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
                 $credentials['authKey'] ?? '',
@@ -922,6 +894,12 @@ class Messaging extends Action
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
         };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
     }
 
     protected function getEmailAdapter(Document $provider): ?EmailAdapter
@@ -930,7 +908,7 @@ class Messaging extends Action
         $options = $provider->getAttribute('options', []);
         $apiKey = $credentials['apiKey'] ?? '';
 
-        return match ($provider->getAttribute('provider')) {
+        $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
                 $credentials['host'] ??  '',
@@ -956,6 +934,12 @@ class Messaging extends Action
             ),
             default => null
         };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
     }
 
     private function buildEmailMessage(
@@ -1172,6 +1156,7 @@ class Messaging extends Action
         $defaultProvider = $this->createProviderFromDSN($defaultDSN);
         $adapter = $this->getSmsAdapter($defaultProvider);
         $geosms = new GEOSMS($adapter);
+        $geosms->setTelemetry($this->telemetry);
 
         /** @var DSN $localDSN */
         foreach ($localDSNs as $localDSN) {
