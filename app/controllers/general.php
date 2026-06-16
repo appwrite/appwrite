@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
@@ -1673,11 +1674,10 @@ Http::get('/v1/ping')
         namespace: 'ping',
         group: null,
         name: 'get',
-        hide: true,
         description: <<<EOT
         Send a ping to project as part of onboarding.
         EOT,
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,

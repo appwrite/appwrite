@@ -249,19 +249,28 @@ class Builds extends Action
 
         if ($deployment->getAttribute('status') === 'canceled') {
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
-            $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+            $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
             return;
         }
 
         $deploymentId = $deployment->getId();
 
-        $deployment->setAttribute('buildStartedAt', $startTime);
-        $deployment->setAttribute('status', 'processing');
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+        $updated = $dbForProject->updateDocuments('deployments', new Document([
             'buildStartedAt' => $startTime,
             'status' => 'processing',
-        ]));
+        ]), [
+            Query::equal('$id', [$deploymentId]),
+            Query::notEqual('status', 'canceled'),
+        ]);
+
+        if ($updated === 0) {
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+            $this->finalizeCanceledDeployment($deploymentId, $dbForProject, $queueForRealtime);
+            return;
+        }
+
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
@@ -389,7 +398,7 @@ class Builds extends Action
                 Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                    $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                    $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                     return;
                 }
@@ -531,10 +540,19 @@ class Builds extends Action
             }
 
             /** Request the executor to build the code... */
-            $deployment->setAttribute('status', 'building');
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            $updated = $dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'building',
-            ]));
+            ]), [
+                Query::equal('$id', [$deploymentId]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            if ($updated === 0) {
+                $this->finalizeCanceledDeployment($deploymentId, $dbForProject, $queueForRealtime);
+                return;
+            }
+
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             Span::add('deployment.status', 'building');
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
@@ -668,11 +686,16 @@ class Builds extends Action
                 deployment: $deployment
             );
 
+            $cacheKey = $this->getNodeModulesCacheKey($project, $resource, $runtime, $version, $command);
+
+            Span::add('build.node_modules_cache.enabled', $cacheKey !== '');
+            Span::add('build.node_modules_cache.key', $cacheKey);
+
             $response = null;
             $err = null;
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -708,7 +731,9 @@ class Builds extends Action
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,
-                            outputDirectory: $outputDirectory ?? ''
+                            outputDirectory: $outputDirectory ?? '',
+                            // temporarily disable build cache
+                            // cacheKey: $cacheKey
                         );
 
                     } catch (ExecutorTimeout $error) {
@@ -827,7 +852,7 @@ class Builds extends Action
 
             $latestDeployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($latestDeployment->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -1073,7 +1098,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -1105,7 +1130,7 @@ class Builds extends Action
             }
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -1295,6 +1320,23 @@ class Builds extends Action
         }
 
         return '';
+    }
+
+    protected function getNodeModulesCacheKey(Document $project, Document $resource, array $runtime, string $version, string $command): string
+    {
+        if ($version !== 'v5' || $command === '' || $command === '0') {
+            return '';
+        }
+
+        $hashContext = [
+            'version' => 'v1',
+            'projectId' => $project->getId(),
+            'resourceType' => $resource->getCollection(),
+            'resourceId' => $resource->getId(),
+            'runtime' => $runtime['image'] ?? '',
+        ];
+
+        return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
     }
 
     protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
@@ -1521,7 +1563,7 @@ class Builds extends Action
         );
     }
 
-    private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
+    private function finalizeCanceledDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
     {
         Span::add('deployment.status', 'canceled');
 
