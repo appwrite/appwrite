@@ -236,9 +236,10 @@ $register->set('pools', function () {
         ],
         'lock' => [
             'type' => 'lock',
-            'dsns' => $fallbackForRedis,
+            'dsns' => System::getEnv('_APP_CONNECTIONS_LOCKS', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
+            'size' => max(1, (int) System::getEnv('_APP_POOL_SIZE_LOCK', 2)),
         ],
     ];
 
@@ -256,6 +257,7 @@ $register->set('pools', function () {
         $type = $connection['type'];
         $multiple = $connection['multiple'];
         $schemes = $connection['schemes'];
+        $poolSizeForConnection = $connection['size'] ?? $poolSize;
         $config = [];
         $dsns = explode(',', $connection['dsns']);
         foreach ($dsns as &$dsn) {
@@ -339,8 +341,8 @@ $register->set('pools', function () {
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
             $connectionPoolSize = match ($type) {
-                'pubsub' => max(2, $poolSize),
-                default => $poolSize,
+                'pubsub' => max(2, $poolSizeForConnection),
+                default => $poolSizeForConnection,
             };
 
             $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
@@ -389,6 +391,13 @@ $register->set('pools', function () {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
             });
+
+            if ($type === 'cache' || $type === 'lock') {
+                $pool
+                    ->setRetryAttempts(1)
+                    ->setReconnectAttempts(1)
+                    ->setSynchronizationTimeout(1);
+            }
 
             $group->add($pool);
         }

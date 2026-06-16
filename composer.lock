@@ -4260,25 +4260,22 @@
         },
         {
             "name": "utopia-php/lock",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/lock.git",
-                "reference": "49317c9493d8f747e4299aa24c22862aa5f6e106"
+                "reference": "9ef48d7094f5c68d1736f664f6e9b4b1ec656f21"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/lock/zipball/49317c9493d8f747e4299aa24c22862aa5f6e106",
-                "reference": "49317c9493d8f747e4299aa24c22862aa5f6e106",
+                "url": "https://api.github.com/repos/utopia-php/lock/zipball/9ef48d7094f5c68d1736f664f6e9b4b1ec656f21",
+                "reference": "9ef48d7094f5c68d1736f664f6e9b4b1ec656f21",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3"
             },
             "require-dev": {
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "2.*",
-                "phpunit/phpunit": "11.*",
                 "swoole/ide-helper": "*"
             },
             "suggest": {
@@ -4302,12 +4299,12 @@
                     "email": "team@appwrite.io"
                 }
             ],
-            "description": "Mutex, semaphore, file and distributed locks for PHP — one interface, four backends.",
+            "description": "A simple lock library to coordinate access to shared resources across coroutines, processes and hosts",
             "support": {
                 "issues": "https://github.com/utopia-php/lock/issues",
-                "source": "https://github.com/utopia-php/lock/tree/0.2.0"
+                "source": "https://github.com/utopia-php/lock/tree/0.2.1"
             },
-            "time": "2026-04-24T10:47:56+00:00"
+            "time": "2026-06-10T15:55:36+00:00"
         },
         {
             "name": "utopia-php/logger",

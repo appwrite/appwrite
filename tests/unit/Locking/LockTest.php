@@ -9,6 +9,7 @@ use Appwrite\Locking\Lock;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Logger\Log;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -57,7 +58,7 @@ final class LockTest extends TestCase
 
     private function withLock(): \Closure
     {
-        return fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new MemoryLock($key, $this->heldLocks));
+        return fn (string $key, int $ttl, \Closure $callback, float $timeout): mixed => (new MemoryLock($key, $this->heldLocks))->withLock($callback, $timeout);
     }
 
     public function test_run_uses_per_document_key_and_invokes_callback(): void
@@ -72,25 +73,34 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
     }
 
-    public function test_run_skips_on_contention(): void
+    public function test_run_throws_on_contention(): void
     {
         $key = self::KEY_PREFIX.'keys:k1';
         $this->heldLocks[$key] = true;
 
         $called = false;
         $lock = $this->makeLock();
-        $lock->run('keys', 'k1', function () use (&$called) {
-            $called = true;
-        });
 
-        $this->assertFalse($called);
-        $this->assertArrayHasKey($key, $this->heldLocks);
+        try {
+            $lock->run('keys', 'k1', function () use (&$called) {
+                $called = true;
+            });
+            $this->fail('Expected lock contention to throw.');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::GENERAL_RESOURCE_LOCKED, $e->getType());
+            $this->assertFalse($called);
+            $this->assertArrayHasKey($key, $this->heldLocks);
+        }
     }
 
-    public function test_backend_acquire_error_runs_callback_unlocked(): void
+    public function test_backend_error_does_not_run_callback_unlocked(): void
     {
+        if (! \class_exists(\RedisException::class)) {
+            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
+        }
+
         $lock = new Lock(
-            fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new FailingLock(new \RedisException('redis unavailable'))),
+            fn (string $key, int $ttl, \Closure $callback, float $timeout): mixed => throw new \RedisException('redis unavailable'),
             new NoTelemetry(),
             $this->log,
             null,
@@ -98,17 +108,24 @@ final class LockTest extends TestCase
         );
 
         $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
-            $called = true;
-        });
-
-        $this->assertTrue($called);
+        try {
+            $lock->run('keys', 'k1', function () use (&$called) {
+                $called = true;
+            });
+            $this->fail('Expected Redis backend errors to bubble.');
+        } catch (\RedisException) {
+            $this->assertFalse($called);
+        }
     }
 
-    public function test_pool_checkout_error_runs_callback_unlocked(): void
+    public function test_pool_checkout_error_does_not_run_callback_unlocked(): void
     {
+        if (! \class_exists(\RedisException::class)) {
+            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
+        }
+
         $lock = new Lock(
-            fn (string $key, int $ttl, \Closure $callback): mixed => throw new \RedisException('redis unavailable'),
+            fn (string $key, int $ttl, \Closure $callback, float $timeout): mixed => throw new \RedisException('redis unavailable'),
             new NoTelemetry(),
             $this->log,
             null,
@@ -116,11 +133,14 @@ final class LockTest extends TestCase
         );
 
         $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
-            $called = true;
-        });
-
-        $this->assertTrue($called);
+        try {
+            $lock->run('keys', 'k1', function () use (&$called) {
+                $called = true;
+            });
+            $this->fail('Expected Redis backend errors to bubble.');
+        } catch (\RedisException) {
+            $this->assertFalse($called);
+        }
     }
 
     public function test_run_or_fail_throws_on_contention(): void
@@ -161,14 +181,14 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey($custom, $this->heldLocks);
     }
 
-    public function test_with_key_or_fail_flag_throws_on_contention(): void
+    public function test_with_key_throws_on_contention(): void
     {
         $custom = 'lock:test:contended';
         $this->heldLocks[$custom] = true;
 
         $lock = $this->makeLock();
         $this->expectException(Exception::class);
-        $lock->withKey($custom, fn () => null, ttl: 5, orFail: true, waitTimeout: 0.1);
+        $lock->withKey($custom, fn () => null, ttl: 5, waitTimeout: 0.1);
     }
 
     public function test_disabled_mode_runs_callback_unlocked(): void
@@ -207,10 +227,15 @@ final class LockTest extends TestCase
         $this->heldLocks[$key] = true;
 
         $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
-            $called = true;
-        });
-        $this->assertFalse($called, 'Lock without project sequence should hash to the unknown bucket');
+        try {
+            $lock->run('keys', 'k1', function () use (&$called) {
+                $called = true;
+            });
+            $this->fail('Expected unknown-bucket contention to throw.');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::GENERAL_RESOURCE_LOCKED, $e->getType());
+            $this->assertFalse($called, 'Lock without project sequence should hash to the unknown bucket');
+        }
 
         unset($this->heldLocks[$key]);
     }
@@ -259,7 +284,7 @@ final class MemoryLock implements UtopiaLock
     public function withLock(callable $callback, float $timeout = 0.0): mixed
     {
         if (! $this->acquire($timeout)) {
-            return null;
+            throw new LockContention("Failed to acquire distributed lock: {$this->key}");
         }
 
         try {
@@ -267,31 +292,5 @@ final class MemoryLock implements UtopiaLock
         } finally {
             $this->release();
         }
-    }
-}
-
-final class FailingLock implements UtopiaLock
-{
-    public function __construct(private readonly \RedisException $error)
-    {
-    }
-
-    public function acquire(float $timeout = 0.0): bool
-    {
-        throw $this->error;
-    }
-
-    public function tryAcquire(): bool
-    {
-        throw $this->error;
-    }
-
-    public function release(): void
-    {
-    }
-
-    public function withLock(callable $callback, float $timeout = 0.0): mixed
-    {
-        throw $this->error;
     }
 }

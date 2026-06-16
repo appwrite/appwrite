@@ -17,7 +17,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
-use Appwrite\Locking\PlatformLock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\Method;
@@ -102,8 +101,7 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->inject('lock')
-    ->inject('platformLock')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, PlatformLock $platformLock) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock) {
 
         /**
          * Handle user authentication and session validation.
@@ -390,7 +388,15 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $platformLock->set('projects', $project->getId(), 'accessedAt', DateTime::now());
+                $lock->withKey(
+                    $lock->key('projects', $project->getId(), 'accessedAt'),
+                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                        'projects',
+                        $project->getId(),
+                        new Document(['accessedAt' => DateTime::now()])
+                    )),
+                    target: 'projects'
+                );
             }
         }
 
@@ -407,7 +413,15 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $platformLock->set('users', $user->getId(), 'accessedAt', $user->getAttribute('accessedAt'));
+                    $lock->withKey(
+                        $lock->key('users', $user->getId(), 'accessedAt'),
+                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                            'users',
+                            $user->getId(),
+                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        )),
+                        target: 'users'
+                    );
                 }
             }
         }

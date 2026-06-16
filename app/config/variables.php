@@ -487,6 +487,24 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_CONNECTIONS_LOCKS',
+                'description' => 'Connection DSN for distributed locks. By default, locks use the Redis server configured by _APP_REDIS_*.',
+                'introduction' => '1.9.3',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_POOL_SIZE_LOCK',
+                'description' => 'Maximum number of connections in the distributed lock connection pool. By default, set to 2.',
+                'introduction' => '1.9.3',
+                'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
