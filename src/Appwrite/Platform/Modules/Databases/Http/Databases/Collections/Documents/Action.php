@@ -542,7 +542,7 @@ abstract class Action extends DatabasesAction
         Database $dbForProject,
         Event $queueForEvents,
         Event $queueForRealtime,
-        Event $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Event $queueForWebhooks,
         EventProcessor $eventProcessor,
         Authorization $authorization,
@@ -610,7 +610,15 @@ abstract class Action extends DatabasesAction
             if (!empty($functionsEvents)) {
                 foreach ($generatedEvents as $eventName) {
                     if (isset($functionsEvents[$eventName])) {
-                        $queueForFunctions->from($queueForEvents)->trigger();
+                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                            event: $queueForEvents->getEvent(),
+                            params: $queueForEvents->getParams(),
+                            project: $queueForEvents->getProject(),
+                            user: $queueForEvents->getUser(),
+                            userId: $queueForEvents->getUserId(),
+                            payload: $queueForEvents->getPayload(),
+                            platform: $queueForEvents->getPlatform(),
+                        ));
                         break;
                     }
                 }
@@ -630,7 +638,6 @@ abstract class Action extends DatabasesAction
         // cleanly. Context (project, user, database, etc.) is preserved by reset().
         $queueForEvents->reset();
         $queueForRealtime->reset();
-        $queueForFunctions->reset();
         $queueForWebhooks->reset();
     }
 }

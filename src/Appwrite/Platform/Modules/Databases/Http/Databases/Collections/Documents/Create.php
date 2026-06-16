@@ -509,7 +509,7 @@ class Create extends Action
             $dbForProject,
             $queueForEvents,
             $queueForRealtime,
-            $queueForFunctions,
+            $publisherForFunctions,
             $queueForWebhooks,
             $eventProcessor,
             $authorization,
