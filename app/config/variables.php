@@ -498,9 +498,9 @@ return [
             ],
             [
                 'name' => '_APP_POOL_SIZE_LOCK',
-                'description' => 'Maximum number of connections in the distributed lock connection pool. By default, set to 2.',
+                'description' => 'Maximum number of connections in the distributed lock connection pool. By default, set to 10.',
                 'introduction' => '1.9.3',
-                'default' => '2',
+                'default' => '10',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

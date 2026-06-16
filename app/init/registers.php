@@ -239,7 +239,7 @@ $register->set('pools', function () {
             'dsns' => System::getEnv('_APP_CONNECTIONS_LOCKS', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
-            'size' => max(1, (int) System::getEnv('_APP_POOL_SIZE_LOCK', 2)),
+            'size' => max(1, (int) System::getEnv('_APP_POOL_SIZE_LOCK', 10)),
         ],
     ];
 
