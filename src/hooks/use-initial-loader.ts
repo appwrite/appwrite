@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useMemo, useReducer } from 'react'
 import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-query'
-import { useRouter, useLocation } from '@tanstack/react-router'
+import { useRouter, useLocation, useMatches } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
+import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 
 /**
  * True when any `['account','console', ...]` query is in error with HTTP 403.
@@ -45,6 +46,7 @@ export function useInitialLoader() {
   // Router + location need to be resolved before computing initial loader state
   const router = useRouter()
   const location = useLocation()
+  const matches = useMatches()
   const isConsoleAccount403 = useConsoleAccountQueryForbidden403()
 
   // Track all active queries and mutations (including Appwrite calls)
@@ -74,7 +76,12 @@ export function useInitialLoader() {
     [location.pathname],
   )
 
-  const skipStaticLoader = isAuthRoute || isInstantPublicRoute
+  const isMarketingRoute = useMemo(
+    () => isMarketingPage({ pathname: location.pathname, matches }),
+    [location.pathname, matches],
+  )
+
+  const skipStaticLoader = isAuthRoute || isInstantPublicRoute || isMarketingRoute
 
   // Include "/" so the branded loader shows until redirect; don't count root as "first page"
   const shouldShowLoader = useMemo(

@@ -3,6 +3,7 @@ import {
   DenyFreeEmailCard,
   DenyAliasedEmailCard,
   DenyDisposableEmailCard,
+  DenyCorporateEmailCard,
 } from './EmailPoliciesCard'
 import {
   SettingsCardsList,
@@ -53,6 +54,19 @@ export function EmailsPolicies({ projectId }: EmailsProps) {
         <DenyDisposableEmailCard
           projectId={projectId}
           currentEnabled={security.authDenyDisposableEmail ?? false}
+        />
+      ),
+    },
+    {
+      id: 'corporate-emails',
+      search: {
+        title: 'Corporate emails',
+        keywords: ['business', 'work', 'organization', 'domain', 'signup'],
+      },
+      node: (
+        <DenyCorporateEmailCard
+          projectId={projectId}
+          currentEnabled={security.authDenyCorporateEmail ?? false}
         />
       ),
     },

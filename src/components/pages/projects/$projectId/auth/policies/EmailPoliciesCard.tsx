@@ -8,6 +8,7 @@ import {
   useUpdateDenyFreeEmailPolicy,
   useUpdateDenyAliasedEmailPolicy,
   useUpdateDenyDisposableEmailPolicy,
+  useUpdateDenyCorporateEmailPolicy,
 } from '@/lib/react-query/hooks/auth'
 
 const EMAIL_POLICIES_DOCS_URL =
@@ -187,6 +188,29 @@ export function DenyDisposableEmailCard({
       mutation={mutation}
       successMessage="Updated deny disposable emails policy"
       errorMessage="Failed to update deny disposable emails policy"
+    />
+  )
+}
+
+export function DenyCorporateEmailCard({
+  projectId,
+  currentEnabled,
+}: {
+  projectId: string
+  currentEnabled: boolean
+}) {
+  const mutation = useUpdateDenyCorporateEmailPolicy(projectId)
+
+  return (
+    <EmailPolicyCard
+      currentEnabled={currentEnabled}
+      title="Corporate emails"
+      description="Reject sign-ups and email updates that use corporate or organization-managed domains. Useful when your project should only accept personal email addresses."
+      switchId="deny-corporate-email-enabled"
+      switchLabel="Deny corporate emails"
+      mutation={mutation}
+      successMessage="Updated deny corporate emails policy"
+      errorMessage="Failed to update deny corporate emails policy"
     />
   )
 }

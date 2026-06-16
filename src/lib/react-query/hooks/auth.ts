@@ -708,6 +708,9 @@ type ProjectEmailPolicyService = {
   updateDenyDisposableEmailPolicy: (params: {
     enabled: boolean
   }) => Promise<unknown>
+  updateDenyCorporateEmailPolicy: (params: {
+    enabled: boolean
+  }) => Promise<unknown>
 }
 
 function projectEmailPolicyService(projectId: string): ProjectEmailPolicyService {
@@ -783,10 +786,34 @@ export function useUpdateDenyDisposableEmailPolicy(
   })
 }
 
+/**
+ * Hook to update the deny corporate email policy.
+ */
+export function useUpdateDenyCorporateEmailPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await projectEmailPolicyService(
+        projectId,
+      ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
 export type AuthEmailPoliciesInput = {
   denyFreeEmail: boolean
   denyAliasedEmail: boolean
   denyDisposableEmail: boolean
+  denyCorporateEmail: boolean
 }
 
 /**
@@ -812,6 +839,9 @@ export function useUpdateAuthEmailPolicies(
         }),
         service.updateDenyDisposableEmailPolicy({
           enabled: policies.denyDisposableEmail,
+        }),
+        service.updateDenyCorporateEmailPolicy({
+          enabled: policies.denyCorporateEmail,
         }),
       ])
     },

@@ -42,6 +42,11 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['mailinator', 'temp', 'signup'],
   },
   {
+    sectionId: 'emails',
+    title: 'Corporate emails',
+    keywords: ['business', 'work', 'organization', 'domain', 'signup'],
+  },
+  {
     sectionId: 'memberships',
     title: 'Privacy',
     keywords: ['team', 'mfa', 'hidden', 'name', 'email'],

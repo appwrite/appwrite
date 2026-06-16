@@ -15,8 +15,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@a9ccdc9
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@a9ccdc9
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@2677607
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@2677607
       '@appwrite.io/specs':
         specifier: github:appwrite/specs
         version: https://codeload.github.com/appwrite/specs/tar.gz/b3ae6f24d42b40a00e7dcec617ce7e035cb4c019
@@ -451,9 +451,9 @@ packages:
     peerDependencies:
       react: 19.1.1
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@a9ccdc9':
-    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@a9ccdc9}
-    version: 13.2.0
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@2677607':
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@2677607}
+    version: 14.0.0
     engines: {node: '>=18.0.0'}
 
   '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/b3ae6f24d42b40a00e7dcec617ce7e035cb4c019':
@@ -7334,7 +7334,7 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@a9ccdc9':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@2677607':
     dependencies:
       json-bigint: 1.0.0
 

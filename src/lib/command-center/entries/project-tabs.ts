@@ -109,7 +109,8 @@ const PROJECT_TABS: CommandEntry[] = [
     kind: 'tab',
     group: 'Auth',
     label: 'Auth · Policies · Emails',
-    description: 'Block free, aliased, and disposable emails at signup',
+    description:
+      'Block free, aliased, disposable, and corporate emails at signup',
     icon: Mail,
     keywords: [
       'email',
@@ -118,6 +119,8 @@ const PROJECT_TABS: CommandEntry[] = [
       'disposable',
       'mailinator',
       'alias',
+      'corporate',
+      'business',
       'signup',
     ],
     available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),

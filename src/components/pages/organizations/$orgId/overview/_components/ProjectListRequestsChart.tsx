@@ -117,6 +117,19 @@ function ChartTooltipBody({
   )
 }
 
+function getChartAnchorElement(
+  portalContainerRef: RefObject<HTMLDivElement | null>,
+): HTMLElement | null {
+  const root = portalContainerRef.current
+  if (!root) return null
+
+  return (
+    root.querySelector<HTMLElement>('.recharts-wrapper') ??
+    root.querySelector<HTMLElement>('.recharts-responsive-container') ??
+    root
+  )
+}
+
 function PortaledChartTooltip({
   active,
   coordinate,
@@ -128,34 +141,62 @@ function PortaledChartTooltip({
   portalContainerRef: RefObject<HTMLDivElement | null>
   children: ReactNode
 }) {
-  const [position, setPosition] = useState<{ left: number; top: number } | null>(
-    null,
-  )
+  const [position, setPosition] = useState<{
+    left: number
+    top: number
+    placement: 'above' | 'below'
+  } | null>(null)
+
+  const coordinateX = coordinate?.x
+  const coordinateY = coordinate?.y
 
   useLayoutEffect(() => {
     if (
       !active ||
-      !coordinate ||
-      coordinate.x == null ||
-      coordinate.y == null ||
+      coordinateX == null ||
+      coordinateY == null ||
       !portalContainerRef.current
     ) {
       setPosition(null)
       return
     }
 
-    const rect = portalContainerRef.current.getBoundingClientRect()
+    const anchor = getChartAnchorElement(portalContainerRef)
+    if (!anchor) {
+      setPosition(null)
+      return
+    }
+
+    const rect = anchor.getBoundingClientRect()
+    const anchorX = rect.left + coordinateX
+    const anchorY = rect.top + coordinateY
+    const estimatedTooltipHeight = 52
+    const gap = 8
+    const viewportPadding = 8
+    const fitsAbove =
+      anchorY - estimatedTooltipHeight - gap >= viewportPadding
+    const fitsBelow =
+      anchorY + gap + estimatedTooltipHeight <=
+      window.innerHeight - viewportPadding
+    const placement = fitsAbove || !fitsBelow ? 'above' : 'below'
+
     setPosition({
-      left: rect.left + coordinate.x,
-      top: rect.top + coordinate.y,
+      left: anchorX,
+      top: anchorY,
+      placement,
     })
-  }, [active, coordinate, portalContainerRef])
+  }, [active, coordinateX, coordinateY, portalContainerRef])
 
   if (!active || !position || typeof document === 'undefined') return null
 
   return createPortal(
     <div
-      className="pointer-events-none fixed z-[100] max-w-none -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-md"
+      className={cn(
+        'pointer-events-none fixed z-[200] max-w-none whitespace-nowrap rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-md',
+        position.placement === 'above'
+          ? '-translate-x-1/2 -translate-y-[calc(100%+8px)]'
+          : '-translate-x-1/2 translate-y-2',
+      )}
       style={{ left: position.left, top: position.top }}
     >
       {children}
@@ -267,9 +308,16 @@ function RequestsChartArea({
               />
             }
             allowEscapeViewBox={{ x: true, y: true }}
+            isAnimationActive={false}
             wrapperStyle={
               usePortalTooltip
-                ? { visibility: 'hidden', pointerEvents: 'none' }
+                ? {
+                    visibility: 'hidden',
+                    pointerEvents: 'none',
+                    width: 0,
+                    height: 0,
+                    overflow: 'hidden',
+                  }
                 : { zIndex: 50, pointerEvents: 'none' }
             }
             cursor={
@@ -553,6 +601,7 @@ export function ProjectListRequestsChart({
             chartHeight={chartHeight}
             isLoading={isLoading}
             isError={isError}
+            usePortalTooltip
           />
         )}
       </div>

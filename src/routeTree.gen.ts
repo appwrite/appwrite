@@ -27,10 +27,12 @@ import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as ThreadsThreadIdRouteImport } from './routes/threads.$threadId'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
@@ -55,7 +57,9 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
+import { Route as ThreadsAuthorsIndexRouteImport } from './routes/threads.authors.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
+import { Route as ThreadsAuthorsAuthorIdRouteImport } from './routes/threads.authors.$authorId'
 import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
 import { Route as BlogPostSlugRouteImport } from './routes/blog.post.$slug'
 import { Route as BlogCategoryCategoryRouteImport } from './routes/blog.category.$category'
@@ -371,6 +375,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
+  id: '/threads/',
+  path: '/threads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -390,6 +399,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicRoute,
+} as any)
+const ThreadsThreadIdRoute = ThreadsThreadIdRouteImport.update({
+  id: '/threads/$threadId',
+  path: '/threads/$threadId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   id: '/products/$productId',
@@ -512,10 +526,20 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   path: '/hello',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ThreadsAuthorsIndexRoute = ThreadsAuthorsIndexRouteImport.update({
+  id: '/threads/authors/',
+  path: '/threads/authors/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicAccountRoute,
+} as any)
+const ThreadsAuthorsAuthorIdRoute = ThreadsAuthorsAuthorIdRouteImport.update({
+  id: '/threads/authors/$authorId',
+  path: '/threads/authors/$authorId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChangelogEntryEntryRoute = ChangelogEntryEntryRouteImport.update({
   id: '/changelog/entry/$entry',
@@ -2063,10 +2087,12 @@ export interface FileRoutesByFullPath {
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/threads/$threadId': typeof ThreadsThreadIdRoute
   '/': typeof PublicIndexRoute
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/threads': typeof ThreadsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2080,7 +2106,9 @@ export interface FileRoutesByFullPath {
   '/blog/category/$category': typeof BlogCategoryCategoryRoute
   '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
+  '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account/': typeof PublicAccountIndexRoute
+  '/threads/authors': typeof ThreadsAuthorsIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2334,10 +2362,12 @@ export interface FileRoutesByTo {
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/threads/$threadId': typeof ThreadsThreadIdRoute
   '/': typeof PublicIndexRoute
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
+  '/threads': typeof ThreadsIndexRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2349,7 +2379,9 @@ export interface FileRoutesByTo {
   '/blog/category/$category': typeof BlogCategoryCategoryRoute
   '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
+  '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account': typeof PublicAccountIndexRoute
+  '/threads/authors': typeof ThreadsAuthorsIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2579,10 +2611,12 @@ export interface FileRoutesById {
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/threads/$threadId': typeof ThreadsThreadIdRoute
   '/_public/': typeof PublicIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/threads/': typeof ThreadsIndexRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
@@ -2596,7 +2630,9 @@ export interface FileRoutesById {
   '/blog/category/$category': typeof BlogCategoryCategoryRoute
   '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
+  '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/_public/account/': typeof PublicAccountIndexRoute
+  '/threads/authors/': typeof ThreadsAuthorsIndexRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2854,10 +2890,12 @@ export interface FileRouteTypes {
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
+    | '/threads/$threadId'
     | '/'
     | '/blog'
     | '/changelog'
     | '/docs/'
+    | '/threads'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -2871,7 +2909,9 @@ export interface FileRouteTypes {
     | '/blog/category/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
+    | '/threads/authors/$authorId'
     | '/account/'
+    | '/threads/authors'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -3125,10 +3165,12 @@ export interface FileRouteTypes {
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
+    | '/threads/$threadId'
     | '/'
     | '/blog'
     | '/changelog'
     | '/docs'
+    | '/threads'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3140,7 +3182,9 @@ export interface FileRouteTypes {
     | '/blog/category/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
+    | '/threads/authors/$authorId'
     | '/account'
+    | '/threads/authors'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -3369,10 +3413,12 @@ export interface FileRouteTypes {
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
+    | '/threads/$threadId'
     | '/_public/'
     | '/blog/'
     | '/changelog/'
     | '/docs/'
+    | '/threads/'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
@@ -3386,7 +3432,9 @@ export interface FileRouteTypes {
     | '/blog/category/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
+    | '/threads/authors/$authorId'
     | '/_public/account/'
+    | '/threads/authors/'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
     | '/_public/organizations/$orgId/billing'
@@ -3627,12 +3675,16 @@ export interface RootRouteChildren {
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
+  ThreadsThreadIdRoute: typeof ThreadsThreadIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ChangelogIndexRoute: typeof ChangelogIndexRoute
+  ThreadsIndexRoute: typeof ThreadsIndexRoute
   BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
   BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
   BlogPostSlugRoute: typeof BlogPostSlugRoute
   ChangelogEntryEntryRoute: typeof ChangelogEntryEntryRoute
+  ThreadsAuthorsAuthorIdRoute: typeof ThreadsAuthorsAuthorIdRoute
+  ThreadsAuthorsIndexRoute: typeof ThreadsAuthorsIndexRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
 }
@@ -3765,6 +3817,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/threads/': {
+      id: '/threads/'
+      path: '/threads'
+      fullPath: '/threads'
+      preLoaderRoute: typeof ThreadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs/': {
       id: '/docs/'
       path: '/'
@@ -3792,6 +3851,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/threads/$threadId': {
+      id: '/threads/$threadId'
+      path: '/threads/$threadId'
+      fullPath: '/threads/$threadId'
+      preLoaderRoute: typeof ThreadsThreadIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/products/$productId': {
       id: '/products/$productId'
@@ -3961,12 +4027,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/threads/authors/': {
+      id: '/threads/authors/'
+      path: '/threads/authors'
+      fullPath: '/threads/authors'
+      preLoaderRoute: typeof ThreadsAuthorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_public/account/': {
       id: '/_public/account/'
       path: '/'
       fullPath: '/account/'
       preLoaderRoute: typeof PublicAccountIndexRouteImport
       parentRoute: typeof PublicAccountRoute
+    }
+    '/threads/authors/$authorId': {
+      id: '/threads/authors/$authorId'
+      path: '/threads/authors/$authorId'
+      fullPath: '/threads/authors/$authorId'
+      preLoaderRoute: typeof ThreadsAuthorsAuthorIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/changelog/entry/$entry': {
       id: '/changelog/entry/$entry'
@@ -6826,12 +6906,16 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
+  ThreadsThreadIdRoute: ThreadsThreadIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   ChangelogIndexRoute: ChangelogIndexRoute,
+  ThreadsIndexRoute: ThreadsIndexRoute,
   BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
   BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,
   BlogPostSlugRoute: BlogPostSlugRoute,
   ChangelogEntryEntryRoute: ChangelogEntryEntryRoute,
+  ThreadsAuthorsAuthorIdRoute: ThreadsAuthorsAuthorIdRoute,
+  ThreadsAuthorsIndexRoute: ThreadsAuthorsIndexRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,
 }
