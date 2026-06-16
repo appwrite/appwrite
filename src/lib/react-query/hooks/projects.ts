@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
+  useQueries,
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
@@ -1135,6 +1136,45 @@ export function usePlatforms(projectId: string | null | undefined) {
     error,
     refetch,
   }
+}
+
+export type ProjectListPlatformsEntry = {
+  isLoading: boolean
+  isError: boolean
+  platforms: Models.PlatformList['platforms']
+}
+
+/**
+ * Fetches platforms for many projects in parallel (org project cards).
+ */
+export function useProjectListPlatforms(
+  projectIds: string[],
+  enabled: boolean,
+): Map<string, ProjectListPlatformsEntry> {
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...platformsQueryOptions(projectId),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListPlatformsEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        platforms: query.data?.platforms ?? [],
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
 }
 
 /**

@@ -3,9 +3,13 @@ import { PauseCircle } from '@/lib/icons'
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type { ProjectListItem } from '@/lib/react-query/hooks/projects'
-import { ProjectListIdentities } from './ProjectListIdentities'
+import type {
+  ProjectListItem,
+  ProjectListPlatformsEntry,
+} from '@/lib/react-query/hooks/projects'
+import { ProjectListCardActionsMenu } from './ProjectListCardActionsMenu'
 import { ProjectListName } from './ProjectListName'
+import { ProjectListPlatformAvatars } from './ProjectListPlatformAvatars'
 
 type ProjectListCardMainProps = {
   project: ProjectListItem
@@ -52,21 +56,43 @@ export function ProjectListCardMain({
 
 export function ProjectListCardFooter({
   project,
+  showSettingsTab,
+  platformsByProjectId,
 }: {
   project: ProjectListItem
+  showSettingsTab: boolean
+  platformsByProjectId: Map<string, ProjectListPlatformsEntry>
 }) {
+  const platformsEntry = platformsByProjectId.get(project.$id)
+
   return (
     <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
-      <ProjectListIdentities project={project} />
+      <div className="flex min-w-0 items-center gap-2">
+        <ProjectListPlatformAvatars
+          projectId={project.$id}
+          platforms={platformsEntry?.platforms ?? []}
+          isLoading={platformsEntry?.isLoading ?? true}
+          className="min-w-0 flex-1"
+        />
+        <ProjectListCardActionsMenu
+          project={project}
+          showSettingsTab={showSettingsTab}
+        />
+      </div>
     </div>
   )
 }
 
-type ProjectListCardContentProps = ProjectListCardMainProps
+type ProjectListCardContentProps = ProjectListCardMainProps & {
+  showSettingsTab: boolean
+  platformsByProjectId: Map<string, ProjectListPlatformsEntry>
+}
 
 export function ProjectListCardContent({
   project,
   failedInvoiceWarning,
+  showSettingsTab,
+  platformsByProjectId,
 }: ProjectListCardContentProps) {
   return (
     <>
@@ -74,7 +100,11 @@ export function ProjectListCardContent({
         project={project}
         failedInvoiceWarning={failedInvoiceWarning}
       />
-      <ProjectListCardFooter project={project} />
+      <ProjectListCardFooter
+        project={project}
+        showSettingsTab={showSettingsTab}
+        platformsByProjectId={platformsByProjectId}
+      />
     </>
   )
 }

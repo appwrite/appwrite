@@ -1,0 +1,168 @@
+import type { Models } from '@appwrite.io/console'
+import { Link } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
+import { PlatformIcon } from '@/components/global/shared/Icon'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { getPlatformDisplayName } from '@/lib/utils/platform'
+import { cn } from '@/lib/utils'
+
+const MAX_VISIBLE_PLATFORMS = 4
+
+const avatarClassName = cn(
+  'grid size-8 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground ring-1 ring-background',
+)
+
+const emptyAvatarClassName = cn(
+  avatarClassName,
+  'border-dashed border-muted-foreground/35 bg-transparent transition-colors hover:border-muted-foreground/50 hover:bg-muted/40',
+)
+
+function ProjectListPlatformAvatarIcon({ platform }: { platform: string }) {
+  return (
+    <PlatformIcon
+      platform={platform}
+      size="sm"
+      className={cn(
+        '!size-4 shrink-0',
+        '[&>div.absolute]:hidden',
+        '[&>div]:flex [&>div]:!size-4 [&>div]:items-center [&>div]:justify-center',
+        '[&_svg]:block [&_svg]:!size-4',
+      )}
+    />
+  )
+}
+
+type PlatformStackItem = {
+  type: string
+  label: string
+}
+
+function groupPlatformsForStack(
+  platforms: Models.PlatformList['platforms'],
+): PlatformStackItem[] {
+  const byType = new Map<string, number>()
+
+  for (const platform of platforms) {
+    const type = platform.type ?? 'web'
+    byType.set(type, (byType.get(type) ?? 0) + 1)
+  }
+
+  return Array.from(byType.entries()).map(([type, count]) => ({
+    type,
+    label:
+      count > 1
+        ? `${getPlatformDisplayName(type)} (${count})`
+        : getPlatformDisplayName(type),
+  }))
+}
+
+type ProjectListPlatformAvatarsProps = {
+  projectId: string
+  platforms: Models.PlatformList['platforms']
+  isLoading?: boolean
+  className?: string
+}
+
+export function ProjectListPlatformAvatars({
+  projectId,
+  platforms,
+  isLoading = false,
+  className,
+}: ProjectListPlatformAvatarsProps) {
+  if (isLoading) {
+    return (
+      <ul
+        className={cn('inline-flex items-center pl-0', className)}
+        aria-label="Loading platforms"
+        aria-busy
+      >
+        {Array.from({ length: 3 }).map((_, index) => (
+          <li
+            key={index}
+            className={cn('relative shrink-0', index > 0 && '-ml-2')}
+            style={{ zIndex: index + 1 }}
+            aria-hidden
+          >
+            <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  const stackItems = groupPlatformsForStack(platforms)
+  if (stackItems.length === 0) {
+    return (
+      <div className={cn('inline-flex items-center', className)}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              to="/projects/$projectId/apps"
+              params={{ projectId }}
+              className={emptyAvatarClassName}
+              aria-label="Add platform"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Plus
+                className="size-4 text-muted-foreground/55"
+                strokeWidth={2}
+              />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-[12px]">
+            Add platform
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    )
+  }
+
+  const visibleItems = stackItems.slice(0, MAX_VISIBLE_PLATFORMS)
+  const overflowCount = stackItems.length - visibleItems.length
+
+  return (
+    <ul
+      className={cn('inline-flex items-center pl-0', className)}
+      aria-label={stackItems.map((item) => item.label).join(', ')}
+    >
+      {visibleItems.map((item, index) => (
+        <li
+          key={item.type}
+          className={cn('relative shrink-0', index > 0 && '-ml-2')}
+          style={{ zIndex: index + 1 }}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={avatarClassName} aria-label={item.label}>
+                <ProjectListPlatformAvatarIcon platform={item.type} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-[12px]">
+              {item.label}
+            </TooltipContent>
+          </Tooltip>
+        </li>
+      ))}
+      {overflowCount > 0 ? (
+        <li
+          className="relative shrink-0 -ml-2"
+          style={{ zIndex: visibleItems.length + 1 }}
+        >
+          <div
+            className={cn(
+              avatarClassName,
+              'text-[10px] font-medium tabular-nums text-muted-foreground',
+            )}
+            aria-label={`${overflowCount} more platforms`}
+          >
+            +{overflowCount}
+          </div>
+        </li>
+      ) : null}
+    </ul>
+  )
+}

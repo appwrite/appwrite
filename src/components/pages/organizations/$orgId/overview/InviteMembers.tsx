@@ -25,8 +25,11 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
+import { AdditionalChargeAlert } from '@/components/global/shared/AdditionalChargeAlert'
+import { wouldIncurPlanAddonCharge } from '@/lib/billing/plan-addon-charge'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import type { Models } from '@appwrite.io/console'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
@@ -42,6 +45,7 @@ interface InviteMembersDialogProps {
   organizationId: string
   currentMemberCount: number
   memberLimit: number | null
+  organizationPlan?: Models.BillingPlan | null
   /** Called after invites are successfully sent */
   onSuccess?: () => void
 }
@@ -85,6 +89,7 @@ export function InviteMembersDialog({
   organizationId,
   currentMemberCount,
   memberLimit,
+  organizationPlan,
   onSuccess,
 }: InviteMembersDialogProps) {
   const queryClient = useQueryClient()
@@ -110,6 +115,32 @@ export function InviteMembersDialog({
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
+
+  const validInviteCount = useMemo(
+    () =>
+      invites.filter(
+        (invite) =>
+          invite.email.trim() !== '' && isValidEmail(invite.email.trim()),
+      ).length,
+    [invites],
+  )
+
+  const additionalMemberCharge = useMemo(() => {
+    if (!features.billing || !organizationPlan || validInviteCount === 0) {
+      return null
+    }
+    return wouldIncurPlanAddonCharge(
+      organizationPlan,
+      'seats',
+      currentMemberCount,
+      validInviteCount,
+    )
+  }, [
+    features.billing,
+    organizationPlan,
+    currentMemberCount,
+    validInviteCount,
+  ])
 
   // Check if all invites are valid
   const isValid = useMemo(() => {
@@ -274,6 +305,17 @@ export function InviteMembersDialog({
                 </p>
               </div>
             )}
+
+          {additionalMemberCharge && (
+            <div className="mb-4">
+              <AdditionalChargeAlert
+                resourceLabel="member"
+                pricePerMonth={additionalMemberCharge.pricePerMonth}
+                currency={additionalMemberCharge.currency}
+                perUnit
+              />
+            </div>
+          )}
 
           {/* Invite List */}
           <div className="space-y-3">

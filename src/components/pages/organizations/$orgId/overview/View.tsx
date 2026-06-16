@@ -67,6 +67,7 @@ import {
   useRemoveTeamMember,
   syncConsoleAccountAfterMutation,
   mapProjectToListItem,
+  useProjectListPlatforms,
   useProjectListRequestsUsage,
 } from '@/lib/react-query/hooks'
 import {
@@ -1644,6 +1645,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     showProjectUsageCharts,
   )
 
+  const gridProjectIds = useMemo(() => {
+    if (projectsViewMode !== 'grid') return []
+    return [
+      ...new Set([
+        ...pinnedProjects.map((project) => project.$id),
+        ...displayedProjectsByTeam.flatMap(({ projects }) =>
+          projects.map((project) => project.$id),
+        ),
+      ]),
+    ]
+  }, [projectsViewMode, pinnedProjects, displayedProjectsByTeam])
+
+  const projectPlatformsById = useProjectListPlatforms(
+    gridProjectIds,
+    projectsViewMode === 'grid',
+  )
+
   const prefetchOrganizationSwitchData = useCallback(
     async (nextOrgId: string) => {
       const [nextTeam] = await Promise.all([
@@ -2570,6 +2588,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             ) : null}
                                             <ProjectListCardFooter
                                               project={project}
+                                              showSettingsTab={
+                                                showProjectSettingsTab
+                                              }
+                                              platformsByProjectId={
+                                                projectPlatformsById
+                                              }
                                             />
                                             {(canReorderPinned ||
                                               canPinProjectsResult) && (
@@ -2761,6 +2785,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               ) : null}
                                               <ProjectListCardFooter
                                                 project={project}
+                                                showSettingsTab={
+                                                  showProjectSettingsTab
+                                                }
+                                                platformsByProjectId={
+                                                  projectPlatformsById
+                                                }
                                               />
                                               {canPin && canPinProjectsResult && (
                                                 <div className="absolute right-2 top-2 z-10 flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
@@ -3941,6 +3971,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           organizationId={orgId}
           currentMemberCount={membershipsTotal}
           memberLimit={memberLimit}
+          organizationPlan={organizationPlan}
           onSuccess={() => {
             if (activeTab !== 'settings' || settingsSubTab !== 'members') {
               handleOrgNavigate('settings/members')

@@ -10,8 +10,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info, Globe } from 'lucide-react'
+import { Globe } from 'lucide-react'
+import { AdditionalChargeAlert } from '@/components/global/shared/AdditionalChargeAlert'
+import { wouldIncurPlanAddonCharge } from '@/lib/billing/plan-addon-charge'
 import {
   useCreateProject,
   useRegions,
@@ -31,12 +32,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import type { Models } from '@appwrite.io/console'
 
 interface CreateProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   teamId: string | null | undefined
-  organizationPlan?: unknown
+  organizationPlan?: Models.BillingPlan | null
   currentProjectsCount?: number
 }
 
@@ -105,30 +107,14 @@ export function CreateProjectDialog({
     }
   }, [availableRegions, selectedRegion])
 
-  // Calculate if this would be an additional project
-  const isAdditionalProject = useMemo(() => {
-    if (!organizationPlan) return false
-
-    const projectLimit = (organizationPlan?.addons as unknown)?.projects?.limit
-    const planIncluded = (organizationPlan?.addons as unknown)?.projects
-      ?.planIncluded
-    const limitNum = Number(projectLimit ?? planIncluded)
-    const limit = isNaN(limitNum) ? null : limitNum
-
-    if (limit === null || limit === 0) return false // Unlimited or no limit
-
-    return currentProjectsCount >= limit
-  }, [organizationPlan, currentProjectsCount])
-
-  // Get additional project price
-  const additionalProjectPrice = useMemo(() => {
-    if (!isAdditionalProject || !organizationPlan) return null
-    return (
-      (organizationPlan?.addons as unknown)?.projects?.price ||
-      (organizationPlan as unknown)?.additionalProjectPrice ||
-      null
+  const additionalProjectCharge = useMemo(() => {
+    if (!features.billing || !organizationPlan) return null
+    return wouldIncurPlanAddonCharge(
+      organizationPlan,
+      'projects',
+      currentProjectsCount,
     )
-  }, [isAdditionalProject, organizationPlan])
+  }, [features.billing, organizationPlan, currentProjectsCount])
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!createProjectMutation.isPending) {
@@ -392,17 +378,12 @@ export function CreateProjectDialog({
               </div>
             )}
 
-            {isAdditionalProject && additionalProjectPrice && (
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-[12px]">
-                  This project will incur an additional charge of{' '}
-                  <span className="font-medium">
-                    ${additionalProjectPrice.toFixed(2)} per month
-                  </span>
-                  .
-                </AlertDescription>
-              </Alert>
+            {additionalProjectCharge && (
+              <AdditionalChargeAlert
+                resourceLabel="project"
+                pricePerMonth={additionalProjectCharge.pricePerMonth}
+                currency={additionalProjectCharge.currency}
+              />
             )}
           </div>
 
