@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
   parsePostgresTableId,
+  postgresNav,
   postgresTableId,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
@@ -18,6 +19,7 @@ import {
 } from '@/lib/user-prefs-keys'
 import { ArrowUpDown, Eye, Loader2, Search, Table2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -54,7 +56,6 @@ type SchemaTablesSidebarProps = {
   databaseSpecification?: string | null
   selectedTableId?: string
   databaseTab?: PostgresDatabaseTab
-  onSelectTable: (tableId: string) => void
 }
 
 export function SchemaTablesSidebar({
@@ -64,7 +65,6 @@ export function SchemaTablesSidebar({
   databaseSpecification,
   selectedTableId,
   databaseTab,
-  onSelectTable,
 }: SchemaTablesSidebarProps) {
   const { account } = useAuth()
   const { panel, setPanel } = usePostgresSidebar()
@@ -342,9 +342,12 @@ export function SchemaTablesSidebar({
                           tableId={id}
                           tableName={table.table_name}
                         >
-                          <button
-                            type="button"
-                            onClick={() => onSelectTable(id)}
+                          <Link
+                            {...postgresNav({ projectId, databaseId }).table({
+                              tableId: id,
+                            }).rows()}
+                            replace
+                            preload="intent"
                             className={cn(
                               'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors',
                               selectedTableId === id
@@ -356,7 +359,7 @@ export function SchemaTablesSidebar({
                             <span className="min-w-0 truncate text-[13px] font-medium">
                               {table.table_name}
                             </span>
-                          </button>
+                          </Link>
                         </PostgresTableContextMenu>
                       )
                     })}

@@ -7,7 +7,6 @@ import type { ReactNode } from 'react'
 import { TableViewResizableLayout } from '@/components/pages/projects/$projectId/databases/_components/TableViewResizableLayout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { parsePostgresShellRouteState, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
-import { usePostgresSidebar } from './_components/PostgresSidebarContext'
 import { PostgresConnectDialogProvider } from './_components/PostgresConnectDialogContext'
 import { PostgresDatabaseHeader } from './_components/PostgresDatabaseHeader'
 import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
@@ -98,12 +97,7 @@ function PostgresShellLayout({
   showDesktopSidebar,
   children,
 }: PostgresShellLayoutProps) {
-  const { openTableInEditor } = usePostgresSidebar()
   const selectedTableId = databaseTab ? undefined : tableId
-
-  const handleOpenTable = (nextTableId: string) => {
-    openTableInEditor(nextTableId)
-  }
 
   const mainPanel = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -143,7 +137,6 @@ function PostgresShellLayout({
               databaseSpecification={database.specification}
               selectedTableId={selectedTableId}
               databaseTab={databaseTab}
-              onSelectTable={handleOpenTable}
             />
           }
         >

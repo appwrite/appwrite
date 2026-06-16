@@ -302,10 +302,13 @@ export function PostgresTableRowsView({
     void refetch()
   }, [refetch])
 
+  const rowsTotal = requestedTotal ?? total
+  const showRowsSearch = hasActiveFilters || rowsTotal > 0
+
   usePostgresTableHeaderSlot({
-    searchPlaceholder: 'Search rows...',
-    searchValue: urlSearch ?? '',
-    onSearchChange: handleSearchChange,
+    searchPlaceholder: showRowsSearch ? 'Search rows...' : undefined,
+    searchValue: showRowsSearch ? urlSearch ?? '' : undefined,
+    onSearchChange: showRowsSearch ? handleSearchChange : undefined,
     createLabel: canWrite ? 'Create row' : undefined,
     onCreate: canWrite ? openCreateRow : undefined,
     createDisabled: !canWrite,
