@@ -1625,10 +1625,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
-  const showProjectUsageCharts =
-    features.usageStats && projectsViewMode === 'grid'
+  const showProjectUsageCharts = features.usageStats
 
-  const gridProjectIds = useMemo(() => {
+  const visibleProjectIds = useMemo(() => {
     if (!showProjectUsageCharts) return []
     return [
       ...new Set([
@@ -1641,7 +1640,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [showProjectUsageCharts, pinnedProjects, displayedProjectsByTeam])
 
   const projectRequestsUsageById = useProjectListRequestsUsage(
-    gridProjectIds,
+    visibleProjectIds,
     showProjectUsageCharts,
   )
 
@@ -2464,6 +2463,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       orgBillingReadonlyForFailedInvoice={
                                         orgBillingReadonlyForFailedInvoice
                                       }
+                                      showUsageCharts={showProjectUsageCharts}
+                                      projectRequestsUsageById={
+                                        projectRequestsUsageById
+                                      }
                                     />
                                   ) : (
                                   <div className={RESOURCE_CARD_GRID_CLASSNAME}>
@@ -2688,6 +2691,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         }
                                         orgBillingReadonlyForFailedInvoice={
                                           orgBillingReadonlyForFailedInvoice
+                                        }
+                                        showUsageCharts={showProjectUsageCharts}
+                                        projectRequestsUsageById={
+                                          projectRequestsUsageById
                                         }
                                       />
                                     ) : (

@@ -1,7 +1,5 @@
 import { Link } from '@tanstack/react-router'
 import { PauseCircle } from '@/lib/icons'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,12 +10,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  getProjectListItemEndpoint,
   type ProjectListItem,
 } from '@/lib/react-query/hooks/projects'
+import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
 import { ProjectContextMenu } from './ProjectContextMenu'
+import { ProjectListIdentities } from './ProjectListIdentities'
 import { ProjectListName } from './ProjectListName'
+import { ProjectListTableRequestsCell } from './ProjectListRequestsChart'
+
+function getProjectListRegionLabel(project: ProjectListItem): string | null {
+  if (!project.region || project.region === 'unknown') return null
+  return project.region
+}
 
 type ProjectsListTableProps = {
   projects: ProjectListItem[]
@@ -26,6 +32,8 @@ type ProjectsListTableProps = {
   onProjectDeleted: (projectId: string) => void | Promise<void>
   showFailedInvoiceOrgAlert: boolean
   orgBillingReadonlyForFailedInvoice: boolean
+  showUsageCharts?: boolean
+  projectRequestsUsageById?: Map<string, ProjectListRequestsUsageEntry>
 }
 
 export function ProjectsListTable({
@@ -35,29 +43,62 @@ export function ProjectsListTable({
   onProjectDeleted,
   showFailedInvoiceOrgAlert,
   orgBillingReadonlyForFailedInvoice,
+  showUsageCharts = false,
+  projectRequestsUsageById,
 }: ProjectsListTableProps) {
+  const { features } = useConsoleProfile()
+  const showRegionColumn = features.multiRegion
+
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <Table className="w-full table-fixed">
         <TableHeader>
           <TableRow className="border-b border-border hover:bg-transparent">
-            <TableHead className="w-[28%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead
+              className={
+                showUsageCharts
+                  ? showRegionColumn
+                    ? 'w-[22%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                    : 'w-[28%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                  : showRegionColumn
+                    ? 'w-[32%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                    : 'w-[40%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+              }
+            >
               Project
             </TableHead>
-            <TableHead className="w-[36%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Endpoint
-            </TableHead>
-            <TableHead className="w-[22%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              ID
-            </TableHead>
-            <TableHead className="w-[14%] px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Created
-            </TableHead>
+            {showRegionColumn ? (
+              <TableHead className="w-[10%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Region
+              </TableHead>
+            ) : null}
+            {showUsageCharts ? (
+              <TableHead
+                className={
+                  showRegionColumn
+                    ? 'w-[36%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                    : 'w-[42%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                }
+              >
+                Requests
+              </TableHead>
+            ) : null}
+            <TableHead
+              className={
+                showUsageCharts
+                  ? showRegionColumn
+                    ? 'w-[32%] px-4 py-3 text-right'
+                    : 'w-[30%] px-4 py-3 text-right'
+                  : showRegionColumn
+                    ? 'w-[58%] px-4 py-3 text-right'
+                    : 'w-[60%] px-4 py-3 text-right'
+              }
+            />
           </TableRow>
         </TableHeader>
         <TableBody>
           {projects.map((project) => {
-            const endpoint = getProjectListItemEndpoint(project)
+            const regionLabel = getProjectListRegionLabel(project)
 
             return (
               <ProjectContextMenu
@@ -99,29 +140,30 @@ export function ProjectsListTable({
                       </div>
                     </Link>
                   </TableCell>
-                  <TableCell className="max-w-0 px-4 py-3">
-                    <CopyableId
-                      id={endpoint}
-                      copyLabel="Copy endpoint"
-                      size="md"
-                      copyToastLabel="Endpoint"
-                      className="w-fit"
-                    />
-                  </TableCell>
-                  <TableCell className="max-w-0 px-4 py-3">
-                    <CopyableId
-                      id={project.$id}
-                      copyLabel="Copy ID"
-                      size="md"
-                      copyToastLabel="ID"
-                      className="w-fit"
-                    />
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-right">
-                    <DateTooltip
-                      date={project.createdAt}
-                      className="text-[12px] text-muted-foreground"
-                    />
+                  {showRegionColumn ? (
+                    <TableCell className="max-w-0 px-4 py-3">
+                      {regionLabel ? (
+                        <span className="truncate font-mono text-[12px] uppercase text-muted-foreground">
+                          {regionLabel}
+                        </span>
+                      ) : null}
+                    </TableCell>
+                  ) : null}
+                  {showUsageCharts && projectRequestsUsageById ? (
+                    <TableCell className="max-w-0 px-4 py-3">
+                      <ProjectListTableRequestsCell
+                        projectId={project.$id}
+                        usageByProjectId={projectRequestsUsageById}
+                      />
+                    </TableCell>
+                  ) : null}
+                  <TableCell
+                    className="px-4 py-3 text-right"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="flex justify-end">
+                      <ProjectListIdentities project={project} />
+                    </div>
                   </TableCell>
                 </TableRow>
               </ProjectContextMenu>

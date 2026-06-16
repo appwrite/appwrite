@@ -11,10 +11,15 @@ import {
 import { cn } from '@/lib/utils'
 
 export const PROJECT_LIST_REQUESTS_CHART_HEIGHT = 48
+export const PROJECT_LIST_REQUESTS_TABLE_CHART_HEIGHT = 32
 
 /** Header row (h-5) + mb-1.5 gap + chart area. Keeps card height stable while loading. */
 export const PROJECT_LIST_REQUESTS_CONTENT_MIN_HEIGHT =
   20 + 6 + PROJECT_LIST_REQUESTS_CHART_HEIGHT
+
+/** Single-row table cell: value column + chart. */
+export const PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT =
+  PROJECT_LIST_REQUESTS_TABLE_CHART_HEIGHT
 
 /** Section divider pt-2.5 + content block. */
 export const PROJECT_LIST_REQUESTS_SECTION_MIN_HEIGHT =
@@ -62,6 +67,7 @@ type ProjectListRequestsChartProps = {
   isLoading: boolean
   isError?: boolean
   className?: string
+  variant?: 'card' | 'table'
 }
 
 function ChartTooltip({
@@ -90,6 +96,7 @@ type RequestsChartAreaProps = {
   gradientId: string
   isSkeleton?: boolean
   tooltipDisabled?: boolean
+  height?: number
 }
 
 function RequestsChartArea({
@@ -97,6 +104,7 @@ function RequestsChartArea({
   gradientId,
   isSkeleton = false,
   tooltipDisabled = false,
+  height = PROJECT_LIST_REQUESTS_CHART_HEIGHT,
 }: RequestsChartAreaProps) {
   const strokeColor = isSkeleton ? SKELETON_CHART_STROKE : CHART_COLOR
   const fillTopColor = isSkeleton ? SKELETON_CHART_FILL : CHART_COLOR
@@ -110,10 +118,10 @@ function RequestsChartArea({
     <div className="h-full w-full min-w-0 text-muted-foreground">
       <ResponsiveContainer
         width="100%"
-        height={PROJECT_LIST_REQUESTS_CHART_HEIGHT}
+        height={height}
         initialDimension={{
           width: 320,
-          height: PROJECT_LIST_REQUESTS_CHART_HEIGHT,
+          height,
         }}
       >
         <AreaChart
@@ -163,6 +171,54 @@ function RequestsChartArea({
   )
 }
 
+function RequestsChartBlock({
+  chartData,
+  gradientId,
+  chartHeight,
+  isLoading,
+  isError,
+}: {
+  chartData: Array<UsageChartPoint & { value: number }>
+  gradientId: string
+  chartHeight: number
+  isLoading: boolean
+  isError: boolean
+}) {
+  if (isError) {
+    return (
+      <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 px-2 text-center">
+        <span className="text-[11px] text-muted-foreground">Unavailable</span>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <RequestsChartArea
+        chartData={chartData}
+        gradientId={gradientId}
+        isSkeleton
+        tooltipDisabled
+        height={chartHeight}
+      />
+    )
+  }
+
+  return (
+    <div
+      key="loaded-chart"
+      className={cn('h-full', CHART_REVEAL_CLASS, CHART_REVEAL_DELAY_CLASS)}
+    >
+      <RequestsChartArea
+        chartData={chartData}
+        gradientId={gradientId}
+        tooltipDisabled={false}
+        height={chartHeight}
+      />
+    </div>
+  )
+}
+
 export function ProjectListRequestsChart({
   totalRequests = 0,
   changePercent = 0,
@@ -170,10 +226,15 @@ export function ProjectListRequestsChart({
   isLoading,
   isError = false,
   className,
+  variant = 'card',
 }: ProjectListRequestsChartProps) {
   const gradientId = useId().replace(/:/g, '')
   const hasPoints = chartPoints.length > 0
   const isZeroUsage = !isLoading && !isError && totalRequests === 0
+  const isTable = variant === 'table'
+  const chartHeight = isTable
+    ? PROJECT_LIST_REQUESTS_TABLE_CHART_HEIGHT
+    : PROJECT_LIST_REQUESTS_CHART_HEIGHT
 
   const showChange = !isLoading && !isError && hasPoints && !isZeroUsage
   const isPositive = changePercent > 0
@@ -192,6 +253,91 @@ export function ProjectListRequestsChart({
     }))
   }, [chartPoints, hasPoints, isLoading])
 
+  const valueContent = isLoading ? (
+    <span
+      className="h-3.5 w-8 shrink-0 rounded-sm bg-border/70"
+      aria-hidden
+    />
+  ) : (
+    <div
+      key="loaded-values"
+      className={cn('min-w-0', !isTable && CHART_REVEAL_CLASS)}
+    >
+      {isZeroUsage ? (
+        <span
+          className={cn(
+            'font-medium leading-none text-muted-foreground',
+            isTable ? 'text-[12px]' : 'text-[13px]',
+          )}
+        >
+          N/A
+        </span>
+      ) : (
+        <span
+          className={cn(
+            'font-medium leading-none tabular-nums text-foreground',
+            isTable ? 'text-[12px]' : 'text-[13px]',
+          )}
+        >
+          {formatRequestsTotal(totalRequests)}
+        </span>
+      )}
+    </div>
+  )
+
+  const changeBadge = !isTable ? (
+    <span
+      className={cn(
+        'ml-auto inline-flex h-3.5 shrink-0 items-center gap-0.5 text-[11px] font-medium leading-none tabular-nums',
+        isLoading && 'invisible',
+        !isLoading &&
+          showChange &&
+          cn(
+            isPositive && 'text-emerald-600 dark:text-emerald-400',
+            isNegative && 'text-red-500 dark:text-red-400',
+            !isPositive && !isNegative && 'text-muted-foreground',
+          ),
+      )}
+      aria-hidden={isLoading || !showChange}
+    >
+      {isPositive ? (
+        <TrendingUp className="h-3.5 w-3.5" aria-hidden />
+      ) : isNegative ? (
+        <TrendingDown className="h-3.5 w-3.5" aria-hidden />
+      ) : (
+        <span className="h-3.5 w-3.5" aria-hidden />
+      )}
+      {isPositive ? '+' : ''}
+      {changePercent}%
+    </span>
+  ) : null
+
+  if (isTable) {
+    return (
+      <div
+        className={cn('flex min-w-0 items-center gap-2', className)}
+        style={{ minHeight: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT }}
+        aria-busy={isLoading}
+        aria-label={isLoading ? 'Loading request usage' : undefined}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="w-11 shrink-0">{valueContent}</div>
+        <div
+          className="relative min-w-0 flex-1 overflow-hidden"
+          style={{ height: chartHeight }}
+        >
+          <RequestsChartBlock
+            chartData={chartData}
+            gradientId={gradientId}
+            chartHeight={chartHeight}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn('min-w-0', className)}
@@ -206,15 +352,11 @@ export function ProjectListRequestsChart({
 
         {isLoading ? (
           <>
-            <span
-              className="h-3.5 w-8 shrink-0 rounded-sm bg-border/70"
-              aria-hidden
-            />
+            {valueContent}
             <span className="ml-auto inline-flex h-3.5 w-9 shrink-0" aria-hidden />
           </>
         ) : (
           <div
-            key="loaded-values"
             className={cn(
               'flex min-w-0 flex-1 items-center gap-2',
               CHART_REVEAL_CLASS,
@@ -222,9 +364,7 @@ export function ProjectListRequestsChart({
           >
             {isZeroUsage ? (
               <>
-                <span className="shrink-0 text-[13px] font-medium leading-none text-muted-foreground">
-                  N/A
-                </span>
+                {valueContent}
                 <span
                   className="ml-auto inline-flex h-3.5 w-9 shrink-0"
                   aria-hidden
@@ -232,35 +372,8 @@ export function ProjectListRequestsChart({
               </>
             ) : (
               <>
-                <span className="shrink-0 text-[13px] font-medium leading-none tabular-nums text-foreground">
-                  {formatRequestsTotal(totalRequests)}
-                </span>
-                <span
-                  className={cn(
-                    'ml-auto inline-flex h-3.5 shrink-0 items-center gap-0.5 text-[11px] font-medium leading-none tabular-nums',
-                    showChange
-                      ? cn(
-                          isPositive &&
-                            'text-emerald-600 dark:text-emerald-400',
-                          isNegative && 'text-red-500 dark:text-red-400',
-                          !isPositive &&
-                            !isNegative &&
-                            'text-muted-foreground',
-                        )
-                      : 'invisible',
-                  )}
-                  aria-hidden={!showChange}
-                >
-                  {isPositive ? (
-                    <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-                  ) : isNegative ? (
-                    <TrendingDown className="h-3.5 w-3.5" aria-hidden />
-                  ) : (
-                    <span className="h-3.5 w-3.5" aria-hidden />
-                  )}
-                  {isPositive ? '+' : ''}
-                  {changePercent}%
-                </span>
+                {valueContent}
+                {changeBadge}
               </>
             )}
           </div>
@@ -269,7 +382,7 @@ export function ProjectListRequestsChart({
 
       <div
         className="relative w-full min-w-0 overflow-hidden"
-        style={{ height: PROJECT_LIST_REQUESTS_CHART_HEIGHT }}
+        style={{ height: chartHeight }}
       >
         {isError ? (
           <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 px-3 text-center">
@@ -277,28 +390,14 @@ export function ProjectListRequestsChart({
               Usage unavailable
             </span>
           </div>
-        ) : isLoading ? (
-          <RequestsChartArea
+        ) : (
+          <RequestsChartBlock
             chartData={chartData}
             gradientId={gradientId}
-            isSkeleton
-            tooltipDisabled
+            chartHeight={chartHeight}
+            isLoading={isLoading}
+            isError={isError}
           />
-        ) : (
-          <div
-            key="loaded-chart"
-            className={cn(
-              'h-full',
-              CHART_REVEAL_CLASS,
-              CHART_REVEAL_DELAY_CLASS,
-            )}
-          >
-            <RequestsChartArea
-              chartData={chartData}
-              gradientId={gradientId}
-              tooltipDisabled={false}
-            />
-          </div>
         )}
       </div>
     </div>
@@ -311,13 +410,37 @@ type ProjectListCardRequestsChartProps = {
   className?: string
 }
 
+function ProjectListRequestsChartFromUsage({
+  projectId,
+  usageByProjectId,
+  className,
+  variant = 'card',
+}: {
+  projectId: string
+  usageByProjectId: Map<string, ProjectListRequestsUsageEntry>
+  className?: string
+  variant?: 'card' | 'table'
+}) {
+  const usage = usageByProjectId.get(projectId)
+
+  return (
+    <ProjectListRequestsChart
+      className={className}
+      variant={variant}
+      isLoading={usage?.isLoading ?? true}
+      isError={usage?.isError ?? false}
+      totalRequests={usage?.data?.totalRequests}
+      changePercent={usage?.data?.changePercent}
+      chartPoints={usage?.data?.chartPoints}
+    />
+  )
+}
+
 export function ProjectListCardRequestsChart({
   projectId,
   usageByProjectId,
   className,
 }: ProjectListCardRequestsChartProps) {
-  const usage = usageByProjectId.get(projectId)
-
   return (
     <div
       className={cn(RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME, 'shrink-0')}
@@ -327,14 +450,30 @@ export function ProjectListCardRequestsChart({
         } satisfies CSSProperties
       }
     >
-      <ProjectListRequestsChart
+      <ProjectListRequestsChartFromUsage
+        projectId={projectId}
+        usageByProjectId={usageByProjectId}
         className={className}
-        isLoading={usage?.isLoading ?? true}
-        isError={usage?.isError ?? false}
-        totalRequests={usage?.data?.totalRequests}
-        changePercent={usage?.data?.changePercent}
-        chartPoints={usage?.data?.chartPoints}
+        variant="card"
       />
     </div>
+  )
+}
+
+type ProjectListTableRequestsCellProps = {
+  projectId: string
+  usageByProjectId: Map<string, ProjectListRequestsUsageEntry>
+}
+
+export function ProjectListTableRequestsCell({
+  projectId,
+  usageByProjectId,
+}: ProjectListTableRequestsCellProps) {
+  return (
+    <ProjectListRequestsChartFromUsage
+      projectId={projectId}
+      usageByProjectId={usageByProjectId}
+      variant="table"
+    />
   )
 }
