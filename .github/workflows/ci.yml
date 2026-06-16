@@ -12,6 +12,9 @@ env:
 
 on:
   pull_request:
+  push:
+    branches:
+      - 1.9.x
   workflow_dispatch:
     inputs:
       response_format:
@@ -705,7 +708,7 @@ jobs:
 
   benchmark:
     name: Benchmark
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -747,9 +750,11 @@ jobs:
       - name: Prepare benchmark before
         id: benchmark_before_prepare
         continue-on-error: true
+        env:
+          BENCHMARK_BEFORE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
-          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
-          git worktree add --detach /tmp/appwrite-benchmark-before ${{ github.event.pull_request.base.sha }}
+          git fetch --depth=1 origin "${BENCHMARK_BEFORE_SHA}"
+          git worktree add --detach /tmp/appwrite-benchmark-before "${BENCHMARK_BEFORE_SHA}"
           docker build \
             --cache-from ${{ env.IMAGE }}:after \
             --target development \
@@ -871,8 +876,8 @@ jobs:
         if: always()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          BENCHMARK_BASE_REF: ${{ github.event.pull_request.base.ref }}
-          BENCHMARK_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BENCHMARK_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.before }}
+          BENCHMARK_HEAD_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.sha }}
         with:
           script: |
             const comment = require('./.github/workflows/benchmark-comment.js');
