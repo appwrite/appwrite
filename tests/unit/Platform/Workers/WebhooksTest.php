@@ -197,7 +197,7 @@ class WebhooksTest extends TestCase
     }
 
     #[DataProvider('ownerRoleProvider')]
-    public function testOwnerRoleDetectionAcceptsArrayAndLegacyStringRoles(mixed $roles, bool $expected): void
+    public function testOwnerRoleDetectionAcceptsArrayAndCommaStringRoles(mixed $roles, bool $expected): void
     {
         $method = new \ReflectionMethod(Webhooks::class, 'hasOwnerRole');
         $membership = new Document([
@@ -205,7 +205,7 @@ class WebhooksTest extends TestCase
             'roles' => $roles,
         ]);
 
-        $this->assertSame($expected, $method->invoke(null, $membership, 'project-1'));
+        $this->assertSame($expected, $method->invoke(null, $membership));
     }
 
     public static function ownerRoleProvider(): array
@@ -213,10 +213,10 @@ class WebhooksTest extends TestCase
         return [
             'array owner' => [['owner'], true],
             'array mixed case owner' => [['Owner'], true],
-            'project owner' => [['project-project-1-owner'], true],
-            'mixed case project owner' => [['Project-Project-1-Owner'], true],
             'comma string owner' => ['developer, owner', true],
-            'comma string project owner' => ['developer, project-project-1-owner', true],
+            'project-scoped owner string not recognized' => [['project-project-1-owner'], false],
+            'mixed case project-scoped owner string not recognized' => [['Project-Project-1-Owner'], false],
+            'comma string project-scoped owner not recognized' => ['developer, project-project-1-owner', false],
             'other project owner' => [['project-project-2-owner'], false],
             'non owner' => [['developer'], false],
             'invalid roles' => [null, false],
