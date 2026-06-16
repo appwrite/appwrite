@@ -39,9 +39,6 @@ const HANDLE_CLASS = cn(
   'after:w-2 after:left-1/2 after:-translate-x-1/2',
 )
 
-/** Debounce window for persisting the sidebar width to user prefs. */
-const PERSIST_DEBOUNCE_MS = 250
-
 type TableViewResizableLayoutProps = {
   sidebar: ReactNode
   children: ReactNode
@@ -119,13 +116,10 @@ export function TableViewResizableLayout({
     })
   }, [containerWidth, mountedSidebarPx])
 
-  const persistTimerRef = useRef<number | null>(null)
-  const lastPersistedPxRef = useRef(sidebarWidthPx)
   const latestSidebarPxRef = useRef(sidebarWidthPx)
 
   useEffect(() => {
     if (isSidebarResizingRef.current) return
-    lastPersistedPxRef.current = sidebarWidthPx
     latestSidebarPxRef.current = sidebarWidthPx
   }, [sidebarWidthPx])
 
@@ -142,19 +136,8 @@ export function TableViewResizableLayout({
         secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
       })
       latestSidebarPxRef.current = layout.firstPx
-      if (!isSidebarResizingRef.current) return
-      const nextPx = layout.firstPx
-      if (Math.abs(nextPx - lastPersistedPxRef.current) < 2) return
-      if (persistTimerRef.current !== null) {
-        window.clearTimeout(persistTimerRef.current)
-      }
-      persistTimerRef.current = window.setTimeout(() => {
-        persistTimerRef.current = null
-        lastPersistedPxRef.current = nextPx
-        persistSidebarWidthPx(nextPx)
-      }, PERSIST_DEBOUNCE_MS)
     },
-    [containerWidth, persistSidebarWidthPx],
+    [containerWidth],
   )
 
   const finishSidebarResize = useCallback(
@@ -168,13 +151,7 @@ export function TableViewResizableLayout({
           /* already released */
         }
       }
-      if (persistTimerRef.current !== null) {
-        window.clearTimeout(persistTimerRef.current)
-        persistTimerRef.current = null
-      }
       const nextPx = latestSidebarPxRef.current
-      lastPersistedPxRef.current = nextPx
-      setMountedSidebarPx(nextPx)
       persistSidebarWidthPx(nextPx)
     },
     [persistSidebarWidthPx],
@@ -187,14 +164,6 @@ export function TableViewResizableLayout({
     },
     [],
   )
-
-  useEffect(() => {
-    return () => {
-      if (persistTimerRef.current !== null) {
-        window.clearTimeout(persistTimerRef.current)
-      }
-    }
-  }, [])
 
   const shellClassName = cn(
     'flex h-full min-h-0 min-w-0 flex-1 flex-col',
@@ -222,7 +191,6 @@ export function TableViewResizableLayout({
   return (
     <div ref={containerRef} className={shellClassName}>
       <ResizablePanelGroup
-        key={`${sidebarWidthScope}-${mountedSidebarPx}`}
         direction="horizontal"
         className="h-full min-h-0 min-w-0 flex-1"
         onLayout={handleLayout}

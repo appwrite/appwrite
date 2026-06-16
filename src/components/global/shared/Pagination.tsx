@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { cn, scrollConsoleMainToTop } from '@/lib/utils'
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -8,12 +9,12 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 // ============================================================================
 // SIMPLE PAGINATION (when total is unknown)
@@ -262,25 +263,42 @@ export function Pagination({
         )}
 
         {showPageSizeSelector && (
-          <div className="hidden items-center gap-2 @[800px]:flex">
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
             <span className="text-muted-foreground whitespace-nowrap text-[12px]">
               Show
             </span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={handlePageSizeChange}
-            >
-              <SelectTrigger className="h-8 w-[72px] text-[12px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {pageSizeOptions.map((size) => (
-                  <SelectItem key={size} value={size.toString()}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-[72px] gap-1 px-2 text-[12px] font-normal tabular-nums"
+                  aria-label="Rows per page"
+                >
+                  {pageSize}
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="z-[10050] min-w-[var(--radix-dropdown-menu-trigger-width)]"
+              >
+                <DropdownMenuRadioGroup
+                  value={pageSize.toString()}
+                  onValueChange={handlePageSizeChange}
+                >
+                  {pageSizeOptions.map((size) => (
+                    <DropdownMenuRadioItem
+                      key={size}
+                      value={size.toString()}
+                      className="text-[12px]"
+                    >
+                      {size}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <span className="text-muted-foreground whitespace-nowrap text-[12px]">
               per page
             </span>

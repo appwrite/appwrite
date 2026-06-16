@@ -202,6 +202,9 @@ export type PostgresTableColumnRow = {
   udt_name: string
   is_nullable: string
   column_default: string | null
+  is_identity: string | null
+  identity_generation: string | null
+  serial_sequence: string | null
   character_maximum_length: number | string | null
   numeric_precision: number | string | null
   numeric_scale: number | string | null
@@ -279,7 +282,17 @@ SELECT
   c.data_type,
   c.udt_name,
   c.is_nullable,
-  c.column_default,
+  COALESCE(pg_get_expr(def.adbin, def.adrelid), c.column_default) AS column_default,
+  CASE WHEN attr.attidentity IN ('a', 'd') THEN 'YES' ELSE 'NO' END AS is_identity,
+  CASE attr.attidentity
+    WHEN 'a' THEN 'ALWAYS'
+    WHEN 'd' THEN 'BY DEFAULT'
+    ELSE NULL
+  END AS identity_generation,
+  pg_get_serial_sequence(
+    quote_ident(c.table_schema) || '.' || quote_ident(c.table_name),
+    c.column_name
+  ) AS serial_sequence,
   c.character_maximum_length,
   c.numeric_precision,
   c.numeric_scale,
@@ -295,6 +308,14 @@ JOIN pg_catalog.pg_class pgc
 JOIN pg_catalog.pg_namespace n
   ON n.oid = pgc.relnamespace
   AND n.nspname = c.table_schema
+LEFT JOIN pg_attribute attr
+  ON attr.attrelid = pgc.oid
+  AND attr.attname = c.column_name
+  AND attr.attnum > 0
+  AND NOT attr.attisdropped
+LEFT JOIN pg_attrdef def
+  ON def.adrelid = attr.attrelid
+  AND def.adnum = attr.attnum
 LEFT JOIN (
   SELECT kcu.column_name
   FROM information_schema.table_constraints tc

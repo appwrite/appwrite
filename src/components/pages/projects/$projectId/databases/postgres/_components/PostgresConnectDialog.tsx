@@ -133,7 +133,7 @@ function PostgresConnectDetails({
 
   const handleCopyAll = async () => {
     await copyText(
-      'Connection details',
+      'Credentials',
       buildPostgresCopyAllText(credentials, endpointInfo),
     )
   }
@@ -489,9 +489,9 @@ export function PostgresConnectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,800px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
-          <DialogTitle>Connect</DialogTitle>
+          <DialogTitle>Credentials</DialogTitle>
           <DialogDescription className="mt-2 text-[13px]">
-            Connection details for external clients, ORMs, and CLI tools.
+            Credentials and connection strings for external clients, ORMs, and CLI tools.
           </DialogDescription>
         </DialogHeader>
 
@@ -503,7 +503,7 @@ export function PostgresConnectDialog({
           <div className="shrink-0 px-6 py-4">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load connection details</AlertTitle>
+              <AlertTitle>Failed to load credentials</AlertTitle>
               <AlertDescription className="text-[13px]">
                 {credentialsErrorMessage}
               </AlertDescription>

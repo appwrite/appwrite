@@ -30,6 +30,7 @@ type PostgresRowsEditSessionContextValue = {
     originalValue: RowCellValue,
   ) => RowCellValue
   isCellEdited: (tableId: string, rowKey: string, columnKey: string) => boolean
+  isRowEdited: (tableId: string, rowKey: string) => boolean
   setCellEdit: (edit: Omit<PendingPostgresRowCellEdit, 'databaseId'>) => void
   discardAll: () => void
   commit: () => void
@@ -185,6 +186,17 @@ export function PostgresRowsEditSessionProvider({
     [pendingEdits],
   )
 
+  const isRowEdited = useCallback(
+    (editTableId: string, rowKey: string) => {
+      const prefix = `${editTableId}:${rowKey}:`
+      for (const key of pendingEdits.keys()) {
+        if (key.startsWith(prefix)) return true
+      }
+      return false
+    },
+    [pendingEdits],
+  )
+
   const discardAll = useCallback(() => {
     setPendingEdits(new Map())
     activeInlineEditRef.current = null
@@ -219,6 +231,7 @@ export function PostgresRowsEditSessionProvider({
       pendingRowCount,
       getCellDisplayValue,
       isCellEdited,
+      isRowEdited,
       setCellEdit,
       discardAll,
       commit,
@@ -240,6 +253,7 @@ export function PostgresRowsEditSessionProvider({
       endInlineEdit,
       getCellDisplayValue,
       isCellEdited,
+      isRowEdited,
       markSuppressNextDrawerOpen,
       pendingEdits.size,
       pendingRowCount,

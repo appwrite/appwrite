@@ -46,7 +46,8 @@ export function SavePostgresQueryDialog({
 }: SavePostgresQueryDialogProps) {
   const [name, setName] = useState('')
   const [level, setLevel] = useState<PostgresSavedQueryLevel>('user')
-  const { setPanel, setSavedQueryLevel } = usePostgresSidebar()
+  const { setPanel, setSavedQueryLevel, selectSavedQuery, savedQueryLevel } =
+    usePostgresSidebar()
   const { addSavedQuery, isAdding, hasTeamLevel } = usePostgresSavedQueries(
     databaseId,
     account,
@@ -68,15 +69,21 @@ export function SavePostgresQueryDialog({
     if (!trimmedName || isAdding) return
     if (level === 'team' && !canSaveTeam) return
     try {
-      await addSavedQuery({
+      const savedLevel = hasTeamLevel ? level : 'user'
+      const savedQuery = await addSavedQuery({
         name: trimmedName,
         sql,
-        level: hasTeamLevel ? level : 'user',
+        level: savedLevel,
       })
       toast.success(
-        level === 'team' ? 'Query saved for team' : 'Query saved for you',
+        savedLevel === 'team' ? 'Query saved for team' : 'Query saved for you',
       )
-      setSavedQueryLevel(hasTeamLevel ? level : 'user')
+      if (savedLevel !== savedQueryLevel) {
+        setSavedQueryLevel(savedLevel)
+      }
+      if (savedQuery) {
+        selectSavedQuery(savedLevel, savedQuery)
+      }
       setPanel('queries')
       onOpenChange(false)
     } catch (error) {

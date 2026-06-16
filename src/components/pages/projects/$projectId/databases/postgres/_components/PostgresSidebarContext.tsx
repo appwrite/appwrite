@@ -1,6 +1,8 @@
 import type { Models } from '@appwrite.io/console'
 import {
   MAX_POSTGRES_QUERY_HISTORY_ENTRIES,
+  MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH,
+  type PersistedPostgresSqlEditorState,
   type PostgresQueryHistoryEntry,
   type SavedPostgresQuery,
 } from '@/lib/user-prefs-keys'
@@ -16,6 +18,8 @@ import { buildPostgresSelectSql } from '@/lib/postgres-sql'
 import {
   usePostgresQueryHistory,
   usePostgresSavedQueryScope,
+  usePostgresSidebarPanel,
+  usePostgresSqlEditorPersistence,
   type PostgresSavedQueryLevel,
 } from '@/lib/react-query/hooks/postgres-databases'
 import { useProject } from '@/lib/react-query/hooks/projects'
@@ -24,6 +28,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -33,7 +38,8 @@ import { flushSync } from 'react-dom'
 
 const DEFAULT_SQL = 'SELECT NOW() AS current_time;'
 
-export type PostgresSidebarPanel = 'schemas' | 'queries' | 'history'
+export type PostgresSidebarPanel =
+  import('@/lib/user-prefs-keys').PostgresSidebarPanelPreference
 
 export type PostgresRecentQuery = PostgresQueryHistoryEntry
 
@@ -236,6 +242,40 @@ function closeEditorTabState(
   }
 }
 
+function editorTabStateFromPersisted(
+  persisted: PersistedPostgresSqlEditorState,
+): SqlEditorTabState {
+  const tabs: SqlEditorTab[] = persisted.tabs.map((tab) => ({
+    id: tab.id,
+    title: tab.title,
+    sql: tab.sql,
+    tableId: tab.tableId,
+    result: null,
+    error: null,
+  }))
+  const activeTabId = tabs.some((tab) => tab.id === persisted.activeTabId)
+    ? persisted.activeTabId
+    : tabs[0]?.id
+
+  return { tabs, activeTabId }
+}
+
+function persistedFromEditorTabState(
+  state: SqlEditorTabState,
+): PersistedPostgresSqlEditorState {
+  const tabs = state.tabs.map((tab) => ({
+    id: tab.id,
+    title: tab.title.slice(0, MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH),
+    sql: tab.sql,
+    ...(tab.tableId ? { tableId: tab.tableId } : {}),
+  }))
+  const activeTabId = tabs.some((tab) => tab.id === state.activeTabId)
+    ? state.activeTabId
+    : tabs[0]?.id ?? state.activeTabId
+
+  return { tabs, activeTabId }
+}
+
 type PostgresSidebarProviderProps = {
   databaseId: string
   children: ReactNode
@@ -260,12 +300,40 @@ export function PostgresSidebarProvider({
     account,
   )
 
-  const [panel, setPanel] = useState<PostgresSidebarPanel>('schemas')
+  const { panel, setPanel } = usePostgresSidebarPanel(databaseId, account)
+  const { parseInitialEditorState, persistEditorTabState } =
+    usePostgresSqlEditorPersistence(databaseId, account)
   const [selectedQueryKey, setSelectedQueryKey] = useState<string | null>(null)
-  const initialTabStateRef = useRef(createInitialTabState())
+  const skipEditorPersistRef = useRef(true)
+  const editorInitializedDatabaseIdRef = useRef<string | null>(null)
   const pendingActiveTabIdRef = useRef<string | null>(null)
-  const [editorTabState, setEditorTabState] = useState(initialTabStateRef.current)
+  const [editorTabState, setEditorTabState] = useState(createInitialTabState)
   const { tabs, activeTabId } = editorTabState
+
+  useEffect(() => {
+    editorInitializedDatabaseIdRef.current = null
+  }, [databaseId])
+
+  useEffect(() => {
+    if (!databaseId) return
+    if (editorInitializedDatabaseIdRef.current === databaseId) return
+    if (!account) return
+
+    skipEditorPersistRef.current = true
+    const persisted = parseInitialEditorState()
+    setEditorTabState(
+      persisted ? editorTabStateFromPersisted(persisted) : createInitialTabState(),
+    )
+    editorInitializedDatabaseIdRef.current = databaseId
+    requestAnimationFrame(() => {
+      skipEditorPersistRef.current = false
+    })
+  }, [account, databaseId, parseInitialEditorState])
+
+  useEffect(() => {
+    if (skipEditorPersistRef.current || !databaseId || !account) return
+    persistEditorTabState(persistedFromEditorTabState(editorTabState))
+  }, [account, databaseId, editorTabState, persistEditorTabState])
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? tabs[0],
@@ -550,6 +618,7 @@ export function PostgresSidebarProvider({
     }),
     [
       panel,
+      setPanel,
       recentQueries,
       addRecentQuery,
       clearRecentQueries,

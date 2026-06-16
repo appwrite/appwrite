@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AppwriteException } from '@appwrite.io/console'
-import { Loader2 } from 'lucide-react'
+import type { editor } from 'monaco-editor'
+import { Loader2, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import {
   commitConsoleAccountToCaches,
@@ -16,6 +16,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CodeEditor } from '@/components/global/shared/CodeEditor'
 import { cn } from '@/lib/utils'
@@ -40,6 +41,132 @@ function parseValueInput(raw: string): unknown {
   } catch {
     return raw
   }
+}
+
+type PrefSearchMatch = {
+  key: string
+  preview: string
+}
+
+function getMatchingPrefKeys(
+  prefsJson: string,
+  query: string,
+): PrefSearchMatch[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return []
+
+  try {
+    const prefs = parsePrefsJson(prefsJson)
+    return Object.entries(prefs)
+      .filter(([key, value]) => {
+        const valueStr =
+          typeof value === 'string' ? value : JSON.stringify(value)
+        return (
+          key.toLowerCase().includes(q) || valueStr.toLowerCase().includes(q)
+        )
+      })
+      .map(([key, value]) => {
+        const valueStr =
+          typeof value === 'string' ? value : JSON.stringify(value)
+        return {
+          key,
+          preview:
+            valueStr.length > 80 ? `${valueStr.slice(0, 80)}…` : valueStr,
+        }
+      })
+      .sort((a, b) => a.key.localeCompare(b.key))
+  } catch {
+    return []
+  }
+}
+
+function scrollEditorToPrefKey(
+  editorInstance: editor.IStandaloneCodeEditor | null,
+  key: string,
+) {
+  if (!editorInstance) return
+  const model = editorInstance.getModel()
+  if (!model) return
+
+  const needle = `"${key.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+  const matches = model.findMatches(needle, false, false, false, null, false)
+  const match = matches[0]
+  if (!match) return
+
+  editorInstance.revealLineInCenter(match.range.startLineNumber)
+  editorInstance.setSelection(match.range)
+  editorInstance.focus()
+}
+
+function PrefsSearchBar({
+  value,
+  onChange,
+  matches,
+  onSelectKey,
+  disabled,
+}: {
+  value: string
+  onChange: (value: string) => void
+  matches: PrefSearchMatch[]
+  onSelectKey: (key: string) => void
+  disabled?: boolean
+}) {
+  const trimmed = value.trim()
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9B87F5]/60" />
+        <Input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          disabled={disabled}
+          placeholder="Search keys or values…"
+          className="h-8 border-[#9B87F5]/25 bg-black/20 pl-8 pr-8 text-[12px] text-[#E5DEFF] placeholder:text-[#9B87F5]/50"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            disabled={disabled}
+            className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[#9B87F5]/70 transition-colors hover:bg-[#9B87F5]/15 hover:text-[#E5DEFF] disabled:opacity-50"
+            aria-label="Clear search"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+      {trimmed ? (
+        <div className="max-h-[min(24dvh,160px)] overflow-y-auto rounded-lg border border-[#9B87F5]/20 bg-black/20">
+          {matches.length === 0 ? (
+            <p className="px-2.5 py-2 text-[11px] text-[#9B87F5]/70">
+              No matching keys
+            </p>
+          ) : (
+            <ul className="divide-y divide-[#9B87F5]/10">
+              {matches.map(({ key, preview }) => (
+                <li key={key}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectKey(key)}
+                    disabled={disabled}
+                    className="flex w-full flex-col gap-0.5 px-2.5 py-2 text-left transition-colors hover:bg-[#9B87F5]/10 disabled:opacity-50"
+                  >
+                    <code className="truncate text-[11px] text-[#E5DEFF]">
+                      {key}
+                    </code>
+                    <span className="truncate text-[10px] text-[#9B87F5]/75">
+                      {preview}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 const tabListClass =
@@ -97,8 +224,43 @@ export function DebugMenuPrefsPanel() {
 
   const [accountDraft, setAccountDraft] = useState('')
   const [teamDraft, setTeamDraft] = useState('')
+  const [accountSearch, setAccountSearch] = useState('')
+  const [teamSearch, setTeamSearch] = useState('')
   const [accountBusy, setAccountBusy] = useState(false)
   const [teamBusy, setTeamBusy] = useState(false)
+  const accountEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const teamEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+
+  const accountSearchMatches = useMemo(
+    () => getMatchingPrefKeys(accountDraft, accountSearch),
+    [accountDraft, accountSearch],
+  )
+
+  const teamSearchMatches = useMemo(
+    () => getMatchingPrefKeys(teamDraft, teamSearch),
+    [teamDraft, teamSearch],
+  )
+
+  const handleAccountEditorMount = useCallback(
+    (editorInstance: editor.IStandaloneCodeEditor) => {
+      accountEditorRef.current = editorInstance
+    },
+    [],
+  )
+
+  const handleTeamEditorMount = useCallback(
+    (editorInstance: editor.IStandaloneCodeEditor) => {
+      teamEditorRef.current = editorInstance
+    },
+    [],
+  )
+
+  useEffect(() => {
+    return () => {
+      accountEditorRef.current = null
+      teamEditorRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (!account) return
@@ -425,12 +587,22 @@ export function DebugMenuPrefsPanel() {
           {accountErrMsg && (
             <p className="text-[11px] text-amber-300/90">{accountErrMsg}</p>
           )}
+          <PrefsSearchBar
+            value={accountSearch}
+            onChange={setAccountSearch}
+            matches={accountSearchMatches}
+            onSelectKey={(key) =>
+              scrollEditorToPrefKey(accountEditorRef.current, key)
+            }
+            disabled={accountLoading || accountBusy || !account}
+          />
           <div className={cn(editorShellClass, 'flex flex-col')}>
             <CodeEditor
               modelPath="debug-menu/prefs/account.json"
               language="json"
               value={accountDraft}
               onChange={setAccountDraft}
+              onEditorMount={handleAccountEditorMount}
               readOnly={accountLoading || accountBusy || !account}
               minimap={false}
               lineNumbers="on"
@@ -519,12 +691,22 @@ export function DebugMenuPrefsPanel() {
               {teamErrMsg && (
                 <p className="text-[11px] text-amber-300/90">{teamErrMsg}</p>
               )}
+              <PrefsSearchBar
+                value={teamSearch}
+                onChange={setTeamSearch}
+                matches={teamSearchMatches}
+                onSelectKey={(key) =>
+                  scrollEditorToPrefKey(teamEditorRef.current, key)
+                }
+                disabled={teamLoading || teamBusy || !team}
+              />
               <div className={cn(editorShellClass, 'flex flex-col')}>
                 <CodeEditor
                   modelPath="debug-menu/prefs/team.json"
                   language="json"
                   value={teamDraft}
                   onChange={setTeamDraft}
+                  onEditorMount={handleTeamEditorMount}
                   readOnly={teamLoading || teamBusy || !team}
                   minimap={false}
                   lineNumbers="on"

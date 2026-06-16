@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   getPostgresColumnEditMeta,
@@ -7,6 +8,7 @@ import {
   isPostgresColumnRequired,
   isPostgresGeneratedColumn,
   parseAndValidatePostgresCellInput,
+  shouldOmitPostgresColumnOnRowCreate,
   valueToPostgresEditString,
 } from '@/lib/postgres-row-edits'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
@@ -27,6 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type PostgresRowEditDrawerProps = {
   open: boolean
@@ -41,12 +44,53 @@ type PostgresRowEditDrawerProps = {
   canWrite?: boolean
 }
 
+/** `null` = explicit SQL NULL; string = raw edit value. */
+type PostgresRowFieldDraft = string | null
+
 function isJsonType(typeId: string): boolean {
   return typeId === 'json' || typeId === 'jsonb'
 }
 
 function isLongTextType(typeId: string): boolean {
   return typeId === 'text'
+}
+
+function PostgresRowNullOverlay({
+  columnName,
+  checked,
+  onCheckedChange,
+  className,
+}: {
+  columnName: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  className?: string
+}) {
+  const id = `postgres-row-field-${columnName}-null`
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute flex items-center gap-2',
+        className,
+      )}
+    >
+      <div className="pointer-events-auto flex items-center gap-1.5">
+        <Checkbox
+          id={id}
+          checked={checked}
+          onCheckedChange={(value) => onCheckedChange(value === true)}
+          onClick={(event) => event.stopPropagation()}
+          className="h-4 w-4"
+        />
+        <label
+          htmlFor={id}
+          className="cursor-pointer select-none text-[11px] text-muted-foreground"
+        >
+          Null
+        </label>
+      </div>
+    </div>
+  )
 }
 
 export function PostgresRowEditDrawer({
@@ -62,7 +106,7 @@ export function PostgresRowEditDrawer({
   canWrite = true,
 }: PostgresRowEditDrawerProps) {
   const isCreate = row == null
-  const [draft, setDraft] = useState<Record<string, string>>({})
+  const [draft, setDraft] = useState<Record<string, PostgresRowFieldDraft>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const createMutation = useCreatePostgresTableRow(
@@ -79,7 +123,7 @@ export function PostgresRowEditDrawer({
   const editableColumns = useMemo(
     () =>
       columns.filter((column) => {
-        if (isCreate) return !isPostgresGeneratedColumn(column)
+        if (isCreate) return !shouldOmitPostgresColumnOnRowCreate(column)
         return true
       }),
     [columns, isCreate],
@@ -87,17 +131,25 @@ export function PostgresRowEditDrawer({
 
   useEffect(() => {
     if (!open) return
-    const nextDraft: Record<string, string> = {}
+    const nextDraft: Record<string, PostgresRowFieldDraft> = {}
     for (const column of editableColumns) {
       const meta = getPostgresColumnEditMeta(column)
-      const value = row?.[column.column_name] as RowCellValue
-      nextDraft[column.column_name] = valueToPostgresEditString(value ?? null, meta)
+      const fieldType = getPostgresInlineFieldType(meta)
+      const value = row?.[column.column_name] as RowCellValue | undefined
+      if (value === null) {
+        nextDraft[column.column_name] = null
+      } else if (value === undefined) {
+        nextDraft[column.column_name] =
+          fieldType === 'boolean' ? 'false' : ''
+      } else {
+        nextDraft[column.column_name] = valueToPostgresEditString(value, meta)
+      }
     }
     setDraft(nextDraft)
     setErrors({})
   }, [editableColumns, open, row])
 
-  const handleFieldChange = (columnName: string, value: string) => {
+  const handleFieldChange = (columnName: string, value: PostgresRowFieldDraft) => {
     setDraft((prev) => ({ ...prev, [columnName]: value }))
     setErrors((prev) => {
       if (!prev[columnName]) return prev
@@ -107,6 +159,14 @@ export function PostgresRowEditDrawer({
     })
   }
 
+  const handleNullToggle = (columnName: string, isNull: boolean) => {
+    if (isNull) {
+      handleFieldChange(columnName, null)
+      return
+    }
+    handleFieldChange(columnName, '')
+  }
+
   const handleSave = async () => {
     if (!canWrite) return
 
@@ -114,9 +174,20 @@ export function PostgresRowEditDrawer({
     const nextErrors: Record<string, string> = {}
 
     for (const column of editableColumns) {
+      if (isCreate && shouldOmitPostgresColumnOnRowCreate(column)) continue
       if (!isCreate && isPostgresGeneratedColumn(column)) continue
-      const raw = draft[column.column_name] ?? ''
-      const result = parseAndValidatePostgresCellInput(raw, column)
+
+      const rawDraft = draft[column.column_name]
+      if (rawDraft === null) {
+        if (isPostgresColumnRequired(column)) {
+          nextErrors[column.column_name] = 'This field is required.'
+          continue
+        }
+        values[column.column_name] = null
+        continue
+      }
+
+      const result = parseAndValidatePostgresCellInput(rawDraft ?? '', column)
       if (!result.ok) {
         nextErrors[column.column_name] = result.error
         continue
@@ -164,108 +235,214 @@ export function PostgresRowEditDrawer({
       open={open}
       onOpenChange={onOpenChange}
       title={isCreate ? 'Create row' : 'Update row'}
+      description={
+        isCreate
+          ? 'Add a new row. Nullable columns can be left empty or set to null.'
+          : 'Update row values. Nullable columns can be cleared or set to null.'
+      }
       maxWidth="sm:max-w-xl"
       disableAutoFocus
     >
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {editableColumns.map((column) => {
-            const meta = getPostgresColumnEditMeta(column)
-            const fieldType = getPostgresInlineFieldType(meta)
-            const required = isPostgresColumnRequired(column)
-            const value = draft[column.column_name] ?? ''
-            const error = errors[column.column_name]
-            const inputId = `postgres-row-field-${column.column_name}`
-            const readOnly =
-              !canWrite ||
-              (!isCreate && isPostgresGeneratedColumn(column)) ||
-              (meta.isPrimaryKey && !isCreate)
+      <>
+        <div className="border-t border-border" />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto px-6 pb-4 pt-4 space-y-4">
+            <div className="space-y-3">
+              <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Row data
+              </h4>
+              <div className="space-y-4">
+                {editableColumns.map((column) => {
+                  const meta = getPostgresColumnEditMeta(column)
+                  const fieldType = getPostgresInlineFieldType(meta)
+                  const required = isPostgresColumnRequired(column)
+                  const draftValue = draft[column.column_name]
+                  const isNull = draftValue === null
+                  const stringValue = isNull ? '' : (draftValue ?? '')
+                  const error = errors[column.column_name]
+                  const inputId = `postgres-row-field-${column.column_name}`
+                  const readOnly =
+                    !canWrite ||
+                    (!isCreate && isPostgresGeneratedColumn(column)) ||
+                    (meta.isPrimaryKey && !isCreate)
+                  const showNullToggle = !required && !readOnly
+                  const useTextarea =
+                    isJsonType(meta.typeId) || isLongTextType(meta.typeId)
 
-            return (
-              <div key={column.column_name} className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor={inputId} className="text-[13px] font-medium">
-                    {column.column_name}
-                  </Label>
-                  <span className="text-[11px] text-muted-foreground">
-                    {meta.dataType}
-                    {required ? '' : ' · nullable'}
-                  </span>
-                </div>
+                  return (
+                    <div key={column.column_name} className="space-y-1.5">
+                      <Label
+                        htmlFor={inputId}
+                        className="flex items-center gap-1.5 text-[12px] font-medium text-foreground"
+                      >
+                        <span>{column.column_name}</span>
+                        {required ? (
+                          <span
+                            className="ml-0.5 text-[12px] font-semibold text-destructive"
+                            aria-label="Required field"
+                          >
+                            *
+                          </span>
+                        ) : null}
+                      </Label>
 
-                {readOnly ? (
-                  <Input
-                    id={inputId}
-                    value={value}
-                    readOnly
-                    className="h-9 text-[13px] bg-muted/30"
-                  />
-                ) : fieldType === 'boolean' ? (
-                  <Switch
-                    id={inputId}
-                    checked={value === 'true'}
-                    onCheckedChange={(checked) =>
-                      handleFieldChange(
-                        column.column_name,
-                        checked ? 'true' : required ? 'false' : '',
-                      )
-                    }
-                  />
-                ) : isDateTimeInlineFieldType(fieldType) ? (
-                  <DateTimePicker
-                    value={value || null}
-                    onChange={(next) =>
-                      handleFieldChange(column.column_name, next ?? '')
-                    }
-                    className="w-full"
-                  />
-                ) : isJsonType(meta.typeId) || isLongTextType(meta.typeId) ? (
-                  <Textarea
-                    id={inputId}
-                    value={value}
-                    onChange={(event) =>
-                      handleFieldChange(column.column_name, event.target.value)
-                    }
-                    rows={isJsonType(meta.typeId) ? 6 : 4}
-                    className="text-[13px] font-mono"
-                    aria-invalid={error ? true : undefined}
-                    autoFocus={focusedField === column.column_name}
-                  />
-                ) : (
-                  <Input
-                    id={inputId}
-                    type={isNumericInlineFieldType(fieldType) ? 'number' : 'text'}
-                    value={value}
-                    onChange={(event) =>
-                      handleFieldChange(column.column_name, event.target.value)
-                    }
-                    className="h-9 text-[13px]"
-                    aria-invalid={error ? true : undefined}
-                    autoFocus={focusedField === column.column_name}
-                  />
-                )}
+                      {readOnly ? (
+                        <Input
+                          id={inputId}
+                          value={stringValue}
+                          readOnly
+                          className="h-9 bg-muted/30 text-[13px]"
+                        />
+                      ) : fieldType === 'boolean' ? (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            id={inputId}
+                            checked={stringValue === 'true'}
+                            onCheckedChange={(checked) =>
+                              handleFieldChange(
+                                column.column_name,
+                                checked ? 'true' : 'false',
+                              )
+                            }
+                          />
+                          <span className="text-[12px] text-muted-foreground">
+                            {stringValue === 'true' ? 'True' : 'False'}
+                          </span>
+                        </div>
+                      ) : isDateTimeInlineFieldType(fieldType) ? (
+                        <DateTimePicker
+                          id={inputId}
+                          value={isNull ? null : stringValue || null}
+                          onChange={(next) =>
+                            handleFieldChange(column.column_name, next ?? null)
+                          }
+                          clearable={!required}
+                          placeholder={
+                            required ? 'Select date & time' : 'NULL'
+                          }
+                          className="w-full"
+                          autoFocus={focusedField === column.column_name}
+                        />
+                      ) : isNumericInlineFieldType(fieldType) ? (
+                        <div className="space-y-1.5">
+                          <Input
+                            id={inputId}
+                            type="number"
+                            inputMode="numeric"
+                            value={stringValue}
+                            onChange={(event) => {
+                              const next = event.target.value
+                              handleFieldChange(
+                                column.column_name,
+                                next === '' ? null : next,
+                              )
+                            }}
+                            placeholder={required ? undefined : 'NULL'}
+                            className="h-9 text-[13px]"
+                            aria-invalid={error ? true : undefined}
+                            autoFocus={focusedField === column.column_name}
+                          />
+                          {!required && isNull ? (
+                            <p className="text-[11px] text-muted-foreground">
+                              NULL
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : useTextarea ? (
+                        <div className="relative">
+                          <Textarea
+                            id={inputId}
+                            value={stringValue}
+                            disabled={isNull}
+                            onChange={(event) =>
+                              handleFieldChange(
+                                column.column_name,
+                                event.target.value,
+                              )
+                            }
+                            rows={isJsonType(meta.typeId) ? 6 : 4}
+                            placeholder={required ? undefined : 'NULL'}
+                            className={cn(
+                              'min-h-[36px] max-h-[600px] resize-none text-[13px] font-mono',
+                              isNull && 'cursor-not-allowed opacity-50',
+                              showNullToggle ? 'pb-8 pr-28' : 'pb-2',
+                            )}
+                            aria-invalid={error ? true : undefined}
+                            autoFocus={focusedField === column.column_name}
+                          />
+                          {showNullToggle ? (
+                            <PostgresRowNullOverlay
+                              columnName={column.column_name}
+                              checked={isNull}
+                              onCheckedChange={(checked) =>
+                                handleNullToggle(column.column_name, checked)
+                              }
+                              className="bottom-2 right-2"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <Input
+                            id={inputId}
+                            type="text"
+                            value={stringValue}
+                            disabled={isNull}
+                            onChange={(event) =>
+                              handleFieldChange(
+                                column.column_name,
+                                event.target.value,
+                              )
+                            }
+                            placeholder={required ? undefined : 'NULL'}
+                            className={cn(
+                              'h-9 text-[13px]',
+                              isNull && 'cursor-not-allowed opacity-50',
+                              showNullToggle && 'pr-28',
+                            )}
+                            aria-invalid={error ? true : undefined}
+                            autoFocus={focusedField === column.column_name}
+                          />
+                          {showNullToggle ? (
+                            <PostgresRowNullOverlay
+                              columnName={column.column_name}
+                              checked={isNull}
+                              onCheckedChange={(checked) =>
+                                handleNullToggle(column.column_name, checked)
+                              }
+                              className="top-1/2 right-2 -translate-y-1/2"
+                            />
+                          ) : null}
+                        </div>
+                      )}
 
-                {error ? (
-                  <p className="text-[12px] text-destructive">{error}</p>
-                ) : null}
+                      {error ? (
+                        <p className="text-[12px] text-destructive">{error}</p>
+                      ) : null}
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
+            </div>
+          </div>
 
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <Button onClick={() => void handleSave()} disabled={!canWrite || isSaving}>
-            {isCreate ? 'Create' : 'Update'}
-          </Button>
+          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
+            <Button
+              onClick={() => void handleSave()}
+              disabled={!canWrite || isSaving}
+            >
+              {isCreate ? 'Create' : 'Update'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
-      </div>
+      </>
     </BaseDrawer>
   )
 }

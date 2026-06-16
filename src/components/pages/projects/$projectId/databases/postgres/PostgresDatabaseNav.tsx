@@ -4,6 +4,7 @@ import {
   Archive,
   BarChart3,
   Cable,
+  KeyRound,
   Network,
   Play,
   Settings,
@@ -17,6 +18,7 @@ import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
 import { POSTGRES_RUN_QUERY_PLAY_ICON_CLASS } from './_components/postgres-chrome'
+import { usePostgresConnectDialog } from './_components/PostgresConnectDialogContext'
 
 type PostgresDatabaseNavProps = {
   projectId: string
@@ -40,6 +42,7 @@ export function PostgresDatabaseNav({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
+  const connectDialog = usePostgresConnectDialog()
   const nav = postgresNav({ projectId, databaseId })
 
   const showSettings = canCreateDatabase(access, features)
@@ -50,6 +53,16 @@ export function PostgresDatabaseNav({
         <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
         <span>SQL editor</span>
       </Link>
+      {connectDialog ? (
+        <button
+          type="button"
+          className={cn(navLinkClass(false), 'cursor-pointer')}
+          onClick={connectDialog.openConnect}
+        >
+          <KeyRound className="h-3.5 w-3.5 shrink-0" />
+          <span>Credentials</span>
+        </button>
+      ) : null}
       <Link
         {...nav.visualizer()}
         className={navLinkClass(activeTab === 'visualizer')}

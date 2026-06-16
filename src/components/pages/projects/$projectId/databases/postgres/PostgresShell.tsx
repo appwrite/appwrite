@@ -95,9 +95,8 @@ function PostgresShellLayout({
   showDesktopSidebar,
   children,
 }: PostgresShellLayoutProps) {
-  const { activeTab, openTableInEditor } = usePostgresSidebar()
-  const selectedTableId =
-    databaseTab ? undefined : activeTab.tableId ?? tableId
+  const { openTableInEditor } = usePostgresSidebar()
+  const selectedTableId = databaseTab ? undefined : tableId
 
   const handleOpenTable = (nextTableId: string) => {
     openTableInEditor(nextTableId)

@@ -43,12 +43,15 @@ import {
   buildPostgresCountRowsSql,
   buildPostgresDeleteRowSql,
   buildPostgresInsertRowSql,
+  buildSyncPostgresSerialSequencesSql,
+  isPostgresDuplicatePrimaryKeyError,
   buildPostgresSelectRowsSql,
   buildPostgresUpdateRowSql,
   POSTGRES_ROW_CTID_COLUMN,
   type PostgresRowIdentity,
 } from '@/lib/postgres-row-sql'
 import {
+  filterPostgresRowCreateValues,
   groupPostgresEditsByRow,
   type PendingPostgresRowCellEdit,
 } from '@/lib/postgres-row-edits'
@@ -60,17 +63,33 @@ import {
 import {
   buildPostgresSavedQueriesPrefs,
   buildPostgresSavedQueriesScopePrefs,
+  buildPostgresSavedQueriesSortPrefs,
   buildPostgresSelectedSchemaPrefs,
+  buildPostgresSidebarPanelPrefs,
+  buildPostgresSidebarTablesSortPrefs,
+  buildPostgresSqlEditorStatePrefs,
   MAX_SAVED_POSTGRES_QUERIES,
   MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
   MAX_SAVED_POSTGRES_QUERY_SQL_CHARS,
   mergePostgresQueryHistoryIntoPrefs,
+  mergePostgresSqlEditorStateIntoPrefs,
   parsePostgresQueryHistory,
   parsePostgresSavedQueries,
   parsePostgresSavedQueriesScope,
+  parsePostgresSavedQueriesSort,
   parsePostgresSelectedSchema,
+  parsePostgresSidebarPanel,
+  parsePostgresSidebarTablesSort,
+  parsePostgresSqlEditorState,
+  POSTGRES_SAVED_QUERIES_DEFAULT_SORT,
+  POSTGRES_SIDEBAR_TABLES_DEFAULT_SORT,
+  POSTGRES_SIDEBAR_PANEL_DEFAULT,
   resolvePostgresSavedQueriesScope,
   resolvePostgresSelectedSchema,
+  type PostgresSavedQueriesSort,
+  type PostgresSidebarPanelPreference,
+  type PostgresSidebarTablesSort,
+  type PersistedPostgresSqlEditorState,
   type PostgresQueryHistoryEntry,
   type SavedPostgresQuery,
   type UserPrefs,
@@ -79,7 +98,9 @@ import {
   getConsoleAccountFromCache,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
+  consoleAccountQueryOptions,
 } from './auth'
+import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -748,8 +769,26 @@ export async function createPostgresTableRow(
   tableId: string,
   values: Record<string, RowCellValue>,
 ) {
-  const sql = buildPostgresInsertRowSql(tableId, values)
-  return executePostgresDatabaseSql(projectId, databaseId, sql)
+  const { columns } = await fetchPostgresTableColumns(
+    projectId,
+    databaseId,
+    tableId,
+  )
+  const filteredValues = filterPostgresRowCreateValues(values, columns)
+  const sql = buildPostgresInsertRowSql(tableId, filteredValues)
+
+  const runInsert = () => executePostgresDatabaseSql(projectId, databaseId, sql)
+
+  try {
+    return await runInsert()
+  } catch (error) {
+    const syncSql = buildSyncPostgresSerialSequencesSql(tableId, columns)
+    if (!syncSql || !isPostgresDuplicatePrimaryKeyError(error)) {
+      throw error
+    }
+    await executePostgresDatabaseSql(projectId, databaseId, syncSql)
+    return await runInsert()
+  }
 }
 
 export async function deletePostgresTableRow(
@@ -818,6 +857,9 @@ export function useCreatePostgresTableRow(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-columns', 'project', projectId, databaseId, tableId],
       })
     },
   })
@@ -1254,21 +1296,29 @@ export function usePostgresSelectedSchema(
   const [selectedSchema, setSelectedSchemaState] = useState<string | null>(null)
   const initializedDatabaseIdRef = useRef<string | null>(null)
 
+  const accountPrefs = useMemo(() => {
+    const cachedPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+      | Record<string, unknown>
+      | undefined
+    return {
+      ...(account?.prefs ?? {}),
+      ...(cachedPrefs ?? {}),
+    } as Record<string, unknown>
+  }, [account?.prefs, queryClient])
+
   useEffect(() => {
     if (!databaseId) return
     if (initializedDatabaseIdRef.current === databaseId) return
-    if (!account) return
 
     const next = resolvePostgresSelectedSchema({
       schemas: knownSchemas,
-      persisted: parsePostgresSelectedSchema(
-        account.prefs as Record<string, unknown> | undefined,
-        databaseId,
-      ),
+      persisted: parsePostgresSelectedSchema(accountPrefs, databaseId),
     })
+    if (!next) return
+
     setSelectedSchemaState(next)
     initializedDatabaseIdRef.current = databaseId
-  }, [account, databaseId, knownSchemas])
+  }, [accountPrefs, databaseId, knownSchemas])
 
   useEffect(() => {
     initializedDatabaseIdRef.current = null
@@ -1286,10 +1336,13 @@ export function usePostgresSelectedSchema(
       const trimmed = schema.trim()
       if (!trimmed) return
       setSelectedSchemaState(trimmed)
-      if (!databaseId || !account) return
+      if (!databaseId) return
+
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) return
 
       void updateAccountPrefs({
-        ...(account.prefs ?? {}),
+        ...(currentAccount.prefs ?? {}),
         ...buildPostgresSelectedSchemaPrefs(databaseId, trimmed),
       })
         .then((updatedAccount) => {
@@ -1301,10 +1354,205 @@ export function usePostgresSelectedSchema(
           /* keep local selection on prefs write failure */
         })
     },
-    [account, databaseId, queryClient],
+    [databaseId, queryClient],
   )
 
   return { selectedSchema, setSelectedSchema }
+}
+
+export function usePostgresSavedQueriesSort(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const { data: consoleAccount } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
+
+  const accountPrefs = useMemo(() => {
+    const cachedPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+      | Record<string, unknown>
+      | undefined
+    return {
+      ...(account?.prefs ?? {}),
+      ...(consoleAccount?.prefs ?? {}),
+      ...(cachedPrefs ?? {}),
+    } as Record<string, unknown>
+  }, [account?.prefs, consoleAccount?.prefs, queryClient])
+
+  const [sort, setSortState] = useState<PostgresSavedQueriesSort>(
+    POSTGRES_SAVED_QUERIES_DEFAULT_SORT,
+  )
+  const initializedDatabaseIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!databaseId) return
+    if (initializedDatabaseIdRef.current === databaseId) return
+
+    setSortState(parsePostgresSavedQueriesSort(accountPrefs, databaseId))
+    initializedDatabaseIdRef.current = databaseId
+  }, [accountPrefs, databaseId])
+
+  useEffect(() => {
+    initializedDatabaseIdRef.current = null
+  }, [databaseId])
+
+  const setSort = useCallback(
+    (next: PostgresSavedQueriesSort) => {
+      setSortState(next)
+      if (!databaseId) return
+
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) return
+
+      void updateAccountPrefs({
+        ...(currentAccount.prefs ?? {}),
+        ...buildPostgresSavedQueriesSortPrefs(databaseId, next),
+      })
+        .then((updatedAccount) => {
+          syncConsoleAccountAfterMutation(queryClient, {
+            apiResult: updatedAccount,
+          })
+        })
+        .catch(() => {
+          /* keep local selection on prefs write failure */
+        })
+    },
+    [databaseId, queryClient],
+  )
+
+  return { sort, setSort }
+}
+
+export function usePostgresSidebarTablesSort(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const { data: consoleAccount } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
+
+  const accountPrefs = useMemo(() => {
+    const cachedPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+      | Record<string, unknown>
+      | undefined
+    return {
+      ...(account?.prefs ?? {}),
+      ...(consoleAccount?.prefs ?? {}),
+      ...(cachedPrefs ?? {}),
+    } as Record<string, unknown>
+  }, [account?.prefs, consoleAccount?.prefs, queryClient])
+
+  const [sort, setSortState] = useState<PostgresSidebarTablesSort>(
+    POSTGRES_SIDEBAR_TABLES_DEFAULT_SORT,
+  )
+  const initializedDatabaseIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!databaseId) return
+    if (initializedDatabaseIdRef.current === databaseId) return
+
+    setSortState(parsePostgresSidebarTablesSort(accountPrefs, databaseId))
+    initializedDatabaseIdRef.current = databaseId
+  }, [accountPrefs, databaseId])
+
+  useEffect(() => {
+    initializedDatabaseIdRef.current = null
+  }, [databaseId])
+
+  const setSort = useCallback(
+    (next: PostgresSidebarTablesSort) => {
+      setSortState(next)
+      if (!databaseId) return
+
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) return
+
+      void updateAccountPrefs({
+        ...(currentAccount.prefs ?? {}),
+        ...buildPostgresSidebarTablesSortPrefs(databaseId, next),
+      })
+        .then((updatedAccount) => {
+          syncConsoleAccountAfterMutation(queryClient, {
+            apiResult: updatedAccount,
+          })
+        })
+        .catch(() => {
+          /* keep local selection on prefs write failure */
+        })
+    },
+    [databaseId, queryClient],
+  )
+
+  return { sort, setSort }
+}
+
+export function usePostgresSidebarPanel(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const { data: consoleAccount } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
+
+  const accountPrefs = useMemo(() => {
+    const cachedPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+      | Record<string, unknown>
+      | undefined
+    return {
+      ...(account?.prefs ?? {}),
+      ...(consoleAccount?.prefs ?? {}),
+      ...(cachedPrefs ?? {}),
+    } as Record<string, unknown>
+  }, [account?.prefs, consoleAccount?.prefs, queryClient])
+
+  const [panel, setPanelState] = useState<PostgresSidebarPanelPreference>(
+    POSTGRES_SIDEBAR_PANEL_DEFAULT,
+  )
+  const initializedDatabaseIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!databaseId) return
+    if (initializedDatabaseIdRef.current === databaseId) return
+
+    setPanelState(parsePostgresSidebarPanel(accountPrefs, databaseId))
+    initializedDatabaseIdRef.current = databaseId
+  }, [accountPrefs, databaseId])
+
+  useEffect(() => {
+    initializedDatabaseIdRef.current = null
+  }, [databaseId])
+
+  const setPanel = useCallback(
+    (next: PostgresSidebarPanelPreference) => {
+      setPanelState(next)
+      if (!databaseId) return
+
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) return
+
+      void updateAccountPrefs({
+        ...(currentAccount.prefs ?? {}),
+        ...buildPostgresSidebarPanelPrefs(databaseId, next),
+      })
+        .then((updatedAccount) => {
+          syncConsoleAccountAfterMutation(queryClient, {
+            apiResult: updatedAccount,
+          })
+        })
+        .catch(() => {
+          /* keep local selection on prefs write failure */
+        })
+    },
+    [databaseId, queryClient],
+  )
+
+  return { panel, setPanel }
 }
 
 export function usePostgresSavedQueryScope(
@@ -1359,10 +1607,13 @@ export function usePostgresSavedQueryScope(
   const setSavedQueryLevel = useCallback(
     (level: PostgresSavedQueryLevel) => {
       setSavedQueryLevelState(level)
-      if (!databaseId || !account) return
+      if (!databaseId) return
+
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) return
 
       void updateAccountPrefs({
-        ...(account.prefs ?? {}),
+        ...(currentAccount.prefs ?? {}),
         ...buildPostgresSavedQueriesScopePrefs(databaseId, level),
       })
         .then((updatedAccount) => {
@@ -1374,10 +1625,35 @@ export function usePostgresSavedQueryScope(
           /* keep local selection on prefs write failure */
         })
     },
-    [account, databaseId, queryClient],
+    [databaseId, queryClient],
   )
 
   return { savedQueryLevel, setSavedQueryLevel }
+}
+
+function buildNextPostgresSavedQueriesList(
+  current: SavedPostgresQuery[],
+  name: string,
+  sql: string,
+): SavedPostgresQuery[] {
+  const trimmedSql = sql.trim()
+  const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
+  if (!trimmedName) throw new Error('Name is required')
+  if (!trimmedSql) throw new Error('SQL is required')
+
+  const head = current[0]
+  if (head && head.name === trimmedName && head.sql === trimmedSql) {
+    return current
+  }
+
+  if (current.length >= MAX_SAVED_POSTGRES_QUERIES) {
+    throw new Error(`Maximum ${MAX_SAVED_POSTGRES_QUERIES} saved queries`)
+  }
+
+  return [
+    { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
+    ...current,
+  ].slice(0, MAX_SAVED_POSTGRES_QUERIES)
 }
 
 /**
@@ -1389,12 +1665,27 @@ export function usePostgresSavedQueries(
   teamId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const { data: consoleAccount } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
   const { data: team } = useConsoleTeam(teamId)
   const updateTeamPrefs = useUpdateConsoleTeamPrefs(teamId)
 
+  const accountPrefs = useMemo(() => {
+    const cachedPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+      | Record<string, unknown>
+      | undefined
+    return {
+      ...(account?.prefs ?? {}),
+      ...(consoleAccount?.prefs ?? {}),
+      ...(cachedPrefs ?? {}),
+    } as Record<string, unknown>
+  }, [account?.prefs, consoleAccount?.prefs, queryClient])
+
   const userQueries: SavedPostgresQuery[] =
-    databaseId && account?.prefs
-      ? parsePostgresSavedQueries(account.prefs, databaseId)
+    databaseId && accountPrefs
+      ? parsePostgresSavedQueries(accountPrefs, databaseId)
       : []
 
   const teamQueries: SavedPostgresQuery[] =
@@ -1412,24 +1703,57 @@ export function usePostgresSavedQueries(
         throw new Error('Account or database not available')
       }
       const trimmedSql = sql.trim()
-      if (!trimmedSql) throw new Error('SQL is required')
       if (trimmedSql.length > MAX_SAVED_POSTGRES_QUERY_SQL_CHARS) {
         throw new Error('Query is too large to save')
       }
       const current = parsePostgresSavedQueries(currentAccount.prefs, databaseId)
-      const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
-      if (!trimmedName) throw new Error('Name is required')
-      if (current.length >= MAX_SAVED_POSTGRES_QUERIES) {
-        throw new Error(`Maximum ${MAX_SAVED_POSTGRES_QUERIES} saved queries`)
-      }
-      const next: SavedPostgresQuery[] = [
-        { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
-        ...current,
-      ]
+      const next = buildNextPostgresSavedQueriesList(current, name, sql)
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildPostgresSavedQueriesPrefs(databaseId, next),
       })
+    },
+    onMutate: async ({ name, sql }) => {
+      if (!databaseId) return undefined
+
+      const trimmedSql = sql.trim()
+      const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
+      if (!trimmedName || !trimmedSql) return undefined
+
+      await queryClient.cancelQueries({ queryKey: ['account', 'console'] })
+
+      const previousAccounts = queryClient.getQueriesData<Models.User>({
+        queryKey: ['account', 'console'],
+      })
+
+      queryClient.setQueriesData<Models.User>(
+        { queryKey: ['account', 'console'] },
+        (current) => {
+          if (!current) return current
+          const currentList = parsePostgresSavedQueries(current.prefs, databaseId)
+          try {
+            const next = buildNextPostgresSavedQueriesList(currentList, name, sql)
+            return {
+              ...current,
+              prefs: {
+                ...(current.prefs ?? {}),
+                ...buildPostgresSavedQueriesPrefs(databaseId, next),
+              },
+            } as Models.User
+          } catch {
+            return current
+          }
+        },
+      )
+
+      return { previousAccounts }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousAccounts) {
+        for (const [queryKey, data] of context.previousAccounts) {
+          queryClient.setQueryData(queryKey, data)
+        }
+      }
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -1447,7 +1771,6 @@ export function usePostgresSavedQueries(
         throw new Error('Team or database not available')
       }
       const trimmedSql = sql.trim()
-      if (!trimmedSql) throw new Error('SQL is required')
       if (trimmedSql.length > MAX_SAVED_POSTGRES_QUERY_SQL_CHARS) {
         throw new Error('Query is too large to save')
       }
@@ -1455,19 +1778,52 @@ export function usePostgresSavedQueries(
         currentTeam.prefs as Record<string, unknown>,
         databaseId,
       )
-      const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
-      if (!trimmedName) throw new Error('Name is required')
-      if (current.length >= MAX_SAVED_POSTGRES_QUERIES) {
-        throw new Error(`Maximum ${MAX_SAVED_POSTGRES_QUERIES} saved queries`)
-      }
-      const next: SavedPostgresQuery[] = [
-        { id: crypto.randomUUID(), name: trimmedName, sql: trimmedSql },
-        ...current,
-      ]
+      const next = buildNextPostgresSavedQueriesList(current, name, sql)
       await updateTeamPrefs.mutateAsync({
         ...(currentTeam.prefs as Record<string, unknown>),
         ...buildPostgresSavedQueriesPrefs(databaseId, next),
       })
+    },
+    onMutate: async ({ name, sql }) => {
+      if (!databaseId || !teamId) return undefined
+
+      const trimmedSql = sql.trim()
+      const trimmedName = name.trim().slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH)
+      if (!trimmedName || !trimmedSql) return undefined
+
+      const teamQueryKey = ['team', 'console', teamId] as const
+
+      await queryClient.cancelQueries({ queryKey: teamQueryKey })
+
+      const previousTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(teamQueryKey)
+
+      queryClient.setQueryData(teamQueryKey, (current) => {
+        if (!current) return current
+        const currentList = parsePostgresSavedQueries(
+          current.prefs as Record<string, unknown>,
+          databaseId,
+        )
+        try {
+          const next = buildNextPostgresSavedQueriesList(currentList, name, sql)
+          return {
+            ...current,
+            prefs: {
+              ...(current.prefs ?? {}),
+              ...buildPostgresSavedQueriesPrefs(databaseId, next),
+            },
+          }
+        } catch {
+          return current
+        }
+      })
+
+      return { previousTeam }
+    },
+    onError: (_error, _variables, context) => {
+      if (!teamId || context?.previousTeam === undefined) return
+      queryClient.setQueryData(['team', 'console', teamId], context.previousTeam)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
@@ -1521,17 +1877,41 @@ export function usePostgresSavedQueries(
     name: string
     sql: string
     level: PostgresSavedQueryLevel
-  }) => {
+  }): Promise<SavedPostgresQuery | undefined> => {
+    const trimmedSql = args.sql.trim()
+    const trimmedName = args.name.trim()
+
     if (args.level === 'team' && teamId) {
-      return addTeamMutation.mutateAsync({
+      await addTeamMutation.mutateAsync({
         name: args.name,
         sql: args.sql,
       })
+      const team = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!team || !databaseId) return undefined
+      const queries = parsePostgresSavedQueries(
+        team.prefs as Record<string, unknown>,
+        databaseId,
+      )
+      return (
+        queries.find(
+          (query) => query.name === trimmedName && query.sql === trimmedSql,
+        ) ?? queries[0]
+      )
     }
-    return addUserMutation.mutateAsync({
+
+    const updatedAccount = await addUserMutation.mutateAsync({
       name: args.name,
       sql: args.sql,
     })
+    if (!databaseId) return undefined
+    const queries = parsePostgresSavedQueries(updatedAccount.prefs, databaseId)
+    return (
+      queries.find(
+        (query) => query.name === trimmedName && query.sql === trimmedSql,
+      ) ?? queries[0]
+    )
   }
 
   const deleteSavedQuery = async (
@@ -1556,6 +1936,102 @@ export function usePostgresSavedQueries(
 }
 
 const POSTGRES_QUERY_HISTORY_PERSIST_DEBOUNCE_MS = 400
+const POSTGRES_SQL_EDITOR_STATE_PERSIST_DEBOUNCE_MS = 400
+
+/**
+ * Persisted PostgreSQL SQL editor tabs for a database
+ * (`console.postgresSqlEditorState.<databaseId>`).
+ */
+export function usePostgresSqlEditorPersistence(
+  databaseId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const { data: consoleAccount } = useQuery(
+    consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
+  )
+
+  const accountPrefs = useMemo(() => {
+    const cachedPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+      | Record<string, unknown>
+      | undefined
+    return {
+      ...(account?.prefs ?? {}),
+      ...(consoleAccount?.prefs ?? {}),
+      ...(cachedPrefs ?? {}),
+    } as Record<string, unknown>
+  }, [account?.prefs, consoleAccount?.prefs, queryClient])
+
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const parseInitialEditorState = useCallback((): PersistedPostgresSqlEditorState | null => {
+    if (!databaseId) return null
+    return parsePostgresSqlEditorState(accountPrefs, databaseId)
+  }, [accountPrefs, databaseId])
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: PersistedPostgresSqlEditorState) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount || !databaseId) {
+        throw new Error('Account or database not available')
+      }
+      return await updateAccountPrefs(
+        mergePostgresSqlEditorStateIntoPrefs(
+          (currentAccount.prefs ?? {}) as UserPrefs,
+          databaseId,
+          value,
+        ),
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistEditorTabState = useCallback(
+    (value: PersistedPostgresSqlEditorState) => {
+      if (!databaseId) return
+
+      const patch = mergePostgresSqlEditorStateIntoPrefs(
+        (getConsoleAccountFromCache(queryClient)?.prefs ?? {}) as UserPrefs,
+        databaseId,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, POSTGRES_SQL_EDITOR_STATE_PERSIST_DEBOUNCE_MS)
+    },
+    [databaseId, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { parseInitialEditorState, persistEditorTabState }
+}
 
 /**
  * Persisted PostgreSQL query history for a database

@@ -185,6 +185,7 @@ export function SqlWorkbench({
           className="min-h-0 flex-1"
           variant="studio"
           showRowNumbers
+          enableColumnResize
           columns={resultColumns}
           rows={resultRows}
           getRowKey={(_, index) => `sql-result-${index}`}

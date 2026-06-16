@@ -202,11 +202,21 @@ export function parsePostgresSavedQueries(
 ): SavedPostgresQuery[] {
   if (!prefs || !databaseId) return []
   const key = getPostgresSavedQueriesKey(databaseId)
-  if (typeof prefs[key] !== 'string') return []
-  try {
-    const raw = JSON.parse(prefs[key] as string)
-    if (!Array.isArray(raw)) return []
-    return raw
+  const stored = prefs[key]
+  let raw: unknown
+  if (typeof stored === 'string') {
+    try {
+      raw = JSON.parse(stored)
+    } catch {
+      return []
+    }
+  } else if (Array.isArray(stored)) {
+    raw = stored
+  } else {
+    return []
+  }
+  if (!Array.isArray(raw)) return []
+  return raw
       .filter(
         (item): item is SavedPostgresQuery =>
           item != null &&
@@ -227,9 +237,6 @@ export function parsePostgresSavedQueries(
         }
       })
       .slice(0, MAX_SAVED_POSTGRES_QUERIES)
-  } catch {
-    return []
-  }
 }
 
 export function buildPostgresSavedQueriesPrefs(
@@ -391,6 +398,376 @@ export function resolvePostgresSelectedSchema(args: {
   if (schemas.length === 0) return null
   if (schemas.includes('public')) return 'public'
   return schemas[0] ?? null
+}
+
+// ---------------------------------------------------------------------------
+// Databases: PostgreSQL saved queries list sort (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for saved-queries sidebar sort order.
+ * Full key: `console.postgresSavedQueriesSort.<databaseId>`
+ * Value: PostgresSavedQueriesSort string (e.g. `name_asc`, `saved_desc`).
+ */
+export const USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_SORT_PREFIX =
+  'console.postgresSavedQueriesSort'
+
+export type PostgresSavedQueriesSort =
+  | 'saved_desc'
+  | 'saved_asc'
+  | 'name_asc'
+  | 'name_desc'
+
+export const POSTGRES_SAVED_QUERIES_DEFAULT_SORT: PostgresSavedQueriesSort =
+  'saved_desc'
+
+const POSTGRES_SAVED_QUERIES_SORT_VALUES: PostgresSavedQueriesSort[] = [
+  'saved_desc',
+  'saved_asc',
+  'name_asc',
+  'name_desc',
+]
+
+export const POSTGRES_SAVED_QUERIES_SORT_OPTIONS: {
+  value: PostgresSavedQueriesSort
+  label: string
+}[] = [
+  { value: 'saved_desc', label: 'Newest first' },
+  { value: 'saved_asc', label: 'Oldest first' },
+  { value: 'name_asc', label: 'Name (A to Z)' },
+  { value: 'name_desc', label: 'Name (Z to A)' },
+]
+
+export function getPostgresSavedQueriesSortKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_SORT_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSavedQueriesSort(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PostgresSavedQueriesSort {
+  if (!prefs || !databaseId) return POSTGRES_SAVED_QUERIES_DEFAULT_SORT
+  const key = getPostgresSavedQueriesSortKey(databaseId)
+  const value = prefs[key]
+  if (
+    typeof value === 'string' &&
+    POSTGRES_SAVED_QUERIES_SORT_VALUES.includes(
+      value as PostgresSavedQueriesSort,
+    )
+  ) {
+    return value as PostgresSavedQueriesSort
+  }
+  return POSTGRES_SAVED_QUERIES_DEFAULT_SORT
+}
+
+export function buildPostgresSavedQueriesSortPrefs(
+  databaseId: string,
+  sort: PostgresSavedQueriesSort,
+): UserPrefs {
+  return {
+    [getPostgresSavedQueriesSortKey(databaseId)]: sort,
+  }
+}
+
+export function sortSavedPostgresQueries(
+  queries: SavedPostgresQuery[],
+  sort: PostgresSavedQueriesSort,
+): SavedPostgresQuery[] {
+  switch (sort) {
+    case 'name_asc':
+      return [...queries].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+      )
+    case 'name_desc':
+      return [...queries].sort((a, b) =>
+        b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }),
+      )
+    case 'saved_asc':
+      return [...queries].reverse()
+    case 'saved_desc':
+    default:
+      return queries
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: PostgreSQL Data sidebar table list sort (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for table list sort in the Data sidebar panel.
+ * Full key: `console.postgresSidebarTablesSort.<databaseId>`
+ * Value: PostgresSidebarTablesSort string.
+ */
+export const USER_PREFS_KEY_POSTGRES_SIDEBAR_TABLES_SORT_PREFIX =
+  'console.postgresSidebarTablesSort'
+
+export type PostgresSidebarTablesSort =
+  | 'list_desc'
+  | 'list_asc'
+  | 'name_asc'
+  | 'name_desc'
+
+export const POSTGRES_SIDEBAR_TABLES_DEFAULT_SORT: PostgresSidebarTablesSort =
+  'name_asc'
+
+const POSTGRES_SIDEBAR_TABLES_SORT_VALUES: PostgresSidebarTablesSort[] = [
+  'list_desc',
+  'list_asc',
+  'name_asc',
+  'name_desc',
+]
+
+export const POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS: {
+  value: PostgresSidebarTablesSort
+  label: string
+}[] = [
+  { value: 'name_asc', label: 'Name (A to Z)' },
+  { value: 'name_desc', label: 'Name (Z to A)' },
+  { value: 'list_desc', label: 'Default order' },
+  { value: 'list_asc', label: 'Reverse order' },
+]
+
+export function getPostgresSidebarTablesSortKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SIDEBAR_TABLES_SORT_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSidebarTablesSort(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PostgresSidebarTablesSort {
+  if (!prefs || !databaseId) return POSTGRES_SIDEBAR_TABLES_DEFAULT_SORT
+  const key = getPostgresSidebarTablesSortKey(databaseId)
+  const value = prefs[key]
+  if (
+    typeof value === 'string' &&
+    POSTGRES_SIDEBAR_TABLES_SORT_VALUES.includes(
+      value as PostgresSidebarTablesSort,
+    )
+  ) {
+    return value as PostgresSidebarTablesSort
+  }
+  return POSTGRES_SIDEBAR_TABLES_DEFAULT_SORT
+}
+
+export function buildPostgresSidebarTablesSortPrefs(
+  databaseId: string,
+  sort: PostgresSidebarTablesSort,
+): UserPrefs {
+  return {
+    [getPostgresSidebarTablesSortKey(databaseId)]: sort,
+  }
+}
+
+export function sortPostgresSidebarTableRows<T extends { table_name: string }>(
+  tables: T[],
+  sort: PostgresSidebarTablesSort,
+): T[] {
+  switch (sort) {
+    case 'name_asc':
+      return [...tables].sort((a, b) =>
+        a.table_name.localeCompare(b.table_name, undefined, {
+          sensitivity: 'base',
+        }),
+      )
+    case 'name_desc':
+      return [...tables].sort((a, b) =>
+        b.table_name.localeCompare(a.table_name, undefined, {
+          sensitivity: 'base',
+        }),
+      )
+    case 'list_asc':
+      return [...tables].reverse()
+    case 'list_desc':
+    default:
+      return tables
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: PostgreSQL sidebar panel (Data / Queries / History)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for the sidebar panel toggle (Data / Queries / History).
+ * Full key: `console.postgresSidebarPanel.<databaseId>`
+ * Value: `schemas`, `queries`, or `history`.
+ */
+export const USER_PREFS_KEY_POSTGRES_SIDEBAR_PANEL_PREFIX =
+  'console.postgresSidebarPanel'
+
+export type PostgresSidebarPanelPreference =
+  | 'schemas'
+  | 'queries'
+  | 'history'
+
+export const POSTGRES_SIDEBAR_PANEL_DEFAULT: PostgresSidebarPanelPreference =
+  'schemas'
+
+const POSTGRES_SIDEBAR_PANEL_VALUES: PostgresSidebarPanelPreference[] = [
+  'schemas',
+  'queries',
+  'history',
+]
+
+export function getPostgresSidebarPanelKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SIDEBAR_PANEL_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSidebarPanel(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PostgresSidebarPanelPreference {
+  if (!prefs || !databaseId) return POSTGRES_SIDEBAR_PANEL_DEFAULT
+  const key = getPostgresSidebarPanelKey(databaseId)
+  const value = prefs[key]
+  if (
+    typeof value === 'string' &&
+    POSTGRES_SIDEBAR_PANEL_VALUES.includes(
+      value as PostgresSidebarPanelPreference,
+    )
+  ) {
+    return value as PostgresSidebarPanelPreference
+  }
+  return POSTGRES_SIDEBAR_PANEL_DEFAULT
+}
+
+export function buildPostgresSidebarPanelPrefs(
+  databaseId: string,
+  panel: PostgresSidebarPanelPreference,
+): UserPrefs {
+  return {
+    [getPostgresSidebarPanelKey(databaseId)]: panel,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Databases: PostgreSQL SQL editor tabs (account prefs, per database)
+// ---------------------------------------------------------------------------
+
+/**
+ * Preference key for SQL editor open tabs and active tab.
+ * Full key: `console.postgresSqlEditorState.<databaseId>`
+ * Value: JSON string of PersistedPostgresSqlEditorState.
+ */
+export const USER_PREFS_KEY_POSTGRES_SQL_EDITOR_STATE_PREFIX =
+  'console.postgresSqlEditorState'
+
+export const MAX_POSTGRES_SQL_EDITOR_TABS = 20
+export const MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH = 64
+
+export interface PersistedPostgresSqlEditorTab {
+  id: string
+  title: string
+  sql: string
+  tableId?: string
+}
+
+export interface PersistedPostgresSqlEditorState {
+  tabs: PersistedPostgresSqlEditorTab[]
+  activeTabId: string
+}
+
+export function getPostgresSqlEditorStateKey(databaseId: string): string {
+  return `${USER_PREFS_KEY_POSTGRES_SQL_EDITOR_STATE_PREFIX}.${databaseId}`
+}
+
+export function parsePostgresSqlEditorState(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+): PersistedPostgresSqlEditorState | null {
+  if (!prefs || !databaseId) return null
+  const key = getPostgresSqlEditorStateKey(databaseId)
+  const stored = prefs[key]
+  let raw: unknown
+  if (typeof stored === 'string') {
+    try {
+      raw = JSON.parse(stored)
+    } catch {
+      return null
+    }
+  } else if (stored != null && typeof stored === 'object') {
+    raw = stored
+  } else {
+    return null
+  }
+
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  if (!Array.isArray(record.tabs)) return null
+
+  const tabs = record.tabs
+    .filter(
+      (item): item is PersistedPostgresSqlEditorTab =>
+        item != null &&
+        typeof item === 'object' &&
+        typeof (item as PersistedPostgresSqlEditorTab).id === 'string' &&
+        typeof (item as PersistedPostgresSqlEditorTab).title === 'string' &&
+        typeof (item as PersistedPostgresSqlEditorTab).sql === 'string',
+    )
+    .map((item) => {
+      const tab = item as PersistedPostgresSqlEditorTab
+      const tableId =
+        typeof tab.tableId === 'string' && tab.tableId.trim()
+          ? tab.tableId.trim()
+          : undefined
+      return {
+        id: tab.id,
+        title: String(tab.title).slice(
+          0,
+          MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH,
+        ),
+        sql: String(tab.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
+        ...(tableId ? { tableId } : {}),
+      }
+    })
+    .slice(0, MAX_POSTGRES_SQL_EDITOR_TABS)
+
+  if (tabs.length === 0) return null
+
+  const activeTabId =
+    typeof record.activeTabId === 'string' &&
+    tabs.some((tab) => tab.id === record.activeTabId)
+      ? record.activeTabId
+      : tabs[0].id
+
+  return { tabs, activeTabId }
+}
+
+export function buildPostgresSqlEditorStatePrefs(
+  databaseId: string,
+  state: PersistedPostgresSqlEditorState,
+): UserPrefs {
+  const key = getPostgresSqlEditorStateKey(databaseId)
+  const tabs = state.tabs
+    .slice(0, MAX_POSTGRES_SQL_EDITOR_TABS)
+    .map((tab) => ({
+      id: tab.id,
+      title: String(tab.title).slice(
+        0,
+        MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH,
+      ),
+      sql: String(tab.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
+      ...(tab.tableId ? { tableId: tab.tableId } : {}),
+    }))
+  const activeTabId = tabs.some((tab) => tab.id === state.activeTabId)
+    ? state.activeTabId
+    : tabs[0]?.id ?? state.activeTabId
+
+  return {
+    [key]: JSON.stringify({ tabs, activeTabId }),
+  }
+}
+
+export function mergePostgresSqlEditorStateIntoPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  state: PersistedPostgresSqlEditorState,
+): UserPrefs {
+  return {
+    ...prefs,
+    ...buildPostgresSqlEditorStatePrefs(databaseId, state),
+  }
 }
 
 export function resolvePostgresSavedQueriesScope(args: {

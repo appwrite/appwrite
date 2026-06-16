@@ -6,6 +6,7 @@ import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
 import { quotePostgresStringLiteral } from '@/lib/postgres-sql'
 import { isPostgresPrimaryKeyColumn } from '@/lib/postgres-sql'
 import type { RowCellValue } from '@/lib/database-row-inline-edits'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 export function formatPostgresSqlLiteral(value: RowCellValue): string {
   if (value === null || value === undefined) return 'NULL'
@@ -170,6 +171,33 @@ export function buildPostgresUpdateRowSql(
   return `UPDATE ${qualified}\nSET ${assignments.join(', ')}\nWHERE ${whereClause}`
 }
 
+export function buildSyncPostgresSerialSequencesSql(
+  tableId: string,
+  columns: PostgresTableColumnRow[],
+): string | null {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const qualified = qualifiedTable(schema, table)
+  const statements: string[] = []
+
+  for (const column of columns) {
+    const sequenceName = column.serial_sequence?.trim()
+    if (!sequenceName) continue
+    const columnName = quotePostgresIdentifier(column.column_name)
+    const sequenceLiteral = quotePostgresStringLiteral(sequenceName)
+    statements.push(
+      `SELECT setval(${sequenceLiteral}::regclass, COALESCE((SELECT MAX(${columnName}) FROM ${qualified}), 1), true)`,
+    )
+  }
+
+  if (statements.length === 0) return null
+  return statements.join(';\n')
+}
+
+export function isPostgresDuplicatePrimaryKeyError(error: unknown): boolean {
+  const normalized = (getErrorMessage(error) ?? String(error)).toLowerCase()
+  return normalized.includes('duplicate key') && normalized.includes('pkey')
+}
+
 export function buildPostgresInsertRowSql(
   tableId: string,
   values: Record<string, RowCellValue>,
@@ -181,7 +209,7 @@ export function buildPostgresInsertRowSql(
   )
 
   if (entries.length === 0) {
-    throw new Error('No values to insert.')
+    return `INSERT INTO ${qualified} DEFAULT VALUES`
   }
 
   const columnNames = entries.map(([column]) => quotePostgresIdentifier(column))

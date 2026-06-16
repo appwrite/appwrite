@@ -5,6 +5,7 @@ import {
   postgresDatabaseCredentialsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
+import { PostgresSqlWorkbench } from '@/components/pages/projects/$projectId/databases/postgres/Workspace'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -39,5 +40,7 @@ export const Route = createFileRoute(
 })
 
 function PostgresSqlEditorPage() {
-  return null
+  const { databaseId } = Route.useParams()
+
+  return <PostgresSqlWorkbench databaseId={databaseId} databaseTab="sql" />
 }

@@ -14,7 +14,7 @@ import { prefetchPostgresTableLayoutData } from '@/components/pages/projects/$pr
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
-  parseListSearch,
+  queryParamToMap,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -34,10 +34,13 @@ async function prefetchPostgresRowsRouteData(
     tableId,
   )
 
-  const { search, page, limit, filterMap } = parseListSearch(routeSearch, {
-    page: DEFAULT_PAGE,
-    limit: ROWS_DEFAULT_PAGE_SIZE,
-  })
+  const search =
+    typeof routeSearch?.search === 'string'
+      ? routeSearch.search.trim() || undefined
+      : undefined
+  const filterMap = queryParamToMap(
+    typeof routeSearch?.query === 'string' ? routeSearch.query : null,
+  )
   const filterKeys =
     filterMap.size > 0 ? Array.from(filterMap.keys()) : undefined
   const hasFilters = filterMap.size > 0
@@ -57,10 +60,10 @@ async function prefetchPostgresRowsRouteData(
               projectId,
               databaseId,
               normalizedTableId,
-              page - 1,
-              limit,
+              DEFAULT_PAGE - 1,
+              ROWS_DEFAULT_PAGE_SIZE,
               {
-                search: search?.trim() || undefined,
+                search,
                 filterKeys,
               },
             ),

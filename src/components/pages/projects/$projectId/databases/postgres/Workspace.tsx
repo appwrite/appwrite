@@ -77,6 +77,7 @@ export function PostgresSqlWorkbenchContent({
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const { account } = useAuth()
+  const accountPrefs = account as { prefs?: Record<string, unknown> } | undefined
   const { project } = useProject(projectId)
   const teamId = project?.teamId ?? null
   const { features } = useConsoleProfile()
@@ -207,6 +208,7 @@ export function PostgresSqlWorkbenchContent({
     <ReadOnlyDataSpreadsheet
       variant="studio"
       showRowNumbers
+      enableColumnResize
       rowNumberOffset={(page - 1) * pageSize}
       columns={tableColumns}
       rows={rows}
@@ -263,7 +265,7 @@ export function PostgresSqlWorkbenchContent({
         isRunning={executeSql.isPending}
         error={editorActiveTab.error ?? executeSql.error}
         result={editorActiveTab.result}
-        account={account}
+        account={accountPrefs}
         teamId={teamId}
         canSaveTeam={canSaveTeam}
       >
