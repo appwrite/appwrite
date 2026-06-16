@@ -24,6 +24,7 @@ class Mails extends Action
 
     protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
 
+
     public static function getName(): string
     {
         return 'mails';
@@ -64,7 +65,6 @@ class Mails extends Action
     public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-
         $payload = $message->getPayload();
 
         if (empty($payload)) {
