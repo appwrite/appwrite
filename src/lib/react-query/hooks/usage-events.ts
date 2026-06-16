@@ -2,7 +2,8 @@
  * React Query hooks for project usage events (overview dashboard).
  */
 
-import { queryOptions, useQuery, keepPreviousData } from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueries, keepPreviousData } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { endOfDay, startOfDay, subDays } from 'date-fns'
 import {
@@ -171,6 +172,54 @@ export function useProjectRequestsTopEndpoints(
   return useQuery(
     requestsTopEndpointsQueryOptions(projectId, dateRange, enabled),
   )
+}
+
+/** Last 30 days — matches project overview request charts. */
+export function getProjectListRequestsChartDateRange(): DateRange {
+  return {
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  }
+}
+
+export type ProjectListRequestsUsageEntry = {
+  isLoading: boolean
+  isError: boolean
+  data: ProjectRequestsChartOverview | undefined
+}
+
+/**
+ * Fetches request usage chart data for many projects in parallel (org project cards).
+ */
+export function useProjectListRequestsUsage(
+  projectIds: string[],
+  enabled: boolean,
+): Map<string, ProjectListRequestsUsageEntry> {
+  const dateRange = getProjectListRequestsChartDateRange()
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...requestsChartOverviewQueryOptions(projectId, dateRange),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListRequestsUsageEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        data: query.data,
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
 }
 
 /** @deprecated Use useProjectBandwidthChartOverview */

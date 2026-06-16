@@ -67,6 +67,7 @@ import {
   useRemoveTeamMember,
   syncConsoleAccountAfterMutation,
   mapProjectToListItem,
+  useProjectListRequestsUsage,
 } from '@/lib/react-query/hooks'
 import {
   parsePinnedProjectIds,
@@ -102,6 +103,7 @@ import {
   ProjectListCardFooter,
   ProjectListCardMain,
 } from './_components/ProjectListCardContent'
+import { ProjectListCardRequestsChart } from './_components/ProjectListRequestsChart'
 import { ProjectsListTable } from './_components/ProjectsListTable'
 import { LightningCollectorGame } from './_components/LightningCollectorGame'
 import { InitOrgPromoBanner } from './_components/InitOrgPromoBanner'
@@ -1623,6 +1625,26 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ? projectsByTeam
       : filteredProjectsByTeam
 
+  const showProjectUsageCharts =
+    features.usageStats && projectsViewMode === 'grid'
+
+  const gridProjectIds = useMemo(() => {
+    if (!showProjectUsageCharts) return []
+    return [
+      ...new Set([
+        ...pinnedProjects.map((project) => project.$id),
+        ...displayedProjectsByTeam.flatMap(({ projects }) =>
+          projects.map((project) => project.$id),
+        ),
+      ]),
+    ]
+  }, [showProjectUsageCharts, pinnedProjects, displayedProjectsByTeam])
+
+  const projectRequestsUsageById = useProjectListRequestsUsage(
+    gridProjectIds,
+    showProjectUsageCharts,
+  )
+
   const prefetchOrganizationSwitchData = useCallback(
     async (nextOrgId: string) => {
       const [nextTeam] = await Promise.all([
@@ -2535,6 +2557,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 }
                                               />
                                             </Link>
+                                            {showProjectUsageCharts ? (
+                                              <ProjectListCardRequestsChart
+                                                projectId={project.$id}
+                                                usageByProjectId={
+                                                  projectRequestsUsageById
+                                                }
+                                              />
+                                            ) : null}
                                             <ProjectListCardFooter
                                               project={project}
                                             />
@@ -2714,6 +2744,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   }
                                                 />
                                               </Link>
+                                              {showProjectUsageCharts ? (
+                                                <ProjectListCardRequestsChart
+                                                  projectId={project.$id}
+                                                  usageByProjectId={
+                                                    projectRequestsUsageById
+                                                  }
+                                                />
+                                              ) : null}
                                               <ProjectListCardFooter
                                                 project={project}
                                               />

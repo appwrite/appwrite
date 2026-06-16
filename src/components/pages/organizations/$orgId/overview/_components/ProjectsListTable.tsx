@@ -17,9 +17,6 @@ import {
   type ProjectListItem,
 } from '@/lib/react-query/hooks/projects'
 import { ProjectContextMenu } from './ProjectContextMenu'
-import {
-  getProjectListEndpointDisplay,
-} from './ProjectListIdentities'
 import { ProjectListName } from './ProjectListName'
 
 type ProjectsListTableProps = {
@@ -105,19 +102,19 @@ export function ProjectsListTable({
                   <TableCell className="max-w-0 px-4 py-3">
                     <CopyableId
                       id={endpoint}
-                      displayText={getProjectListEndpointDisplay(endpoint)}
+                      copyLabel="Copy endpoint"
                       size="md"
                       copyToastLabel="Endpoint"
-                      className="w-fit max-w-full"
+                      className="w-fit"
                     />
                   </TableCell>
                   <TableCell className="max-w-0 px-4 py-3">
                     <CopyableId
                       id={project.$id}
+                      copyLabel="Copy ID"
                       size="md"
-                      maxWidth={140}
-                      copyToastLabel="Project ID"
-                      className="w-fit max-w-full"
+                      copyToastLabel="ID"
+                      className="w-fit"
                     />
                   </TableCell>
                   <TableCell className="px-4 py-3 text-right">

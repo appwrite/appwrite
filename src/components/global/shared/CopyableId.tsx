@@ -26,6 +26,8 @@ interface CopyableIdProps {
   showCopyOnHover?: boolean
   /** Shows a toast on copy, e.g. "Endpoint" → "Endpoint copied". */
   copyToastLabel?: string
+  /** CTA label shown instead of the value (full value available via title tooltip). */
+  copyLabel?: string
 }
 
 const sizeStyles: Record<
@@ -59,11 +61,16 @@ export function CopyableId({
   constrainToContainer = false,
   showCopyOnHover,
   copyToastLabel,
+  copyLabel,
 }: CopyableIdProps) {
   const [copied, setCopied] = useState(false)
-  const shown = displayText ?? id
+  const shown = copyLabel ?? displayText ?? id
   const copyOnHover = showCopyOnHover ?? variant === 'inline'
-  const nativeTitle = displayText && displayText !== id ? id : undefined
+  const nativeTitle = copyLabel
+    ? id
+    : displayText && displayText !== id
+      ? id
+      : undefined
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -77,7 +84,7 @@ export function CopyableId({
   }
 
   const styles = sizeStyles[size]
-  const shouldTruncate = !/\s/.test(shown)
+  const shouldTruncate = !copyLabel && !/\s/.test(shown)
 
   return (
     <button
@@ -85,7 +92,8 @@ export function CopyableId({
       onClick={handleCopy}
       title={nativeTitle}
       className={cn(
-        'group/copyable inline-flex items-center cursor-pointer font-mono transition-colors',
+        'group/copyable inline-flex items-center cursor-pointer transition-colors',
+        copyLabel ? 'font-medium' : 'font-mono',
         variant === 'badge'
           ? 'gap-1.5 rounded bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
           : 'gap-1.5 rounded-md border border-transparent bg-transparent text-foreground transition-[color,background-color,border-color] hover:border-border hover:bg-muted/40 hover:text-foreground',

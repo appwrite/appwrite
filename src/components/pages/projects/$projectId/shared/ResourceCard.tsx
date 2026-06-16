@@ -6,9 +6,15 @@ import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { getStatusColor, type StatusType } from '@/lib/utils/status-badge'
 
+/** Full-bleed section divider for p-4 resource cards (chart blocks, metadata footers). */
+export const RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME =
+  '-mx-4 mt-2 min-w-0 border-t border-border px-4 pt-2.5'
+
 /** Full-bleed footer for p-4 resource cards. Pair with `pb-0` on the padded card body so bottom inset comes from the footer (avoids clipping with overflow-hidden shells). */
-export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME =
-  '-mx-4 mt-2 min-w-0 border-t border-border px-4 pt-2.5 pb-4'
+export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME = cn(
+  RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME,
+  'pb-4',
+)
 
 /**
  * Base shell for resource grid cards (matches org project list cards).
