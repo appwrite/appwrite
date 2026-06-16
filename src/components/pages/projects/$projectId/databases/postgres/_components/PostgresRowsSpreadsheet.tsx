@@ -155,7 +155,7 @@ export function PostgresRowsSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative inline-block min-w-full align-top"
+            className="relative inline-block min-w-full align-top overflow-x-clip"
           >
             <table
               className="w-full table-fixed border-collapse"

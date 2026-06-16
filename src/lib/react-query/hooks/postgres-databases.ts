@@ -21,11 +21,11 @@ import {
   buildPostgresListSchemasSql,
   buildPostgresListTablesCountSql,
   buildPostgresListTablesSql,
+  buildPostgresTableAutocompleteColumnsSql,
+  buildPostgresTableColumnsForRowsSql,
   buildPostgresTableColumnsSql,
   buildPostgresTableIndexesSql,
   buildPostgresTableInfoSql,
-  POSTGRES_LIST_COLUMNS_SQL,
-  POSTGRES_LIST_SCHEMAS_SQL,
   POSTGRES_SIDEBAR_LIST_PAGE_SIZE,
   type PostgresColumnRow,
   type PostgresListSchemasOptions,
@@ -37,6 +37,7 @@ import {
   type PostgresTableRow,
   sortPostgresTableColumns,
   sortPostgresTableIndexes,
+  postgresRelationSupportsRowCtid,
 } from '@/lib/postgres-sql'
 import { parsePostgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 import {
@@ -68,6 +69,7 @@ import {
   buildPostgresSidebarPanelPrefs,
   buildPostgresSidebarTablesSortPrefs,
   buildPostgresSqlEditorStatePrefs,
+  getPostgresSqlEditorStateKey,
   MAX_SAVED_POSTGRES_QUERIES,
   MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
   MAX_SAVED_POSTGRES_QUERY_SQL_CHARS,
@@ -206,40 +208,17 @@ export async function fetchPostgresSchemasPage(
   }
 }
 
-export async function fetchPostgresSchemas(projectId: string, databaseId: string) {
-  const execution = await executePostgresDatabaseSql(
-    projectId,
-    databaseId,
-    POSTGRES_LIST_SCHEMAS_SQL,
-  )
-  const rows = executionResultRows<PostgresSchemaRow>(execution)
-  return {
-    schemas: rows.map((row) => row.schema_name).filter(Boolean),
-    total: rows.length,
-  }
-}
-
-function normalizePostgresTablesListOptions(
-  options?: PostgresListTablesOptions,
-): PostgresListTablesOptions | undefined {
-  if (!options) return undefined
-  const schema = options.schema?.trim() || undefined
-  const search = options.search?.trim() || undefined
-  if (!schema && !search) return undefined
-  return { schema, search }
-}
-
 export async function fetchPostgresTablesPage(
   projectId: string,
   databaseId: string,
   options: {
-    schema: string
+    schema?: string
     search?: string
     page?: number
     limit?: number
   },
 ) {
-  const schema = options.schema.trim()
+  const schema = options.schema?.trim() || undefined
   const limit = options.limit ?? POSTGRES_SIDEBAR_LIST_PAGE_SIZE
   const page = options.page ?? 0
   const offset = page * limit
@@ -271,37 +250,31 @@ export async function fetchPostgresTablesPage(
   }
 }
 
-export async function fetchPostgresTables(
+export async function fetchFirstPostgresTable(
   projectId: string,
   databaseId: string,
-  options?: PostgresListTablesOptions,
-) {
-  const normalized = normalizePostgresTablesListOptions(options)
-  const execution = await executePostgresDatabaseSql(
-    projectId,
-    databaseId,
-    buildPostgresListTablesSql(normalized),
-  )
-  const rows = executionResultRows<PostgresTableRow>(execution)
-  return {
-    tables: rows.filter((row) => row.table_schema && row.table_name),
-    total: rows.length,
-  }
+): Promise<PostgresTableRow | null> {
+  const page = await fetchPostgresTablesPage(projectId, databaseId, {
+    limit: 1,
+    page: 0,
+  })
+  return page.tables[0] ?? null
 }
 
-export async function fetchPostgresColumns(projectId: string, databaseId: string) {
+export async function fetchPostgresTableAutocompleteColumns(
+  projectId: string,
+  databaseId: string,
+  schema: string,
+  table: string,
+): Promise<PostgresColumnRow[]> {
   const execution = await executePostgresDatabaseSql(
     projectId,
     databaseId,
-    POSTGRES_LIST_COLUMNS_SQL,
+    buildPostgresTableAutocompleteColumnsSql(schema, table),
   )
-  const rows = executionResultRows<PostgresColumnRow>(execution)
-  return {
-    columns: rows.filter(
-      (row) => row.table_schema && row.table_name && row.column_name,
-    ),
-    total: rows.length,
-  }
+  return executionResultRows<PostgresColumnRow>(execution).filter(
+    (row) => row.table_schema && row.table_name && row.column_name,
+  )
 }
 
 export async function fetchPostgresTableColumns(
@@ -322,6 +295,41 @@ export async function fetchPostgresTableColumns(
   return {
     columns,
     total: columns.length,
+  }
+}
+
+export type PostgresTableRowColumnsResult = {
+  columns: PostgresTableColumnRow[]
+  total: number
+  exists: boolean
+  supportsRowCtid: boolean
+}
+
+type PostgresTableRowColumnSqlRow = PostgresTableColumnRow & {
+  rel_kind?: string | null
+}
+
+export async function fetchPostgresTableRowColumns(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+): Promise<PostgresTableRowColumnsResult> {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTableColumnsForRowsSql(schema, table),
+  )
+  const rows = executionResultRows<PostgresTableRowColumnSqlRow>(execution)
+  const relKind = rows[0]?.rel_kind ?? null
+  const columns = sortPostgresTableColumns(
+    rows.filter((row) => row.column_name),
+  )
+  return {
+    columns,
+    total: columns.length,
+    exists: relKind != null,
+    supportsRowCtid: postgresRelationSupportsRowCtid(relKind),
   }
 }
 
@@ -368,17 +376,34 @@ export type PostgresTableRowsListParams = {
   orderDirection?: 'asc' | 'desc'
 }
 
-async function resolvePostgresRowsWhereClause(
+type FetchPostgresTableRowsOptions = {
+  tableColumns?: PostgresTableColumnRow[]
+  supportsRowCtid?: boolean
+}
+
+async function resolvePostgresTableColumnsForRows(
   projectId: string,
   databaseId: string,
   tableId: string,
-  params?: PostgresTableRowsListParams,
-): Promise<string | undefined> {
-  const columns = await fetchPostgresTableColumns(projectId, databaseId, tableId)
+  tableColumns?: PostgresTableColumnRow[],
+) {
+  if (tableColumns) {
+    return {
+      columns: tableColumns,
+      total: tableColumns.length,
+    }
+  }
+  return fetchPostgresTableRowColumns(projectId, databaseId, tableId)
+}
+
+function buildPostgresRowsWhereClause(
+  params: PostgresTableRowsListParams | undefined,
+  columns: PostgresTableColumnRow[],
+): string | undefined {
   return buildPostgresRowsListWhereClause(
     params?.filterKeys,
     params?.search,
-    columns.columns,
+    columns,
   )
 }
 
@@ -386,6 +411,7 @@ function buildPostgresRowsOrderClause(
   columns: PostgresTableColumnRow[],
   sortBy?: string,
   orderDirection: 'asc' | 'desc' = 'asc',
+  supportsRowCtid = true,
 ): string | undefined {
   const direction = orderDirection === 'desc' ? 'DESC' : 'ASC'
   const sortColumn = sortBy?.trim()
@@ -401,7 +427,16 @@ function buildPostgresRowsOrderClause(
       .map((column) => `${quotePostgresIdentifier(column.column_name)} ${direction}`)
       .join(', ')
   }
-  return `${quotePostgresIdentifier(POSTGRES_ROW_CTID_COLUMN)} ${direction}`
+  if (supportsRowCtid) {
+    return `${quotePostgresIdentifier(POSTGRES_ROW_CTID_COLUMN)} ${direction}`
+  }
+  const sortableColumns = columns.filter(
+    (column) => column.column_name !== POSTGRES_ROW_CTID_COLUMN,
+  )
+  if (sortableColumns.length === 0) return undefined
+  return sortableColumns
+    .map((column) => `${quotePostgresIdentifier(column.column_name)} ${direction}`)
+    .join(', ')
 }
 
 export async function fetchPostgresTableRows(
@@ -411,22 +446,21 @@ export async function fetchPostgresTableRows(
   page: number,
   limit: number,
   params?: PostgresTableRowsListParams,
+  options?: FetchPostgresTableRowsOptions,
 ) {
-  const columnsResult = await fetchPostgresTableColumns(
+  const columnsResult = await resolvePostgresTableColumnsForRows(
     projectId,
     databaseId,
     tableId,
+    options?.tableColumns,
   )
-  const whereClause = await resolvePostgresRowsWhereClause(
-    projectId,
-    databaseId,
-    tableId,
-    params,
-  )
+  const supportsRowCtid = options?.supportsRowCtid !== false
+  const whereClause = buildPostgresRowsWhereClause(params, columnsResult.columns)
   const orderByClause = buildPostgresRowsOrderClause(
     columnsResult.columns,
     params?.orderBy,
     params?.orderDirection ?? 'asc',
+    supportsRowCtid,
   )
   const offset = page * limit
 
@@ -439,6 +473,7 @@ export async function fetchPostgresTableRows(
         orderByClause,
         limit,
         offset,
+        includeCtid: supportsRowCtid,
       }),
     ),
     executePostgresDatabaseSql(
@@ -478,64 +513,44 @@ export function postgresDatabaseQueryOptions(
   })
 }
 
-export function postgresSchemasQueryOptions(
+export function postgresTableAutocompleteColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  schema: string | null | undefined,
+  table: string | null | undefined,
 ) {
-  return queryOptions({
-    queryKey: ['postgres-schemas', 'project', projectId, databaseId],
-    queryFn: () => fetchPostgresSchemas(projectId!, databaseId!),
-    enabled: !!projectId && !!databaseId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export function postgresTablesQueryOptions(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-  options?: PostgresListTablesOptions,
-) {
-  const normalized = normalizePostgresTablesListOptions(options)
+  const normalizedSchema = schema?.trim() ?? ''
+  const normalizedTable = table?.trim() ?? ''
   return queryOptions({
     queryKey: [
-      'postgres-tables',
+      'postgres-autocomplete-columns',
       'project',
       projectId,
       databaseId,
-      normalized?.schema,
-      normalized?.search,
+      normalizedSchema,
+      normalizedTable,
     ],
     queryFn: () =>
-      fetchPostgresTables(projectId!, databaseId!, normalized),
-    enabled: !!projectId && !!databaseId,
+      fetchPostgresTableAutocompleteColumns(
+        projectId!,
+        databaseId!,
+        normalizedSchema,
+        normalizedTable,
+      ),
+    enabled:
+      !!projectId &&
+      !!databaseId &&
+      !!normalizedSchema &&
+      !!normalizedTable,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export function postgresColumnsQueryOptions(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-) {
-  return queryOptions({
-    queryKey: ['postgres-columns', 'project', projectId, databaseId],
-    queryFn: () => fetchPostgresColumns(projectId!, databaseId!),
-    enabled: !!projectId && !!databaseId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+    gcTime:
+      projectId && databaseId && normalizedSchema && normalizedTable
+        ? 5 * 60 * 1000
+        : 0,
   })
 }
 
@@ -658,6 +673,31 @@ export function postgresTableColumnsQueryOptions(
   })
 }
 
+export function postgresTableRowColumnsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-row-columns',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () =>
+      fetchPostgresTableRowColumns(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function postgresTableIndexesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -732,15 +772,23 @@ export function postgresTableRowsQueryOptions(
       params?.orderBy,
       params?.orderDirection,
     ],
-    queryFn: () =>
-      fetchPostgresTableRows(
+    queryFn: async ({ client }) => {
+      const rowColumns = await client.ensureQueryData(
+        postgresTableRowColumnsQueryOptions(projectId!, databaseId!, tableId!),
+      )
+      return fetchPostgresTableRows(
         projectId!,
         databaseId!,
         tableId!,
         page,
         limit,
         params,
-      ),
+        {
+          tableColumns: rowColumns.columns,
+          supportsRowCtid: rowColumns.supportsRowCtid,
+        },
+      )
+    },
     enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -769,7 +817,7 @@ export async function createPostgresTableRow(
   tableId: string,
   values: Record<string, RowCellValue>,
 ) {
-  const { columns } = await fetchPostgresTableColumns(
+  const { columns } = await fetchPostgresTableRowColumns(
     projectId,
     databaseId,
     tableId,
@@ -861,6 +909,9 @@ export function useCreatePostgresTableRow(
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-columns', 'project', projectId, databaseId, tableId],
       })
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-row-columns', 'project', projectId, databaseId, tableId],
+      })
     },
   })
 }
@@ -907,40 +958,6 @@ export function usePostgresDatabase(
     postgresDatabaseQueryOptions(projectId, databaseId),
   )
   return { database: data ?? null, isLoading, error, refetch }
-}
-
-export function usePostgresSchemas(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-) {
-  const { data, isLoading, error, refetch, isFetching } = useQuery(
-    postgresSchemasQueryOptions(projectId, databaseId),
-  )
-  return {
-    schemas: data?.schemas ?? [],
-    total: data?.total ?? 0,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  }
-}
-
-export function usePostgresTables(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-) {
-  const { data, isLoading, error, refetch, isFetching } = useQuery(
-    postgresTablesQueryOptions(projectId, databaseId),
-  )
-  return {
-    tables: data?.tables ?? [],
-    total: data?.total ?? 0,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  }
 }
 
 export function postgresSidebarSchemasInfiniteQueryOptions(
@@ -995,20 +1012,20 @@ export function postgresSidebarTablesInfiniteQueryOptions(
     ],
     queryFn: ({ pageParam }) =>
       fetchPostgresTablesPage(projectId!, databaseId!, {
-        schema: schema!,
+        schema: schema?.trim() || undefined,
         search: normalizedSearch,
         page: pageParam,
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.page + 1 : undefined,
-    enabled: !!projectId && !!databaseId && !!schema,
+    enabled: !!projectId && !!databaseId && !!schema?.trim(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    gcTime: projectId && databaseId && schema ? 5 * 60 * 1000 : 0,
+    gcTime: projectId && databaseId && schema?.trim() ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -1097,23 +1114,6 @@ export function usePostgresSidebarTables(
     refetch,
     fetchNextPage,
     hasNextPage: hasNextPage ?? false,
-  }
-}
-
-export function usePostgresColumns(
-  projectId: string | null | undefined,
-  databaseId: string | null | undefined,
-) {
-  const { data, isLoading, error, refetch, isFetching } = useQuery(
-    postgresColumnsQueryOptions(projectId, databaseId),
-  )
-  return {
-    columns: data?.columns ?? [],
-    total: data?.total ?? 0,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
   }
 }
 
@@ -1267,13 +1267,16 @@ export function useExecutePostgresSql(
         queryKey: ['postgres-tables', 'project', projectId, databaseId],
       })
       void queryClient.invalidateQueries({
-        queryKey: ['postgres-columns', 'project', projectId, databaseId],
+        queryKey: ['postgres-autocomplete-columns', 'project', projectId, databaseId],
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId],
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-table-columns', 'project', projectId, databaseId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['postgres-table-row-columns', 'project', projectId, databaseId],
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-table-indexes', 'project', projectId, databaseId],
@@ -1995,8 +1998,29 @@ export function usePostgresSqlEditorPersistence(
     (value: PersistedPostgresSqlEditorState) => {
       if (!databaseId) return
 
+      const currentPrefs = (getConsoleAccountFromCache(queryClient)?.prefs ??
+        {}) as UserPrefs
+      const prefsKey = getPostgresSqlEditorStateKey(databaseId)
+      const nextSerialized = buildPostgresSqlEditorStatePrefs(databaseId, value)[
+        prefsKey
+      ]
+      const currentSerialized = currentPrefs[prefsKey]
+      const normalizedNext =
+        typeof nextSerialized === 'string'
+          ? nextSerialized
+          : nextSerialized != null
+            ? JSON.stringify(nextSerialized)
+            : undefined
+      const normalizedCurrent =
+        typeof currentSerialized === 'string'
+          ? currentSerialized
+          : currentSerialized != null
+            ? JSON.stringify(currentSerialized)
+            : undefined
+      if (normalizedNext === normalizedCurrent) return
+
       const patch = mergePostgresSqlEditorStateIntoPrefs(
-        (getConsoleAccountFromCache(queryClient)?.prefs ?? {}) as UserPrefs,
+        currentPrefs,
         databaseId,
         value,
       )

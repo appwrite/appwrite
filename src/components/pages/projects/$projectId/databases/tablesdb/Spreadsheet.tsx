@@ -24,7 +24,6 @@ import {
   ArrowDown,
   Calendar,
   Link2,
-  Fingerprint,
   X,
   Check,
   BarChart3,
@@ -3023,6 +3022,7 @@ export function RowsSpreadsheet({
   }, [])
 
   const SequenceHeaderIcon = getColumnIcon('integer')
+  const IdHeaderIcon = getColumnIcon('$id')
 
   useEffect(() => {
     return () => {
@@ -4920,7 +4920,7 @@ export function RowsSpreadsheet({
                       className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}
                     >
                       <div className="flex items-center gap-2">
-                        <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <button
                           type="button"
                           aria-label="Copy column name: $id"

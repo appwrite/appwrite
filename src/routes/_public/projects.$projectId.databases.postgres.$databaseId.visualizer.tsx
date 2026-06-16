@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
@@ -27,10 +26,5 @@ export const Route = createFileRoute(
 })
 
 function PostgresVisualizerPage() {
-  const { databaseId } = Route.useParams()
-  return (
-    <PostgresShell databaseId={databaseId} databaseTab="visualizer">
-      <TabPlaceholder tab="visualizer" />
-    </PostgresShell>
-  )
+  return <TabPlaceholder tab="visualizer" />
 }

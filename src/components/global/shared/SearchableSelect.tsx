@@ -3,8 +3,8 @@
  * Use for column, operator, and value droplists in filters and elsewhere.
  */
 
-import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -44,6 +44,13 @@ export interface SearchableSelectProps {
   showPlaceholderWhenEmpty?: boolean
   /** When set, search is handled externally and cmdk filtering is disabled. */
   onSearchChange?: (query: string) => void
+  /** Show a spinner in the search field while results are loading. */
+  isFetching?: boolean
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
+  onLoadMore?: () => void
+  /** Optional footer below the list (e.g. "Showing X of Y"). */
+  listFooter?: ReactNode
 }
 
 export function SearchableSelect({
@@ -58,8 +65,15 @@ export function SearchableSelect({
   emptyMessage = 'No results',
   showPlaceholderWhenEmpty = true,
   onSearchChange,
+  isFetching = false,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
+  listFooter,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
+  const listScrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
   const selectedLabel = items.find((i) => i.value === value)?.label ?? ''
   const displayText =
     value && selectedLabel
@@ -68,8 +82,37 @@ export function SearchableSelect({
         ? placeholder
         : ''
 
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    const root = listScrollRef.current
+    if (!sentinel || !root || !open || !hasNextPage || isFetchingNextPage || !onLoadMore) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          onLoadMore()
+        }
+      },
+      { root, rootMargin: '120px', threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, onLoadMore, open, items.length])
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen)
+        if (!nextOpen && onSearchChange) {
+          onSearchChange('')
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -98,40 +141,74 @@ export function SearchableSelect({
         }}
       >
         <Command shouldFilter={!onSearchChange}>
-          <CommandInput
-            placeholder={searchPlaceholder}
-            className="h-9 text-[13px]"
-            onValueChange={onSearchChange}
-          />
-          <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
-            <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-              {emptyMessage}
-            </CommandEmpty>
-            <CommandGroup>
-              {items.map((item) => (
-                <CommandItem
-                  key={item.value}
-                  value={item.searchText ?? item.label}
-                  className="text-[13px]"
-                  onSelect={() => {
-                    onValueChange(item.value)
-                    setOpen(false)
-                  }}
-                >
-                  {item.description ? (
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                      <span className="truncate">{item.label}</span>
-                      <span className="truncate text-[11px] text-muted-foreground">
-                        {item.description}
-                      </span>
-                    </div>
-                  ) : (
-                    item.label
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+          <div className="relative">
+            <CommandInput
+              placeholder={searchPlaceholder}
+              className={cn('h-9 text-[13px]', isFetching && 'pr-8')}
+              onValueChange={onSearchChange}
+            />
+            <div
+              className={cn(
+                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                isFetching ? 'opacity-100' : 'opacity-0',
+              )}
+              aria-hidden
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          </div>
+          <CommandList
+            ref={listScrollRef}
+            className="max-h-[240px] overflow-y-auto overscroll-contain"
+          >
+            {items.length === 0 && isFetching ? (
+              <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
+                Loading…
+              </div>
+            ) : items.length === 0 ? (
+              <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
+                {emptyMessage}
+              </CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {items.map((item) => (
+                  <CommandItem
+                    key={item.value}
+                    value={item.searchText ?? item.label}
+                    className="text-[13px]"
+                    onSelect={() => {
+                      onValueChange(item.value)
+                      setOpen(false)
+                    }}
+                  >
+                    {item.description ? (
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="truncate">{item.label}</span>
+                        <span className="truncate text-[11px] text-muted-foreground">
+                          {item.description}
+                        </span>
+                      </div>
+                    ) : (
+                      item.label
+                    )}
+                  </CommandItem>
+                ))}
+                {hasNextPage ? (
+                  <div ref={sentinelRef} className="h-px w-full shrink-0" aria-hidden />
+                ) : null}
+                {isFetchingNextPage ? (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : null}
+              </CommandGroup>
+            )}
           </CommandList>
+          {listFooter ? (
+            <div className="border-t border-border px-3 py-2 text-[11px] tabular-nums text-muted-foreground">
+              {listFooter}
+            </div>
+          ) : null}
         </Command>
       </PopoverContent>
     </Popover>

@@ -16,7 +16,7 @@ import {
   POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS,
   sortPostgresSidebarTableRows,
 } from '@/lib/user-prefs-keys'
-import { ArrowUpDown, Loader2, Search, X } from 'lucide-react'
+import { ArrowUpDown, Eye, Loader2, Search, Table2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -326,12 +326,14 @@ export function SchemaTablesSidebar({
                     Loading tables…
                   </p>
                 ) : displayedTables.length > 0 ? (
-                  <div className="space-y-0.5">
+                  <div>
                     {displayedTables.map((table) => {
                       const id = postgresTableId(
                         table.table_schema,
                         table.table_name,
                       )
+                      const isView = table.table_type === 'VIEW'
+                      const TableListIcon = isView ? Eye : Table2
                       return (
                         <PostgresTableContextMenu
                           key={id}
@@ -344,13 +346,14 @@ export function SchemaTablesSidebar({
                             type="button"
                             onClick={() => onSelectTable(id)}
                             className={cn(
-                              'flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-left transition-colors',
+                              'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors',
                               selectedTableId === id
                                 ? 'bg-accent text-foreground'
                                 : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                             )}
                           >
-                            <span className="truncate text-[13px] font-medium">
+                            <TableListIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="min-w-0 truncate text-[13px] font-medium">
                               {table.table_name}
                             </span>
                           </button>

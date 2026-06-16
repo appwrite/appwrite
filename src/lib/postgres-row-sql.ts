@@ -3,8 +3,11 @@ import {
   quotePostgresIdentifier,
 } from '@/lib/postgres-database-routes'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
-import { quotePostgresStringLiteral } from '@/lib/postgres-sql'
-import { isPostgresPrimaryKeyColumn } from '@/lib/postgres-sql'
+import {
+  isPostgresPrimaryKeyColumn,
+  prefixPostgresSqlComment,
+  quotePostgresStringLiteral,
+} from '@/lib/postgres-sql'
 import type { RowCellValue } from '@/lib/database-row-inline-edits'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -36,6 +39,7 @@ export type PostgresRowsListOptions = {
   orderByClause?: string
   limit: number
   offset: number
+  includeCtid?: boolean
 }
 
 function qualifiedTable(schema: string, table: string): string {
@@ -132,8 +136,11 @@ export function buildPostgresSelectRowsSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = qualifiedTable(schema, table)
-  const base = `SELECT *, ctid::text AS ${quotePostgresIdentifier(POSTGRES_ROW_CTID_COLUMN)} FROM ${qualified}`
-  return appendWhereAndOrder(base, options)
+  const includeCtid = options.includeCtid !== false
+  const base = includeCtid
+    ? `SELECT *, ctid::text AS ${quotePostgresIdentifier(POSTGRES_ROW_CTID_COLUMN)} FROM ${qualified}`
+    : `SELECT * FROM ${qualified}`
+  return prefixPostgresSqlComment(appendWhereAndOrder(base, options), 'Select filtered rows')
 }
 
 export function buildPostgresCountRowsSql(
@@ -146,7 +153,7 @@ export function buildPostgresCountRowsSql(
   if (whereClause?.trim()) {
     sql += `\nWHERE ${whereClause.trim()}`
   }
-  return sql
+  return prefixPostgresSqlComment(sql, 'Count filtered rows')
 }
 
 export function buildPostgresUpdateRowSql(
@@ -168,7 +175,10 @@ export function buildPostgresUpdateRowSql(
   }
 
   const whereClause = buildPostgresRowWhereClause(identity)
-  return `UPDATE ${qualified}\nSET ${assignments.join(', ')}\nWHERE ${whereClause}`
+  return prefixPostgresSqlComment(
+    `UPDATE ${qualified}\nSET ${assignments.join(', ')}\nWHERE ${whereClause}`,
+    'Update table row',
+  )
 }
 
 export function buildSyncPostgresSerialSequencesSql(
@@ -190,7 +200,7 @@ export function buildSyncPostgresSerialSequencesSql(
   }
 
   if (statements.length === 0) return null
-  return statements.join(';\n')
+  return prefixPostgresSqlComment(statements.join(';\n'), 'Sync serial sequences')
 }
 
 export function isPostgresDuplicatePrimaryKeyError(error: unknown): boolean {
@@ -209,7 +219,10 @@ export function buildPostgresInsertRowSql(
   )
 
   if (entries.length === 0) {
-    return `INSERT INTO ${qualified} DEFAULT VALUES`
+    return prefixPostgresSqlComment(
+      `INSERT INTO ${qualified} DEFAULT VALUES`,
+      'Insert table row',
+    )
   }
 
   const columnNames = entries.map(([column]) => quotePostgresIdentifier(column))
@@ -217,7 +230,10 @@ export function buildPostgresInsertRowSql(
     value === null ? 'NULL' : formatPostgresSqlLiteral(value),
   )
 
-  return `INSERT INTO ${qualified} (${columnNames.join(', ')})\nVALUES (${valueLiterals.join(', ')})`
+  return prefixPostgresSqlComment(
+    `INSERT INTO ${qualified} (${columnNames.join(', ')})\nVALUES (${valueLiterals.join(', ')})`,
+    'Insert table row',
+  )
 }
 
 export function buildPostgresDeleteRowSql(
@@ -227,7 +243,10 @@ export function buildPostgresDeleteRowSql(
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = qualifiedTable(schema, table)
   const whereClause = buildPostgresRowWhereClause(identity)
-  return `DELETE FROM ${qualified}\nWHERE ${whereClause}`
+  return prefixPostgresSqlComment(
+    `DELETE FROM ${qualified}\nWHERE ${whereClause}`,
+    'Delete table row',
+  )
 }
 
 export {

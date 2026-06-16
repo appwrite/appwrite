@@ -331,9 +331,9 @@ export function PostgresSidebarProvider({
   }, [account, databaseId, parseInitialEditorState])
 
   useEffect(() => {
-    if (skipEditorPersistRef.current || !databaseId || !account) return
+    if (skipEditorPersistRef.current || !databaseId) return
     persistEditorTabState(persistedFromEditorTabState(editorTabState))
-  }, [account, databaseId, editorTabState, persistEditorTabState])
+  }, [databaseId, editorTabState, persistEditorTabState])
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? tabs[0],

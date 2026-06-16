@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { X, Plus } from 'lucide-react'
-import { Fingerprint, Calendar } from 'lucide-react'
+import { Calendar, Hash } from 'lucide-react'
 
 export type IndexType = 'key' | 'unique' | 'fulltext' | 'spatial'
 
@@ -63,7 +63,7 @@ const ORDER_OPTIONS_WITH_NONE = [
 
 // System fields that can be indexed
 const SYSTEM_FIELDS = [
-  { key: '$id', type: 'string', label: '$id', icon: Fingerprint },
+  { key: '$id', type: 'string', label: '$id', icon: Hash },
   { key: '$createdAt', type: 'datetime', label: '$createdAt', icon: Calendar },
   { key: '$updatedAt', type: 'datetime', label: '$updatedAt', icon: Calendar },
 ]

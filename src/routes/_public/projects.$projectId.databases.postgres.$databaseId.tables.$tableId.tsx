@@ -1,5 +1,5 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { PostgresTableLayout } from '@/components/pages/projects/$projectId/databases/postgres/PostgresTableLayout'
 import { prefetchPostgresTableLayoutData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-table-route-loader'
 import { postgresNav } from '@/lib/postgres-database-routes'
 
@@ -30,13 +30,3 @@ export const Route = createFileRoute(
   },
   component: PostgresTableLayout,
 })
-
-function PostgresTableLayout() {
-  const { databaseId, tableId } = Route.useParams()
-
-  return (
-    <PostgresShell databaseId={databaseId} tableId={tableId}>
-      <Outlet />
-    </PostgresShell>
-  )
-}

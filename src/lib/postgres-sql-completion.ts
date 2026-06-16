@@ -1,18 +1,24 @@
 import type { IDisposable, IRange, languages } from 'monaco-editor'
 import type { PostgresColumnRow, PostgresTableRow } from '@/lib/postgres-sql'
 
-export type PostgresSqlCompletionCatalog = {
-  schemas: string[]
-  tables: PostgresTableRow[]
-  columns: PostgresColumnRow[]
-}
-
-type Monaco = typeof import('monaco-editor')
-
-type TableRef = {
+export type PostgresSqlCompletionTableRef = {
   schema: string
   table: string
 }
+
+export type PostgresSqlCompletionResolvers = {
+  searchSchemas: (search: string) => Promise<string[]>
+  searchTables: (
+    schema: string | undefined,
+    search: string,
+  ) => Promise<PostgresTableRow[]>
+  resolveTableColumns: (
+    tables: PostgresSqlCompletionTableRef[],
+  ) => Promise<PostgresColumnRow[]>
+  resolveTableRef: (ref: string) => Promise<PostgresSqlCompletionTableRef | null>
+}
+
+type Monaco = typeof import('monaco-editor')
 
 const IDENT = String.raw`(?:"[^"]+"|[a-zA-Z_][\w$]*)`
 const TABLE_CONTEXT_PATTERN =
@@ -49,34 +55,13 @@ function parseQualifiedPrefix(
   return null
 }
 
-function resolveTableRef(
-  ref: string,
-  catalog: PostgresSqlCompletionCatalog,
-): TableRef | null {
-  const parts = ref.split('.').map(unquoteIdentifier)
-  if (parts.length === 2) {
-    return { schema: parts[0], table: parts[1] }
-  }
-  if (parts.length === 1) {
-    const matches = catalog.tables.filter((row) => row.table_name === parts[0])
-    if (matches.length === 0) return null
-    const publicMatch = matches.find((row) => row.table_schema === 'public')
-    const chosen = publicMatch ?? matches[0]
-    return { schema: chosen.table_schema, table: chosen.table_name }
-  }
-  return null
-}
-
 function addTableRefToken(refs: Set<string>, token: string | undefined) {
   if (!token) return
   const cleaned = token.replace(/^["'`(]+|["'`)]+$/g, '').trim()
   if (cleaned) refs.add(cleaned)
 }
 
-function extractReferencedTables(
-  text: string,
-  catalog: PostgresSqlCompletionCatalog,
-): TableRef[] {
+function extractReferencedTableTokens(text: string): string[] {
   const refs = new Set<string>()
 
   const fromMatch = text.match(
@@ -98,21 +83,26 @@ function extractReferencedTables(
   const updateMatch = text.match(/\bUPDATE\s+((?:"[^"]+"|[\w.]+))/i)
   addTableRefToken(refs, updateMatch?.[1])
 
-  const resolved: TableRef[] = []
-  for (const ref of refs) {
-    const table = resolveTableRef(ref, catalog)
-    if (table) resolved.push(table)
+  return Array.from(refs)
+}
+
+function tablesNeedingColumns(
+  textUntilPosition: string,
+): PostgresSqlCompletionTableRef[] {
+  const qualified = parseQualifiedPrefix(textUntilPosition)
+  if (qualified?.type === 'columns') {
+    return [{ schema: qualified.schema, table: qualified.table }]
   }
-  return resolved
+  return []
 }
 
 function schemaSuggestions(
   monaco: Monaco,
-  catalog: PostgresSqlCompletionCatalog,
+  schemas: string[],
   prefix: string,
   range: IRange,
 ): languages.CompletionItem[] {
-  return catalog.schemas
+  return schemas
     .filter((schema) => matchesPrefix(schema, prefix))
     .map((schema) => ({
       label: schema,
@@ -126,15 +116,10 @@ function schemaSuggestions(
 
 function tableSuggestions(
   monaco: Monaco,
-  catalog: PostgresSqlCompletionCatalog,
+  tables: PostgresTableRow[],
   prefix: string,
   range: IRange,
-  schemaFilter?: string,
 ): languages.CompletionItem[] {
-  const tables = schemaFilter
-    ? catalog.tables.filter((row) => row.table_schema === schemaFilter)
-    : catalog.tables
-
   return tables
     .filter((row) => {
       const qualified = `${row.table_schema}.${row.table_name}`
@@ -159,17 +144,17 @@ function tableSuggestions(
 
 function columnSuggestions(
   monaco: Monaco,
-  catalog: PostgresSqlCompletionCatalog,
+  columns: PostgresColumnRow[],
   prefix: string,
   range: IRange,
-  tables: TableRef[],
+  tables: PostgresSqlCompletionTableRef[],
   qualifyColumns: boolean,
 ): languages.CompletionItem[] {
   const suggestions: languages.CompletionItem[] = []
   const seen = new Set<string>()
 
   for (const table of tables) {
-    const tableColumns = catalog.columns.filter(
+    const tableColumns = columns.filter(
       (column) =>
         column.table_schema === table.schema &&
         column.table_name === table.table,
@@ -200,26 +185,41 @@ function columnSuggestions(
   return suggestions
 }
 
-function buildSuggestions(
+async function resolveReferencedTables(
+  text: string,
+  resolveTableRef: PostgresSqlCompletionResolvers['resolveTableRef'],
+): Promise<PostgresSqlCompletionTableRef[]> {
+  const tokens = extractReferencedTableTokens(text)
+  const resolved: PostgresSqlCompletionTableRef[] = []
+  const seen = new Set<string>()
+
+  for (const token of tokens) {
+    const table = await resolveTableRef(token)
+    if (!table) continue
+    const key = `${table.schema}.${table.table}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    resolved.push(table)
+  }
+
+  return resolved
+}
+
+async function buildSuggestions(
   monaco: Monaco,
-  catalog: PostgresSqlCompletionCatalog,
+  resolvers: PostgresSqlCompletionResolvers,
   textUntilPosition: string,
   prefix: string,
   range: IRange,
-): languages.CompletionItem[] {
-  if (
-    catalog.schemas.length === 0 &&
-    catalog.tables.length === 0 &&
-    catalog.columns.length === 0
-  ) {
-    return []
-  }
-
+): Promise<languages.CompletionItem[]> {
   const qualified = parseQualifiedPrefix(textUntilPosition)
   if (qualified?.type === 'columns') {
+    const columns = await resolvers.resolveTableColumns([
+      { schema: qualified.schema, table: qualified.table },
+    ])
     return columnSuggestions(
       monaco,
-      catalog,
+      columns,
       prefix,
       range,
       [{ schema: qualified.schema, table: qualified.table }],
@@ -228,24 +228,37 @@ function buildSuggestions(
   }
 
   if (qualified?.type === 'tables') {
-    return tableSuggestions(
-      monaco,
-      catalog,
-      prefix,
-      range,
-      qualified.schema,
-    )
+    const tables = await resolvers.searchTables(qualified.schema, prefix)
+    return tableSuggestions(monaco, tables, prefix, range)
   }
 
   if (TABLE_CONTEXT_PATTERN.test(textUntilPosition)) {
-    return tableSuggestions(monaco, catalog, prefix, range)
+    const tables = await resolvers.searchTables(undefined, prefix)
+    return tableSuggestions(monaco, tables, prefix, range)
   }
 
-  const referencedTables = extractReferencedTables(textUntilPosition, catalog)
+  const explicitTables = tablesNeedingColumns(textUntilPosition)
+  if (explicitTables.length > 0) {
+    const columns = await resolvers.resolveTableColumns(explicitTables)
+    return columnSuggestions(
+      monaco,
+      columns,
+      prefix,
+      range,
+      explicitTables,
+      false,
+    )
+  }
+
+  const referencedTables = await resolveReferencedTables(
+    textUntilPosition,
+    resolvers.resolveTableRef,
+  )
   if (referencedTables.length > 0) {
+    const columns = await resolvers.resolveTableColumns(referencedTables)
     const columnItems = columnSuggestions(
       monaco,
-      catalog,
+      columns,
       prefix,
       range,
       referencedTables,
@@ -256,31 +269,25 @@ function buildSuggestions(
     }
   }
 
+  const [schemas, tables] = await Promise.all([
+    resolvers.searchSchemas(prefix),
+    resolvers.searchTables(undefined, prefix),
+  ])
+
   return [
-    ...schemaSuggestions(monaco, catalog, prefix, range),
-    ...tableSuggestions(monaco, catalog, prefix, range),
-    ...columnSuggestions(
-      monaco,
-      catalog,
-      prefix,
-      range,
-      catalog.tables.map((row) => ({
-        schema: row.table_schema,
-        table: row.table_name,
-      })),
-      false,
-    ),
+    ...schemaSuggestions(monaco, schemas, prefix, range),
+    ...tableSuggestions(monaco, tables, prefix, range),
   ]
 }
 
 export function registerPostgresSqlCompletionProvider(
   monaco: Monaco,
-  getCatalog: () => PostgresSqlCompletionCatalog,
+  getResolvers: () => PostgresSqlCompletionResolvers,
 ): IDisposable {
   return monaco.languages.registerCompletionItemProvider('sql', {
     triggerCharacters: ['.', ' ', ','],
-    provideCompletionItems(model, position) {
-      const catalog = getCatalog()
+    async provideCompletionItems(model, position) {
+      const resolvers = getResolvers()
       const textUntilPosition = model.getValueInRange({
         startLineNumber: 1,
         startColumn: 1,
@@ -296,9 +303,9 @@ export function registerPostgresSqlCompletionProvider(
       }
 
       return {
-        suggestions: buildSuggestions(
+        suggestions: await buildSuggestions(
           monaco,
-          catalog,
+          resolvers,
           textUntilPosition,
           word.word,
           range,

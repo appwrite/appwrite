@@ -30,6 +30,7 @@ export const Route = createFileRoute(
       projectId,
       databaseId,
       tableId,
+      { includeFullIndexes: true },
     )
   },
   component: PostgresIndexesPage,

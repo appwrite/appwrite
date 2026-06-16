@@ -33,6 +33,11 @@ export function getColumnIcon(type: string): LucideIcon {
     case 'char':
     case 'character varying':
       return Type
+    case 'id':
+    case 'system-id':
+    case '$id':
+    case 'uuid':
+      return Hash
     case 'integer':
     case 'int':
     case 'int2':

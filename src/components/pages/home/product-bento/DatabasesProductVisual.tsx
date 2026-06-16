@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Braces, Check, CheckCircle2, Fingerprint, Layers, Loader2, Table as TableIcon, type LucideIcon } from 'lucide-react'
+import { Braces, Check, CheckCircle2, Layers, Loader2, Table as TableIcon, type LucideIcon } from 'lucide-react'
 import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
@@ -101,7 +101,7 @@ const TABLE_TEXT = 'text-[11px]'
 const TABLE_HEADER_TEXT = 'text-[11px]'
 
 function TablesDbColumnIcon({ type }: { type: string }) {
-  const Icon = type === 'system-id' ? Fingerprint : getColumnIcon(type)
+  const Icon = type === 'system-id' ? getColumnIcon('system-id') : getColumnIcon(type)
 
   return <Icon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
 }

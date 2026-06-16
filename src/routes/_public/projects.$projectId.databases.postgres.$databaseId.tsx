@@ -6,6 +6,7 @@ import {
   isPostgresEngine,
 } from '@/lib/react-query/hooks'
 import { PostgresSidebarProvider } from '@/components/pages/projects/$projectId/databases/postgres/_components/PostgresSidebarContext'
+import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/postgres/$databaseId',
@@ -46,7 +47,9 @@ function PostgresDatabaseLayout() {
 
   return (
     <PostgresSidebarProvider databaseId={databaseId}>
-      <Outlet />
+      <PostgresShell>
+        <Outlet />
+      </PostgresShell>
     </PostgresSidebarProvider>
   )
 }

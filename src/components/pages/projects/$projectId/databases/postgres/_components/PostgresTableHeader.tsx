@@ -11,8 +11,6 @@ type PostgresTableHeaderProps = {
   databaseId: string
   tableId: string
   activeTab: PostgresTableTab
-  columnCount?: number
-  indexCount?: number
   onCreate?: () => void
   createLabel?: string
   createDisabled?: boolean
@@ -31,8 +29,6 @@ export function PostgresTableHeader({
   databaseId,
   tableId,
   activeTab,
-  columnCount,
-  indexCount,
   onCreate,
   createLabel,
   createDisabled,
@@ -54,21 +50,11 @@ export function PostgresTableHeader({
   const tabs: Tab[] = useMemo(
     () => [
       { id: 'rows', label: 'Rows', ...nav.rows() },
-      {
-        id: 'columns',
-        label: 'Columns',
-        count: columnCount,
-        ...nav.columns(),
-      },
-      {
-        id: 'indexes',
-        label: 'Indexes',
-        count: indexCount,
-        ...nav.indexes(),
-      },
+      { id: 'columns', label: 'Columns', ...nav.columns() },
+      { id: 'indexes', label: 'Indexes', ...nav.indexes() },
       { id: 'settings', label: 'Settings', ...nav.settings() },
     ],
-    [columnCount, indexCount, nav],
+    [nav],
   )
 
   return (

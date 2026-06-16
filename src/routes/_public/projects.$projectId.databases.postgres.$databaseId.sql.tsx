@@ -42,5 +42,5 @@ export const Route = createFileRoute(
 function PostgresSqlEditorPage() {
   const { databaseId } = Route.useParams()
 
-  return <PostgresSqlWorkbench databaseId={databaseId} databaseTab="sql" />
+  return <PostgresSqlWorkbench databaseId={databaseId} />
 }
