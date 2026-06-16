@@ -56,3 +56,10 @@ e2e/.auth/
 *.tmp
 *.temp
 .cache
+
+# Playwright MCP
+.playwright-mcp
+
+# OAuth2 e2e screenshots (uploaded via gitshot)
+.shots/
+scripts/oauth2-shots.mjs

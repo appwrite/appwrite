@@ -144,19 +144,22 @@ function SignUpPage() {
         return
       }
 
+      // If we're headed to a specific destination (e.g. an OAuth2 consent/device
+      // flow), go straight there without provisioning a personal org/project.
+      const targetRedirect = resolvePostAuthRedirect(search.redirect)
+      if (targetRedirect) {
+        navigate({ to: targetRedirect })
+        return
+      }
+
       // No verification: org was ensured during prefetchPostAuthDestination
       try {
         const orgId = await resolvePostAuthOrganizationId(account)
-        const targetRedirect = resolvePostAuthRedirect(search.redirect)
-        if (targetRedirect) {
-          navigate({ to: targetRedirect })
-        } else {
-          navigate({
-            to: '/organizations/$orgId',
-            params: { orgId },
-            replace: true,
-          })
-        }
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
       } catch {
         navigate({ to: '/' })
       }

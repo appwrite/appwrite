@@ -69,6 +69,8 @@ import { Route as PublicAccountSecurityRouteImport } from './routes/_public/acco
 import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
 import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
+import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
@@ -586,6 +588,16 @@ const PublicAccountBillingAddressesRoute =
     path: '/billing-addresses',
     getParentRoute: () => PublicAccountRoute,
   } as any)
+const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
+  id: '/oauth2/device',
+  path: '/oauth2/device',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
+  id: '/oauth2/consent',
+  path: '/oauth2/consent',
+  getParentRoute: () => AuthRoute,
+} as any)
 const PublicProjectsProjectIdIndexRoute =
   PublicProjectsProjectIdIndexRouteImport.update({
     id: '/',
@@ -2067,6 +2079,8 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/oauth2/consent': typeof AuthOauth2ConsentRoute
+  '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2338,6 +2352,8 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
+  '/oauth2/consent': typeof AuthOauth2ConsentRoute
+  '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2583,6 +2599,8 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
+  '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
@@ -2858,6 +2876,8 @@ export interface FileRouteTypes {
     | '/blog'
     | '/changelog'
     | '/docs/'
+    | '/oauth2/consent'
+    | '/oauth2/device'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3129,6 +3149,8 @@ export interface FileRouteTypes {
     | '/blog'
     | '/changelog'
     | '/docs'
+    | '/oauth2/consent'
+    | '/oauth2/device'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3373,6 +3395,8 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/changelog/'
     | '/docs/'
+    | '/_auth/oauth2/consent'
+    | '/_auth/oauth2/device'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
@@ -4058,6 +4082,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/billing-addresses'
       preLoaderRoute: typeof PublicAccountBillingAddressesRouteImport
       parentRoute: typeof PublicAccountRoute
+    }
+    '/_auth/oauth2/device': {
+      id: '/_auth/oauth2/device'
+      path: '/oauth2/device'
+      fullPath: '/oauth2/device'
+      preLoaderRoute: typeof AuthOauth2DeviceRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/oauth2/consent': {
+      id: '/_auth/oauth2/consent'
+      path: '/oauth2/consent'
+      fullPath: '/oauth2/consent'
+      preLoaderRoute: typeof AuthOauth2ConsentRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_public/projects/$projectId/': {
       id: '/_public/projects/$projectId/'
@@ -5568,6 +5606,8 @@ interface AuthRouteChildren {
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+  AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
+  AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -5578,6 +5618,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+  AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
+  AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

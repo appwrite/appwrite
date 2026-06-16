@@ -8,6 +8,7 @@
 import {
   Account,
   Activities,
+  Apps,
   Assistant,
   Avatars,
   Backups,
@@ -21,6 +22,7 @@ import {
   Manager,
   Messaging,
   Migrations,
+  Oauth2,
   Project,
   Project as ProjectApi,
   Projects,
@@ -183,6 +185,8 @@ function createConsoleSdkRaw(client: Client) {
   return {
     client,
     account: new Account(client),
+    apps: new Apps(client),
+    oauth2: new Oauth2(client),
     avatars: new Avatars(client),
     compute: new Compute(client),
     functions: new Functions(client),
