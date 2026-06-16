@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
+use Appwrite\Locking\PlatformDBLock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -70,8 +71,8 @@ return function (Container $context): void {
 
     $context->set('lock', function (Group $pools, Telemetry $telemetry, Log $log, ?Logger $logger, Document $project): Lock {
         return new Lock(
-            fn (string $key, int $ttl, Closure $callback, float $timeout): mixed => $pools->get('lock')->use(
-                fn (\Redis $redis): mixed => (new DistributedLock($redis, $key, $ttl))->withLock($callback, $timeout)
+            fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
+                fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
             $log,
@@ -79,6 +80,12 @@ return function (Container $context): void {
             $project
         );
     }, ['pools', 'telemetry', 'log', 'logger', 'project']);
+
+    $context->set('platformDBLock', fn (Lock $lock, Database $dbForPlatform, Authorization $authorization): PlatformDBLock => new PlatformDBLock(
+        $lock,
+        $dbForPlatform,
+        $authorization
+    ), ['lock', 'dbForPlatform', 'authorization']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 

@@ -7,7 +7,7 @@ use Closure;
 use Throwable;
 use Utopia\Console;
 use Utopia\Database\Document;
-use Utopia\Lock\Exception\Contention as LockContention;
+use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
@@ -15,20 +15,25 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 final class Lock
 {
-    /**
-     * Keep defaults aligned with Cloud's distributed database worker lock.
-     */
-    private const TTL_SECONDS = 1800;
+    private const FAIL_TTL_SECONDS = 10;
 
-    private const WAIT_SECONDS = 1500.0;
+    private const FAIL_WAIT_SECONDS = 3.0;
+
+    private const SKIP_TTL_SECONDS = 5;
+
+    private const SKIP_WAIT_SECONDS = 0.0;
 
     private const REPORT_RATE_LIMIT_SECONDS = 60;
 
     private const OUTCOME_ACQUIRED = 'acquired';
 
+    private const OUTCOME_SKIPPED = 'skipped';
+
     private const OUTCOME_CONTENDED = 'contended';
 
     private const OUTCOME_BACKEND_ERROR = 'backend_error';
+
+    private const OUTCOME_RELEASE_ERROR = 'release_error';
 
     private readonly bool $enabled;
 
@@ -40,18 +45,18 @@ final class Lock
     private static array $lastReportAt = [];
 
     /**
-     * @var Closure(string, int, Closure(): mixed, float): mixed
+     * @var Closure(string, int, Closure(UtopiaLock): mixed): mixed
      */
-    private readonly Closure $withLock;
+    private readonly Closure $useLock;
 
     public function __construct(
-        Closure $withLock,
+        Closure $useLock,
         Telemetry $telemetry,
         private readonly Log $log,
         private readonly ?Logger $logger,
         Document $project,
     ) {
-        $this->withLock = $withLock;
+        $this->useLock = $useLock;
         $this->enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
         $this->attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
         $sequence = $project->getSequence();
@@ -59,11 +64,13 @@ final class Lock
     }
 
     /**
-     * Distributed lock around an arbitrary callback for a platform document.
+     * Try-once lock around an arbitrary callback for a platform document.
+     * Idempotent metadata writes should not make HTTP requests wait behind
+     * another pod doing the same update.
      */
     public function run(string $collection, string $id, Closure $fn): void
     {
-        $this->execute($this->key($collection, $id), $collection, $fn);
+        $this->tryWithKey($this->key($collection, $id), $fn, target: $collection);
     }
 
     /**
@@ -86,8 +93,8 @@ final class Lock
     public function withKey(
         string $key,
         Closure $fn,
-        int $ttl = self::TTL_SECONDS,
-        float $waitTimeout = self::WAIT_SECONDS,
+        int $ttl = self::FAIL_TTL_SECONDS,
+        float $waitTimeout = self::FAIL_WAIT_SECONDS,
         ?string $target = null,
     ): mixed {
         return $this->execute(
@@ -96,6 +103,27 @@ final class Lock
             $fn,
             ttl: $ttl,
             waitTimeout: $waitTimeout,
+            skipOnContention: false,
+        );
+    }
+
+    /**
+     * Try-once lock around a callback. On contention, skip the callback and
+     * return null; this is for best-effort timestamp/access metadata writes.
+     */
+    public function tryWithKey(
+        string $key,
+        Closure $fn,
+        int $ttl = self::SKIP_TTL_SECONDS,
+        ?string $target = null,
+    ): mixed {
+        return $this->execute(
+            $key,
+            $target ?? self::inferTargetFromKey($key),
+            $fn,
+            ttl: $ttl,
+            waitTimeout: self::SKIP_WAIT_SECONDS,
+            skipOnContention: true,
         );
     }
 
@@ -103,8 +131,9 @@ final class Lock
         string $key,
         string $target,
         Closure $fn,
-        int $ttl = self::TTL_SECONDS,
-        float $waitTimeout = self::WAIT_SECONDS,
+        int $ttl = self::FAIL_TTL_SECONDS,
+        float $waitTimeout = self::FAIL_WAIT_SECONDS,
+        bool $skipOnContention = false,
     ): mixed {
         if (! $this->enabled) {
             return $fn();
@@ -113,20 +142,65 @@ final class Lock
         $labels = ['target' => $target, 'project' => $this->projectInternalId];
 
         try {
-            return ($this->withLock)($key, $ttl, function () use ($fn, $labels) {
-                $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
-
-                return $fn();
-            }, $waitTimeout);
-        } catch (LockContention) {
-            $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
-            // No custom message: the lock key embeds collection and document ID.
-            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+            return ($this->useLock)($key, $ttl, function (UtopiaLock $lock) use ($fn, $key, $labels, $skipOnContention, $target, $waitTimeout): mixed {
+                return $this->executeWithLock($lock, $key, $target, $labels, $fn, $waitTimeout, $skipOnContention);
+            });
+        } catch (CallbackRedisException $e) {
+            throw $e->getRedisException();
         } catch (\RedisException $e) {
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
-            throw $e;
+            return $fn();
+        }
+    }
+
+    /**
+     * @param array{target: string, project: string} $labels
+     */
+    private function executeWithLock(
+        UtopiaLock $lock,
+        string $key,
+        string $target,
+        array $labels,
+        Closure $fn,
+        float $waitTimeout,
+        bool $skipOnContention,
+    ): mixed {
+        try {
+            $acquired = $lock->acquire($waitTimeout);
+        } catch (\RedisException $e) {
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+            return $fn();
+        }
+
+        if (! $acquired) {
+            if ($skipOnContention) {
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
+
+                return null;
+            }
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
+            // No custom message: the lock key embeds collection and document ID.
+            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+        }
+
+        $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
+        try {
+            try {
+                return $fn();
+            } catch (\RedisException $e) {
+                throw new CallbackRedisException($e);
+            }
+        } finally {
+            try {
+                $lock->release();
+            } catch (Throwable $e) {
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
+                $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
+            }
         }
     }
 
@@ -148,7 +222,24 @@ final class Lock
      */
     public function key(string $collection, string $id, ?string $attribute = null): string
     {
-        $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}";
+        return self::buildKey($this->projectInternalId, $collection, $id, $attribute);
+    }
+
+    /**
+     * Build a key for a project document that was resolved after this request
+     * lock was constructed, such as router/custom-domain resolution.
+     */
+    public function keyForProject(Document $project, string $collection, string $id, ?string $attribute = null): string
+    {
+        $sequence = $project->getSequence();
+        $projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+
+        return self::buildKey($projectInternalId, $collection, $id, $attribute);
+    }
+
+    private static function buildKey(string $projectInternalId, string $collection, string $id, ?string $attribute = null): string
+    {
+        $key = "lock:platform:{$projectInternalId}:{$collection}:{$id}";
 
         return $attribute === null ? $key : "{$key}:{$attribute}";
     }
@@ -194,5 +285,19 @@ final class Lock
             $this->logger->addLog($this->log);
         } catch (Throwable) {
         }
+    }
+}
+
+final class CallbackRedisException extends \RuntimeException
+{
+    public function __construct(\RedisException $previous)
+    {
+        parent::__construct($previous->getMessage(), $previous->getCode(), $previous);
+    }
+
+    public function getRedisException(): \RedisException
+    {
+        /** @var \RedisException */
+        return parent::getPrevious();
     }
 }

@@ -17,6 +17,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Locking\PlatformDBLock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\Method;
@@ -101,7 +102,8 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->inject('lock')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock) {
+    ->inject('platformDBLock')
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, PlatformDBLock $platformDBLock) {
 
         /**
          * Handle user authentication and session validation.
@@ -388,15 +390,7 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $lock->withKey(
-                    $lock->key('projects', $project->getId(), 'accessedAt'),
-                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                        'projects',
-                        $project->getId(),
-                        new Document(['accessedAt' => DateTime::now()])
-                    )),
-                    target: 'projects'
-                );
+                $platformDBLock->tryUpdateAttribute('projects', $project->getId(), 'accessedAt', DateTime::now());
             }
         }
 
@@ -413,15 +407,7 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $lock->withKey(
-                        $lock->key('users', $user->getId(), 'accessedAt'),
-                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
-                            'users',
-                            $user->getId(),
-                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
-                        )),
-                        target: 'users'
-                    );
+                    $platformDBLock->tryUpdateAttribute('users', $user->getId(), 'accessedAt', $user->getAttribute('accessedAt'));
                 }
             }
         }
