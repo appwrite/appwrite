@@ -1,4 +1,5 @@
-import { useId, useMemo, type CSSProperties } from 'react'
+import { useId, useMemo, type CSSProperties, type ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
@@ -59,6 +60,31 @@ const CHART_REVEAL_CLASS =
   'animate-in fade-in-0 slide-in-from-bottom-1 duration-500 ease-out motion-reduce:animate-none'
 
 const CHART_REVEAL_DELAY_CLASS = 'delay-100'
+
+const projectChartLinkClassName =
+  'block min-w-0 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_*]:!cursor-pointer'
+
+function ProjectRequestsChartLink({
+  projectId,
+  children,
+  className,
+}: {
+  projectId: string
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <Link
+      to="/projects/$projectId"
+      params={{ projectId }}
+      className={cn(projectChartLinkClassName, className)}
+      aria-label="View project"
+      onClick={(event) => event.stopPropagation()}
+    >
+      {children}
+    </Link>
+  )
+}
 
 type ProjectListRequestsChartProps = {
   totalRequests?: number
@@ -127,6 +153,7 @@ function RequestsChartArea({
         <AreaChart
           data={chartData}
           margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+          style={{ cursor: 'pointer' }}
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -319,7 +346,6 @@ export function ProjectListRequestsChart({
         style={{ minHeight: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT }}
         aria-busy={isLoading}
         aria-label={isLoading ? 'Loading request usage' : undefined}
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="w-11 shrink-0">{valueContent}</div>
         <div
@@ -450,12 +476,14 @@ export function ProjectListCardRequestsChart({
         } satisfies CSSProperties
       }
     >
-      <ProjectListRequestsChartFromUsage
-        projectId={projectId}
-        usageByProjectId={usageByProjectId}
-        className={className}
-        variant="card"
-      />
+      <ProjectRequestsChartLink projectId={projectId}>
+        <ProjectListRequestsChartFromUsage
+          projectId={projectId}
+          usageByProjectId={usageByProjectId}
+          className={className}
+          variant="card"
+        />
+      </ProjectRequestsChartLink>
     </div>
   )
 }
@@ -470,10 +498,12 @@ export function ProjectListTableRequestsCell({
   usageByProjectId,
 }: ProjectListTableRequestsCellProps) {
   return (
-    <ProjectListRequestsChartFromUsage
-      projectId={projectId}
-      usageByProjectId={usageByProjectId}
-      variant="table"
-    />
+    <ProjectRequestsChartLink projectId={projectId}>
+      <ProjectListRequestsChartFromUsage
+        projectId={projectId}
+        usageByProjectId={usageByProjectId}
+        variant="table"
+      />
+    </ProjectRequestsChartLink>
   )
 }
