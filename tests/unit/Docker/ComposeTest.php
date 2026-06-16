@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Docker;
 
 use Appwrite\Docker\Compose;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
-class ComposeTest extends TestCase
+final class ComposeTest extends TestCase
 {
     protected ?Compose $object = null;
 

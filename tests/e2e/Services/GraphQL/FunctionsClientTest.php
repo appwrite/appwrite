@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
@@ -10,7 +12,7 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class FunctionsClientTest extends Scope
+final class FunctionsClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;

@@ -309,7 +309,7 @@ class Create extends Base
         ]));
 
         // Backwards compatibility with 1.6 behaviour
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
             // build from template
             $template = new Document([]);
@@ -345,12 +345,6 @@ class Create extends Base
                     referenceType: 'branch'
                 );
 
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                ]));
             } elseif (!$template->isEmpty()) {
                 // Deploy non-VCS from template
                 $deploymentId = ID::unique();
@@ -369,13 +363,6 @@ class Create extends Base
                     'startCommand' => $function->getAttribute('startCommand', ''),
                     'type' => 'manual',
                     'activate' => true,
-                ]));
-
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
                 ]));
 
                 $publisherForBuilds->enqueue(new BuildMessage(

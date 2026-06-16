@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Migration;
 
 use Appwrite\Migration\Migration;
@@ -12,7 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-class MigrationVersionsTest extends TestCase
+final class MigrationVersionsTest extends TestCase
 {
     /**
      * Check versions array integrity.
