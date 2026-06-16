@@ -197,10 +197,6 @@ class Update extends Base
             $installation = $dbForPlatform->getDocument('installations', $installationId);
         }
 
-        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForPlatform->find('repositories', [
