@@ -117,7 +117,7 @@ export function View() {
                       Platforms
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Repository
+                      Identifier
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                       Updated
@@ -157,8 +157,11 @@ export function View() {
                         <PlatformIcons platforms={app.platforms} />
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        <span className="truncate text-[12px] text-muted-foreground">
-                          {app.repository.owner}/{app.repository.name}
+                        <span className="truncate text-[12px] text-muted-foreground font-mono">
+                          {app.applicationId ||
+                            app.bundleId ||
+                            app.packageIdentity ||
+                            '-'}
                         </span>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
@@ -221,8 +224,11 @@ export function View() {
                       </div>
                       <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
                         <div className="flex min-w-0 items-center justify-between gap-2">
-                          <span className="truncate text-[12px] text-muted-foreground">
-                            {app.repository.owner}/{app.repository.name}
+                          <span className="truncate text-[12px] text-muted-foreground font-mono">
+                            {app.applicationId ||
+                              app.bundleId ||
+                              app.packageIdentity ||
+                              '-'}
                           </span>
                           <DateTooltip
                             date={app.$updatedAt}

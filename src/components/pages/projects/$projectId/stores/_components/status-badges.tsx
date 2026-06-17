@@ -1,15 +1,8 @@
 import { Badge } from '@/components/ui/badge'
-import type {
-  DistributionBuildStatus,
-  DistributionSubmissionStatus,
-} from '@/lib/react-query/hooks'
 
 type BadgeVariant = React.ComponentProps<typeof Badge>['variant']
 
-const BUILD_STATUS: Record<
-  DistributionBuildStatus,
-  { label: string; variant: BadgeVariant }
-> = {
+const BUILD_STATUS: Record<string, { label: string; variant: BadgeVariant }> = {
   building: { label: 'Building', variant: 'processing' },
   ready: { label: 'Ready', variant: 'success' },
   failed: { label: 'Failed', variant: 'error' },
@@ -17,7 +10,7 @@ const BUILD_STATUS: Record<
 }
 
 const SUBMISSION_STATUS: Record<
-  DistributionSubmissionStatus,
+  string,
   { label: string; variant: BadgeVariant }
 > = {
   queued: { label: 'Queued', variant: 'pending' },
@@ -29,12 +22,15 @@ const SUBMISSION_STATUS: Record<
   failed: { label: 'Failed', variant: 'error' },
 }
 
-export function BuildStatusBadge({
-  status,
-}: {
-  status: DistributionBuildStatus
-}) {
-  const { label, variant } = BUILD_STATUS[status]
+function fallback(status: string): { label: string; variant: BadgeVariant } {
+  const label = status
+    ? status.charAt(0).toUpperCase() + status.slice(1)
+    : 'Unknown'
+  return { label, variant: 'default' }
+}
+
+export function BuildStatusBadge({ status }: { status: string }) {
+  const { label, variant } = BUILD_STATUS[status] ?? fallback(status)
   return (
     <Badge variant={variant} className="text-[10px] shrink-0">
       {label}
@@ -42,12 +38,8 @@ export function BuildStatusBadge({
   )
 }
 
-export function SubmissionStatusBadge({
-  status,
-}: {
-  status: DistributionSubmissionStatus
-}) {
-  const { label, variant } = SUBMISSION_STATUS[status]
+export function SubmissionStatusBadge({ status }: { status: string }) {
+  const { label, variant } = SUBMISSION_STATUS[status] ?? fallback(status)
   return (
     <Badge variant={variant} className="text-[10px] shrink-0">
       {label}

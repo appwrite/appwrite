@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, GitBranch, Package } from 'lucide-react'
+import { ArrowLeft, Package } from 'lucide-react'
 import { ServiceHeader } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -143,24 +143,15 @@ export function View({ initialData }: ViewProps = {}) {
                   ))}
                 </span>
               </Detail>
-              <Detail label="Default track">{app.defaultTrack}</Detail>
+              <Detail label="Default track">{app.defaultTrack || '-'}</Detail>
               <Detail label="Identifier">
-                {app.applicationId ??
-                  app.bundleId ??
-                  app.packageIdentity ??
+                {app.applicationId ||
+                  app.bundleId ||
+                  app.packageIdentity ||
                   '-'}
               </Detail>
               <Detail label="Auto submit">
                 {app.autoSubmit ? 'Enabled' : 'Disabled'}
-              </Detail>
-              <Detail label="Repository">
-                <span className="flex items-center gap-1.5">
-                  <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
-                  {app.repository.owner}/{app.repository.name}
-                  <span className="text-muted-foreground">
-                    ({app.repository.branch})
-                  </span>
-                </span>
               </Detail>
             </div>
           </div>
@@ -198,9 +189,6 @@ export function View({ initialData }: ViewProps = {}) {
                       Status
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Commit
-                    </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Duration
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
@@ -233,16 +221,6 @@ export function View({ initialData }: ViewProps = {}) {
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <BuildStatusBadge status={build.status} />
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <span className="flex min-w-0 items-center gap-1.5">
-                          <code className="text-[12px] text-muted-foreground">
-                            {build.providerCommitHash}
-                          </code>
-                          <span className="truncate text-[12px] text-muted-foreground/80">
-                            {build.providerCommitMessage}
-                          </span>
-                        </span>
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <span className="text-[12px] text-muted-foreground font-mono">
@@ -323,12 +301,12 @@ export function View({ initialData }: ViewProps = {}) {
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <span className="text-[12px] text-muted-foreground font-mono">
-                          {submission.storeReleaseId ?? '-'}
+                          {submission.storeReleaseId || '-'}
                         </span>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
                         <DateTooltip
-                          date={submission.submittedAt}
+                          date={submission.$createdAt}
                           className="text-[12px] text-muted-foreground font-mono"
                         />
                       </TableCell>
