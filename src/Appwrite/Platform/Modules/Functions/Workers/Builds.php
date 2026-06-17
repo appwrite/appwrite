@@ -215,7 +215,7 @@ class Builds extends Action
         }
 
         if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
-            throw new \Exception('Resource is blocked');
+            throw new BuildException('Resource is blocked');
         }
 
         $log->addTag('deploymentId', $deployment->getId());
@@ -226,7 +226,7 @@ class Builds extends Action
         }
 
         if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
+            throw new BuildException('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
         $version = $this->getVersion($resource);
@@ -406,7 +406,7 @@ class Builds extends Action
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
-                    throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    throw new BuildException('Unable to clone code repository: ' . $stderr);
                 }
 
                 // Local refactoring for function folder with spaces
@@ -501,7 +501,7 @@ class Builds extends Action
                 }
 
                 if ($directorySize > $sizeLimit && $sizeLimit !== 0) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
+                    throw new BuildException('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -741,7 +741,7 @@ class Builds extends Action
                         $span?->set('build.runtime.timed_out', true);
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
-                        $err = new AppwriteException(AppwriteException::BUILD_TIMEOUT, previous: $error);
+                        $err = new BuildException(type: AppwriteException::BUILD_TIMEOUT, previous: $error);
                     } catch (\Throwable $error) {
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
@@ -867,7 +867,7 @@ class Builds extends Action
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
             if ($response['size'] > $buildSizeLimit && $buildSizeLimit !== 0) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
+                throw new BuildException('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
             $deployment->setAttribute('buildPath', $response['path']);
@@ -898,7 +898,7 @@ class Builds extends Action
                     Span::add('build.adapter', $deployment->getAttribute('adapter'));
                     Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                    throw new BuildException('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }
             }
 
@@ -1136,14 +1136,12 @@ class Builds extends Action
                 return;
             }
 
-            Span::add('build.error.stage', 'deployment');
-            Span::add('build.error.type', $th::class);
-            Span::add('build.error.message', $th->getMessage());
-            Span::add('build.error.file', $th->getFile());
-            Span::add('build.error.line', $th->getLine());
+            $isUserFacing = $th instanceof BuildException;
+            $message = $isUserFacing
+                ? $th->getMessage()
+                : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
 
             // Color message red
-            $message = $th->getMessage();
             if (! \str_contains($message, '')) {
                 $message = '[31m' . $message;
             }
@@ -1182,6 +1180,11 @@ class Builds extends Action
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform, true);
+            }
+
+            // Let the worker harness record internal errors via the span and logger.
+            if (! $isUserFacing) {
+                throw $th;
             }
         } finally {
             $queueForRealtime
@@ -1279,7 +1282,7 @@ class Builds extends Action
             default => null
         };
         if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+            throw new BuildException('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
         return $runtime;
