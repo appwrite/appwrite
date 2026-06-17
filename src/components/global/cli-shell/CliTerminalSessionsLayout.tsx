@@ -197,7 +197,7 @@ export function CliTerminalSessionsLayout({
               <div
                 className={cn(
                   'flex h-full min-h-0 flex-col',
-                  isSplit && isDisplayed && 'py-3 sm:pb-4',
+                  isSplit && isDisplayed && 'pt-3',
                 )}
               >
                 <div

@@ -8,6 +8,10 @@ import {
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import {
+  isPostgresSqlEditorPath,
+  usePostgresSqlEditorActions,
+} from '@/lib/postgres-sql-editor-actions'
+import {
   KeyboardShortcutsView,
   ShortcutKeyBadges,
 } from '@/components/global/shared/KeyboardShortcutsView'
@@ -293,6 +297,9 @@ export function CommandCenter({
   const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
   const { access: rbacAccess } = useOrganizationScopes(scopesOrgId)
   const access = rbacAccess ?? FULL_ACCESS
+  usePostgresSqlEditorActions()
+  const showPostgresSqlEditorShortcuts =
+    isProjectContext && isPostgresSqlEditorPath(location.pathname)
 
   // Build the runtime CommandContext used by registry entries.
   const closeCommandCenter = useCallback(
@@ -341,6 +348,7 @@ export function CommandCenter({
       scope: toRegistryScope(context),
       projectId: projectId ?? null,
       orgId: orgId ?? project?.teamId ?? null,
+      pathname: location.pathname,
       features,
       access,
       isMobile,
@@ -365,6 +373,7 @@ export function CommandCenter({
       projectId,
       orgId,
       project?.teamId,
+      location.pathname,
       features,
       access,
       isMobile,
@@ -1424,6 +1433,7 @@ export function CommandCenter({
             commands={allCommands}
             isMobile={isMobile}
             showTerminalShortcuts={isProjectContext && !!onToggleTerminal}
+            showPostgresSqlEditorShortcuts={showPostgresSqlEditorShortcuts}
             onBack={() => setPages([])}
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}

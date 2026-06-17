@@ -595,7 +595,7 @@ export function CliTerminalSession({
     <div
       className={cn(
         'relative flex h-full min-h-0 flex-col',
-        !isSplitPane && 'pt-2 pb-1.5',
+        !isSplitPane && 'pt-2',
         !isVisible && 'hidden',
       )}
     >

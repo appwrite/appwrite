@@ -28,6 +28,8 @@ export interface CommandContext {
   scope: CommandScope
   projectId?: string | null
   orgId?: string | null
+  /** Current route pathname for context-sensitive commands. */
+  pathname: string
   features: ConsoleProfileFeatures
   access: ConsoleAccess
   isMobile: boolean

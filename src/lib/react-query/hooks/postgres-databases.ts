@@ -12,6 +12,9 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  explainPostgresDatabaseQuery,
+} from '@/lib/postgres-query-explanation'
+import {
   normalizePostgresExecutionResult,
   wrapPostgresSqlForDisplay,
 } from '@/lib/postgres-execution-values'
@@ -39,7 +42,16 @@ import {
   sortPostgresTableIndexes,
   postgresRelationSupportsRowCtid,
 } from '@/lib/postgres-sql'
-import { parsePostgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
+import { parsePostgresTableId, postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
+import {
+  buildPostgresVisualizerColumnsBatchSql,
+  buildPostgresVisualizerExternalColumnsSql,
+  buildPostgresVisualizerForeignKeysSql,
+  POSTGRES_VISUALIZER_RELATIONS_BATCH_SIZE,
+  type PostgresVisualizerColumnRow,
+  type PostgresVisualizerForeignKeyRow,
+  type PostgresVisualizerRelationRef,
+} from '@/lib/postgres-visualizer-sql'
 import {
   buildPostgresCountRowsSql,
   buildPostgresDeleteRowSql,
@@ -367,6 +379,149 @@ export async function fetchPostgresTableInfo(
   )
   const rows = executionResultRows<PostgresTableInfoRow>(execution)
   return rows[0] ?? null
+}
+
+export type PostgresVisualizerColumn = {
+  name: string
+  dataType: string
+  udtName: string
+  required: boolean
+  isPrimaryKey: boolean
+}
+
+export type PostgresVisualizerRelation = {
+  id: string
+  schema: string
+  name: string
+  tableType: string
+  isExternal: boolean
+  columns: PostgresVisualizerColumn[]
+  columnsLoaded: boolean
+}
+
+export type PostgresVisualizerRelationship = {
+  from: string
+  to: string
+  fromColumn: string
+  toColumn: string
+  constraintName: string
+}
+
+function mapPostgresVisualizerColumnRow(
+  row: PostgresVisualizerColumnRow,
+): PostgresVisualizerColumn {
+  return {
+    name: row.column_name,
+    dataType: row.data_type,
+    udtName: row.udt_name,
+    required: row.is_nullable !== 'YES',
+    isPrimaryKey:
+      row.is_primary_key === true || row.is_primary_key === 'true',
+  }
+}
+
+function groupPostgresVisualizerColumns(
+  rows: PostgresVisualizerColumnRow[],
+): Map<string, PostgresVisualizerColumn[]> {
+  const grouped = new Map<string, PostgresVisualizerColumn[]>()
+  for (const row of rows) {
+    const key = postgresTableId(row.table_schema, row.table_name)
+    const columns = grouped.get(key) ?? []
+    columns.push(mapPostgresVisualizerColumnRow(row))
+    grouped.set(key, columns)
+  }
+  return grouped
+}
+
+export async function fetchPostgresVisualizerColumnsBatch(
+  projectId: string,
+  databaseId: string,
+  schema: string,
+  tableNames: string[],
+) {
+  if (!schema.trim() || tableNames.length === 0) {
+    return new Map<string, PostgresVisualizerColumn[]>()
+  }
+
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresVisualizerColumnsBatchSql(schema, tableNames),
+  )
+  const rows = executionResultRows<PostgresVisualizerColumnRow>(execution)
+  return groupPostgresVisualizerColumns(rows)
+}
+
+export async function fetchPostgresVisualizerExternalColumns(
+  projectId: string,
+  databaseId: string,
+  relations: PostgresVisualizerRelationRef[],
+) {
+  if (relations.length === 0) {
+    return new Map<string, PostgresVisualizerColumn[]>()
+  }
+
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresVisualizerExternalColumnsSql(relations),
+  )
+  const rows = executionResultRows<PostgresVisualizerColumnRow>(execution)
+  return groupPostgresVisualizerColumns(rows)
+}
+
+export async function fetchPostgresVisualizerForeignKeys(
+  projectId: string,
+  databaseId: string,
+  schema: string,
+) {
+  if (!schema.trim()) return [] as PostgresVisualizerForeignKeyRow[]
+
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresVisualizerForeignKeysSql(schema),
+  )
+  return executionResultRows<PostgresVisualizerForeignKeyRow>(execution).filter(
+    (row) =>
+      row.source_schema &&
+      row.source_table &&
+      row.source_column &&
+      row.target_schema &&
+      row.target_table &&
+      row.target_column,
+  )
+}
+
+export function postgresVisualizerForeignKeysQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+) {
+  const normalizedSchema = schema?.trim() || undefined
+  return queryOptions({
+    queryKey: [
+      'postgres-visualizer',
+      'foreign-keys',
+      'project',
+      projectId,
+      databaseId,
+      normalizedSchema,
+    ],
+    queryFn: () =>
+      fetchPostgresVisualizerForeignKeys(
+        projectId!,
+        databaseId!,
+        normalizedSchema!,
+      ),
+    enabled: !!projectId && !!databaseId && !!normalizedSchema,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && normalizedSchema ? 5 * 60 * 1000 : 0,
+  })
 }
 
 export type PostgresTableRowsListParams = {
@@ -982,7 +1137,7 @@ export function postgresSidebarSchemasInfiniteQueryOptions(
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.page + 1 : undefined,
+      lastPage?.hasMore ? lastPage.page + 1 : undefined,
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1018,7 +1173,7 @@ export function postgresSidebarTablesInfiniteQueryOptions(
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.page + 1 : undefined,
+      lastPage?.hasMore ? lastPage.page + 1 : undefined,
     enabled: !!projectId && !!databaseId && !!schema?.trim(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1251,6 +1406,287 @@ export function usePostgresTableInfo(
   }
 }
 
+function buildPostgresVisualizerRelationships(
+  foreignKeys: PostgresVisualizerForeignKeyRow[],
+): PostgresVisualizerRelationship[] {
+  return foreignKeys.map((row) => ({
+    from: postgresTableId(row.source_schema, row.source_table),
+    to: postgresTableId(row.target_schema, row.target_table),
+    fromColumn: row.source_column,
+    toColumn: row.target_column,
+    constraintName: row.constraint_name,
+  }))
+}
+
+function collectExternalPostgresVisualizerTargets(
+  foreignKeys: PostgresVisualizerForeignKeyRow[],
+  loadedRelationIds: Set<string>,
+  activeSchema: string,
+): PostgresVisualizerRelationRef[] {
+  const targets = new Map<string, PostgresVisualizerRelationRef>()
+
+  for (const row of foreignKeys) {
+    const targetId = postgresTableId(row.target_schema, row.target_table)
+    if (loadedRelationIds.has(targetId)) continue
+    if (row.target_schema === activeSchema) continue
+    targets.set(targetId, {
+      schema: row.target_schema,
+      table: row.target_table,
+    })
+  }
+
+  return Array.from(targets.values())
+}
+
+/**
+ * Gradually loads schema visualizer data: relations in batches, then columns per batch,
+ * plus foreign keys and external FK targets in separate optimized queries.
+ */
+export function usePostgresSchemaVisualizer(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+) {
+  const normalizedSchema = schema?.trim() || undefined
+  const [relations, setRelations] = useState<PostgresVisualizerRelation[]>([])
+  const [totalRelations, setTotalRelations] = useState(0)
+  const [loadedRelations, setLoadedRelations] = useState(0)
+  const [isLoadingRelations, setIsLoadingRelations] = useState(false)
+  const [isLoadingColumns, setIsLoadingColumns] = useState(false)
+  const [isComplete, setIsComplete] = useState(false)
+  const [loadError, setLoadError] = useState<Error | null>(null)
+  const loadGenerationRef = useRef(0)
+  const externalTargetsLoadedRef = useRef<string | null>(null)
+
+  const {
+    data: foreignKeys = [],
+    isLoading: foreignKeysLoading,
+    error: foreignKeysError,
+  } = useQuery(
+    postgresVisualizerForeignKeysQueryOptions(
+      projectId,
+      databaseId,
+      normalizedSchema,
+    ),
+  )
+
+  useEffect(() => {
+    if (!projectId || !databaseId || !normalizedSchema) {
+      setRelations([])
+      setTotalRelations(0)
+      setLoadedRelations(0)
+      setIsLoadingRelations(false)
+      setIsLoadingColumns(false)
+      setIsComplete(false)
+      setLoadError(null)
+      return
+    }
+
+    const generation = loadGenerationRef.current + 1
+    loadGenerationRef.current = generation
+    let cancelled = false
+
+    async function loadSchemaVisualizer() {
+      setRelations([])
+      setTotalRelations(0)
+      setLoadedRelations(0)
+      setIsComplete(false)
+      setLoadError(null)
+      setIsLoadingRelations(true)
+      setIsLoadingColumns(false)
+
+      const relationMap = new Map<string, PostgresVisualizerRelation>()
+      let page = 0
+      let total = 0
+
+      try {
+        while (!cancelled && loadGenerationRef.current === generation) {
+          const tablesPage = await fetchPostgresTablesPage(
+            projectId!,
+            databaseId!,
+            {
+              schema: normalizedSchema,
+              page,
+              limit: POSTGRES_VISUALIZER_RELATIONS_BATCH_SIZE,
+            },
+          )
+
+          if (page === 0) {
+            total = tablesPage.total
+            setTotalRelations(total)
+          }
+
+          if (tablesPage.tables.length === 0) {
+            break
+          }
+
+          setIsLoadingColumns(true)
+
+          const tableNames = tablesPage.tables.map((row) => row.table_name)
+          const columnsByRelation = await fetchPostgresVisualizerColumnsBatch(
+            projectId!,
+            databaseId!,
+            normalizedSchema!,
+            tableNames,
+          )
+
+          for (const table of tablesPage.tables) {
+            const id = postgresTableId(table.table_schema, table.table_name)
+            relationMap.set(id, {
+              id,
+              schema: table.table_schema,
+              name: table.table_name,
+              tableType: table.table_type,
+              isExternal: false,
+              columns: columnsByRelation.get(id) ?? [],
+              columnsLoaded: true,
+            })
+          }
+
+          setRelations(Array.from(relationMap.values()))
+          setLoadedRelations(relationMap.size)
+          setIsLoadingRelations(false)
+          setIsLoadingColumns(false)
+
+          if (!tablesPage.hasMore) {
+            break
+          }
+
+          page += 1
+        }
+
+        if (cancelled || loadGenerationRef.current !== generation) return
+
+        setIsComplete(true)
+        setIsLoadingRelations(false)
+        setIsLoadingColumns(false)
+      } catch (error) {
+        if (cancelled || loadGenerationRef.current !== generation) return
+        setLoadError(
+          error instanceof Error ? error : new Error('Failed to load schema'),
+        )
+        setIsLoadingRelations(false)
+        setIsLoadingColumns(false)
+      }
+    }
+
+    void loadSchemaVisualizer()
+
+    return () => {
+      cancelled = true
+    }
+  }, [projectId, databaseId, normalizedSchema])
+
+  useEffect(() => {
+    externalTargetsLoadedRef.current = null
+  }, [normalizedSchema])
+
+  useEffect(() => {
+    if (!projectId || !databaseId || !normalizedSchema) return
+    if (foreignKeysLoading || foreignKeys.length === 0) return
+    if (!isComplete) return
+    if (externalTargetsLoadedRef.current === normalizedSchema) return
+
+    const loadedIds = new Set(relations.map((relation) => relation.id))
+    const externalTargets = collectExternalPostgresVisualizerTargets(
+      foreignKeys,
+      loadedIds,
+      normalizedSchema,
+    )
+    if (externalTargets.length === 0) {
+      externalTargetsLoadedRef.current = normalizedSchema
+      return
+    }
+
+    externalTargetsLoadedRef.current = normalizedSchema
+    let cancelled = false
+
+    async function loadExternalTargets() {
+      try {
+        const columnsByRelation = await fetchPostgresVisualizerExternalColumns(
+          projectId!,
+          databaseId!,
+          externalTargets,
+        )
+
+        if (cancelled) return
+
+        setRelations((current) => {
+          const next = [...current]
+          const existingIds = new Set(current.map((relation) => relation.id))
+
+          for (const target of externalTargets) {
+            const id = postgresTableId(target.schema, target.table)
+            if (existingIds.has(id)) continue
+
+            next.push({
+              id,
+              schema: target.schema,
+              name: target.table,
+              tableType: 'BASE TABLE',
+              isExternal: true,
+              columns: columnsByRelation.get(id) ?? [],
+              columnsLoaded: true,
+            })
+            existingIds.add(id)
+          }
+
+          return next
+        })
+      } catch {
+        /* External targets are optional for layout */
+      }
+    }
+
+    void loadExternalTargets()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    projectId,
+    databaseId,
+    normalizedSchema,
+    foreignKeys,
+    foreignKeysLoading,
+    isComplete,
+    relations,
+  ])
+
+  const relationships = useMemo(
+    () => buildPostgresVisualizerRelationships(foreignKeys),
+    [foreignKeys],
+  )
+
+  const isLoading =
+    isLoadingRelations ||
+    isLoadingColumns ||
+    foreignKeysLoading ||
+    (!!normalizedSchema && !isComplete && relations.length === 0 && !loadError)
+
+  return {
+    relations,
+    relationships,
+    totalRelations,
+    loadedRelations,
+    isLoading,
+    isLoadingRelations,
+    isLoadingColumns,
+    isComplete,
+    error: loadError ?? foreignKeysError ?? null,
+  }
+}
+
+export function useExplainPostgresSql(
+  projectId: string,
+  databaseId: string,
+) {
+  return useMutation({
+    mutationFn: (query: string) =>
+      explainPostgresDatabaseQuery(projectId, databaseId, query),
+  })
+}
+
 export function useExecutePostgresSql(
   projectId: string,
   databaseId: string,
@@ -1283,6 +1719,9 @@ export function useExecutePostgresSql(
       })
       void queryClient.invalidateQueries({
         queryKey: ['postgres-table-info', 'project', projectId, databaseId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['postgres-visualizer', 'project', projectId, databaseId],
       })
     },
   })

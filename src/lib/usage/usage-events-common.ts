@@ -1,7 +1,6 @@
 import {
   addDays,
   addHours,
-  addMinutes,
   differenceInCalendarDays,
   endOfDay,
   format,
@@ -9,7 +8,6 @@ import {
   parseISO,
   startOfDay,
   startOfHour,
-  startOfMinute,
   subDays,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
@@ -99,13 +97,11 @@ export function resolveOverviewUsagePeriod(
 }
 
 function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
-  if (interval === '1m') return startOfMinute(date)
   if (interval === '1h') return startOfHour(date)
   return startOfDay(date)
 }
 
 function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
-  if (interval === '1m') return addMinutes(date, 1)
   if (interval === '1h') return addHours(date, 1)
   return addDays(date, 1)
 }
@@ -141,10 +137,6 @@ function formatChartPointLabel(
   rangeFrom: Date,
   rangeTo: Date,
 ): string {
-  if (interval === '1m') {
-    const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
-    return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')
-  }
   if (interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
     return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')

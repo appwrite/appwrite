@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
+import { PostgresSchemaVisualizer } from '@/components/pages/projects/$projectId/databases/postgres/SchemaVisualizer'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
+import { postgresSidebarSchemasInfiniteQueryOptions } from '@/lib/react-query/hooks/postgres-databases'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -16,15 +17,30 @@ export const Route = createFileRoute(
   }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return { database: null }
-    return prefetchPostgresShellData(
-      context.queryClient,
-      params.projectId,
-      params.databaseId,
+
+    const { projectId, databaseId } = params
+    const { queryClient } = context
+
+    const shellData = await prefetchPostgresShellData(
+      queryClient,
+      projectId,
+      databaseId,
     )
+
+    await queryClient
+      .prefetchInfiniteQuery(
+        postgresSidebarSchemasInfiniteQueryOptions(projectId, databaseId, ''),
+      )
+      .catch(() => {
+        /* optional prefetch */
+      })
+
+    return shellData
   },
   component: PostgresVisualizerPage,
 })
 
 function PostgresVisualizerPage() {
-  return <TabPlaceholder tab="visualizer" />
+  const { databaseId } = Route.useParams()
+  return <PostgresSchemaVisualizer databaseId={databaseId} />
 }

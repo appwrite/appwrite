@@ -14,6 +14,7 @@ import {
   CLI_SHELL_CONSOLE_SHORTCUTS,
   CLI_TERMINAL_INPUT_SHORTCUTS,
 } from '@/lib/cli-shell/cli-terminal-shortcuts'
+import { POSTGRES_SQL_EDITOR_SHORTCUTS } from '@/lib/postgres-sql-editor-shortcuts'
 import { KeyboardLayoutVisualizer } from '@/components/global/shared/KeyboardLayoutVisualizer'
 
 interface ShortcutCommand {
@@ -28,6 +29,7 @@ interface KeyboardShortcutsViewProps {
   commands: ShortcutCommand[]
   isMobile: boolean
   showTerminalShortcuts?: boolean
+  showPostgresSqlEditorShortcuts?: boolean
   onBack: () => void
   onClose: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
@@ -83,6 +85,7 @@ export function KeyboardShortcutsView({
   commands,
   isMobile,
   showTerminalShortcuts = false,
+  showPostgresSqlEditorShortcuts = false,
   onBack,
   onClose,
   onKeyDown,
@@ -97,16 +100,24 @@ export function KeyboardShortcutsView({
       isMac,
     )
 
-    if (!showTerminalShortcuts) return base
+    let merged = base
 
-    return mergeShortcutGroups(base, [
+    if (showPostgresSqlEditorShortcuts) {
+      merged = mergeShortcutGroups(merged, [
+        buildShortcutRefGroup('SQL editor', POSTGRES_SQL_EDITOR_SHORTCUTS, isMac),
+      ])
+    }
+
+    if (!showTerminalShortcuts) return merged
+
+    return mergeShortcutGroups(merged, [
       buildShortcutRefGroup(
         'Terminal',
         [...CLI_SHELL_CONSOLE_SHORTCUTS, ...CLI_TERMINAL_INPUT_SHORTCUTS],
         isMac,
       ),
     ])
-  }, [commands, isMac, showTerminalShortcuts])
+  }, [commands, isMac, showPostgresSqlEditorShortcuts, showTerminalShortcuts])
 
   const allShortcuts = useMemo(
     () => groups.flatMap((group) => group.shortcuts),

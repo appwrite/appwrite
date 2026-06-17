@@ -3,6 +3,11 @@ import type { Models } from '@appwrite.io/console'
 import { executionResultRows, formatPostgresSql } from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import {
+  registerPostgresSqlEditorActions,
+  type PostgresSqlEditorActions,
+} from '@/lib/postgres-sql-editor-actions'
+import { usePostgresSqlEditorShortcuts } from '@/lib/postgres-sql-editor/use-postgres-sql-editor-shortcuts'
 import { ReadOnlyDataSpreadsheet } from '@/components/global/shared/ReadOnlyDataSpreadsheet'
 import { PostgresQueryResultsMeta } from './_components/PostgresQueryResultsMeta'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -14,6 +19,7 @@ import type { PostgresSqlCodeEditorRef } from './PostgresSqlCodeEditor'
 import { SqlEditorActionBar } from './_components/SqlEditorActionBar'
 import { SqlEditorTabBar } from './_components/SqlEditorTabBar'
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
+import { PostgresQueryPlanView } from './_components/PostgresQueryPlanView'
 import { SavePostgresQueryDialog } from './_components/SavePostgresQueryDialog'
 import { POSTGRES_SQL_EDITOR_SURFACE_CLASS } from './_components/postgres-chrome'
 import type { SqlEditorTab } from './_components/PostgresSidebarContext'
@@ -30,9 +36,13 @@ type SqlWorkbenchProps = {
   onCloseTab: (tabId: string) => void
   onReorderTabs: (activeId: string, overId: string) => void
   onRun: () => void
+  onExplain: () => void
   isRunning: boolean
+  isExplaining: boolean
   error: unknown
   result: Models.DedicatedDatabaseExecution | null
+  explainResult: Models.DedicatedDatabaseQueryExplanation | null
+  resultKind?: 'query' | 'explain'
   account: { prefs?: Record<string, unknown> } | undefined
   teamId: string | null | undefined
   canSaveTeam: boolean
@@ -52,9 +62,13 @@ export function SqlWorkbench({
   onCloseTab,
   onReorderTabs,
   onRun,
+  onExplain,
   isRunning,
+  isExplaining,
   error,
   result,
+  explainResult,
+  resultKind = 'query',
   account,
   teamId,
   canSaveTeam,
@@ -66,10 +80,14 @@ export function SqlWorkbench({
   const [canRedo, setCanRedo] = useState(false)
   const sqlEditorRef = useRef<PostgresSqlCodeEditorRef>(null)
   const hasSql = !!sql.trim()
-  const canRunQuery = !isRunning && hasSql
+  const isBusy = isRunning || isExplaining
+  const canRunQuery = !isBusy && hasSql
+  const canExplainQuery = !isBusy && hasSql
   const canSaveQuery = hasSql
   const canFormatQuery = hasSql
   const errorMessage = error ? getErrorMessage(error) : null
+  const errorTitle = resultKind === 'explain' ? 'Explain failed' : 'Query failed'
+  const loadingLabel = isExplaining ? 'Explaining query…' : 'Running query…'
   const resultRows = useMemo(
     () => (result ? executionResultRows<Record<string, unknown>>(result) : []),
     [result],
@@ -86,19 +104,61 @@ export function SqlWorkbench({
       ? Object.keys(first).map((key) => ({ key, label: key }))
       : []
   }, [result?.columns, resultRows])
-  const showQueryResults = result != null || isRunning
+  const showQueryResults =
+    result != null || explainResult != null || isBusy
+  const showExplainResults =
+    isExplaining || (resultKind === 'explain' && !isRunning)
 
   useEffect(() => {
     setCanUndo(false)
     setCanRedo(false)
   }, [activeTabId])
 
+  const editorActions = useMemo<PostgresSqlEditorActions>(
+    () => ({
+      canUndo,
+      canRedo,
+      canSave: canSaveQuery,
+      canFormat: canFormatQuery,
+      canRun: canRunQuery,
+      canExplain: canExplainQuery,
+      undo: () => sqlEditorRef.current?.undo(),
+      redo: () => sqlEditorRef.current?.redo(),
+      save: () => setSaveDialogOpen(true),
+      format: () => onSqlChange(formatPostgresSql(sql)),
+      run: onRun,
+      explain: onExplain,
+    }),
+    [
+      canExplainQuery,
+      canFormatQuery,
+      canRedo,
+      canRunQuery,
+      canSaveQuery,
+      canUndo,
+      onExplain,
+      onRun,
+      onSqlChange,
+      sql,
+    ],
+  )
+
+  useEffect(() => {
+    registerPostgresSqlEditorActions(editorActions)
+    return () => registerPostgresSqlEditorActions(null)
+  }, [editorActions])
+
+  usePostgresSqlEditorShortcuts(editorActions)
+
   return (
     <>
     <PostgresSqlEditorContainer
       className="h-full min-h-0 flex-1"
       editor={
-        <div className="relative flex h-full min-h-0 flex-col">
+        <div
+          className="relative flex h-full min-h-0 flex-col"
+          data-postgres-sql-workbench
+        >
           <div className="shrink-0 bg-background">
             <ServiceHeader
               title="SQL editor"
@@ -142,10 +202,6 @@ export function SqlWorkbench({
               tabId={activeTabId}
               sql={sql}
               onSqlChange={onSqlChange}
-              onRun={onRun}
-              canRun={canRunQuery}
-              onFormat={() => onSqlChange(formatPostgresSql(sql))}
-              canFormat={canFormatQuery}
               onUndoRedoStateChange={({ canUndo: nextCanUndo, canRedo: nextCanRedo }) => {
                 setCanUndo(nextCanUndo)
                 setCanRedo(nextCanRedo)
@@ -159,10 +215,13 @@ export function SqlWorkbench({
               canSave={canSaveQuery}
               canFormat={canFormatQuery}
               canRun={canRunQuery}
+              canExplain={canExplainQuery}
               isRunning={isRunning}
+              isExplaining={isExplaining}
               onSave={() => setSaveDialogOpen(true)}
               onFormat={() => onSqlChange(formatPostgresSql(sql))}
               onRun={onRun}
+              onExplain={onExplain}
             />
           </div>
         </div>
@@ -170,9 +229,9 @@ export function SqlWorkbench({
     >
       {errorMessage ? (
         <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Query failed</AlertTitle>
+          <Alert>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <AlertTitle>{errorTitle}</AlertTitle>
             <AlertDescription className="text-[13px]">
               {errorMessage}
             </AlertDescription>
@@ -181,6 +240,14 @@ export function SqlWorkbench({
       ) : null}
 
       {showQueryResults ? (
+        showExplainResults ? (
+          <PostgresQueryPlanView
+            className="min-h-0 flex-1"
+            explanation={explainResult}
+            isLoading={isExplaining && !explainResult}
+            loadingLabel={loadingLabel}
+          />
+        ) : (
         <ReadOnlyDataSpreadsheet
           className="min-h-0 flex-1"
           variant="studio"
@@ -189,8 +256,8 @@ export function SqlWorkbench({
           columns={resultColumns}
           rows={resultRows}
           getRowKey={(_, index) => `sql-result-${index}`}
-          isLoading={isRunning && !result}
-          loadingLabel="Running query…"
+          isLoading={isBusy && !result}
+          loadingLabel={loadingLabel}
           emptyContent={<SqlWorkbenchPanelEmptyState variant="query-no-rows" />}
           header={
             result ? (
@@ -203,6 +270,7 @@ export function SqlWorkbench({
             ) : undefined
           }
         />
+        )
       ) : (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {children}
