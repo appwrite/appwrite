@@ -152,7 +152,6 @@ class Create extends Action
                 $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
-                // Continue detection without package.json
             }
 
             $output = new Document([
@@ -210,7 +209,6 @@ class Create extends Action
                             break;
                         }
                     } catch (FileNotFound $e) {
-                        // Try next config file
                     }
                 }
 
@@ -218,9 +216,6 @@ class Create extends Action
             } else {
                 $frameworkName = 'other';
                 $detectedAdapter = '';
-                $output->setAttribute('installCommand', '');
-                $output->setAttribute('buildCommand', '');
-                $output->setAttribute('outputDirectory', '');
             }
 
             $frameworks = Config::getParam('frameworks');
