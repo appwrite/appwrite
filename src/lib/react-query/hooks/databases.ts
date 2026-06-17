@@ -3722,7 +3722,7 @@ export function useDeleteProjectTable(
 }
 
 /**
- * Commit staged row cell edits atomically using a Tables DB transaction.
+ * Commit staged row cell edits atomically using a database transaction.
  */
 type TableRowsListCache = {
   rows: unknown[]
@@ -3785,6 +3785,65 @@ export function applyCommittedEditsToRowsCache(
   }
 }
 
+type RowEditTransactionSdk = {
+  createTransaction: (params?: { ttl?: number }) => Promise<{ $id: string }>
+  createOperations?: (params: {
+    transactionId: string
+    operations?: object[]
+  }) => Promise<unknown>
+  updateTransaction: (params: {
+    transactionId: string
+    commit?: boolean
+    rollback?: boolean
+  }) => Promise<unknown>
+}
+
+type DocumentRowUpdateOperation = {
+  databaseId: string
+  collectionId: string
+  documentId: string
+  data: Record<string, unknown>
+}
+
+function getRowEditTransactionSdk(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  kind: DatabaseType,
+): RowEditTransactionSdk {
+  if (kind === DatabaseType.Documentsdb) return projectSdk.documentsDB
+  if (kind === DatabaseType.Vectorsdb) return projectSdk.vectorsDB
+  return projectSdk.tablesDB
+}
+
+async function stageRowEditTransactionOperations(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  kind: DatabaseType,
+  transactionId: string,
+  operations: object[],
+) {
+  if (kind === DatabaseType.Documentsdb) {
+    for (const operation of operations as DocumentRowUpdateOperation[]) {
+      await projectSdk.documentsDB.updateDocument({
+        databaseId: operation.databaseId,
+        collectionId: operation.collectionId,
+        documentId: operation.documentId,
+        data: operation.data,
+        transactionId,
+      })
+    }
+    return
+  }
+
+  const transactionSdk = getRowEditTransactionSdk(projectSdk, kind)
+  if (typeof transactionSdk.createOperations !== 'function') {
+    throw new Error('Bulk transaction staging is not available in this environment')
+  }
+
+  await transactionSdk.createOperations({
+    transactionId,
+    operations,
+  })
+}
+
 export async function commitProjectTableRowEdits(
   projectId: string,
   edits: PendingRowCellEdit[],
@@ -3800,30 +3859,29 @@ export async function commitProjectTableRowEdits(
   const databaseId = edits[0].databaseId
   const dm = await getDatabaseModel(projectId, databaseId)
   const kind = dm?.type ?? DatabaseType.Tablesdb
+  const transactionSdk = getRowEditTransactionSdk(projectSdk, kind)
 
-  if (kind !== DatabaseType.Tablesdb) {
-    throw new Error('Row edit transactions are only supported for Tables DB')
-  }
-
-  if (typeof projectSdk.tablesDB.createTransaction !== 'function') {
+  if (typeof transactionSdk.createTransaction !== 'function') {
     throw new Error('Transactions are not available in this environment')
   }
 
-  const operations = groupEditsIntoUpdateOperations(edits)
-  const tx = await projectSdk.tablesDB.createTransaction()
+  const operations = groupEditsIntoUpdateOperations(edits, kind)
+  const tx = await transactionSdk.createTransaction()
 
   try {
-    await projectSdk.tablesDB.createOperations({
-      transactionId: tx.$id,
+    await stageRowEditTransactionOperations(
+      projectSdk,
+      kind,
+      tx.$id,
       operations,
-    })
-    await projectSdk.tablesDB.updateTransaction({
+    )
+    await transactionSdk.updateTransaction({
       transactionId: tx.$id,
       commit: true,
     })
   } catch (error) {
     try {
-      await projectSdk.tablesDB.updateTransaction({
+      await transactionSdk.updateTransaction({
         transactionId: tx.$id,
         rollback: true,
       })
