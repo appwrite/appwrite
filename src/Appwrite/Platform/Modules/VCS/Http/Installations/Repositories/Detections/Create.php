@@ -194,10 +194,6 @@ class Create extends Action
 
                 $configContent = '';
                 foreach ($framework->getConfigFiles() as $configFile) {
-                    if ($configFile === 'package.json') {
-                        $configContent = $packages;
-                        break;
-                    }
                     if (!\in_array($configFile, $files, true)) {
                         continue;
                     }
