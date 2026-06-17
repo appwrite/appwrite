@@ -5,36 +5,32 @@
 import { queryOptions, useQuery, useQueries, keepPreviousData } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
-import { endOfDay, startOfDay, subDays } from 'date-fns'
 import {
-  fetchProjectBandwidthChartOverview,
-  fetchProjectBandwidthTopConsumers,
-  type ProjectBandwidthChartOverview,
-  type ProjectBandwidthTopConsumersOverview,
+  fetchProjectBandwidthOverview,
+  type ProjectBandwidthOverview,
 } from '@/lib/usage/bandwidth-events'
 import {
   fetchProjectRequestsChartOverview,
-  fetchProjectRequestsTopEndpoints,
+  fetchProjectRequestsOverview,
   type ProjectRequestsChartOverview,
-  type ProjectRequestsTopEndpointsOverview,
+  type ProjectRequestsOverview,
 } from '@/lib/usage/requests-events'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
+import {
+  getDefaultUsageChartDateRange,
+  resolveUsageDateBounds,
+} from '@/lib/usage/usage-date-range'
 import { DEFAULT_STALE_TIME } from './constants'
-
-function getDefaultOverviewDateRange(): DateRange {
-  return {
-    from: startOfDay(subDays(new Date(), 29)),
-    to: endOfDay(new Date()),
-  }
-}
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   from: string
   to: string
 } {
-  const resolved = dateRange ?? getDefaultOverviewDateRange()
-  const from = startOfDay(resolved.from ?? subDays(new Date(), 29)).toISOString()
-  const to = endOfDay(resolved.to ?? new Date()).toISOString()
-  return { from, to }
+  const { from, to } = resolveUsageDateBounds(dateRange)
+  return { from: from.toISOString(), to: to.toISOString() }
 }
 
 const usageEventsQueryOptionsBase = {
@@ -46,140 +42,206 @@ const usageEventsQueryOptionsBase = {
   placeholderData: keepPreviousData,
 }
 
-export function bandwidthChartOverviewQueryOptions(
+export function bandwidthOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
   const { from, to } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: ['usage-events', 'bandwidth', 'chart', 'project', projectId, from, to],
+    queryKey: [
+      'usage-events',
+      'bandwidth',
+      'overview',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
     queryFn: () =>
-      fetchProjectBandwidthChartOverview(projectId!, {
-        from: new Date(from),
-        to: new Date(to),
-      }),
+      fetchProjectBandwidthOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
 
+export function requestsOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'requests',
+      'overview',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectRequestsOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/** Org project list sparklines — chart only, no breakdown dimensions payload in query key. */
+export function requestsChartOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'requests',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectRequestsChartOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/** @deprecated Use bandwidthOverviewQueryOptions */
+export function bandwidthChartOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return bandwidthOverviewQueryOptions(projectId, dateRange, interval)
+}
+
+/** @deprecated Use bandwidthOverviewQueryOptions */
 export function bandwidthTopConsumersQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: ['usage-events', 'bandwidth', 'top', 'project', projectId, from, to],
-    queryFn: () =>
-      fetchProjectBandwidthTopConsumers(projectId!, {
-        from: new Date(from),
-        to: new Date(to),
-      }),
+  return {
+    ...bandwidthOverviewQueryOptions(projectId, dateRange, interval),
     enabled: !!projectId && enabled,
-    ...usageEventsQueryOptionsBase,
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
+  }
 }
 
-export function requestsChartOverviewQueryOptions(
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: ['usage-events', 'requests', 'chart', 'project', projectId, from, to],
-    queryFn: () =>
-      fetchProjectRequestsChartOverview(projectId!, {
-        from: new Date(from),
-        to: new Date(to),
-      }),
-    enabled: !!projectId,
-    ...usageEventsQueryOptionsBase,
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
-}
-
+/** @deprecated Use requestsOverviewQueryOptions */
 export function requestsTopEndpointsQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: ['usage-events', 'requests', 'top', 'project', projectId, from, to],
-    queryFn: () =>
-      fetchProjectRequestsTopEndpoints(projectId!, {
-        from: new Date(from),
-        to: new Date(to),
-      }),
+  return {
+    ...requestsOverviewQueryOptions(projectId, dateRange, interval),
     enabled: !!projectId && enabled,
-    ...usageEventsQueryOptionsBase,
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  }
+}
+
+export function useProjectBandwidthOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...bandwidthOverviewQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
   })
 }
 
-/** @deprecated Use bandwidthChartOverviewQueryOptions */
-export function bandwidthOverviewQueryOptions(
+export function useProjectRequestsOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  return bandwidthChartOverviewQueryOptions(projectId, dateRange)
+  return useQuery({
+    ...requestsOverviewQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
 }
 
-/** @deprecated Use requestsChartOverviewQueryOptions */
-export function requestsOverviewQueryOptions(
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-) {
-  return requestsChartOverviewQueryOptions(projectId, dateRange)
-}
-
+/** @deprecated Use useProjectBandwidthOverview */
 export function useProjectBandwidthChartOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  return useQuery(bandwidthChartOverviewQueryOptions(projectId, dateRange))
+  return useProjectBandwidthOverview(projectId, dateRange, true, interval)
 }
 
+/** @deprecated Use useProjectBandwidthOverview */
 export function useProjectBandwidthTopConsumers(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  return useQuery(
-    bandwidthTopConsumersQueryOptions(projectId, dateRange, enabled),
-  )
+  return useProjectBandwidthOverview(projectId, dateRange, enabled, interval)
 }
 
+/** @deprecated Use useProjectRequestsOverview */
 export function useProjectRequestsChartOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  return useQuery(requestsChartOverviewQueryOptions(projectId, dateRange))
+  return useProjectRequestsOverview(projectId, dateRange, true, interval)
 }
 
+/** @deprecated Use useProjectRequestsOverview */
 export function useProjectRequestsTopEndpoints(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  return useQuery(
-    requestsTopEndpointsQueryOptions(projectId, dateRange, enabled),
-  )
+  return useProjectRequestsOverview(projectId, dateRange, enabled, interval)
 }
 
-/** Last 30 days — matches project overview request charts. */
+/** Last 24 hours — matches project overview usage charts. */
 export function getProjectListRequestsChartDateRange(): DateRange {
-  return {
-    from: startOfDay(subDays(new Date(), 29)),
-    to: endOfDay(new Date()),
-  }
+  return getDefaultUsageChartDateRange()
 }
 
 export type ProjectListRequestsUsageEntry = {
@@ -195,7 +257,7 @@ export function useProjectListRequestsUsage(
   projectIds: string[],
   enabled: boolean,
 ): Map<string, ProjectListRequestsUsageEntry> {
-  const dateRange = getProjectListRequestsChartDateRange()
+  const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
   const uniqueIds = useMemo(
     () => [...new Set(projectIds.filter(Boolean))],
     [projectIds],
@@ -203,7 +265,11 @@ export function useProjectListRequestsUsage(
 
   const queries = useQueries({
     queries: uniqueIds.map((projectId) => ({
-      ...requestsChartOverviewQueryOptions(projectId, dateRange),
+      ...requestsChartOverviewQueryOptions(
+        projectId,
+        dateRange,
+        DEFAULT_USAGE_CHART_INTERVAL,
+      ),
       enabled: enabled && !!projectId,
     })),
   })
@@ -222,35 +288,14 @@ export function useProjectListRequestsUsage(
   }, [uniqueIds, queries])
 }
 
-/** @deprecated Use useProjectBandwidthChartOverview */
-export function useProjectBandwidthOverview(
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  initialData?: ProjectBandwidthChartOverview,
-) {
-  return useQuery({
-    ...bandwidthChartOverviewQueryOptions(projectId, dateRange),
-    initialData,
-  })
-}
-
-/** @deprecated Use useProjectRequestsChartOverview */
-export function useProjectRequestsOverview(
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  initialData?: ProjectRequestsChartOverview,
-) {
-  return useQuery({
-    ...requestsChartOverviewQueryOptions(projectId, dateRange),
-    initialData,
-  })
-}
-
 export type {
-  ProjectBandwidthChartOverview,
-  ProjectBandwidthTopConsumersOverview,
+  ProjectBandwidthOverview,
+  ProjectRequestsOverview,
   ProjectRequestsChartOverview,
-  ProjectRequestsTopEndpointsOverview,
-  ProjectBandwidthChartOverview as ProjectBandwidthOverview,
-  ProjectRequestsChartOverview as ProjectRequestsOverview,
+  ProjectBandwidthOverview as ProjectBandwidthChartOverview,
+  ProjectBandwidthOverview as ProjectBandwidthTopConsumersOverview,
+  ProjectRequestsOverview as ProjectRequestsTopEndpointsOverview,
 }
+
+export type { UsageChartInterval } from '@/lib/usage/chart-interval'
+export { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'

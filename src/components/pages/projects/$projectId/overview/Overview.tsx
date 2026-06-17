@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useLayoutEffect } from 'react'
-import { endOfDay, startOfDay, subDays } from 'date-fns'
+import { getDefaultUsageChartDateRange, parseUsageChartDateRange, type SerializedUsageChartDateRange } from '@/lib/usage/usage-date-range'
 import type { DateRange } from 'react-day-picker'
 import {
   TrendingUp,
@@ -31,14 +31,13 @@ import {
   useUpdateApiKey,
   useDeleteApiKey,
   fetchApiKeys,
-  useProjectBandwidthChartOverview,
-  useProjectBandwidthTopConsumers,
-  useProjectRequestsChartOverview,
-  useProjectRequestsTopEndpoints,
+  useProjectBandwidthOverview,
+  useProjectRequestsOverview,
 } from '@/lib/react-query/hooks'
 import {
   formatBandwidthTotal,
   formatBandwidthValue,
+  sumUsageChartPoints,
 } from '@/lib/usage/bandwidth-events'
 import {
   formatRequestsTotal,
@@ -76,11 +75,18 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateRangePicker } from '../analytics/DateRangePicker'
+import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
   OVERVIEW_REQUESTS_ERROR,
   overviewChartColumnClass,
   overviewChartContentRowClass,
+  overviewBreakdownColumnClass,
 } from './chart-panel'
 
 interface OverviewTab {
@@ -167,6 +173,8 @@ export interface OverviewInitialData {
   apiKeysRaw?: { keys?: unknown[] } | null
   /** Prefetched platforms from listPlatforms; avoids empty-state flash in Apps section */
   platforms?: ProjectPlatform[]
+  /** Shared with route loader so usage query keys match prefetch */
+  chartDateRange?: SerializedUsageChartDateRange
 }
 
 interface ViewProps {
@@ -175,11 +183,13 @@ interface ViewProps {
   initialData?: OverviewInitialData
 }
 
-function getDefaultDashboardChartRange(): DateRange {
-  return {
-    from: startOfDay(subDays(new Date(), 29)),
-    to: endOfDay(new Date()),
+function getInitialDashboardChartRange(
+  initialData?: OverviewInitialData,
+): DateRange {
+  if (initialData?.chartDateRange) {
+    return parseUsageChartDateRange(initialData.chartDateRange)
   }
+  return getDefaultUsageChartDateRange()
 }
 
 export function View({ projectId, initialData }: ViewProps) {
@@ -188,7 +198,10 @@ export function View({ projectId, initialData }: ViewProps) {
   const [chartShowSession, setChartShowSession] = useState(0)
   const [dashboardChartDateRange, setDashboardChartDateRange] = useState<
     DateRange | undefined
-  >(() => getDefaultDashboardChartRange())
+  >(() => getInitialDashboardChartRange(initialData))
+  const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
+    DEFAULT_USAGE_CHART_INTERVAL,
+  )
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -203,6 +216,12 @@ export function View({ projectId, initialData }: ViewProps) {
     setChartShowSession(1)
   }, [])
 
+  useEffect(() => {
+    setChartInterval((current) =>
+      resolveUsageChartIntervalForRange(current, dashboardChartDateRange),
+    )
+  }, [dashboardChartDateRange])
+
   const handleOverviewTabChange = (tabId: string) => {
     if (tabId !== activeTab) {
       setChartShowSession((session) => session + 1)
@@ -210,56 +229,40 @@ export function View({ projectId, initialData }: ViewProps) {
     setActiveTab(tabId)
   }
 
-  const {
-    data: bandwidthData,
-    isLoading: isBandwidthChartLoading,
-    isError: isBandwidthChartError,
-    refetch: refetchBandwidthChart,
-  } = useProjectBandwidthChartOverview(projectId, dashboardChartDateRange)
+  const usageStatsEnabled = features.usageStats
 
   const {
-    data: bandwidthTopData,
-    isLoading: isBandwidthTopLoading,
-    isError: isBandwidthTopError,
-    refetch: refetchBandwidthTop,
-  } = useProjectBandwidthTopConsumers(
+    data: bandwidthUsage,
+    isLoading: isBandwidthLoading,
+    isError: isBandwidthError,
+    refetch: refetchBandwidth,
+  } = useProjectBandwidthOverview(
     projectId,
     dashboardChartDateRange,
-    activeTab === 'bandwidth',
+    usageStatsEnabled,
+    chartInterval,
   )
 
   const {
-    data: requestsData,
-    isLoading: isRequestsChartLoading,
-    isError: isRequestsChartError,
-    refetch: refetchRequestsChart,
-  } = useProjectRequestsChartOverview(projectId, dashboardChartDateRange)
-
-  const {
-    data: requestsTopData,
-    isLoading: isRequestsTopLoading,
-    isError: isRequestsTopError,
-    refetch: refetchRequestsTop,
-  } = useProjectRequestsTopEndpoints(
+    data: requestsUsage,
+    isLoading: isRequestsLoading,
+    isError: isRequestsError,
+    refetch: refetchRequests,
+  } = useProjectRequestsOverview(
     projectId,
     dashboardChartDateRange,
-    activeTab === 'requests',
+    usageStatsEnabled,
+    chartInterval,
   )
 
   const showBandwidthChartLoading =
-    isBandwidthChartLoading && !isBandwidthChartError && !bandwidthData
-
-  const showBandwidthTopLoading =
-    isBandwidthTopLoading && !isBandwidthTopError && !bandwidthTopData
+    isBandwidthLoading && !isBandwidthError && !bandwidthUsage
 
   const showRequestsChartLoading =
-    isRequestsChartLoading && !isRequestsChartError && !requestsData
-
-  const showRequestsTopLoading =
-    isRequestsTopLoading && !isRequestsTopError && !requestsTopData
+    isRequestsLoading && !isRequestsError && !requestsUsage
 
   const overviewTabs = useMemo(() => {
-    const bandwidthTab: OverviewTab = isBandwidthChartError
+    const bandwidthTab: OverviewTab = isBandwidthError
       ? {
           id: 'bandwidth',
           value: OVERVIEW_METRIC_NOT_AVAILABLE,
@@ -276,12 +279,14 @@ export function View({ projectId, initialData }: ViewProps) {
           }
         : {
             id: 'bandwidth',
-            value: formatBandwidthTotal(bandwidthData?.totalBytes ?? 0),
+            value: formatBandwidthTotal(
+              sumUsageChartPoints(bandwidthUsage?.chartPoints ?? []),
+            ),
             label: 'Bandwidth',
-            change: bandwidthData?.changePercent ?? 0,
+            change: bandwidthUsage?.changePercent ?? 0,
           }
 
-    const requestsTab: OverviewTab = isRequestsChartError
+    const requestsTab: OverviewTab = isRequestsError
       ? {
           id: 'requests',
           value: OVERVIEW_METRIC_NOT_AVAILABLE,
@@ -298,17 +303,19 @@ export function View({ projectId, initialData }: ViewProps) {
           }
         : {
             id: 'requests',
-            value: formatRequestsTotal(requestsData?.totalRequests ?? 0),
+            value: formatRequestsTotal(
+              sumUsageChartPoints(requestsUsage?.chartPoints ?? []),
+            ),
             label: 'Requests',
-            change: requestsData?.changePercent ?? 0,
+            change: requestsUsage?.changePercent ?? 0,
           }
 
     return [bandwidthTab, requestsTab, ...mockOverviewTabs.slice(2)]
   }, [
-    bandwidthData,
-    isBandwidthChartError,
-    requestsData,
-    isRequestsChartError,
+    bandwidthUsage,
+    isBandwidthError,
+    requestsUsage,
+    isRequestsError,
     showBandwidthChartLoading,
     showRequestsChartLoading,
   ])
@@ -740,7 +747,13 @@ export function View({ projectId, initialData }: ViewProps) {
                     })}
                   </div>
                 </div>
-                <div className="shrink-0 py-3">
+                <div className="flex shrink-0 items-center gap-2 py-3">
+                  <UsageChartIntervalToggle
+                    value={chartInterval}
+                    onValueChange={setChartInterval}
+                    dateRange={dashboardChartDateRange}
+                    className="h-9"
+                  />
                   <DateRangePicker
                     dateRange={dashboardChartDateRange}
                     onDateRangeChange={setDashboardChartDateRange}
@@ -766,26 +779,26 @@ export function View({ projectId, initialData }: ViewProps) {
                     metric="bandwidth"
                     dateRange={dashboardChartDateRange}
                     chartData={
-                      isBandwidthChartError ? [] : bandwidthData?.chartPoints
+                      isBandwidthError ? [] : bandwidthUsage?.dualChartPoints
                     }
                     isLoading={showBandwidthChartLoading}
-                    isError={isBandwidthChartError}
-                    onRetry={() => void refetchBandwidthChart()}
+                    isError={isBandwidthError}
+                    onRetry={() => void refetchBandwidth()}
                     formatValue={formatBandwidthValue}
                   />
                 </div>
-                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
+                <div className={overviewBreakdownColumnClass}>
                   <TopRequests
                     className="min-h-0 flex-1"
                     title="Top bandwidth consumers"
                     metric="bandwidth"
                     items={
-                      isBandwidthTopError ? [] : bandwidthTopData?.topConsumers
+                      isBandwidthError ? [] : bandwidthUsage?.topConsumers
                     }
                     formatCount={formatBandwidthValue}
-                    isLoading={showBandwidthTopLoading}
-                    isError={isBandwidthTopError}
-                    onRetry={() => void refetchBandwidthTop()}
+                    isLoading={showBandwidthChartLoading}
+                    isError={isBandwidthError}
+                    onRetry={() => void refetchBandwidth()}
                   />
                 </div>
               </div>
@@ -805,28 +818,28 @@ export function View({ projectId, initialData }: ViewProps) {
                     metric="requests"
                     dateRange={dashboardChartDateRange}
                     chartData={
-                      isRequestsChartError ? [] : requestsData?.chartPoints
+                      isRequestsError ? [] : requestsUsage?.chartPoints
                     }
                     isLoading={showRequestsChartLoading}
-                    isError={isRequestsChartError}
-                    onRetry={() => void refetchRequestsChart()}
+                    isError={isRequestsError}
+                    onRetry={() => void refetchRequests()}
                     formatValue={formatRequestsValue}
                     errorTitle={OVERVIEW_REQUESTS_ERROR.title}
                     errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                   />
                 </div>
-                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
+                <div className={overviewBreakdownColumnClass}>
                   <TopRequests
                     className="min-h-0 flex-1"
                     title="Top requested endpoints"
                     metric="requests"
                     items={
-                      isRequestsTopError ? [] : requestsTopData?.topEndpoints
+                      isRequestsError ? [] : requestsUsage?.topEndpoints
                     }
                     formatCount={formatRequestsValue}
-                    isLoading={showRequestsTopLoading}
-                    isError={isRequestsTopError}
-                    onRetry={() => void refetchRequestsTop()}
+                    isLoading={showRequestsChartLoading}
+                    isError={isRequestsError}
+                    onRetry={() => void refetchRequests()}
                     errorTitle={OVERVIEW_REQUESTS_ERROR.title}
                     errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                   />
@@ -844,7 +857,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     dateRange={dashboardChartDateRange}
                   />
                 </div>
-                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
+                <div className={overviewBreakdownColumnClass}>
                   <TopRequests
                     className="min-h-0 flex-1"
                     title="Top storage buckets"
@@ -865,7 +878,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     dateRange={dashboardChartDateRange}
                   />
                 </div>
-                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
+                <div className={overviewBreakdownColumnClass}>
                   <TopRequests
                     className="min-h-0 flex-1"
                     title="Top executed functions"
@@ -886,7 +899,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     dateRange={dashboardChartDateRange}
                   />
                 </div>
-                <div className="flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[320px] @[700px]:shrink-0">
+                <div className={overviewBreakdownColumnClass}>
                   <TopRequests
                     className="min-h-0 flex-1"
                     title="Top GB-hours consumers"

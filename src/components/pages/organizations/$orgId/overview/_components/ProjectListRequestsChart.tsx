@@ -7,6 +7,7 @@ import type { TooltipProps } from 'recharts'
 import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
 import { RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import type { UsageChartPoint } from '@/lib/usage/usage-events-common'
+import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import {
   formatRequestsTotal,
   formatRequestsValue,
@@ -93,7 +94,6 @@ function ProjectRequestsChartLink({
 }
 
 type ProjectListRequestsChartProps = {
-  totalRequests?: number
   changePercent?: number
   chartPoints?: UsageChartPoint[]
   isLoading: boolean
@@ -406,7 +406,6 @@ function RequestsChartBlock({
 }
 
 export function ProjectListRequestsChart({
-  totalRequests = 0,
   changePercent = 0,
   chartPoints = [],
   isLoading,
@@ -416,6 +415,10 @@ export function ProjectListRequestsChart({
 }: ProjectListRequestsChartProps) {
   const gradientId = useId().replace(/:/g, '')
   const hasPoints = chartPoints.length > 0
+  const totalRequests = useMemo(
+    () => sumUsageChartPoints(chartPoints),
+    [chartPoints],
+  )
   const isZeroUsage = !isLoading && !isError && totalRequests === 0
   const isTable = variant === 'table'
   const chartHeight = isTable
@@ -634,7 +637,6 @@ function ProjectListRequestsChartFromUsage({
       variant={variant}
       isLoading={usage?.isLoading ?? true}
       isError={usage?.isError ?? false}
-      totalRequests={usage?.data?.totalRequests}
       changePercent={usage?.data?.changePercent}
       chartPoints={usage?.data?.chartPoints}
     />

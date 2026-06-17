@@ -1,4 +1,5 @@
 import { cn, truncateMiddle } from '@/lib/utils'
+import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
@@ -10,8 +11,12 @@ import {
 import { OverviewChartPanelError } from './OverviewChartPanelError'
 import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
 
-/** Character cap for middle truncation; flex + overflow-hidden handle the rest. */
-const PATH_DISPLAY_MAX = 32
+/** Character cap for middle truncation after ID compaction. */
+const PATH_DISPLAY_MAX = 42
+
+function formatBreakdownPath(path: string): string {
+  return truncateMiddle(compactUsagePathIds(path), PATH_DISPLAY_MAX)
+}
 
 type MetricType =
   | 'bandwidth'
@@ -181,7 +186,7 @@ export function TopRequests({
                       className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground/70"
                       title={request.path}
                     >
-                      {truncateMiddle(request.path, PATH_DISPLAY_MAX)}
+                      {formatBreakdownPath(request.path)}
                     </span>
                     <span className="shrink-0 text-right text-[12px] font-medium tabular-nums text-muted-foreground">
                       {formatValue(request.count)}
