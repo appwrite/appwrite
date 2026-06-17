@@ -19,6 +19,7 @@ import {
 import type { ThreadsDetailLoaderData } from '@/lib/threads/types'
 import { MessageCard } from './_components/MessageCard'
 import { ThreadShareActions } from './_components/ThreadShareActions'
+import { ThreadSummary } from './_components/ThreadSummary'
 import { ThreadsPreFooter } from './_components/ThreadsPreFooter'
 
 type ThreadDetailViewProps = ThreadsDetailLoaderData
@@ -27,6 +28,7 @@ export function ThreadDetailView({
   thread,
   messages,
   related,
+  mentionLookup,
 }: ThreadDetailViewProps) {
   const resolved = isThreadResolved(thread)
   const discordLink = getDiscordThreadUrl(thread.discord_id)
@@ -125,16 +127,10 @@ export function ThreadDetailView({
                   key={message.$id ?? `${message.timestamp}-${index}`}
                   message={message}
                   isOriginalPost={index === 0}
+                  mentionLookup={mentionLookup}
                 >
                   {index === 0 && thread.tldr?.trim() ? (
-                    <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                        TL;DR
-                      </p>
-                      <p className="mt-2 text-[13px] leading-relaxed text-foreground">
-                        {thread.tldr}
-                      </p>
-                    </div>
+                    <ThreadSummary summary={thread.tldr.trim()} />
                   ) : null}
                 </MessageCard>
               ))}
@@ -207,7 +203,7 @@ export function ThreadDetailView({
                           <p className="line-clamp-2 text-[13px] font-medium leading-5 text-foreground group-hover:underline">
                             {item.title}
                           </p>
-                          <p className="mt-2 line-clamp-3 text-[12px] leading-5 text-muted-foreground">
+                          <p className="mt-2 line-clamp-3 whitespace-pre-line text-[12px] leading-5 text-muted-foreground">
                             {sanitizeThreadContent(item.content, 180)}
                           </p>
                         </Link>

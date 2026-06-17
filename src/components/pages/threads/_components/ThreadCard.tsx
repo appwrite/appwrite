@@ -61,7 +61,7 @@ export function ThreadCard({ thread, query = '' }: ThreadCardProps) {
         </h3>
       </div>
 
-      <p className="mt-2 break-words text-[13px] leading-relaxed text-muted-foreground">
+      <p className="mt-2 whitespace-pre-line break-words text-[13px] leading-relaxed text-muted-foreground">
         {highlightText(sanitizeThreadContent(thread.content), query)}
       </p>
 

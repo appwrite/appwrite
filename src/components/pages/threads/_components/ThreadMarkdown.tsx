@@ -1,12 +1,27 @@
 'use client'
 
+import { Link } from '@tanstack/react-router'
+import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
+import { resolveFenceCodeLanguage } from '@/lib/code-language'
+import {
+  THREAD_PROSE_DETAIL_CLASSES,
+  THREAD_PROSE_WRAPPER_CLASS,
+} from '@/lib/docs/prose-typography'
+import {
+  isDiscordEmojiImageUrl,
+  prepareThreadMessageForMarkdown,
+} from '@/lib/threads/markdown'
+import type { ThreadMentionLookup } from '@/lib/threads/types'
 import { cn } from '@/lib/utils'
 
 type ThreadMarkdownProps = {
   content: string
   className?: string
+  mentionLookup?: ThreadMentionLookup
 }
 
 function isExternalLink(href?: string): boolean {
@@ -34,67 +49,120 @@ function sanitizeUserMessageHref(href?: string): string | undefined {
   return undefined
 }
 
-export function ThreadMarkdown({ content, className }: ThreadMarkdownProps) {
+function ThreadMarkdownLink({
+  href,
+  children,
+  ...props
+}: {
+  href?: string
+  children?: React.ReactNode
+}) {
+  const safeHref = sanitizeUserMessageHref(href)
+  if (!safeHref) {
+    return <span>{children}</span>
+  }
+
+  const authorMatch = safeHref.match(/^\/threads\/authors\/([^/?#]+)$/)
+  if (authorMatch) {
+    return (
+      <Link
+        to="/threads/authors/$authorId"
+        params={{ authorId: authorMatch[1] }}
+        {...props}
+      >
+        {children}
+      </Link>
+    )
+  }
+
+  const threadMatch = safeHref.match(/^\/threads\/([^/?#]+)$/)
+  if (threadMatch) {
+    return (
+      <Link
+        to="/threads/$threadId"
+        params={{ threadId: threadMatch[1] }}
+        {...props}
+      >
+        {children}
+      </Link>
+    )
+  }
+
+  const external = isExternalLink(safeHref)
+  return (
+    <a
+      href={safeHref}
+      {...props}
+      rel="nofollow ugc noopener noreferrer"
+      {...(external ? { target: '_blank' } : {})}
+    >
+      {children}
+    </a>
+  )
+}
+
+export function ThreadMarkdown({
+  content,
+  className,
+  mentionLookup,
+}: ThreadMarkdownProps) {
+  const preparedContent = useMemo(
+    () => prepareThreadMessageForMarkdown(content, mentionLookup),
+    [content, mentionLookup],
+  )
+
   return (
     <div
       className={cn(
-        'min-w-0 break-words text-[13px] leading-relaxed text-foreground',
-        '[&_p]:my-0 [&_p+p]:mt-3',
-        '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:ps-5',
-        '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:ps-5',
-        '[&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-2',
-        '[&_code:not(pre_code)]:rounded [&_code:not(pre_code)]:bg-muted [&_code:not(pre_code)]:px-1 [&_code:not(pre_code)]:py-0.5 [&_code:not(pre_code)]:text-[12px]',
-        '[&_pre]:my-3 [&_pre]:overflow-x-auto',
-        '[&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground',
+        THREAD_PROSE_WRAPPER_CLASS,
+        ...THREAD_PROSE_DETAIL_CLASSES,
         className,
       )}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
         skipHtml
         components={{
-          a({ href, children, ...props }) {
-            const safeHref = sanitizeUserMessageHref(href)
-            if (!safeHref) {
-              return <span>{children}</span>
+          a: ThreadMarkdownLink,
+          img({ src, alt }) {
+            if (isDiscordEmojiImageUrl(src)) {
+              return (
+                <img
+                  src={src}
+                  alt={alt ?? ''}
+                  className="inline-block h-5 w-5 align-text-bottom"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )
             }
 
-            const external = isExternalLink(safeHref)
-            return (
-              <a
-                href={safeHref}
-                {...props}
-                rel="nofollow ugc noopener noreferrer"
-                {...(external
-                  ? { target: '_blank' }
-                  : {})}
-              >
-                {children}
-              </a>
-            )
-          },
-          img({ alt }) {
             return alt ? (
               <span className="text-muted-foreground">[Image: {alt}]</span>
             ) : null
           },
-          code({ className: codeClassName, children, ...props }) {
-            return (
-              <code className={codeClassName} {...props}>
-                {children}
-              </code>
-            )
-          },
           pre({ children }) {
+            return <>{children}</>
+          },
+          code({ className: codeClassName, children, ...props }) {
+            if (!codeClassName) {
+              return <code {...props}>{children}</code>
+            }
+
+            const rawCode = String(children ?? '').replace(/\n$/, '')
+            const language = resolveFenceCodeLanguage(
+              codeClassName.match(/language-([a-zA-Z0-9_-]+)/)?.[1],
+            )
+
             return (
-              <pre className="my-3 overflow-x-auto rounded-lg border border-border bg-muted/40 p-3 text-[12px] leading-5 text-foreground">
-                {children}
-              </pre>
+              <div className="not-prose my-4">
+                <ConnectCodeExample code={rawCode} language={language} />
+              </div>
             )
           },
         }}
       >
-        {content}
+        {preparedContent}
       </ReactMarkdown>
     </div>
   )

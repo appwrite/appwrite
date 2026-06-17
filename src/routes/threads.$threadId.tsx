@@ -4,6 +4,7 @@ import {
   getRelatedThreads,
   getThread,
   getThreadMessages,
+  resolveThreadMentionLookup,
 } from '@/lib/threads/content'
 import { getThreadsThreadRouteMetaTags } from '@/lib/threads/route-meta'
 import {
@@ -33,6 +34,11 @@ export const Route = createFileRoute('/threads/$threadId')({
       getRelatedThreads(thread),
     ])
 
+    const mentionLookup = await resolveThreadMentionLookup(
+      messages.map((message) => message.message),
+      messages,
+    )
+
     const canonicalUrl = getThreadsCanonicalUrl(`/threads/${params.threadId}`)
 
     return {
@@ -40,6 +46,7 @@ export const Route = createFileRoute('/threads/$threadId')({
       messages,
       related,
       canonicalUrl,
+      mentionLookup,
     }
   },
   head: ({ loaderData }) => {

@@ -43,3 +43,15 @@ export const DOCS_PROSE_DETAIL_CLASSES = [
 
 export const DOCS_TOC_SECTION_TITLE_CLASS =
   'pb-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+
+/** Thread messages — same body scale and prose rhythm as docs articles. */
+export const THREAD_PROSE_WRAPPER_CLASS = cn(
+  DOCS_PROSE_WRAPPER_CLASS,
+  'prose-links-neutral min-w-0 break-words',
+)
+
+export const THREAD_PROSE_DETAIL_CLASSES = [
+  ...DOCS_PROSE_DETAIL_CLASSES,
+  '[&_blockquote]:border-[var(--brand-cta)] [&_blockquote]:italic',
+  '[&_img]:inline-block [&_img]:h-5 [&_img]:w-5 [&_img]:align-text-bottom',
+] as const

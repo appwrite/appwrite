@@ -4,18 +4,20 @@ import { Heart } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
 import { cleanThreadRoleLabel } from '@/lib/threads/content'
-import type { DiscordMessage } from '@/lib/threads/types'
+import type { DiscordMessage, ThreadMentionLookup } from '@/lib/threads/types'
 import { ThreadMarkdown } from './ThreadMarkdown'
 
 type MessageCardProps = {
   message: DiscordMessage
   isOriginalPost?: boolean
+  mentionLookup?: ThreadMentionLookup
   children?: ReactNode
 }
 
 export function MessageCard({
   message,
   isOriginalPost = false,
+  mentionLookup,
   children,
 }: MessageCardProps) {
   const role = cleanThreadRoleLabel(message.role)
@@ -63,7 +65,7 @@ export function MessageCard({
       </div>
 
       <div className="px-5 py-5">
-        <ThreadMarkdown content={message.message} />
+        <ThreadMarkdown content={message.message} mentionLookup={mentionLookup} />
 
         {message.reaction_count ? (
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2.5 py-1 text-[12px] text-muted-foreground">

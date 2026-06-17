@@ -1,6 +1,6 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
-import { getAuthorDescription, getAuthorHref } from './content'
+import { getAuthorDescription } from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
 
 const THREADS_OG_IMAGE = `${MARKETING_SITE_ORIGIN}/images/open-graph/website.avif`
@@ -69,28 +69,6 @@ export function getThreadsThreadMetaTags(
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
     { tag: 'link', rel: 'canonical', href: canonicalUrl },
-  ] as const
-}
-
-export function getThreadsAuthorsMetaTags() {
-  const title = getThreadsPageTitle('Thread authors')
-  const description =
-    'Browse authors from Appwrite Threads, including Discord community members who have started conversations and shared replies.'
-  const canonical = getThreadsCanonicalUrl('/threads/authors')
-
-  return [
-    { title },
-    { name: 'description', content: description },
-    { property: 'og:title', content: title },
-    { property: 'og:description', content: description },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: canonical },
-    { property: 'og:image', content: THREADS_OG_IMAGE },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: title },
-    { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: THREADS_OG_IMAGE },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
@@ -232,28 +210,6 @@ export function getThreadsIndexPageSchema() {
       '@type': 'WebSite',
       name: 'Appwrite',
       url: MARKETING_SITE_ORIGIN,
-    },
-  }
-}
-
-export function getThreadsAuthorsPageSchema(authors: DiscordAuthor[]) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: 'Thread authors',
-    url: getThreadsCanonicalUrl('/threads/authors'),
-    mainEntity: {
-      '@type': 'ItemList',
-      itemListElement: authors.slice(0, 100).map((author, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        url: getThreadsCanonicalUrl(getAuthorHref(author.discord_id)),
-        item: {
-          '@type': 'Person',
-          name: author.display_name,
-          alternateName: author.username,
-        },
-      })),
     },
   }
 }

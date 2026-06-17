@@ -1,11 +1,13 @@
 import { Query } from '@appwrite.io/console'
 import { getThreadsAppwriteConfig, isThreadsConfigured } from './config'
 import { getThreadsDatabases } from './client'
+import { extractDiscordMentionIds, normalizeThreadPlainText } from './markdown'
 import { THREADS_DISCORD_GUILD_ID, THREADS_PAGE_SIZE } from './constants'
 import type {
   DiscordAuthor,
   DiscordMessage,
   DiscordThread,
+  ThreadMentionLookup,
   ThreadsListResult,
 } from './types'
 
@@ -24,8 +26,9 @@ type FilterThreadsArgs = {
 export function sanitizeThreadContent(
   rawContent: string,
   maxLength: number = 200,
+  mentionLookup?: ThreadMentionLookup,
 ): string {
-  const cleaned = rawContent.replace(
+  const cleaned = normalizeThreadPlainText(rawContent, mentionLookup).replace(
     /```(?:\w+)?\n([\s\S]*?)```|```([\s\S]*?)```/g,
     (_, withLang, withoutLang) => (withLang || withoutLang).trim(),
   )
@@ -143,48 +146,6 @@ export async function getAuthor(discordId: string): Promise<DiscordAuthor> {
   )) as unknown as DiscordAuthor
 }
 
-export async function getAuthors(): Promise<{
-  authors: DiscordAuthor[]
-  total: number
-}> {
-  const config = getThreadsAppwriteConfig()
-  const databases = getThreadsDatabases()
-  const limit = 100
-  let cursor: string | undefined
-  const authors: DiscordAuthor[] = []
-  let total = 0
-
-  while (true) {
-    const queries = [Query.limit(limit)]
-    if (cursor) {
-      queries.push(Query.cursorAfter(cursor))
-    }
-
-    const data = await databases.listDocuments(
-      config.databaseId,
-      config.authorsCollectionId,
-      queries,
-    )
-
-    total = data.total
-    if (data.documents.length === 0) break
-
-    authors.push(...(data.documents as unknown as DiscordAuthor[]))
-    cursor = data.documents[data.documents.length - 1]?.$id
-
-    if (authors.length >= data.total) break
-  }
-
-  authors.sort((a, b) => {
-    const aActivity = a.thread_count + a.reply_count
-    const bActivity = b.thread_count + b.reply_count
-    if (bActivity !== aActivity) return bActivity - aActivity
-    return a.display_name.localeCompare(b.display_name)
-  })
-
-  return { authors, total }
-}
-
 export async function getAuthorThreads(authorId: string) {
   const config = getThreadsAppwriteConfig()
   const databases = getThreadsDatabases()
@@ -214,6 +175,58 @@ export async function getThread(threadId: string): Promise<DiscordThread> {
     config.threadsCollectionId,
     threadId,
   )) as unknown as DiscordThread
+}
+
+function seedMentionLookupFromMessages(
+  messages: DiscordMessage[],
+): ThreadMentionLookup {
+  const users: Record<string, string> = {}
+
+  for (const message of messages) {
+    if (message.author_id && message.author) {
+      users[message.author_id] = message.author
+    }
+  }
+
+  return { users, channels: {} }
+}
+
+export async function resolveThreadMentionLookup(
+  contents: string[],
+  messages: DiscordMessage[] = [],
+): Promise<ThreadMentionLookup> {
+  const lookup = seedMentionLookupFromMessages(messages)
+  const { userIds, channelIds } = extractDiscordMentionIds(contents)
+
+  const missingAuthorIds = [...userIds].filter((id) => !lookup.users[id])
+  await Promise.all(
+    missingAuthorIds.map(async (authorId) => {
+      try {
+        const author = await getAuthor(authorId)
+        lookup.users[authorId] = author.display_name || author.username
+      } catch {
+        // Author may not exist in the synced authors collection.
+      }
+    }),
+  )
+
+  await Promise.all(
+    [...channelIds].map(async (channelId) => {
+      if (lookup.channels[channelId]) return
+
+      try {
+        const thread = await getThread(channelId)
+        lookup.channels[channelId] = {
+          title: thread.title,
+          href: getThreadHref(thread),
+        }
+      } catch {
+        // Channel id is a Discord channel, not a mirrored forum thread.
+      }
+    }),
+  )
+
+  return lookup
 }
 
 export async function getThreadMessages(

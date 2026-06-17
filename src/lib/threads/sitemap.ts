@@ -13,14 +13,9 @@ export async function fetchThreadsSitemapEntries(): Promise<SitemapEntry[]> {
     priority: 0.8,
     changefreq: 'weekly',
   }
-  const authorsEntry: SitemapEntry = {
-    path: '/threads/authors',
-    priority: 0.6,
-    changefreq: 'monthly',
-  }
 
   if (!isThreadsConfigured() || shouldSkipThreadsSitemap()) {
-    return [indexEntry, authorsEntry]
+    return [indexEntry]
   }
 
   try {
@@ -31,9 +26,9 @@ export async function fetchThreadsSitemapEntries(): Promise<SitemapEntry[]> {
       changefreq: 'monthly' as const,
     }))
 
-    return [indexEntry, authorsEntry, ...threadEntries]
+    return [indexEntry, ...threadEntries]
   } catch (error) {
     console.warn('[sitemap] Failed to fetch thread IDs, including index only.', error)
-    return [indexEntry, authorsEntry]
+    return [indexEntry]
   }
 }

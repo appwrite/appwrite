@@ -1,7 +1,6 @@
 import type { DiscordAuthor, DiscordThread } from './types'
 import {
   getThreadsAuthorMetaTags as buildThreadsAuthorMetaTags,
-  getThreadsAuthorsMetaTags as buildThreadsAuthorsMetaTags,
   getThreadsIndexMetaTags as buildThreadsIndexMetaTags,
   getThreadsThreadMetaTags as buildThreadsThreadMetaTags,
 } from './seo'
@@ -23,10 +22,6 @@ export function getThreadsThreadRouteMetaTags(
   return asRouteMetaTags(
     buildThreadsThreadMetaTags(thread, canonicalUrl) as unknown as MetaTag[],
   )
-}
-
-export function getThreadsAuthorsRouteMetaTags() {
-  return asRouteMetaTags(buildThreadsAuthorsMetaTags() as unknown as MetaTag[])
 }
 
 export function getThreadsAuthorRouteMetaTags(

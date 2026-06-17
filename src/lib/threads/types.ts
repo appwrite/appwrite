@@ -61,9 +61,15 @@ export type ThreadsAuthorLoaderData = {
   canonicalUrl: string
 }
 
-export type ThreadsAuthorsLoaderData = {
-  authors: DiscordAuthor[]
-  total: number
+export type ThreadMentionChannel = {
+  title: string
+  href: string
+}
+
+/** Resolved Discord mention labels for a thread page. */
+export type ThreadMentionLookup = {
+  users: Record<string, string>
+  channels: Record<string, ThreadMentionChannel>
 }
 
 export type ThreadsDetailLoaderData = {
@@ -71,4 +77,5 @@ export type ThreadsDetailLoaderData = {
   messages: DiscordMessage[]
   related: DiscordThread[]
   canonicalUrl: string
+  mentionLookup: ThreadMentionLookup
 }

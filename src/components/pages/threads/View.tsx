@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { MarketingHeroSection } from '@/components/pages/marketing/MarketingSections'
@@ -97,11 +97,7 @@ export function View({
         title="Threads"
         description="Community support discussions from the Appwrite Discord. Search threads, browse topics, and find answers from developers."
         align="left"
-      >
-        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/threads/authors">Browse authors</Link>
-        </Button>
-      </MarketingHeroSection>
+      />
 
       <section className="border-b border-border py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">

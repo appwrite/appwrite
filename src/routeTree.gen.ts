@@ -57,7 +57,6 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
-import { Route as ThreadsAuthorsIndexRouteImport } from './routes/threads.authors.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as ThreadsAuthorsAuthorIdRouteImport } from './routes/threads.authors.$authorId'
 import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
@@ -524,11 +523,6 @@ const AuthJoinRoute = AuthJoinRouteImport.update({
 const ApiHelloRoute = ApiHelloRouteImport.update({
   id: '/_api/hello',
   path: '/hello',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ThreadsAuthorsIndexRoute = ThreadsAuthorsIndexRouteImport.update({
-  id: '/threads/authors/',
-  path: '/threads/authors/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
@@ -2108,7 +2102,6 @@ export interface FileRoutesByFullPath {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account/': typeof PublicAccountIndexRoute
-  '/threads/authors': typeof ThreadsAuthorsIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2381,7 +2374,6 @@ export interface FileRoutesByTo {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account': typeof PublicAccountIndexRoute
-  '/threads/authors': typeof ThreadsAuthorsIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2632,7 +2624,6 @@ export interface FileRoutesById {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/_public/account/': typeof PublicAccountIndexRoute
-  '/threads/authors/': typeof ThreadsAuthorsIndexRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2911,7 +2902,6 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/account/'
-    | '/threads/authors'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -3184,7 +3174,6 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/account'
-    | '/threads/authors'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -3434,7 +3423,6 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/_public/account/'
-    | '/threads/authors/'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
     | '/_public/organizations/$orgId/billing'
@@ -3684,7 +3672,6 @@ export interface RootRouteChildren {
   BlogPostSlugRoute: typeof BlogPostSlugRoute
   ChangelogEntryEntryRoute: typeof ChangelogEntryEntryRoute
   ThreadsAuthorsAuthorIdRoute: typeof ThreadsAuthorsAuthorIdRoute
-  ThreadsAuthorsIndexRoute: typeof ThreadsAuthorsIndexRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
 }
@@ -4025,13 +4012,6 @@ declare module '@tanstack/react-router' {
       path: '/hello'
       fullPath: '/hello'
       preLoaderRoute: typeof ApiHelloRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/threads/authors/': {
-      id: '/threads/authors/'
-      path: '/threads/authors'
-      fullPath: '/threads/authors'
-      preLoaderRoute: typeof ThreadsAuthorsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/account/': {
@@ -6915,7 +6895,6 @@ const rootRouteChildren: RootRouteChildren = {
   BlogPostSlugRoute: BlogPostSlugRoute,
   ChangelogEntryEntryRoute: ChangelogEntryEntryRoute,
   ThreadsAuthorsAuthorIdRoute: ThreadsAuthorsAuthorIdRoute,
-  ThreadsAuthorsIndexRoute: ThreadsAuthorsIndexRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,
 }
