@@ -127,11 +127,16 @@ export interface SavedImageTransformPreset {
 export function parseSavedImageTransformPresets(
   prefs: UserPrefs | null | undefined,
 ): SavedImageTransformPreset[] {
-  if (!prefs || typeof prefs[USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS] !== 'string') {
+  if (
+    !prefs ||
+    typeof prefs[USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS] !== 'string'
+  ) {
     return []
   }
   try {
-    const raw = JSON.parse(prefs[USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS] as string)
+    const raw = JSON.parse(
+      prefs[USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS] as string,
+    )
     if (!Array.isArray(raw)) return []
     return raw
       .filter(
@@ -150,7 +155,10 @@ export function parseSavedImageTransformPresets(
             : ''
         return {
           id: p.id,
-          name: String(p.name).slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH),
+          name: String(p.name).slice(
+            0,
+            MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH,
+          ),
           json,
         }
       })
@@ -217,26 +225,23 @@ export function parsePostgresSavedQueries(
   }
   if (!Array.isArray(raw)) return []
   return raw
-      .filter(
-        (item): item is SavedPostgresQuery =>
-          item != null &&
-          typeof item === 'object' &&
-          typeof (item as SavedPostgresQuery).id === 'string' &&
-          typeof (item as SavedPostgresQuery).name === 'string' &&
-          typeof (item as SavedPostgresQuery).sql === 'string',
-      )
-      .map((item) => {
-        const query = item as SavedPostgresQuery
-        return {
-          id: query.id,
-          name: String(query.name).slice(
-            0,
-            MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH,
-          ),
-          sql: String(query.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
-        }
-      })
-      .slice(0, MAX_SAVED_POSTGRES_QUERIES)
+    .filter(
+      (item): item is SavedPostgresQuery =>
+        item != null &&
+        typeof item === 'object' &&
+        typeof (item as SavedPostgresQuery).id === 'string' &&
+        typeof (item as SavedPostgresQuery).name === 'string' &&
+        typeof (item as SavedPostgresQuery).sql === 'string',
+    )
+    .map((item) => {
+      const query = item as SavedPostgresQuery
+      return {
+        id: query.id,
+        name: String(query.name).slice(0, MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH),
+        sql: String(query.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
+      }
+    })
+    .slice(0, MAX_SAVED_POSTGRES_QUERIES)
 }
 
 export function buildPostgresSavedQueriesPrefs(
@@ -596,10 +601,7 @@ export function sortPostgresSidebarTableRows<T extends { table_name: string }>(
 export const USER_PREFS_KEY_POSTGRES_SIDEBAR_PANEL_PREFIX =
   'console.postgresSidebarPanel'
 
-export type PostgresSidebarPanelPreference =
-  | 'schemas'
-  | 'queries'
-  | 'history'
+export type PostgresSidebarPanelPreference = 'schemas' | 'queries' | 'history'
 
 export const POSTGRES_SIDEBAR_PANEL_DEFAULT: PostgresSidebarPanelPreference =
   'schemas'
@@ -739,20 +741,15 @@ export function buildPostgresSqlEditorStatePrefs(
   state: PersistedPostgresSqlEditorState,
 ): UserPrefs {
   const key = getPostgresSqlEditorStateKey(databaseId)
-  const tabs = state.tabs
-    .slice(0, MAX_POSTGRES_SQL_EDITOR_TABS)
-    .map((tab) => ({
-      id: tab.id,
-      title: String(tab.title).slice(
-        0,
-        MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH,
-      ),
-      sql: String(tab.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
-      ...(tab.tableId ? { tableId: tab.tableId } : {}),
-    }))
+  const tabs = state.tabs.slice(0, MAX_POSTGRES_SQL_EDITOR_TABS).map((tab) => ({
+    id: tab.id,
+    title: String(tab.title).slice(0, MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH),
+    sql: String(tab.sql).slice(0, MAX_SAVED_POSTGRES_QUERY_SQL_CHARS),
+    ...(tab.tableId ? { tableId: tab.tableId } : {}),
+  }))
   const activeTabId = tabs.some((tab) => tab.id === state.activeTabId)
     ? state.activeTabId
-    : tabs[0]?.id ?? state.activeTabId
+    : (tabs[0]?.id ?? state.activeTabId)
 
   return {
     [key]: JSON.stringify({ tabs, activeTabId }),
@@ -802,7 +799,10 @@ export const USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH =
 export function parseDatabasesSidebarWidthPx(
   prefs: UserPrefs | null | undefined,
 ): number | null {
-  return parseSidebarWidthPxForKey(prefs, USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH)
+  return parseSidebarWidthPxForKey(
+    prefs,
+    USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH,
+  )
 }
 
 export function buildDatabasesSidebarWidthPrefs(widthPx: number): UserPrefs {
@@ -954,10 +954,7 @@ const STORAGE_FILES_LIST_COLUMN_WIDTH_KEY_SET = new Set<string>(
 export function clampStorageFilesListDataColumnWidthPx(px: number): number {
   return Math.min(
     STORAGE_FILES_LIST_DATA_COLUMN_MAX_WIDTH_PX,
-    Math.max(
-      STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
-      Math.round(px),
-    ),
+    Math.max(STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX, Math.round(px)),
   )
 }
 
@@ -1096,7 +1093,9 @@ export function mergeStorageFilesTablePaneWidthPxIntoPrefs(
   }
 }
 
-export function readLegacyStorageFilesTablePaneWidthFromLocalStorage(): number | null {
+export function readLegacyStorageFilesTablePaneWidthFromLocalStorage():
+  | number
+  | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(
@@ -1167,7 +1166,11 @@ function parseRowColumnWidthsByDatabase(
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return out
   for (const [dbId, tables] of Object.entries(raw as Record<string, unknown>)) {
     if (!dbId) continue
-    if (typeof tables !== 'object' || tables === null || Array.isArray(tables)) {
+    if (
+      typeof tables !== 'object' ||
+      tables === null ||
+      Array.isArray(tables)
+    ) {
       continue
     }
     const bucket: RowColumnWidthsByTable = {}
@@ -1232,11 +1235,7 @@ function parseRowColumnWidthsStorage(prefs: UserPrefs | null | undefined): {
       const legacyOnly: RowColumnWidthsByTable = {}
       for (const [tid, cols] of Object.entries(root)) {
         if (!tid) continue
-        if (
-          typeof cols !== 'object' ||
-          cols === null ||
-          Array.isArray(cols)
-        ) {
+        if (typeof cols !== 'object' || cols === null || Array.isArray(cols)) {
           continue
         }
         legacyOnly[tid] = parseInnerRowColumnWidthMap(cols)
@@ -1275,7 +1274,9 @@ function serializeDatabaseTableRowColumnWidths(
     return JSON.stringify(flat)
   }
 
-  const payload: Record<string, unknown> = { databases: {} as Record<string, unknown> }
+  const payload: Record<string, unknown> = {
+    databases: {} as Record<string, unknown>,
+  }
   for (const id of dbIds) {
     ;(payload.databases as Record<string, unknown>)[id] = databases[id]
   }
@@ -1546,7 +1547,12 @@ export function parseTablesDbRowsListColumnLayout(
   const visibleOrdered: string[] = []
   for (const item of stored) {
     const entry = parseStoredTablesDbRowsListColumnEntry(item)
-    if (!entry || entry.hidden || !allKeysSet.has(entry.key) || seen.has(entry.key))
+    if (
+      !entry ||
+      entry.hidden ||
+      !allKeysSet.has(entry.key) ||
+      seen.has(entry.key)
+    )
       continue
     seen.add(entry.key)
     visibleOrdered.push(entry.key)
@@ -1557,7 +1563,10 @@ export function parseTablesDbRowsListColumnLayout(
   }
 
   const hiddenKeys = new Set(allKeys.filter((k) => !seen.has(k)))
-  const orderedKeys = [...visibleOrdered, ...allKeys.filter((k) => hiddenKeys.has(k))]
+  const orderedKeys = [
+    ...visibleOrdered,
+    ...allKeys.filter((k) => hiddenKeys.has(k)),
+  ]
   return { orderedKeys, hiddenKeys }
 }
 
@@ -1616,7 +1625,8 @@ export function deleteTablesDbRowsListColumnsFromPrefs(
 export const USER_PREFS_KEY_AI_CHAT_PANEL_OPEN = 'console.aiChat.panelOpen'
 
 /** Full key: `console.aiChat.panelWidthPx` - panel width in pixels (string number). */
-export const USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX = 'console.aiChat.panelWidthPx'
+export const USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX =
+  'console.aiChat.panelWidthPx'
 
 export const AI_CHAT_PANEL_MIN_WIDTH_PX = 320
 export const AI_CHAT_PANEL_MAX_WIDTH_PX = 600
@@ -1637,7 +1647,9 @@ function parseBooleanAccountPref(raw: unknown): boolean | null {
 export function parseAIChatPanelOpen(
   prefs: UserPrefs | null | undefined,
 ): boolean {
-  return parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_AI_CHAT_PANEL_OPEN]) ?? false
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_AI_CHAT_PANEL_OPEN]) ?? false
+  )
 }
 
 export function hasAIChatPanelOpenPref(
@@ -1737,7 +1749,9 @@ export function mergeRightPaneWidthPxIntoPrefs(
 ): UserPrefs {
   return {
     ...prefs,
-    [USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX]: String(clampRightPaneWidthPx(widthPx)),
+    [USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX]: String(
+      clampRightPaneWidthPx(widthPx),
+    ),
   }
 }
 
@@ -1825,10 +1839,12 @@ export const USER_PREFS_KEY_CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PX =
   'console.cliShell.sessionsSidebarWidthPx'
 
 /** Prefix: `console.cliShell.history.<projectId>` - JSON string[] of recent commands. */
-export const USER_PREFS_KEY_CLI_SHELL_HISTORY_PREFIX = 'console.cliShell.history'
+export const USER_PREFS_KEY_CLI_SHELL_HISTORY_PREFIX =
+  'console.cliShell.history'
 
 /** Prefix: `console.cliShell.sessions.<projectId>` - JSON session layout. */
-export const USER_PREFS_KEY_CLI_SHELL_SESSIONS_PREFIX = 'console.cliShell.sessions'
+export const USER_PREFS_KEY_CLI_SHELL_SESSIONS_PREFIX =
+  'console.cliShell.sessions'
 
 export const MAX_CLI_SHELL_HISTORY_ENTRIES = 200
 export const MAX_CLI_SHELL_SESSIONS = 10
@@ -1841,9 +1857,7 @@ export function clampCliShellHeightPx(
   px: number,
   viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800,
 ): number {
-  const maxHeight = Math.floor(
-    viewportHeight * CLI_SHELL_MAX_HEIGHT_RATIO,
-  )
+  const maxHeight = Math.floor(viewportHeight * CLI_SHELL_MAX_HEIGHT_RATIO)
   return Math.min(
     Math.max(Math.round(px), CLI_SHELL_MIN_HEIGHT_PX),
     Math.max(maxHeight, CLI_SHELL_MIN_HEIGHT_PX),
@@ -1853,7 +1867,9 @@ export function clampCliShellHeightPx(
 export function parseCliShellOpen(
   prefs: UserPrefs | null | undefined,
 ): boolean {
-  return parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_CLI_SHELL_OPEN]) ?? false
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_CLI_SHELL_OPEN]) ?? false
+  )
 }
 
 export function hasCliShellOpenPref(
@@ -2018,7 +2034,9 @@ export function parseCliShellSessions(
   try {
     const raw = JSON.parse(prefs[key] as string)
     if (!raw || typeof raw !== 'object') return null
-    const sessions = Array.isArray((raw as PersistedCliShellSessionsState).sessions)
+    const sessions = Array.isArray(
+      (raw as PersistedCliShellSessionsState).sessions,
+    )
       ? (raw as PersistedCliShellSessionsState).sessions
           .filter(
             (item): item is PersistedCliShellSession =>
@@ -2038,14 +2056,15 @@ export function parseCliShellSessions(
           .slice(0, MAX_CLI_SHELL_SESSIONS)
       : []
     const activeSessionId =
-      typeof (raw as PersistedCliShellSessionsState).activeSessionId === 'string'
+      typeof (raw as PersistedCliShellSessionsState).activeSessionId ===
+      'string'
         ? (raw as PersistedCliShellSessionsState).activeSessionId
         : ''
     const splitPaneSessionIds = Array.isArray(
       (raw as PersistedCliShellSessionsState).splitPaneSessionIds,
     )
-      ? (raw as PersistedCliShellSessionsState).splitPaneSessionIds!
-          .filter(
+      ? (raw as PersistedCliShellSessionsState)
+          .splitPaneSessionIds!.filter(
             (id): id is string =>
               typeof id === 'string' &&
               sessions.some((session) => session.id === id),
@@ -2053,7 +2072,9 @@ export function parseCliShellSessions(
           .slice(0, MAX_CLI_SHELL_SESSIONS)
       : []
     if (sessions.length === 0) return null
-    const activeExists = sessions.some((session) => session.id === activeSessionId)
+    const activeExists = sessions.some(
+      (session) => session.id === activeSessionId,
+    )
     return {
       sessions,
       activeSessionId: activeExists ? activeSessionId : sessions[0].id,
@@ -2078,7 +2099,9 @@ export function mergeCliShellSessionsIntoPrefs(
       name: String(session.name).slice(0, MAX_CLI_SHELL_SESSION_NAME_LENGTH),
       parentSessionId: session.parentSessionId ?? null,
     }))
-  const activeExists = sessions.some((session) => session.id === state.activeSessionId)
+  const activeExists = sessions.some(
+    (session) => session.id === state.activeSessionId,
+  )
   const splitPaneSessionIds = Array.isArray(state.splitPaneSessionIds)
     ? state.splitPaneSessionIds
         .filter((id) => sessions.some((session) => session.id === id))
@@ -2228,8 +2251,9 @@ export function parseBuildNotificationsOptedOut(
   prefs: UserPrefs | null | undefined,
 ): boolean {
   return (
-    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT]) ??
-    false
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT],
+    ) ?? false
   )
 }
 
@@ -2253,8 +2277,9 @@ export function readLegacyBuildNotificationsOptedOutFromLocalStorage(): boolean 
   if (typeof window === 'undefined') return false
   try {
     return (
-      localStorage.getItem(LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT) ===
-      '1'
+      localStorage.getItem(
+        LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT,
+      ) === '1'
     )
   } catch {
     return false
@@ -2278,7 +2303,11 @@ export type ServiceListViewMode = 'list' | 'grid'
 
 export const SERVICE_LIST_VIEW_MODE_DEFAULT: ServiceListViewMode = 'grid'
 
-export type ServiceListViewModeScope = 'functions' | 'sites' | 'projects'
+export type ServiceListViewModeScope =
+  | 'functions'
+  | 'sites'
+  | 'projects'
+  | 'stores'
 
 /** Full key: `console.functions.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE =
@@ -2291,6 +2320,10 @@ export const USER_PREFS_KEY_SITES_LIST_VIEW_MODE = 'console.sites.listViewMode'
 export const USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE =
   'console.organizations.projects.listViewMode'
 
+/** Full key: `console.stores.listViewMode` - `"list"` or `"grid"`. */
+export const USER_PREFS_KEY_STORES_LIST_VIEW_MODE =
+  'console.stores.listViewMode'
+
 function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
   switch (scope) {
     case 'functions':
@@ -2299,6 +2332,8 @@ function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
       return USER_PREFS_KEY_SITES_LIST_VIEW_MODE
     case 'projects':
       return USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE
+    case 'stores':
+      return USER_PREFS_KEY_STORES_LIST_VIEW_MODE
   }
 }
 

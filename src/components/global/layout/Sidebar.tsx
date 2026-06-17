@@ -150,7 +150,6 @@ const getNavItems = (projectId: string) => {
           label: 'Distribution',
           icon: Package,
           path: `/projects/${projectId}/stores`,
-          comingSoon: true,
         },
       ],
     },
@@ -245,7 +244,9 @@ export function ConsoleSidebar({
   className,
 }: ConsoleSidebarProps) {
   const { account } = useAuth()
-  const accountWithPrefs = account as { prefs?: Record<string, unknown> } | undefined
+  const accountWithPrefs = account as
+    | { prefs?: Record<string, unknown> }
+    | undefined
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
@@ -275,12 +276,7 @@ export function ConsoleSidebar({
         }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [
-    projectId,
-    isDebugModeOpen,
-    features,
-    access,
-  ])
+  }, [projectId, isDebugModeOpen, features, access])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).
