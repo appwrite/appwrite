@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { marketingSplitLayoutClassName } from '@/components/pages/marketing/MarketingSections'
 import { pricingFaqItems } from '@/lib/pricing/faq'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 
@@ -11,7 +12,7 @@ export function FaqSection() {
   return (
     <section className="bg-background py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] lg:gap-12">
+        <div className={marketingSplitLayoutClassName()}>
           <PricingSectionHeading
             align="left"
             title="FAQ"

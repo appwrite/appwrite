@@ -8,6 +8,7 @@ import {
   MarketingFeatureGrid,
   MarketingHeroSection,
   MarketingSectionHeading,
+  marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -118,7 +119,7 @@ export function View() {
 
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
+          <div className={marketingSplitLayoutClassName({ align: 'start' })}>
             <MarketingSectionHeading
               align="left"
               size="md"
@@ -170,7 +171,7 @@ export function View() {
       <section id={STARTUPS_FORM_ID} className="relative scroll-mt-28 border-b border-border">
         <HomeSoftLights variant="testimonials" className="opacity-40" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-start">
+          <div className={marketingSplitLayoutClassName({ align: 'start' })}>
             <div>
               <MarketingSectionHeading
                 align="left"

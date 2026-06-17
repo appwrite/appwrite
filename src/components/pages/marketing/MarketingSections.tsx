@@ -114,6 +114,20 @@ export function MarketingHeroSection({
   )
 }
 
+type MarketingSplitLayoutAlign = 'start' | 'center'
+
+/** Heading left, content right. Matches MarketingFaqSection column ratio. */
+export function marketingSplitLayoutClassName(
+  options?: { align?: MarketingSplitLayoutAlign; className?: string },
+) {
+  return cn(
+    'grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] lg:gap-12',
+    options?.align === 'start' && 'lg:items-start',
+    options?.align === 'center' && 'lg:items-center',
+    options?.className,
+  )
+}
+
 export type MarketingSectionHeadingProps = {
   title: string
   description?: string

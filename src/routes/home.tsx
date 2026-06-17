@@ -296,13 +296,7 @@ function HomePage() {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-                <a
-                  href="https://appwrite.io/contact"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Request a demo
-                </a>
+                <Link to="/enterprise">Request a demo</Link>
               </Button>
             </div>
           </div>

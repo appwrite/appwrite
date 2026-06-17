@@ -10,11 +10,27 @@ import {
   type ProjectBandwidthOverview,
 } from '@/lib/usage/bandwidth-events'
 import {
+  fetchProjectExecutionsOverview,
+  type ProjectExecutionsOverview,
+} from '@/lib/usage/executions-events'
+import {
+  fetchProjectGbHoursOverview,
+  type ProjectGbHoursOverview,
+} from '@/lib/usage/gb-hours-events'
+import {
   fetchProjectRequestsChartOverview,
   fetchProjectRequestsOverview,
   type ProjectRequestsChartOverview,
   type ProjectRequestsOverview,
 } from '@/lib/usage/requests-events'
+import {
+  fetchProjectStorageOverview,
+  type ProjectStorageOverview,
+} from '@/lib/usage/storage-gauges'
+import {
+  fetchComputeBreakdownResources,
+  normalizeComputeBreakdownResourceIds,
+} from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
   type UsageChartInterval,
@@ -40,6 +56,9 @@ const usageEventsQueryOptionsBase = {
   refetchOnWindowFocus: false as const,
   refetchOnReconnect: false as const,
   placeholderData: keepPreviousData,
+  meta: {
+    skipInitialLoader: true,
+  },
 }
 
 export function bandwidthOverviewQueryOptions(
@@ -95,6 +114,105 @@ export function requestsOverviewQueryOptions(
     ],
     queryFn: () =>
       fetchProjectRequestsOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function executionsOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'executions',
+      'overview',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectExecutionsOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function gbHoursOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'gb-hours',
+      'overview',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectGbHoursOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function storageOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'storage',
+      'overview',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectStorageOverview(
         projectId!,
         {
           from: new Date(from),
@@ -201,6 +319,88 @@ export function useProjectRequestsOverview(
   })
 }
 
+export function useProjectExecutionsOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...executionsOverviewQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectGbHoursOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...gbHoursOverviewQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectStorageOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...storageOverviewQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function computeBreakdownResourcesQueryOptions(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+) {
+  const normalizedIds = normalizeComputeBreakdownResourceIds(resourceIds)
+
+  return queryOptions({
+    queryKey: [
+      'usage-breakdown',
+      'compute-resources',
+      'project',
+      projectId,
+      normalizedIds.join(','),
+    ],
+    queryFn: () =>
+      fetchComputeBreakdownResources(projectId!, normalizedIds),
+    enabled: !!projectId && normalizedIds.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
+  })
+}
+
+/** Resolve executions / GB-hours breakdown IDs to function and site names (background). */
+export function useComputeBreakdownResources(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+  enabled = true,
+) {
+  const normalizedIds = useMemo(
+    () => normalizeComputeBreakdownResourceIds(resourceIds),
+    [resourceIds],
+  )
+
+  return useQuery({
+    ...computeBreakdownResourcesQueryOptions(projectId, normalizedIds),
+    enabled: enabled && !!projectId && normalizedIds.length > 0,
+  })
+}
+
 /** @deprecated Use useProjectBandwidthOverview */
 export function useProjectBandwidthChartOverview(
   projectId: string | null | undefined,
@@ -289,7 +489,14 @@ export function useProjectListRequestsUsage(
 }
 
 export type {
+  ComputeBreakdownResourceMap,
+} from '@/lib/usage/resolve-compute-breakdown-resources'
+
+export type {
   ProjectBandwidthOverview,
+  ProjectExecutionsOverview,
+  ProjectGbHoursOverview,
+  ProjectStorageOverview,
   ProjectRequestsOverview,
   ProjectRequestsChartOverview,
   ProjectBandwidthOverview as ProjectBandwidthChartOverview,

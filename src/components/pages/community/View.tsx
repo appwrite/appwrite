@@ -7,6 +7,7 @@ import {
   MarketingInvolvementCards,
   MarketingSectionHeading,
   MarketingStatGrid,
+  marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -167,7 +168,7 @@ export function View({ issues }: ViewProps) {
           />
 
           <div className="mt-10 overflow-hidden rounded-xl border border-border bg-card/50">
-            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)]">
+            <div className={marketingSplitLayoutClassName({ className: 'p-6 sm:p-8' })}>
               <div>
                 <h3 className="text-[15px] font-semibold text-foreground">
                   {communityGetInvolved.issuesTitle}
@@ -293,7 +294,7 @@ export function View({ issues }: ViewProps) {
 
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+          <div className={marketingSplitLayoutClassName()}>
             <MarketingSectionHeading
               align="left"
               size="md"

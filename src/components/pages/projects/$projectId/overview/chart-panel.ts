@@ -1,8 +1,14 @@
 /** Shared layout tokens for overview chart + side breakdown panels. */
 export const OVERVIEW_CHART_HEIGHT = 240
 
+import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+
 /** Max rows shown in the overview top-endpoints breakdown (matches usage API limit). */
-export const OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT = 7
+export const OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT
+
+/** Executions / GB-hours breakdown rows (matches compute resource fetch limit). */
+export const OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT =
+  COMPUTE_BREAKDOWN_RESOURCE_LIMIT
 
 /** Fixed-height list so skeleton, partial, and full results share the same layout. */
 export const overviewTopBreakdownListClass =
@@ -50,6 +56,24 @@ export const OVERVIEW_BANDWIDTH_ERROR = {
 
 export const OVERVIEW_REQUESTS_ERROR = {
   title: "Couldn't load requests",
+  message:
+    "We couldn't fetch usage data from the server. Check your connection and try again.",
+} as const
+
+export const OVERVIEW_EXECUTIONS_ERROR = {
+  title: "Couldn't load executions",
+  message:
+    "We couldn't fetch usage data from the server. Check your connection and try again.",
+} as const
+
+export const OVERVIEW_GB_HOURS_ERROR = {
+  title: "Couldn't load GB-hours",
+  message:
+    "We couldn't fetch usage data from the server. Check your connection and try again.",
+} as const
+
+export const OVERVIEW_STORAGE_ERROR = {
+  title: "Couldn't load storage",
   message:
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const

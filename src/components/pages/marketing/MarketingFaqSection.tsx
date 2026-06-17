@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { MarketingSectionHeading } from './MarketingSections'
+import { MarketingSectionHeading, marketingSplitLayoutClassName } from './MarketingSections'
 
 export type MarketingFaqLink = {
   label: string
@@ -33,7 +33,7 @@ export function MarketingFaqSection({
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] lg:gap-12">
+        <div className={marketingSplitLayoutClassName()}>
           <MarketingSectionHeading
             align="left"
             size="md"

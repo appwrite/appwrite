@@ -125,3 +125,38 @@ export function formatCompactCount(
 export function formatCompactCountAxis(num: number): string {
   return formatCompactCount(num, { compact: true })
 }
+
+/** MB-seconds to GB-hours (same divisor as cloud billing aggregation). */
+export const MB_SECONDS_PER_GB_HOUR = 1000 * 3600
+
+export function mbSecondsToGbHours(mbSeconds: number): number {
+  if (!Number.isFinite(mbSeconds) || mbSeconds <= 0) return 0
+  return mbSeconds / MB_SECONDS_PER_GB_HOUR
+}
+
+function trimGbHoursValue(gbHours: number): string {
+  if (gbHours >= 100) return Math.round(gbHours).toLocaleString()
+  if (gbHours >= 10) return gbHours.toFixed(1).replace(/\.0$/, '')
+  if (gbHours >= 1) return gbHours.toFixed(1)
+  if (gbHours >= 0.01) return gbHours.toFixed(2)
+  return gbHours.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')
+}
+
+/** Compact GB-hours formatter for overview KPIs, lists, and charts. */
+export function formatGbHoursTotal(gbHours: number): string {
+  if (!Number.isFinite(gbHours) || gbHours <= 0) return '0'
+  return trimGbHoursValue(gbHours)
+}
+
+export function formatGbHoursValue(gbHours: number): string {
+  return formatGbHoursTotal(gbHours)
+}
+
+/** Short Y-axis labels for GB-hours. */
+export function formatGbHoursAxisValue(gbHours: number): string {
+  if (!Number.isFinite(gbHours) || gbHours <= 0) return '0'
+  if (gbHours >= 1_000) {
+    return `${trimGbHoursValue(gbHours / 1_000)}k`
+  }
+  return trimGbHoursValue(gbHours)
+}

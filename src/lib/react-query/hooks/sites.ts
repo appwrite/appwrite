@@ -93,6 +93,34 @@ export async function fetchProjectSite(
   return await projectSdk.sites.get({ siteId })
 }
 
+/** Fetch up to 8 sites by ID in a single list call (overview compute breakdown). */
+export async function fetchProjectSitesByIds(
+  projectId: string,
+  siteIds: string[],
+): Promise<{ sites: Models.Site[] }> {
+  if (!projectId || siteIds.length === 0) {
+    return { sites: [] }
+  }
+
+  const validIds = [
+    ...new Set(siteIds.filter((id) => typeof id === 'string' && id.trim())),
+  ].slice(0, 8)
+  if (validIds.length === 0) {
+    return { sites: [] }
+  }
+
+  const idQuery =
+    validIds.length === 1
+      ? Query.equal('$id', validIds[0])
+      : Query.or(validIds.map((id) => Query.equal('$id', id)))
+
+  const response = await sdk.forProject(projectId).sites.list({
+    queries: [idQuery, Query.limit(validIds.length)],
+  })
+
+  return { sites: response.sites ?? [] }
+}
+
 // Object form of sites.update() params (SDK has overloads; avoid string | object union)
 type SiteUpdateParams = Extract<
   Parameters<ReturnType<typeof sdk.forProject>['sites']['update']>[0],

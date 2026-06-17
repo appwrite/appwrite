@@ -46,7 +46,7 @@ export function formatRequestsValue(count: number): string {
 export { formatCompactCountAxis as formatRequestsAxisValue } from '@/lib/usage/format-metric'
 export { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 
-/** One listEvents call (with dimensions) for chart + breakdown. */
+/** Chart + server-side top endpoint breakdown per metric. */
 export async function fetchProjectRequestsOverview(
   projectId: string,
   dateRange: DateRange | undefined,

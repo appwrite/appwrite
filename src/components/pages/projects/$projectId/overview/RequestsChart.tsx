@@ -29,6 +29,7 @@ import {
   formatCompactBytes,
   formatCompactBytesAxis,
   formatCompactCountAxis,
+  formatGbHoursAxisValue,
 } from '@/lib/usage/format-metric'
 
 type MetricType =
@@ -351,13 +352,17 @@ export function RequestsChart({
   const outboundGradientId = 'overview-chart-gradient-outbound'
   const valueFormatter =
     formatValue ??
-    (metric === 'requests'
+    (metric === 'requests' || metric === 'executions'
       ? (value: number) => String(value)
-      : (value: number) => formatCompactBytes(value, { compact: true }))
+      : metric === 'gbhours'
+        ? (value: number) => String(value)
+        : (value: number) => formatCompactBytes(value, { compact: true }))
   const yAxisTickFormatter = usesRealData
-    ? metric === 'requests'
+    ? metric === 'requests' || metric === 'executions'
       ? (value: number) => formatCompactCountAxis(value)
-      : (value: number) => formatCompactBytesAxis(value)
+      : metric === 'gbhours'
+        ? (value: number) => formatGbHoursAxisValue(value)
+        : (value: number) => formatCompactBytesAxis(value)
     : (value: number) => {
         if (value >= 1000) return `${(value / 1000).toFixed(0)}k`
         return value.toString()

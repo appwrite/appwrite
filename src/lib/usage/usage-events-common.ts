@@ -21,6 +21,8 @@ import {
   isFullCalendarDayRange,
   resolveUsageDateBounds,
 } from '@/lib/usage/usage-date-range'
+import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'
 export {
@@ -110,7 +112,7 @@ function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
 
 interface ListUsageEventGroupsParams {
   metric: string
-  interval: UsageChartInterval
+  interval?: UsageChartInterval
   startAt: string
   endAt: string
   dimensions?: string[]
@@ -183,7 +185,7 @@ export function mergeChartPointsSeries(
 
 export function mergeTopEndpoints(
   lists: UsageTopEndpoint[][],
-  limit = 7,
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
   const grouped = new Map<string, UsageTopEndpoint>()
 
@@ -235,12 +237,48 @@ export type { UsageMetricSeriesResult }
 
 const TOP_ENDPOINTS_DIMENSIONS = ['path', 'method', 'status'] as const
 
-async function fetchUsageMetricSeries(
+function mapBreakdownGroupsToEndpoints(
+  groups: Models.UsageGroup[],
+  dimensions: readonly string[],
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): UsageTopEndpoint[] {
+  let items: UsageTopEndpoint[]
+
+  if (dimensions.length === 1 && dimensions[0] === 'resourceId') {
+    items = groups.map((group, index) => {
+      const resourceId = group.resourceId?.trim() || ''
+      return {
+        id: resourceId || `resource-${index}`,
+        method: '',
+        statusCode: 0,
+        path: resourceId,
+        count: group.value,
+      }
+    })
+  } else {
+    items = groups.map((group, index) => {
+      const method = group.method || 'GET'
+      const statusCode = Number.parseInt(group.status ?? '', 10) || 0
+      const path = group.path || '/'
+      return {
+        id: `${method}|${statusCode}|${path}|${index}`,
+        method,
+        statusCode,
+        path,
+        count: group.value,
+      }
+    })
+  }
+
+  return items.sort((a, b) => b.count - a.count).slice(0, limit)
+}
+
+async function fetchUsageMetricChartSeries(
   projectId: string,
   metric: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-): Promise<UsageMetricSeriesResult> {
+): Promise<Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>> {
   const {
     from,
     to,
@@ -252,7 +290,6 @@ async function fetchUsageMetricSeries(
   const groups = await listUsageEventGroups(projectId, {
     metric,
     interval: resolvedInterval,
-    dimensions: [...TOP_ENDPOINTS_DIMENSIONS],
     startAt: previousFrom.toISOString(),
     endAt: to.toISOString(),
   })
@@ -269,19 +306,66 @@ async function fetchUsageMetricSeries(
       previousTo,
       resolvedInterval,
     ),
-    topEndpoints: aggregateTopEndpointsFromGroups(current),
+  }
+}
+
+async function fetchUsageMetricBreakdown(
+  projectId: string,
+  metric: string,
+  dateRange: DateRange | undefined,
+  dimensions: readonly string[],
+  breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): Promise<UsageTopEndpoint[]> {
+  const { from, to } = resolveOverviewUsagePeriod(dateRange)
+
+  const groups = await listUsageEventGroups(projectId, {
+    metric,
+    dimensions: [...dimensions],
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+  })
+
+  return mapBreakdownGroupsToEndpoints(groups, dimensions, breakdownLimit)
+}
+
+async function fetchUsageMetricSeries(
+  projectId: string,
+  metric: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  dimensions: readonly string[] = TOP_ENDPOINTS_DIMENSIONS,
+  breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): Promise<UsageMetricSeriesResult> {
+  const breakdownEnabled = areUsageBreakdownQueriesEnabled()
+  const [chartSeries, topEndpoints] = await Promise.all([
+    fetchUsageMetricChartSeries(projectId, metric, dateRange, interval),
+    dimensions.length > 0 && breakdownEnabled
+      ? fetchUsageMetricBreakdown(
+          projectId,
+          metric,
+          dateRange,
+          dimensions,
+          breakdownLimit,
+        )
+      : Promise.resolve([]),
+  ])
+
+  return {
+    ...chartSeries,
+    topEndpoints,
   }
 }
 
 /**
- * One listEvents call per metric (with dimensions): chart series, top breakdown,
- * and change % from the same response (chart totals summed client-side).
+ * Chart series (with interval) plus flat top-N breakdown (no interval).
  */
 export async function fetchProjectUsageMetricsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  dimensions: readonly string[] = TOP_ENDPOINTS_DIMENSIONS,
+  breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): Promise<ProjectUsageMetricOverview> {
   if (!projectId) {
     return { changePercent: 0, chartPoints: [], topEndpoints: [] }
@@ -289,7 +373,14 @@ export async function fetchProjectUsageMetricsOverview(
 
   const results = await Promise.all(
     metrics.map((metric) =>
-      fetchUsageMetricSeries(projectId, metric, dateRange, interval),
+      fetchUsageMetricSeries(
+        projectId,
+        metric,
+        dateRange,
+        interval,
+        dimensions,
+        breakdownLimit,
+      ),
     ),
   )
 
@@ -302,12 +393,21 @@ export async function fetchProjectUsageMetricSeriesOverview(
   metric: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  dimensions: readonly string[] = TOP_ENDPOINTS_DIMENSIONS,
+  breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): Promise<UsageMetricSeriesResult> {
   if (!projectId) {
     return { chartPoints: [], previousChartPoints: [], topEndpoints: [] }
   }
 
-  return fetchUsageMetricSeries(projectId, metric, dateRange, interval)
+  return fetchUsageMetricSeries(
+    projectId,
+    metric,
+    dateRange,
+    interval,
+    dimensions,
+    breakdownLimit,
+  )
 }
 
 /** Fill missing interval buckets with zero so the chart spans the full date range. */
@@ -358,45 +458,6 @@ function splitGroupsByPeriod(
   return { current, previous }
 }
 
-function aggregateTopEndpointsFromGroups(
-  groups: Models.UsageGroup[],
-  limit = 7,
-): UsageTopEndpoint[] {
-  const grouped = new Map<
-    string,
-    {
-      method: string
-      statusCode: number
-      path: string
-      count: number
-    }
-  >()
-
-  for (const group of groups) {
-    const method = group.method || 'GET'
-    const statusCode = Number.parseInt(group.status ?? '', 10) || 0
-    const path = group.path || '/'
-    const key = `${method}|${statusCode}|${path}`
-    const existing = grouped.get(key)
-    if (existing) {
-      existing.count += group.value
-      continue
-    }
-    grouped.set(key, { method, statusCode, path, count: group.value })
-  }
-
-  return Array.from(grouped.entries())
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, limit)
-    .map(([key, item]) => ({
-      id: key,
-      method: item.method,
-      statusCode: item.statusCode,
-      path: item.path,
-      count: item.count,
-    }))
-}
-
 async function listUsageEventGroups(
   projectId: string,
   params: ListUsageEventGroupsParams,
@@ -404,7 +465,7 @@ async function listUsageEventGroups(
   const projectSdk = sdk.forProject(projectId)
   const request: {
     metric: string
-    interval: string
+    interval?: string
     startAt: string
     endAt: string
     dimensions?: string[]
@@ -412,11 +473,13 @@ async function listUsageEventGroups(
     resourceId?: string
   } = {
     metric: params.metric,
-    interval: params.interval,
     startAt: params.startAt,
     endAt: params.endAt,
   }
 
+  if (params.interval) {
+    request.interval = params.interval
+  }
   if (params.dimensions?.length) {
     request.dimensions = params.dimensions
   }

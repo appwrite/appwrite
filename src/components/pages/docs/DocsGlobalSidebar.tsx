@@ -50,7 +50,7 @@ import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-
 import { DOCS_GLOBAL_NAV } from '@/lib/docs/navigation'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
-import { getBlogPageUrl, isBlogPageExternal, parseBlogPagePath } from '@/lib/marketing/urls'
+import { getBlogPageUrl, getMarketingPageUrl, isBlogPageExternal, isMarketingPageExternal, parseBlogPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DocsRouteLink } from './DocsRouteLink'
@@ -137,14 +137,22 @@ function DocsGlobalNavItem({
   marketingEnabled: boolean
 }) {
   const blogPath = parseBlogPagePath(item.href)
+  const isChangelogPath =
+    item.href === '/changelog' || item.href.startsWith('/changelog/')
   const resolvedHref = blogPath
     ? getBlogPageUrl(blogPath, marketingEnabled)
-    : item.href
+    : isChangelogPath
+      ? getMarketingPageUrl('/changelog', marketingEnabled)
+      : item.href
   const isActive = isDocsNavActive(resolvedHref, pathname)
   const CustomIcon = item.icon ? CUSTOM_ICON_MAP[item.icon] : null
   const Icon = item.icon && !CustomIcon ? ICON_MAP[item.icon] : null
   const external =
-    (blogPath ? isBlogPageExternal(marketingEnabled) : resolvedHref.startsWith('http')) ||
+    (blogPath
+      ? isBlogPageExternal(marketingEnabled)
+      : isChangelogPath
+        ? isMarketingPageExternal(marketingEnabled)
+        : resolvedHref.startsWith('http')) ||
     item.openInNewTab
 
   const className = cn(

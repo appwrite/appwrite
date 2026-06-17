@@ -87,7 +87,7 @@ export function mergeBandwidthDualChartPoints(
   })
 }
 
-/** One listEvents call per metric (with dimensions) for chart + breakdown. */
+/** Inbound/outbound chart series + server-side top endpoint breakdown. */
 export async function fetchProjectBandwidthOverview(
   projectId: string,
   dateRange: DateRange | undefined,

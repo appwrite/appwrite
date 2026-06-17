@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import {
   getMockReportTitle,
   getStatusIcon,
@@ -130,9 +132,14 @@ function CloudStatusBannerInner({
 
 export function CloudStatusBanner() {
   const { isCloud, features } = useConsoleProfile()
+  const { account, isFetched } = useAuth()
   const cloudStatusEnabled = isCloud && features.systemStatus
+  const showToOperator =
+    isFetched && isOperatorAccount(account as OperatorAccount)
   const { mockCloudStatusAlert } = useDebugOverrides()
-  const { data, isSuccess } = useAppwriteCloudStatus(cloudStatusEnabled)
+  const { data, isSuccess } = useAppwriteCloudStatus(
+    cloudStatusEnabled && showToOperator,
+  )
 
   const aggregateState: AppwriteCloudAggregateState =
     !cloudStatusEnabled
@@ -149,7 +156,7 @@ export function CloudStatusBanner() {
     }
   }, [aggregateState])
 
-  if (!cloudStatusEnabled) {
+  if (!cloudStatusEnabled || !showToOperator) {
     return null
   }
 

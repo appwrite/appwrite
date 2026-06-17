@@ -41,8 +41,10 @@ import {
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
 import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/console-project-scopes'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
@@ -364,9 +366,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
   const { isCloud, features } = useConsoleProfile()
+  const { account, isFetched } = useAuth()
   const cloudStatusEnabled = isCloud && features.systemStatus
+  const showCloudStatusToOperator =
+    isFetched && isOperatorAccount(account as OperatorAccount)
   const { data: statusData, isSuccess: isStatusSuccess } =
-    useAppwriteCloudStatus(cloudStatusEnabled)
+    useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
   const { showFullscreenLoader } = useDebugOverrides()
   useGlobalAnalyticsTracker()
 
@@ -385,6 +390,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
   const statusBanner =
     cloudStatusEnabled &&
+    showCloudStatusToOperator &&
     isLoaderVisible &&
     isStatusSuccess &&
     statusData?.aggregateState &&

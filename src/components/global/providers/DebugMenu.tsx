@@ -70,6 +70,7 @@ import {
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import { useNavigate } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 import { cn } from '@/lib/utils'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
@@ -352,6 +353,7 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible } = useDebugMode()
+  const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
@@ -1190,9 +1192,29 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
+                label: 'Disable usage breakdown queries',
+                description:
+                  'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
+                variant: 'switch' as const,
+                switchValue: overrides.disableUsageBreakdownQueries,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    disableUsageBreakdownQueries: checked,
+                  }))
+                  setDebugOverride('disableUsageBreakdownQueries', checked)
+                  void queryClient.invalidateQueries({
+                    predicate: (query) =>
+                      query.queryKey[0] === 'usage-events' ||
+                      query.queryKey[0] === 'usage-gauges' ||
+                      query.queryKey[0] === 'usage-breakdown',
+                  })
+                },
+              },
+              {
                 label: 'Reset feature flags',
                 description:
-                  'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, activity chart, AI assistant, native app bar, success team card, functions local editor).',
+                  'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, activity chart, AI assistant, native app bar, success team card, functions local editor, usage breakdown).',
                 onClick: () => {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()

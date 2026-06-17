@@ -6,6 +6,9 @@ import {
   platformsQueryOptions,
   bandwidthOverviewQueryOptions,
   requestsOverviewQueryOptions,
+  executionsOverviewQueryOptions,
+  gbHoursOverviewQueryOptions,
+  storageOverviewQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ensureProjectRegion } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -49,24 +52,44 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
           to: new Date(chartDateRange.to),
         }
 
-        void queryClient
-          .ensureQueryData(
+        // Usage is non-critical: prefetch in background; page renders with chart skeletons.
+        void Promise.all([
+          queryClient.prefetchQuery(
             bandwidthOverviewQueryOptions(
               projectId,
               parsedRange,
               DEFAULT_USAGE_CHART_INTERVAL,
             ),
-          )
-          .catch(() => undefined)
-        void queryClient
-          .ensureQueryData(
+          ),
+          queryClient.prefetchQuery(
             requestsOverviewQueryOptions(
               projectId,
               parsedRange,
               DEFAULT_USAGE_CHART_INTERVAL,
             ),
-          )
-          .catch(() => undefined)
+          ),
+          queryClient.prefetchQuery(
+            executionsOverviewQueryOptions(
+              projectId,
+              parsedRange,
+              DEFAULT_USAGE_CHART_INTERVAL,
+            ),
+          ),
+          queryClient.prefetchQuery(
+            gbHoursOverviewQueryOptions(
+              projectId,
+              parsedRange,
+              DEFAULT_USAGE_CHART_INTERVAL,
+            ),
+          ),
+          queryClient.prefetchQuery(
+            storageOverviewQueryOptions(
+              projectId,
+              parsedRange,
+              DEFAULT_USAGE_CHART_INTERVAL,
+            ),
+          ),
+        ]).catch(() => undefined)
       }
 
       return {
