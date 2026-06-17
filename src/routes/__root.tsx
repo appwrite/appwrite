@@ -172,9 +172,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({
     meta: [
       {
-        charSet: 'utf-8',
-      },
-      {
         name: 'viewport',
         content:
           'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
@@ -184,10 +181,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
     links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
       {
         rel: 'icon',
         href: import.meta.env.DEV ? '/logo-theme.svg' : '/logo.svg',
@@ -410,6 +403,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta charSet="utf-8" />
+        <link rel="stylesheet" href={appCss} />
         <HeadContent />
       </head>
       <body suppressHydrationWarning>

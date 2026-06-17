@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -61,8 +62,16 @@ export function CliTerminalSessionsLayout({
   >(() => new Map())
   const panelOpenRef = useRef(false)
   const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
-  const isSplit = displaySessionIds.length > 1
-  const displayedCount = displaySessionIds.length
+  const effectiveDisplaySessionIds = useMemo(() => {
+    const valid = displaySessionIds.filter((id) =>
+      sessions.some((session) => session.id === id),
+    )
+    if (valid.length > 0) return valid
+    if (sessions.length > 0) return [sessions[0]!.id]
+    return []
+  }, [displaySessionIds, sessions])
+  const isSplit = effectiveDisplaySessionIds.length > 1
+  const displayedCount = effectiveDisplaySessionIds.length
   const defaultPaneSize =
     displayedCount > 0 ? 100 / displayedCount : 100
   const isResizing = isPanelResizing || isSplitResizing
@@ -82,7 +91,7 @@ export function CliTerminalSessionsLayout({
 
   useEffect(() => {
     handleSplitLayout()
-  }, [displaySessionIds, handleSplitLayout])
+  }, [effectiveDisplaySessionIds, handleSplitLayout])
 
   useEffect(() => {
     const wasOpen = panelOpenRef.current
@@ -92,7 +101,7 @@ export function CliTerminalSessionsLayout({
     setActivatedSessions((previous) => {
       const next = new Map(previous)
       let changed = false
-      for (const sessionId of displaySessionIds) {
+      for (const sessionId of effectiveDisplaySessionIds) {
         if (!next.has(sessionId)) {
           next.set(sessionId, { deferInit: deferInitForNewSessions })
           changed = true
@@ -100,7 +109,7 @@ export function CliTerminalSessionsLayout({
       }
       return changed ? next : previous
     })
-  }, [displaySessionIds, open])
+  }, [effectiveDisplaySessionIds, open])
 
   useEffect(() => {
     if (!isSplitResizing) return
@@ -114,14 +123,16 @@ export function CliTerminalSessionsLayout({
 
   useLayoutEffect(() => {
     const activeDisplayId =
-      displaySessionIds.length === 1 ? displaySessionIds[0] : null
+      effectiveDisplaySessionIds.length === 1
+        ? effectiveDisplaySessionIds[0]
+        : null
     const splitSize = isSplit ? 100 / displayedCount : 100
 
     for (const session of sessions) {
       const panel = panelRefs.current[session.id]
       if (!panel) continue
 
-      const isDisplayed = displaySessionIds.includes(session.id)
+      const isDisplayed = effectiveDisplaySessionIds.includes(session.id)
       if (!isDisplayed) {
         if (!panel.isCollapsed()) {
           panel.collapse()
@@ -146,21 +157,24 @@ export function CliTerminalSessionsLayout({
         panel.collapse()
       }
     }
-  }, [displaySessionIds, displayedCount, isSplit, sessions])
+  }, [displayedCount, effectiveDisplaySessionIds, isSplit, sessions])
+
+  if (effectiveDisplaySessionIds.length === 0) {
+    return <div className="h-full min-h-0" aria-hidden />
+  }
 
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      autoSaveId="cli-shell-terminal-panels"
       className="h-full min-h-0 min-w-0 items-stretch gap-0"
       onLayout={handleSplitLayout}
     >
       {sessions.map((session, index) => {
-        const isDisplayed = displaySessionIds.includes(session.id)
-        const displayIndex = displaySessionIds.indexOf(session.id)
+        const isDisplayed = effectiveDisplaySessionIds.includes(session.id)
+        const displayIndex = effectiveDisplaySessionIds.indexOf(session.id)
         const hasDisplayedBeforeInList = sessions
           .slice(0, index)
-          .some((item) => displaySessionIds.includes(item.id))
+          .some((item) => effectiveDisplaySessionIds.includes(item.id))
         const showHandle =
           isSplit &&
           isDisplayed &&
