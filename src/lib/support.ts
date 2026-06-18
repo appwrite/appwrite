@@ -106,7 +106,7 @@ export function getSupportAnalyticsEvent(): string {
 
 const SUPPORT_TIMEZONE = 'Europe/Paris' // CET/CEST
 
-/** Support hours: Mon–Fri 17:00 – 01:00 CET (weekdays only). Informational only; submission always allowed. */
+/** Support hours: Mon–Fri 14:00 – 02:00 CET, 12 hours (weekdays only). Informational only; submission always allowed. */
 export function getSupportHoursInLocalTime(): {
   startLocal: string
   endLocal: string
@@ -122,14 +122,14 @@ export function getSupportHoursInLocalTime(): {
     minute: '2-digit',
     hour12: true,
   })
-  // Display: 17:00 and 01:00 CET converted to user's local time (same day as "now" for consistency)
+  // Display: 14:00 and 02:00 CET converted to user's local time (same day as "now" for consistency)
   const startCET = new Date(now)
-  startCET.setUTCHours(17 - cetOffset, 0, 0, 0)
+  startCET.setUTCHours(14 - cetOffset, 0, 0, 0)
   const endCET = new Date(now)
-  endCET.setUTCHours(25 - cetOffset, 0, 0, 0) // 01:00 next day CET
+  endCET.setUTCHours(26 - cetOffset, 0, 0, 0) // 02:00 next day CET
   const startLocal = timeFormatter.format(startCET)
   const endLocal = timeFormatter.format(endCET)
-  // isOpen: only true on weekdays Mon–Fri 17:00–01:00 CET (including Sat 00:00–00:59 as tail of Fri)
+  // isOpen: only true on weekdays Mon–Fri 14:00–02:00 CET (including Sat 00:00–01:59 as tail of Fri)
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: SUPPORT_TIMEZONE,
     weekday: 'long',
@@ -150,10 +150,10 @@ export function getSupportHoursInLocalTime(): {
   }
   const w = weekdayNum[cetWeekday] ?? 0
   const isOpen =
-    (w >= 1 && w <= 4 && cetHour >= 17) ||
-    (w >= 2 && w <= 5 && cetHour < 1) ||
-    (w === 5 && cetHour >= 17) ||
-    (w === 6 && cetHour < 1)
+    (w >= 1 && w <= 4 && cetHour >= 14) ||
+    (w >= 2 && w <= 5 && cetHour < 2) ||
+    (w === 5 && cetHour >= 14) ||
+    (w === 6 && cetHour < 2)
   return {
     startLocal,
     endLocal,
