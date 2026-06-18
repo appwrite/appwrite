@@ -104,6 +104,7 @@ import {
   Dependencies,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
@@ -475,14 +476,17 @@ export function View() {
     setScreenshotLoaded(false)
   }, [activeDeploymentResolved?.$id, screenshotTheme])
 
-  // Use same site domains as Domains tab, then filter to active deployment
+  // Same limit as site layout loader prefetch (DOMAINS_DEFAULT_PAGE_SIZE) to avoid cache miss
   const { rules: siteDomainsRules } = useSiteDomains(
     projectId,
     siteId,
     0,
-    100,
+    DOMAINS_DEFAULT_PAGE_SIZE,
     '',
   )
+
+  const activeDeploymentIdForDomains =
+    activeDeploymentResolved?.$id ?? site?.deploymentId
 
   // Filter to rules that point to the active deployment (same data source as Domains tab)
   const activeDomains = useMemo(() => {
@@ -490,23 +494,23 @@ export function View() {
       siteDomainsRules?.filter((rule) =>
         proxyRuleServesActiveDeployment(
           rule,
-          activeDeploymentResolved?.$id,
+          activeDeploymentIdForDomains,
         ),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
       .slice(0, 3)
-  }, [siteDomainsRules, activeDeploymentResolved?.$id])
+  }, [siteDomainsRules, activeDeploymentIdForDomains])
 
   const totalActiveDomains = useMemo(
     () =>
       siteDomainsRules?.filter((rule) =>
         proxyRuleServesActiveDeployment(
           rule,
-          activeDeploymentResolved?.$id,
+          activeDeploymentIdForDomains,
         ),
       ).length ?? 0,
-    [siteDomainsRules, activeDeploymentResolved?.$id],
+    [siteDomainsRules, activeDeploymentIdForDomains],
   )
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
@@ -1149,125 +1153,73 @@ export function View() {
                           <div className="text-[12px] text-muted-foreground mb-1.5">
                             Domains
                           </div>
-                          {activeDomains.length > 0 ? (
-                            <>
-                              <div className="flex flex-col gap-1">
-                                {activeDomains.map((rule) => (
-                                  <a
-                                    key={rule.$id}
-                                    href={`https://${rule.domain}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
-                                  >
-                                    {rule.domain}
-                                    <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  </a>
-                                ))}
-                              </div>
-                              {hasMoreDomains && (
-                                <p className="text-[11px] text-muted-foreground mt-1.5">
-                                  +{totalActiveDomains - activeDomains.length}{' '}
-                                  more
-                                </p>
-                              )}
-                              <div
-                                className={cn(
-                                  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-                                  'flex flex-wrap items-center gap-2',
-                                )}
+                          <div className="flex flex-col gap-1">
+                            {activeDomains.map((rule) => (
+                              <a
+                                key={rule.$id}
+                                href={`https://${rule.domain}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[13px] font-mono link-neutral"
                               >
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="h-auto p-0 text-[13px] font-medium"
-                                  asChild
-                                >
-                                  <Link
-                                    to="/projects/$projectId/sites/$siteId/domains"
-                                    params={{
-                                      projectId: projectId!,
-                                      siteId: siteId!,
-                                    }}
-                                  >
-                                    View all domains
-                                    {hasMoreDomains && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
-                                      >
-                                        +
-                                        {totalActiveDomains -
-                                          activeDomains.length}
-                                      </Badge>
-                                    )}
-                                  </Link>
-                                </Button>
-                                <span className="text-muted-foreground/60">
-                                  ·
-                                </span>
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="h-auto p-0 text-[13px] font-medium"
-                                  asChild
-                                >
-                                  <Link
-                                    to="/projects/$projectId/sites/$siteId/domains"
-                                    params={{
-                                      projectId: projectId!,
-                                      siteId: siteId!,
-                                    }}
-                                  >
-                                    Add domain
-                                  </Link>
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            <div
-                              className={cn(
-                                RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-                                'flex flex-wrap items-center gap-2',
-                              )}
-                            >
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px] font-medium"
-                                asChild
-                              >
-                                <Link
-                                  to="/projects/$projectId/sites/$siteId/domains"
-                                  params={{
-                                    projectId: projectId!,
-                                    siteId: siteId!,
-                                  }}
-                                >
-                                  View all domains
-                                </Link>
-                              </Button>
-                              <span className="text-muted-foreground/60">
-                                ·
-                              </span>
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px] font-medium"
-                                asChild
-                              >
-                                <Link
-                                  to="/projects/$projectId/sites/$siteId/domains"
-                                  params={{
-                                    projectId: projectId!,
-                                    siteId: siteId!,
-                                  }}
-                                >
-                                  Add domain
-                                </Link>
-                              </Button>
-                            </div>
+                                <span className="truncate">{rule.domain}</span>
+                                <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              </a>
+                            ))}
+                          </div>
+                          {hasMoreDomains && (
+                            <p className="text-[11px] text-muted-foreground mt-1.5">
+                              +{totalActiveDomains - activeDomains.length} more
+                            </p>
                           )}
+                          <div
+                            className={cn(
+                              RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+                              'flex flex-wrap items-center gap-2',
+                            )}
+                          >
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px] font-medium"
+                              asChild
+                            >
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                              >
+                                View all domains
+                                {hasMoreDomains && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
+                                  >
+                                    +{totalActiveDomains - activeDomains.length}
+                                  </Badge>
+                                )}
+                              </Link>
+                            </Button>
+                            <span className="text-muted-foreground/60">·</span>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px] font-medium"
+                              asChild
+                            >
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                              >
+                                Add domain
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1337,7 +1289,7 @@ export function View() {
                         Build logs
                       </Link>
                     </Button>
-                    {activeDomains.length > 0 && (
+                    {activeDomains.length > 0 ? (
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -1390,6 +1342,16 @@ export function View() {
                           </div>
                         </PopoverContent>
                       </Popover>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        disabled
+                      >
+                        <Globe className="mr-1.5 h-4 w-4" />
+                        Visit
+                      </Button>
                     )}
                   </div>
                 </div>
