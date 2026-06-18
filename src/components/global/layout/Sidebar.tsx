@@ -150,6 +150,7 @@ const getNavItems = (projectId: string) => {
           label: 'Distribution',
           icon: Package,
           path: `/projects/${projectId}/stores`,
+          comingSoon: true,
         },
       ],
     },
