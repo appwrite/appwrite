@@ -3,11 +3,14 @@ import {
   getFormFieldTypeLabel,
   type RequestFormField,
 } from '@/lib/api-explorer/request-form'
+import type { ApiReferenceResponse } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
 import { MethodDescriptionMarkdown } from '@/components/global/api-explorer/MethodDescriptionMarkdown'
 import {
   REQUEST_BUILDER_VALUE_INNER_COMPLEX,
 } from '@/components/global/api-explorer/request-form-table'
+import { ApiReferenceCollapsibleModels } from './ApiReferenceCollapsibleModels'
+import { ApiReferenceCollapsibleCard } from './ApiReferenceCollapsibleCard'
 
 /** Always table layout in the reference panel (not viewport-stacked like the live explorer). */
 const REFERENCE_PARAM_ROW =
@@ -91,63 +94,84 @@ export function ApiReferenceParameterFields({
   )
 }
 
+const REFERENCE_RESPONSE_HEADER =
+  'grid min-w-[480px] border-b border-border/50 bg-muted/20 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground grid-cols-[88px_minmax(0,1fr)]'
+
+const REFERENCE_RESPONSE_META_ROW =
+  'grid min-w-[480px] items-start border-b border-border/50 grid-cols-[88px_minmax(0,1fr)]'
+
+const REFERENCE_RESPONSE_STATUS_CELL =
+  'flex min-h-[44px] items-center px-4 py-2'
+
+const REFERENCE_RESPONSE_TYPE_CELL =
+  'flex min-h-[44px] items-center border-l border-border/50 px-4 py-2'
+
+const REFERENCE_RESPONSE_MODELS_SECTION =
+  'space-y-4 border-b border-border/50 px-4 py-4 last:border-b-0'
+
 type ApiReferenceResponsesPanelProps = {
-  responses: Array<{
-    code: number
-    contentType?: string
-    models: Array<{ id: string; name: string }>
-  }>
-  version: string
+  responses: ApiReferenceResponse[]
+}
+
+function ReferenceResponseModels({
+  models,
+}: {
+  models: ApiReferenceResponse['models']
+}) {
+  if (models.length === 0) {
+    return (
+      <span className="text-[13px] text-muted-foreground/60">No response body</span>
+    )
+  }
+
+  if (models.length > 1) {
+    return (
+      <div className="space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Response types ({models.length})
+        </p>
+        <ApiReferenceCollapsibleModels models={models} />
+      </div>
+    )
+  }
+
+  return <ApiReferenceCollapsibleModels models={models} />
 }
 
 export function ApiReferenceResponsesPanel({
   responses,
-  version,
 }: ApiReferenceResponsesPanelProps) {
   if (responses.length === 0) return null
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <div className="border-b border-border px-4 py-2.5">
-        <h4 className="text-[13px] font-semibold tracking-tight text-foreground">
-          Responses
-        </h4>
-      </div>
-      <ul className="divide-y divide-border/50">
+    <ApiReferenceCollapsibleCard title="Responses" cardId="responses">
+      <div className="overflow-x-auto">
+        <div className={REFERENCE_RESPONSE_HEADER}>
+          <div className={REFERENCE_RESPONSE_STATUS_CELL}>Status</div>
+          <div className={REFERENCE_RESPONSE_TYPE_CELL}>Content type</div>
+        </div>
         {responses.map((response) => (
-          <li
-            key={response.code}
-            className="grid grid-cols-1 gap-2 px-4 py-3 sm:grid-cols-[80px_minmax(0,1fr)] sm:items-start"
-          >
-            <div className="flex items-center gap-2">
-              <Badge variant="inactive" className="font-mono text-[10px] shrink-0">
-                {response.code}
-              </Badge>
+          <div key={response.code}>
+            <div className={REFERENCE_RESPONSE_META_ROW}>
+              <div className={REFERENCE_RESPONSE_STATUS_CELL}>
+                <Badge variant="inactive" className="font-mono text-[10px] shrink-0">
+                  {response.code}
+                </Badge>
+              </div>
+              <div className={REFERENCE_RESPONSE_TYPE_CELL}>
+                <span className="text-[13px] text-muted-foreground">
+                  {response.contentType ?? '—'}
+                </span>
+              </div>
             </div>
-            <div className="min-w-0 space-y-2">
-              {response.contentType ? (
-                <p className="text-[12px] text-muted-foreground">
-                  {response.contentType}
-                </p>
-              ) : null}
-              {response.models.length > 0 ? (
-                <ul className="space-y-1">
-                  {response.models.map((model) => (
-                    <li key={model.id}>
-                      <a
-                        href={`/docs/references/${version}/models/${model.id}`}
-                        className="text-[13px] text-foreground underline-offset-4 hover:underline"
-                      >
-                        {model.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          </li>
+            {response.models.length > 0 ? (
+              <div className={REFERENCE_RESPONSE_MODELS_SECTION}>
+                <ReferenceResponseModels models={response.models} />
+              </div>
+            ) : null}
+          </div>
         ))}
-      </ul>
-    </div>
+      </div>
+    </ApiReferenceCollapsibleCard>
   )
 }

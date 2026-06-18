@@ -10,6 +10,7 @@ export type ApiReferenceParameter = {
 export type ApiReferenceResponseModel = {
   id: string
   name: string
+  properties: ApiReferenceModelProperty[]
 }
 
 export type ApiReferenceResponse = {
@@ -30,11 +31,20 @@ export type ApiReferenceServiceData = {
   methods: ApiReferenceMethod[]
 }
 
+export type ApiReferencePropertyTypeKind = 'array' | 'object' | 'scalar'
+
 export type ApiReferenceModelProperty = {
   name: string
+  typeKind: ApiReferencePropertyTypeKind
+  /** Scalar type label, or `array` / `object` for container fields. */
   type: string
+  /** When array items resolve to a single model. */
+  itemType?: string
+  variantCount?: number
   description: string
   relatedModels?: string
+  /** Inline models for array items or object unions (e.g. columns list, indexes). */
+  variants?: ApiReferenceResponseModel[]
 }
 
 export type ApiReferenceModelData = {

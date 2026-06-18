@@ -1,4 +1,5 @@
 import type { OpenApiSchema, OpenApiSpec } from '@/lib/api-explorer/types'
+import type { ApiReferenceResponseModel } from '@/lib/docs/references/types'
 
 export function resolveSchemaRef(
   schema: OpenApiSchema | undefined,
@@ -37,4 +38,36 @@ export function formatSchemaType(
 
   if (resolved.type) return resolved.type
   return ''
+}
+
+function getResponseModelFromRef(
+  ref: string,
+  spec: OpenApiSpec,
+): Pick<ApiReferenceResponseModel, 'id' | 'name'> {
+  const id = getSchemaIdFromRef(ref)
+  const resolved = spec.components?.schemas?.[id]
+  return { id, name: resolved?.description?.trim() || id }
+}
+
+export function resolveResponseModels(
+  schema: OpenApiSchema | undefined,
+  spec: OpenApiSpec,
+): Pick<ApiReferenceResponseModel, 'id' | 'name'>[] {
+  if (!schema) return []
+
+  if (schema.oneOf?.length) {
+    return schema.oneOf
+      .filter((item): item is OpenApiSchema & { $ref: string } => Boolean(item.$ref))
+      .map((item) => getResponseModelFromRef(item.$ref, spec))
+  }
+
+  if (schema.$ref) {
+    return [getResponseModelFromRef(schema.$ref, spec)]
+  }
+
+  if (schema.type === 'array' && schema.items) {
+    return resolveResponseModels(schema.items, spec)
+  }
+
+  return []
 }

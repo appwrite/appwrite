@@ -44,10 +44,58 @@ function buildParameterTable(
   ].join('\n')
 }
 
-function buildResponsesSection(
-  method: ApiReferenceMethod,
-  version: ReferenceVersion,
+function formatPropertyTypeForMarkdown(property: ApiReferenceModelProperty): string {
+  if (property.typeKind === 'array') {
+    if (property.itemType) return `array of ${property.itemType}`
+    if (property.variantCount) {
+      return `array (${property.variantCount} possible object types)`
+    }
+    return 'array'
+  }
+  if (property.typeKind === 'object') {
+    if (property.itemType) return `object (${property.itemType})`
+    if (property.variantCount) {
+      return `object (${property.variantCount} possible types)`
+    }
+    return 'object'
+  }
+  return property.type
+}
+
+function buildModelPropertiesTable(
+  properties: ApiReferenceMethod['responses'][number]['models'][number]['properties'],
 ): string {
+  if (properties.length === 0) return ''
+
+  const rows = properties.map((property) => {
+    const description = property.description?.trim() || ''
+    const related = property.relatedModels
+      ? `${description ? `${description} ` : ''}Can be one of: ${property.relatedModels}`
+      : description
+    return `| ${property.name} | ${formatPropertyTypeForMarkdown(property)} | ${related.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |`
+  })
+
+  const sections = [
+    '| Name | Type | Description |',
+    '| --- | --- | --- |',
+    ...rows,
+  ]
+
+  for (const property of properties) {
+    if (!property.variants?.length) continue
+    for (const variant of property.variants) {
+      sections.push('', `#### ${property.name}: ${variant.name}`)
+      const variantTable = buildModelPropertiesTable(variant.properties)
+      if (variantTable) {
+        sections.push('', variantTable)
+      }
+    }
+  }
+
+  return sections.join('\n')
+}
+
+function buildResponsesSection(method: ApiReferenceMethod): string {
   if (method.responses.length === 0) return ''
 
   return method.responses
@@ -57,13 +105,13 @@ function buildResponsesSection(
         lines.push('', response.contentType)
       }
       if (response.models.length > 0) {
-        lines.push(
-          '',
-          ...response.models.map(
-            (model) =>
-              `- [${model.name}](/docs/references/${version}/models/${model.id})`,
-          ),
-        )
+        for (const model of response.models) {
+          lines.push('', `**${model.name}**`)
+          const table = buildModelPropertiesTable(model.properties)
+          if (table) {
+            lines.push('', table)
+          }
+        }
       }
       return lines.join('\n')
     })
@@ -155,7 +203,7 @@ export function buildApiReferenceMethodMarkdown(
     appendSection(lines, bodyTitle, bodyTable)
   }
 
-  const responses = buildResponsesSection(method, version)
+  const responses = buildResponsesSection(method)
   if (responses) appendSection(lines, 'Responses', responses)
 
   if (method.demo?.trim()) {

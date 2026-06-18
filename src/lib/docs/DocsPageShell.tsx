@@ -10,6 +10,7 @@ import {
 } from '@/components/pages/docs/DocsSearchProvider'
 import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
+import { ApiReferenceUiPrefsProvider } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
 
 type DocsPageShellProps = {
@@ -46,8 +47,9 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
   const docsSearch = useDocsSearchContext()
   const { pathname } = useLocation()
   const isReferenceExplorer = isApiReferenceExplorerPath(pathname)
+  const isReferencesSection = pathname.startsWith('/docs/references')
 
-  return (
+  const layout = (
     <ConsoleLayout
       header={{
         marketingNav: true,
@@ -82,6 +84,12 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
         {children}
       </div>
     </ConsoleLayout>
+  )
+
+  return isReferencesSection ? (
+    <ApiReferenceUiPrefsProvider>{layout}</ApiReferenceUiPrefsProvider>
+  ) : (
+    layout
   )
 }
 

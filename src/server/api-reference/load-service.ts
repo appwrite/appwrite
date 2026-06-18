@@ -17,13 +17,14 @@ import {
   type ReferenceService,
   type ReferenceVersion,
 } from '@/lib/docs/references/constants'
-import { resolveSchemaRef } from '@/lib/docs/references/schema-utils'
+import { resolveResponseModels } from '@/lib/docs/references/schema-utils'
+import { buildInlineResponseModel } from '@/lib/docs/references/parse-model'
 import type {
   ApiReferenceMethod,
   ApiReferenceResponse,
   ApiReferenceServiceData,
 } from '@/lib/docs/references/types'
-import { loadReferenceOpenApiSpec } from './load-spec'
+import { loadReferenceOpenApiSpec, loadReferenceConsoleSpec } from './load-spec'
 
 function getServiceDescriptionFromSpec(
   spec: OpenApiSpec,
@@ -46,8 +47,22 @@ const exampleContentCache = new Map<string, string | undefined>()
 
 function stripMarkdownCodeFence(content: string): string {
   const trimmed = content.trim()
-  const fenced = trimmed.match(/^```[^\n]*\n([\s\S]*?)\n```[ \t]*$/)
-  if (fenced) return fenced[1]
+  const withNewlineBeforeClose = trimmed.match(
+    /^```[^\n]*\n([\s\S]*?)\n```[ \t]*$/,
+  )
+  if (withNewlineBeforeClose) return withNewlineBeforeClose[1].trimEnd()
+
+  const closingFenceOnLastLine = trimmed.match(
+    /^```[^\n]*\n([\s\S]*?)```[ \t]*$/,
+  )
+  if (closingFenceOnLastLine) return closingFenceOnLastLine[1].trimEnd()
+
+  if (trimmed.startsWith('```')) {
+    const withoutOpen = trimmed.replace(/^```[^\n]*\n?/, '')
+    const withoutClose = withoutOpen.replace(/\n?```[ \t]*$/, '')
+    if (withoutClose !== trimmed) return withoutClose.trimEnd()
+  }
+
   return content
 }
 
@@ -137,54 +152,40 @@ function getRawOperationForMethod(
     | undefined
 }
 
-function resolveResponseModels(
-  schema: ReturnType<typeof resolveSchemaRef>,
-  spec: OpenApiSpec,
-): Array<{ id: string; name: string }> {
-  if (!schema) return []
-
-  if (schema.oneOf?.length) {
-    return schema.oneOf
-      .filter((item) => item.$ref)
-      .map((item) => {
-        const id = item.$ref!.replace('#/components/schemas/', '')
-        const resolved = spec.components?.schemas?.[id]
-        return { id, name: resolved?.description ?? id }
-      })
-  }
-
-  if (schema.$ref) {
-    const id = schema.$ref.replace('#/components/schemas/', '')
-    const resolved = spec.components?.schemas?.[id]
-    return [{ id, name: resolved?.description ?? id }]
-  }
-
-  return []
-}
-
 function collectMethodResponses(
   operation: OpenApiOperation | undefined,
-  spec: OpenApiSpec,
+  platformSpec: OpenApiSpec,
+  consoleSpec: OpenApiSpec,
+  version: ReferenceVersion,
 ): ApiReferenceResponse[] {
   if (!operation?.responses) return []
 
-  return Object.entries(operation.responses).map(([code, response]) => {
-    const responseObj = response as {
-      content?: Record<string, { schema?: { $ref?: string; oneOf?: Array<{ $ref?: string }> } }>
-    }
-    const content = responseObj.content?.['application/json']
-    const schema = resolveSchemaRef(content?.schema, spec)
-    const models =
-      Number(code) === 204 ? [] : resolveResponseModels(schema, spec)
+  return Object.entries(operation.responses)
+    .map(([code, response]) => {
+      const responseObj = response as {
+        content?: Record<
+          string,
+          { schema?: { $ref?: string; oneOf?: Array<{ $ref?: string }> } }
+        >
+      }
+      const content = responseObj.content?.['application/json']
+      const modelRefs =
+        Number(code) === 204
+          ? []
+          : resolveResponseModels(content?.schema, platformSpec)
+      const models = modelRefs.map((model) =>
+        buildInlineResponseModel(model.id, model.name, consoleSpec, version),
+      )
 
-    return {
-      code: Number(code),
-      contentType: responseObj.content
-        ? Object.keys(responseObj.content)[0]
-        : undefined,
-      models,
-    }
-  })
+      return {
+        code: Number(code),
+        contentType: responseObj.content
+          ? Object.keys(responseObj.content)[0]
+          : undefined,
+        models,
+      }
+    })
+    .sort((a, b) => a.code - b.code)
 }
 
 export async function loadApiReferenceService(
@@ -200,7 +201,10 @@ export async function loadApiReferenceService(
     return null
   }
 
-  const spec = await loadReferenceOpenApiSpec(version, platform)
+  const [spec, consoleSpec] = await Promise.all([
+    loadReferenceOpenApiSpec(version, platform),
+    loadReferenceConsoleSpec(version),
+  ])
   const mode = getSpecMode(platform) as ApiSpecPlatform
   const parsed = parseOpenApiSpec(spec, mode)
   const service = parsed.services.find((item) => item.id === serviceId)
@@ -221,7 +225,12 @@ export async function loadApiReferenceService(
     return {
       ...method,
       demo: demos.get(method.id),
-      responses: collectMethodResponses(rawOperation, spec),
+      responses: collectMethodResponses(
+        rawOperation,
+        spec,
+        consoleSpec,
+        version,
+      ),
     }
   })
 

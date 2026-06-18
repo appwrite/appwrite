@@ -2206,6 +2206,13 @@ export function mergeApiExplorerExpandedProductGroupIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// API reference explorer UI (account prefs + localStorage for guests)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.apiReference.ui` - JSON UI state for docs API reference. */
+export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
+
+// ---------------------------------------------------------------------------
 // Build completion browser notifications (account prefs)
 // ---------------------------------------------------------------------------
 

@@ -25,6 +25,7 @@ import {
   ApiReferenceParameterFields,
   ApiReferenceResponsesPanel,
 } from './ApiReferenceParameterFields'
+import { ApiReferenceCollapsibleCard } from './ApiReferenceCollapsibleCard'
 import {
   REFERENCE_COLUMN_HEADER_CLASS,
   REFERENCE_SCROLL_AREA_CLASS,
@@ -143,37 +144,36 @@ export function ApiReferenceMethodPanel({
           <ApiReferenceMethodDetails method={method} />
 
           {hasRequestSections ? (
-            <RequestBuilderPanel>
-              {hasPathParams ? (
-                <RequestBuilderSection title="Path">
-                  <ApiReferenceParameterFields fields={pathFields} />
-                </RequestBuilderSection>
-              ) : null}
+            <ApiReferenceCollapsibleCard title="Parameters" cardId="parameters">
+              <RequestBuilderPanel className="rounded-none border-0">
+                {hasPathParams ? (
+                  <RequestBuilderSection title="Path">
+                    <ApiReferenceParameterFields fields={pathFields} />
+                  </RequestBuilderSection>
+                ) : null}
 
-              {hasQueryParams ? (
-                <RequestBuilderSection
-                  title="Query parameters"
-                  showTopBorder={hasPathParams}
-                >
-                  <ApiReferenceParameterFields fields={queryFields} />
-                </RequestBuilderSection>
-              ) : null}
+                {hasQueryParams ? (
+                  <RequestBuilderSection
+                    title="Query parameters"
+                    showTopBorder={hasPathParams}
+                  >
+                    <ApiReferenceParameterFields fields={queryFields} />
+                  </RequestBuilderSection>
+                ) : null}
 
-              {hasRequestBody ? (
-                <RequestBuilderSection
-                  title={hasPathParams || hasQueryParams ? 'Body' : 'Parameters'}
-                  showTopBorder={hasPathParams || hasQueryParams}
-                >
-                  <ApiReferenceParameterFields fields={bodyFields} />
-                </RequestBuilderSection>
-              ) : null}
-            </RequestBuilderPanel>
+                {hasRequestBody ? (
+                  <RequestBuilderSection
+                    title={hasPathParams || hasQueryParams ? 'Body' : 'Parameters'}
+                    showTopBorder={hasPathParams || hasQueryParams}
+                  >
+                    <ApiReferenceParameterFields fields={bodyFields} />
+                  </RequestBuilderSection>
+                ) : null}
+              </RequestBuilderPanel>
+            </ApiReferenceCollapsibleCard>
           ) : null}
 
-          <ApiReferenceResponsesPanel
-            responses={method.responses}
-            version={version}
-          />
+          <ApiReferenceResponsesPanel responses={method.responses} />
 
           {method.demo ? (
             <ConnectCodeExample

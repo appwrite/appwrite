@@ -14,7 +14,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import type { ApiExplorerProjectPlatform } from '@/lib/api-explorer/types'
 import {
-  getDefaultReferencePlatform,
   getSpecMode,
   type ReferencePlatform,
   type ReferenceService,
@@ -24,11 +23,12 @@ import {
   buildReferenceNavProductGroups,
   findFirstReferenceNavService,
   findReferenceNavProductGroupForService,
-  getReferencePlatformForMode,
   parseApiReferencePath,
   resolveReferenceVersionFromPath,
   type ReferenceNavProductGroup,
 } from '@/lib/docs/references/reference-nav'
+import { getApiReferencePlatformForMode } from '@/lib/docs/references/api-reference-ui-prefs'
+import { useApiReferenceUiPrefs } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { loadReferenceNavServiceCountsFn } from '@/server/functions/api-reference'
 import type { DocsNavParent } from '@/lib/docs/types'
 import {
@@ -94,37 +94,67 @@ function ApiReferenceSectionSubnavShell({
   const parsedPath = parseApiReferencePath(pathname)
   const versionFromPath = resolveReferenceVersionFromPath(pathname)
   const isServiceRoute = Boolean(parsedPath?.service)
-  const specMode: ApiExplorerProjectPlatform =
+  const {
+    prefs,
+    updatePrefs,
+    setPlatformMode,
+    setClientPlatform,
+    setServerPlatform,
+    setVersion,
+  } = useApiReferenceUiPrefs()
+
+  const platformModeFromPath: ApiExplorerProjectPlatform | null =
     parsedPath?.platform && getSpecMode(parsedPath.platform) === 'server'
       ? 'server'
       : parsedPath?.platform
         ? 'client'
-        : 'client'
+        : null
 
-  const [platformMode, setPlatformMode] = useState<ApiExplorerProjectPlatform>(specMode)
-  const [selectedVersion, setSelectedVersion] = useState<ReferenceVersion>(versionFromPath)
-  const [selectedPlatform, setSelectedPlatform] = useState<ReferencePlatform>(() =>
-    parsedPath?.platform ?? getDefaultReferencePlatform(specMode),
-  )
-
-  const version = isServiceRoute || isReferenceModelPath(pathname) ? versionFromPath : selectedVersion
-  const platform = parsedPath?.platform ?? selectedPlatform
-
-  useEffect(() => {
-    setPlatformMode(specMode)
-  }, [specMode])
+  const platformMode = platformModeFromPath ?? prefs.platformMode
+  const version =
+    isServiceRoute || isReferenceModelPath(pathname)
+      ? versionFromPath
+      : prefs.version
+  const platform =
+    parsedPath?.platform ?? getApiReferencePlatformForMode(prefs, platformMode)
 
   useEffect(() => {
-    if (parsedPath?.platform) {
-      setSelectedPlatform(parsedPath.platform)
+    if (!parsedPath?.platform) return
+
+    const mode = getSpecMode(parsedPath.platform)
+    if (mode !== 'client' && mode !== 'server') return
+
+    const patch: Partial<typeof prefs> = {}
+    if (mode !== prefs.platformMode) {
+      patch.platformMode = mode
     }
-  }, [parsedPath?.platform])
-
-  useEffect(() => {
-    if (isServiceRoute || isReferenceModelPath(pathname)) {
-      setSelectedVersion(versionFromPath)
+    if (mode === 'client' && parsedPath.platform !== prefs.clientPlatform) {
+      patch.clientPlatform = parsedPath.platform
     }
-  }, [isServiceRoute, pathname, versionFromPath])
+    if (mode === 'server' && parsedPath.platform !== prefs.serverPlatform) {
+      patch.serverPlatform = parsedPath.platform
+    }
+    if (
+      (isServiceRoute || isReferenceModelPath(pathname)) &&
+      versionFromPath !== prefs.version
+    ) {
+      patch.version = versionFromPath
+    }
+
+    if (Object.keys(patch).length > 0) {
+      updatePrefs(patch)
+    }
+  }, [
+    isServiceRoute,
+    parsedPath?.platform,
+    pathname,
+    prefs.clientPlatform,
+    prefs.platformMode,
+    prefs.serverPlatform,
+    prefs.version,
+    updatePrefs,
+    versionFromPath,
+  ])
 
   const { data: serviceCounts, isLoading } = useQuery({
     queryKey: ['api-reference-nav-services', version, platformMode],
@@ -142,8 +172,8 @@ function ApiReferenceSectionSubnavShell({
 
   const handlePlatformModeChange = async (nextMode: ApiExplorerProjectPlatform) => {
     setPlatformMode(nextMode)
-    const nextPlatform = getReferencePlatformForMode(nextMode, platform)
-    setSelectedPlatform(nextPlatform)
+    const nextPlatform =
+      nextMode === 'client' ? prefs.clientPlatform : prefs.serverPlatform
 
     if (!parsedPath?.service) return
 
@@ -184,7 +214,11 @@ function ApiReferenceSectionSubnavShell({
   }
 
   const handlePlatformChange = (nextPlatform: ReferencePlatform) => {
-    setSelectedPlatform(nextPlatform)
+    if (platformMode === 'client') {
+      setClientPlatform(nextPlatform)
+    } else {
+      setServerPlatform(nextPlatform)
+    }
     if (!parsedPath?.service) return
 
     void navigate({
@@ -226,7 +260,7 @@ function ApiReferenceSectionSubnavShell({
       return
     }
 
-    setSelectedVersion(nextVersion)
+    setVersion(nextVersion)
   }
 
   return (

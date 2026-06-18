@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { getMethodAuthKeys } from '@/lib/api-explorer/auth'
 import { MethodDescriptionMarkdown } from '@/components/global/api-explorer/MethodDescriptionMarkdown'
+import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
 import type { ApiReferenceMethod } from '@/lib/docs/references/types'
 import { cn, truncateMiddle } from '@/lib/utils'
 
@@ -67,7 +68,12 @@ export function ApiReferenceMethodDetails({
             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Description
             </p>
-            <MethodDescriptionMarkdown content={method.description} />
+            <div className={DOCS_CONTAINER}>
+              <MethodDescriptionMarkdown
+                content={method.description}
+                variant="docs"
+              />
+            </div>
           </div>
         ) : null}
       </div>
