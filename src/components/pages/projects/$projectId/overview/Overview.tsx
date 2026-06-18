@@ -76,6 +76,7 @@ import {
 } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
+import { UsageHistoricDataNote } from '../shared/UsageHistoricDataNote'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
 import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { PlatformContextMenu } from '../apps/_components/PlatformContextMenu'
@@ -1156,6 +1157,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   </div>
                 ) : null}
               </div>
+            <UsageHistoricDataNote variant="footer" />
           </div>
         )}
 

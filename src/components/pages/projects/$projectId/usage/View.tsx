@@ -50,6 +50,7 @@ import {
   getUsageStatus,
 } from './data'
 import { DateRangePicker } from '../analytics/DateRangePicker'
+import { UsageHistoricDataNote } from '../shared/UsageHistoricDataNote'
 
 // ============================================================================
 // ICON MAPPING
@@ -486,10 +487,11 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
         <div className="border-b border-border">
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
                 <h1 className="text-[17px] font-semibold text-foreground">
                   Usage
                 </h1>
+                <UsageHistoricDataNote className="min-w-0" />
               </div>
 
               <div className="flex items-center gap-3">
@@ -571,7 +573,6 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
               />
             </div>
 
-            {/* Category header */}
             {activeCategoryData && (
               <>
                 <div className="mb-6">
@@ -595,7 +596,6 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
                   </div>
                 </div>
 
-                {/* Metrics grid with IDs for anchor navigation */}
                 <div className="space-y-6">
                   {activeCategoryData.metrics.map((metric) => (
                     <div
