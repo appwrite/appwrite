@@ -3,6 +3,7 @@
 import { MethodDescriptionMarkdown } from '@/components/global/api-explorer/MethodDescriptionMarkdown'
 import type { ApiReferenceModelProperty } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
+import { ApiReferenceCopyableName } from './_components/ApiReferenceCopyableName'
 import { ApiReferenceCollapsibleModels } from './ApiReferenceCollapsibleModels'
 import {
   ApiReferencePropertyTypeCell,
@@ -38,10 +39,13 @@ export function ApiReferenceModelPropertyRow({
   return (
     <div className={cn(showBottomBorder && 'border-b border-border/50')}>
       <div className={INLINE_MODEL_ROW}>
-        <div className="px-3 py-2 font-mono text-[12px] text-foreground">
-          {property.name}
+        <div className="min-w-0 px-3 py-2">
+          <ApiReferenceCopyableName
+            name={property.name}
+            textClassName="text-[12px] text-foreground"
+          />
         </div>
-        <div className="border-l border-border/50 px-3 py-2">
+        <div className="flex items-start justify-start border-l border-border/50 px-3 py-2">
           <ApiReferencePropertyTypeCell property={property} />
         </div>
         <div className="border-l border-border/50 px-3 py-2 text-[12px] text-muted-foreground">

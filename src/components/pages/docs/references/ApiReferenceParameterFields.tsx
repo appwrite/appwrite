@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import {
-  getFormFieldTypeLabel,
+  getFormFieldOpenApiTypeLabel,
   type RequestFormField,
 } from '@/lib/api-explorer/request-form'
 import type { ApiReferenceResponse } from '@/lib/docs/references/types'
@@ -11,16 +11,18 @@ import {
 } from '@/components/global/api-explorer/request-form-table'
 import { ApiReferenceCollapsibleModels } from './ApiReferenceCollapsibleModels'
 import { ApiReferenceCollapsibleCard } from './ApiReferenceCollapsibleCard'
+import { ApiReferenceCopyableName } from './_components/ApiReferenceCopyableName'
+import { getFormFieldTypeBadgeVariant, getResponseStatusVariant, REFERENCE_TYPE_PILL_CLASS } from './explorer-styles'
 
 /** Always table layout in the reference panel (not viewport-stacked like the live explorer). */
 const REFERENCE_PARAM_ROW =
-  'group grid min-w-[520px] items-center border-b border-border/50 last:border-b-0 hover:bg-muted/[0.07] min-h-[44px] grid-cols-[minmax(120px,22%)_72px_80px_minmax(0,1fr)]'
+  'group grid min-w-[520px] items-center border-b border-border/50 last:border-b-0 hover:bg-muted/[0.07] min-h-[44px] grid-cols-[minmax(120px,22%)_minmax(84px,auto)_80px_minmax(0,1fr)]'
 
 const REFERENCE_PARAM_NAME_CELL =
   'flex min-h-[44px] min-w-0 items-center px-4 py-2'
 
 const REFERENCE_PARAM_TYPE_CELL =
-  'flex min-h-[44px] items-center justify-center border-l border-border/50 px-3 py-2 text-center'
+  'flex min-h-[44px] items-center justify-start border-l border-border/50 px-3 py-2'
 
 const REFERENCE_PARAM_REQUIRED_CELL =
   'flex min-h-[44px] items-center justify-center border-l border-border/50 px-3 py-2 text-center'
@@ -36,19 +38,25 @@ type ApiReferenceParameterFieldsProps = {
 }
 
 function ReferenceParameterRow({ field }: { field: RequestFormField }) {
-  const typeLabel = getFormFieldTypeLabel(field.kind)
+  const typeLabel = getFormFieldOpenApiTypeLabel(field.kind)
   const hasDescription = Boolean(field.description?.trim())
   const isComplex = field.kind === 'json' || field.kind === 'array-string'
 
   return (
     <div className={REFERENCE_PARAM_ROW}>
       <div className={REFERENCE_PARAM_NAME_CELL}>
-        <span className="truncate font-mono text-[13px] text-foreground">
-          {field.name}
-        </span>
+        <ApiReferenceCopyableName
+          name={field.name}
+          textClassName="text-[13px] text-foreground"
+        />
       </div>
       <div className={REFERENCE_PARAM_TYPE_CELL}>
-        <span className="text-[12px] text-muted-foreground">{typeLabel}</span>
+        <Badge
+          variant={getFormFieldTypeBadgeVariant(field.kind)}
+          className={REFERENCE_TYPE_PILL_CLASS}
+        >
+          {typeLabel}
+        </Badge>
       </div>
       <div className={REFERENCE_PARAM_REQUIRED_CELL}>
         {field.required ? (
@@ -154,7 +162,10 @@ export function ApiReferenceResponsesPanel({
           <div key={response.code}>
             <div className={REFERENCE_RESPONSE_META_ROW}>
               <div className={REFERENCE_RESPONSE_STATUS_CELL}>
-                <Badge variant="inactive" className="font-mono text-[10px] shrink-0">
+                <Badge
+                  variant={getResponseStatusVariant(String(response.code))}
+                  className={REFERENCE_TYPE_PILL_CLASS}
+                >
                   {response.code}
                 </Badge>
               </div>

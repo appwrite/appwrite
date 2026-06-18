@@ -297,6 +297,7 @@ function parseOperation(
     parameters,
     requestBody,
     contentType,
+    security: operation.security,
     xAppwrite,
     authLabel: formatAuthLabel(xAppwrite, operation.security),
   }

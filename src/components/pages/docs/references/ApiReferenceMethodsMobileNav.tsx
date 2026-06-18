@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet'
 import type { ApiReferenceMethod } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
-import { getHttpMethodVariant } from './explorer-styles'
+import { getHttpMethodVariant, REFERENCE_PILL_CLASS } from './explorer-styles'
 import { ApiReferenceMethodsNavContent } from './ApiReferenceMethodsNavContent'
 
 type ApiReferenceMethodsMobileNavProps = {
@@ -54,7 +54,7 @@ export function ApiReferenceMethodsMobileNav({
             <>
               <Badge
                 variant={getHttpMethodVariant(selectedMethod.httpMethod)}
-                className="shrink-0 text-[10px] uppercase"
+                className={cn('shrink-0 text-[10px] uppercase', REFERENCE_PILL_CLASS)}
               >
                 {selectedMethod.httpMethod}
               </Badge>

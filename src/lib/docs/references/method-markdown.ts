@@ -1,7 +1,8 @@
-import { getMethodAuthKeys } from '@/lib/api-explorer/auth'
+import { formatMethodAuthDescription } from '@/lib/api-explorer/format-method-auth'
+import { formatRateLimitDescription } from '@/lib/api-explorer/format-rate-limit'
 import {
   getRequestBodyFormFields,
-  getFormFieldTypeLabel,
+  getFormFieldOpenApiTypeLabel,
   parameterToFormField,
 } from '@/lib/api-explorer/request-form'
 import {
@@ -34,7 +35,7 @@ function buildParameterTable(
   const rows = fields.map((field) => {
     const required = field.required ? 'Required' : ''
     const description = field.description?.trim() || ''
-    return `| ${field.name} | ${getFormFieldTypeLabel(field.kind)} | ${required} | ${description.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |`
+    return `| ${field.name} | ${getFormFieldOpenApiTypeLabel(field.kind)} | ${required} | ${description.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |`
   })
 
   return [
@@ -165,21 +166,18 @@ export function buildApiReferenceMethodMarkdown(
     )
   }
 
-  const authMethods = getMethodAuthKeys(method)
-  if (authMethods.length > 0) {
-    appendSection(
-      lines,
-      'Required auth',
-      authMethods.map((auth) => `- ${auth}`).join('\n'),
-    )
-  }
+  appendSection(lines, 'Authentication', formatMethodAuthDescription(method, platform))
 
   const rateLimit = method.xAppwrite?.['rate-limit']
   if (rateLimit !== undefined && rateLimit > 0) {
     appendSection(
       lines,
       'Rate limit',
-      `${rateLimit} requests per ${method.xAppwrite?.['rate-time'] ?? 3600}s`,
+      formatRateLimitDescription(
+        rateLimit,
+        method.xAppwrite?.['rate-time'] ?? 3600,
+        method.xAppwrite?.['rate-key'],
+      ),
     )
   }
 

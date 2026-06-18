@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
@@ -27,7 +28,9 @@ import {
 } from './ApiReferenceParameterFields'
 import { ApiReferenceCollapsibleCard } from './ApiReferenceCollapsibleCard'
 import {
+  getHttpMethodVariant,
   REFERENCE_COLUMN_HEADER_CLASS,
+  REFERENCE_PILL_CLASS,
   REFERENCE_SCROLL_AREA_CLASS,
 } from './explorer-styles'
 
@@ -112,9 +115,15 @@ export function ApiReferenceMethodPanel({
       <div
         className={cn(
           REFERENCE_COLUMN_HEADER_CLASS,
-          'items-center gap-2',
+          'items-center gap-2.5',
         )}
       >
+        <Badge
+          variant={getHttpMethodVariant(method.httpMethod)}
+          className={cn('shrink-0 text-[10px] uppercase', REFERENCE_PILL_CLASS)}
+        >
+          {method.httpMethod}
+        </Badge>
         <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
           {method.summary}
         </p>
@@ -141,7 +150,7 @@ export function ApiReferenceMethodPanel({
 
       <ScrollArea className={REFERENCE_SCROLL_AREA_CLASS}>
         <div className="space-y-6 p-4 sm:p-6">
-          <ApiReferenceMethodDetails method={method} />
+          <ApiReferenceMethodDetails method={method} platform={platform} />
 
           {hasRequestSections ? (
             <ApiReferenceCollapsibleCard title="Parameters" cardId="parameters">

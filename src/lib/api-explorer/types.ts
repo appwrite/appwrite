@@ -139,6 +139,7 @@ export type ApiExplorerMethod = {
   parameters: OpenApiParameter[]
   requestBody?: OpenApiRequestBody
   contentType?: string
+  security?: Array<Record<string, string[]>>
   xAppwrite?: AppwriteOpenApiExtension
   authLabel: string
 }

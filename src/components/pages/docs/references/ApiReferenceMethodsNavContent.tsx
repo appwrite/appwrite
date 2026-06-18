@@ -12,6 +12,8 @@ import type { ApiReferenceMethod } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
 import {
   getHttpMethodVariant,
+  getHttpMethodAccentClasses,
+  REFERENCE_PILL_CLASS,
   REFERENCE_SCROLL_AREA_CLASS,
 } from './explorer-styles'
 
@@ -44,6 +46,7 @@ function MethodList({
     <div className="divide-y divide-border/50">
       {methods.map((method) => {
         const isActive = method.id === selectedMethodId
+        const methodAccent = getHttpMethodAccentClasses(method.httpMethod)
         return (
           <button
             key={method.id}
@@ -57,16 +60,22 @@ function MethodList({
             type="button"
             onClick={() => onSelectMethod(method.id)}
             className={cn(
-              'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 px-2.5 py-2 text-left transition-colors',
+              'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 border-l-2 px-2.5 py-2 text-left transition-colors',
               isActive
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                ? cn(
+                    'border-l-current bg-accent text-foreground',
+                    methodAccent.methodText,
+                  )
+                : 'border-l-transparent text-muted-foreground hover:border-l-border hover:bg-accent/50 hover:text-foreground',
             )}
           >
             <div className="flex w-full min-w-0 max-w-full items-center gap-2">
               <Badge
                 variant={getHttpMethodVariant(method.httpMethod)}
-                className="text-[10px] shrink-0 uppercase"
+                className={cn(
+                  'text-[10px] shrink-0 uppercase',
+                  REFERENCE_PILL_CLASS,
+                )}
               >
                 {method.httpMethod}
               </Badge>

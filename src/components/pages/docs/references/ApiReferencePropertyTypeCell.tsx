@@ -1,10 +1,25 @@
 import { Badge } from '@/components/ui/badge'
 import type { ApiReferenceModelProperty } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
+import {
+  formatOpenApiTypeLabel,
+  getModelPropertyTypeBadgeVariant,
+  getOpenApiTypeBadgeVariant,
+  REFERENCE_TYPE_PILL_CLASS,
+} from './explorer-styles'
+
+const TYPE_BADGE_CLASS = REFERENCE_TYPE_PILL_CLASS
 
 type ApiReferencePropertyTypeCellProps = {
   property: ApiReferenceModelProperty
   className?: string
+}
+
+function getArrayItemType(property: ApiReferenceModelProperty): string | undefined {
+  if (property.variants?.length === 1) {
+    return property.variants[0]!.name
+  }
+  return property.itemType
 }
 
 function getVariantHint(property: ApiReferenceModelProperty): string | null {
@@ -20,29 +35,61 @@ function getVariantHint(property: ApiReferenceModelProperty): string | null {
   return `${count} options`
 }
 
+function ItemTypeLabel({ itemType }: { itemType: string }) {
+  const normalizedType = formatOpenApiTypeLabel(itemType)
+  const isPrimitive = [
+    'string',
+    'integer',
+    'number',
+    'boolean',
+    'array',
+    'object',
+    'enum',
+  ].includes(normalizedType.toLowerCase())
+
+  if (isPrimitive) {
+    return (
+      <Badge
+        variant={getOpenApiTypeBadgeVariant(normalizedType)}
+        className={TYPE_BADGE_CLASS}
+      >
+        {normalizedType}
+      </Badge>
+    )
+  }
+
+  return <span className="font-mono text-foreground">{itemType}</span>
+}
+
 export function ApiReferencePropertyTypeCell({
   property,
   className,
 }: ApiReferencePropertyTypeCellProps) {
   const variantHint = getVariantHint(property)
+  const typeLabel =
+    property.typeKind === 'scalar'
+      ? formatOpenApiTypeLabel(property.type)
+      : formatOpenApiTypeLabel(property.typeKind)
 
   if (property.typeKind === 'array') {
+    const itemType = getArrayItemType(property)
+
     return (
       <div
         className={cn(
-          'flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-muted-foreground',
+          'flex min-w-0 flex-wrap items-start justify-start gap-1.5 text-[11px] text-muted-foreground',
           className,
         )}
       >
         <Badge
-          variant="secondary"
-          className="shrink-0 text-[10px] font-medium uppercase"
+          variant={getModelPropertyTypeBadgeVariant(property.typeKind, property.type)}
+          className={TYPE_BADGE_CLASS}
         >
-          Array
+          {typeLabel}
         </Badge>
-        {property.itemType ? (
-          <span>
-            of <span className="font-mono text-foreground">{property.itemType}</span>
+        {itemType ? (
+          <span className="flex items-start gap-1">
+            of <ItemTypeLabel itemType={itemType} />
           </span>
         ) : variantHint ? (
           <span>{variantHint}</span>
@@ -55,20 +102,18 @@ export function ApiReferencePropertyTypeCell({
     return (
       <div
         className={cn(
-          'flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-muted-foreground',
+          'flex min-w-0 flex-wrap items-start justify-start gap-1.5 text-[11px] text-muted-foreground',
           className,
         )}
       >
         <Badge
-          variant="secondary"
-          className="shrink-0 text-[10px] font-medium uppercase"
+          variant={getModelPropertyTypeBadgeVariant(property.typeKind, property.type)}
+          className={TYPE_BADGE_CLASS}
         >
-          Object
+          {typeLabel}
         </Badge>
         {property.itemType ? (
-          <span>
-            <span className="font-mono text-foreground">{property.itemType}</span>
-          </span>
+          <ItemTypeLabel itemType={property.itemType} />
         ) : variantHint ? (
           <span>{variantHint}</span>
         ) : null}
@@ -77,9 +122,14 @@ export function ApiReferencePropertyTypeCell({
   }
 
   return (
-    <span className={cn('font-mono text-[12px] text-muted-foreground', className)}>
-      {property.type}
-    </span>
+    <div className={cn('flex justify-start', className)}>
+      <Badge
+        variant={getModelPropertyTypeBadgeVariant(property.typeKind, property.type)}
+        className={TYPE_BADGE_CLASS}
+      >
+        {typeLabel}
+      </Badge>
+    </div>
   )
 }
 

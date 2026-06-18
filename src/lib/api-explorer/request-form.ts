@@ -37,6 +37,45 @@ const OPENAPI_STRING_FORMAT_KIND: Record<string, RequestFormFieldKind> = {
 
 const OPENAPI_NUMBER_FORMATS = new Set(['float', 'double'])
 
+/** String formats and other aliases that should display as base OpenAPI primitives. */
+const OPENAPI_STRING_FORMATS = new Set([
+  'password',
+  'email',
+  'url',
+  'phone',
+  'datetime',
+  'ip',
+  'id',
+  'binary',
+  'uuid',
+])
+
+const OPENAPI_PRIMITIVE_TYPES = new Set([
+  'string',
+  'integer',
+  'number',
+  'boolean',
+  'array',
+  'object',
+  'enum',
+])
+
+export function normalizeOpenApiPrimitiveType(type: string): string {
+  const trimmed = type.trim()
+  const normalized = trimmed.toLowerCase()
+
+  // Only map OpenAPI format aliases when the label is already lowercase (e.g. "password").
+  // Preserve model names like "File" that would otherwise match "file" in format sets.
+  if (trimmed === normalized) {
+    if (OPENAPI_STRING_FORMATS.has(normalized)) return 'string'
+    if (OPENAPI_NUMBER_FORMATS.has(normalized)) return 'number'
+  }
+
+  if (OPENAPI_PRIMITIVE_TYPES.has(normalized)) return normalized
+
+  return trimmed
+}
+
 export function getFormFieldTypeLabel(kind: RequestFormFieldKind): string {
   switch (kind) {
     case 'boolean':
@@ -66,6 +105,37 @@ export function getFormFieldTypeLabel(kind: RequestFormFieldKind): string {
     case 'string':
     default:
       return 'String'
+  }
+}
+
+/** Base OpenAPI primitive for API reference type badges and tables. */
+export function getFormFieldOpenApiTypeLabel(kind: RequestFormFieldKind): string {
+  switch (kind) {
+    case 'boolean':
+      return 'boolean'
+    case 'integer':
+      return 'integer'
+    case 'number':
+      return 'number'
+    case 'enum':
+    case 'array-enum':
+      return 'enum'
+    case 'array-string':
+    case 'array-number':
+      return 'array'
+    case 'json':
+      return 'object'
+    case 'password':
+    case 'email':
+    case 'url':
+    case 'phone':
+    case 'datetime':
+    case 'ip':
+    case 'id':
+    case 'binary':
+    case 'string':
+    default:
+      return 'string'
   }
 }
 

@@ -14,6 +14,8 @@ import { MethodDescriptionMarkdown } from '@/components/global/api-explorer/Meth
 import type { ReferenceVersion } from '@/lib/docs/references/constants'
 import type { ApiReferenceModelData } from '@/lib/docs/references/types'
 import { DocsLayout } from '../DocsLayout'
+import { ApiReferencePropertyTypeCell } from './ApiReferencePropertyTypeCell'
+import { ApiReferenceCopyableName } from './_components/ApiReferenceCopyableName'
 
 type ModelViewProps = {
   data: ApiReferenceModelData
@@ -58,11 +60,14 @@ export function ApiReferenceModelView({ data, version }: ModelViewProps) {
               <TableBody>
                 {data.properties.map((property) => (
                   <TableRow key={property.name}>
-                    <TableCell className="px-4 py-3 font-mono text-[13px]">
-                      {property.name}
+                    <TableCell className="px-4 py-3">
+                      <ApiReferenceCopyableName
+                        name={property.name}
+                        textClassName="text-[13px] text-foreground"
+                      />
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                      {property.type}
+                    <TableCell className="px-4 py-3 align-top">
+                      <ApiReferencePropertyTypeCell property={property} />
                     </TableCell>
                     <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                       {property.description ? (

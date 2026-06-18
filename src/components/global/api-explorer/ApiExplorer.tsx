@@ -24,6 +24,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { CodeBlock, type CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import { RateLimitDescription } from '@/components/global/shared/RateLimitDescription'
+import { AuthRequirementDescription } from '@/components/global/shared/AuthRequirementDescription'
 import {
   ExplorerColumnsResizableLayout,
   ExplorerResponseSplitResizableLayout,
@@ -57,7 +59,6 @@ import {
   parameterToFormField,
   serializeBodyFromForm,
   createUserJwtForExplorer,
-  getMethodAuthKeys,
   methodRequiresSessionAuthChoice,
   type ApiExplorerConfig,
   type ApiExplorerMethod,
@@ -1107,19 +1108,21 @@ function MethodRequestHeader({
 function MethodDetailsCard({
   endpoint,
   method,
+  platform,
 }: {
   endpoint: string
   method: ApiExplorerMethod
+  platform: ApiExplorerProjectPlatform
 }) {
   const [copied, setCopied] = useState(false)
   const fullUrl = `${endpoint.replace(/\/$/, '')}${method.path}`
   const scopes = splitMetadataList(method.scope)
-  const authMethods = getMethodAuthKeys(method)
   const rateLimit = method.xAppwrite?.['rate-limit']
+  const hasAuth = Boolean(
+    method.xAppwrite?.auth && Object.keys(method.xAppwrite.auth).length > 0,
+  ) || Boolean(method.security?.length)
   const hasMetadata =
-    scopes.length > 0 ||
-    authMethods.length > 0 ||
-    (rateLimit !== undefined && rateLimit > 0)
+    scopes.length > 0 || hasAuth || (rateLimit !== undefined && rateLimit > 0)
 
   const handleCopyEndpoint = async () => {
     try {
@@ -1210,22 +1213,12 @@ function MethodDetailsCard({
               </div>
             )}
 
-            {authMethods.length > 0 && (
-              <div className="space-y-2">
+            {hasAuth && (
+              <div className="space-y-2 sm:col-span-2">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Required auth
+                  Authentication
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {authMethods.map((auth) => (
-                    <Badge
-                      key={auth}
-                      variant="inactive"
-                      className="text-[10px] shrink-0"
-                    >
-                      {auth}
-                    </Badge>
-                  ))}
-                </div>
+                <AuthRequirementDescription method={method} platform={platform} />
               </div>
             )}
 
@@ -1234,10 +1227,11 @@ function MethodDetailsCard({
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Rate limit
                 </p>
-                <p className="text-[13px] text-foreground">
-                  {rateLimit} requests per{' '}
-                  {method.xAppwrite?.['rate-time'] ?? 3600}s
-                </p>
+                <RateLimitDescription
+                  limit={rateLimit}
+                  windowSeconds={method.xAppwrite?.['rate-time'] ?? 3600}
+                  rateKey={method.xAppwrite?.['rate-key']}
+                />
               </div>
             )}
 
@@ -1439,7 +1433,7 @@ function RequestPanelContent({
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <MethodDetailsCard endpoint={endpoint} method={method} />
+      <MethodDetailsCard endpoint={endpoint} method={method} platform={platform} />
 
       <ApiExplorerAuthSection
         projectId={projectId}

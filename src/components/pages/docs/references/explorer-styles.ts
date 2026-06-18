@@ -1,4 +1,19 @@
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
+import type { RequestFormFieldKind } from '@/lib/api-explorer/request-form'
+import {
+  getFormFieldOpenApiTypeLabel,
+  normalizeOpenApiPrimitiveType,
+} from '@/lib/api-explorer/request-form'
+import type { ApiReferencePropertyTypeKind } from '@/lib/docs/references/types'
+import { cn } from '@/lib/utils'
+
+export type ReferenceTypeBadgeVariant =
+  | 'processing'
+  | 'success'
+  | 'warning'
+  | 'info'
+  | 'inactive'
+  | 'secondary'
 
 /**
  * Container on the explorer root (measures `main` content width only).
@@ -28,10 +43,10 @@ export const REFERENCE_RESIZE_HANDLE_CLASS =
 
 export function getHttpMethodVariant(
   method: string,
-): 'info' | 'success' | 'warning' | 'error' | 'secondary' {
+): 'info' | 'success' | 'warning' | 'error' | 'secondary' | 'processing' {
   switch (method.toLowerCase()) {
     case 'get':
-      return 'info'
+      return 'processing'
     case 'post':
       return 'success'
     case 'put':
@@ -42,4 +57,120 @@ export function getHttpMethodVariant(
     default:
       return 'secondary'
   }
+}
+
+/** Status pills in API references: tinted fill without an outline. */
+export const REFERENCE_PILL_CLASS = 'border-0 shadow-none'
+
+/** Type and status pills in reference tables. */
+export const REFERENCE_TYPE_PILL_CLASS = cn(
+  REFERENCE_PILL_CLASS,
+  'shrink-0 font-mono text-[10px]',
+)
+
+/** Subtle method-colored accents for endpoint boxes and nav selection. */
+export function getHttpMethodAccentClasses(method: string): {
+  endpointBox: string
+  methodText: string
+} {
+  switch (method.toLowerCase()) {
+    case 'get':
+      return {
+        endpointBox: 'bg-blue-500/[0.06]',
+        methodText: 'text-blue-600 dark:text-blue-400',
+      }
+    case 'post':
+      return {
+        endpointBox: 'bg-emerald-500/[0.06]',
+        methodText: 'text-emerald-600 dark:text-emerald-400',
+      }
+    case 'put':
+    case 'patch':
+      return {
+        endpointBox: 'bg-amber-500/[0.06]',
+        methodText: 'text-amber-600 dark:text-amber-400',
+      }
+    case 'delete':
+      return {
+        endpointBox: 'bg-red-500/[0.06]',
+        methodText: 'text-red-600 dark:text-red-400',
+      }
+    default:
+      return {
+        endpointBox: 'bg-muted/40',
+        methodText: 'text-foreground',
+      }
+  }
+}
+
+export function getResponseStatusVariant(
+  code: string,
+): 'success' | 'warning' | 'error' | 'inactive' {
+  const status = Number.parseInt(code, 10)
+  if (Number.isNaN(status)) return 'inactive'
+  if (status >= 200 && status < 300) return 'success'
+  if (status >= 400 && status < 500) return 'warning'
+  if (status >= 500) return 'error'
+  return 'inactive'
+}
+
+export function getOpenApiTypeBadgeVariant(type: string): ReferenceTypeBadgeVariant {
+  const normalized = type.toLowerCase().trim()
+
+  switch (normalized) {
+    case 'boolean':
+      return 'info'
+    case 'integer':
+    case 'number':
+      return 'warning'
+    case 'string':
+      return 'processing'
+    case 'file':
+    case 'binary':
+      return 'inactive'
+    case 'array':
+      return 'success'
+    case 'object':
+      return 'info'
+    default:
+      if (normalized.includes('|')) return 'warning'
+      return 'processing'
+  }
+}
+
+export function formatOpenApiTypeLabel(type: string): string {
+  const normalized = normalizeOpenApiPrimitiveType(type)
+  const lower = normalized.toLowerCase().trim()
+
+  if (
+    lower === 'string' ||
+    lower === 'integer' ||
+    lower === 'number' ||
+    lower === 'boolean' ||
+    lower === 'array' ||
+    lower === 'object' ||
+    lower === 'enum'
+  ) {
+    return lower
+  }
+
+  return normalized
+}
+
+export function getModelPropertyTypeBadgeVariant(
+  typeKind: ApiReferencePropertyTypeKind,
+  type: string,
+): ReferenceTypeBadgeVariant {
+  if (typeKind === 'array') return 'success'
+  if (typeKind === 'object') return 'info'
+  return getOpenApiTypeBadgeVariant(formatOpenApiTypeLabel(type))
+}
+
+export function getFormFieldTypeBadgeVariant(
+  kind: RequestFormFieldKind,
+): ReferenceTypeBadgeVariant {
+  if (kind === 'enum' || kind === 'array-enum') return 'warning'
+  if (kind === 'array-string' || kind === 'array-number') return 'success'
+  if (kind === 'json') return 'info'
+  return getOpenApiTypeBadgeVariant(getFormFieldOpenApiTypeLabel(kind))
 }
