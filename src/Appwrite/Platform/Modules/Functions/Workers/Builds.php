@@ -627,6 +627,8 @@ class Builds extends Action
 
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory = max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
+            Span::add('build.cpus', (float) $cpus);
+            Span::add('build.memory', (int) $memory);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0);
 
             $apiKey = $jwtObj->encode([
