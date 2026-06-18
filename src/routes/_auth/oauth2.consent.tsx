@@ -44,6 +44,12 @@ function OAuth2ConsentPage() {
   useEffect(() => {
     let cancelled = false
 
+    // Re-runs when the authorize params change (this route can stay mounted as
+    // the router moves between requests). Reset to loading so a previously
+    // loaded grant can never be approved against a different request.
+    setPhase('loading')
+    setError(null)
+
     const currentRelativeUrl = window.location.pathname + window.location.search
 
     const goSignIn = () => {
@@ -161,7 +167,7 @@ function OAuth2ConsentPage() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [search])
 
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">

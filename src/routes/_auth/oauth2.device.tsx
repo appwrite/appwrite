@@ -115,6 +115,21 @@ function OAuth2DevicePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Keep the shown code in sync when a new `user_code` arrives in the URL (e.g.
+  // the user follows a fresh `verification_uri_complete` link while this route
+  // stays mounted). A different code means a different request, so drop any
+  // loaded grant and return to confirmation rather than approving the old one.
+  useEffect(() => {
+    const next = normalizeUserCode(search.user_code ?? '')
+    if (!next || next === code) return
+    setCode(next)
+    setGrant(null)
+    setApp(null)
+    setError(null)
+    setPhase((current) => (current === 'loading' ? current : 'enter-code'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.user_code])
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const normalized = normalizeUserCode(code)
