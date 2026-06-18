@@ -17,6 +17,7 @@ import {
 } from './explorer-styles'
 
 type ApiReferenceMethodsPanelProps = {
+  serviceId: string
   serviceLabel: string
   methods: ApiReferenceMethod[]
   selectedMethodId?: string
@@ -94,6 +95,7 @@ function MethodList({
 }
 
 export function ApiReferenceMethodsPanel({
+  serviceId,
   serviceLabel,
   methods,
   selectedMethodId,
@@ -101,6 +103,10 @@ export function ApiReferenceMethodsPanel({
 }: ApiReferenceMethodsPanelProps) {
   const selectedMethodRef = useRef<HTMLButtonElement | null>(null)
   const [searchValue, setSearchValue] = useState('')
+
+  useEffect(() => {
+    setSearchValue('')
+  }, [serviceId])
 
   const resourceGroups = useMemo(
     () => groupMethodsByResource(methods),

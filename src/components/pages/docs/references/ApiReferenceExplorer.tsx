@@ -134,6 +134,7 @@ export function ApiReferenceExplorer({
           className="h-full min-h-0 overflow-hidden"
           methods={
             <ApiReferenceMethodsPanel
+              serviceId={data.id}
               serviceLabel={data.label}
               methods={data.methods}
               selectedMethodId={selectedMethodId}
