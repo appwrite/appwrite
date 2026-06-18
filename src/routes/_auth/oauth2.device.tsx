@@ -51,12 +51,11 @@ function OAuth2DevicePage() {
   const [error, setError] = useState<string | null>(null)
   const hasPrefilledCode = Boolean(normalizeUserCode(search.user_code ?? ''))
 
-  // Tracks the code the page is currently acting on so a submission that
-  // resolves after the user moved to a different code (URL change) is ignored.
+  // The code the page is currently acting on. Set synchronously at the two
+  // points it can change — on submit (below) and on a URL `user_code` change
+  // (sync effect) — so a `createGrant` that resolves after the user moved to a
+  // different code is ignored, without depending on render/effect timing.
   const activeCodeRef = useRef(code)
-  useEffect(() => {
-    activeCodeRef.current = code
-  })
 
   const submitMutation = useMutation({
     mutationFn: async (userCode: string) => {
@@ -154,6 +153,8 @@ function OAuth2DevicePage() {
     const normalized = normalizeUserCode(code)
     if (!normalized) return
     setError(null)
+    // Mark this as the active submission so onSuccess accepts its result.
+    activeCodeRef.current = normalized
     submitMutation.mutate(normalized)
   }
 
