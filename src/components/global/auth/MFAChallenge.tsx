@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AuthenticationFactor } from '@appwrite.io/console'
@@ -20,8 +20,13 @@ import { Card } from '@/components/ui/card'
 import { ArrowLeft, Smartphone, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { clearConsoleAccountCache } from '@/lib/console-account-cache'
-import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import {
+  prefetchPostAuthDestination,
+  resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
+} from '@/lib/post-auth-navigation'
 
 interface MFAChallengeProps {
   factors: Models.MfaFactors & { recoveryCode?: boolean }
@@ -106,6 +111,7 @@ export async function verifyMFAChallenge(
 
 export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   const navigate = useNavigate()
+  const router = useRouter()
   const queryClient = useQueryClient()
   const [challengeType, setChallengeType] = useState<AuthenticationFactor | null>(
     () => getDefaultChallengeType(factors),
@@ -240,11 +246,29 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     onSuccess: async () => {
       setError(null)
 
-      const targetUrl = resolvePostAuthRedirect(redirect) ?? '/'
+      try {
+        const account = await refreshConsoleAccountAfterAuth(queryClient)
+        await prefetchPostAuthDestination(queryClient, account, redirect)
+        await router.invalidate()
 
-      queryClient.removeQueries({ queryKey: ['account', 'console'] })
-      clearConsoleAccountCache()
-      window.location.href = targetUrl
+        const targetRedirect = resolvePostAuthRedirect(redirect)
+        if (targetRedirect) {
+          navigate(toRedirectNavigateOptions(targetRedirect))
+          return
+        }
+
+        const orgId = await resolvePostAuthOrganizationId(account)
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
+      } catch (error: unknown) {
+        console.error('Post MFA navigation error:', error)
+        toast.error(
+          getErrorMessage(error, 'Verified but could not open the console'),
+        )
+      }
     },
     onError: (error: unknown) => {
       const errorMessage = getErrorMessage(error, 'Failed to verify code')

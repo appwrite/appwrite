@@ -17,7 +17,11 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
-import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import {
+  refreshConsoleAccountAfterAuth,
+  navigateToConsoleMfaAfterSession,
+  isConsoleMfaRequiredError,
+} from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
   resolvePostAuthRedirect,
@@ -55,6 +59,7 @@ function SignUpPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isGitHubLoading, setIsGitHubLoading] = useState(false)
+  const [isOpeningMfa, setIsOpeningMfa] = useState(false)
 
   const handleGitHubLogin = async () => {
     setIsGitHubLoading(true)
@@ -108,7 +113,16 @@ function SignUpPage() {
           email: data.email,
           password: data.password,
         })
-      } catch (error) {
+
+        // MFA may be required before account.get succeeds
+        await sdk.forConsole.account.get()
+      } catch (error: unknown) {
+        if (
+          error instanceof AppwriteException &&
+          error.type === 'user_more_factors_required'
+        ) {
+          throw { ...error, isMfaRequired: true }
+        }
         if (error instanceof AppwriteException) {
           throw new Error(error.message || 'Failed to sign up')
         }
@@ -165,6 +179,28 @@ function SignUpPage() {
       }
     },
     onError: async (error: unknown) => {
+      const isMfaRequired =
+        typeof error === 'object' &&
+        error !== null &&
+        'isMfaRequired' in error &&
+        (error as { isMfaRequired?: boolean }).isMfaRequired === true
+      if (isMfaRequired || isConsoleMfaRequiredError(error)) {
+        setIsOpeningMfa(true)
+        try {
+          await navigateToConsoleMfaAfterSession(
+            queryClient,
+            navigate,
+            search.redirect,
+          )
+        } catch (navigationError: unknown) {
+          setIsOpeningMfa(false)
+          toast.error(
+            getErrorMessage(navigationError, 'Could not open MFA verification'),
+          )
+        }
+        return
+      }
+
       toast.error(getErrorMessage(error, 'Failed to sign up'))
       console.error('Sign up error:', error)
     },
@@ -177,7 +213,7 @@ function SignUpPage() {
           mode="sign-up"
           onSubmit={(data) => signUpMutation.mutate(data)}
           onGitHubLogin={handleGitHubLogin}
-          isLoading={signUpMutation.isPending}
+          isLoading={signUpMutation.isPending || isOpeningMfa}
           isGitHubLoading={isGitHubLoading}
           redirect={search.redirect}
         />

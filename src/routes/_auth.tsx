@@ -3,9 +3,12 @@ import { ensureConsoleAccountOnAuthRoute } from '@/lib/react-query/hooks/auth'
 
 export const Route = createFileRoute('/_auth')({
   ssr: false,
-  loader: async ({ context }) => {
+  loader: async ({ context, location }) => {
     if (typeof window !== 'undefined') {
-      await ensureConsoleAccountOnAuthRoute(context.queryClient)
+      // MFA route loader owns account/MFA prefetch; skip guest refresh here.
+      if (location.pathname !== '/mfa') {
+        await ensureConsoleAccountOnAuthRoute(context.queryClient)
+      }
     }
     return {
       currentUser: null,

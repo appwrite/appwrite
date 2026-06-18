@@ -1,17 +1,12 @@
 import { useLoaderData, useNavigate, useLocation } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import {
-  clearConsoleImpersonateUser,
-  clearConsoleSessionLocally,
-  sdk,
-} from '@/lib/appwrite/sdk'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { clearConsoleSessionLocally } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { ReactNode, useEffect, useRef } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
-import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
-import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { consoleAccountQueryOptions, performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -187,39 +182,19 @@ function isMfaRequiredError(error: unknown) {
   )
 }
 
-// Client-side sign out function - deletes only the current session
-async function signOut(navigate?: (options: { to: string }) => void) {
-  try {
-    clearConsoleImpersonateUser()
-    clearConsoleImpersonationSession()
+// Client-side sign out — always hard-redirects to sign-in when complete.
+async function signOut(
+  _navigate?: (options: { to: string }) => void,
+  queryClient?: ReturnType<typeof useQueryClient>,
+) {
+  if (queryClient) {
+    await performConsoleSignOut(queryClient)
+    return
+  }
 
-    // Get all sessions to find the current one
-    const sessionsResponse = await sdk.forConsole.account.listSessions()
-    const sessions = sessionsResponse.sessions || []
-
-    // Find the current session
-    const currentSession = sessions.find((session) => session.current === true)
-
-    if (currentSession) {
-      // Delete only the current session
-      await sdk.forConsole.account.deleteSession({
-        sessionId: currentSession.$id,
-      })
-    } else {
-      // Fallback: if no current session found, delete all sessions
-      await sdk.forConsole.account.deleteSessions()
-    }
-
-    // Redirect to sign-in after successful sign out
-    if (navigate) {
-      navigate({ to: '/sign-in' })
-    } else if (typeof window !== 'undefined') {
-      window.location.href = '/sign-in'
-    }
-  } catch (error) {
-    console.error('Error signing out:', error)
-    // Account APIs may be blocked (e.g. 403); clear local credentials only (no redirect).
-    clearConsoleSessionLocally()
+  clearConsoleSessionLocally()
+  if (typeof window !== 'undefined') {
+    window.location.replace('/sign-in')
   }
 }
 
@@ -273,6 +248,7 @@ export function RequireAuth({
   const { currentUser } = useLoaderData({ from: '__root__' })
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
   const consoleImpersonationRevision = useConsoleImpersonationRevision()
 
   // Client-side authentication check using Console SDK
@@ -300,7 +276,7 @@ export function RequireAuth({
     isAuthenticated,
     isMfaRequired,
     accountAccessBlocked,
-    signOut: () => signOut(navigate),
+    signOut: () => signOut(navigate, queryClient),
   }
 
   // Show loading state while checking auth
@@ -357,6 +333,7 @@ export function useAuth(): AuthData {
   const { currentUser } = useLoaderData({ from: '__root__' })
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
   const consoleImpersonationRevision = useConsoleImpersonationRevision()
 
   const {
@@ -382,6 +359,6 @@ export function useAuth(): AuthData {
     isAuthenticated: !!account && !error,
     isMfaRequired: isMfaRequiredError(error),
     accountAccessBlocked,
-    signOut: () => signOut(navigate),
+    signOut: () => signOut(navigate, queryClient),
   }
 }

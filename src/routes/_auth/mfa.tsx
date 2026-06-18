@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router'
 import { z } from 'zod'
-import { Loader2 } from 'lucide-react'
 import { MFAChallenge } from '@/components/global/auth/MFAChallenge'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { fetchMFAFactors } from '@/lib/react-query/hooks'
 import {
+  prefetchPostAuthDestination,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import {
+  mfaFactorsQueryOptions,
+  refreshConsoleAccountAfterAuth,
+} from '@/lib/react-query/hooks/auth'
 import { pageTitle } from '@/lib/utils/page-title'
 
 function isValidRelativeRedirect(url: string): boolean {
@@ -30,88 +33,91 @@ const searchSchema = z.object({
     }),
 })
 
-type MfaFactorsWithRecovery = Models.MfaFactors & { recoveryCode: boolean }
+export type MfaFactorsWithRecovery = Models.MfaFactors & { recoveryCode: boolean }
 
 export const Route = createFileRoute('/_auth/mfa')({
-  component: MFAPage,
   validateSearch: searchSchema,
+  loader: async ({ context, location }) => {
+    if (typeof window === 'undefined') return undefined
+
+    const { queryClient } = context
+    const redirectSearch =
+      typeof location.search === 'object' &&
+      location.search !== null &&
+      'redirect' in location.search &&
+      typeof location.search.redirect === 'string'
+        ? location.search.redirect
+        : undefined
+
+    try {
+      await sdk.forConsole.account.get()
+
+      const account = await refreshConsoleAccountAfterAuth(queryClient)
+      await prefetchPostAuthDestination(queryClient, account, redirectSearch)
+
+      const targetRedirect = resolvePostAuthRedirect(redirectSearch)
+      if (targetRedirect) {
+        throw redirect({
+          ...toRedirectNavigateOptions(targetRedirect),
+          replace: true,
+        })
+      }
+
+      const orgId = await resolvePostAuthOrganizationId(account)
+      throw redirect({
+        to: '/organizations/$orgId',
+        params: { orgId },
+        replace: true,
+      })
+    } catch (error: unknown) {
+      if (isRedirect(error)) throw error
+
+      if (!(error instanceof AppwriteException)) {
+        throw redirect({ to: '/sign-in', replace: true })
+      }
+
+      if (error.type === 'user_more_factors_required') {
+        const availableFactors = await queryClient.ensureQueryData(
+          mfaFactorsQueryOptions(),
+        )
+        return {
+          factors: {
+            ...availableFactors,
+            recoveryCode: true,
+          } satisfies MfaFactorsWithRecovery,
+        }
+      }
+
+      if (error.code === 401) {
+        throw redirect({
+          to: '/sign-in',
+          search:
+            redirectSearch && isValidRelativeRedirect(redirectSearch)
+              ? { redirect: redirectSearch }
+              : undefined,
+          replace: true,
+        })
+      }
+
+      throw redirect({ to: '/sign-in', replace: true })
+    }
+  },
+  component: MFAPage,
   head: () => ({ meta: [{ title: pageTitle('Two-factor authentication') }] }),
 })
 
 function MFAPage() {
-  const navigate = useNavigate()
   const search = Route.useSearch({ from: '/_auth/mfa' })
-  const [factors, setFactors] = useState<MfaFactorsWithRecovery | null>(null)
-  const [isInitializing, setIsInitializing] = useState(true)
+  const loaderData = Route.useLoaderData()
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function init() {
-      try {
-        await sdk.forConsole.account.get()
-
-        const target = resolvePostAuthRedirect(search.redirect) ?? '/'
-        navigate({ ...toRedirectNavigateOptions(target), replace: true })
-        return
-      } catch (error: unknown) {
-        if (!(error instanceof AppwriteException)) {
-          navigate({ to: '/sign-in', replace: true })
-          return
-        }
-
-        if (error.type === 'user_more_factors_required') {
-          try {
-            const availableFactors = await fetchMFAFactors()
-            if (cancelled) return
-            setFactors({
-              ...availableFactors,
-              recoveryCode: true,
-            })
-            setIsInitializing(false)
-          } catch {
-            if (!cancelled) {
-              navigate({ to: '/sign-in', replace: true })
-            }
-          }
-          return
-        }
-
-        if (error.code === 401) {
-          navigate({
-            to: '/sign-in',
-            search:
-              search.redirect && isValidRelativeRedirect(search.redirect)
-                ? { redirect: search.redirect }
-                : undefined,
-            replace: true,
-          })
-          return
-        }
-
-        navigate({ to: '/sign-in', replace: true })
-      }
-    }
-
-    void init()
-
-    return () => {
-      cancelled = true
-    }
-  }, [navigate, search.redirect])
-
-  if (isInitializing || !factors) {
-    return (
-      <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+  if (!loaderData?.factors) {
+    return null
   }
 
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm md:max-w-4xl">
-        <MFAChallenge factors={factors} redirect={search.redirect} />
+        <MFAChallenge factors={loaderData.factors} redirect={search.redirect} />
       </div>
     </div>
   )

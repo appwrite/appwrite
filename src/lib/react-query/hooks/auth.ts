@@ -13,8 +13,12 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
-import { ProjectAuthMethodId } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
+import { AppwriteException, ProjectAuthMethodId } from '@appwrite.io/console'
+import {
+  clearConsoleImpersonateUser,
+  clearConsoleSessionLocally,
+  sdk,
+} from '@/lib/appwrite/sdk'
 import {
   clearConsoleAccountCache,
   getConsoleAccountUnauthenticatedError,
@@ -27,6 +31,8 @@ import {
   type FetchConsoleAccountOptions,
 } from '@/lib/console-account-get'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
+import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
+import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -248,6 +254,90 @@ export function isConsoleAccountQuerySettled(
   return state?.status === 'success' || state?.status === 'error'
 }
 
+export function isConsoleMfaRequiredError(error: unknown): boolean {
+  return (
+    error instanceof AppwriteException &&
+    error.type === 'user_more_factors_required'
+  )
+}
+
+/** Drop module singleton + React Query account entries (e.g. before MFA challenge). */
+export function purgeConsoleAccountCaches(queryClient: QueryClient): void {
+  clearConsoleAccountCache()
+  void queryClient.cancelQueries({ queryKey: ['account', 'console'] })
+  queryClient.removeQueries({ queryKey: ['account', 'console'] })
+}
+
+/** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
+export function redirectToSignInAfterConsoleSignOut(): void {
+  if (typeof window === 'undefined') return
+  window.location.replace('/sign-in')
+}
+
+/** Clear client auth state, best-effort server session delete, then open sign-in. */
+export async function performConsoleSignOut(
+  queryClient: QueryClient,
+): Promise<void> {
+  clearConsoleImpersonateUser()
+  clearConsoleImpersonationSession()
+  purgeConsoleAccountCaches(queryClient)
+
+  try {
+    const sessionsResponse = await sdk.forConsole.account.listSessions()
+    const sessions = sessionsResponse.sessions || []
+    const currentSession = sessions.find((session) => session.current === true)
+
+    if (currentSession) {
+      await sdk.forConsole.account.deleteSession({
+        sessionId: currentSession.$id,
+      })
+    } else if (sessions.length > 0) {
+      await sdk.forConsole.account.deleteSessions()
+    }
+  } catch (error) {
+    console.error('Error signing out:', error)
+  } finally {
+    clearConsoleSessionLocally()
+    redirectToSignInAfterConsoleSignOut()
+  }
+}
+
+type ConsoleMfaNavigate = (options: {
+  to: string
+  search?: { redirect?: string }
+}) => void
+
+/** Purge stale guest account cache and open the MFA challenge route. */
+export function redirectToConsoleMfaAfterSession(
+  queryClient: QueryClient,
+  navigate: ConsoleMfaNavigate,
+  redirect?: string,
+): void {
+  void navigateToConsoleMfaAfterSession(queryClient, navigate, redirect)
+}
+
+/** Prefetch MFA factors while still on the previous auth screen. */
+export async function prefetchConsoleMfaRouteData(
+  queryClient: QueryClient,
+): Promise<void> {
+  purgeConsoleAccountCaches(queryClient)
+  await queryClient.ensureQueryData(mfaFactorsQueryOptions())
+}
+
+/** Purge account cache, prefetch MFA data, then navigate once the MFA route can render. */
+export async function navigateToConsoleMfaAfterSession(
+  queryClient: QueryClient,
+  navigate: ConsoleMfaNavigate,
+  redirect?: string,
+): Promise<void> {
+  await prefetchConsoleMfaRouteData(queryClient)
+  const redirectUrl = resolvePostAuthRedirect(redirect)
+  navigate({
+    to: '/mfa',
+    search: redirectUrl ? { redirect: redirectUrl } : undefined,
+  })
+}
+
 /** Guest 401 may be cached while a session cookie exists (e.g. right after sign-in). */
 export function shouldRevalidateConsoleAccount(
   queryClient: QueryClient,
@@ -258,6 +348,9 @@ export function shouldRevalidateConsoleAccount(
   const { queryKey } = consoleAccountQueryOptions({ revision })
   const state = queryClient.getQueryState(queryKey)
   if (state?.status === 'error' && isHttpUnauthorizedError(state.error)) {
+    return true
+  }
+  if (state?.status === 'error' && isConsoleMfaRequiredError(state.error)) {
     return true
   }
 
@@ -286,8 +379,7 @@ export function shouldRevalidateConsoleAccountOnAuthRoute(
 export async function refreshConsoleAccountAfterAuth(
   queryClient: QueryClient,
 ): Promise<Models.User> {
-  clearConsoleAccountCache()
-  queryClient.removeQueries({ queryKey: ['account', 'console'] })
+  purgeConsoleAccountCaches(queryClient)
   const revision = getConsoleAccountQueryRevision()
   const account = await fetchConsoleAccount({ revision, force: true })
   commitConsoleAccountToCaches(queryClient, account, revision)

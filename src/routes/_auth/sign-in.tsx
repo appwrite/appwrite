@@ -15,7 +15,11 @@ import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
-import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import {
+  refreshConsoleAccountAfterAuth,
+  navigateToConsoleMfaAfterSession,
+  isConsoleMfaRequiredError,
+} from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
   resolvePostAuthRedirect,
@@ -54,6 +58,7 @@ function SignInPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isGitHubLoading, setIsGitHubLoading] = useState(false)
+  const [isOpeningMfa, setIsOpeningMfa] = useState(false)
 
   const handleGitHubLogin = async () => {
     setIsGitHubLoading(true)
@@ -145,16 +150,20 @@ function SignInPage() {
         error !== null &&
         'isMfaRequired' in error &&
         (error as { isMfaRequired?: boolean }).isMfaRequired === true
-      if (
-        isMfaRequired ||
-        (error instanceof AppwriteException &&
-          error.type === 'user_more_factors_required')
-      ) {
-        const redirectUrl = resolvePostAuthRedirect(search.redirect)
-        navigate({
-          to: '/mfa',
-          search: redirectUrl ? { redirect: redirectUrl } : undefined,
-        })
+      if (isMfaRequired || isConsoleMfaRequiredError(error)) {
+        setIsOpeningMfa(true)
+        try {
+          await navigateToConsoleMfaAfterSession(
+            queryClient,
+            navigate,
+            search.redirect,
+          )
+        } catch (navigationError: unknown) {
+          setIsOpeningMfa(false)
+          toast.error(
+            getErrorMessage(navigationError, 'Could not open MFA verification'),
+          )
+        }
         return
       }
 
@@ -171,7 +180,7 @@ function SignInPage() {
           mode="sign-in"
           onSubmit={(data) => signInMutation.mutate(data)}
           onGitHubLogin={handleGitHubLogin}
-          isLoading={signInMutation.isPending}
+          isLoading={signInMutation.isPending || isOpeningMfa}
           isGitHubLoading={isGitHubLoading}
           redirect={search.redirect}
         />

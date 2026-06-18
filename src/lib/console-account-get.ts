@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import { AppwriteException, type Models } from '@appwrite.io/console'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   clearConsoleAccountCache,
@@ -42,6 +42,19 @@ export function hasLikelyConsoleSession(): boolean {
 /** Called once from `sdk.ts` so every `account.get` shares the same singleton. */
 export function registerConsoleAccountGet(fn: RawConsoleAccountGet): void {
   rawConsoleAccountGet = fn
+}
+
+/** Partial auth (MFA pending) is not a guest session — do not cache or replay as 401. */
+function isConsoleMfaRequiredError(error: unknown): boolean {
+  return (
+    error instanceof AppwriteException &&
+    error.type === 'user_more_factors_required'
+  )
+}
+
+function shouldCacheConsoleAccountUnauthenticatedError(error: unknown): boolean {
+  if (!isHttpUnauthorizedError(error)) return false
+  return !isConsoleMfaRequiredError(error)
 }
 
 export type FetchConsoleAccountOptions = {
@@ -92,7 +105,7 @@ export async function fetchConsoleAccount(
       return account
     })
     .catch((error) => {
-      if (isHttpUnauthorizedError(error)) {
+      if (shouldCacheConsoleAccountUnauthenticatedError(error)) {
         setConsoleAccountUnauthenticatedError(revision, error)
       }
       throw error
