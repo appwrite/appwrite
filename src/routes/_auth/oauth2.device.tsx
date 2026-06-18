@@ -125,13 +125,15 @@ function OAuth2DevicePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Keep the shown code in sync when a new `user_code` arrives in the URL (e.g.
-  // the user follows a fresh `verification_uri_complete` link while this route
-  // stays mounted). A different code means a different request, so drop any
-  // loaded grant and return to confirmation rather than approving the old one.
+  // Keep the shown code in sync with the URL's `user_code` while this route
+  // stays mounted (e.g. the user follows a fresh `verification_uri_complete`
+  // link, or navigates back to the bare `/oauth2/device`). Any change means a
+  // different request, so drop the loaded grant and return to confirmation
+  // rather than showing or approving the previous code — including when the
+  // code is removed entirely.
   useEffect(() => {
     const next = normalizeUserCode(search.user_code ?? '')
-    if (!next || next === code) return
+    if (next === code) return
     setCode(next)
     setGrant(null)
     setApp(null)

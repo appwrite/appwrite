@@ -106,7 +106,13 @@ function VerifyEmailPage() {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/verify-email`
+      // Preserve the pending destination (e.g. an OAuth2 consent/device flow)
+      // so the resent link returns the user to it after verification.
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const redirectParam = search.redirect
+        ? `?redirect=${encodeURIComponent(search.redirect)}`
+        : ''
+      const url = `${origin}/verify-email${redirectParam}`
       return await sdk.forConsole.account.createEmailVerification({ url })
     },
     onSuccess: () => {
