@@ -3374,7 +3374,7 @@ final class AccountCustomClientTest extends Scope
             ID::unique(),
             ID::unique(),
         ]);
-        $success = false;
+        $successfulUserIds = [];
 
         foreach ($responses as $response) {
             $body = (string) (\is_array($response['body']) ? \json_encode($response['body']) : $response['body']);
@@ -3384,7 +3384,9 @@ final class AccountCustomClientTest extends Scope
             $this->assertStringNotContainsString('Document with the requested unique attributes already exists', $body);
 
             if ($response['status'] === 201) {
-                $success = true;
+                $this->assertIsArray($response['body']);
+                $this->assertArrayHasKey('userId', $response['body']);
+                $successfulUserIds[] = $response['body']['userId'];
                 continue;
             }
 
@@ -3393,7 +3395,8 @@ final class AccountCustomClientTest extends Scope
             $this->assertSame('user_already_exists', $response['body']['type']);
         }
 
-        $this->assertTrue($success);
+        $this->assertGreaterThan(1, \count($successfulUserIds));
+        $this->assertCount(1, \array_unique($successfulUserIds));
 
         $response = $this->client->call(Client::METHOD_GET, '/users', [
             'content-type' => 'application/json',
@@ -3407,6 +3410,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['users']);
+        $this->assertSame($successfulUserIds[0], $response['body']['users'][0]['$id']);
 
         /**
          * Test for FAILURE
@@ -4145,6 +4149,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
 
+        $targetId = $response['body']['$id'];
+        $targetUserId = $response['body']['userId'];
+        $expectedIdentifier = $response['body']['identifier'];
+        $expectedExpired = $response['body']['expired'];
+
         $duplicateIdentifier = 'test-identifier-' . ID::unique();
         $duplicate = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
             'content-type' => 'application/json',
@@ -4165,6 +4174,17 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertSame(409, $response['headers']['status-code']);
         $this->assertSame('user_target_already_exists', $response['body']['type']);
+
+        $target = $this->client->call(Client::METHOD_GET, '/users/' . $targetUserId . '/targets/' . $targetId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $target['headers']['status-code']);
+        $this->assertSame($targetId, $target['body']['$id']);
+        $this->assertSame($expectedIdentifier, $target['body']['identifier']);
+        $this->assertSame($expectedExpired, $target['body']['expired']);
     }
 
     /**
