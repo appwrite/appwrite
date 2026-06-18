@@ -284,6 +284,8 @@ export function SiteDeploymentsView() {
       'providerCommitMessage',
       'providerCommitHash',
       'providerCommitUrl',
+      'providerCommitAuthor',
+      'providerCommitAuthorUrl',
       '$createdAt',
     ]),
   ])
@@ -311,6 +313,8 @@ export function SiteDeploymentsView() {
         'providerCommitMessage',
         'providerCommitHash',
         'providerCommitUrl',
+        'providerCommitAuthor',
+        'providerCommitAuthorUrl',
         '$createdAt',
       ]),
     ],
@@ -1500,6 +1504,10 @@ export function SiteDeploymentsView() {
                               const commitHash =
                                 deploymentData.providerCommitHash
                               const commitUrl = deploymentData.providerCommitUrl
+                              const commitAuthor =
+                                deploymentData.providerCommitAuthor
+                              const commitAuthorUrl =
+                                deploymentData.providerCommitAuthorUrl
                               const branch = deploymentData.providerBranch
 
                               if (!commitMessage && !branch && !commitHash) {
@@ -1559,11 +1567,32 @@ export function SiteDeploymentsView() {
                                       {commitHash && (
                                         <>
                                           {branch && <span>•</span>}
-                                          <div className="flex items-center gap-1">
-                                            <GitCommit className="h-3 w-3" />
-                                            <span className="font-mono">
+                                          <div className="flex min-w-0 items-center gap-1">
+                                            <GitCommit className="h-3 w-3 shrink-0" />
+                                            <span className="shrink-0 font-mono">
                                               {commitHash.slice(0, 7)}
                                             </span>
+                                            {commitAuthor ? (
+                                              <span className="min-w-0 truncate">
+                                                {' by '}
+                                                {commitAuthorUrl ? (
+                                                  <a
+                                                    href={commitAuthorUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="link-neutral"
+                                                    onClick={(e) =>
+                                                      e.stopPropagation()
+                                                    }
+                                                    title={commitAuthor}
+                                                  >
+                                                    {commitAuthor}
+                                                  </a>
+                                                ) : (
+                                                  commitAuthor
+                                                )}
+                                              </span>
+                                            ) : null}
                                           </div>
                                         </>
                                       )}

@@ -44,6 +44,7 @@ export function DeploymentInfo({
           )}
         </div>
         {(deployment.providerBranch ||
+          deployment.providerCommitAuthor ||
           deployment.providerCommitMessage ||
           deployment.$createdAt) && (
           <div className="flex flex-col gap-1.5 text-[11px] text-muted-foreground">
@@ -51,6 +52,14 @@ export function DeploymentInfo({
               <div className="flex items-center gap-1.5">
                 <GitBranch className="h-3 w-3 shrink-0" />
                 <span className="truncate">{deployment.providerBranch}</span>
+              </div>
+            )}
+            {deployment.providerCommitAuthor && (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="shrink-0">Committer</span>
+                <span className="truncate font-medium text-foreground">
+                  {deployment.providerCommitAuthor}
+                </span>
               </div>
             )}
             {deployment.providerCommitMessage && (
@@ -97,6 +106,7 @@ export function DeploymentInfo({
       </div>
 
       {(deployment.providerBranch ||
+        deployment.providerCommitAuthor ||
         deployment.providerCommitMessage ||
         deployment.$createdAt) && (
         <div className="space-y-2 text-[12px]">
@@ -106,6 +116,14 @@ export function DeploymentInfo({
               <span className="text-muted-foreground">Branch:</span>
               <span className="font-medium text-foreground">
                 {deployment.providerBranch}
+              </span>
+            </div>
+          )}
+          {deployment.providerCommitAuthor && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-muted-foreground shrink-0">Committer:</span>
+              <span className="font-medium text-foreground truncate">
+                {deployment.providerCommitAuthor}
               </span>
             </div>
           )}

@@ -65,6 +65,8 @@ export const Route = createFileRoute(
               'providerCommitMessage',
               'providerCommitHash',
               'providerCommitUrl',
+              'providerCommitAuthor',
+              'providerCommitAuthorUrl',
             ]),
           ]),
         ),

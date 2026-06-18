@@ -823,11 +823,34 @@ export function DeploymentDetailView({
         )}
 
         {(deployment.providerCommitMessage ||
-          deployment.providerCommitHash) && (
+          deployment.providerCommitHash ||
+          deployment.providerCommitAuthor) && (
           <section className="space-y-2 py-3">
             <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Commit
             </h3>
+            {deployment.providerCommitAuthor ? (
+              <div className="min-w-0">
+                {deployment.providerCommitAuthorUrl ? (
+                  <a
+                    href={deployment.providerCommitAuthorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link-neutral truncate text-[11px]"
+                    title={deployment.providerCommitAuthor}
+                  >
+                    {deployment.providerCommitAuthor}
+                  </a>
+                ) : (
+                  <span
+                    className="truncate text-[11px] font-medium text-foreground"
+                    title={deployment.providerCommitAuthor}
+                  >
+                    {deployment.providerCommitAuthor}
+                  </span>
+                )}
+              </div>
+            ) : null}
             {deployment.providerCommitMessage ? (
               <p className="break-words text-[11px] leading-snug whitespace-pre-wrap text-foreground">
                 {deployment.providerCommitMessage}
@@ -1647,6 +1670,32 @@ export function DeploymentDetailView({
                     <DateTooltip date={deployment.$createdAt} />
                   </span>
                 </div>
+
+                {deployment.providerCommitAuthor ? (
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="shrink-0 text-[12px] sm:text-[13px] text-muted-foreground">
+                      Committer
+                    </span>
+                    {deployment.providerCommitAuthorUrl ? (
+                      <a
+                        href={deployment.providerCommitAuthorUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link-neutral min-w-0 truncate text-[12px] sm:text-[13px] font-medium"
+                        title={deployment.providerCommitAuthor}
+                      >
+                        {deployment.providerCommitAuthor}
+                      </a>
+                    ) : (
+                      <span
+                        className="min-w-0 truncate text-[12px] sm:text-[13px] font-medium text-foreground"
+                        title={deployment.providerCommitAuthor}
+                      >
+                        {deployment.providerCommitAuthor}
+                      </span>
+                    )}
+                  </div>
+                ) : null}
 
                 {/* Build duration and Status - at end */}
                 {(deployment.buildDuration != null ||

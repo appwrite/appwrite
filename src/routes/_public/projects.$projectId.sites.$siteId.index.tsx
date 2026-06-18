@@ -28,6 +28,8 @@ const DEPLOYMENTS_SELECT = [
     'providerCommitMessage',
     'providerCommitHash',
     'providerCommitUrl',
+    'providerCommitAuthor',
+    'providerCommitAuthorUrl',
     '$createdAt',
   ]),
 ]
