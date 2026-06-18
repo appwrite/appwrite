@@ -145,7 +145,11 @@ class Delete extends Action
             }
 
             if (!$deleted) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                $exists = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                if (!$exists->isEmpty()) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                }
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
         } else {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
