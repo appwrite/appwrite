@@ -94,7 +94,7 @@ export function OAuth2ConsentCard({
         onDeviceDone?.('approved')
         return
       }
-      window.location.href = result.redirectUrl
+      window.location.assign(result.redirectUrl)
     },
     onError: (e: unknown) => {
       const message = getErrorMessage(e, 'Failed to authorize the application')
@@ -110,7 +110,7 @@ export function OAuth2ConsentCard({
         onDeviceDone?.('denied')
         return
       }
-      window.location.href = result.redirectUrl
+      window.location.assign(result.redirectUrl)
     },
     onError: (e: unknown) => {
       const message = getErrorMessage(e, 'Failed to cancel the request')

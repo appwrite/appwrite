@@ -8,11 +8,12 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { pageTitle } from '@/lib/utils/page-title'
-import {
-  resolvePostAuthOrganizationId,
-} from '@/lib/ensure-personal-org'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  prefetchPostAuthDestination,
+  resolvePostAuthRedirect,
+} from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 
 function isValidRelativeRedirect(url: string): boolean {
@@ -71,23 +72,25 @@ function VerifyEmailPage() {
       toast.success('Email verified successfully')
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
-        await prefetchPostAuthDestination(
-          queryClient,
-          account,
-          search.redirect,
-        )
-        const orgId = await resolvePostAuthOrganizationId(account)
+        await prefetchPostAuthDestination(queryClient, account, search.redirect)
         await router.invalidate()
+
+        // If we're headed to a specific destination (e.g. an OAuth2
+        // consent/device flow), go straight there without provisioning a
+        // personal org/project — provisioning throws on single-tenant
+        // profiles and would otherwise drop the pending authorization.
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {
           navigate({ to: targetRedirect })
-        } else {
-          navigate({
-            to: '/organizations/$orgId',
-            params: { orgId },
-            replace: true,
-          })
+          return
         }
+
+        const orgId = await resolvePostAuthOrganizationId(account)
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
       } catch {
         navigate({ to: '/' })
       }

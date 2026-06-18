@@ -139,7 +139,7 @@ function OAuth2ConsentPage() {
           if (cancelled) return
           if (result.redirectUrl) {
             // Already consented — go straight back to the client.
-            window.location.href = result.redirectUrl
+            window.location.assign(result.redirectUrl)
             return
           }
           if (result.grantId) {
