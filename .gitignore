@@ -13,6 +13,12 @@ dist
 .nitro
 .tanstack
 
+# Generated static exports (built via generate:sitemap and generate:docs-exports)
+public/llms.txt
+public/llms-full.txt
+public/sitemap.xml
+public/sitemap/
+
 # Vite cache
 .vite
 node_modules/.vite

@@ -224,13 +224,13 @@ export const Route = createFileRoute('/home')({
       {
         rel: 'preload',
         as: 'image',
-        href: '/images/heroes/console-app-light.png',
+        href: '/images/heroes/console-app-light.avif',
         media: '(prefers-color-scheme: light)',
       },
       {
         rel: 'preload',
         as: 'image',
-        href: '/images/heroes/console-app-dark.png',
+        href: '/images/heroes/console-app-dark.avif',
         media: '(prefers-color-scheme: dark)',
       },
     ],
@@ -296,20 +296,14 @@ function HomePage() {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-                <a
-                  href="https://appwrite.io/contact"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Request a demo
-                </a>
+                <Link to="/enterprise">Request a demo</Link>
               </Button>
             </div>
           </div>
 
           <div className="relative z-[1] mt-8 w-full sm:mt-10">
             <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
-              <div className="relative isolate z-[1] flex h-[400px] w-full flex-col overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10 sm:h-[500px] lg:h-[560px]">
+              <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10">
                 <div className="relative z-10 flex h-10 shrink-0 items-center gap-2 text-left">
                   <div className="ml-2 flex items-center gap-1.5" aria-hidden>
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
@@ -324,21 +318,21 @@ function HomePage() {
                     <span className="truncate">First Appwrite project</span>
                   </div>
                 </div>
-                <div className="relative z-10 min-h-0 flex-1 overflow-hidden">
+                <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
                   <img
-                    src="/images/heroes/console-app-light.png"
+                    src="/images/heroes/console-app-light.avif"
                     alt="Appwrite console overview with usage charts, apps, and API keys"
-                    width={3200}
-                    height={2400}
+                    width={1280}
+                    height={960}
                     fetchPriority="high"
                     decoding="async"
                     className="block h-full w-full rounded-t-lg object-cover object-top opacity-95 dark:hidden"
                   />
                   <img
-                    src="/images/heroes/console-app-dark.png"
+                    src="/images/heroes/console-app-dark.avif"
                     alt="Appwrite console overview with usage charts, apps, and API keys"
-                    width={3200}
-                    height={2400}
+                    width={1280}
+                    height={960}
                     fetchPriority="high"
                     decoding="async"
                     className="hidden h-full w-full rounded-t-lg object-cover object-top opacity-95 dark:block"

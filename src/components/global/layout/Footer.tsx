@@ -180,7 +180,7 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
         href: getMarketingPageUrl('/assets', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      { label: 'Security', href: 'https://appwrite.io/security', external: true },
+      docsFooterLink('Security', '/docs/advanced/security', marketing),
     ],
   },
   {

@@ -18,6 +18,7 @@ import {
   Database,
   Users,
   Folder,
+  FolderOpen,
   Zap,
   Globe,
   Building2,
@@ -50,6 +51,7 @@ import {
   canCreateFunction,
   canCreateSite,
   canWriteTopics,
+  canShowOrgDomainsTab,
 } from '@/lib/console-access-checks'
 import {
   DropdownMenu,
@@ -267,10 +269,14 @@ export function ConsoleHeader({
 
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
+  const orgIdFromRoute = params?.orgId as string | undefined
+  const orgId = projectId
+    ? (project?.teamId ?? undefined)
+    : (orgIdFromRoute ?? (account?.prefs?.organization as string | undefined))
   const { features } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
-  const { access } = useOrganizationScopes(project?.teamId)
+  const { access } = useOrganizationScopes(orgId ?? project?.teamId)
   const marketingNavItems = (
     marketingNav === true
       ? DEFAULT_MARKETING_HEADER_NAV
@@ -305,13 +311,6 @@ export function ConsoleHeader({
   const canCreateFunctionFlag = canCreateFunction(access, features)
   const canCreateSiteFlag = canCreateSite(access, features)
   const canCreateTopicFlag = canWriteTopics(access, features)
-
-  // Organization ID for upgrade button. Project scope: use current project's teamId only.
-  // Org scope (e.g. billing): use orgId from URL so the link matches the org we're viewing.
-  const orgIdFromRoute = params?.orgId as string | undefined
-  const orgId = projectId
-    ? (project?.teamId ?? undefined)
-    : (orgIdFromRoute ?? (account?.prefs?.organization as string | undefined))
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan, isFetched: isPlanFetched } =
@@ -364,6 +363,7 @@ export function ConsoleHeader({
   const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
   const showChangelogBadge = useChangelogNavBadge()
+  const showOrgDomainsLink = Boolean(orgId && canShowOrgDomainsTab(access, features))
   const docsHref = getMarketingPageUrl('/docs', features.marketing)
   const changelogHref = getMarketingPageUrl('/changelog', features.marketing)
   const homeHref = getMarketingPageUrl('/home', features.marketing)
@@ -941,7 +941,7 @@ export function ConsoleHeader({
         </div>
 
         {showCenterSearch ? (
-          <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[700px]:block">
+          <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[900px]:block">
             <button
               type="button"
               onClick={openCommandCenter}
@@ -975,6 +975,16 @@ export function ConsoleHeader({
             </div>
           ) : showGuestHeader ? (
             <>
+              {showCenterSearch ? (
+                <button
+                  type="button"
+                  onClick={openCommandCenter}
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label={centerSearchPlaceholder}
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              ) : null}
               <Button
                 asChild
                 variant="outline"
@@ -1031,7 +1041,7 @@ export function ConsoleHeader({
                 <button
                   type="button"
                   onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={centerSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
@@ -1141,6 +1151,34 @@ export function ConsoleHeader({
                       <span>Account</span>
                     </Link>
                   </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      {...(orgId
+                        ? {
+                            to: '/organizations/$orgId',
+                            params: { orgId },
+                          }
+                        : { to: '/' })}
+                      className={ACCOUNT_MENU_ITEM_CLASS}
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      <span>Projects</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {showOrgDomainsLink && orgId ? (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/organizations/$orgId/domains"
+                        params={{ orgId }}
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                      >
+                        <Globe className="h-4 w-4" />
+                        <span>Domains</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : null}
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
 

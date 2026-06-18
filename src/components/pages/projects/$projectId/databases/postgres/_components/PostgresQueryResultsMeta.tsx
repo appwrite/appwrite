@@ -1,12 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import {
   formatPostgresQueryDurationMs,
-  formatPostgresRowCount,
 } from '@/lib/postgres-sql'
 
 type PostgresQueryResultsMetaProps = {
   title: string
   rowCount: number
+  countLabel?: string
   durationMs?: number
   truncated?: boolean
 }
@@ -14,9 +14,12 @@ type PostgresQueryResultsMetaProps = {
 export function PostgresQueryResultsMeta({
   title,
   rowCount,
+  countLabel = 'row',
   durationMs,
   truncated,
 }: PostgresQueryResultsMetaProps) {
+  const formattedCount = rowCount.toLocaleString()
+  const countText = `${formattedCount} ${countLabel}${rowCount === 1 ? '' : 's'}`
   return (
     <div className="flex min-w-0 items-center justify-between gap-3">
       <h3 className="min-w-0 truncate text-[13px] font-semibold text-foreground">
@@ -25,7 +28,7 @@ export function PostgresQueryResultsMeta({
       <div className="flex shrink-0 items-center gap-2">
         <p className="flex items-center gap-x-2 text-[12px] text-muted-foreground">
           <span className="tabular-nums text-foreground/90">
-            {formatPostgresRowCount(rowCount)}
+            {countText}
           </span>
           {durationMs != null ? (
             <>

@@ -1,6 +1,7 @@
 export type AppwriteAdditionalMethod = {
   name: string
   desc?: string
+  weight?: number
   auth?: Record<string, string[]>
   parameters?: string[]
   required?: string[]
@@ -74,6 +75,9 @@ export type OpenApiSchema = {
   'x-enum-keys'?: string[]
   'x-upload-id'?: string
   format?: string
+  oneOf?: OpenApiSchema[]
+  allOf?: OpenApiSchema[]
+  anyOf?: OpenApiSchema[]
 }
 
 export type OpenApiRequestBody = {

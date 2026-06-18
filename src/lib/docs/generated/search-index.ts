@@ -3198,28 +3198,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "references",
-    "title": "API reference",
-    "description": "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
-    "excerpt": "Appwrite lets you build integrations on web, mobile, native, and server platforms through a set of APIs. You can use one of our many SDKs or integrate directly through the REST API or GraphQL API. Client vs Server APIs Client APIs and SDKs are for integrating with Appwrite to build client-based applications and websites. Client APIs only give access to resources if users have been granted permissions. Server API and SDKs are for integrating with Appwrite to build backend or…",
-    "breadcrumbs": [
-      "API reference",
-      "Getting started",
-      "Overview"
-    ]
-  },
-  {
-    "slug": "references/quick-start",
-    "title": "Quick start",
-    "description": "Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.",
-    "excerpt": "Follow these steps before you begin using the Appwrite SDKs or accessing Appwrite through the REST and GraphQL API. If you are choosing Appwrite among BaaS platforms or mapping backend infrastructure options first, skim that guide, then return here to wire SDKs. Appwrite has two types of APIs for different use cases, select one or both depending on your use case. If you're creating a **web, mobile, or native application** used by end-users that will register and create accounts, install…",
-    "breadcrumbs": [
-      "API reference",
-      "Getting started",
-      "Quick start"
-    ]
-  },
-  {
     "slug": "sdks",
     "title": "SDKs",
     "description": "Get started with Appwrite SDKs and learn how to use them to add authentication, user management, file storage, and more to your apps.",

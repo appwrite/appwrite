@@ -7,10 +7,10 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
       { label: 'Quick start', href: '/docs/quick-starts', icon: 'play' },
       { label: 'Tutorials', href: '/docs/tutorials', icon: 'book-open' },
       { label: 'SDKs', href: '/docs/sdks', icon: 'cog' },
-      { label: 'Blog', href: '/blog', icon: 'document-text' },
-      { label: 'Changelog', href: '/changelog', icon: 'clock' },
+      { label: 'Blog', href: '/blog', icon: 'document-text', openInNewTab: true },
+      { label: 'Changelog', href: '/changelog', icon: 'clock', openInNewTab: true },
       { label: 'Integrations', href: 'https://appwrite.io/integrations', icon: 'puzzle', openInNewTab: true },
-      { label: 'API references', href: '/docs/references', icon: 'document', isParent: true },
+      { label: 'API references', href: '/docs/references', icon: 'code', isParent: true },
     ],
   },
   {

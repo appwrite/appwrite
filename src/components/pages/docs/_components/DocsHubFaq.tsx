@@ -135,7 +135,7 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     ),
   },
   {
-    question: 'Where can I browse the API reference?',
+    question: 'Where can I browse the API references?',
     answer: (
       <>
         Open{' '}

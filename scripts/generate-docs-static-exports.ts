@@ -1,13 +1,12 @@
 /**
  * Generates static docs exports for SEO and LLM crawlers (llms.txt, llms-full.txt).
- * Sitemaps are generated via scripts/generate-sitemap.ts (also run from generate:docs-exports).
- * Not part of the build. Run manually when docs change: bun run generate:docs-exports
+ * Sitemaps are generated via scripts/generate-sitemap.ts.
+ * Run manually when docs change: bun run generate:docs-exports
  */
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DOCS_PAGES } from '../src/lib/docs/generated/manifest'
-import { generateSitemapFiles } from '../src/lib/sitemap/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -85,38 +84,17 @@ async function generateLlmsFullTxt(): Promise<string> {
   return sections.join('\n\n---\n\n') + '\n'
 }
 
-async function writeSitemapFiles(): Promise<{
-  totalUrls: number
-  sectionCount: number
-}> {
-  const sitemapDir = join(PUBLIC_DIR, 'sitemap')
-  const { indexXml, sectionFiles, totalUrls } = generateSitemapFiles()
-
-  await mkdir(sitemapDir, { recursive: true })
-  await writeFile(join(PUBLIC_DIR, 'sitemap.xml'), indexXml, 'utf-8')
-  await Promise.all(
-    Object.entries(sectionFiles).map(([sectionId, xml]) =>
-      writeFile(join(sitemapDir, `${sectionId}.xml`), xml, 'utf-8'),
-    ),
-  )
-
-  return { totalUrls, sectionCount: Object.keys(sectionFiles).length }
-}
-
 async function main() {
   await mkdir(PUBLIC_DIR, { recursive: true })
 
   const llmsFullTxt = await generateLlmsFullTxt()
-  const { totalUrls, sectionCount } = await writeSitemapFiles()
 
   await Promise.all([
     writeFile(join(PUBLIC_DIR, 'llms.txt'), generateLlmsTxt(), 'utf-8'),
     writeFile(join(PUBLIC_DIR, 'llms-full.txt'), llmsFullTxt, 'utf-8'),
   ])
 
-  console.log(
-    `Generated llms.txt, llms-full.txt, and sitemaps (${totalUrls} URLs across ${sectionCount} sections)`,
-  )
+  console.log('Generated llms.txt and llms-full.txt')
 }
 
 main().catch((err) => {

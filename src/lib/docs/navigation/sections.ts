@@ -1516,80 +1516,9 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       prefix: "references",
       parent: {
         href: "/docs",
-        label: "API reference",
+        label: "API references",
       },
-      navigation: [
-        {
-          label: "Getting started",
-          items: [
-            {
-              label: "Overview",
-              href: "/docs/references",
-            },
-            {
-              label: "Quick start",
-              href: "/docs/references/quick-start",
-            },
-          ],
-        },
-        {
-          label: "APIs",
-          items: [
-            {
-              label: "Account",
-              href: "/docs/references/cloud/client-web/account",
-            },
-            {
-              label: "Users",
-              href: "/docs/references/cloud/client-web/users",
-            },
-            {
-              label: "Teams",
-              href: "/docs/references/cloud/client-web/teams",
-            },
-            {
-              label: "Databases",
-              href: "/docs/references/cloud/client-web/databases",
-            },
-            {
-              label: "TablesDB",
-              href: "/docs/references/cloud/client-web/tablesDB",
-            },
-            {
-              label: "Sites",
-              href: "/docs/references/cloud/client-web/sites",
-            },
-            {
-              label: "Storage",
-              href: "/docs/references/cloud/client-web/storage",
-            },
-            {
-              label: "Functions",
-              href: "/docs/references/cloud/client-web/functions",
-            },
-            {
-              label: "Messaging",
-              href: "/docs/references/cloud/client-web/messaging",
-            },
-            {
-              label: "Localization",
-              href: "/docs/references/cloud/client-web/locale",
-            },
-            {
-              label: "Avatars",
-              href: "/docs/references/cloud/client-web/avatars",
-            },
-            {
-              label: "Presences",
-              href: "/docs/references/cloud/client-web/presences",
-            },
-            {
-              label: "Project",
-              href: "/docs/references/cloud/client-web/project",
-            },
-          ],
-        },
-      ],
+      navigation: [],
     },
     {
       prefix: "tooling/ai",

@@ -6,6 +6,7 @@ import {
   MarketingHeroSection,
   MarketingSectionHeading,
   MarketingStatGrid,
+  marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
 import { CARD_LINK_HINT_CLASS } from '@/lib/link-styles'
@@ -71,7 +72,7 @@ export function View() {
       <section className="relative isolate overflow-hidden border-b border-border bg-muted/20">
         <SectionSoftLight tone="purple" />
         <div className="relative z-[1] mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className={marketingSplitLayoutClassName({ align: 'center' })}>
             <div>
               <MarketingSectionHeading
                 align="left"
@@ -162,7 +163,7 @@ export function View() {
       <section id={PARTNERS_FORM_ID} className="relative scroll-mt-28 border-b border-border">
         <HomeSoftLights variant="testimonials" className="opacity-40" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-start">
+          <div className={marketingSplitLayoutClassName({ align: 'start' })}>
             <div>
               <MarketingSectionHeading
                 align="left"

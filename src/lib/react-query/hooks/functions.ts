@@ -92,6 +92,34 @@ export async function fetchProjectFunction(
   return await projectSdk.functions.get({ functionId })
 }
 
+/** Fetch up to 8 functions by ID in a single list call (overview compute breakdown). */
+export async function fetchProjectFunctionsByIds(
+  projectId: string,
+  functionIds: string[],
+): Promise<{ functions: Models.Function[] }> {
+  if (!projectId || functionIds.length === 0) {
+    return { functions: [] }
+  }
+
+  const validIds = [
+    ...new Set(functionIds.filter((id) => typeof id === 'string' && id.trim())),
+  ].slice(0, 8)
+  if (validIds.length === 0) {
+    return { functions: [] }
+  }
+
+  const idQuery =
+    validIds.length === 1
+      ? Query.equal('$id', validIds[0])
+      : Query.or(validIds.map((id) => Query.equal('$id', id)))
+
+  const response = await sdk.forProject(projectId).functions.list({
+    queries: [idQuery, Query.limit(validIds.length)],
+  })
+
+  return { functions: response.functions ?? [] }
+}
+
 // Object form of functions.update() params (SDK has overloads; avoid string | object union)
 type FunctionUpdateParams = Extract<
   Parameters<ReturnType<typeof sdk.forProject>['functions']['update']>[0],

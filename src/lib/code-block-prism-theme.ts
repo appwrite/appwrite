@@ -1,7 +1,10 @@
 import type { CSSProperties } from 'react'
 import type { PrismTheme } from 'prism-react-renderer'
 import { themes } from 'prism-react-renderer'
-import { isResolvedThemeDarkChrome } from '@/lib/html-theme'
+import {
+  isHtmlDarkChrome,
+  isResolvedThemeDarkChrome,
+} from '@/lib/html-theme'
 
 const PRISM_BACKGROUND_KEYS = [
   'background',
@@ -26,9 +29,12 @@ export const CODE_BLOCK_PRISM_SURFACE_CLASS =
 export function buildCodeBlockPrismTheme(
   resolvedTheme: string | undefined,
 ): PrismTheme {
-  const base = isResolvedThemeDarkChrome(resolvedTheme)
-    ? themes.vsDark
-    : themes.vsLight
+  const isDark =
+    resolvedTheme !== undefined
+      ? isResolvedThemeDarkChrome(resolvedTheme)
+      : isHtmlDarkChrome()
+
+  const base = isDark ? themes.vsDark : themes.vsLight
 
   return {
     ...base,

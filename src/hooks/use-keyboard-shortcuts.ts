@@ -58,6 +58,10 @@ function eventMatchesRequiredKey(
 ): boolean {
   const pressed = normalizeKey(e.key)
   if (pressed === requiredKey) return true
+  // macOS Option layers emit special characters (e.g. Ï) instead of the base key.
+  if (/^[a-z]$/i.test(requiredKey) && e.code === `Key${requiredKey.toUpperCase()}`) {
+    return true
+  }
   // US QWERTY: ? is shift+/ but e.key is '?'.
   if (requiredKey === '/' && pressed === '?') return true
   if (

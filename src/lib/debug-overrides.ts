@@ -22,6 +22,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
   keyboardLayout: 'debug:keyboardLayout',
+  disableUsageBreakdownQueries: 'debug:disableUsageBreakdownQueries',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -73,6 +74,8 @@ export type DebugOverrides = {
   initLowPowerAnimations: InitLowPowerAnimationsOverride
   /** Command center keyboard visualizer and shortcut labels. */
   keyboardLayout: KeyboardLayoutOverride
+  /** When true, skip usage listEvents/listGauges calls that pass dimensions (overview breakdown panels). */
+  disableUsageBreakdownQueries: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -158,6 +161,10 @@ export function loadDebugOverrides(): DebugOverrides {
       ['auto', 'macos', 'windows'] as const,
       'auto',
     ),
+    disableUsageBreakdownQueries: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.disableUsageBreakdownQueries,
+      false,
+    ),
   }
 }
 
@@ -206,6 +213,7 @@ const FEATURE_FLAGS_MENU_DEBUG_KEYS: (keyof DebugOverrides)[] = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
+  'disableUsageBreakdownQueries',
 ]
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */
@@ -239,4 +247,9 @@ export function useDebugOverrides(): DebugOverrides {
     return subscribeToDebugOverrides(setOverrides)
   }, [])
   return overrides
+}
+
+/** When false, overview usage fetchers skip dimension-based breakdown API calls. */
+export function areUsageBreakdownQueriesEnabled(): boolean {
+  return !loadDebugOverrides().disableUsageBreakdownQueries
 }

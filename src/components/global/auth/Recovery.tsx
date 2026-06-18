@@ -71,7 +71,7 @@ export function Recovery({
               alt="Image"
               className="h-full w-full object-cover"
               height="600"
-              src="/cover.png"
+              src="/cover.avif"
               width="600"
             />
           </div>
@@ -140,7 +140,7 @@ export function Recovery({
             alt="Image"
             className="h-full w-full object-cover"
             height="600"
-            src="/cover.png"
+            src="/cover.avif"
             width="600"
           />
         </div>

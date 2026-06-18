@@ -12,14 +12,13 @@ import type {
   ParsedApiSpec,
 } from './types'
 
-const HTTP_METHODS = [
+/** Matches website references specs.ts path iteration order. */
+const REFERENCE_HTTP_METHODS = [
   'get',
   'post',
   'put',
   'patch',
   'delete',
-  'options',
-  'head',
 ] as const
 
 type ParsedOperationContext = {
@@ -151,6 +150,7 @@ function* processAdditionalMethods(
           method: additionalMethod.name,
           demo: additionalMethod.demo ?? xAppwrite.demo,
           public: additionalMethod.public ?? true,
+          weight: additionalMethod.weight ?? xAppwrite.weight,
         },
         responses:
           responseCode !== undefined
@@ -180,7 +180,10 @@ function* iterateOperations(
   platform: ApiSpecPlatform,
 ): Generator<ParsedOperationContext> {
   for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
-    for (const httpMethod of HTTP_METHODS) {
+    if (!pathItem) continue
+
+    // Phase 1: base operations (skip routes that expose x-appwrite.methods).
+    for (const httpMethod of REFERENCE_HTTP_METHODS) {
       const operation = pathItem[httpMethod]
       if (!operation) continue
 
@@ -192,19 +195,33 @@ function* iterateOperations(
 
       const service = operation.tags?.[0]
       if (!service) continue
-
-      if (hasAdditionalMethods(operation, service)) {
-        yield* processAdditionalMethods(
-          operation,
-          httpMethod,
-          path,
-          service,
-          spec.components,
-        )
-        continue
-      }
+      if (hasAdditionalMethods(operation, service)) continue
 
       yield { path, httpMethod, operation, service }
+    }
+
+    // Phase 2: additional SDK methods from x-appwrite.methods.
+    for (const httpMethod of REFERENCE_HTTP_METHODS) {
+      const operation = pathItem[httpMethod]
+      if (!operation) continue
+
+      const xAppwrite = operation['x-appwrite'] as
+        | AppwriteOpenApiExtension
+        | undefined
+      if (!isPlatformSupported(xAppwrite, platform)) continue
+      if (xAppwrite?.public === false) continue
+
+      const service = operation.tags?.[0]
+      if (!service) continue
+      if (!hasAdditionalMethods(operation, service)) continue
+
+      yield* processAdditionalMethods(
+        operation,
+        httpMethod,
+        path,
+        service,
+        spec.components,
+      )
     }
   }
 }
@@ -299,10 +316,28 @@ function getOperationOrder(summary: string): number {
   return 8
 }
 
+/** Matches website references specs.ts weight lookup on the source OpenAPI path. */
+function getOperationWeightFromSpec(
+  spec: OpenApiSpec,
+  path: string,
+  httpMethod: string,
+): number {
+  const operation = spec.paths?.[path]?.[httpMethod.toLowerCase()] as
+    | OpenApiOperation
+    | undefined
+  return operation?.['x-appwrite']?.weight ?? 0
+}
+
 /** Matches website references specs.ts: global method order before grouping. */
-function sortMethodsByWeight(methods: ApiExplorerMethod[]): ApiExplorerMethod[] {
-  // Website only compares weight; equal weights keep spec iteration order (stable sort).
-  return [...methods].sort((a, b) => a.weight - b.weight)
+function sortMethodsByWeight(
+  methods: ApiExplorerMethod[],
+  spec: OpenApiSpec,
+): ApiExplorerMethod[] {
+  return [...methods].sort((a, b) => {
+    const aWeight = getOperationWeightFromSpec(spec, a.path, a.httpMethod)
+    const bWeight = getOperationWeightFromSpec(spec, b.path, b.httpMethod)
+    return aWeight - bWeight
+  })
 }
 
 /** Matches website references +page.svelte sortMethods: order within a group. */
@@ -354,7 +389,7 @@ export function parseOpenApiSpec(
       id,
       label: getServiceLabel(id),
       description: getServiceDescription(id, tagDescriptions),
-      methods: sortMethodsByWeight(methods),
+      methods: sortMethodsByWeight(methods, spec),
     }))
     .sort((a, b) => compareServices(a.id, b.id))
 
@@ -365,23 +400,32 @@ export function parseOpenApiSpec(
   }
 }
 
+export function formatResourceGroupLabel(group: string): string {
+  if (!group) return ''
+  return group.replace(/([a-z])([A-Z])/g, '$1 $2')
+}
+
 export function groupMethodsByResource(
   methods: ApiExplorerMethod[],
 ): Array<{ id: string; label: string; methods: ApiExplorerMethod[] }> {
   const groups = new Map<string, ApiExplorerMethod[]>()
+  const groupOrder: string[] = []
 
-  // Methods are already weight-sorted in parseOpenApiSpec (website references pattern).
+  // Methods are weight-sorted in parseOpenApiSpec. Group order follows first
+  // encounter while iterating that sorted list (website references pattern).
   for (const method of methods) {
     const key = method.resourceGroup ?? ''
-    const existing = groups.get(key) ?? []
-    existing.push(method)
-    groups.set(key, existing)
+    if (!groups.has(key)) {
+      groups.set(key, [])
+      groupOrder.push(key)
+    }
+    groups.get(key)!.push(method)
   }
 
-  return Array.from(groups.entries()).map(([id, groupMethods]) => ({
+  return groupOrder.map((id) => ({
     id,
-    label: id ? getServiceLabel(id) : '',
-    methods: sortMethodsByOperationOrder(groupMethods),
+    label: formatResourceGroupLabel(id),
+    methods: sortMethodsByOperationOrder(groups.get(id) ?? []),
   }))
 }
 

@@ -2,7 +2,7 @@ import { differenceInCalendarDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
 
-export type UsageChartInterval = '1m' | '1h' | '1d'
+export type UsageChartInterval = '1h' | '1d'
 
 export const DEFAULT_USAGE_CHART_INTERVAL: UsageChartInterval = '1h'
 
@@ -10,7 +10,6 @@ export const USAGE_CHART_INTERVAL_OPTIONS: {
   value: UsageChartInterval
   label: string
 }[] = [
-  { value: '1m', label: '1m' },
   { value: '1h', label: '1h' },
   { value: '1d', label: '1d' },
 ]
@@ -24,7 +23,6 @@ function resolveChartIntervalDateBounds(dateRange: DateRange | undefined): {
 
 /** Max inclusive calendar days allowed for each interval (null = unlimited). */
 const INTERVAL_MAX_RANGE_DAYS: Record<UsageChartInterval, number | null> = {
-  '1m': 1,
   '1h': 31,
   '1d': null,
 }
@@ -56,9 +54,6 @@ export function getUsageChartIntervalDisabledReason(
   }
 
   const maxDays = getUsageChartIntervalMaxRangeDays(interval)
-  if (interval === '1m') {
-    return 'Use a date range of 24 hours or less for minute intervals.'
-  }
   if (maxDays !== null) {
     return `Use a date range of ${maxDays} days or less for this interval.`
   }

@@ -7,6 +7,8 @@ export type DocsRedirectTarget = {
  * Legacy and convenience redirects for docs paths that do not have index pages.
  */
 const DOCS_REDIRECTS: Record<string, string> = {
+  references: 'references/cloud/client-web/account',
+  'references/quick-start': 'references/cloud/client-web/account',
   'tooling/command-line': 'tooling/command-line/installation',
   'tooling/assistant': 'tooling/ai/assistant',
   'tooling/skills': 'tooling/ai/skills',

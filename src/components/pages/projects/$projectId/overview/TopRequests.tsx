@@ -1,6 +1,13 @@
 import { cn, truncateMiddle } from '@/lib/utils'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
 import {
+  getComputeBreakdownResourceRoute,
+  getComputeBreakdownResourceTypeLabel,
+  type ComputeBreakdownResourceMap,
+} from '@/lib/usage/resolve-compute-breakdown-resources'
+import { Link } from '@tanstack/react-router'
+import { ChevronRight } from 'lucide-react'
+import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   overviewChartPanelBodyClass,
@@ -29,6 +36,11 @@ interface TopRequestsProps {
   className?: string
   title?: string
   metric?: MetricType
+  /** Endpoint rows (method/status/path) vs resource ID rows. */
+  breakdownVariant?: 'endpoint' | 'resource'
+  projectId?: string
+  resourceLookup?: ComputeBreakdownResourceMap
+  itemCount?: number
   items?: RequestItem[]
   formatCount?: (value: number) => string
   isLoading?: boolean
@@ -110,6 +122,10 @@ function getStatusColor(statusCode: number): string {
 export function TopRequests({
   className,
   title,
+  breakdownVariant = 'endpoint',
+  projectId,
+  resourceLookup,
+  itemCount = OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   items,
   formatCount,
   isLoading = false,
@@ -123,8 +139,9 @@ export function TopRequests({
   const maxCount = Math.max(...requestItems.map((r) => r.count), 1)
   const displayTitle = title || 'Top requests'
   const formatValue = formatCount ?? ((value: number) => value.toLocaleString())
+  const isResourceBreakdown = breakdownVariant === 'resource'
   const itemSlots = Array.from(
-    { length: OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT },
+    { length: itemCount },
     (_, index) => requestItems[index] ?? null,
   )
   const showEmptyOverlay = usesLiveItems && !isLoading && !isError && requestItems.length === 0
@@ -171,23 +188,63 @@ export function TopRequests({
                   />
 
                   <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                    <span className="w-9 shrink-0 text-[11px] font-medium text-muted-foreground">
-                      {request.method}
-                    </span>
-                    <span
-                      className={cn(
-                        'w-9 shrink-0 text-center text-[12px] font-medium tabular-nums',
-                        getStatusColor(request.statusCode),
-                      )}
-                    >
-                      {request.statusCode || '—'}
-                    </span>
-                    <span
-                      className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground/70"
-                      title={request.path}
-                    >
-                      {formatBreakdownPath(request.path)}
-                    </span>
+                    {!isResourceBreakdown && (
+                      <>
+                        <span className="w-9 shrink-0 text-[11px] font-medium text-muted-foreground">
+                          {request.method}
+                        </span>
+                        <span
+                          className={cn(
+                            'w-9 shrink-0 text-center text-[12px] font-medium tabular-nums',
+                            getStatusColor(request.statusCode),
+                          )}
+                        >
+                          {request.statusCode || '—'}
+                        </span>
+                      </>
+                    )}
+                    {(() => {
+                      const resource =
+                        isResourceBreakdown && projectId
+                          ? resourceLookup?.[request.path]
+                          : undefined
+                      const fallbackLabel = formatBreakdownPath(request.path)
+
+                      if (resource && projectId) {
+                        const route = getComputeBreakdownResourceRoute(
+                          projectId,
+                          resource,
+                        )
+                        const typeLabel = getComputeBreakdownResourceTypeLabel(
+                          resource.type,
+                        )
+                        return (
+                          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+                            <span className="shrink-0 text-[11px] text-muted-foreground">
+                              {typeLabel}
+                            </span>
+                            <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                            <Link
+                              to={route.to}
+                              params={route.params}
+                              className="min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
+                              title={`${typeLabel} / ${resource.name}`}
+                            >
+                              {resource.name}
+                            </Link>
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <span
+                          className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground/70"
+                          title={request.path}
+                        >
+                          {fallbackLabel}
+                        </span>
+                      )
+                    })()}
                     <span className="shrink-0 text-right text-[12px] font-medium tabular-nums text-muted-foreground">
                       {formatValue(request.count)}
                     </span>

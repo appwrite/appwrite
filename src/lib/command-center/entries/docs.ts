@@ -2,7 +2,7 @@
  * Docs-scope entries (Appwrite documentation at /docs).
  */
 
-import { BookOpen, Cog, FileText, Play } from 'lucide-react'
+import { BookOpen, Code, Cog, Play } from 'lucide-react'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
@@ -43,8 +43,8 @@ const DOCS: CommandEntry[] = [
     scopes: ['docs'],
     kind: 'navigation',
     label: 'API references',
-    description: 'Browse API reference documentation',
-    icon: FileText,
+    description: 'Browse API references documentation',
+    icon: Code,
     keywords: ['api', 'reference', 'sdk'],
     to: () => '/docs/references',
   },

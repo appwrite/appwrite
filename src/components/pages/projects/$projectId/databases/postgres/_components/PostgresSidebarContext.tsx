@@ -19,6 +19,8 @@ import {
   usePostgresQueryHistory,
   usePostgresSavedQueryScope,
   usePostgresSidebarPanel,
+  usePostgresSidebarSchemas,
+  usePostgresSelectedSchema,
   usePostgresSqlEditorPersistence,
   type PostgresSavedQueryLevel,
 } from '@/lib/react-query/hooks/postgres-databases'
@@ -49,12 +51,16 @@ export type SqlEditorTab = {
   sql: string
   tableId?: string
   result: Models.DedicatedDatabaseExecution | null
+  explainResult: Models.DedicatedDatabaseQueryExplanation | null
   error: unknown
+  resultKind?: 'query' | 'explain'
 }
 
 type PostgresSidebarContextValue = {
   panel: PostgresSidebarPanel
   setPanel: (panel: PostgresSidebarPanel) => void
+  selectedSchema: string | null
+  setSelectedSchema: (schema: string) => void
   recentQueries: PostgresRecentQuery[]
   addRecentQuery: (sql: string) => void
   clearRecentQueries: () => void
@@ -83,6 +89,8 @@ type PostgresSidebarContextValue = {
   setActiveTabResult: (
     result: Models.DedicatedDatabaseExecution | null,
     error?: unknown,
+    resultKind?: 'query' | 'explain',
+    explainResult?: Models.DedicatedDatabaseQueryExplanation | null,
   ) => void
 }
 
@@ -113,6 +121,7 @@ function createBlankTab(existingCount: number): SqlEditorTab {
     title: `Query ${existingCount + 1}`,
     sql: DEFAULT_SQL,
     result: null,
+    explainResult: null,
     error: null,
   }
 }
@@ -125,6 +134,7 @@ function createTableTab(tableId: string): SqlEditorTab {
     sql: buildPostgresSelectSql(schema, table, ROWS_DEFAULT_PAGE_SIZE, 0),
     tableId,
     result: null,
+    explainResult: null,
     error: null,
   }
 }
@@ -153,6 +163,7 @@ function openQueryInEditorState(
     title: queryPreviewLabel(trimmed),
     sql: trimmed,
     result: null,
+    explainResult: null,
     error: null,
   }
 
@@ -199,6 +210,7 @@ function duplicateQueryInEditorState(
     title: queryPreviewLabel(trimmed || DEFAULT_SQL),
     sql: trimmed || DEFAULT_SQL,
     result: null,
+    explainResult: null,
     error: null,
   }
 
@@ -251,6 +263,7 @@ function editorTabStateFromPersisted(
     sql: tab.sql,
     tableId: tab.tableId,
     result: null,
+    explainResult: null,
     error: null,
   }))
   const activeTabId = tabs.some((tab) => tab.id === persisted.activeTabId)
@@ -301,6 +314,16 @@ export function PostgresSidebarProvider({
   )
 
   const { panel, setPanel } = usePostgresSidebarPanel(databaseId, account)
+  const { schemas: sidebarSchemas } = usePostgresSidebarSchemas(
+    projectId,
+    databaseId,
+    '',
+  )
+  const { selectedSchema, setSelectedSchema } = usePostgresSelectedSchema(
+    databaseId,
+    sidebarSchemas,
+    account,
+  )
   const { parseInitialEditorState, persistEditorTabState } =
     usePostgresSqlEditorPersistence(databaseId, account)
   const [selectedQueryKey, setSelectedQueryKey] = useState<string | null>(null)
@@ -415,7 +438,14 @@ export function PostgresSidebarProvider({
       ...prev,
       tabs: prev.tabs.map((tab) =>
         tab.id === prev.activeTabId
-          ? { ...tab, sql, result: null, error: null }
+          ? {
+              ...tab,
+              sql,
+              result: null,
+              explainResult: null,
+              error: null,
+              resultKind: undefined,
+            }
           : tab,
       ),
     }))
@@ -425,11 +455,22 @@ export function PostgresSidebarProvider({
     (
       result: Models.DedicatedDatabaseExecution | null,
       error: unknown = null,
+      resultKind: 'query' | 'explain' = 'query',
+      explainResult: Models.DedicatedDatabaseQueryExplanation | null = null,
     ) => {
       setEditorTabState((prev) => ({
         ...prev,
         tabs: prev.tabs.map((tab) =>
-          tab.id === prev.activeTabId ? { ...tab, result, error } : tab,
+          tab.id === prev.activeTabId
+            ? {
+                ...tab,
+                result: resultKind === 'explain' ? null : result,
+                explainResult:
+                  resultKind === 'explain' ? explainResult : null,
+                error,
+                resultKind,
+              }
+            : tab,
         ),
       }))
     },
@@ -592,6 +633,8 @@ export function PostgresSidebarProvider({
     () => ({
       panel,
       setPanel,
+      selectedSchema,
+      setSelectedSchema,
       recentQueries,
       addRecentQuery,
       clearRecentQueries,
@@ -619,6 +662,8 @@ export function PostgresSidebarProvider({
     [
       panel,
       setPanel,
+      selectedSchema,
+      setSelectedSchema,
       recentQueries,
       addRecentQuery,
       clearRecentQueries,

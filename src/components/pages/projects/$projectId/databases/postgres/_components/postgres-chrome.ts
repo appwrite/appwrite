@@ -10,8 +10,7 @@ export const POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS =
 export const POSTGRES_SQL_EDITOR_SURFACE_CLASS =
   'bg-[var(--editor-bg,var(--background))]'
 
-/** Format document in the Postgres SQL editor (Shift+Alt+F). */
-export const POSTGRES_SQL_FORMAT_SHORTCUT_RAW = 'shift+alt+f'
+export { POSTGRES_SQL_FORMAT_SHORTCUT_RAW } from '@/lib/postgres-sql-editor-shortcuts'
 
 /** Filled play icon used for Run query and SQL editor entry points. */
 export const POSTGRES_RUN_QUERY_PLAY_ICON_CLASS =

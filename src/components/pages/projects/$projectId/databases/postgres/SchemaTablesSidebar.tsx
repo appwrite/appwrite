@@ -8,7 +8,6 @@ import {
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
 import {
-  usePostgresSelectedSchema,
   usePostgresSidebarSchemas,
   usePostgresSidebarTables,
   usePostgresSidebarTablesSort,
@@ -67,7 +66,7 @@ export function SchemaTablesSidebar({
   databaseTab,
 }: SchemaTablesSidebarProps) {
   const { account } = useAuth()
-  const { panel, setPanel } = usePostgresSidebar()
+  const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()
 
   const [schemaPickerOpen, setSchemaPickerOpen] = useState(false)
   const [schemaPickerSearch, setSchemaPickerSearch] = useState('')
@@ -116,12 +115,6 @@ export function SchemaTablesSidebar({
     projectId,
     databaseId,
     schemaPickerOpen ? debouncedSchemaPickerSearch : '',
-  )
-
-  const { selectedSchema, setSelectedSchema } = usePostgresSelectedSchema(
-    databaseId,
-    loadedSchemas,
-    account as { prefs?: Record<string, unknown> } | undefined,
   )
 
   const { sort: tablesSort, setSort: setTablesSort } =
@@ -221,97 +214,100 @@ export function SchemaTablesSidebar({
             </p>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col gap-2">
-              <div className="shrink-0 space-y-2">
-                <PostgresSchemaSelector
-                  value={selectedSchema}
-                  schemas={loadedSchemas}
-                  total={schemasTotal}
-                  isLoading={schemasLoading}
-                  isFetching={schemasFetching}
-                  isFetchingNextPage={isFetchingMoreSchemas}
-                  hasNextPage={hasMoreSchemas}
-                  onSelect={setSelectedSchema}
-                  onSearchChange={handleSchemaSearchChange}
-                  onLoadMore={() => void fetchNextSchemaPage()}
-                  onOpenChange={setSchemaPickerOpen}
-                />
-                <div className="flex min-w-0 items-center gap-2">
-                  <div className="relative min-w-0 flex-1">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      value={tableSearch}
-                      onChange={(event) => setTableSearch(event.target.value)}
-                      placeholder="Search tables"
-                      className="h-8 pl-8 pr-8 text-[13px]"
-                      aria-label="Search tables"
-                      disabled={!selectedSchema}
+              <PostgresSchemaSelector
+                value={selectedSchema}
+                schemas={loadedSchemas}
+                total={schemasTotal}
+                isLoading={schemasLoading}
+                isFetching={schemasFetching}
+                isFetchingNextPage={isFetchingMoreSchemas}
+                hasNextPage={hasMoreSchemas}
+                onSelect={setSelectedSchema}
+                onSearchChange={handleSchemaSearchChange}
+                onLoadMore={() => void fetchNextSchemaPage()}
+                onOpenChange={setSchemaPickerOpen}
+              />
+              <div
+                className="-mx-2 h-px shrink-0 bg-border"
+                role="separator"
+                aria-hidden
+              />
+              <div className="flex min-w-0 shrink-0 items-center gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    value={tableSearch}
+                    onChange={(event) => setTableSearch(event.target.value)}
+                    placeholder="Search tables"
+                    className="h-8 pl-8 pr-8 text-[13px]"
+                    aria-label="Search tables"
+                    disabled={!selectedSchema}
+                  />
+                  {tableSearch ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                      aria-label="Clear table search"
+                      onClick={() => setTableSearch('')}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  ) : tablesFetching ? (
+                    <Loader2
+                      className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
+                      aria-hidden
                     />
-                    {tableSearch ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
-                        aria-label="Clear table search"
-                        onClick={() => setTableSearch('')}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    ) : tablesFetching ? (
-                      <Loader2
-                        className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
-                        aria-hidden
-                      />
-                    ) : null}
-                  </div>
-                  <DropdownMenu>
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 shrink-0"
-                              aria-label="Sort tables"
-                              disabled={!selectedSchema}
-                            >
-                              <ArrowUpDown className="h-3.5 w-3.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="text-xs">
-                          Sort tables
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Sort tables
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuRadioGroup
-                        value={tablesSort}
-                        onValueChange={(value) => {
-                          const option = POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS.find(
-                            (item) => item.value === value,
-                          )
-                          if (option) setTablesSort(option.value)
-                        }}
-                      >
-                        {POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS.map((option) => (
-                          <DropdownMenuRadioItem
-                            key={option.value}
-                            value={option.value}
-                          >
-                            {option.label}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  ) : null}
                 </div>
+                <DropdownMenu>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            aria-label="Sort tables"
+                            disabled={!selectedSchema}
+                          >
+                            <ArrowUpDown className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        Sort tables
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Sort tables
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup
+                      value={tablesSort}
+                      onValueChange={(value) => {
+                        const option = POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS.find(
+                          (item) => item.value === value,
+                        )
+                        if (option) setTablesSort(option.value)
+                      }}
+                    >
+                      {POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <div
                 ref={tablesScrollRef}

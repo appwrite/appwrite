@@ -144,16 +144,16 @@ export function ApiExplorerPlatformToggle({
       aria-label="API platform"
     >
       <ToggleGroupItem
-        value="server"
-        className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
-      >
-        Server API
-      </ToggleGroupItem>
-      <ToggleGroupItem
         value="client"
         className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
       >
         Client API
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="server"
+        className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+      >
+        Server API
       </ToggleGroupItem>
     </ToggleGroup>
   )

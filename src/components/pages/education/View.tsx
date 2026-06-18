@@ -9,6 +9,7 @@ import {
   MarketingFeatureGrid,
   MarketingHeroSection,
   MarketingSectionHeading,
+  marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,7 +59,7 @@ export function View() {
       <section className="relative border-b border-border bg-muted/20">
         <SectionSoftLight tone="teal" />
         <div className="relative z-[1] mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className={marketingSplitLayoutClassName({ align: 'center' })}>
             <div>
               <MarketingSectionHeading
                 align="left"
@@ -118,7 +119,7 @@ export function View() {
 
       <section className="border-b border-border bg-muted/10 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className={marketingSplitLayoutClassName({ align: 'center' })}>
             <div>
               <MarketingSectionHeading
                 align="left"

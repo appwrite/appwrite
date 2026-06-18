@@ -14,6 +14,7 @@ import {
   MarketingHeroSection,
   MarketingHeroStats,
   MarketingSectionHeading,
+  marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
 import { allCustomerLogos } from '@/lib/home/customer-logos'
@@ -243,7 +244,7 @@ export function View() {
       <section id={ENTERPRISE_FORM_ID} className="relative scroll-mt-28 border-b border-border">
         <HomeSoftLights variant="testimonials" className="opacity-40" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-start">
+          <div className={marketingSplitLayoutClassName({ align: 'start' })}>
             <div>
               <MarketingSectionHeading
                 align="left"

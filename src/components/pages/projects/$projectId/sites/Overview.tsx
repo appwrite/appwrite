@@ -15,6 +15,7 @@ import {
   Package,
   ChevronDown,
   ExternalLink,
+  ScrollText,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -486,7 +487,7 @@ export function View() {
                   </div>
                 </div>
               </div>
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto [&_button]:w-full [&_button]:justify-start sm:[&_button]:w-auto sm:[&_button]:justify-center [&_a]:w-full [&_a]:justify-start sm:[&_a]:w-auto sm:[&_a]:justify-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -496,7 +497,7 @@ export function View() {
                     >
                       <Download className="mr-1.5 h-4 w-4" />
                       Download
-                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                      <ChevronDown className="ml-auto sm:ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
@@ -547,6 +548,7 @@ export function View() {
                     variant="outline"
                     className="h-9 text-[13px]"
                   >
+                    <ScrollText className="mr-1.5 h-4 w-4" />
                     Build logs
                   </Button>
                 </Link>

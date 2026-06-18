@@ -3,11 +3,8 @@
  * Used in deployment details and create-site deploying wizard.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import * as React from 'react'
-import { Check, Copy } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
@@ -249,7 +246,7 @@ export interface BuildLogsViewProps {
   searchTerm?: string
   /** Log line numbers (1-based) to highlight as selected. */
   selectedLines?: ReadonlySet<number> | null
-  /** When set, rows are selectable on click and a per-row copy control is shown. */
+  /** When set, rows are selectable on click. */
   onLineClick?: (lineNumber: number, event: React.MouseEvent<HTMLDivElement>) => void
   /** Ref map for line elements (e.g. for scroll-into-view) */
   lineRefs?: React.MutableRefObject<Map<number, HTMLDivElement>>
@@ -290,34 +287,6 @@ export function BuildLogsView({
   trailingPadding = true,
   lineHorizontalPaddingClass,
 }: BuildLogsViewProps) {
-  const [copiedLineNumber, setCopiedLineNumber] = useState<number | null>(null)
-  /** Copy stays hidden after a copy until the pointer leaves this line's row (then hover shows it again). */
-  const [copyHiddenUntilLeaveLine, setCopyHiddenUntilLeaveLine] = useState<
-    number | null
-  >(null)
-  const prevSearchTermRef = useRef(searchTerm)
-  const prevBuildLogsRef = useRef<string | undefined>(undefined)
-
-  useEffect(() => {
-    const searchChanged = prevSearchTermRef.current !== searchTerm
-    if (searchChanged) prevSearchTermRef.current = searchTerm
-
-    const logs = buildLogs ?? ''
-    const logsChanged = prevBuildLogsRef.current !== logs
-    if (logsChanged) prevBuildLogsRef.current = logs
-
-    if (searchChanged || logsChanged) {
-      setCopiedLineNumber(null)
-      setCopyHiddenUntilLeaveLine(null)
-    }
-  }, [buildLogs, searchTerm])
-
-  useEffect(() => {
-    if (copiedLineNumber == null) return
-    const id = window.setTimeout(() => setCopiedLineNumber(null), 1800)
-    return () => clearTimeout(id)
-  }, [copiedLineNumber])
-
   const parsedLogs = useMemo(() => {
     if (!buildLogs) return null
 
@@ -346,15 +315,9 @@ export function BuildLogsView({
       lineHorizontalPaddingClass ??
       `pl-4 sm:pl-6 ${trailingPadding ? 'pr-4 sm:pr-6' : 'pr-0'}`
 
-    const showLineActions = !!onLineClick
-
-    const gridStyle: React.CSSProperties = showLineActions
-      ? {
-          gridTemplateColumns: `${lineNumberWidth} minmax(0, 1fr) auto`,
-        }
-      : {
-          gridTemplateColumns: `${lineNumberWidth} minmax(0, 1fr)`,
-        }
+    const gridStyle: React.CSSProperties = {
+      gridTemplateColumns: `${lineNumberWidth} minmax(0, 1fr)`,
+    }
 
     const gutterSpacerRow = (position: 'top' | 'bottom') => (
       <div
@@ -365,7 +328,6 @@ export function BuildLogsView({
       >
         <div className="border-r border-border/50 pr-2" />
         <div className="pl-1" />
-        {showLineActions ? <div className="w-5 shrink-0" /> : null}
       </div>
     )
 
@@ -386,16 +348,7 @@ export function BuildLogsView({
               lineRefs.current.delete(originalLineNumber)
             }
           }}
-          onMouseLeave={
-            showLineActions
-              ? () => {
-                  setCopyHiddenUntilLeaveLine((blocked) =>
-                    blocked === originalLineNumber ? null : blocked,
-                  )
-                }
-              : undefined
-          }
-          className={`grid min-w-0 items-stretch gap-4 group transition-colors ${rowPadding} ${
+          className={`grid min-w-0 items-stretch gap-4 transition-colors ${rowPadding} ${
             isSelected
               ? 'bg-yellow-100/50 dark:bg-yellow-900/20'
               : showHover
@@ -432,51 +385,6 @@ export function BuildLogsView({
           >
             {parsedLine}
           </div>
-          {showLineActions ? (
-            <div
-              className={cn(
-                'flex shrink-0 items-start justify-end self-start transition-opacity duration-150',
-                copiedLineNumber === originalLineNumber
-                  ? 'pointer-events-none opacity-100'
-                  : copyHiddenUntilLeaveLine === originalLineNumber
-                    ? 'pointer-events-none opacity-0'
-                    : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100',
-              )}
-            >
-              {copiedLineNumber === originalLineNumber ? (
-                <div
-                  className="flex h-5 w-5 items-center justify-center text-green-600 dark:text-green-500"
-                  aria-label="Copied"
-                  role="status"
-                >
-                  <Check className="h-3 w-3" strokeWidth={2.5} />
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-5 w-5 min-h-0 shrink-0 p-0 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:ring-inset"
-                  aria-label={`Copy line ${originalLineNumber}`}
-                  title="Copy line"
-                  onClick={async (e) => {
-                    e.stopPropagation()
-                    try {
-                      await navigator.clipboard.writeText(
-                        stripAnsiForClipboard(line),
-                      )
-                      setCopyHiddenUntilLeaveLine(originalLineNumber)
-                      setCopiedLineNumber(originalLineNumber)
-                      toast.success(`Line ${originalLineNumber} copied`)
-                    } catch {
-                      toast.error('Failed to copy')
-                    }
-                  }}
-                >
-                  <Copy className="h-2.5 w-2.5" />
-                </Button>
-              )}
-            </div>
-          ) : null}
         </div>
       )
     })
@@ -492,8 +400,6 @@ export function BuildLogsView({
     buildLogs,
     searchTerm,
     selectedLines,
-    copiedLineNumber,
-    copyHiddenUntilLeaveLine,
     onLineClick,
     lineRefs,
     fontSizeClass,

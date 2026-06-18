@@ -2040,20 +2040,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
-    "slug": "references",
-    "title": "API reference",
-    "description": "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "references/quick-start",
-    "title": "Quick start",
-    "description": "Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
     "slug": "sdks",
     "title": "SDKs",
     "description": "Get started with Appwrite SDKs and learn how to use them to add authentication, user management, file storage, and more to your apps.",

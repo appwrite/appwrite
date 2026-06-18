@@ -1,8 +1,8 @@
 /** Init ticket frame assets — 1024×682 with outer padding baked in. */
-export const INIT_TICKET_BG_SRC_LIGHT = '/images/init/ticket-bg-light.png'
-export const INIT_TICKET_BG_SRC_DARK = '/images/init/ticket-bg-dark.png'
-export const INIT_TICKET_BG_SRC_GOLD = '/images/init/ticket-bg-gold.png'
-export const INIT_TICKET_BG_SRC_SILVER = '/images/init/ticket-bg-silver.png'
+export const INIT_TICKET_BG_SRC_LIGHT = '/images/init/ticket-bg-light.avif'
+export const INIT_TICKET_BG_SRC_DARK = '/images/init/ticket-bg-dark.avif'
+export const INIT_TICKET_BG_SRC_GOLD = '/images/init/ticket-bg-gold.avif'
+export const INIT_TICKET_BG_SRC_SILVER = '/images/init/ticket-bg-silver.avif'
 
 export const INIT_TICKET_IMAGE_WIDTH = 1024
 export const INIT_TICKET_IMAGE_HEIGHT = 682
@@ -13,7 +13,7 @@ export const INIT_TICKET_MAX_WIDTH_PX = 820
 export const INIT_TICKET_COLLAPSED_WIDTH_PX = 240
 
 /**
- * Transparent padding baked into the bottom of ticket PNGs (percent of image height).
+ * Transparent padding baked into the bottom of ticket frame images (percent of image height).
  * Cropped from layout so the drop shadow sits against the visible card edge.
  */
 export const INIT_TICKET_BOTTOM_TRIM_PERCENT = 5

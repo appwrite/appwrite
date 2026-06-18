@@ -9,6 +9,8 @@ import {
   useDocsSearchContext,
 } from '@/components/pages/docs/DocsSearchProvider'
 import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
+import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
+import { ApiReferenceUiPrefsProvider } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
 
 type DocsPageShellProps = {
@@ -43,8 +45,11 @@ function DocsScrollToTop() {
 function DocsPageShellLayout({ children }: DocsPageShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const docsSearch = useDocsSearchContext()
+  const { pathname } = useLocation()
+  const isReferenceExplorer = isApiReferenceExplorerPath(pathname)
+  const isReferencesSection = pathname.startsWith('/docs/references')
 
-  return (
+  const layout = (
     <ConsoleLayout
       header={{
         marketingNav: true,
@@ -64,12 +69,27 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
           />
         ),
       }}
-      showFooter
+      fixedLayout={isReferenceExplorer}
+      showFooter={!isReferenceExplorer}
       footer={{ expanded: false }}
     >
       <DocsScrollToTop />
-      <div className={cn(DOCS_CONTAINER, 'min-w-0 w-full')}>{children}</div>
+      <div
+        className={cn(
+          isReferenceExplorer
+            ? 'flex h-full min-h-0 w-full min-w-0 flex-col'
+            : cn(DOCS_CONTAINER, 'min-w-0 w-full'),
+        )}
+      >
+        {children}
+      </div>
     </ConsoleLayout>
+  )
+
+  return isReferencesSection ? (
+    <ApiReferenceUiPrefsProvider>{layout}</ApiReferenceUiPrefsProvider>
+  ) : (
+    layout
   )
 }
 

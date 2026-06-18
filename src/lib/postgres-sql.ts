@@ -666,6 +666,7 @@ export function formatPostgresQueryDurationMs(ms: number): string {
   return `${minutes} min ${remainingSeconds.toFixed(0)} s`
 }
 
+/** Default SELECT for the SQL editor (no API trace comment). */
 export function buildPostgresSelectSql(
   schema: string,
   table: string,
@@ -673,10 +674,7 @@ export function buildPostgresSelectSql(
   offset: number,
 ): string {
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return prefixPostgresSqlComment(
-    `SELECT * FROM ${qualified} LIMIT ${limit} OFFSET ${offset}`,
-    'Select table rows',
-  )
+  return `SELECT * FROM ${qualified} LIMIT ${limit} OFFSET ${offset}`
 }
 
 export function buildPostgresCountSql(schema: string, table: string): string {

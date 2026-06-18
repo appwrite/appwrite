@@ -1,5 +1,6 @@
 import {
   useExecutePostgresSql,
+  useExplainPostgresSql,
   usePostgresTableRows,
 } from '@/lib/react-query/hooks'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -139,6 +140,7 @@ export function PostgresSqlWorkbenchContent({
   )
 
   const executeSql = useExecutePostgresSql(projectId, databaseId)
+  const explainSql = useExplainPostgresSql(projectId, databaseId)
 
   const tableColumns =
     columns.length > 0
@@ -152,15 +154,15 @@ export function PostgresSqlWorkbenchContent({
     if (!trimmed) return
 
     if (editorActiveTab.error) {
-      setActiveTabResult(editorActiveTab.result, null)
+      setActiveTabResult(editorActiveTab.result, null, 'query')
     }
 
     try {
       const result = await executeSql.mutateAsync(trimmed)
-      setActiveTabResult(result, null)
+      setActiveTabResult(result, null, 'query')
       addRecentQuery(trimmed)
     } catch (error) {
-      setActiveTabResult(null, error)
+      setActiveTabResult(null, error, 'query')
     }
   }, [
     addRecentQuery,
@@ -168,6 +170,28 @@ export function PostgresSqlWorkbenchContent({
     editorActiveTab.result,
     editorActiveTab.sql,
     executeSql,
+    setActiveTabResult,
+  ])
+
+  const handleExplainSql = useCallback(async () => {
+    const trimmed = editorActiveTab.sql.trim()
+    if (!trimmed) return
+
+    if (editorActiveTab.error) {
+      setActiveTabResult(editorActiveTab.result, null, 'explain')
+    }
+
+    try {
+      const explanation = await explainSql.mutateAsync(trimmed)
+      setActiveTabResult(null, null, 'explain', explanation)
+    } catch (error) {
+      setActiveTabResult(null, error, 'explain', null)
+    }
+  }, [
+    editorActiveTab.error,
+    editorActiveTab.result,
+    editorActiveTab.sql,
+    explainSql,
     setActiveTabResult,
   ])
 
@@ -251,9 +275,13 @@ export function PostgresSqlWorkbenchContent({
         onCloseTab={closeTab}
         onReorderTabs={reorderTabs}
         onRun={handleRunSql}
+        onExplain={handleExplainSql}
         isRunning={executeSql.isPending}
-        error={editorActiveTab.error ?? executeSql.error}
+        isExplaining={explainSql.isPending}
+        error={editorActiveTab.error ?? executeSql.error ?? explainSql.error}
         result={editorActiveTab.result}
+        explainResult={editorActiveTab.explainResult}
+        resultKind={editorActiveTab.resultKind}
         account={accountPrefs}
         teamId={teamId}
         canSaveTeam={canSaveTeam}

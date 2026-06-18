@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Bookmark, Braces, Loader2, Play, Redo2, Undo2 } from 'lucide-react'
+import { Bookmark, Braces, ListTree, Loader2, Play, Redo2, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -8,10 +8,17 @@ import {
 } from '@/components/ui/tooltip'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import {
+  POSTGRES_SQL_EXPLAIN_SHORTCUT_RAW,
+  POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+  POSTGRES_SQL_REDO_SHORTCUT_RAW,
+  POSTGRES_SQL_RUN_SHORTCUT_RAW,
+  POSTGRES_SQL_SAVE_SHORTCUT_RAW,
+  POSTGRES_SQL_UNDO_SHORTCUT_RAW,
+} from '@/lib/postgres-sql-editor-shortcuts'
 import { cn } from '@/lib/utils'
 import {
   POSTGRES_SQL_EDITOR_SURFACE_CLASS,
-  POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
   POSTGRES_RUN_QUERY_PLAY_ICON_CLASS,
 } from './postgres-chrome'
 
@@ -21,36 +28,43 @@ type SqlEditorActionBarProps = {
   canSave: boolean
   canFormat: boolean
   canRun: boolean
+  canExplain: boolean
   isRunning: boolean
+  isExplaining: boolean
   onUndo: () => void
   onRedo: () => void
   onSave: () => void
   onFormat: () => void
   onRun: () => void
+  onExplain: () => void
 }
 
 function ActionDivider() {
   return <div className="mx-0.5 h-5 w-px shrink-0 bg-border/80" aria-hidden />
 }
 
-function DisabledActionTooltip({
-  disabled,
-  reason,
+function formatShortcutLabel(raw: string, isMac: boolean) {
+  return formatDisplayKeys(raw, isMac).join('')
+}
+
+function ShortcutTooltip({
+  enabled,
+  disabledReason,
+  enabledLabel,
   children,
 }: {
-  disabled: boolean
-  reason?: string
+  enabled: boolean
+  disabledReason?: string
+  enabledLabel: string
   children: ReactNode
 }) {
-  if (!disabled || !reason) return <>{children}</>
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span className="inline-flex">{children}</span>
       </TooltipTrigger>
       <TooltipContent side="top" sideOffset={6} className="text-[12px]">
-        {reason}
+        {enabled ? enabledLabel : disabledReason}
       </TooltipContent>
     </Tooltip>
   )
@@ -62,18 +76,26 @@ export function SqlEditorActionBar({
   canSave,
   canFormat,
   canRun,
+  canExplain,
   isRunning,
+  isExplaining,
   onUndo,
   onRedo,
   onSave,
   onFormat,
   onRun,
+  onExplain,
 }: SqlEditorActionBarProps) {
   const { isMac } = usePlatform()
-  const formatShortcutLabel = formatDisplayKeys(
-    POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+  const undoShortcut = formatShortcutLabel(POSTGRES_SQL_UNDO_SHORTCUT_RAW, isMac)
+  const redoShortcut = formatShortcutLabel(POSTGRES_SQL_REDO_SHORTCUT_RAW, isMac)
+  const saveShortcut = formatShortcutLabel(POSTGRES_SQL_SAVE_SHORTCUT_RAW, isMac)
+  const formatShortcut = formatShortcutLabel(POSTGRES_SQL_FORMAT_SHORTCUT_RAW, isMac)
+  const explainShortcut = formatShortcutLabel(
+    POSTGRES_SQL_EXPLAIN_SHORTCUT_RAW,
     isMac,
-  ).join('')
+  )
+  const runShortcut = formatShortcutLabel(POSTGRES_SQL_RUN_SHORTCUT_RAW, isMac)
 
   return (
     <div
@@ -84,9 +106,10 @@ export function SqlEditorActionBar({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-0.5">
-          <DisabledActionTooltip
-            disabled={!canUndo}
-            reason="Nothing to undo."
+          <ShortcutTooltip
+            enabled={canUndo}
+            disabledReason="Nothing to undo."
+            enabledLabel={`Undo (${undoShortcut})`}
           >
             <Button
               type="button"
@@ -100,11 +123,12 @@ export function SqlEditorActionBar({
             >
               <Undo2 className="h-3.5 w-3.5 shrink-0" />
             </Button>
-          </DisabledActionTooltip>
+          </ShortcutTooltip>
 
-          <DisabledActionTooltip
-            disabled={!canRedo}
-            reason="Nothing to redo."
+          <ShortcutTooltip
+            enabled={canRedo}
+            disabledReason="Nothing to redo."
+            enabledLabel={`Redo (${redoShortcut})`}
           >
             <Button
               type="button"
@@ -118,78 +142,107 @@ export function SqlEditorActionBar({
             >
               <Redo2 className="h-3.5 w-3.5 shrink-0" />
             </Button>
-          </DisabledActionTooltip>
+          </ShortcutTooltip>
         </div>
 
-        <div className={cn('flex items-center gap-0.5')}>
-        <DisabledActionTooltip
-          disabled={!canSave}
-          reason="Write SQL before saving a query."
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 gap-1.5 px-2.5 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            onClick={onSave}
-            disabled={!canSave}
+        <div className={cn('flex items-center gap-1')}>
+          <ShortcutTooltip
+            enabled={canSave}
+            disabledReason="Write SQL before saving a query."
+            enabledLabel={`Save query (${saveShortcut})`}
           >
-            <Bookmark className="h-3.5 w-3.5 shrink-0" />
-            Save
-          </Button>
-        </DisabledActionTooltip>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 px-2.5 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              onClick={onSave}
+              disabled={!canSave}
+            >
+              <Bookmark className="h-3.5 w-3.5 shrink-0" />
+              Save
+            </Button>
+          </ShortcutTooltip>
 
-        <ActionDivider />
+          <ActionDivider />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-1.5 px-2.5 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                onClick={onFormat}
-                disabled={!canFormat}
-              >
-                <Braces className="h-3.5 w-3.5 shrink-0" />
-                Format
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={6} className="text-[12px]">
-            {canFormat
-              ? `Format SQL (${formatShortcutLabel})`
-              : 'Write SQL before formatting.'}
-          </TooltipContent>
-        </Tooltip>
-
-        <ActionDivider />
-
-        <DisabledActionTooltip
-          disabled={!canRun}
-          reason={
-            isRunning
-              ? 'Query is running.'
-              : 'Write SQL before running a query.'
-          }
-        >
-          <Button
-            type="button"
-            variant="brandCta"
-            size="sm"
-            className="h-8 gap-1.5 px-3 text-[12px] font-semibold shadow-sm"
-            onClick={onRun}
-            disabled={!canRun}
+          <ShortcutTooltip
+            enabled={canFormat}
+            disabledReason="Write SQL before formatting."
+            enabledLabel={`Format SQL (${formatShortcut})`}
           >
-            {isRunning ? (
-              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-            ) : (
-              <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
-            )}
-            Run query
-          </Button>
-        </DisabledActionTooltip>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 px-2.5 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              onClick={onFormat}
+              disabled={!canFormat}
+            >
+              <Braces className="h-3.5 w-3.5 shrink-0" />
+              Format
+            </Button>
+          </ShortcutTooltip>
+
+          <ActionDivider />
+
+          <ShortcutTooltip
+            enabled={canExplain}
+            disabledReason={
+              isExplaining
+                ? 'Query explanation is running.'
+                : isRunning
+                  ? 'Query is running.'
+                  : 'Write SQL before explaining a query.'
+            }
+            enabledLabel={`Explain (${explainShortcut})`}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 px-3 text-[12px] font-medium"
+              onClick={onExplain}
+              disabled={!canExplain}
+            >
+              {isExplaining ? (
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+              ) : (
+                <ListTree className="h-3.5 w-3.5 shrink-0" />
+              )}
+              Explain
+            </Button>
+          </ShortcutTooltip>
+
+          <ActionDivider />
+
+          <ShortcutTooltip
+            enabled={canRun}
+            disabledReason={
+              isRunning
+                ? 'Query is running.'
+                : isExplaining
+                  ? 'Query explanation is running.'
+                  : 'Write SQL before running a query.'
+            }
+            enabledLabel={`Run (${runShortcut})`}
+          >
+            <Button
+              type="button"
+              variant="brandCta"
+              size="sm"
+              className="h-8 gap-1.5 px-3 text-[12px] font-semibold shadow-sm"
+              onClick={onRun}
+              disabled={!canRun}
+            >
+              {isRunning ? (
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+              ) : (
+                <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
+              )}
+              Run
+            </Button>
+          </ShortcutTooltip>
         </div>
       </div>
     </div>

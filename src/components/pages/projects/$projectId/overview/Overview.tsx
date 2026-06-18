@@ -19,10 +19,10 @@ import {
 import { cn } from '@/lib/utils'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
-import { dashboardStats, formatNumber } from '@/lib/utils/mock-data'
 import {
   useProject,
   usePlatforms,
@@ -33,6 +33,10 @@ import {
   fetchApiKeys,
   useProjectBandwidthOverview,
   useProjectRequestsOverview,
+  useProjectExecutionsOverview,
+  useProjectGbHoursOverview,
+  useProjectStorageOverview,
+  useComputeBreakdownResources,
 } from '@/lib/react-query/hooks'
 import {
   formatBandwidthTotal,
@@ -40,9 +44,21 @@ import {
   sumUsageChartPoints,
 } from '@/lib/usage/bandwidth-events'
 import {
+  formatExecutionsTotal,
+  formatExecutionsValue,
+} from '@/lib/usage/executions-events'
+import {
+  formatGbHoursTotal,
+  formatGbHoursValue,
+} from '@/lib/usage/gb-hours-events'
+import {
   formatRequestsTotal,
   formatRequestsValue,
 } from '@/lib/usage/requests-events'
+import {
+  formatStorageTotal,
+  formatStorageValue,
+} from '@/lib/usage/storage-gauges'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import {
@@ -84,10 +100,18 @@ import {
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
   OVERVIEW_REQUESTS_ERROR,
+  OVERVIEW_EXECUTIONS_ERROR,
+  OVERVIEW_GB_HOURS_ERROR,
+  OVERVIEW_STORAGE_ERROR,
   overviewChartColumnClass,
   overviewChartContentRowClass,
   overviewBreakdownColumnClass,
+  overviewChartPanelBodyClass,
+  overviewChartPanelHeaderClass,
+  OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT,
 } from './chart-panel'
+import { OverviewChartPanelError } from './OverviewChartPanelError'
+import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
 
 interface OverviewTab {
   id: string
@@ -98,39 +122,6 @@ interface OverviewTab {
   /** When true, the tab KPI shows a skeleton instead of value/change. */
   isLoading?: boolean
 }
-
-const mockOverviewTabs: OverviewTab[] = [
-  {
-    id: 'bandwidth',
-    value: `${dashboardStats.totalBandwidth}GB`,
-    label: 'Bandwidth',
-    change: dashboardStats.bandwidthChange,
-  },
-  {
-    id: 'requests',
-    value: formatNumber(dashboardStats.totalRequests),
-    label: 'Requests',
-    change: dashboardStats.requestsChange,
-  },
-  {
-    id: 'storage',
-    value: `${dashboardStats.totalStorage}GB`,
-    label: 'Storage',
-    change: dashboardStats.storageChange,
-  },
-  {
-    id: 'executions',
-    value: formatNumber(dashboardStats.totalExecutions),
-    label: 'Executions',
-    change: dashboardStats.executionsChange,
-  },
-  {
-    id: 'gbhours',
-    value: `${dashboardStats.totalGbHours}`,
-    label: 'GB-hours',
-    change: dashboardStats.gbHoursChange,
-  },
-]
 
 interface Integration {
   id: string
@@ -230,6 +221,12 @@ export function View({ projectId, initialData }: ViewProps) {
   }
 
   const usageStatsEnabled = features.usageStats
+  const { disableUsageBreakdownQueries } = useDebugOverrides()
+  const showUsageBreakdownPanels = !disableUsageBreakdownQueries
+  const overviewMainChartColumnClass = cn(
+    overviewChartColumnClass,
+    !showUsageBreakdownPanels && '@[700px]:border-r-0',
+  )
 
   const {
     data: bandwidthUsage,
@@ -255,11 +252,82 @@ export function View({ projectId, initialData }: ViewProps) {
     chartInterval,
   )
 
+  const {
+    data: executionsUsage,
+    isLoading: isExecutionsLoading,
+    isError: isExecutionsError,
+    refetch: refetchExecutions,
+  } = useProjectExecutionsOverview(
+    projectId,
+    dashboardChartDateRange,
+    usageStatsEnabled,
+    chartInterval,
+  )
+
+  const {
+    data: gbHoursUsage,
+    isLoading: isGbHoursLoading,
+    isError: isGbHoursError,
+    refetch: refetchGbHours,
+  } = useProjectGbHoursOverview(
+    projectId,
+    dashboardChartDateRange,
+    usageStatsEnabled,
+    chartInterval,
+  )
+
+  const {
+    data: storageUsage,
+    isLoading: isStorageLoading,
+    isError: isStorageError,
+    refetch: refetchStorage,
+  } = useProjectStorageOverview(
+    projectId,
+    dashboardChartDateRange,
+    usageStatsEnabled,
+    chartInterval,
+  )
+
   const showBandwidthChartLoading =
     isBandwidthLoading && !isBandwidthError && !bandwidthUsage
 
   const showRequestsChartLoading =
     isRequestsLoading && !isRequestsError && !requestsUsage
+
+  const showExecutionsChartLoading =
+    isExecutionsLoading && !isExecutionsError && !executionsUsage
+
+  const showGbHoursChartLoading =
+    isGbHoursLoading && !isGbHoursError && !gbHoursUsage
+
+  const showStorageChartLoading =
+    isStorageLoading && !isStorageError && !storageUsage
+
+  const executionBreakdownIds = useMemo(
+    () => executionsUsage?.topConsumers.map((item) => item.id) ?? [],
+    [executionsUsage?.topConsumers],
+  )
+
+  const gbHoursBreakdownIds = useMemo(
+    () => gbHoursUsage?.topConsumers.map((item) => item.id) ?? [],
+    [gbHoursUsage?.topConsumers],
+  )
+
+  const { data: executionBreakdownResources } = useComputeBreakdownResources(
+    projectId,
+    executionBreakdownIds,
+    usageStatsEnabled &&
+      showUsageBreakdownPanels &&
+      executionBreakdownIds.length > 0,
+  )
+
+  const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
+    projectId,
+    gbHoursBreakdownIds,
+    usageStatsEnabled &&
+      showUsageBreakdownPanels &&
+      gbHoursBreakdownIds.length > 0,
+  )
 
   const overviewTabs = useMemo(() => {
     const bandwidthTab: OverviewTab = isBandwidthError
@@ -310,14 +378,99 @@ export function View({ projectId, initialData }: ViewProps) {
             change: requestsUsage?.changePercent ?? 0,
           }
 
-    return [bandwidthTab, requestsTab, ...mockOverviewTabs.slice(2)]
+    const storageTab: OverviewTab = isStorageError
+      ? {
+          id: 'storage',
+          value: OVERVIEW_METRIC_NOT_AVAILABLE,
+          label: 'Storage',
+          change: null,
+        }
+      : showStorageChartLoading
+        ? {
+            id: 'storage',
+            value: '',
+            label: 'Storage',
+            change: null,
+            isLoading: true,
+          }
+        : {
+            id: 'storage',
+            value: formatStorageTotal(storageUsage?.latestValue ?? 0),
+            label: 'Storage',
+            change: storageUsage?.changePercent ?? 0,
+          }
+
+    const executionsTab: OverviewTab = isExecutionsError
+      ? {
+          id: 'executions',
+          value: OVERVIEW_METRIC_NOT_AVAILABLE,
+          label: 'Executions',
+          change: null,
+        }
+      : showExecutionsChartLoading
+        ? {
+            id: 'executions',
+            value: '',
+            label: 'Executions',
+            change: null,
+            isLoading: true,
+          }
+        : {
+            id: 'executions',
+            value: formatExecutionsTotal(
+              sumUsageChartPoints(executionsUsage?.chartPoints ?? []),
+            ),
+            label: 'Executions',
+            change: executionsUsage?.changePercent ?? 0,
+          }
+
+    const gbHoursTab: OverviewTab = isGbHoursError
+      ? {
+          id: 'gbhours',
+          value: OVERVIEW_METRIC_NOT_AVAILABLE,
+          label: 'GB-hours',
+          change: null,
+        }
+      : showGbHoursChartLoading
+        ? {
+            id: 'gbhours',
+            value: '',
+            label: 'GB-hours',
+            change: null,
+            isLoading: true,
+          }
+        : {
+            id: 'gbhours',
+            value: formatGbHoursTotal(
+              sumUsageChartPoints(gbHoursUsage?.chartPoints ?? []),
+            ),
+            label: 'GB-hours',
+            change: gbHoursUsage?.changePercent ?? 0,
+          }
+
+    return [
+      bandwidthTab,
+      requestsTab,
+      storageTab,
+      executionsTab,
+      gbHoursTab,
+    ]
   }, [
     bandwidthUsage,
     isBandwidthError,
     requestsUsage,
     isRequestsError,
+    storageUsage,
+    isStorageError,
+    executionsUsage,
+    isExecutionsError,
+    gbHoursUsage,
+    isGbHoursError,
     showBandwidthChartLoading,
     showRequestsChartLoading,
+    showStorageChartLoading,
+    showExecutionsChartLoading,
+    showGbHoursChartLoading,
   ])
 
   const goToAddAppWizard = (kind?: AddAppKind) => {
@@ -770,7 +923,7 @@ export function View({ projectId, initialData }: ViewProps) {
                 activeTab !== 'bandwidth' && 'hidden',
               )}
             >
-                <div className={overviewChartColumnClass}>
+                <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
                     showSession={chartShowSession}
@@ -787,20 +940,22 @@ export function View({ projectId, initialData }: ViewProps) {
                     formatValue={formatBandwidthValue}
                   />
                 </div>
-                <div className={overviewBreakdownColumnClass}>
-                  <TopRequests
-                    className="min-h-0 flex-1"
-                    title="Top bandwidth consumers"
-                    metric="bandwidth"
-                    items={
-                      isBandwidthError ? [] : bandwidthUsage?.topConsumers
-                    }
-                    formatCount={formatBandwidthValue}
-                    isLoading={showBandwidthChartLoading}
-                    isError={isBandwidthError}
-                    onRetry={() => void refetchBandwidth()}
-                  />
-                </div>
+                {showUsageBreakdownPanels ? (
+                  <div className={overviewBreakdownColumnClass}>
+                    <TopRequests
+                      className="min-h-0 flex-1"
+                      title="Top bandwidth consumers"
+                      metric="bandwidth"
+                      items={
+                        isBandwidthError ? [] : bandwidthUsage?.topConsumers
+                      }
+                      formatCount={formatBandwidthValue}
+                      isLoading={showBandwidthChartLoading}
+                      isError={isBandwidthError}
+                      onRetry={() => void refetchBandwidth()}
+                    />
+                  </div>
+                ) : null}
               </div>
 
             <div
@@ -809,7 +964,7 @@ export function View({ projectId, initialData }: ViewProps) {
                 activeTab !== 'requests' && 'hidden',
               )}
             >
-                <div className={overviewChartColumnClass}>
+                <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
                     showSession={chartShowSession}
@@ -828,86 +983,179 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                   />
                 </div>
-                <div className={overviewBreakdownColumnClass}>
-                  <TopRequests
-                    className="min-h-0 flex-1"
-                    title="Top requested endpoints"
-                    metric="requests"
-                    items={
-                      isRequestsError ? [] : requestsUsage?.topEndpoints
-                    }
-                    formatCount={formatRequestsValue}
-                    isLoading={showRequestsChartLoading}
-                    isError={isRequestsError}
-                    onRetry={() => void refetchRequests()}
-                    errorTitle={OVERVIEW_REQUESTS_ERROR.title}
-                    errorMessage={OVERVIEW_REQUESTS_ERROR.message}
-                  />
-                </div>
+                {showUsageBreakdownPanels ? (
+                  <div className={overviewBreakdownColumnClass}>
+                    <TopRequests
+                      className="min-h-0 flex-1"
+                      title="Top requested endpoints"
+                      metric="requests"
+                      items={
+                        isRequestsError ? [] : requestsUsage?.topEndpoints
+                      }
+                      formatCount={formatRequestsValue}
+                      isLoading={showRequestsChartLoading}
+                      isError={isRequestsError}
+                      onRetry={() => void refetchRequests()}
+                      errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+                      errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+                    />
+                  </div>
+                ) : null}
               </div>
 
-            {activeTab === 'storage' && (
-              <div className={overviewChartContentRowClass}>
-                <div className={overviewChartColumnClass}>
+            <div
+              className={cn(
+                overviewChartContentRowClass,
+                activeTab !== 'storage' && 'hidden',
+              )}
+            >
+                <div className={overviewMainChartColumnClass}>
+                  <div className="flex h-full min-w-0 flex-col">
+                    <div className={overviewChartPanelHeaderClass}>
+                      <h3 className="text-[13px] font-medium text-foreground">
+                        File storage
+                      </h3>
+                    </div>
+                    <div className={overviewChartPanelBodyClass}>
+                      {isStorageError ? (
+                        <OverviewChartPanelError
+                          title={OVERVIEW_STORAGE_ERROR.title}
+                          message={OVERVIEW_STORAGE_ERROR.message}
+                          onRetry={() => void refetchStorage()}
+                        />
+                      ) : showStorageChartLoading ? (
+                        <OverviewChartPanelSkeleton variant="chart" embedded />
+                      ) : (
+                        <div className="flex min-h-[240px] flex-1 flex-col justify-center gap-2">
+                          <p className="text-[13px] text-muted-foreground">
+                            Current file storage in selected period
+                          </p>
+                          <p className="text-[28px] font-semibold tabular-nums text-foreground">
+                            {formatStorageTotal(storageUsage?.latestValue ?? 0)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {showUsageBreakdownPanels ? (
+                  <div className={overviewBreakdownColumnClass}>
+                    <TopRequests
+                      className="min-h-0 flex-1"
+                      title="Top storage buckets"
+                      metric="storage"
+                      breakdownVariant="resource"
+                      items={
+                        isStorageError ? [] : storageUsage?.topConsumers
+                      }
+                      formatCount={formatStorageValue}
+                      isLoading={showStorageChartLoading}
+                      isError={isStorageError}
+                      onRetry={() => void refetchStorage()}
+                      errorTitle={OVERVIEW_STORAGE_ERROR.title}
+                      errorMessage={OVERVIEW_STORAGE_ERROR.message}
+                    />
+                  </div>
+                ) : null}
+              </div>
+
+            <div
+              className={cn(
+                overviewChartContentRowClass,
+                activeTab !== 'executions' && 'hidden',
+              )}
+            >
+                <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
                     showSession={chartShowSession}
-                    title="Storage usage over time"
-                    metric="storage"
-                    dateRange={dashboardChartDateRange}
-                  />
-                </div>
-                <div className={overviewBreakdownColumnClass}>
-                  <TopRequests
-                    className="min-h-0 flex-1"
-                    title="Top storage buckets"
-                    metric="storage"
-                  />
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'executions' && (
-              <div className={overviewChartContentRowClass}>
-                <div className={overviewChartColumnClass}>
-                  <RequestsChart
-                    className="@[700px]:min-h-0 @[700px]:flex-1"
-                    showSession={chartShowSession}
+                    isPanelVisible={activeTab === 'executions'}
                     title="Executions over time"
                     metric="executions"
                     dateRange={dashboardChartDateRange}
+                    chartData={
+                      isExecutionsError ? [] : executionsUsage?.chartPoints
+                    }
+                    isLoading={showExecutionsChartLoading}
+                    isError={isExecutionsError}
+                    onRetry={() => void refetchExecutions()}
+                    formatValue={formatExecutionsValue}
+                    errorTitle={OVERVIEW_EXECUTIONS_ERROR.title}
+                    errorMessage={OVERVIEW_EXECUTIONS_ERROR.message}
                   />
                 </div>
-                <div className={overviewBreakdownColumnClass}>
-                  <TopRequests
-                    className="min-h-0 flex-1"
-                    title="Top executed functions"
-                    metric="executions"
-                  />
-                </div>
+                {showUsageBreakdownPanels ? (
+                  <div className={overviewBreakdownColumnClass}>
+                    <TopRequests
+                      className="min-h-0 flex-1"
+                      title="Top executed functions"
+                      metric="executions"
+                      breakdownVariant="resource"
+                      projectId={projectId}
+                      resourceLookup={executionBreakdownResources?.resources}
+                      itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
+                      items={
+                        isExecutionsError ? [] : executionsUsage?.topConsumers
+                      }
+                      formatCount={formatExecutionsValue}
+                      isLoading={showExecutionsChartLoading}
+                      isError={isExecutionsError}
+                      onRetry={() => void refetchExecutions()}
+                      errorTitle={OVERVIEW_EXECUTIONS_ERROR.title}
+                      errorMessage={OVERVIEW_EXECUTIONS_ERROR.message}
+                    />
+                  </div>
+                ) : null}
               </div>
-            )}
 
-            {activeTab === 'gbhours' && (
-              <div className={overviewChartContentRowClass}>
-                <div className={overviewChartColumnClass}>
+            <div
+              className={cn(
+                overviewChartContentRowClass,
+                activeTab !== 'gbhours' && 'hidden',
+              )}
+            >
+                <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
                     showSession={chartShowSession}
+                    isPanelVisible={activeTab === 'gbhours'}
                     title="GB-hours over time"
                     metric="gbhours"
                     dateRange={dashboardChartDateRange}
+                    chartData={
+                      isGbHoursError ? [] : gbHoursUsage?.chartPoints
+                    }
+                    isLoading={showGbHoursChartLoading}
+                    isError={isGbHoursError}
+                    onRetry={() => void refetchGbHours()}
+                    formatValue={formatGbHoursValue}
+                    errorTitle={OVERVIEW_GB_HOURS_ERROR.title}
+                    errorMessage={OVERVIEW_GB_HOURS_ERROR.message}
                   />
                 </div>
-                <div className={overviewBreakdownColumnClass}>
-                  <TopRequests
-                    className="min-h-0 flex-1"
-                    title="Top GB-hours consumers"
-                    metric="gbhours"
-                  />
-                </div>
+                {showUsageBreakdownPanels ? (
+                  <div className={overviewBreakdownColumnClass}>
+                    <TopRequests
+                      className="min-h-0 flex-1"
+                      title="Top GB-hours consumers"
+                      metric="gbhours"
+                      breakdownVariant="resource"
+                      projectId={projectId}
+                      resourceLookup={gbHoursBreakdownResources?.resources}
+                      itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
+                      items={
+                        isGbHoursError ? [] : gbHoursUsage?.topConsumers
+                      }
+                      formatCount={formatGbHoursValue}
+                      isLoading={showGbHoursChartLoading}
+                      isError={isGbHoursError}
+                      onRetry={() => void refetchGbHours()}
+                      errorTitle={OVERVIEW_GB_HOURS_ERROR.title}
+                      errorMessage={OVERVIEW_GB_HOURS_ERROR.message}
+                    />
+                  </div>
+                ) : null}
               </div>
-            )}
           </div>
         )}
 

@@ -449,7 +449,7 @@ packages:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
   '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@1a5604f':
-    resolution: {integrity: sha512-rTSBXaSROcQaZ8X6t7QdimAj9b/tucx705EJYCka5e7mifcl3tbGTysqofTXsr3nw9treqWA2S08Z0fzUgycDA==}
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@1a5604f}
     version: 14.0.0
     engines: {node: '>=18.0.0'}
 
