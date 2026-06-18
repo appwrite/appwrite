@@ -27,8 +27,6 @@ import type { CompactFilterKey } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
 import {
   Users,
-  LayoutGrid,
-  List,
   AlertCircle,
   CheckCircle2,
   XCircle,
@@ -61,6 +59,7 @@ import {
 } from '@/lib/react-query/hooks/users'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -1241,38 +1240,18 @@ export function View({
       </div>
     ) : undefined
 
-  const ViewToggle = ({
-    viewMode,
-    onViewModeChange,
-  }: {
-    viewMode: 'list' | 'grid'
-    onViewModeChange: (mode: 'list' | 'grid') => void
-  }) => (
-    <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => onViewModeChange('list')}
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => onViewModeChange('grid')}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
-    </div>
-  )
+  const viewToggle =
+    activeTab === 'users' ? (
+      <ServiceListViewToggle
+        viewMode={usersViewMode}
+        onViewModeChange={setUsersViewMode}
+      />
+    ) : activeTab === 'teams' ? (
+      <ServiceListViewToggle
+        viewMode={teamsViewMode}
+        onViewModeChange={setTeamsViewMode}
+      />
+    ) : undefined
 
   // Don't render if we're on a detail route (those have their own components)
   // This check is placed after all hooks to comply with React's rules of hooks
@@ -1392,19 +1371,7 @@ export function View({
         }
         fullWidthBorder
         contentAfterBorder={smtpAlert}
-        beforeCreateButtons={
-          activeTab === 'users' ? (
-            <ViewToggle
-              viewMode={usersViewMode}
-              onViewModeChange={setUsersViewMode}
-            />
-          ) : activeTab === 'teams' ? (
-            <ViewToggle
-              viewMode={teamsViewMode}
-              onViewModeChange={setTeamsViewMode}
-            />
-          ) : undefined
-        }
+        rightContent={viewToggle}
       />
 
       <div

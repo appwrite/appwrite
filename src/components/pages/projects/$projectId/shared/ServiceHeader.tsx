@@ -68,7 +68,7 @@ interface ServiceHeaderProps {
   fullWidthBorder?: boolean
   /** When true, removes max-width constraints to allow full-width layout */
   fullWidth?: boolean
-  /** Custom content to render on the right side of the toolbar (before the create button) */
+  /** Custom content after search/filters in the left toolbar cluster (e.g. list/grid toggle) */
   rightContent?: React.ReactNode
   /** Custom buttons to render in the action buttons group (right before the create button) */
   beforeCreateButtons?: React.ReactNode
@@ -497,44 +497,46 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 'border-b border-border',
             )}
           >
-            {/* Search */}
-            {onSearchChange && (
-              <div className="relative min-w-0 flex-1 shrink @[520px]:w-64 @[520px]:flex-none @[520px]:shrink-0">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={searchPlaceholder}
-                  value={searchValue}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                />
-              </div>
-            )}
+            <div className="flex min-w-0 items-center gap-2 @[640px]:gap-3">
+              {/* Search */}
+              {onSearchChange && (
+                <div className="relative min-w-0 w-full max-w-xs flex-1 shrink @[520px]:w-64 @[520px]:max-w-none @[520px]:flex-none @[520px]:shrink-0">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder={searchPlaceholder}
+                    value={searchValue}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  />
+                </div>
+              )}
 
-            {/* Filters */}
-            {showFilters &&
-              (filterTrigger ?? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onFilterClick}
-                  className={cn(
-                    'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
-                    serviceHeaderFiltersButton,
-                  )}
-                >
-                  <Filter className="h-3.5 w-3.5 shrink-0" />
-                  <span className={serviceHeaderFiltersLabel}>Filters</span>
-                </Button>
-              ))}
+              {/* Filters */}
+              {showFilters &&
+                (filterTrigger ?? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onFilterClick}
+                    className={cn(
+                      'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
+                      serviceHeaderFiltersButton,
+                    )}
+                  >
+                    <Filter className="h-3.5 w-3.5 shrink-0" />
+                    <span className={serviceHeaderFiltersLabel}>Filters</span>
+                  </Button>
+                ))}
 
-            {/* Right Content (e.g., view toggle) */}
-            {rightContent ? (
-              <div className="hidden shrink-0 @[480px]:block">
-                {rightContent}
-              </div>
-            ) : null}
+              {/* Left toolbar content (e.g., view toggle) */}
+              {rightContent ? (
+                <div className="hidden shrink-0 @[480px]:block">
+                  {rightContent}
+                </div>
+              ) : null}
+            </div>
 
             {/* Action Buttons Group */}
             <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 @[640px]:gap-2">
