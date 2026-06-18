@@ -193,6 +193,9 @@ class Builds extends Action
         Span::add('deployment.id', $deployment->getId());
         Span::add('build.timeout', $timeout);
 
+        $cpus = 0.0;
+        $memory = 0;
+
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
 
@@ -234,9 +237,14 @@ class Builds extends Action
         Span::add('build.runtime', $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime', ''));
         Span::add('build.version', $version);
 
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        Span::add('build.cpus', (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
-        Span::add('build.memory', (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT));
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification') ?? APP_COMPUTE_SPECIFICATION_DEFAULT] ?? null;
+        if (empty($spec)) {
+            $spec = Config::getParam('specifications')[APP_COMPUTE_SPECIFICATION_DEFAULT] ?? [];
+        }
+        $cpus = (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
+        $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
+        Span::add('build.cpus', $cpus);
+        Span::add('build.memory', $memory);
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
@@ -1192,17 +1200,15 @@ class Builds extends Action
                 deployment: $deployment,
                 project: $project,
                 usage: $usage,
-                publisherForUsage: $publisherForUsage
+                publisherForUsage: $publisherForUsage,
+                memory: $memory,
+                cpus: $cpus
             );
         }
     }
 
-    protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
+    protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage, int $memory, float $cpus): void
     {
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        $cpus = (int) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
-        $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
-
         switch ($deployment->getAttribute('status')) {
             case 'ready':
                 $usage
