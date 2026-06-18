@@ -1088,6 +1088,13 @@ export function DeploymentDetailView({
     avifSupported,
   ])
 
+  const navigateToDeploymentsList = useCallback(() => {
+    navigate({
+      to: listRoute as unknown,
+      params: { projectId, [parentResourceParam]: resourceId } as unknown,
+    })
+  }, [navigate, listRoute, projectId, parentResourceParam, resourceId])
+
   const refetchAndNavigate = async () => {
     for (const queryKey of invalidateQueries) {
       const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
@@ -1097,10 +1104,7 @@ export function DeploymentDetailView({
     }
     setDeleteDialogOpen(false)
     setCancelBuildDialogOpen(false)
-    navigate({
-      to: listRoute as unknown,
-      params: { projectId, [parentResourceParam]: resourceId } as unknown,
-    })
+    navigateToDeploymentsList()
   }
 
   // Cancel build mutation (stops build via onCancelBuild; deployment remains, no navigate)
@@ -1716,16 +1720,12 @@ export function DeploymentDetailView({
       constrainFooterWidth={false}
       showBackButton={true}
       backButtonLabel="Deployments"
+      onBack={navigateToDeploymentsList}
       contentPadding={false}
       contentWrapperClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
       fullscreenContentXClassName="pl-0 pr-0"
       fullscreenInnerClassName="flex min-h-0 flex-1 flex-col"
-      onClose={() => {
-        navigate({
-          to: listRoute as unknown,
-          params: { projectId, [parentResourceParam]: resourceId } as unknown,
-        })
-      }}
+      onClose={navigateToDeploymentsList}
       contentClassName="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row"
       footer={
         <>
