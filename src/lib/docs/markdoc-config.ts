@@ -1,4 +1,5 @@
 import Markdoc, { type Config } from '@markdoc/markdoc'
+import { extractMarkdocTableColumnWidthsFromAst } from './markdoc-table'
 
 export const docsMarkdocConfig: Config = {
   tags: {
@@ -71,7 +72,15 @@ export const docsMarkdocConfig: Config = {
         title: { type: String },
       },
     },
-    table: { render: 'MarkdocTableRoot' },
+    table: {
+      render: 'MarkdocTableRoot',
+      transform(node, config) {
+        const columnWidths = extractMarkdocTableColumnWidthsFromAst(node)
+        const attributes = Markdoc.transformer.attributes(node, config)
+        const children = Markdoc.transformer.children(node, config)
+        return new Markdoc.Tag('MarkdocTableRoot', { ...attributes, columnWidths }, children)
+      },
+    },
     thead: { render: 'MarkdocTableHeader' },
     tbody: { render: 'MarkdocTableBody' },
     tr: { render: 'MarkdocTableRow' },
