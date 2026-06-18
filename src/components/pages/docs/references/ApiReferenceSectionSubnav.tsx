@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Menu } from 'lucide-react'
 import { ApiExplorerPlatformToggle } from '@/components/global/api-explorer'
 import {
   Accordion,
@@ -12,6 +12,14 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import type { ApiExplorerProjectPlatform } from '@/lib/api-explorer/types'
 import {
   getSpecMode,
@@ -36,6 +44,9 @@ import {
   DOCS_SECTION_HEADER_CLASS,
   docsSidebarNavLinkClassName,
 } from '@/lib/docs/nav-styles'
+import {
+  REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS,
+} from './explorer-styles'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '../DocsRouteLink'
 import { ApiReferenceSidebarSelectors } from './ApiReferenceSelectors'
@@ -412,7 +423,10 @@ export function ApiReferenceSectionSubnavPanel({
 }: ApiReferenceSectionSubnavPanelProps) {
   return (
     <aside
-      className="relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-r border-border bg-background @[1024px]:flex"
+      className={cn(
+        'relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-r border-border bg-background',
+        REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS,
+      )}
       aria-label={
         parent?.label ? `${parent.label} section navigation` : 'API references navigation'
       }
@@ -429,10 +443,35 @@ export function ApiReferenceSectionSubnavPanel({
 
 export function ApiReferenceSectionSubnavMobile({
   parent,
-  onNavigate,
 }: {
   parent: DocsNavParent | null
-  onNavigate?: () => void
 }) {
-  return <ApiReferenceSectionSubnavShell parent={parent} onNavigate={onNavigate} />
+  const [sheetOpen, setSheetOpen] = useState(false)
+
+  return (
+    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-8 shrink-0"
+          aria-label="Browse APIs"
+        >
+          <Menu className="size-3.5" strokeWidth={DOCS_MENU_ICON_STROKE} />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="flex w-[min(100vw,320px)] flex-col p-0">
+        <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-left">
+          <SheetTitle className="text-[15px]">
+            {parent?.label ?? 'API references'}
+          </SheetTitle>
+        </SheetHeader>
+        <ApiReferenceSectionSubnavShell
+          parent={parent}
+          onNavigate={() => setSheetOpen(false)}
+          className="min-h-0 flex-1"
+        />
+      </SheetContent>
+    </Sheet>
+  )
 }

@@ -1,12 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation } from '@tanstack/react-router'
 import { groupMethodsByResource } from '@/lib/api-explorer/parse-spec'
 import { ReferenceColumnsResizableLayout } from '@/components/global/api-explorer/ApiExplorerResizableLayout'
 import {
   API_REFERENCE_COLUMNS_DEFAULT_LAYOUT,
   normalizeApiReferenceColumnsLayout,
 } from '@/lib/resizable-layout'
+import { getDocsSlugFromPath } from '@/lib/docs/content'
+import { getDocsSectionNav } from '@/lib/docs/navigation'
 import type {
   ReferencePlatform,
   ReferenceVersion,
@@ -14,8 +17,13 @@ import type {
 import type { ApiReferenceServiceData } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
 import { ApiReferenceMethodsPanel } from './ApiReferenceMethodsPanel'
+import { ApiReferenceMethodsMobileNav } from './ApiReferenceMethodsMobileNav'
 import { ApiReferenceMethodPanel } from './ApiReferenceMethodPanel'
+import { ApiReferenceSectionSubnavMobile } from './ApiReferenceSectionSubnav'
 import {
+  REFERENCE_EXPLORER_CONTAINER,
+  REFERENCE_EXPLORER_DESKTOP_ONLY_CLASS,
+  REFERENCE_EXPLORER_MOBILE_ONLY_CLASS,
   REFERENCE_RESIZE_HANDLE_CLASS,
 } from './explorer-styles'
 
@@ -63,6 +71,11 @@ export function ApiReferenceExplorer({
   version,
   platform,
 }: ApiReferenceExplorerProps) {
+  const pathname = useLocation().pathname
+  const sectionParent = useMemo(() => {
+    return getDocsSectionNav(getDocsSlugFromPath(pathname)).parent
+  }, [pathname])
+
   const [selectedMethodId, setSelectedMethodId] = useState<string | undefined>(
     () => getInitialMethodId(data.methods),
   )
@@ -125,8 +138,39 @@ export function ApiReferenceExplorer({
   }
 
   return (
-    <div className={cn('flex h-full min-h-0 flex-1 flex-col')}>
-      <div className="min-h-0 flex-1">
+    <div
+      className={cn(
+        REFERENCE_EXPLORER_CONTAINER,
+        'flex h-full min-h-0 flex-1 flex-col',
+      )}
+    >
+      <div
+        className={cn(
+          'flex shrink-0 items-center gap-2 border-b border-border px-3 py-2',
+          REFERENCE_EXPLORER_MOBILE_ONLY_CLASS,
+        )}
+      >
+        <ApiReferenceSectionSubnavMobile parent={sectionParent} />
+        <ApiReferenceMethodsMobileNav
+          serviceId={data.id}
+          serviceLabel={data.label}
+          methods={data.methods}
+          selectedMethodId={selectedMethodId}
+          onSelectMethod={selectMethod}
+        />
+      </div>
+
+      <div
+        className={cn('min-h-0 flex-1', REFERENCE_EXPLORER_MOBILE_ONLY_CLASS)}
+      >
+        <ApiReferenceMethodPanel
+          method={selectedMethod}
+          version={version}
+          platform={platform}
+        />
+      </div>
+
+      <div className={cn('min-h-0 flex-1', REFERENCE_EXPLORER_DESKTOP_ONLY_CLASS)}>
         <ReferenceColumnsResizableLayout
           layout={columnsLayout}
           persistLayout={persistColumnsLayout}

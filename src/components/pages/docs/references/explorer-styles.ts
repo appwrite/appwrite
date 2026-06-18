@@ -1,5 +1,23 @@
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
 
+/**
+ * Container on the explorer root (measures `main` content width only).
+ * Pair utilities with the `/reference-explorer` container name — not the layout-row
+ * `@container`, which includes sidebar width and wrongly enables desktop columns on iPad.
+ */
+export const REFERENCE_EXPLORER_CONTAINER = '@container/reference-explorer'
+
+/** Hide at/above this main-column width (sheet navigation). */
+export const REFERENCE_EXPLORER_MOBILE_ONLY_CLASS =
+  '@[900px]/reference-explorer:hidden'
+
+/** Show at/above this main-column width (methods + detail columns). */
+export const REFERENCE_EXPLORER_DESKTOP_ONLY_CLASS =
+  'hidden @[900px]/reference-explorer:block'
+
+/** Min layout width before pinning the API references section subnav beside global docs nav. */
+export const REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS = '@[1280px]:flex'
+
 /** Matches {@link DOCS_SECTION_HEADER_CLASS} height for alignment with the docs section subnav. */
 export const REFERENCE_COLUMN_HEADER_CLASS = `${DOCS_SECTION_HEADER_CLASS} px-4`
 

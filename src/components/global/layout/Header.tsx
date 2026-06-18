@@ -941,7 +941,7 @@ export function ConsoleHeader({
         </div>
 
         {showCenterSearch ? (
-          <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[700px]:block">
+          <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[900px]:block">
             <button
               type="button"
               onClick={openCommandCenter}
@@ -975,6 +975,16 @@ export function ConsoleHeader({
             </div>
           ) : showGuestHeader ? (
             <>
+              {showCenterSearch ? (
+                <button
+                  type="button"
+                  onClick={openCommandCenter}
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label={centerSearchPlaceholder}
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              ) : null}
               <Button
                 asChild
                 variant="outline"
@@ -1031,7 +1041,7 @@ export function ConsoleHeader({
                 <button
                   type="button"
                   onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={centerSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
