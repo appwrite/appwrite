@@ -38,6 +38,19 @@ export const POSTGRES_SQL_UNDO_SHORTCUT_RAW = 'mod+z'
 
 export const POSTGRES_SQL_REDO_SHORTCUT_RAW = 'mod+shift+z'
 
+/** Control (not Command) so Mac app switching (⌘Tab) stays untouched. */
+export const POSTGRES_SQL_NEXT_TAB_SHORTCUT_RAW = 'ctrl+tab'
+
+export const POSTGRES_SQL_NEXT_TAB_SHORTCUT_COMBOS = [
+  'control+tab',
+] as const
+
+export const POSTGRES_SQL_PREV_TAB_SHORTCUT_RAW = 'ctrl+shift+tab'
+
+export const POSTGRES_SQL_PREV_TAB_SHORTCUT_COMBOS = [
+  'control+shift+tab',
+] as const
+
 export const POSTGRES_SQL_EDITOR_SHORTCUTS: readonly PostgresSqlEditorShortcutRef[] =
   [
     {
@@ -69,5 +82,15 @@ export const POSTGRES_SQL_EDITOR_SHORTCUTS: readonly PostgresSqlEditorShortcutRe
       id: 'postgres-sql.redo',
       description: 'Redo',
       raw: POSTGRES_SQL_REDO_SHORTCUT_RAW,
+    },
+    {
+      id: 'postgres-sql.next-tab',
+      description: 'Next query tab',
+      raw: POSTGRES_SQL_NEXT_TAB_SHORTCUT_RAW,
+    },
+    {
+      id: 'postgres-sql.prev-tab',
+      description: 'Previous query tab',
+      raw: POSTGRES_SQL_PREV_TAB_SHORTCUT_RAW,
     },
   ]

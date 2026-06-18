@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { executionResultRows, formatPostgresSql } from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -109,6 +109,22 @@ export function SqlWorkbench({
   const showExplainResults =
     isExplaining || (resultKind === 'explain' && !isRunning)
 
+  const canSwitchTabs = tabs.length > 1
+
+  const selectNextTab = useCallback(() => {
+    if (!canSwitchTabs) return
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId)
+    if (currentIndex < 0) return
+    onSelectTab(tabs[(currentIndex + 1) % tabs.length].id)
+  }, [activeTabId, canSwitchTabs, onSelectTab, tabs])
+
+  const selectPreviousTab = useCallback(() => {
+    if (!canSwitchTabs) return
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId)
+    if (currentIndex < 0) return
+    onSelectTab(tabs[(currentIndex - 1 + tabs.length) % tabs.length].id)
+  }, [activeTabId, canSwitchTabs, onSelectTab, tabs])
+
   useEffect(() => {
     setCanUndo(false)
     setCanRedo(false)
@@ -122,12 +138,16 @@ export function SqlWorkbench({
       canFormat: canFormatQuery,
       canRun: canRunQuery,
       canExplain: canExplainQuery,
+      canSelectNextTab: canSwitchTabs,
+      canSelectPreviousTab: canSwitchTabs,
       undo: () => sqlEditorRef.current?.undo(),
       redo: () => sqlEditorRef.current?.redo(),
       save: () => setSaveDialogOpen(true),
       format: () => onSqlChange(formatPostgresSql(sql)),
       run: onRun,
       explain: onExplain,
+      selectNextTab,
+      selectPreviousTab,
     }),
     [
       canExplainQuery,
@@ -135,10 +155,13 @@ export function SqlWorkbench({
       canRedo,
       canRunQuery,
       canSaveQuery,
+      canSwitchTabs,
       canUndo,
       onExplain,
       onRun,
       onSqlChange,
+      selectNextTab,
+      selectPreviousTab,
       sql,
     ],
   )

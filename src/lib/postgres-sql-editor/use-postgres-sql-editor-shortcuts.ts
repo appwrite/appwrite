@@ -3,6 +3,8 @@ import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import {
   POSTGRES_SQL_EXPLAIN_SHORTCUT_COMBOS,
   POSTGRES_SQL_FORMAT_SHORTCUT_COMBOS,
+  POSTGRES_SQL_NEXT_TAB_SHORTCUT_COMBOS,
+  POSTGRES_SQL_PREV_TAB_SHORTCUT_COMBOS,
   POSTGRES_SQL_RUN_SHORTCUT_COMBOS,
   POSTGRES_SQL_SAVE_SHORTCUT_COMBOS,
 } from '@/lib/postgres-sql-editor-shortcuts'
@@ -38,6 +40,26 @@ function useWorkbenchModShortcut(
   })
 }
 
+function useWorkbenchCtrlShortcut(
+  combo: string,
+  handler: () => void,
+  enabled: boolean,
+) {
+  const wrappedHandler = useCallback(
+    (event: KeyboardEvent) => {
+      if (!isPostgresSqlWorkbenchFocused()) return
+      event.preventDefault()
+      handler()
+    },
+    [handler],
+  )
+
+  useKeyboardShortcut(combo, wrappedHandler, {
+    ...WORKBENCH_SHORTCUT_OPTIONS,
+    enabled,
+  })
+}
+
 export function usePostgresSqlEditorShortcuts(
   actions: PostgresSqlEditorActions,
   enabled = true,
@@ -58,9 +80,27 @@ export function usePostgresSqlEditorShortcuts(
     if (actions.canFormat) actions.format()
   }, [actions])
 
+  const selectNextTab = useCallback(() => {
+    if (actions.canSelectNextTab) actions.selectNextTab()
+  }, [actions])
+
+  const selectPreviousTab = useCallback(() => {
+    if (actions.canSelectPreviousTab) actions.selectPreviousTab()
+  }, [actions])
+
   useWorkbenchModShortcut(POSTGRES_SQL_RUN_SHORTCUT_COMBOS, run, enabled)
   useWorkbenchModShortcut(POSTGRES_SQL_EXPLAIN_SHORTCUT_COMBOS, explain, enabled)
   useWorkbenchModShortcut(POSTGRES_SQL_SAVE_SHORTCUT_COMBOS, save, enabled)
+  useWorkbenchCtrlShortcut(
+    POSTGRES_SQL_NEXT_TAB_SHORTCUT_COMBOS[0],
+    selectNextTab,
+    enabled,
+  )
+  useWorkbenchCtrlShortcut(
+    POSTGRES_SQL_PREV_TAB_SHORTCUT_COMBOS[0],
+    selectPreviousTab,
+    enabled,
+  )
 
   const wrappedFormatHandler = useCallback(
     (event: KeyboardEvent) => {

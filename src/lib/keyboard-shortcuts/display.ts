@@ -67,6 +67,8 @@ function formatSingleDisplayKey(key: string, isMac: boolean): string {
   if (lower === 'delete') return 'Delete'
   if (lower === 'backspace') return '⌫'
   if (lower === 'tab') return 'Tab'
+  if (lower === 'pageup') return 'PgUp'
+  if (lower === 'pagedown') return 'PgDn'
   if (lower === 'up') return '↑'
   if (lower === 'down') return '↓'
   if (lower === 'left') return '←'
@@ -95,6 +97,8 @@ function tokenToHighlightKey(token: string, isMac: boolean): KeyId[] {
   if (lower === 'delete') return ['delete']
   if (lower === 'backspace') return ['backspace']
   if (lower === 'tab') return ['tab']
+  if (lower === 'pageup') return ['pageUp']
+  if (lower === 'pagedown') return ['pageDown']
   if (lower === 'up') return ['arrowUp']
   if (lower === 'down') return ['arrowDown']
   if (lower === 'left') return ['arrowLeft']

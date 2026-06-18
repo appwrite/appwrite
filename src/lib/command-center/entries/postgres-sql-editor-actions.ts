@@ -1,6 +1,8 @@
 import {
   Bookmark,
   Braces,
+  ChevronLeft,
+  ChevronRight,
   ListTree,
   Play,
   Redo2,
@@ -13,6 +15,8 @@ import {
 import {
   POSTGRES_SQL_EXPLAIN_SHORTCUT_RAW,
   POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+  POSTGRES_SQL_NEXT_TAB_SHORTCUT_RAW,
+  POSTGRES_SQL_PREV_TAB_SHORTCUT_RAW,
   POSTGRES_SQL_REDO_SHORTCUT_RAW,
   POSTGRES_SQL_RUN_SHORTCUT_RAW,
   POSTGRES_SQL_SAVE_SHORTCUT_RAW,
@@ -164,6 +168,50 @@ const POSTGRES_SQL_EDITOR_ACTIONS: CommandEntry[] = [
       ),
     perform: (ctx) => {
       getPostgresSqlEditorActions()?.redo()
+      ctx.closeCommandCenter()
+    },
+  },
+  {
+    id: 'postgres.sql.next-tab',
+    scopes: ['project'],
+    kind: 'action',
+    group: 'SQL editor',
+    label: 'Next query tab',
+    description: 'Switch to the next SQL editor tab',
+    icon: ChevronRight,
+    shortcut: POSTGRES_SQL_NEXT_TAB_SHORTCUT_RAW,
+    keywords: ['sql', 'tab', 'next', 'postgres', 'editor'],
+    available: (ctx) => sqlEditorActionsAvailable(ctx.pathname),
+    disabled: () => !getPostgresSqlEditorActions()?.canSelectNextTab,
+    disabledReason: () =>
+      disabledReasonWhen(
+        getPostgresSqlEditorActions()?.canSelectNextTab,
+        'Open another query tab to switch tabs.',
+      ),
+    perform: (ctx) => {
+      getPostgresSqlEditorActions()?.selectNextTab()
+      ctx.closeCommandCenter()
+    },
+  },
+  {
+    id: 'postgres.sql.prev-tab',
+    scopes: ['project'],
+    kind: 'action',
+    group: 'SQL editor',
+    label: 'Previous query tab',
+    description: 'Switch to the previous SQL editor tab',
+    icon: ChevronLeft,
+    shortcut: POSTGRES_SQL_PREV_TAB_SHORTCUT_RAW,
+    keywords: ['sql', 'tab', 'previous', 'postgres', 'editor'],
+    available: (ctx) => sqlEditorActionsAvailable(ctx.pathname),
+    disabled: () => !getPostgresSqlEditorActions()?.canSelectPreviousTab,
+    disabledReason: () =>
+      disabledReasonWhen(
+        getPostgresSqlEditorActions()?.canSelectPreviousTab,
+        'Open another query tab to switch tabs.',
+      ),
+    perform: (ctx) => {
+      getPostgresSqlEditorActions()?.selectPreviousTab()
       ctx.closeCommandCenter()
     },
   },

@@ -76,6 +76,9 @@ function eventMatchesRequiredKey(
   ) {
     return true
   }
+  if (requiredKey === 'tab' && (pressed === 'tab' || e.code === 'Tab')) {
+    return true
+  }
   return false
 }
 

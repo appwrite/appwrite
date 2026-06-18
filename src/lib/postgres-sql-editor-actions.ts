@@ -8,12 +8,16 @@ export type PostgresSqlEditorActions = {
   canFormat: boolean
   canRun: boolean
   canExplain: boolean
+  canSelectNextTab: boolean
+  canSelectPreviousTab: boolean
   undo: () => void
   redo: () => void
   save: () => void
   format: () => void
   run: () => void
   explain: () => void
+  selectNextTab: () => void
+  selectPreviousTab: () => void
 }
 
 let registeredActions: PostgresSqlEditorActions | null = null
