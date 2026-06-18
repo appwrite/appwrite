@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { parseOpenApiSpec } from '@/lib/api-explorer/parse-spec'
 import { getServiceLabel } from '@/lib/api-explorer/services'
 import type {
@@ -25,6 +27,7 @@ import type {
   ApiReferenceServiceData,
 } from '@/lib/docs/references/types'
 import { loadReferenceOpenApiSpec, loadReferenceConsoleSpec } from './load-spec'
+import { getSpecsPackageRoot } from './specs-path'
 
 function getServiceDescriptionFromSpec(
   spec: OpenApiSpec,
@@ -35,13 +38,6 @@ function getServiceDescriptionFromSpec(
   )
   return tag?.description?.trim() ?? ''
 }
-
-const SPECS_EXAMPLES_PREFIX = '../../../node_modules/@appwrite.io/specs/'
-
-const exampleModules = import.meta.glob<string>(
-  '../../../node_modules/@appwrite.io/specs/examples/**/*.md',
-  { query: '?raw', import: 'default' },
-)
 
 const exampleContentCache = new Map<string, string | undefined>()
 
@@ -89,12 +85,6 @@ function getExamplePath(
   return `examples/${examplesDir}/${platform}/examples/${demo}`
 }
 
-function resolveExampleModuleKey(relativePath: string): string | undefined {
-  const normalized = relativePath.replace(/\\/g, '/')
-  const key = `${SPECS_EXAMPLES_PREFIX}${normalized}`
-  return key in exampleModules ? key : undefined
-}
-
 async function loadMethodDemo(
   version: ReferenceVersion,
   platform: ReferencePlatform,
@@ -106,14 +96,10 @@ async function loadMethodDemo(
   const cached = exampleContentCache.get(relativePath)
   if (cached !== undefined) return cached
 
-  const moduleKey = resolveExampleModuleKey(relativePath)
-  if (!moduleKey) {
-    exampleContentCache.set(relativePath, undefined)
-    return undefined
-  }
+  const filePath = join(getSpecsPackageRoot(), `${relativePath}.md`)
 
   try {
-    const content = stripMarkdownCodeFence((await exampleModules[moduleKey]()) as string)
+    const content = stripMarkdownCodeFence(await readFile(filePath, 'utf-8'))
     exampleContentCache.set(relativePath, content)
     return content
   } catch {

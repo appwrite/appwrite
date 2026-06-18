@@ -1,8 +1,6 @@
-const specModuleKeys = Object.keys(
-  import.meta.glob('../../../../node_modules/@appwrite.io/specs/specs/**/*.json'),
-)
+import { NUMBERED_REFERENCE_VERSIONS } from './generated/versions'
 
-const VERSION_DIR_PATTERN = /\/specs\/([^/]+)\/[^/]+\.json$/
+export { NUMBERED_REFERENCE_VERSIONS }
 
 function parseVersionParts(version: string): number[] {
   return version.split('.').map((part) => {
@@ -24,24 +22,6 @@ export function compareReferenceVersionsDesc(a: string, b: string): number {
 
   return b.localeCompare(a)
 }
-
-function discoverNumberedReferenceVersions(): string[] {
-  const versions = new Set<string>()
-
-  for (const key of specModuleKeys) {
-    const normalized = key.replace(/\\/g, '/')
-    const match = normalized.match(VERSION_DIR_PATTERN)
-    if (!match) continue
-
-    const specDir = match[1]
-    if (specDir === 'latest') continue
-    versions.add(specDir)
-  }
-
-  return [...versions].sort(compareReferenceVersionsDesc)
-}
-
-export const NUMBERED_REFERENCE_VERSIONS = discoverNumberedReferenceVersions()
 
 /** Newest semver spec folder; used for Cloud example snippets. */
 export const LATEST_EXAMPLES_VERSION = NUMBERED_REFERENCE_VERSIONS[0] ?? '1.9.x'
