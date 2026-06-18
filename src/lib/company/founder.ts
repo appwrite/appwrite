@@ -2,7 +2,7 @@ export const companyFounder = {
   name: 'Eldad Fux',
   title: 'Founder & CEO',
   image: {
-    src: '/images/company/eldad-fux.png',
+    src: '/images/company/eldad-fux.avif',
     alt: 'Eldad Fux, Founder and CEO of Appwrite',
   },
   quote:

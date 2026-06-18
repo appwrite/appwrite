@@ -18,7 +18,7 @@ export type CompanyTeamPhoto = {
 export const companyTeamPhotos: readonly CompanyTeamPhoto[] = [
   {
     id: 'camp-5-group',
-    src: '/images/company/team-camp-5.png',
+    src: '/images/company/team-camp-5.avif',
     alt: 'The Appwrite team at Camp 5.0',
     caption: 'Team Appwrite at Camp 5.0, Barcelona',
     gridClassName: 'sm:col-span-2 lg:col-span-6',
@@ -26,7 +26,7 @@ export const companyTeamPhotos: readonly CompanyTeamPhoto[] = [
   },
   {
     id: 'camp-3-nyc',
-    src: '/images/company/team-camp-3-nyc.png',
+    src: '/images/company/team-camp-3-nyc.avif',
     alt: 'The Appwrite team at Camp 3.0 on a rooftop in New York City',
     caption: 'Team Appwrite at Camp 3.0, New York City',
     gridClassName: 'sm:col-span-2 lg:col-span-6',
@@ -34,21 +34,21 @@ export const companyTeamPhotos: readonly CompanyTeamPhoto[] = [
   },
   {
     id: 'barcelona-cafe',
-    src: '/images/company/team-barcelona-cafe.png',
+    src: '/images/company/team-barcelona-cafe.avif',
     alt: 'Appwrite team members working together at a cafe in Barcelona',
     caption: 'Deep work over coffee in Barcelona during Camp',
     gridClassName: 'lg:col-span-4',
   },
   {
     id: 'init-prague-portraits',
-    src: '/images/company/team-init-prague-portraits.png',
+    src: '/images/company/team-init-prague-portraits.avif',
     alt: 'Appwrite team members during the first Init shoot in Prague',
     caption: 'Behind the scenes: portrait setup for the first Init in Prague',
     gridClassName: 'lg:col-span-4',
   },
   {
     id: 'init-prague-monitor',
-    src: '/images/company/team-init-prague-monitor.png',
+    src: '/images/company/team-init-prague-monitor.avif',
     alt: 'On-set monitor during the first Init filming in Prague',
     caption: 'Behind the scenes: reviewing takes on the first Init set in Prague',
     gridClassName: 'lg:col-span-4',
