@@ -477,18 +477,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               {!isProjectRoute(location.pathname) && <GlobalUploadProgress />}
             </ClientOnly>
           </NavigationHistoryProvider>
-          {/* <TanStackDevtools
-            config={{
-              position: 'bottom-left',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              TanStackQueryDevtools,
-            ]}
-          /> */}
         </ClientThemeProvider>
         <Scripts />
       </body>
