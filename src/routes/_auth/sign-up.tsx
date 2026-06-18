@@ -18,7 +18,11 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  prefetchPostAuthDestination,
+  resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
+} from '@/lib/post-auth-navigation'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -114,11 +118,7 @@ function SignUpPage() {
     onSuccess: async () => {
       setLastLoginMethod('email')
       const account = await refreshConsoleAccountAfterAuth(queryClient)
-      await prefetchPostAuthDestination(
-        queryClient,
-        account,
-        search.redirect,
-      )
+      await prefetchPostAuthDestination(queryClient, account, search.redirect)
       await router.invalidate()
 
       const features = getActiveProfileFeatures()
@@ -144,19 +144,22 @@ function SignUpPage() {
         return
       }
 
+      // If we're headed to a specific destination (e.g. an OAuth2 consent/device
+      // flow), go straight there without provisioning a personal org/project.
+      const targetRedirect = resolvePostAuthRedirect(search.redirect)
+      if (targetRedirect) {
+        navigate(toRedirectNavigateOptions(targetRedirect))
+        return
+      }
+
       // No verification: org was ensured during prefetchPostAuthDestination
       try {
         const orgId = await resolvePostAuthOrganizationId(account)
-        const targetRedirect = resolvePostAuthRedirect(search.redirect)
-        if (targetRedirect) {
-          navigate({ to: targetRedirect })
-        } else {
-          navigate({
-            to: '/organizations/$orgId',
-            params: { orgId },
-            replace: true,
-          })
-        }
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
       } catch {
         navigate({ to: '/' })
       }

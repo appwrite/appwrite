@@ -32,6 +32,19 @@ function isAuthPagePath(pathname: string): boolean {
   return (AUTH_PAGE_PATHS as readonly string[]).includes(normalized)
 }
 
+// OAuth2 server flows (consent / device). When a user authenticates only to
+// authorize an application, we must NOT provision a personal org + project —
+// just return them to the flow. On single-tenant profiles org creation also
+// throws ("supports only one organization"), which would otherwise abort the
+// whole authorization after the account is already created.
+const OAUTH2_FLOW_PATHS = ['/oauth2/consent', '/oauth2/device'] as const
+
+export function isOAuth2FlowRedirect(redirect?: string): boolean {
+  if (!redirect) return false
+  const normalized = normalizeRedirectPathname(redirect)
+  return (OAUTH2_FLOW_PATHS as readonly string[]).includes(normalized)
+}
+
 /**
  * Returns a post-auth redirect only for console destinations. Marketing pages,
  * auth pages, and `/` fall back to the default org console route.
@@ -45,6 +58,23 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
   if (isMarketingPagePath(pathname)) return undefined
 
   return redirect
+}
+
+/**
+ * Split a validated relative redirect into the `{ to, search }` shape TanStack
+ * Router needs. Passing a URL with a query string directly as `to` drops the
+ * search params — which would lose OAuth2 params like `client_id` (consent) or
+ * `user_code` (device) when returning to the flow after sign-up / verification.
+ */
+export function toRedirectNavigateOptions(redirect: string): {
+  to: string
+  search: Record<string, string>
+} {
+  const url = new URL(redirect, 'http://localhost')
+  return {
+    to: url.pathname,
+    search: Object.fromEntries(url.searchParams),
+  }
 }
 
 async function prefetchOrganizationOverviewSafe(
@@ -68,6 +98,9 @@ export async function prefetchPostAuthDestination(
   account: Models.User,
   redirect?: string,
 ): Promise<void> {
+  // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
+  if (isOAuth2FlowRedirect(redirect)) return
+
   const resolvedRedirect = resolvePostAuthRedirect(redirect)
   if (resolvedRedirect) {
     const orgIdFromPath = parseOrganizationIdFromPath(resolvedRedirect)

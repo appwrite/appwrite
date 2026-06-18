@@ -16,7 +16,11 @@ import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  prefetchPostAuthDestination,
+  resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
+} from '@/lib/post-auth-navigation'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
@@ -120,7 +124,7 @@ function SignInPage() {
         await router.invalidate()
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {
-          navigate({ to: targetRedirect })
+          navigate(toRedirectNavigateOptions(targetRedirect))
         } else {
           const orgId = await resolvePostAuthOrganizationId(account)
           navigate({

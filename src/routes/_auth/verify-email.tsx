@@ -8,11 +8,13 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { pageTitle } from '@/lib/utils/page-title'
-import {
-  resolvePostAuthOrganizationId,
-} from '@/lib/ensure-personal-org'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  prefetchPostAuthDestination,
+  resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
+} from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 
 function isValidRelativeRedirect(url: string): boolean {
@@ -71,23 +73,25 @@ function VerifyEmailPage() {
       toast.success('Email verified successfully')
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
-        await prefetchPostAuthDestination(
-          queryClient,
-          account,
-          search.redirect,
-        )
-        const orgId = await resolvePostAuthOrganizationId(account)
+        await prefetchPostAuthDestination(queryClient, account, search.redirect)
         await router.invalidate()
+
+        // If we're headed to a specific destination (e.g. an OAuth2
+        // consent/device flow), go straight there without provisioning a
+        // personal org/project — provisioning throws on single-tenant
+        // profiles and would otherwise drop the pending authorization.
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {
-          navigate({ to: targetRedirect })
-        } else {
-          navigate({
-            to: '/organizations/$orgId',
-            params: { orgId },
-            replace: true,
-          })
+          navigate(toRedirectNavigateOptions(targetRedirect))
+          return
         }
+
+        const orgId = await resolvePostAuthOrganizationId(account)
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
       } catch {
         navigate({ to: '/' })
       }
@@ -103,7 +107,13 @@ function VerifyEmailPage() {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/verify-email`
+      // Preserve the pending destination (e.g. an OAuth2 consent/device flow)
+      // so the resent link returns the user to it after verification.
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const redirectParam = search.redirect
+        ? `?redirect=${encodeURIComponent(search.redirect)}`
+        : ''
+      const url = `${origin}/verify-email${redirectParam}`
       return await sdk.forConsole.account.createEmailVerification({ url })
     },
     onSuccess: () => {

@@ -8,6 +8,7 @@
 import {
   Account,
   Activities,
+  Apps,
   Assistant,
   Avatars,
   Backups,
@@ -21,6 +22,7 @@ import {
   Manager,
   Messaging,
   Migrations,
+  Oauth2,
   Project,
   Project as ProjectApi,
   Projects,
@@ -101,7 +103,10 @@ export function getApiEndpoint(region?: string): string {
     baseEndpoint =
       config.appwriteEndpoint ||
       (typeof window !== 'undefined'
-        ? resolveAppwriteEndpointFallback(config.consoleProfile, window.location)
+        ? resolveAppwriteEndpointFallback(
+            config.consoleProfile,
+            window.location,
+          )
         : resolveAppwriteEndpointFallback(config.consoleProfile))
   }
 
@@ -183,6 +188,8 @@ function createConsoleSdkRaw(client: Client) {
   return {
     client,
     account: new Account(client),
+    apps: new Apps(client),
+    oauth2: new Oauth2(client),
     avatars: new Avatars(client),
     compute: new Compute(client),
     functions: new Functions(client),
@@ -451,7 +458,9 @@ const sdkForProject = wrapServiceObject(
 ) as typeof sdkForProjectRaw
 
 const consoleSdkRawBase = createConsoleSdkRaw(clientConsole)
-registerConsoleAccountGet(consoleSdkRawBase.account.get.bind(consoleSdkRawBase.account))
+registerConsoleAccountGet(
+  consoleSdkRawBase.account.get.bind(consoleSdkRawBase.account),
+)
 const consoleSdkRaw = wrapConsoleAccountGet(consoleSdkRawBase)
 
 // Export SDK instances
@@ -468,9 +477,10 @@ export const sdk = {
     const regionClient = new Client()
     regionClient.setEndpoint(regionEndpoint).setProject('console')
     return wrapServiceObject(
-      wrapConsoleAccountGet(
-        createConsoleSdkRaw(regionClient),
-      ) as Record<string, unknown>,
+      wrapConsoleAccountGet(createConsoleSdkRaw(regionClient)) as Record<
+        string,
+        unknown
+      >,
       'forConsoleIn',
     ) as ReturnType<typeof createConsoleSdkRaw>
   },

@@ -30,7 +30,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@fc6d659",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@1a5604f",
     "@appwrite.io/specs": "github:appwrite/specs",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
