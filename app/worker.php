@@ -96,7 +96,13 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $adapter = new DatabasePool($pools->get($dsn->getHost()));
+    try {
+        $pool = $pools->get($dsn->getHost());
+    } catch (\Exception $e) {
+        throw new \Exception("Pool '{$dsn->getHost()}' not found for project '{$project->getId()}'. The project's database pool is not available on this worker. Database attribute: '{$project->getAttribute('database')}'");
+    }
+
+    $adapter = new DatabasePool($pool);
     $database = new Database($adapter, $cache);
     $database->setDocumentType('users', User::class);
 
@@ -156,7 +162,13 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             return $database;
         }
 
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        try {
+            $pool = $pools->get($dsn->getHost());
+        } catch (\Exception $e) {
+            throw new \Exception("Pool '{$dsn->getHost()}' not found for project '{$project->getId()}'. The project's database pool is not available on this worker. Database attribute: '{$project->getAttribute('database')}'");
+        }
+
+        $adapter = new DatabasePool($pool);
         $database = new Database($adapter, $cache);
 
         $databases[$dsn->getHost()] = $database;

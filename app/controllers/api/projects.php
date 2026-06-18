@@ -223,7 +223,13 @@ App::post('/v1/projects')
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
+            try {
+                $pool = $pools->get($dsn->getHost());
+            } catch (\Exception $e) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Database pool '{$dsn->getHost()}' is not available on this instance.");
+            }
+
+            $adapter = new DatabasePool($pool);
             $dbForProject = new Database($adapter, $cache);
 
             if ($sharedTables) {
