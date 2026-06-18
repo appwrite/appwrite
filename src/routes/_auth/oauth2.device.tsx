@@ -134,6 +134,10 @@ function OAuth2DevicePage() {
   useEffect(() => {
     const next = normalizeUserCode(search.user_code ?? '')
     if (next === code) return
+    // Update the gate synchronously (not via the passive ref-sync effect on the
+    // next render) so a `createGrant` for the old code that resolves in this
+    // window is rejected by onSuccess instead of pushing the page into consent.
+    activeCodeRef.current = next
     setCode(next)
     setGrant(null)
     setApp(null)
