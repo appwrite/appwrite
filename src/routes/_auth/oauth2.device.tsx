@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { CheckCircle2, Loader2, MonitorSmartphone, XCircle } from 'lucide-react'
@@ -51,6 +51,13 @@ function OAuth2DevicePage() {
   const [error, setError] = useState<string | null>(null)
   const hasPrefilledCode = Boolean(normalizeUserCode(search.user_code ?? ''))
 
+  // Tracks the code the page is currently acting on so a submission that
+  // resolves after the user moved to a different code (URL change) is ignored.
+  const activeCodeRef = useRef(code)
+  useEffect(() => {
+    activeCodeRef.current = code
+  })
+
   const submitMutation = useMutation({
     mutationFn: async (userCode: string) => {
       const loadedGrant = await sdk.forConsole.oauth2.createGrant({
@@ -61,13 +68,16 @@ function OAuth2DevicePage() {
       })
       return { loadedGrant, loadedApp }
     },
-    onSuccess: ({ loadedGrant, loadedApp }) => {
+    onSuccess: ({ loadedGrant, loadedApp }, userCode) => {
+      // Drop results from a submission the user has since navigated away from.
+      if (userCode !== activeCodeRef.current) return
       setGrant(loadedGrant)
       setApp(loadedApp)
       setError(null)
       setPhase('consent')
     },
-    onError: (e: unknown) => {
+    onError: (e: unknown, userCode) => {
+      if (userCode !== activeCodeRef.current) return
       if (
         e instanceof AppwriteException &&
         e.type === 'oauth2_invalid_user_code'
@@ -126,6 +136,9 @@ function OAuth2DevicePage() {
     setGrant(null)
     setApp(null)
     setError(null)
+    // Clear any in-flight submission for the previous code; its result is also
+    // gated by activeCodeRef in case it resolves after this.
+    submitMutation.reset()
     setPhase((current) => (current === 'loading' ? current : 'enter-code'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.user_code])
