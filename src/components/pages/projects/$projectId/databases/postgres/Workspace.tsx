@@ -7,7 +7,6 @@ import {
   normalizePostgresTableRouteId,
   parsePostgresTableId,
   postgresNav,
-  type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -20,7 +19,6 @@ import { ReadOnlyDataSpreadsheet } from '@/components/global/shared/ReadOnlyData
 import { PostgresQueryResultsMeta } from './_components/PostgresQueryResultsMeta'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { SqlWorkbench } from './SqlWorkbench'
-import { PostgresShell } from './PostgresShell'
 import { PostgresTableRowsEmptyState } from './_components/PostgresTableRowsEmptyState'
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
@@ -29,26 +27,17 @@ export type PostgresSqlWorkbenchProps = {
   databaseId: string
   /** Table id from the `/tables/$tableId/rows` URL, when present. */
   routeTableId?: string
-  /** Set when the URL is `/sql`. */
-  databaseTab?: PostgresDatabaseTab
 }
 
 export function PostgresSqlWorkbench({
   databaseId,
   routeTableId,
-  databaseTab,
 }: PostgresSqlWorkbenchProps) {
   return (
-    <PostgresShell
+    <PostgresSqlWorkbenchContent
       databaseId={databaseId}
-      tableId={routeTableId}
-      databaseTab={databaseTab}
-    >
-      <PostgresSqlWorkbenchContent
-        databaseId={databaseId}
-        routeTableId={routeTableId}
-      />
-    </PostgresShell>
+      routeTableId={routeTableId}
+    />
   )
 }
 
@@ -77,6 +66,7 @@ export function PostgresSqlWorkbenchContent({
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const { account } = useAuth()
+  const accountPrefs = account as { prefs?: Record<string, unknown> } | undefined
   const { project } = useProject(projectId)
   const teamId = project?.teamId ?? null
   const { features } = useConsoleProfile()
@@ -207,6 +197,7 @@ export function PostgresSqlWorkbenchContent({
     <ReadOnlyDataSpreadsheet
       variant="studio"
       showRowNumbers
+      enableColumnResize
       rowNumberOffset={(page - 1) * pageSize}
       columns={tableColumns}
       rows={rows}
@@ -263,7 +254,7 @@ export function PostgresSqlWorkbenchContent({
         isRunning={executeSql.isPending}
         error={editorActiveTab.error ?? executeSql.error}
         result={editorActiveTab.result}
-        account={account}
+        account={accountPrefs}
         teamId={teamId}
         canSaveTeam={canSaveTeam}
       >

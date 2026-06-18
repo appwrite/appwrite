@@ -5,10 +5,12 @@ import {
 } from '@/lib/usage/format-metric'
 import {
   fetchProjectUsageChartOverview,
-  fetchProjectUsageTopEndpoints,
+  fetchProjectUsageMetricsOverview,
+  type UsageChartInterval,
   type UsageChartPoint,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
+import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 
 /** Event metric for API request counts. */
 export const REQUESTS_EVENT_METRICS = ['network.requests'] as const
@@ -16,12 +18,19 @@ export const REQUESTS_EVENT_METRICS = ['network.requests'] as const
 export type RequestsChartPoint = UsageChartPoint
 export type RequestsTopEndpoint = UsageTopEndpoint
 
-export interface ProjectRequestsChartOverview {
-  totalRequests: number
+export interface ProjectRequestsOverview {
   changePercent: number
   chartPoints: RequestsChartPoint[]
+  topEndpoints: RequestsTopEndpoint[]
 }
 
+/** @deprecated Use ProjectRequestsOverview */
+export type ProjectRequestsChartOverview = Pick<
+  ProjectRequestsOverview,
+  'changePercent' | 'chartPoints'
+>
+
+/** @deprecated Use ProjectRequestsOverview */
 export type ProjectRequestsTopEndpointsOverview = {
   topEndpoints: RequestsTopEndpoint[]
 }
@@ -34,52 +43,59 @@ export function formatRequestsValue(count: number): string {
   return formatCompactCount(count, { compact: true })
 }
 
-export { formatCompactCountAxis as formatRequestsAxisValue }
+export { formatCompactCountAxis as formatRequestsAxisValue } from '@/lib/usage/format-metric'
+export { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 
+/** One listEvents call (with dimensions) for chart + breakdown. */
+export async function fetchProjectRequestsOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<ProjectRequestsOverview> {
+  const overview = await fetchProjectUsageMetricsOverview(
+    projectId,
+    dateRange,
+    REQUESTS_EVENT_METRICS,
+    interval,
+  )
+
+  return {
+    changePercent: overview.changePercent,
+    chartPoints: overview.chartPoints,
+    topEndpoints: overview.topEndpoints,
+  }
+}
+
+/** Chart-only fetch for org project list sparklines. */
 export async function fetchProjectRequestsChartOverview(
   projectId: string,
   dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ): Promise<ProjectRequestsChartOverview> {
   const overview = await fetchProjectUsageChartOverview(
     projectId,
     dateRange,
     REQUESTS_EVENT_METRICS,
+    interval,
   )
 
   return {
-    totalRequests: overview.total,
     changePercent: overview.changePercent,
     chartPoints: overview.chartPoints,
   }
 }
 
+/** @deprecated Use fetchProjectRequestsOverview */
 export async function fetchProjectRequestsTopEndpoints(
   projectId: string,
   dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ): Promise<ProjectRequestsTopEndpointsOverview> {
-  const overview = await fetchProjectUsageTopEndpoints(
+  const overview = await fetchProjectRequestsOverview(
     projectId,
     dateRange,
-    REQUESTS_EVENT_METRICS,
+    interval,
   )
 
   return { topEndpoints: overview.topEndpoints }
 }
-
-/** @deprecated Use fetchProjectRequestsChartOverview + fetchProjectRequestsTopEndpoints */
-export async function fetchProjectRequestsOverview(
-  projectId: string,
-  dateRange: DateRange | undefined,
-): Promise<
-  ProjectRequestsChartOverview & ProjectRequestsTopEndpointsOverview
-> {
-  const [chart, top] = await Promise.all([
-    fetchProjectRequestsChartOverview(projectId, dateRange),
-    fetchProjectRequestsTopEndpoints(projectId, dateRange),
-  ])
-
-  return { ...chart, ...top }
-}
-
-export type ProjectRequestsOverview = ProjectRequestsChartOverview &
-  ProjectRequestsTopEndpointsOverview

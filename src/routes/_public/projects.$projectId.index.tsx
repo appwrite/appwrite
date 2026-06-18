@@ -1,24 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { endOfDay, startOfDay, subDays } from 'date-fns'
 import { View } from '@/components/pages/projects/$projectId/overview/Overview'
 import {
   apiKeysQueryOptions,
   mapApiKeysFromResponse,
   platformsQueryOptions,
-  bandwidthChartOverviewQueryOptions,
-  bandwidthTopConsumersQueryOptions,
-  requestsChartOverviewQueryOptions,
+  bandwidthOverviewQueryOptions,
+  requestsOverviewQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ensureProjectRegion } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
-
-function getDefaultDashboardChartRange() {
-  return {
-    from: startOfDay(subDays(new Date(), 29)),
-    to: endOfDay(new Date()),
-  }
-}
+import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
+import {
+  getDefaultUsageChartDateRange,
+  serializeUsageChartDateRange,
+} from '@/lib/usage/usage-date-range'
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
   head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
@@ -37,7 +33,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
         .ensureQueryData(apiKeysQueryOptions(projectId))
         .catch(() => null)
 
-      const defaultChartRange = getDefaultDashboardChartRange()
+      const chartDateRange = serializeUsageChartDateRange(
+        getDefaultUsageChartDateRange(),
+      )
       const usageStatsEnabled = getActiveProfileFeatures().usageStats
 
       // Non-critical data: prefetch in the background so the page can render immediately.
@@ -46,19 +44,27 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
         .catch(() => undefined)
 
       if (usageStatsEnabled) {
+        const parsedRange = {
+          from: new Date(chartDateRange.from),
+          to: new Date(chartDateRange.to),
+        }
+
         void queryClient
-          .prefetchQuery(
-            bandwidthChartOverviewQueryOptions(projectId, defaultChartRange),
+          .ensureQueryData(
+            bandwidthOverviewQueryOptions(
+              projectId,
+              parsedRange,
+              DEFAULT_USAGE_CHART_INTERVAL,
+            ),
           )
           .catch(() => undefined)
         void queryClient
-          .prefetchQuery(
-            requestsChartOverviewQueryOptions(projectId, defaultChartRange),
-          )
-          .catch(() => undefined)
-        void queryClient
-          .prefetchQuery(
-            bandwidthTopConsumersQueryOptions(projectId, defaultChartRange, true),
+          .ensureQueryData(
+            requestsOverviewQueryOptions(
+              projectId,
+              parsedRange,
+              DEFAULT_USAGE_CHART_INTERVAL,
+            ),
           )
           .catch(() => undefined)
       }
@@ -66,6 +72,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
       return {
         apiKeys: mapApiKeysFromResponse(apiKeysRaw),
         apiKeysRaw,
+        chartDateRange,
       }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)
@@ -86,6 +93,7 @@ function ProjectOverviewPage() {
           ? {
               apiKeys: loaderData.apiKeys,
               apiKeysRaw: loaderData.apiKeysRaw,
+              chartDateRange: loaderData.chartDateRange,
             }
           : undefined
       }

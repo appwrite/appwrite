@@ -21,6 +21,7 @@ export const AuthEmailPolicyId = {
   DenyFreeEmail: 'deny-free-email',
   DenyAliasedEmail: 'deny-aliased-email',
   DenyDisposableEmail: 'deny-disposable-email',
+  DenyCorporateEmail: 'deny-corporate-email',
 } as const
 
 export type ProjectAuthSecuritySnapshot = {
@@ -36,6 +37,7 @@ export type ProjectAuthSecuritySnapshot = {
   authDenyFreeEmail: boolean
   authDenyAliasedEmail: boolean
   authDenyDisposableEmail: boolean
+  authDenyCorporateEmail: boolean
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
     userName: boolean
@@ -59,6 +61,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authDenyFreeEmail: false,
   authDenyAliasedEmail: false,
   authDenyDisposableEmail: false,
+  authDenyCorporateEmail: false,
   authMockNumbers: [],
   membershipsPrivacy: {
     userName: true,
@@ -155,6 +158,10 @@ export function parseProjectAuthSecurity(
     policies,
     AuthEmailPolicyId.DenyDisposableEmail,
   )
+  const denyCorporateEmail = policyById(
+    policies,
+    AuthEmailPolicyId.DenyCorporateEmail,
+  )
 
   return {
     authLimit: parsePolicyCountLimit(userLimit, 0),
@@ -184,6 +191,7 @@ export function parseProjectAuthSecurity(
     authDenyFreeEmail: parsePolicyEnabled(denyFreeEmail, false),
     authDenyAliasedEmail: parsePolicyEnabled(denyAliasedEmail, false),
     authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
+    authDenyCorporateEmail: parsePolicyEnabled(denyCorporateEmail, false),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,
       otp: n.otp,

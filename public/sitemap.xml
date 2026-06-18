@@ -2,18 +2,22 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://appwrite.io/sitemap/pages.xml</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-16</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://appwrite.io/sitemap/docs.xml</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-16</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://appwrite.io/sitemap/blog.xml</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-16</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://appwrite.io/sitemap/changelog.xml</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-16</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://appwrite.io/sitemap/threads.xml</loc>
+    <lastmod>2026-06-16</lastmod>
   </sitemap>
 </sitemapindex>

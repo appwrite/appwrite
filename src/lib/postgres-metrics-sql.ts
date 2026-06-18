@@ -3,7 +3,10 @@
  * All queries are read-only and safe to run via the compute SQL API.
  */
 
-export const POSTGRES_METRICS_SNAPSHOT_SQL = `
+import { prefixPostgresSqlComment } from '@/lib/postgres-sql'
+
+export const POSTGRES_METRICS_SNAPSHOT_SQL = prefixPostgresSqlComment(
+  `
 SELECT
   d.numbackends::bigint AS active_connections,
   d.xact_commit::bigint AS xact_commit,
@@ -51,9 +54,12 @@ SELECT
   EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time()))::bigint AS uptime_seconds
 FROM pg_stat_database d
 WHERE d.datname = current_database()
-`.trim()
+`.trim(),
+  'Load metrics snapshot',
+)
 
-export const POSTGRES_METRICS_CONNECTION_STATES_SQL = `
+export const POSTGRES_METRICS_CONNECTION_STATES_SQL = prefixPostgresSqlComment(
+  `
 SELECT
   COALESCE(state, 'unknown') AS state,
   count(*)::bigint AS count
@@ -62,9 +68,12 @@ WHERE datname = current_database()
   AND pid != pg_backend_pid()
 GROUP BY state
 ORDER BY count DESC
-`.trim()
+`.trim(),
+  'List connection states',
+)
 
-export const POSTGRES_METRICS_CONNECTION_APPS_SQL = `
+export const POSTGRES_METRICS_CONNECTION_APPS_SQL = prefixPostgresSqlComment(
+  `
 SELECT
   COALESCE(NULLIF(application_name, ''), 'unknown') AS application_name,
   count(*)::bigint AS count
@@ -74,9 +83,12 @@ WHERE datname = current_database()
 GROUP BY application_name
 ORDER BY count DESC
 LIMIT 12
-`.trim()
+`.trim(),
+  'List connection apps',
+)
 
-export const POSTGRES_ACTIVE_CONNECTIONS_SQL = `
+export const POSTGRES_ACTIVE_CONNECTIONS_SQL = prefixPostgresSqlComment(
+  `
 SELECT
   pid,
   backend_type,
@@ -108,9 +120,12 @@ ORDER BY
   END,
   query_start NULLS LAST,
   pid ASC
-`.trim()
+`.trim(),
+  'List active connections',
+)
 
-export const POSTGRES_METRICS_TABLE_ACTIVITY_SQL = `
+export const POSTGRES_METRICS_TABLE_ACTIVITY_SQL = prefixPostgresSqlComment(
+  `
 SELECT
   schemaname,
   relname AS table_name,
@@ -125,4 +140,6 @@ FROM pg_stat_user_tables
 WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
 ORDER BY total_bytes DESC
 LIMIT 12
-`.trim()
+`.trim(),
+  'List table activity',
+)

@@ -13,11 +13,7 @@ import {
   projectQueryOptions,
   projectSmtpStatusQueryOptions,
 } from '@/lib/react-query/hooks'
-import {
-  consoleOAuth2CatalogQueryOptions,
-  projectOAuth2ProvidersQueryOptions,
-  type AuthOAuth2SettingsInitialData,
-} from '@/lib/react-query/hooks/oauth2-providers'
+import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 import {
   isAuthTeamDetailPath,
   isAuthUserDetailPath,
@@ -37,10 +33,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth')({
       await Promise.all([
         queryClient.ensureQueryData(projectQueryOptions(projectId)),
         queryClient.ensureQueryData(projectSmtpStatusQueryOptions(projectId)),
-        queryClient.ensureQueryData(consoleOAuth2CatalogQueryOptions()),
-        queryClient.ensureQueryData(
-          projectOAuth2ProvidersQueryOptions(projectId),
-        ),
       ])
     }
   },

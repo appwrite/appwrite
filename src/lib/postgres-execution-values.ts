@@ -1,6 +1,10 @@
 import type { Models } from '@appwrite.io/console'
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
-import { executionResultRows } from '@/lib/postgres-sql'
+import {
+  executionResultRows,
+  peelLeadingPostgresSqlComments,
+  stripLeadingPostgresSqlComments,
+} from '@/lib/postgres-sql'
 
 /** Wrapped read-query payload column (internal, not user-facing). */
 export const POSTGRES_CONSOLE_RESULT_COLUMN = '__console_result_rows'
@@ -17,7 +21,9 @@ function stripTrailingStatementSemicolon(sql: string): string {
 
 /** True when the statement is a read query safe to wrap for JSON display. */
 export function isPostgresReadQuery(sql: string): boolean {
-  const trimmed = stripTrailingStatementSemicolon(sql.trim())
+  const trimmed = stripTrailingStatementSemicolon(
+    stripLeadingPostgresSqlComments(sql.trim()),
+  )
   if (!trimmed) return false
   if (MUTATION_QUERY_PATTERN.test(trimmed)) return false
   if (/\bselect\s+into\b/i.test(trimmed)) return false
@@ -30,11 +36,16 @@ export function isPostgresReadQuery(sql: string): boolean {
  * for NUMERIC, TIMESTAMP, BYTEA, and other non-primitive driver types.
  */
 export function wrapPostgresSqlForDisplay(sql: string): string {
-  const trimmed = stripTrailingStatementSemicolon(sql.trim())
-  if (!isPostgresReadQuery(trimmed)) return sql
+  const trimmed = sql.trim()
+  const { leadingComments, sqlWithoutLeadingComments } =
+    peelLeadingPostgresSqlComments(trimmed)
+  const innerSql = stripTrailingStatementSemicolon(sqlWithoutLeadingComments)
+  if (!isPostgresReadQuery(sqlWithoutLeadingComments)) return trimmed
 
   const column = quotePostgresIdentifier(POSTGRES_CONSOLE_RESULT_COLUMN)
-  return `SELECT coalesce(json_agg(row_to_json(__console_subq)), '[]'::json) AS ${column} FROM (${trimmed}) AS __console_subq`
+  const wrapped = `SELECT coalesce(json_agg(row_to_json(__console_subq)), '[]'::json) AS ${column} FROM (${innerSql}) AS __console_subq`
+  if (!leadingComments) return wrapped
+  return `${leadingComments}\n${wrapped}`
 }
 
 function parseJsonArray(value: unknown): unknown[] | null {

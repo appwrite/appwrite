@@ -46,6 +46,14 @@ interface ChartPoint {
   total: number
 }
 
+type RealChartPoint = {
+  date: string
+  day: Date
+  total: number
+  inbound?: number
+  outbound?: number
+}
+
 interface RequestsChartProps {
   className?: string
   variant?: 'line' | 'bar'
@@ -54,7 +62,7 @@ interface RequestsChartProps {
   /** When omitted, the chart shows the last 30 days of the generated series */
   dateRange?: DateRange
   /** Real usage data (e.g. bandwidth from usage.listEvents). When set, mock data is skipped. */
-  chartData?: Array<{ date: string; day: Date; total: number }>
+  chartData?: RealChartPoint[]
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
@@ -145,11 +153,12 @@ interface CustomTooltipProps {
   payload?: Array<{
     value: number
     dataKey: string
-    payload: ChartPoint | { date: string; day: Date; total: number }
+    payload: ChartPoint | RealChartPoint
   }>
   label?: string
   formatValue?: (value: number) => string
   showBreakdown?: boolean
+  metric?: MetricType
 }
 
 const CustomTooltip = ({
@@ -157,9 +166,48 @@ const CustomTooltip = ({
   payload,
   formatValue,
   showBreakdown = true,
+  metric = 'requests',
 }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
+    const format = formatValue ?? ((value: number) => value.toLocaleString())
+
+    if (
+      metric === 'bandwidth' &&
+      'inbound' in data &&
+      'outbound' in data &&
+      typeof data.inbound === 'number' &&
+      typeof data.outbound === 'number'
+    ) {
+      return (
+        <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
+          <p className="mb-2 text-[12px] font-medium text-foreground">
+            {data.date}
+          </p>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-[11px] text-muted-foreground">Inbound</span>
+              <span className="text-[12px] font-medium text-foreground">
+                {format(data.inbound)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-[11px] text-muted-foreground">Outbound</span>
+              <span className="text-[12px] font-medium text-foreground">
+                {format(data.outbound)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
+              <span className="text-[11px] text-muted-foreground">Total</span>
+              <span className="text-[12px] font-medium text-foreground">
+                {format(data.total)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     const total = 'total' in data ? data.total : 0
 
     if (!showBreakdown || !('successful' in data)) {
@@ -169,9 +217,11 @@ const CustomTooltip = ({
             {data.date}
           </p>
           <div className="flex items-center justify-between gap-6">
-            <span className="text-[11px] text-muted-foreground">Bandwidth</span>
+            <span className="text-[11px] text-muted-foreground">
+              {metric === 'bandwidth' ? 'Bandwidth' : 'Value'}
+            </span>
             <span className="text-[12px] font-medium text-foreground">
-              {formatValue ? formatValue(total) : total.toLocaleString()}
+              {format(total)}
             </span>
           </div>
         </div>
@@ -245,6 +295,13 @@ export function RequestsChart({
   )
 
   const chartData = usesRealData ? (chartDataProp ?? []) : mockChartData
+  const showBandwidthDualSeries =
+    usesRealData &&
+    metric === 'bandwidth' &&
+    chartData.some(
+      (point) =>
+        typeof point.inbound === 'number' && typeof point.outbound === 'number',
+    )
 
   const { successRate, errorRate } = useMemo(() => {
     if (usesRealData) {
@@ -290,6 +347,8 @@ export function RequestsChart({
   chartDataLengthRef.current = chartData.length
   const mountedForKeyRef = useRef<string | null>(null)
   const areaGradientId = `overview-chart-gradient-${metric}`
+  const inboundGradientId = 'overview-chart-gradient-inbound'
+  const outboundGradientId = 'overview-chart-gradient-outbound'
   const valueFormatter =
     formatValue ??
     (metric === 'requests'
@@ -307,6 +366,7 @@ export function RequestsChart({
     <CustomTooltip
       formatValue={usesRealData ? valueFormatter : undefined}
       showBreakdown={!usesRealData}
+      metric={metric}
     />
   )
 
@@ -383,6 +443,28 @@ export function RequestsChart({
           )}
         </div>
         <div className="flex items-center gap-4">
+          {showBandwidthDualSeries && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: 'var(--chart-2)' }}
+                />
+                <span className="text-[11px] text-muted-foreground">
+                  Inbound
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: 'var(--chart-brand)' }}
+                />
+                <span className="text-[11px] text-muted-foreground">
+                  Outbound
+                </span>
+              </div>
+            </>
+          )}
           {!usesRealData && (
             <>
               <div className="flex items-center gap-1.5">
@@ -455,25 +537,66 @@ export function RequestsChart({
                   margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient
-                      id={areaGradientId}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                  <stop
-                    offset="0%"
-                    stopColor="var(--chart-brand)"
-                    stopOpacity={0.2}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--chart-brand)"
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
+                    {showBandwidthDualSeries ? (
+                      <>
+                        <linearGradient
+                          id={inboundGradientId}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="var(--chart-2)"
+                            stopOpacity={0.15}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="var(--chart-2)"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                        <linearGradient
+                          id={outboundGradientId}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="var(--chart-brand)"
+                            stopOpacity={0.15}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="var(--chart-brand)"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </>
+                    ) : (
+                      <linearGradient
+                        id={areaGradientId}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="var(--chart-brand)"
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="var(--chart-brand)"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    )}
+                  </defs>
               <XAxis
                 dataKey="date"
                 axisLine={false}
@@ -501,21 +624,58 @@ export function RequestsChart({
                 width={usesRealData ? 48 : 40}
               />
               <Tooltip content={tooltipContent} cursor={false} />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="var(--chart-brand)"
-                    strokeWidth={2}
-                    fill={`url(#${areaGradientId})`}
-                    dot={false}
-                    activeDot={{
-                      r: 4,
-                      fill: 'var(--chart-brand)',
-                      stroke: '#fff',
-                      strokeWidth: 2,
-                    }}
-                    {...areaAnimationProps}
-                  />
+                  {showBandwidthDualSeries ? (
+                    <>
+                      <Area
+                        type="monotone"
+                        dataKey="inbound"
+                        name="Inbound"
+                        stroke="var(--chart-2)"
+                        strokeWidth={2}
+                        fill={`url(#${inboundGradientId})`}
+                        dot={false}
+                        activeDot={{
+                          r: 4,
+                          fill: 'var(--chart-2)',
+                          stroke: '#fff',
+                          strokeWidth: 2,
+                        }}
+                        {...areaAnimationProps}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="outbound"
+                        name="Outbound"
+                        stroke="var(--chart-brand)"
+                        strokeWidth={2}
+                        fill={`url(#${outboundGradientId})`}
+                        dot={false}
+                        activeDot={{
+                          r: 4,
+                          fill: 'var(--chart-brand)',
+                          stroke: '#fff',
+                          strokeWidth: 2,
+                        }}
+                        {...areaAnimationProps}
+                      />
+                    </>
+                  ) : (
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="var(--chart-brand)"
+                      strokeWidth={2}
+                      fill={`url(#${areaGradientId})`}
+                      dot={false}
+                      activeDot={{
+                        r: 4,
+                        fill: 'var(--chart-brand)',
+                        stroke: '#fff',
+                        strokeWidth: 2,
+                      }}
+                      {...areaAnimationProps}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             ) : null}

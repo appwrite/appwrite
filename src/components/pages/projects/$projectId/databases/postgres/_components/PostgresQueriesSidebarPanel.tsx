@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Loader2, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowUpDown, Loader2, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import {
   usePostgresSavedQueries,
+  usePostgresSavedQueriesSort,
   type PostgresSavedQueryLevel,
 } from '@/lib/react-query/hooks/postgres-databases'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
@@ -12,8 +13,30 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { SavedPostgresQuery } from '@/lib/user-prefs-keys'
+import {
+  POSTGRES_SAVED_QUERIES_SORT_OPTIONS,
+  sortSavedPostgresQueries,
+  type SavedPostgresQuery,
+} from '@/lib/user-prefs-keys'
+import { matchesPostgresLocalSearch } from './postgres-spreadsheet-chrome'
 import {
   postgresQuerySelectionKey,
   queryPreviewLabel,
@@ -144,10 +167,28 @@ export function PostgresQueriesSidebarPanel({
     hasTeamLevel,
   } = usePostgresSavedQueries(databaseId, account, teamId)
 
+  const { sort, setSort } = usePostgresSavedQueriesSort(databaseId, account)
+
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
+  const [querySearch, setQuerySearch] = useState('')
+
+  useEffect(() => {
+    setQuerySearch('')
+  }, [databaseId])
 
   const activeSavedQueries =
     savedQueryLevel === 'team' ? teamQueries : userQueries
+
+  const filteredSavedQueries = activeSavedQueries.filter((query) =>
+    matchesPostgresLocalSearch(querySearch, query.name, query.sql),
+  )
+
+  const displayedSavedQueries = useMemo(
+    () => sortSavedPostgresQueries(filteredSavedQueries, sort),
+    [filteredSavedQueries, sort],
+  )
+
+  const hasActiveSearch = querySearch.trim().length > 0
 
   const handleDelete = async (
     id: string,
@@ -165,7 +206,7 @@ export function PostgresQueriesSidebarPanel({
     }
   }
 
-  const savedItems = activeSavedQueries.map((query) => (
+  const savedItems = displayedSavedQueries.map((query) => (
     <SavedQueryButton
       key={query.id}
       query={query}
@@ -188,14 +229,85 @@ export function PostgresQueriesSidebarPanel({
 
   return (
     <div className="flex min-h-full flex-col pt-2">
-      <div className="min-h-0 flex-1">
-        {activeSavedQueries.length > 0 ? (
+      <div className="shrink-0 pb-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={querySearch}
+              onChange={(event) => setQuerySearch(event.target.value)}
+              placeholder="Search queries"
+              className="h-8 pl-8 pr-8 text-[13px]"
+              aria-label="Search queries"
+            />
+            {querySearch ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                aria-label="Clear query search"
+                onClick={() => setQuerySearch('')}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+          </div>
+          <DropdownMenu>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      aria-label="Sort queries"
+                    >
+                      <ArrowUpDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  Sort queries
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Sort queries
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup
+                value={sort}
+                onValueChange={(value) => {
+                  const option = POSTGRES_SAVED_QUERIES_SORT_OPTIONS.find(
+                    (item) => item.value === value,
+                  )
+                  if (option) setSort(option.value)
+                }}
+              >
+                {POSTGRES_SAVED_QUERIES_SORT_OPTIONS.map((option) => (
+                  <DropdownMenuRadioItem key={option.value} value={option.value}>
+                    {option.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {displayedSavedQueries.length > 0 ? (
           <div className="space-y-0.5">{savedItems}</div>
         ) : (
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            {savedQueryLevel === 'team'
-              ? 'No team queries yet.'
-              : 'No saved queries yet.'}
+            {hasActiveSearch
+              ? 'No queries match your search.'
+              : savedQueryLevel === 'team'
+                ? 'No team queries yet.'
+                : 'No saved queries yet.'}
           </p>
         )}
       </div>
@@ -203,7 +315,10 @@ export function PostgresQueriesSidebarPanel({
         <div className="shrink-0 border-t border-border pt-2">
           <SavedQueryScopeToggle
             savedQueryLevel={savedQueryLevel}
-            onChange={setSavedQueryLevel}
+            onChange={(level) => {
+              setQuerySearch('')
+              setSavedQueryLevel(level)
+            }}
           />
         </div>
       ) : null}

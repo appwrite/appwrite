@@ -126,7 +126,7 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
       { label: 'Integrations', href: 'https://appwrite.io/integrations', external: true },
       { label: 'Community', href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Init', href: 'https://appwrite.io/init', external: true },
-      { label: 'Threads', href: 'https://threads.appwrite.io/', external: true },
+      { label: 'Threads', href: getMarketingPageUrl('/threads', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Changelog', href: getMarketingPageUrl('/changelog', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects', external: true },
       { label: 'Source code', href: 'https://github.com/appwrite/appwrite', external: true },

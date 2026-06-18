@@ -1,25 +1,36 @@
 import {
   addDays,
   addHours,
+  addMinutes,
   differenceInCalendarDays,
-  differenceInHours,
   endOfDay,
   format,
+  isSameDay,
   parseISO,
   startOfDay,
   startOfHour,
+  startOfMinute,
   subDays,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
-import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
+import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
+import {
+  isFullCalendarDayRange,
+  resolveUsageDateBounds,
+} from '@/lib/usage/usage-date-range'
 
-/** API max per listEvents request. */
-export const USAGE_EVENTS_MAX_LIMIT = 500
-
-/** Single-page fetch for top-endpoint aggregation (no pagination). */
-export const TOP_ENDPOINTS_QUERY_LIMIT = USAGE_EVENTS_MAX_LIMIT
+export type { UsageChartInterval } from '@/lib/usage/chart-interval'
+export {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  USAGE_CHART_INTERVAL_OPTIONS,
+  getUsageChartIntervalDisabledReason,
+  getUsageChartIntervalMaxRangeDays,
+  isUsageChartIntervalValidForRange,
+  resolveUsageChartIntervalForRange,
+} from '@/lib/usage/chart-interval'
 
 export interface UsageChartPoint {
   date: string
@@ -36,9 +47,12 @@ export interface UsageTopEndpoint {
 }
 
 export interface ProjectUsageChartOverview {
-  total: number
   changePercent: number
   chartPoints: UsageChartPoint[]
+}
+
+export interface ProjectUsageMetricOverview extends ProjectUsageChartOverview {
+  topEndpoints: UsageTopEndpoint[]
 }
 
 export interface ProjectUsageTopEndpointsOverview {
@@ -50,86 +64,95 @@ export interface OverviewUsagePeriod {
   to: Date
   previousFrom: Date
   previousTo: Date
-  interval: string
-}
-
-export function groupByIntervalQuery(interval: string): string {
-  return new Query('groupByInterval', 'time', [interval]).toString()
+  interval: UsageChartInterval
 }
 
 export function resolveDateBounds(dateRange: DateRange | undefined): {
   from: Date
   to: Date
 } {
-  const to = dateRange?.to
-    ? endOfDay(dateRange.to)
-    : endOfDay(new Date())
-  const from = dateRange?.from
-    ? startOfDay(dateRange.from)
-    : startOfDay(subDays(to, 29))
-
-  return { from, to }
+  return resolveUsageDateBounds(dateRange)
 }
 
 export function resolveOverviewUsagePeriod(
   dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ): OverviewUsagePeriod {
-  const { from, to } = resolveDateBounds(dateRange)
-  const interval = getGroupInterval(from, to)
-  const rangeDays = Math.max(1, differenceInCalendarDays(to, from) + 1)
-  const previousTo = endOfDay(subDays(from, 1))
-  const previousFrom = startOfDay(subDays(previousTo, rangeDays - 1))
+  const { from, to } = resolveUsageDateBounds(dateRange)
+
+  let previousFrom: Date
+  let previousTo: Date
+
+  if (isFullCalendarDayRange(from, to)) {
+    const rangeDays = Math.max(1, differenceInCalendarDays(to, from) + 1)
+    previousTo = endOfDay(subDays(from, 1))
+    previousFrom = startOfDay(subDays(previousTo, rangeDays - 1))
+  } else {
+    const durationMs = to.getTime() - from.getTime()
+    previousTo = new Date(from.getTime())
+    previousFrom = new Date(from.getTime() - durationMs)
+  }
 
   return { from, to, previousFrom, previousTo, interval }
 }
 
-export function getGroupInterval(from: Date, to: Date): string {
-  const days = Math.max(1, differenceInCalendarDays(to, from) + 1)
-  if (days <= 2) return '1h'
-  return '1d'
+function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return startOfMinute(date)
+  if (interval === '1h') return startOfHour(date)
+  return startOfDay(date)
 }
 
-/** Bucket count for groupByInterval queries; capped at API max. */
-export function getChartQueryLimit(
-  from: Date,
-  to: Date,
-  interval: string,
-): number {
-  if (interval === '1h') {
-    const hours = Math.max(1, differenceInHours(to, from) + 1)
-    return Math.min(hours, USAGE_EVENTS_MAX_LIMIT)
-  }
-
-  const days = Math.max(1, differenceInCalendarDays(to, from) + 1)
-  return Math.min(days, USAGE_EVENTS_MAX_LIMIT)
+function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return addMinutes(date, 1)
+  if (interval === '1h') return addHours(date, 1)
+  return addDays(date, 1)
 }
 
-function mergeValuesByTime(events: Models.UsageEvent[]): Map<string, number> {
+interface ListUsageEventGroupsParams {
+  metric: string
+  interval: UsageChartInterval
+  startAt: string
+  endAt: string
+  dimensions?: string[]
+  resource?: string
+  resourceId?: string
+}
+
+function mergeValuesByTime(groups: Models.UsageGroup[]): Map<string, number> {
   const merged = new Map<string, number>()
-  for (const event of events) {
-    merged.set(event.time, (merged.get(event.time) ?? 0) + event.value)
+  for (const group of groups) {
+    merged.set(group.time, (merged.get(group.time) ?? 0) + group.value)
   }
   return merged
 }
 
-function sumMergedValues(merged: Map<string, number>): number {
-  return Array.from(merged.values()).reduce((sum, value) => sum + value, 0)
+function normalizeBucketTime(
+  date: Date,
+  interval: UsageChartInterval,
+): Date {
+  return getIntervalStart(date, interval)
 }
 
-function normalizeBucketTime(date: Date, interval: string): Date {
-  return interval === '1h' ? startOfHour(date) : startOfDay(date)
-}
-
-function formatChartPointLabel(day: Date, interval: string): string {
+function formatChartPointLabel(
+  day: Date,
+  interval: UsageChartInterval,
+  rangeFrom: Date,
+  rangeTo: Date,
+): string {
+  if (interval === '1m') {
+    const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
+    return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')
+  }
   if (interval === '1h') {
-    return format(day, 'HH:mm')
+    const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
+    return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')
   }
   return format(day, 'd MMM')
 }
 
 function buildBucketLookup(
   merged: Map<string, number>,
-  interval: string,
+  interval: UsageChartInterval,
 ): Map<number, number> {
   const lookup = new Map<number, number>()
   for (const [time, value] of merged.entries()) {
@@ -140,58 +163,203 @@ function buildBucketLookup(
   return lookup
 }
 
+/** Sum all bucket values in a usage chart series. */
+export function sumUsageChartPoints(points: UsageChartPoint[]): number {
+  return points.reduce((sum, point) => sum + point.total, 0)
+}
+
+export function mergeChartPointsSeries(
+  series: UsageChartPoint[][],
+): UsageChartPoint[] {
+  if (series.length === 0) return []
+  const [first] = series
+  if (!first) return []
+
+  return first.map((point, index) => ({
+    ...point,
+    total: series.reduce((sum, items) => sum + (items[index]?.total ?? 0), 0),
+  }))
+}
+
+export function mergeTopEndpoints(
+  lists: UsageTopEndpoint[][],
+  limit = 7,
+): UsageTopEndpoint[] {
+  const grouped = new Map<string, UsageTopEndpoint>()
+
+  for (const list of lists) {
+    for (const item of list) {
+      const existing = grouped.get(item.id)
+      if (existing) {
+        existing.count += item.count
+        continue
+      }
+      grouped.set(item.id, { ...item })
+    }
+  }
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+}
+
+function mergeUsageMetricSeries(
+  results: UsageMetricSeriesResult[],
+): ProjectUsageMetricOverview {
+  if (results.length === 0) {
+    return { changePercent: 0, chartPoints: [], topEndpoints: [] }
+  }
+
+  const chartPoints = mergeChartPointsSeries(results.map((result) => result.chartPoints))
+  const previousChartPoints = mergeChartPointsSeries(
+    results.map((result) => result.previousChartPoints),
+  )
+
+  return {
+    chartPoints,
+    topEndpoints: mergeTopEndpoints(results.map((result) => result.topEndpoints)),
+    changePercent: computeChangePercent(
+      sumUsageChartPoints(chartPoints),
+      sumUsageChartPoints(previousChartPoints),
+    ),
+  }
+}
+
+interface UsageMetricSeriesResult {
+  chartPoints: UsageChartPoint[]
+  previousChartPoints: UsageChartPoint[]
+  topEndpoints: UsageTopEndpoint[]
+}
+
+export type { UsageMetricSeriesResult }
+
+const TOP_ENDPOINTS_DIMENSIONS = ['path', 'method', 'status'] as const
+
+async function fetchUsageMetricSeries(
+  projectId: string,
+  metric: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<UsageMetricSeriesResult> {
+  const {
+    from,
+    to,
+    previousFrom,
+    previousTo,
+    interval: resolvedInterval,
+  } = resolveOverviewUsagePeriod(dateRange, interval)
+
+  const groups = await listUsageEventGroups(projectId, {
+    metric,
+    interval: resolvedInterval,
+    dimensions: [...TOP_ENDPOINTS_DIMENSIONS],
+    startAt: previousFrom.toISOString(),
+    endAt: to.toISOString(),
+  })
+
+  const { current, previous } = splitGroupsByPeriod(groups, from)
+  const currentMerged = mergeValuesByTime(current)
+  const previousMerged = mergeValuesByTime(previous)
+
+  return {
+    chartPoints: fillChartPointsGaps(currentMerged, from, to, resolvedInterval),
+    previousChartPoints: fillChartPointsGaps(
+      previousMerged,
+      previousFrom,
+      previousTo,
+      resolvedInterval,
+    ),
+    topEndpoints: aggregateTopEndpointsFromGroups(current),
+  }
+}
+
+/**
+ * One listEvents call per metric (with dimensions): chart series, top breakdown,
+ * and change % from the same response (chart totals summed client-side).
+ */
+export async function fetchProjectUsageMetricsOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  metrics: readonly string[],
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<ProjectUsageMetricOverview> {
+  if (!projectId) {
+    return { changePercent: 0, chartPoints: [], topEndpoints: [] }
+  }
+
+  const results = await Promise.all(
+    metrics.map((metric) =>
+      fetchUsageMetricSeries(projectId, metric, dateRange, interval),
+    ),
+  )
+
+  return mergeUsageMetricSeries(results)
+}
+
+/** Single-metric fetch with separate current/previous series (for multi-line charts). */
+export async function fetchProjectUsageMetricSeriesOverview(
+  projectId: string,
+  metric: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<UsageMetricSeriesResult> {
+  if (!projectId) {
+    return { chartPoints: [], previousChartPoints: [], topEndpoints: [] }
+  }
+
+  return fetchUsageMetricSeries(projectId, metric, dateRange, interval)
+}
+
 /** Fill missing interval buckets with zero so the chart spans the full date range. */
 export function fillChartPointsGaps(
   merged: Map<string, number>,
   from: Date,
   to: Date,
-  interval: string,
+  interval: UsageChartInterval,
 ): UsageChartPoint[] {
   const lookup = buildBucketLookup(merged, interval)
   const points: UsageChartPoint[] = []
-  let cursor =
-    interval === '1h' ? startOfHour(from) : startOfDay(from)
-  const endCursor =
-    interval === '1h' ? startOfHour(to) : startOfDay(to)
+  let cursor = getIntervalStart(from, interval)
+  const endCursor = getIntervalStart(to, interval)
 
   while (cursor.getTime() <= endCursor.getTime()) {
     const key = cursor.getTime()
     points.push({
-      date: formatChartPointLabel(cursor, interval),
+      date: formatChartPointLabel(cursor, interval, from, to),
       day: cursor,
       total: lookup.get(key) ?? 0,
     })
-    cursor = interval === '1h' ? addHours(cursor, 1) : addDays(cursor, 1)
+    cursor = advanceIntervalCursor(cursor, interval)
   }
 
   return points
 }
 
-function splitEventsByPeriod(
-  events: Models.UsageEvent[],
+function splitGroupsByPeriod(
+  groups: Models.UsageGroup[],
   currentFrom: Date,
 ): {
-  current: Models.UsageEvent[]
-  previous: Models.UsageEvent[]
+  current: Models.UsageGroup[]
+  previous: Models.UsageGroup[]
 } {
-  const currentFromMs = startOfDay(currentFrom).getTime()
-  const current: Models.UsageEvent[] = []
-  const previous: Models.UsageEvent[] = []
+  const currentFromMs = currentFrom.getTime()
+  const current: Models.UsageGroup[] = []
+  const previous: Models.UsageGroup[] = []
 
-  for (const event of events) {
-    const eventMs = parseISO(event.time).getTime()
-    if (eventMs >= currentFromMs) {
-      current.push(event)
+  for (const group of groups) {
+    const groupMs = parseISO(group.time).getTime()
+    if (groupMs >= currentFromMs) {
+      current.push(group)
     } else {
-      previous.push(event)
+      previous.push(group)
     }
   }
 
   return { current, previous }
 }
 
-function aggregateTopEndpoints(
-  events: Models.UsageEvent[],
+function aggregateTopEndpointsFromGroups(
+  groups: Models.UsageGroup[],
   limit = 7,
 ): UsageTopEndpoint[] {
   const grouped = new Map<
@@ -204,17 +372,17 @@ function aggregateTopEndpoints(
     }
   >()
 
-  for (const event of events) {
-    const method = event.method || 'GET'
-    const statusCode = Number.parseInt(event.status, 10) || 0
-    const path = event.path || '/'
+  for (const group of groups) {
+    const method = group.method || 'GET'
+    const statusCode = Number.parseInt(group.status ?? '', 10) || 0
+    const path = group.path || '/'
     const key = `${method}|${statusCode}|${path}`
     const existing = grouped.get(key)
     if (existing) {
-      existing.count += event.value
+      existing.count += group.value
       continue
     }
-    grouped.set(key, { method, statusCode, path, count: event.value })
+    grouped.set(key, { method, statusCode, path, count: group.value })
   }
 
   return Array.from(grouped.entries())
@@ -229,16 +397,51 @@ function aggregateTopEndpoints(
     }))
 }
 
-async function listUsageEvents(
+async function listUsageEventGroups(
   projectId: string,
-  queries: string[],
-): Promise<Models.UsageEvent[]> {
+  params: ListUsageEventGroupsParams,
+): Promise<Models.UsageGroup[]> {
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.usage.listEvents({
-    queries,
-    total: false,
-  })
-  return response.events ?? []
+  const request: {
+    metric: string
+    interval: string
+    startAt: string
+    endAt: string
+    dimensions?: string[]
+    resource?: string
+    resourceId?: string
+  } = {
+    metric: params.metric,
+    interval: params.interval,
+    startAt: params.startAt,
+    endAt: params.endAt,
+  }
+
+  if (params.dimensions?.length) {
+    request.dimensions = params.dimensions
+  }
+  if (params.resource) {
+    request.resource = params.resource
+  }
+  if (params.resourceId) {
+    request.resourceId = params.resourceId
+  }
+
+  const response = await projectSdk.usage.listEvents(request)
+  return response.groups ?? []
+}
+
+async function listUsageEventGroupsForMetrics(
+  projectId: string,
+  metrics: readonly string[],
+  params: Omit<ListUsageEventGroupsParams, 'metric'>,
+): Promise<Models.UsageGroup[]> {
+  const results = await Promise.all(
+    metrics.map((metric) =>
+      listUsageEventGroups(projectId, { ...params, metric }),
+    ),
+  )
+  return results.flat()
 }
 
 export function computeChangePercent(
@@ -252,70 +455,73 @@ export function computeChangePercent(
 }
 
 /**
- * One listEvents call: current + previous period buckets for chart, total, and change %.
+ * Chart-only fetch (no dimensions). Used by org project list sparklines.
  */
 export async function fetchProjectUsageChartOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   metrics: readonly string[],
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId) {
     return {
-      total: 0,
       changePercent: 0,
       chartPoints: [],
     }
   }
 
-  const { from, to, previousFrom, interval } =
-    resolveOverviewUsagePeriod(dateRange)
-  const limit = getChartQueryLimit(previousFrom, to, interval)
+  const {
+    from,
+    to,
+    previousFrom,
+    previousTo,
+    interval: resolvedInterval,
+  } = resolveOverviewUsagePeriod(dateRange, interval)
 
-  const events = await listUsageEvents(projectId, [
-    Query.equal('metric', [...metrics]),
-    Query.greaterThanEqual('time', previousFrom.toISOString()),
-    Query.lessThanEqual('time', to.toISOString()),
-    groupByIntervalQuery(interval),
-    Query.orderAsc('time'),
-    Query.limit(limit),
-  ])
+  const groups = await listUsageEventGroupsForMetrics(projectId, metrics, {
+    interval: resolvedInterval,
+    startAt: previousFrom.toISOString(),
+    endAt: to.toISOString(),
+  })
 
-  const { current, previous } = splitEventsByPeriod(events, from)
+  const { current, previous } = splitGroupsByPeriod(groups, from)
   const currentMerged = mergeValuesByTime(current)
   const previousMerged = mergeValuesByTime(previous)
-  const total = sumMergedValues(currentMerged)
-  const previousTotal = sumMergedValues(previousMerged)
+  const chartPoints = fillChartPointsGaps(
+    currentMerged,
+    from,
+    to,
+    resolvedInterval,
+  )
+  const previousChartPoints = fillChartPointsGaps(
+    previousMerged,
+    previousFrom,
+    previousTo,
+    resolvedInterval,
+  )
 
   return {
-    total,
-    changePercent: computeChangePercent(total, previousTotal),
-    chartPoints: fillChartPointsGaps(currentMerged, from, to, interval),
+    changePercent: computeChangePercent(
+      sumUsageChartPoints(chartPoints),
+      sumUsageChartPoints(previousChartPoints),
+    ),
+    chartPoints,
   }
 }
 
-/**
- * One listEvents call: aggregate top path/method/status rows for the current range.
- */
+/** @deprecated Use fetchProjectUsageMetricsOverview for chart + breakdown together. */
 export async function fetchProjectUsageTopEndpoints(
   projectId: string,
   dateRange: DateRange | undefined,
   metrics: readonly string[],
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ): Promise<ProjectUsageTopEndpointsOverview> {
-  if (!projectId) {
-    return { topEndpoints: [] }
-  }
+  const overview = await fetchProjectUsageMetricsOverview(
+    projectId,
+    dateRange,
+    metrics,
+    interval,
+  )
 
-  const { from, to } = resolveOverviewUsagePeriod(dateRange)
-
-  const events = await listUsageEvents(projectId, [
-    Query.equal('metric', [...metrics]),
-    Query.greaterThanEqual('time', from.toISOString()),
-    Query.lessThanEqual('time', to.toISOString()),
-    Query.orderDesc('time'),
-    Query.limit(TOP_ENDPOINTS_QUERY_LIMIT),
-  ])
-
-  return {
-    topEndpoints: aggregateTopEndpoints(events),
-  }
+  return { topEndpoints: overview.topEndpoints }
 }

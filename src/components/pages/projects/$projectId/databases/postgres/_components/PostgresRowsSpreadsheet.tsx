@@ -1,8 +1,4 @@
 import { cn } from '@/lib/utils'
-import {
-  formatSpreadsheetCellValue,
-  isSpreadsheetRtlText,
-} from '@/lib/spreadsheet-cell-formatting'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
 import { isPostgresPrimaryKeyColumn } from '@/lib/postgres-sql'
@@ -30,7 +26,13 @@ import {
   POSTGRES_ROWS_TABLE_EDGE_COL_PX,
   POSTGRES_STICKY_THEAD_CLASS,
 } from './postgres-spreadsheet-chrome'
-import { useCallback, useMemo, useRef, type MouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type MouseEvent,
+} from 'react'
 
 type PostgresRowsSpreadsheetProps = {
   databaseId: string
@@ -47,6 +49,7 @@ type PostgresRowsSpreadsheetProps = {
   pageSize: number
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
+  onPaginationInteract?: () => void
 }
 
 export function PostgresRowsSpreadsheet({
@@ -64,6 +67,7 @@ export function PostgresRowsSpreadsheet({
   pageSize,
   onPageChange,
   onPageSizeChange,
+  onPaginationInteract,
 }: PostgresRowsSpreadsheetProps) {
   const editSession = usePostgresRowsEditSession()
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -117,6 +121,17 @@ export function PostgresRowsSpreadsheet({
     [cancelDrawerOpen, editSession, onOpenRow],
   )
 
+  useEffect(() => {
+    return () => {
+      cancelDrawerOpen()
+    }
+  }, [cancelDrawerOpen])
+
+  const handlePaginationInteract = useCallback(() => {
+    cancelDrawerOpen()
+    onPaginationInteract?.()
+  }, [cancelDrawerOpen, onPaginationInteract])
+
   const showEmptyTable = !isLoading && (visibleColumns.length === 0 || rows.length === 0)
 
   return (
@@ -140,7 +155,7 @@ export function PostgresRowsSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative inline-block min-w-full align-top"
+            className="relative inline-block min-w-full align-top overflow-x-clip"
           >
             <table
               className="w-full table-fixed border-collapse"
@@ -246,12 +261,19 @@ export function PostgresRowsSpreadsheet({
                 {rows.map((row, rowIndex) => {
                   const rowKey = getPostgresRowKey(row, columns)
                   const identity = buildPostgresRowIdentityFromRow(row, columns)
+                  const hasPendingEdits =
+                    editSession?.isRowEdited(tableId, rowKey) ?? false
                   return (
                     <tr
                       key={rowKey}
                       className={cn(
-                        'transition-colors hover:bg-muted/50',
-                        rowIndex % 2 === 1 && 'bg-muted/15',
+                        'group cursor-pointer transition-colors',
+                        hasPendingEdits &&
+                          'bg-amber-500/10 ring-1 ring-inset ring-amber-500/20 hover:bg-amber-500/15',
+                        !hasPendingEdits && 'hover:bg-muted/50',
+                        !hasPendingEdits &&
+                          rowIndex % 2 === 1 &&
+                          'bg-muted/15',
                       )}
                     >
                       <td
@@ -266,9 +288,6 @@ export function PostgresRowsSpreadsheet({
                       </td>
                       {visibleColumns.map((column, columnIndex) => {
                         const rawValue = row[column.column_name]
-                        const { full, display, isNull } =
-                          formatSpreadsheetCellValue(rawValue)
-                        const isRtl = isSpreadsheetRtlText(full)
                         const isLastColumn =
                           columnIndex === visibleColumns.length - 1
                         return (
@@ -280,10 +299,6 @@ export function PostgresRowsSpreadsheet({
                             identity={identity}
                             originalValue={rawValue as never}
                             canWrite={canWrite}
-                            display={display}
-                            isNull={isNull}
-                            title={full}
-                            dir={isRtl ? 'rtl' : undefined}
                             className={
                               isLastColumn ? 'border-r-0' : undefined
                             }
@@ -328,7 +343,10 @@ export function PostgresRowsSpreadsheet({
       </div>
 
       <div className="h-[54px] shrink-0 border-t border-border bg-background">
-        <div className="@container flex h-full items-center px-4 sm:px-6">
+        <div
+          className="@container flex h-full items-center px-4 sm:px-6"
+          onPointerDownCapture={handlePaginationInteract}
+        >
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}

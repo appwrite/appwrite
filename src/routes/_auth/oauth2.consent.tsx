@@ -8,7 +8,6 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { OAuth2ConsentCard } from '@/components/global/auth/OAuth2ConsentCard'
-import { OAUTH2_SERVER_PROJECT_ID } from '@/lib/appwrite/oauth2-server'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -63,7 +62,6 @@ function OAuth2ConsentPage() {
       knownAccount?: Models.User<Models.Preferences> | null,
     ) {
       const loadedGrant = await sdk.forConsole.oauth2.getGrant({
-        projectId: OAUTH2_SERVER_PROJECT_ID,
         grantId,
       })
       const [loadedApp, loadedAccount] = await Promise.all([

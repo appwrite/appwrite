@@ -6,8 +6,8 @@ import {
   postgresTableId,
 } from '@/lib/postgres-database-routes'
 import {
+  fetchFirstPostgresTable,
   postgresDatabaseQueryOptions,
-  postgresTablesQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 
@@ -26,17 +26,13 @@ export const Route = createFileRoute(
       postgresDatabaseQueryOptions(projectId, databaseId),
     )
 
-    let tablesData: { tables?: { table_schema: string; table_name: string }[] } | null =
-      null
+    let firstTable: { table_schema: string; table_name: string } | null = null
     try {
-      tablesData = (await queryClient.ensureQueryData(
-        postgresTablesQueryOptions(projectId, databaseId),
-      )) as { tables?: { table_schema: string; table_name: string }[] }
+      firstTable = await fetchFirstPostgresTable(projectId, databaseId)
     } catch {
       /* navigate to overview even if SQL metadata is unavailable */
     }
 
-    const firstTable = tablesData?.tables?.[0]
     if (firstTable) {
       throw redirect({
         ...postgresDatabaseHome({

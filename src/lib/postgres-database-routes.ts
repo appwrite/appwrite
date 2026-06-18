@@ -170,17 +170,59 @@ export function postgresTableRows(params: PostgresNavParams & { tableId: string 
   return postgresNav(params).table({ tableId: params.tableId }).rows()
 }
 
-export type PostgresSqlWorkbenchRoute = { mode: 'sql' }
+const POSTGRES_DATABASE_TAB_SEGMENTS: PostgresDatabaseTab[] = [
+  'sql',
+  'visualizer',
+  'monitor',
+  'insights',
+  'backups',
+  'connections',
+  'settings',
+]
 
-/** Matches `/sql` so the SQL workbench can stay mounted while editing. */
-export function parsePostgresSqlWorkbenchRoute(
+export function parsePostgresDatabaseTabFromPathname(
   pathname: string,
-): PostgresSqlWorkbenchRoute | null {
-  if (
-    /\/projects\/[^/]+\/databases\/postgres\/[^/]+\/sql\/?$/.test(pathname)
-  ) {
-    return { mode: 'sql' }
-  }
+): PostgresDatabaseTab | undefined {
+  const segments = pathname.split('/').filter(Boolean)
+  const postgresIndex = segments.indexOf('postgres')
+  if (postgresIndex === -1) return undefined
 
+  const segment = segments[postgresIndex + 2]
+  if (!segment) return undefined
+  if (segment === 'tables') return undefined
+
+  return POSTGRES_DATABASE_TAB_SEGMENTS.find((tab) => tab === segment)
+}
+
+export function parsePostgresTableTabFromPathname(
+  pathname: string,
+): PostgresTableTab | null {
+  if (!pathname.includes('/tables/')) return null
+  if (pathname.endsWith('/columns')) return 'columns'
+  if (pathname.endsWith('/indexes')) return 'indexes'
+  if (pathname.endsWith('/settings')) return 'settings'
+  if (pathname.endsWith('/rows')) return 'rows'
   return null
 }
+
+export function parsePostgresShellRouteState(args: {
+  pathname: string
+  tableId?: string
+}): {
+  databaseTab?: PostgresDatabaseTab
+  tableId?: string
+} {
+  const tableTab = parsePostgresTableTabFromPathname(args.pathname)
+  if (tableTab) {
+    return {
+      tableId: args.tableId
+        ? normalizePostgresTableRouteId(args.tableId)
+        : undefined,
+    }
+  }
+
+  return {
+    databaseTab: parsePostgresDatabaseTabFromPathname(args.pathname),
+  }
+}
+

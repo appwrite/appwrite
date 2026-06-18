@@ -1,5 +1,4 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 import { View as PostgresMonitorView } from '@/components/pages/projects/$projectId/databases/postgres/Monitor'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import {
@@ -68,9 +67,5 @@ export const Route = createFileRoute(
 
 function PostgresMonitorPage() {
   const { projectId, databaseId } = Route.useParams()
-  return (
-    <PostgresShell databaseId={databaseId} databaseTab="monitor">
-      <PostgresMonitorView projectId={projectId} databaseId={databaseId} />
-    </PostgresShell>
-  )
+  return <PostgresMonitorView projectId={projectId} databaseId={databaseId} />
 }

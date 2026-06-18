@@ -14,7 +14,6 @@ import {
   OAuth2ConsentCard,
   type OAuth2Flow,
 } from '@/components/global/auth/OAuth2ConsentCard'
-import { OAUTH2_SERVER_PROJECT_ID } from '@/lib/appwrite/oauth2-server'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -61,7 +60,6 @@ function OAuth2DevicePage() {
   const submitMutation = useMutation({
     mutationFn: async (userCode: string) => {
       const loadedGrant = await sdk.forConsole.oauth2.createGrant({
-        projectId: OAUTH2_SERVER_PROJECT_ID,
         userCode,
       })
       const loadedApp = await sdk.forConsole.apps.get({

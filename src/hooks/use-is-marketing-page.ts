@@ -1,7 +1,6 @@
 import { useLocation, useMatches } from '@tanstack/react-router'
 import { useMemo } from 'react'
-import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
-import { isMarketingRouteMatch } from '@/lib/marketing/route-static-data'
+import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 
 /**
  * True on marketing/public pages (home, pricing, docs, policies, etc.).
@@ -12,9 +11,7 @@ export function useIsMarketingPage(): boolean {
   const { pathname } = useLocation()
 
   return useMemo(
-    () =>
-      matches.some((match) => isMarketingRouteMatch(match)) ||
-      isMarketingPagePath(pathname),
+    () => isMarketingPage({ pathname, matches }),
     [matches, pathname],
   )
 }

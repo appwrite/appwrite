@@ -101,7 +101,14 @@ export function usePostgresRowsColumnResize(
       const th = headerThRefs.current.get(columnKey)
       const rail = railRefs.current.get(columnKey)
       if (!th || !rail) continue
-      rail.style.left = `${th.getBoundingClientRect().right - layerRect.left}px`
+      const isLastColumn =
+        columnKeysRef.current[columnKeysRef.current.length - 1] === columnKey
+      const rawLeft = th.getBoundingClientRect().right - layerRect.left
+      // Keep the last resize handle inside the table so it does not widen scroll width.
+      const left = isLastColumn
+        ? Math.min(rawLeft, Math.max(0, layerRect.width - 4))
+        : rawLeft
+      rail.style.left = `${left}px`
     }
   }, [])
 

@@ -9,7 +9,7 @@ import {
   usePostgresTableIndexes,
 } from '@/lib/react-query/hooks'
 import type { PostgresTableTab } from '@/lib/postgres-database-routes'
-import { PostgresTableHeader } from './_components/PostgresTableHeader'
+import { usePostgresTableHeaderSlot } from './_components/PostgresTableHeaderSlotContext'
 import { PostgresTableColumnsPanel } from './_components/PostgresTableColumnsPanel'
 import { PostgresTableIndexesPanel } from './_components/PostgresTableIndexesPanel'
 import { PostgresTablePropertiesPanel } from './_components/PostgresTablePropertiesPanel'
@@ -45,12 +45,10 @@ export function TableStructureContent({
   const canWrite = canShowTableSecuritySettings(access, features)
 
   const {
-    total: columnCount,
     refetch: refetchColumns,
     isFetching: columnsFetching,
   } = usePostgresTableColumns(projectId, databaseId, tableId)
   const {
-    total: indexCount,
     refetch: refetchIndexes,
     isFetching: indexesFetching,
   } = usePostgresTableIndexes(projectId, databaseId, tableId)
@@ -115,21 +113,11 @@ export function TableStructureContent({
     searchValue,
   ])
 
+  usePostgresTableHeaderSlot(headerProps)
+
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 bg-background">
-        <PostgresTableHeader
-          projectId={projectId}
-          databaseId={databaseId}
-          tableId={tableId}
-          activeTab={activeTab}
-          columnCount={columnCount}
-          indexCount={indexCount}
-          {...headerProps}
-        />
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {activeTab === 'columns' ? (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      {activeTab === 'columns' ? (
           <PostgresTableColumnsPanel
             databaseId={databaseId}
             tableId={tableId}
@@ -153,7 +141,6 @@ export function TableStructureContent({
             tableId={tableId}
           />
         ) : null}
-      </div>
     </div>
   )
 }

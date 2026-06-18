@@ -8,9 +8,6 @@
  * directly — this module only holds pure constants/helpers, no API calls.
  */
 
-/** The reserved project that hosts the Console OAuth2 server. */
-export const OAUTH2_SERVER_PROJECT_ID = 'console'
-
 /** A single parsed authorization detail entry (RFC 9396). */
 export interface AuthorizationDetail {
   type: string

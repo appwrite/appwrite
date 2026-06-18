@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -11,9 +11,9 @@ import {
 import { formatPostgresColumnType } from '@/lib/postgres-table-ddl'
 import { isPostgresPrimaryKeyColumn } from '@/lib/postgres-sql'
 import {
-  postgresSchemasQueryOptions,
+  postgresSidebarSchemasInfiniteQueryOptions,
+  postgresSidebarTablesInfiniteQueryOptions,
   postgresTableColumnsQueryOptions,
-  postgresTablesQueryOptions,
 } from '@/lib/react-query/hooks/postgres-databases'
 
 type PostgresForeignKeySelectorProps = {
@@ -35,15 +35,57 @@ export function PostgresForeignKeySelector({
   active = true,
   hasMultipleForeignKeys = false,
 }: PostgresForeignKeySelectorProps) {
-  const { data: schemasData, isFetching: schemasLoading } = useQuery({
-    ...postgresSchemasQueryOptions(projectId, databaseId),
+  const [schemaSearch, setSchemaSearch] = useState('')
+  const [tableSearch, setTableSearch] = useState('')
+  const [debouncedSchemaSearch, setDebouncedSchemaSearch] = useState('')
+  const [debouncedTableSearch, setDebouncedTableSearch] = useState('')
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedSchemaSearch(schemaSearch.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timeout)
+  }, [schemaSearch])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedTableSearch(tableSearch.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timeout)
+  }, [tableSearch])
+
+  const {
+    data: schemasData,
+    isLoading: schemasLoading,
+    isFetching: schemasFetching,
+    isFetchingNextPage: schemasFetchingNextPage,
+    fetchNextPage: fetchNextSchemaPage,
+    hasNextPage: hasMoreSchemas,
+  } = useInfiniteQuery({
+    ...postgresSidebarSchemasInfiniteQueryOptions(
+      projectId,
+      databaseId,
+      debouncedSchemaSearch,
+    ),
     enabled: active && value.enabled,
   })
 
-  const { data: tablesData, isFetching: tablesLoading } = useQuery({
-    ...postgresTablesQueryOptions(projectId, databaseId, {
-      schema: value.schema || defaultSchema,
-    }),
+  const {
+    data: tablesData,
+    isLoading: tablesLoading,
+    isFetching: tablesFetching,
+    isFetchingNextPage: tablesFetchingNextPage,
+    fetchNextPage: fetchNextTablePage,
+    hasNextPage: hasMoreTables,
+  } = useInfiniteQuery({
+    ...postgresSidebarTablesInfiniteQueryOptions(
+      projectId,
+      databaseId,
+      value.schema || defaultSchema,
+      debouncedTableSearch,
+    ),
     enabled: active && value.enabled && !!value.schema,
   })
 
@@ -55,22 +97,34 @@ export function PostgresForeignKeySelector({
     enabled: active && value.enabled && !!referencedTableId,
   })
 
+  const schemas = useMemo(
+    () => schemasData?.pages.flatMap((page) => page.schemas) ?? [],
+    [schemasData?.pages],
+  )
+  const schemasTotal = schemasData?.pages[0]?.total ?? schemas.length
+
+  const tables = useMemo(
+    () => tablesData?.pages.flatMap((page) => page.tables) ?? [],
+    [tablesData?.pages],
+  )
+  const tablesTotal = tablesData?.pages[0]?.total ?? tables.length
+
   const schemaItems = useMemo(
     () =>
-      (schemasData?.schemas ?? []).map((schema) => ({
+      schemas.map((schema) => ({
         value: schema,
         label: schema,
       })),
-    [schemasData?.schemas],
+    [schemas],
   )
 
   const tableItems = useMemo(
     () =>
-      (tablesData?.tables ?? []).map((table) => ({
+      tables.map((table) => ({
         value: table.table_name,
         label: table.table_name,
       })),
-    [tablesData?.tables],
+    [tables],
   )
 
   const columnItems = useMemo(
@@ -170,6 +224,16 @@ export function PostgresForeignKeySelector({
               searchPlaceholder="Search schemas…"
               emptyMessage="No schemas found"
               disabled={schemasLoading && schemaItems.length === 0}
+              onSearchChange={setSchemaSearch}
+              isFetching={schemasFetching}
+              hasNextPage={hasMoreSchemas ?? false}
+              isFetchingNextPage={schemasFetchingNextPage}
+              onLoadMore={() => fetchNextSchemaPage()}
+              listFooter={
+                schemasTotal > schemas.length
+                  ? `Showing ${schemas.length.toLocaleString()} of ${schemasTotal.toLocaleString()} schemas`
+                  : undefined
+              }
             />
           </div>
           <div className="space-y-2">
@@ -190,6 +254,16 @@ export function PostgresForeignKeySelector({
               searchPlaceholder="Search tables…"
               emptyMessage="No tables found"
               disabled={!value.schema || (tablesLoading && tableItems.length === 0)}
+              onSearchChange={setTableSearch}
+              isFetching={tablesFetching}
+              hasNextPage={hasMoreTables ?? false}
+              isFetchingNextPage={tablesFetchingNextPage}
+              onLoadMore={() => fetchNextTablePage()}
+              listFooter={
+                tablesTotal > tables.length
+                  ? `Showing ${tables.length.toLocaleString()} of ${tablesTotal.toLocaleString()} tables`
+                  : undefined
+              }
             />
           </div>
           <div className="space-y-2">

@@ -16,9 +16,13 @@ export const overviewTopBreakdownRowClass =
 export const overviewChartContentRowClass =
   'flex min-w-0 flex-col @[700px]:min-h-[368px] @[700px]:flex-row @[700px]:items-stretch'
 
-/** Left chart column — explicit width on mobile; flex growth on wide layouts only. */
+/** Left chart column — grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
   'flex w-full min-w-0 flex-col border-b border-border p-5 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-r'
+
+/** Right breakdown column (top endpoints / consumers). */
+export const overviewBreakdownColumnClass =
+  'flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[400px] @[700px]:shrink-0'
 
 export const overviewChartPanelHeaderClass =
   'mb-4 flex min-h-9 shrink-0 items-center justify-between gap-3'

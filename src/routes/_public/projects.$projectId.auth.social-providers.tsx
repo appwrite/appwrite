@@ -29,8 +29,9 @@ export const Route = createFileRoute(
       })
     }
 
-    const [, catalog, providerList] = await Promise.all([
-      queryClient.ensureQueryData(projectQueryOptions(projectId)),
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
+    const [catalog, providerList] = await Promise.all([
       queryClient.ensureQueryData(consoleOAuth2CatalogQueryOptions()),
       queryClient.ensureQueryData(
         projectOAuth2ProvidersQueryOptions(projectId),

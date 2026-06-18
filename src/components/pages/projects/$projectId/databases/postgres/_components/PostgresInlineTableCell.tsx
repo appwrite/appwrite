@@ -14,13 +14,19 @@ import {
   isNumericInlineFieldType,
   type RowCellValue,
 } from '@/lib/database-row-inline-edits'
+import {
+  formatSpreadsheetCellValue,
+  isSpreadsheetRtlText,
+} from '@/lib/spreadsheet-cell-formatting'
 import { usePostgresRowsEditSession } from './PostgresRowsEditSession'
+import { POSTGRES_BODY_CELL_BORDER_CLASS } from './postgres-spreadsheet-chrome'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -36,10 +42,6 @@ type PostgresInlineTableCellProps = {
   originalValue: RowCellValue
   canWrite?: boolean
   className?: string
-  title?: string
-  dir?: 'ltr' | 'rtl'
-  display: string
-  isNull: boolean
   onCancelDrawerOpen?: () => void
   onCellClick?: (event: MouseEvent) => void
 }
@@ -58,10 +60,6 @@ export function PostgresInlineTableCell({
   originalValue,
   canWrite = true,
   className,
-  title,
-  dir,
-  display,
-  isNull,
   onCancelDrawerOpen,
   onCellClick,
 }: PostgresInlineTableCellProps) {
@@ -89,6 +87,19 @@ export function PostgresInlineTableCell({
     ) ?? originalValue
   const isEdited =
     editSession?.isCellEdited(tableId, rowKey, column.column_name) ?? false
+
+  const formattedCell = useMemo(
+    () => formatSpreadsheetCellValue(displayValue),
+    [displayValue],
+  )
+  const shownDisplay = formattedCell.display
+  const shownIsNull = formattedCell.isNull
+  const shownTitle = formattedCell.full
+  const shownDir = isSpreadsheetRtlText(shownTitle) ? 'rtl' : undefined
+  const cellTitle =
+    editable
+      ? `${shownTitle} · Double-click to edit inline`
+      : shownTitle
 
   const startEditing = useCallback(
     (event?: MouseEvent) => {
@@ -151,17 +162,22 @@ export function PostgresInlineTableCell({
 
   useEffect(() => {
     if (!isEditing) return
-    const handlePointerDown = (event: PointerEvent) => {
-      if (
-        editContainerRef.current &&
-        !editContainerRef.current.contains(event.target as Node)
-      ) {
-        commitLocalEdit()
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement
+      if (editContainerRef.current?.contains(target)) return
+      if (target.closest('[data-radix-popper-content-wrapper]')) return
+      if (target.closest('[data-slot="select-trigger"]')) return
+      if (target.closest('[data-slot="select-content"]')) return
+      if (target.closest('[data-slot="dropdown-menu-trigger"]')) return
+      if (target.closest('[data-slot="dropdown-menu-content"]')) return
+      const committed = commitLocalEditRef.current()
+      if (committed) {
+        editSession?.markSuppressNextDrawerOpen()
       }
     }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [commitLocalEdit, isEditing])
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [editSession, isEditing])
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -182,56 +198,106 @@ export function PostgresInlineTableCell({
     }
   }
 
+  const renderEditingSurface = () => (
+    <div
+      ref={editContainerRef}
+      className={CELL_SURFACE_CLASS}
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      {fieldType === 'boolean' ? (
+        <Switch
+          checked={draft === 'true'}
+          onCheckedChange={(checked) => {
+            setDraft(checked ? 'true' : isRequired ? 'false' : '')
+          }}
+        />
+      ) : isDateTimeInlineFieldType(fieldType) ? (
+        <DateTimePicker
+          value={draft || null}
+          onChange={(value) => setDraft(value ?? '')}
+          className="h-7 w-full text-[12px]"
+        />
+      ) : (
+        <Input
+          ref={inputRef}
+          type={isNumericInlineFieldType(fieldType) ? 'number' : 'text'}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={handleKeyDown}
+          className={INLINE_INPUT_CLASS}
+          aria-invalid={validationError ? true : undefined}
+        />
+      )}
+    </div>
+  )
+
+  const renderReadOnlySurface = () => (
+    <div
+      className={CELL_SURFACE_CLASS}
+      title={cellTitle}
+      onClick={(event) => {
+        event.stopPropagation()
+        onCellClick?.(event)
+      }}
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      <span
+        className={cn(
+          'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
+          shownIsNull ? 'text-foreground/60' : 'text-foreground',
+        )}
+        dir={shownDir}
+      >
+        {shownDisplay}
+      </span>
+    </div>
+  )
+
+  const renderEditableSurface = () => {
+    if (isEditing) {
+      return renderEditingSurface()
+    }
+
+    return (
+      <div
+        className={cn(
+          CELL_SURFACE_CLASS,
+          isEdited && 'bg-amber-500/20',
+          !isEdited && 'hover:bg-muted/60',
+        )}
+        title={cellTitle}
+        onClick={(event) => {
+          event.stopPropagation()
+          onCellClick?.(event)
+        }}
+        onDoubleClick={startEditing}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <span
+          className={cn(
+            'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
+            shownIsNull ? 'text-foreground/60' : 'text-foreground',
+            isEdited && 'font-medium text-amber-950 dark:text-amber-50',
+          )}
+          dir={shownDir}
+        >
+          {shownDisplay}
+        </span>
+      </div>
+    )
+  }
+
   return (
     <td
       data-column={column.column_name}
       className={cn(
-        'relative px-4 py-2.5 border-b border-r border-border',
-        isEdited && 'bg-amber-500/20',
+        'relative h-px p-0',
+        POSTGRES_BODY_CELL_BORDER_CLASS,
         className,
       )}
-      onClick={onCellClick}
-      onDoubleClick={startEditing}
     >
-      {isEditing ? (
-        <div ref={editContainerRef} className={CELL_SURFACE_CLASS}>
-          {fieldType === 'boolean' ? (
-            <Switch
-              checked={draft === 'true'}
-              onCheckedChange={(checked) => {
-                setDraft(checked ? 'true' : isRequired ? 'false' : '')
-              }}
-            />
-          ) : isDateTimeInlineFieldType(fieldType) ? (
-            <DateTimePicker
-              value={draft || null}
-              onChange={(value) => setDraft(value ?? '')}
-              className="h-7 w-full text-[12px]"
-            />
-          ) : (
-            <Input
-              ref={inputRef}
-              type={isNumericInlineFieldType(fieldType) ? 'number' : 'text'}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={handleKeyDown}
-              className={INLINE_INPUT_CLASS}
-              aria-invalid={validationError ? true : undefined}
-            />
-          )}
-        </div>
-      ) : (
-        <span
-          className={cn(
-            'block max-w-[320px] truncate whitespace-nowrap text-[12px] font-mono',
-            isNull ? 'text-foreground/60' : 'text-foreground',
-          )}
-          title={title}
-          dir={dir}
-        >
-          {display}
-        </span>
-      )}
+      {editable ? renderEditableSurface() : renderReadOnlySurface()}
     </td>
   )
 }

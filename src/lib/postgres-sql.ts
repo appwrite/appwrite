@@ -2,16 +2,76 @@ import type { Models } from '@appwrite.io/console'
 import { format } from 'sql-formatter'
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 
+const POSTGRES_NAMESPACE_SYSTEM_FILTER = `
+  n.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+  AND n.nspname NOT LIKE 'pg_temp_%'
+  AND n.nspname NOT LIKE 'pg_toast_temp_%'
+`.trim()
+
 const POSTGRES_SCHEMAS_SYSTEM_FILTER = `
-  schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-  AND schema_name NOT LIKE 'pg_temp_%'
-  AND schema_name NOT LIKE 'pg_toast_temp_%'
+  nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+  AND nspname NOT LIKE 'pg_temp_%'
+  AND nspname NOT LIKE 'pg_toast_temp_%'
 `.trim()
 
 export const POSTGRES_SIDEBAR_LIST_PAGE_SIZE = 50
 
 export function quotePostgresStringLiteral(value: string): string {
   return `'${value.replace(/'/g, "''")}'`
+}
+
+/** Strip leading line and block comments for statement classification. */
+export function stripLeadingPostgresSqlComments(sql: string): string {
+  return peelLeadingPostgresSqlComments(sql).sqlWithoutLeadingComments
+}
+
+/** Split leading SQL comments from the executable statement. */
+export function peelLeadingPostgresSqlComments(sql: string): {
+  leadingComments: string
+  sqlWithoutLeadingComments: string
+} {
+  const commentLines: string[] = []
+  let remaining = sql.trimStart()
+
+  while (remaining.length > 0) {
+    if (remaining.startsWith('--')) {
+      const newlineIndex = remaining.indexOf('\n')
+      if (newlineIndex === -1) {
+        commentLines.push(remaining)
+        remaining = ''
+        break
+      }
+      commentLines.push(remaining.slice(0, newlineIndex))
+      remaining = remaining.slice(newlineIndex + 1).trimStart()
+      continue
+    }
+    if (remaining.startsWith('/*')) {
+      const endIndex = remaining.indexOf('*/')
+      if (endIndex === -1) {
+        commentLines.push(remaining)
+        remaining = ''
+        break
+      }
+      commentLines.push(remaining.slice(0, endIndex + 2))
+      remaining = remaining.slice(endIndex + 2).trimStart()
+      continue
+    }
+    break
+  }
+
+  return {
+    leadingComments: commentLines.join('\n'),
+    sqlWithoutLeadingComments: remaining.trim(),
+  }
+}
+
+/** Prefix SQL with a short `--` comment for API tracing. */
+export function prefixPostgresSqlComment(sql: string, comment: string): string {
+  const trimmedSql = sql.trim()
+  if (!trimmedSql) return trimmedSql
+  const trimmedComment = comment.trim().replace(/\s+/g, ' ')
+  if (!trimmedComment) return trimmedSql
+  return `-- ${trimmedComment}\n${trimmedSql}`
 }
 
 export function escapePostgresLikePattern(value: string): string {
@@ -50,21 +110,24 @@ export function buildPostgresListSchemasSql(
   if (search) {
     const pattern = `%${escapePostgresLikePattern(search)}%`
     conditions.push(
-      `schema_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+      `nspname ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
     )
   }
 
   const base = `
-SELECT schema_name
-FROM information_schema.schemata
+SELECT nspname AS schema_name
+FROM pg_catalog.pg_namespace
 WHERE ${conditions.join('\n  AND ')}
-ORDER BY schema_name
+ORDER BY nspname
 `.trim()
 
-  return appendPostgresSqlLimitOffset(
-    base,
-    options?.limit,
-    options?.offset,
+  return prefixPostgresSqlComment(
+    appendPostgresSqlLimitOffset(
+      base,
+      options?.limit,
+      options?.offset,
+    ),
+    'List database schemas',
   )
 }
 
@@ -77,24 +140,23 @@ export function buildPostgresListSchemasCountSql(
   if (search) {
     const pattern = `%${escapePostgresLikePattern(search)}%`
     conditions.push(
-      `schema_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+      `nspname ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
     )
   }
 
-  return `
+  return prefixPostgresSqlComment(
+    `
 SELECT COUNT(*) AS total
-FROM information_schema.schemata
+FROM pg_catalog.pg_namespace
 WHERE ${conditions.join('\n  AND ')}
-`.trim()
+`.trim(),
+    'Count database schemas',
+  )
 }
 
-export const POSTGRES_LIST_SCHEMAS_SQL = buildPostgresListSchemasSql()
+const POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER = POSTGRES_NAMESPACE_SYSTEM_FILTER
 
-const POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER = `
-  table_schema NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-  AND table_schema NOT LIKE 'pg_temp_%'
-  AND table_schema NOT LIKE 'pg_toast_temp_%'
-`.trim()
+const POSTGRES_TABLE_RELKIND_FILTER = `c.relkind IN ('r', 'v')`
 
 export type PostgresListTablesOptions = {
   schema?: string
@@ -108,33 +170,44 @@ export function buildPostgresListTablesSql(
 ): string {
   const conditions = [
     POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER,
-    `table_type IN ('BASE TABLE', 'VIEW')`,
+    POSTGRES_TABLE_RELKIND_FILTER,
   ]
 
   const schema = options?.schema?.trim()
   if (schema) {
-    conditions.push(`table_schema = ${quotePostgresStringLiteral(schema)}`)
+    conditions.push(`n.nspname = ${quotePostgresStringLiteral(schema)}`)
   }
 
   const search = options?.search?.trim()
   if (search) {
     const pattern = `%${escapePostgresLikePattern(search)}%`
     conditions.push(
-      `table_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+      `c.relname ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
     )
   }
 
   const base = `
-SELECT table_schema, table_name, table_type
-FROM information_schema.tables
+SELECT
+  n.nspname AS table_schema,
+  c.relname AS table_name,
+  CASE c.relkind
+    WHEN 'r' THEN 'BASE TABLE'
+    WHEN 'v' THEN 'VIEW'
+    ELSE c.relkind::text
+  END AS table_type
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
 WHERE ${conditions.join('\n  AND ')}
-ORDER BY table_schema, table_name
+ORDER BY n.nspname, c.relname
 `.trim()
 
-  return appendPostgresSqlLimitOffset(
-    base,
-    options?.limit,
-    options?.offset,
+  return prefixPostgresSqlComment(
+    appendPostgresSqlLimitOffset(
+      base,
+      options?.limit,
+      options?.offset,
+    ),
+    'List tables and views',
   )
 }
 
@@ -143,39 +216,32 @@ export function buildPostgresListTablesCountSql(
 ): string {
   const conditions = [
     POSTGRES_TABLES_SYSTEM_SCHEMA_FILTER,
-    `table_type IN ('BASE TABLE', 'VIEW')`,
+    POSTGRES_TABLE_RELKIND_FILTER,
   ]
 
   const schema = options?.schema?.trim()
   if (schema) {
-    conditions.push(`table_schema = ${quotePostgresStringLiteral(schema)}`)
+    conditions.push(`n.nspname = ${quotePostgresStringLiteral(schema)}`)
   }
 
   const search = options?.search?.trim()
   if (search) {
     const pattern = `%${escapePostgresLikePattern(search)}%`
     conditions.push(
-      `table_name ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
+      `c.relname ILIKE ${quotePostgresStringLiteral(pattern)} ESCAPE ${quotePostgresStringLiteral('\\')}`,
     )
   }
 
-  return `
+  return prefixPostgresSqlComment(
+    `
 SELECT COUNT(*) AS total
-FROM information_schema.tables
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
 WHERE ${conditions.join('\n  AND ')}
-`.trim()
+`.trim(),
+    'Count tables and views',
+  )
 }
-
-export const POSTGRES_LIST_TABLES_SQL = buildPostgresListTablesSql()
-
-export const POSTGRES_LIST_COLUMNS_SQL = `
-SELECT table_schema, table_name, column_name, data_type, is_nullable, ordinal_position
-FROM information_schema.columns
-WHERE table_schema NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-  AND table_schema NOT LIKE 'pg_temp_%'
-  AND table_schema NOT LIKE 'pg_toast_temp_%'
-ORDER BY table_schema, table_name, ordinal_position
-`.trim()
 
 export type PostgresSchemaRow = {
   schema_name: string
@@ -202,6 +268,9 @@ export type PostgresTableColumnRow = {
   udt_name: string
   is_nullable: string
   column_default: string | null
+  is_identity: string | null
+  identity_generation: string | null
+  serial_sequence: string | null
   character_maximum_length: number | string | null
   numeric_precision: number | string | null
   numeric_scale: number | string | null
@@ -273,13 +342,24 @@ export type PostgresTableInfoRow = {
 export function buildPostgresTableColumnsSql(schema: string, table: string): string {
   const schemaLit = quotePostgresStringLiteral(schema)
   const tableLit = quotePostgresStringLiteral(table)
-  return `
+  return prefixPostgresSqlComment(
+    `
 SELECT
   c.column_name,
   c.data_type,
   c.udt_name,
   c.is_nullable,
-  c.column_default,
+  COALESCE(pg_get_expr(def.adbin, def.adrelid), c.column_default) AS column_default,
+  CASE WHEN attr.attidentity IN ('a', 'd') THEN 'YES' ELSE 'NO' END AS is_identity,
+  CASE attr.attidentity
+    WHEN 'a' THEN 'ALWAYS'
+    WHEN 'd' THEN 'BY DEFAULT'
+    ELSE NULL
+  END AS identity_generation,
+  pg_get_serial_sequence(
+    quote_ident(c.table_schema) || '.' || quote_ident(c.table_name),
+    c.column_name
+  ) AS serial_sequence,
   c.character_maximum_length,
   c.numeric_precision,
   c.numeric_scale,
@@ -295,6 +375,14 @@ JOIN pg_catalog.pg_class pgc
 JOIN pg_catalog.pg_namespace n
   ON n.oid = pgc.relnamespace
   AND n.nspname = c.table_schema
+LEFT JOIN pg_attribute attr
+  ON attr.attrelid = pgc.oid
+  AND attr.attname = c.column_name
+  AND attr.attnum > 0
+  AND NOT attr.attisdropped
+LEFT JOIN pg_attrdef def
+  ON def.adrelid = attr.attrelid
+  AND def.adnum = attr.attnum
 LEFT JOIN (
   SELECT kcu.column_name
   FROM information_schema.table_constraints tc
@@ -356,13 +444,135 @@ LEFT JOIN (
 WHERE c.table_schema = ${schemaLit}
   AND c.table_name = ${tableLit}
 ORDER BY CASE WHEN pk.column_name IS NOT NULL THEN 0 ELSE 1 END, c.ordinal_position
-`.trim()
+`.trim(),
+    'List table columns',
+  )
+}
+
+/** Lighter column metadata for row browsing/editing (pg_catalog only, no information_schema). */
+export function buildPostgresTableColumnsForRowsSql(
+  schema: string,
+  table: string,
+): string {
+  const schemaLit = quotePostgresStringLiteral(schema)
+  const tableLit = quotePostgresStringLiteral(table)
+  return prefixPostgresSqlComment(
+    `
+WITH rel AS (
+  SELECT c.oid AS rel_oid, c.relkind
+  FROM pg_catalog.pg_class c
+  JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = ${schemaLit}
+    AND c.relname = ${tableLit}
+)
+SELECT
+  a.attname AS column_name,
+  format_type(a.atttypid, a.atttypmod) AS data_type,
+  t.typname AS udt_name,
+  CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END AS is_nullable,
+  pg_get_expr(d.adbin, d.adrelid) AS column_default,
+  CASE WHEN a.attidentity IN ('a', 'd') THEN 'YES' ELSE 'NO' END AS is_identity,
+  CASE a.attidentity
+    WHEN 'a' THEN 'ALWAYS'
+    WHEN 'd' THEN 'BY DEFAULT'
+    ELSE NULL
+  END AS identity_generation,
+  NULL::text AS serial_sequence,
+  CASE
+    WHEN t.typname IN ('varchar', 'bpchar', 'bit', 'varbit') AND a.atttypmod > 0
+      THEN a.atttypmod - 4
+    ELSE NULL
+  END AS character_maximum_length,
+  CASE
+    WHEN t.typname = 'numeric' AND a.atttypmod > 0
+      THEN ((a.atttypmod - 4) >> 16) & 65535
+    ELSE NULL
+  END AS numeric_precision,
+  CASE
+    WHEN t.typname = 'numeric' AND a.atttypmod > 0
+      THEN (a.atttypmod - 4) & 65535
+    ELSE NULL
+  END AS numeric_scale,
+  CASE
+    WHEN t.typname IN ('time', 'timetz', 'timestamp', 'timestamptz', 'interval')
+      AND a.atttypmod > 0
+      THEN a.atttypmod
+    ELSE NULL
+  END AS datetime_precision,
+  a.attnum AS ordinal_position,
+  CASE WHEN pk.contype = 'p' THEN true ELSE false END AS is_primary_key,
+  NULL::text AS column_comment,
+  NULL::text AS check_constraints,
+  NULL::text AS foreign_keys,
+  rel.relkind AS rel_kind
+FROM rel
+LEFT JOIN pg_catalog.pg_attribute a
+  ON a.attrelid = rel.rel_oid
+ AND a.attnum > 0
+ AND NOT a.attisdropped
+LEFT JOIN pg_catalog.pg_type t
+  ON t.oid = a.atttypid
+LEFT JOIN pg_catalog.pg_attrdef d
+  ON d.adrelid = a.attrelid
+ AND d.adnum = a.attnum
+LEFT JOIN pg_catalog.pg_constraint pk
+  ON pk.conrelid = rel.rel_oid
+ AND pk.contype = 'p'
+ AND a.attnum = ANY (pk.conkey)
+WHERE a.attname IS NOT NULL
+   OR NOT EXISTS (
+     SELECT 1
+     FROM pg_catalog.pg_attribute a2
+     WHERE a2.attrelid = rel.rel_oid
+       AND a2.attnum > 0
+       AND NOT a2.attisdropped
+   )
+ORDER BY CASE WHEN pk.contype = 'p' THEN 0 ELSE 1 END, a.attnum
+`.trim(),
+    'Load row columns',
+  )
+}
+
+/** Slim per-table column list for SQL editor autocomplete (pg_catalog only). */
+export function buildPostgresTableAutocompleteColumnsSql(
+  schema: string,
+  table: string,
+): string {
+  const schemaLit = quotePostgresStringLiteral(schema)
+  const tableLit = quotePostgresStringLiteral(table)
+  return prefixPostgresSqlComment(
+    `
+SELECT
+  n.nspname AS table_schema,
+  c.relname AS table_name,
+  a.attname AS column_name,
+  format_type(a.atttypid, a.atttypmod) AS data_type,
+  CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END AS is_nullable,
+  a.attnum AS ordinal_position
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+JOIN pg_catalog.pg_attribute a
+  ON a.attrelid = c.oid
+ AND a.attnum > 0
+ AND NOT a.attisdropped
+WHERE n.nspname = ${schemaLit}
+  AND c.relname = ${tableLit}
+ORDER BY a.attnum
+`.trim(),
+    'List autocomplete columns',
+  )
+}
+
+/** Base tables and materialized views expose ctid; ordinary views do not. */
+export function postgresRelationSupportsRowCtid(relKind: string | null | undefined): boolean {
+  return relKind === 'r' || relKind === 'm'
 }
 
 export function buildPostgresTableIndexesSql(schema: string, table: string): string {
   const schemaLit = quotePostgresStringLiteral(schema)
   const tableLit = quotePostgresStringLiteral(table)
-  return `
+  return prefixPostgresSqlComment(
+    `
 SELECT
   i.relname AS index_name,
   pg_get_indexdef(i.oid) AS index_definition,
@@ -388,13 +598,16 @@ JOIN pg_am am ON am.oid = i.relam
 WHERE n.nspname = ${schemaLit}
   AND t.relname = ${tableLit}
 ORDER BY ix.indisprimary DESC, i.relname
-`.trim()
+`.trim(),
+    'List table indexes',
+  )
 }
 
 export function buildPostgresTableInfoSql(schema: string, table: string): string {
   const schemaLit = quotePostgresStringLiteral(schema)
   const tableLit = quotePostgresStringLiteral(table)
-  return `
+  return prefixPostgresSqlComment(
+    `
 SELECT
   n.nspname AS table_schema,
   c.relname AS table_name,
@@ -411,7 +624,9 @@ FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = ${schemaLit}
   AND c.relname = ${tableLit}
-`.trim()
+`.trim(),
+    'Load table info',
+  )
 }
 
 export function executionResultRows<T extends Record<string, unknown>>(
@@ -458,12 +673,18 @@ export function buildPostgresSelectSql(
   offset: number,
 ): string {
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `SELECT * FROM ${qualified} LIMIT ${limit} OFFSET ${offset}`
+  return prefixPostgresSqlComment(
+    `SELECT * FROM ${qualified} LIMIT ${limit} OFFSET ${offset}`,
+    'Select table rows',
+  )
 }
 
 export function buildPostgresCountSql(schema: string, table: string): string {
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `SELECT COUNT(*) AS total FROM ${qualified}`
+  return prefixPostgresSqlComment(
+    `SELECT COUNT(*) AS total FROM ${qualified}`,
+    'Count table rows',
+  )
 }
 
 /** Pretty-print SQL for the Postgres SQL editor. Returns the original string on parse errors. */

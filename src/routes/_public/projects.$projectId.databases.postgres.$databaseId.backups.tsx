@@ -1,5 +1,4 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import {
@@ -42,10 +41,5 @@ export const Route = createFileRoute(
 })
 
 function PostgresBackupsPage() {
-  const { databaseId } = Route.useParams()
-  return (
-    <PostgresShell databaseId={databaseId} databaseTab="backups">
-      <TabPlaceholder tab="backups" />
-    </PostgresShell>
-  )
+  return <TabPlaceholder tab="backups" />
 }

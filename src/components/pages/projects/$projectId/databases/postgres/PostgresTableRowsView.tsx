@@ -1,19 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation, useSearch } from '@tanstack/react-router'
 import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import {
-  usePostgresTableColumns,
-  usePostgresTableIndexes,
   usePostgresTableRows,
 } from '@/lib/react-query/hooks'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   buildListSearchParams,
-  getLimit,
-  getPage,
   getQueryParam,
   getSearch,
   mapToQueryParam,
@@ -23,7 +19,7 @@ import {
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
-import { PostgresTableHeader } from './_components/PostgresTableHeader'
+import { usePostgresTableHeaderSlot } from './_components/PostgresTableHeaderSlotContext'
 import { PostgresRowsSpreadsheet } from './_components/PostgresRowsSpreadsheet'
 import { PostgresRowsEditSessionProvider } from './_components/PostgresRowsEditSession'
 import { PostgresRowEditDrawer } from './_components/PostgresRowEditDrawer'
@@ -63,8 +59,6 @@ export function PostgresTableRowsView({
     getSearch(rowsListUrl)?.trim() ||
     (routeSearch?.search as string | undefined)?.trim() ||
     undefined
-  const urlPage = getPage(rowsListUrl, 1)
-  const urlLimit = getLimit(rowsListUrl, ROWS_DEFAULT_PAGE_SIZE)
   const filterMap = useMemo(
     () =>
       queryParamToMap(
@@ -81,8 +75,10 @@ export function PostgresTableRowsView({
   const hasActiveFilters = filterMap.size > 0 || Boolean(urlSearch)
 
   const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
-  const [requestedPage, setRequestedPage] = useState(urlPage)
-  const [displayedPage, setDisplayedPage] = useState(urlPage)
+  const [pageSize, setPageSize] = useState(ROWS_DEFAULT_PAGE_SIZE)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const strippedPaginationFromUrlRef = useRef(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerRow, setDrawerRow] = useState<Record<string, unknown> | null>(
     null,
@@ -94,9 +90,43 @@ export function PostgresTableRowsView({
   >()
 
   useEffect(() => {
-    setRequestedPage(urlPage)
-    setDisplayedPage(urlPage)
-  }, [tableId, urlPage, urlLimit, urlSearch, filterKeys])
+    setPageSize(ROWS_DEFAULT_PAGE_SIZE)
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }, [tableId])
+
+  useEffect(() => {
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }, [urlSearch, filterKeys])
+
+  useEffect(() => {
+    if (strippedPaginationFromUrlRef.current) return
+    if (routeSearch?.page == null && routeSearch?.limit == null) return
+    strippedPaginationFromUrlRef.current = true
+    const query =
+      getQueryParam(rowsListUrl) ??
+      (routeSearch?.query as string | undefined) ??
+      undefined
+    navigate({
+      ...postgresNav({ projectId, databaseId }).table({ tableId }).rows(),
+      search: buildListSearchParams({
+        search: urlSearch ?? '',
+        query: query || undefined,
+      }),
+      replace: true,
+    })
+  }, [
+    databaseId,
+    navigate,
+    projectId,
+    routeSearch?.limit,
+    routeSearch?.page,
+    routeSearch?.query,
+    rowsListUrl,
+    tableId,
+    urlSearch,
+  ])
 
   const rowsListParams = useMemo(
     () => ({
@@ -114,7 +144,7 @@ export function PostgresTableRowsView({
     databaseId,
     tableId,
     requestedPage - 1,
-    urlLimit,
+    pageSize,
     rowsListParams,
   )
 
@@ -130,7 +160,7 @@ export function PostgresTableRowsView({
     databaseId,
     tableId,
     displayedPage - 1,
-    urlLimit,
+    pageSize,
     rowsListParams,
   )
 
@@ -140,35 +170,11 @@ export function PostgresTableRowsView({
     }
   }, [displayedPage, requestedFetching, requestedPage])
 
-  const { total: columnCount } = usePostgresTableColumns(
-    projectId,
-    databaseId,
-    tableId,
-  )
-  const { total: indexCount } = usePostgresTableIndexes(
-    projectId,
-    databaseId,
-    tableId,
-  )
-
-  const filterColumns = useMemo(
-    () => postgresRowsFilterColumns(tableColumns),
-    [tableColumns],
-  )
-  const filterScope = `postgres.rows.${databaseId}.${tableId}`
-
   const navigateToRowsList = useCallback(
-    (updates: {
-      search?: string
-      page?: number
-      limit?: number
-      query?: string
-    }) => {
+    (updates: { search?: string; query?: string }) => {
       const nextSearch = buildListSearchParams({
         search:
           updates.search !== undefined ? updates.search : urlSearch ?? '',
-        page: updates.page ?? displayedPage,
-        limit: updates.limit ?? urlLimit,
         query: updates.query,
       })
       navigate({
@@ -177,7 +183,7 @@ export function PostgresTableRowsView({
         replace: true,
       })
     },
-    [databaseId, displayedPage, navigate, projectId, tableId, urlLimit, urlSearch],
+    [databaseId, navigate, projectId, tableId, urlSearch],
   )
 
   const handleApplyFilter = useCallback(
@@ -201,7 +207,6 @@ export function PostgresTableRowsView({
       nextMap.set(compactKey, '')
       navigateToRowsList({
         query: mapToQueryParam(nextMap),
-        page: 1,
       })
     },
     [filterMap, navigateToRowsList],
@@ -213,39 +218,35 @@ export function PostgresTableRowsView({
       nextMap.delete(compactKey)
       navigateToRowsList({
         query: mapToQueryParam(nextMap),
-        page: 1,
       })
     },
     [filterMap, navigateToRowsList],
   )
 
   const handleClearAllFilters = useCallback(() => {
-    navigateToRowsList({ query: '', page: 1 })
+    navigateToRowsList({ query: '' })
   }, [navigateToRowsList])
 
   const handleSearchChange = useCallback(
     (value: string) => {
-      navigateToRowsList({ search: value, page: 1 })
+      navigateToRowsList({ search: value })
     },
     [navigateToRowsList],
   )
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setRequestedPage(page)
-      navigateToRowsList({ page })
-    },
-    [navigateToRowsList],
-  )
+  const handlePageChange = useCallback((page: number) => {
+    setRequestedPage(page)
+  }, [])
 
-  const handlePageSizeChange = useCallback(
-    (limit: number) => {
-      setRequestedPage(1)
-      setDisplayedPage(1)
-      navigateToRowsList({ page: 1, limit })
-    },
-    [navigateToRowsList],
-  )
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setPageSize(limit)
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }, [])
+
+  const handlePaginationInteract = useCallback(() => {
+    setDrawerOpen(false)
+  }, [])
 
   const openCreateRow = useCallback(() => {
     setDrawerRow(null)
@@ -263,6 +264,62 @@ export function PostgresTableRowsView({
     },
     [tableColumns],
   )
+
+  const filterColumns = useMemo(
+    () => postgresRowsFilterColumns(tableColumns),
+    [tableColumns],
+  )
+  const filterScope = `postgres.rows.${databaseId}.${tableId}`
+
+  const filterTrigger = useMemo(
+    () => (
+      <FiltersPopover
+        open={rowsFiltersOpen}
+        onOpenChange={setRowsFiltersOpen}
+        columns={filterColumns}
+        filterMap={filterMap}
+        onApplyFilter={handleApplyFilter}
+        onRemoveFilter={handleRemoveFilter}
+        onClearAll={handleClearAllFilters}
+        filterScope={filterScope}
+        resourceLabel="rows"
+        teamId={project?.teamId}
+      />
+    ),
+    [
+      filterColumns,
+      filterMap,
+      filterScope,
+      handleApplyFilter,
+      handleClearAllFilters,
+      handleRemoveFilter,
+      project?.teamId,
+      rowsFiltersOpen,
+    ],
+  )
+
+  const handleRefresh = useCallback(() => {
+    void refetch()
+  }, [refetch])
+
+  const rowsTotal = requestedTotal ?? total
+  const showRowsSearch = hasActiveFilters || rowsTotal > 0
+
+  usePostgresTableHeaderSlot({
+    searchPlaceholder: showRowsSearch ? 'Search rows...' : undefined,
+    searchValue: showRowsSearch ? urlSearch ?? '' : undefined,
+    onSearchChange: showRowsSearch ? handleSearchChange : undefined,
+    createLabel: canWrite ? 'Create row' : undefined,
+    onCreate: canWrite ? openCreateRow : undefined,
+    createDisabled: !canWrite,
+    createDisabledTooltip: canWrite
+      ? undefined
+      : "You don't have permission to modify rows.",
+    showRefresh: true,
+    onRefresh: handleRefresh,
+    isRefreshing: isFetching,
+    filterTrigger,
+  })
 
   const displayedRows = useMemo(
     () =>
@@ -294,78 +351,38 @@ export function PostgresTableRowsView({
       tableId={tableId}
       canWrite={canWrite}
     >
-      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 bg-background">
-          <PostgresTableHeader
-            projectId={projectId}
-            databaseId={databaseId}
-            tableId={tableId}
-            activeTab="rows"
-            columnCount={columnCount}
-            indexCount={indexCount}
-            searchPlaceholder="Search rows..."
-            searchValue={urlSearch ?? ''}
-            onSearchChange={handleSearchChange}
-            createLabel={canWrite ? 'Create row' : undefined}
-            onCreate={canWrite ? openCreateRow : undefined}
-            createDisabled={!canWrite}
-            createDisabledTooltip={
-              canWrite
-                ? undefined
-                : "You don't have permission to modify rows."
-            }
-            showRefresh
-            onRefresh={() => void refetch()}
-            isRefreshing={isFetching}
-            filterTrigger={
-              <FiltersPopover
-                open={rowsFiltersOpen}
-                onOpenChange={setRowsFiltersOpen}
-                columns={filterColumns}
-                filterMap={filterMap}
-                onApplyFilter={handleApplyFilter}
-                onRemoveFilter={handleRemoveFilter}
-                onClearAll={handleClearAllFilters}
-                filterScope={filterScope}
-                resourceLabel="rows"
-                teamId={project?.teamId}
-              />
-            }
-          />
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <PostgresRowsSpreadsheet
-            databaseId={databaseId}
-            tableId={tableId}
-            columns={tableColumns}
-            rows={displayedRows}
-            rowNumberOffset={(displayedPage - 1) * urlLimit}
-            canWrite={canWrite}
-            isLoading={isLoading && rows.length === 0}
-            emptyContent={emptyContent}
-            onOpenRow={openRowInDrawer}
-            currentPage={displayedPage}
-            totalItems={requestedFetching ? total : (requestedTotal ?? total)}
-            pageSize={urlLimit}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        </div>
-
-        <PostgresRowEditDrawer
-          open={drawerOpen}
-          onOpenChange={setDrawerOpen}
-          projectId={projectId}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <PostgresRowsSpreadsheet
           databaseId={databaseId}
           tableId={tableId}
-          row={drawerRow}
-          identity={drawerIdentity}
           columns={tableColumns}
-          focusedField={drawerFocusedField}
+          rows={displayedRows}
+          rowNumberOffset={(displayedPage - 1) * pageSize}
           canWrite={canWrite}
+          isLoading={isLoading && rows.length === 0}
+          emptyContent={emptyContent}
+          onOpenRow={openRowInDrawer}
+          currentPage={displayedPage}
+          totalItems={requestedFetching ? total : (requestedTotal ?? total)}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onPaginationInteract={handlePaginationInteract}
         />
       </div>
+
+      <PostgresRowEditDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        projectId={projectId}
+        databaseId={databaseId}
+        tableId={tableId}
+        row={drawerRow}
+        identity={drawerIdentity}
+        columns={tableColumns}
+        focusedField={drawerFocusedField}
+        canWrite={canWrite}
+      />
     </PostgresRowsEditSessionProvider>
   )
 }

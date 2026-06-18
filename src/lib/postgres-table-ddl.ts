@@ -3,7 +3,7 @@ import {
   quotePostgresIdentifier,
 } from '@/lib/postgres-database-routes'
 import type { PostgresIndexAlgorithm } from '@/lib/postgres-index-metadata'
-import { quotePostgresStringLiteral } from '@/lib/postgres-sql'
+import { quotePostgresStringLiteral, prefixPostgresSqlComment } from '@/lib/postgres-sql'
 
 export function buildPostgresAddColumnSql(
   tableId: string,
@@ -23,7 +23,7 @@ export function buildPostgresAddColumnSql(
   if (options?.defaultValue?.trim()) {
     parts.push(`DEFAULT ${options.defaultValue.trim()}`)
   }
-  return parts.join(' ')
+  return prefixPostgresSqlComment(parts.join(' '), 'Add table column')
 }
 
 export function buildPostgresDropColumnSql(
@@ -32,7 +32,10 @@ export function buildPostgresDropColumnSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `ALTER TABLE ${qualified} DROP COLUMN ${quotePostgresIdentifier(columnName)}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} DROP COLUMN ${quotePostgresIdentifier(columnName)}`,
+    'Drop table column',
+  )
 }
 
 export function buildPostgresRenameColumnSql(
@@ -42,7 +45,10 @@ export function buildPostgresRenameColumnSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `ALTER TABLE ${qualified} RENAME COLUMN ${quotePostgresIdentifier(columnName)} TO ${quotePostgresIdentifier(newName)}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} RENAME COLUMN ${quotePostgresIdentifier(columnName)} TO ${quotePostgresIdentifier(newName)}`,
+    'Rename table column',
+  )
 }
 
 export function buildPostgresAlterColumnTypeSql(
@@ -52,7 +58,10 @@ export function buildPostgresAlterColumnTypeSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `ALTER TABLE ${qualified} ALTER COLUMN ${quotePostgresIdentifier(columnName)} TYPE ${dataType}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ALTER COLUMN ${quotePostgresIdentifier(columnName)} TYPE ${dataType}`,
+    'Change column type',
+  )
 }
 
 export function buildPostgresAlterColumnNullableSql(
@@ -63,7 +72,10 @@ export function buildPostgresAlterColumnNullableSql(
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
   const action = nullable ? 'DROP NOT NULL' : 'SET NOT NULL'
-  return `ALTER TABLE ${qualified} ALTER COLUMN ${quotePostgresIdentifier(columnName)} ${action}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ALTER COLUMN ${quotePostgresIdentifier(columnName)} ${action}`,
+    'Set column nullable',
+  )
 }
 
 export function buildPostgresCreateIndexSql(
@@ -92,7 +104,10 @@ export function buildPostgresCreateIndexSql(
   const condition = options?.condition?.trim()
   const whereClause = condition ? ` WHERE (${condition})` : ''
 
-  return `CREATE ${uniqueKeyword}INDEX ${quotePostgresIdentifier(indexName)} ON ${qualified} USING ${algorithm} (${columns})${includeClause}${whereClause}`
+  return prefixPostgresSqlComment(
+    `CREATE ${uniqueKeyword}INDEX ${quotePostgresIdentifier(indexName)} ON ${qualified} USING ${algorithm} (${columns})${includeClause}${whereClause}`,
+    'Create table index',
+  )
 }
 
 export function buildPostgresIndexCommentSql(
@@ -102,13 +117,22 @@ export function buildPostgresIndexCommentSql(
 ): string {
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(indexName)}`
   if (!comment?.trim()) {
-    return `COMMENT ON INDEX ${qualified} IS NULL`
+    return prefixPostgresSqlComment(
+      `COMMENT ON INDEX ${qualified} IS NULL`,
+      'Set index comment',
+    )
   }
-  return `COMMENT ON INDEX ${qualified} IS ${quotePostgresStringLiteral(comment.trim())}`
+  return prefixPostgresSqlComment(
+    `COMMENT ON INDEX ${qualified} IS ${quotePostgresStringLiteral(comment.trim())}`,
+    'Set index comment',
+  )
 }
 
 export function buildPostgresDropIndexSql(schema: string, indexName: string): string {
-  return `DROP INDEX ${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(indexName)}`
+  return prefixPostgresSqlComment(
+    `DROP INDEX ${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(indexName)}`,
+    'Drop table index',
+  )
 }
 
 export function buildPostgresRenameTableSql(
@@ -117,7 +141,10 @@ export function buildPostgresRenameTableSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `ALTER TABLE ${qualified} RENAME TO ${quotePostgresIdentifier(newTableName)}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} RENAME TO ${quotePostgresIdentifier(newTableName)}`,
+    'Rename table',
+  )
 }
 
 export function buildPostgresColumnCommentSql(
@@ -129,9 +156,15 @@ export function buildPostgresColumnCommentSql(
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
   const column = quotePostgresIdentifier(columnName)
   if (!comment?.trim()) {
-    return `COMMENT ON COLUMN ${qualified}.${column} IS NULL`
+    return prefixPostgresSqlComment(
+      `COMMENT ON COLUMN ${qualified}.${column} IS NULL`,
+      'Set column comment',
+    )
   }
-  return `COMMENT ON COLUMN ${qualified}.${column} IS ${quotePostgresStringLiteral(comment.trim())}`
+  return prefixPostgresSqlComment(
+    `COMMENT ON COLUMN ${qualified}.${column} IS ${quotePostgresStringLiteral(comment.trim())}`,
+    'Set column comment',
+  )
 }
 
 export function buildPostgresDropConstraintSql(
@@ -140,7 +173,10 @@ export function buildPostgresDropConstraintSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `ALTER TABLE ${qualified} DROP CONSTRAINT ${quotePostgresIdentifier(constraintName)}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} DROP CONSTRAINT ${quotePostgresIdentifier(constraintName)}`,
+    'Drop table constraint',
+  )
 }
 
 export function buildPostgresAddCheckConstraintSql(
@@ -151,7 +187,10 @@ export function buildPostgresAddCheckConstraintSql(
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
   const trimmed = expression.trim()
-  return `ALTER TABLE ${qualified} ADD CONSTRAINT ${quotePostgresIdentifier(constraintName)} CHECK (${trimmed})`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quotePostgresIdentifier(constraintName)} CHECK (${trimmed})`,
+    'Add check constraint',
+  )
 }
 
 export function buildPostgresAddForeignKeySql(
@@ -163,7 +202,10 @@ export function buildPostgresAddForeignKeySql(
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
   const refQualified = `${quotePostgresIdentifier(reference.schema)}.${quotePostgresIdentifier(reference.table)}`
-  return `ALTER TABLE ${qualified} ADD CONSTRAINT ${quotePostgresIdentifier(constraintName)} FOREIGN KEY (${quotePostgresIdentifier(columnName)}) REFERENCES ${refQualified} (${quotePostgresIdentifier(reference.column)})`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quotePostgresIdentifier(constraintName)} FOREIGN KEY (${quotePostgresIdentifier(columnName)}) REFERENCES ${refQualified} (${quotePostgresIdentifier(reference.column)})`,
+    'Add foreign key',
+  )
 }
 
 export function buildPostgresTableCommentSql(
@@ -172,13 +214,16 @@ export function buildPostgresTableCommentSql(
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `COMMENT ON TABLE ${qualified} IS ${quotePostgresStringLiteral(comment)}`
+  return prefixPostgresSqlComment(
+    `COMMENT ON TABLE ${qualified} IS ${quotePostgresStringLiteral(comment)}`,
+    'Set table comment',
+  )
 }
 
 export function buildPostgresDropTableSql(tableId: string): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
-  return `DROP TABLE ${qualified}`
+  return prefixPostgresSqlComment(`DROP TABLE ${qualified}`, 'Drop table')
 }
 
 export function formatPostgresColumnType(row: {

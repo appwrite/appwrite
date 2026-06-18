@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { PostgresShell } from '@/components/pages/projects/$projectId/databases/postgres/PostgresShell'
 import { PostgresConnectionDetails } from '@/components/pages/projects/$projectId/databases/postgres/PostgresConnectionDetails'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import { postgresActiveConnectionsQueryOptions } from '@/lib/react-query/hooks'
@@ -35,11 +34,9 @@ export const Route = createFileRoute(
 function PostgresConnectionsPage() {
   const { projectId, databaseId } = Route.useParams()
   return (
-    <PostgresShell databaseId={databaseId} databaseTab="connections">
-      <PostgresConnectionDetails
-        projectId={projectId}
-        databaseId={databaseId}
-      />
-    </PostgresShell>
+    <PostgresConnectionDetails
+      projectId={projectId}
+      databaseId={databaseId}
+    />
   )
 }

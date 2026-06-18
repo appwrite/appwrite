@@ -28,6 +28,6 @@ export function generateSitemapFiles(): GeneratedSitemapFiles {
 }
 
 export { renderSitemapIndexXml, renderUrlsetXml } from './xml'
-export { collectSitemapSections, getSitemapSection } from './collect'
+export { collectSitemapSections, getSitemapSection, registerSitemapSection } from './collect'
 export { getSitemapSiteOrigin, DEFAULT_SITE_ORIGIN } from './config'
 export { isExcludedFromSitemap } from './excluded-paths'

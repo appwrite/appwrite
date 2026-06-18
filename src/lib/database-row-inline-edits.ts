@@ -1,3 +1,4 @@
+import { DatabaseType } from '@appwrite.io/console'
 import { isTableColumnStatusPending } from '@/lib/utils/database-columns'
 
 export type RowCellValue = string | number | bigint | boolean | unknown[] | null
@@ -386,8 +387,13 @@ export function serializeRowDataForApi(
   return out
 }
 
+export function usesCollectionDocumentIds(kind: DatabaseType): boolean {
+  return kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb
+}
+
 export function groupEditsIntoUpdateOperations(
   edits: PendingRowCellEdit[],
+  kind: DatabaseType = DatabaseType.Tablesdb,
 ): object[] {
   const byRow = new Map<string, PendingRowCellEdit[]>()
   for (const edit of edits) {
@@ -405,13 +411,23 @@ export function groupEditsIntoUpdateOperations(
       const serialized = serializeRowDataForApi({ [edit.columnKey]: edit.value })
       data[edit.columnKey] = serialized[edit.columnKey]
     }
-    operations.push({
-      action: 'update',
-      databaseId: first.databaseId,
-      tableId: first.tableId,
-      rowId: first.rowId,
-      data,
-    })
+    operations.push(
+      usesCollectionDocumentIds(kind)
+        ? {
+            action: 'update',
+            databaseId: first.databaseId,
+            collectionId: first.tableId,
+            documentId: first.rowId,
+            data,
+          }
+        : {
+            action: 'update',
+            databaseId: first.databaseId,
+            tableId: first.tableId,
+            rowId: first.rowId,
+            data,
+          },
+    )
   }
   return operations
 }
