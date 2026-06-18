@@ -51,6 +51,34 @@ export const POSTGRES_SQL_PREV_TAB_SHORTCUT_COMBOS = [
   'control+shift+tab',
 ] as const
 
+export const POSTGRES_SQL_NEW_TAB_SHORTCUT_RAW = 'mod+t'
+
+export const POSTGRES_SQL_NEW_TAB_SHORTCUT_COMBOS = [
+  'meta+t',
+  'control+t',
+] as const
+
+export const POSTGRES_SQL_CLOSE_TAB_SHORTCUT_RAW = 'mod+w'
+
+export const POSTGRES_SQL_CLOSE_TAB_SHORTCUT_COMBOS = [
+  'meta+w',
+  'control+w',
+] as const
+
+export const POSTGRES_SQL_JUMP_TAB_PICKER_SHORTCUT_RAW = 'mod+shift+p'
+
+export const POSTGRES_SQL_JUMP_TAB_PICKER_SHORTCUT_COMBOS = [
+  'meta+shift+p',
+  'control+shift+p',
+] as const
+
+export const POSTGRES_SQL_JUMP_TAB_DIGIT_SHORTCUTS: readonly PostgresSqlEditorShortcutRef[] =
+  Array.from({ length: 8 }, (_, index) => ({
+    id: `postgres-sql.jump-tab-${index + 1}`,
+    description: `Jump to tab ${index + 1}`,
+    raw: `mod+${index + 1}`,
+  }))
+
 export const POSTGRES_SQL_EDITOR_SHORTCUTS: readonly PostgresSqlEditorShortcutRef[] =
   [
     {
@@ -92,5 +120,26 @@ export const POSTGRES_SQL_EDITOR_SHORTCUTS: readonly PostgresSqlEditorShortcutRe
       id: 'postgres-sql.prev-tab',
       description: 'Previous query tab',
       raw: POSTGRES_SQL_PREV_TAB_SHORTCUT_RAW,
+    },
+    {
+      id: 'postgres-sql.new-tab',
+      description: 'New query tab',
+      raw: POSTGRES_SQL_NEW_TAB_SHORTCUT_RAW,
+    },
+    {
+      id: 'postgres-sql.close-tab',
+      description: 'Close query tab',
+      raw: POSTGRES_SQL_CLOSE_TAB_SHORTCUT_RAW,
+    },
+    {
+      id: 'postgres-sql.jump-tab-picker',
+      description: 'Go to query tab',
+      raw: POSTGRES_SQL_JUMP_TAB_PICKER_SHORTCUT_RAW,
+    },
+    ...POSTGRES_SQL_JUMP_TAB_DIGIT_SHORTCUTS,
+    {
+      id: 'postgres-sql.jump-tab-last',
+      description: 'Jump to last tab',
+      raw: 'mod+9',
     },
   ]

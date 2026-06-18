@@ -4,17 +4,23 @@ import {
   ChevronLeft,
   ChevronRight,
   ListTree,
+  PanelTop,
   Play,
+  Plus,
   Redo2,
   Undo2,
+  X,
 } from 'lucide-react'
 import {
   getPostgresSqlEditorActions,
   isPostgresSqlEditorPath,
 } from '@/lib/postgres-sql-editor-actions'
 import {
+  POSTGRES_SQL_CLOSE_TAB_SHORTCUT_RAW,
   POSTGRES_SQL_EXPLAIN_SHORTCUT_RAW,
   POSTGRES_SQL_FORMAT_SHORTCUT_RAW,
+  POSTGRES_SQL_JUMP_TAB_PICKER_SHORTCUT_RAW,
+  POSTGRES_SQL_NEW_TAB_SHORTCUT_RAW,
   POSTGRES_SQL_NEXT_TAB_SHORTCUT_RAW,
   POSTGRES_SQL_PREV_TAB_SHORTCUT_RAW,
   POSTGRES_SQL_REDO_SHORTCUT_RAW,
@@ -213,6 +219,61 @@ const POSTGRES_SQL_EDITOR_ACTIONS: CommandEntry[] = [
     perform: (ctx) => {
       getPostgresSqlEditorActions()?.selectPreviousTab()
       ctx.closeCommandCenter()
+    },
+  },
+  {
+    id: 'postgres.sql.new-tab',
+    scopes: ['project'],
+    kind: 'action',
+    group: 'SQL editor',
+    label: 'New query tab',
+    description: 'Open a new SQL editor tab',
+    icon: Plus,
+    shortcut: POSTGRES_SQL_NEW_TAB_SHORTCUT_RAW,
+    keywords: ['sql', 'tab', 'new', 'postgres', 'editor', 'query'],
+    available: (ctx) => sqlEditorActionsAvailable(ctx.pathname),
+    disabled: () => !getPostgresSqlEditorActions()?.canCreateTab,
+    perform: (ctx) => {
+      getPostgresSqlEditorActions()?.createTab()
+      ctx.closeCommandCenter()
+    },
+  },
+  {
+    id: 'postgres.sql.close-tab',
+    scopes: ['project'],
+    kind: 'action',
+    group: 'SQL editor',
+    label: 'Close query tab',
+    description: 'Close the current SQL editor tab',
+    icon: X,
+    shortcut: POSTGRES_SQL_CLOSE_TAB_SHORTCUT_RAW,
+    keywords: ['sql', 'tab', 'close', 'postgres', 'editor', 'query'],
+    available: (ctx) => sqlEditorActionsAvailable(ctx.pathname),
+    disabled: () => !getPostgresSqlEditorActions()?.canCloseTab,
+    disabledReason: () =>
+      disabledReasonWhen(
+        getPostgresSqlEditorActions()?.canCloseTab,
+        'Keep at least one query tab open.',
+      ),
+    perform: (ctx) => {
+      getPostgresSqlEditorActions()?.closeTab()
+      ctx.closeCommandCenter()
+    },
+  },
+  {
+    id: 'postgres.sql.jump-tab',
+    scopes: ['project'],
+    kind: 'action',
+    group: 'SQL editor',
+    label: 'Go to query tab',
+    description: 'Pick a SQL editor tab to open',
+    icon: PanelTop,
+    shortcut: POSTGRES_SQL_JUMP_TAB_PICKER_SHORTCUT_RAW,
+    keywords: ['sql', 'tab', 'jump', 'goto', 'postgres', 'editor', 'query'],
+    available: (ctx) => sqlEditorActionsAvailable(ctx.pathname),
+    disabled: () => !getPostgresSqlEditorActions()?.canJumpToTab,
+    perform: () => {
+      getPostgresSqlEditorActions()?.openJumpToTabPicker()
     },
   },
 ]

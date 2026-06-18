@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { parsePostgresDatabaseTabFromPathname } from '@/lib/postgres-database-routes'
 
+export type PostgresSqlEditorTabRef = {
+  id: string
+  title: string
+}
+
 export type PostgresSqlEditorActions = {
   canUndo: boolean
   canRedo: boolean
@@ -8,20 +13,40 @@ export type PostgresSqlEditorActions = {
   canFormat: boolean
   canRun: boolean
   canExplain: boolean
+  canCreateTab: boolean
+  canCloseTab: boolean
   canSelectNextTab: boolean
   canSelectPreviousTab: boolean
+  canJumpToTab: boolean
+  tabs: readonly PostgresSqlEditorTabRef[]
   undo: () => void
   redo: () => void
   save: () => void
   format: () => void
   run: () => void
   explain: () => void
+  createTab: () => void
+  closeTab: () => void
   selectNextTab: () => void
   selectPreviousTab: () => void
+  /** 1-based index; 9 selects the last tab. */
+  selectTabByIndex: (index: number) => void
+  selectTab: (tabId: string) => void
+  openJumpToTabPicker: () => void
 }
 
 let registeredActions: PostgresSqlEditorActions | null = null
 const subscribers = new Set<() => void>()
+
+let jumpToTabPickerHandler: (() => void) | null = null
+
+export function registerPostgresSqlJumpToTabPicker(handler: (() => void) | null) {
+  jumpToTabPickerHandler = handler
+}
+
+export function openPostgresSqlJumpToTabPicker() {
+  jumpToTabPickerHandler?.()
+}
 
 export function registerPostgresSqlEditorActions(
   actions: PostgresSqlEditorActions | null,

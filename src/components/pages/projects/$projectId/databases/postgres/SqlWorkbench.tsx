@@ -5,6 +5,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import {
   registerPostgresSqlEditorActions,
+  openPostgresSqlJumpToTabPicker,
   type PostgresSqlEditorActions,
 } from '@/lib/postgres-sql-editor-actions'
 import { usePostgresSqlEditorShortcuts } from '@/lib/postgres-sql-editor/use-postgres-sql-editor-shortcuts'
@@ -110,6 +111,12 @@ export function SqlWorkbench({
     isExplaining || (resultKind === 'explain' && !isRunning)
 
   const canSwitchTabs = tabs.length > 1
+  const canCloseTab = tabs.length > 1
+
+  const tabRefs = useMemo(
+    () => tabs.map((tab) => ({ id: tab.id, title: tab.title })),
+    [tabs],
+  )
 
   const selectNextTab = useCallback(() => {
     if (!canSwitchTabs) return
@@ -125,6 +132,28 @@ export function SqlWorkbench({
     onSelectTab(tabs[(currentIndex - 1 + tabs.length) % tabs.length].id)
   }, [activeTabId, canSwitchTabs, onSelectTab, tabs])
 
+  const selectTabByIndex = useCallback(
+    (index: number) => {
+      if (tabs.length === 0) return
+      const targetIndex = index === 9 ? tabs.length - 1 : index - 1
+      if (targetIndex < 0 || targetIndex >= tabs.length) return
+      onSelectTab(tabs[targetIndex].id)
+    },
+    [onSelectTab, tabs],
+  )
+
+  const selectTab = useCallback(
+    (tabId: string) => {
+      if (tabs.some((tab) => tab.id === tabId)) onSelectTab(tabId)
+    },
+    [onSelectTab, tabs],
+  )
+
+  const closeActiveTab = useCallback(() => {
+    if (!canCloseTab) return
+    onCloseTab(activeTabId)
+  }, [activeTabId, canCloseTab, onCloseTab])
+
   useEffect(() => {
     setCanUndo(false)
     setCanRedo(false)
@@ -138,18 +167,28 @@ export function SqlWorkbench({
       canFormat: canFormatQuery,
       canRun: canRunQuery,
       canExplain: canExplainQuery,
+      canCreateTab: true,
+      canCloseTab,
       canSelectNextTab: canSwitchTabs,
       canSelectPreviousTab: canSwitchTabs,
+      canJumpToTab: tabs.length > 0,
+      tabs: tabRefs,
       undo: () => sqlEditorRef.current?.undo(),
       redo: () => sqlEditorRef.current?.redo(),
       save: () => setSaveDialogOpen(true),
       format: () => onSqlChange(formatPostgresSql(sql)),
       run: onRun,
       explain: onExplain,
+      createTab: onCreateTab,
+      closeTab: closeActiveTab,
       selectNextTab,
       selectPreviousTab,
+      selectTabByIndex,
+      selectTab,
+      openJumpToTabPicker: openPostgresSqlJumpToTabPicker,
     }),
     [
+      canCloseTab,
       canExplainQuery,
       canFormatQuery,
       canRedo,
@@ -157,12 +196,18 @@ export function SqlWorkbench({
       canSaveQuery,
       canSwitchTabs,
       canUndo,
+      closeActiveTab,
+      onCreateTab,
       onExplain,
       onRun,
       onSqlChange,
       selectNextTab,
       selectPreviousTab,
+      selectTab,
+      selectTabByIndex,
       sql,
+      tabRefs,
+      tabs.length,
     ],
   )
 

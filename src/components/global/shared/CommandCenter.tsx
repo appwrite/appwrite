@@ -9,6 +9,7 @@ import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import {
   usePostgresSqlEditorActions,
+  registerPostgresSqlJumpToTabPicker,
 } from '@/lib/postgres-sql-editor-actions'
 import {
   KeyboardShortcutsView,
@@ -25,6 +26,7 @@ import {
   Globe,
   Keyboard,
   Megaphone,
+  PanelTop,
   Play,
   Send,
   Terminal,
@@ -298,7 +300,18 @@ export function CommandCenter({
   const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
   const { access: rbacAccess } = useOrganizationScopes(scopesOrgId)
   const access = rbacAccess ?? FULL_ACCESS
-  usePostgresSqlEditorActions()
+  const postgresSqlEditorActions = usePostgresSqlEditorActions()
+
+  const openSqlTabPickerPage = useCallback(() => {
+    setPages(['sql-tabs'])
+    setSearch('')
+    onOpenChange(true)
+  }, [onOpenChange])
+
+  useEffect(() => {
+    registerPostgresSqlJumpToTabPicker(openSqlTabPickerPage)
+    return () => registerPostgresSqlJumpToTabPicker(null)
+  }, [openSqlTabPickerPage])
 
   // Build the runtime CommandContext used by registry entries.
   const closeCommandCenter = useCallback(
@@ -396,6 +409,7 @@ export function CommandCenter({
     if (
       currentPage === 'shortcuts' ||
       currentPage === 'functions' ||
+      currentPage === 'sql-tabs' ||
       currentPage === 'feedback' ||
       currentPage === 'support'
     ) {
@@ -426,6 +440,7 @@ export function CommandCenter({
         open &&
         currentPage !== 'shortcuts' &&
         currentPage !== 'docs' &&
+        currentPage !== 'sql-tabs' &&
         currentPage !== 'feedback' &&
         currentPage !== 'support',
     },
@@ -1311,6 +1326,7 @@ export function CommandCenter({
       if (
         currentPage === 'shortcuts' ||
         currentPage === 'functions' ||
+        currentPage === 'sql-tabs' ||
         currentPage === 'feedback' ||
         currentPage === 'support'
       ) {
@@ -1386,6 +1402,13 @@ export function CommandCenter({
     [search, searchScope, pages, handleEscape],
   )
 
+  const sqlTabPickerItems = useMemo(() => {
+    const tabs = postgresSqlEditorActions?.tabs ?? []
+    const query = search.trim().toLowerCase()
+    if (!query) return tabs
+    return tabs.filter((tab) => tab.title.toLowerCase().includes(query))
+  }, [postgresSqlEditorActions?.tabs, search])
+
   const dialogTitle =
     currentPage === 'shortcuts'
       ? 'Keyboard shortcuts'
@@ -1397,11 +1420,15 @@ export function CommandCenter({
             ? 'Support'
             : currentPage === 'functions' && context === 'project'
               ? 'Execute function'
-              : 'Command center'
+              : currentPage === 'sql-tabs' && context === 'project'
+                ? 'Go to query tab'
+                : 'Command center'
 
   const placeholder = searchScope
     ? `Search ${searchScope}...`
-    : context === 'docs'
+    : currentPage === 'sql-tabs'
+      ? 'Search query tabs…'
+      : context === 'docs'
       ? 'Search commands and documentation pages…'
       : context === 'org'
         ? 'Search projects, settings, members…'
@@ -1533,6 +1560,88 @@ export function CommandCenter({
                 ) : (
                   <div className="px-3 py-2.5 text-[13px] text-muted-foreground">
                     {functionsLoading ? 'Loading...' : 'No functions found'}
+                  </div>
+                )}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        ) : currentPage === 'sql-tabs' && context === 'project' ? (
+          <Command
+            className={cn('bg-transparent', isMobile && 'flex flex-col flex-1')}
+            onKeyDown={handleKeyDown}
+          >
+            <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent">
+              <button
+                onClick={() => setPages([])}
+                className="ml-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+              >
+                ← Back
+              </button>
+              <CommandInput
+                placeholder="Search query tabs…"
+                value={search}
+                onValueChange={setSearch}
+                className="h-14 border-0 text-foreground placeholder:text-muted-foreground"
+              />
+              {isMobile && (
+                <button
+                  onClick={() => onOpenChange(false)}
+                  className="mr-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            <CommandList
+              className={cn('p-2', commandCenterListHeightClass(isMobile))}
+            >
+              <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
+                No query tabs found.
+              </CommandEmpty>
+              <CommandGroup heading="Query tabs" className="text-muted-foreground">
+                {sqlTabPickerItems.length > 0 ? (
+                  sqlTabPickerItems.map((tab) => {
+                    const allTabs = postgresSqlEditorActions?.tabs ?? []
+                    const tabIndex = allTabs.findIndex(
+                      (entry) => entry.id === tab.id,
+                    )
+                    const shortcutLabel =
+                      tabIndex >= 0 && tabIndex === allTabs.length - 1
+                        ? formatDisplayKeys('mod+9', isMac).join('')
+                        : tabIndex >= 0 && tabIndex < 8
+                          ? formatDisplayKeys(`mod+${tabIndex + 1}`, isMac).join('')
+                          : null
+
+                    return (
+                      <CommandItem
+                        key={tab.id}
+                        value={tab.title}
+                        onSelect={() => {
+                          postgresSqlEditorActions?.selectTab(tab.id)
+                          onOpenChange(false)
+                        }}
+                        className="group flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted group-data-[selected=true]:bg-accent">
+                          <PanelTop className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-[13px] font-medium">{tab.title}</p>
+                          <p className="text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
+                            {tabIndex >= 0 ? `Tab ${tabIndex + 1}` : 'Query tab'}
+                          </p>
+                        </div>
+                        {shortcutLabel ? (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {shortcutLabel}
+                          </span>
+                        ) : null}
+                      </CommandItem>
+                    )
+                  })
+                ) : (
+                  <div className="px-3 py-2.5 text-[13px] text-muted-foreground">
+                    No query tabs found
                   </div>
                 )}
               </CommandGroup>
