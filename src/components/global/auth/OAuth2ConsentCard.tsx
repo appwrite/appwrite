@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { sdk } from '@/lib/appwrite/sdk'
-import { describeScopes } from '@/lib/oauth2/scopes'
+import { describeConsentScopes } from '@/lib/oauth2/scopes'
 
 export type OAuth2Flow = 'authorization' | 'device'
 
@@ -77,7 +77,7 @@ export function OAuth2ConsentCard({
   const [error, setError] = useState<string | null>(null)
 
   const scopes = useMemo(
-    () => describeScopes(grant.scopes ?? []),
+    () => describeConsentScopes(grant.scopes ?? []),
     [grant.scopes],
   )
   const details = useMemo(
@@ -160,11 +160,6 @@ export function OAuth2ConsentCard({
                 </li>
               )
             })}
-            {scopes.length === 0 && (
-              <li className="text-muted-foreground text-sm">
-                Sign you in with your Appwrite identity.
-              </li>
-            )}
           </ul>
         </div>
 
