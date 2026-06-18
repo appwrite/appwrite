@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
 import {
   useDebugOverrides,
@@ -390,13 +390,20 @@ export function resolveKeyboardLayoutIsMac(
  * Respects debug menu keyboard layout override when set.
  */
 export function usePlatform() {
+  const [isPlatformKnown, setIsPlatformKnown] = useState(false)
   const { keyboardLayout } = useDebugOverrides()
+
+  useEffect(() => {
+    setIsPlatformKnown(true)
+  }, [])
+
   const isMac = resolveKeyboardLayoutIsMac(keyboardLayout)
 
   return {
     isMac,
+    isPlatformKnown,
     keyboardLayout,
-    modKey: isMac ? '⌘' : 'Ctrl',
-    altKey: isMac ? '⌥' : 'Alt',
+    modKey: isPlatformKnown ? (isMac ? '⌘' : 'Ctrl') : undefined,
+    altKey: isPlatformKnown ? (isMac ? '⌥' : 'Alt') : undefined,
   }
 }

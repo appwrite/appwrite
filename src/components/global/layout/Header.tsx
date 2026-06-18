@@ -92,7 +92,7 @@ import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
-import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
 import {
   getBlogPageUrl,
@@ -370,7 +370,7 @@ export function ConsoleHeader({
   const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
   const showCenterSearch = centerSearch && !hideSearch
   const showRightSearch = !hideSearch && !centerSearch
-  const searchModKey = isMacPlatform() ? '⌘' : 'Ctrl'
+  const { modKey: searchModKey } = usePlatform()
   const logoColumnWidth = showMarketingNav ? 158 : 60
 
   return (
@@ -951,14 +951,16 @@ export function ConsoleHeader({
               <span className="min-w-0 flex-1 truncate text-left">
                 {centerSearchPlaceholder}
               </span>
-              <span className="ml-auto flex shrink-0 items-center gap-1">
-                <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
-                  {searchModKey}
-                </kbd>
-                <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
-                  K
-                </kbd>
-              </span>
+              {searchModKey ? (
+                <span className="ml-auto flex shrink-0 items-center gap-1">
+                  <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+                    {searchModKey}
+                  </kbd>
+                  <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+                    K
+                  </kbd>
+                </span>
+              ) : null}
             </button>
           </div>
         ) : null}
@@ -1024,9 +1026,11 @@ export function ConsoleHeader({
                   >
                     <Search className="h-3.5 w-3.5 shrink-0" />
                     <span className="hidden @[850px]:inline">Search...</span>
-                    <kbd className="ml-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
-                      {searchModKey}K
-                    </kbd>
+                    {searchModKey ? (
+                      <kbd className="ml-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
+                        {searchModKey}K
+                      </kbd>
+                    ) : null}
                   </button>
 
                   <button

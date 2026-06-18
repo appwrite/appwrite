@@ -96,7 +96,7 @@ async function loadMethodDemo(
   const cached = exampleContentCache.get(relativePath)
   if (cached !== undefined) return cached
 
-  const filePath = join(getSpecsPackageRoot(), `${relativePath}.md`)
+  const filePath = join(getSpecsPackageRoot(), relativePath)
 
   try {
     const content = stripMarkdownCodeFence(await readFile(filePath, 'utf-8'))
