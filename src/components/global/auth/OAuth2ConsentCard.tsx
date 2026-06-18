@@ -9,10 +9,26 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { sdk } from '@/lib/appwrite/sdk'
-import { parseAuthorizationDetails } from '@/lib/appwrite/oauth2-server'
 import { describeScopes } from '@/lib/oauth2/scopes'
 
 export type OAuth2Flow = 'authorization' | 'device'
+
+/** A single parsed authorization detail entry (RFC 9396). */
+interface AuthorizationDetail {
+  type: string
+  [key: string]: unknown
+}
+
+/** Safely parse a grant's `authorizationDetails` JSON string into entries. */
+function parseAuthorizationDetails(raw: string): AuthorizationDetail[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as AuthorizationDetail[]) : []
+  } catch {
+    return []
+  }
+}
 
 interface OAuth2ConsentCardProps {
   grant: Models.Oauth2Grant
