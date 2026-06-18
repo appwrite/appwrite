@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -70,6 +70,12 @@ export function ApiReferenceMethodPanel({
   version,
   platform,
 }: ApiReferenceMethodPanelProps) {
+  const scrollViewportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    scrollViewportRef.current?.scrollTo({ top: 0 })
+  }, [method?.id])
+
   const pathFields = useMemo(
     () =>
       (method?.parameters ?? [])
@@ -148,12 +154,15 @@ export function ApiReferenceMethodPanel({
         </div>
       ) : null}
 
-      <ScrollArea className={REFERENCE_SCROLL_AREA_CLASS}>
+      <ScrollArea
+        className={REFERENCE_SCROLL_AREA_CLASS}
+        viewportRef={scrollViewportRef}
+      >
         <div className="space-y-6 p-4 sm:p-6">
           <ApiReferenceMethodDetails method={method} platform={platform} />
 
           {hasRequestSections ? (
-            <ApiReferenceCollapsibleCard title="Parameters" cardId="parameters">
+            <ApiReferenceCollapsibleCard title="Request" cardId="parameters">
               <RequestBuilderPanel className="rounded-none border-0">
                 {hasPathParams ? (
                   <RequestBuilderSection title="Path">
