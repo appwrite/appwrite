@@ -16,7 +16,6 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +27,9 @@ import {
 import { ChevronUp, Plus, X } from 'lucide-react'
 import type { SqlEditorTab } from './PostgresSidebarContext'
 import { SqlEditorTabContextMenu } from './SqlEditorTabContextMenu'
+import { getAxisRestrictedDragModifiers, sortableAxisTransform } from '@/lib/dnd-modifiers'
+
+const tabDragModifiers = getAxisRestrictedDragModifiers('horizontal')
 
 type SqlEditorTabBarProps = {
   projectId: string
@@ -80,7 +82,7 @@ function SortableTab({
   const style = isDragging
     ? undefined
     : {
-        transform: CSS.Transform.toString(transform),
+        transform: sortableAxisTransform(transform, 'horizontal'),
         transition,
       }
 
@@ -257,6 +259,7 @@ export function SqlEditorTabBar({
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            modifiers={tabDragModifiers}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >

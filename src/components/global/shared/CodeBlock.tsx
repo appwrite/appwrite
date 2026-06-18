@@ -7,8 +7,8 @@
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
  * Go, C#/.NET, C++, Rust, JSON, YAML, TOML, Bash, PowerShell, HCL (Terraform), GraphQL, HTTP,
  * Markdown, Diff, markup, plaintext, and .env (dotenv).
- * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
- * Editor surface is transparent so the page background shows through the frame.
+ * Uses prism-react-renderer with the Snapwrite-inspired palette from
+ * `@/lib/code-syntax-theme`; editor surface is transparent so the page background shows through.
  */
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'

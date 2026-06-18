@@ -1,4 +1,5 @@
 import type { editor } from 'monaco-editor'
+import { monacoSyntaxHighlightRules } from '@/lib/code-syntax-theme'
 
 const MONACO_THEME_PREFIX = 'app-console'
 const EDITOR_SURFACE_CSS = 'var(--editor-bg, var(--background))'
@@ -195,7 +196,7 @@ export function defineMonacoAppTheme(
     monaco.editor.defineTheme(themeId, {
       base: 'vs-dark',
       inherit: true,
-      rules: [],
+      rules: monacoSyntaxHighlightRules(true),
       colors: {
         'editor.background': surface,
         'editorGutter.background': surface,
@@ -224,7 +225,7 @@ export function defineMonacoAppTheme(
   monaco.editor.defineTheme(themeId, {
     base: 'vs',
     inherit: true,
-    rules: [],
+    rules: monacoSyntaxHighlightRules(false),
     colors: {
       'editor.background': surface,
       'editorGutter.background': surface,

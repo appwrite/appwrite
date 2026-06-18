@@ -2,6 +2,10 @@ import type { CSSProperties } from 'react'
 import type { PrismTheme } from 'prism-react-renderer'
 import { themes } from 'prism-react-renderer'
 import {
+  getCodeSyntaxColors,
+  prismSyntaxHighlightStyles,
+} from '@/lib/code-syntax-theme'
+import {
   isHtmlDarkChrome,
   isResolvedThemeDarkChrome,
 } from '@/lib/html-theme'
@@ -35,14 +39,15 @@ export function buildCodeBlockPrismTheme(
       : isHtmlDarkChrome()
 
   const base = isDark ? themes.vsDark : themes.vsLight
+  const colors = getCodeSyntaxColors(isDark)
 
   return {
-    ...base,
     plain: {
       color: base.plain.color,
       backgroundColor: 'transparent',
       background: 'transparent',
     },
+    styles: prismSyntaxHighlightStyles(colors, base.plain.color),
   }
 }
 

@@ -9,6 +9,7 @@ import {
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
+import { monacoSyntaxHighlightRules } from '@/lib/code-syntax-theme'
 import Editor from '@monaco-editor/react'
 import {
   ArrowLeft,
@@ -383,7 +384,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
   monaco.editor.defineTheme(MONACO_THEME_LIGHT, {
     base: 'vs',
     inherit: true,
-    rules: [],
+    rules: monacoSyntaxHighlightRules(false),
     colors: {
       'editor.background': '#ffffff',
       'editor.foreground': '#1a1a1a',
@@ -415,7 +416,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
   monaco.editor.defineTheme(MONACO_THEME_DARK, {
     base: 'vs-dark',
     inherit: true,
-    rules: [],
+    rules: monacoSyntaxHighlightRules(true),
     colors: {
       'editor.background': DARK_BG,
       'editorGutter.background': DARK_BG,

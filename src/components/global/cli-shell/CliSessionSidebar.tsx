@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -32,7 +33,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { getAxisRestrictedDragModifiers, sortableAxisTransform } from '@/lib/dnd-modifiers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { getCliShellSplitChildren } from '@/lib/cli-shell/cli-shell-split'
@@ -338,10 +339,12 @@ function SortableRootSessionGroup({
     transition: null,
   })
 
+  const dragAxis = layout === 'strip' ? 'horizontal' : 'vertical'
+
   const style = isDragging
     ? undefined
     : {
-        transform: CSS.Transform.toString(transform),
+        transform: sortableAxisTransform(transform, dragAxis),
         transition,
       }
 
@@ -450,6 +453,12 @@ export function CliSessionSidebar() {
   const rootSessions = sessions.filter((session) => !session.parentSessionId)
   const rootCount = rootSessions.length
   const canReorder = rootCount > 1
+
+  const dragModifiers = useMemo(
+    () =>
+      getAxisRestrictedDragModifiers(isStrip ? 'horizontal' : 'vertical'),
+    [isStrip],
+  )
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragSessionId(String(event.active.id))
@@ -575,6 +584,7 @@ export function CliSessionSidebar() {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          modifiers={dragModifiers}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
