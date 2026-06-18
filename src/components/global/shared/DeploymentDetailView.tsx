@@ -2086,7 +2086,7 @@ export function DeploymentDetailView({
             <div
               ref={logsContainerRef}
               tabIndex={-1}
-              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-auto pl-6 pr-16 pb-44 sm:pr-20 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-auto pl-6 pr-4 pb-44 sm:pr-5 outline-none"
             >
               <div className="min-h-full min-w-0">
                 <BuildLogsView
