@@ -103,7 +103,10 @@ export function getApiEndpoint(region?: string): string {
     baseEndpoint =
       config.appwriteEndpoint ||
       (typeof window !== 'undefined'
-        ? resolveAppwriteEndpointFallback(config.consoleProfile, window.location)
+        ? resolveAppwriteEndpointFallback(
+            config.consoleProfile,
+            window.location,
+          )
         : resolveAppwriteEndpointFallback(config.consoleProfile))
   }
 
@@ -455,7 +458,9 @@ const sdkForProject = wrapServiceObject(
 ) as typeof sdkForProjectRaw
 
 const consoleSdkRawBase = createConsoleSdkRaw(clientConsole)
-registerConsoleAccountGet(consoleSdkRawBase.account.get.bind(consoleSdkRawBase.account))
+registerConsoleAccountGet(
+  consoleSdkRawBase.account.get.bind(consoleSdkRawBase.account),
+)
 const consoleSdkRaw = wrapConsoleAccountGet(consoleSdkRawBase)
 
 // Export SDK instances
@@ -472,9 +477,10 @@ export const sdk = {
     const regionClient = new Client()
     regionClient.setEndpoint(regionEndpoint).setProject('console')
     return wrapServiceObject(
-      wrapConsoleAccountGet(
-        createConsoleSdkRaw(regionClient),
-      ) as Record<string, unknown>,
+      wrapConsoleAccountGet(createConsoleSdkRaw(regionClient)) as Record<
+        string,
+        unknown
+      >,
       'forConsoleIn',
     ) as ReturnType<typeof createConsoleSdkRaw>
   },

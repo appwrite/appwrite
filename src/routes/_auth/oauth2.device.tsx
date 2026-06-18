@@ -30,12 +30,7 @@ export const Route = createFileRoute('/_auth/oauth2/device')({
   head: () => ({ meta: [{ title: pageTitle('Connect a device') }] }),
 })
 
-type Phase =
-  | 'loading'
-  | 'enter-code'
-  | 'consent'
-  | 'approved'
-  | 'denied'
+type Phase = 'loading' | 'enter-code' | 'consent' | 'approved' | 'denied'
 
 /** Keep only the characters the device user codes are built from. */
 function normalizeUserCode(value: string): string {
@@ -48,9 +43,8 @@ function OAuth2DevicePage() {
   const navigate = useNavigate()
   const search = Route.useSearch()
   const [phase, setPhase] = useState<Phase>('loading')
-  const [account, setAccount] = useState<Models.User<Models.Preferences> | null>(
-    null,
-  )
+  const [account, setAccount] =
+    useState<Models.User<Models.Preferences> | null>(null)
   const [code, setCode] = useState(normalizeUserCode(search.user_code ?? ''))
   const [grant, setGrant] = useState<Models.Oauth2Grant | null>(null)
   const [app, setApp] = useState<Models.App | null>(null)
@@ -74,8 +68,13 @@ function OAuth2DevicePage() {
       setPhase('consent')
     },
     onError: (e: unknown) => {
-      if (e instanceof AppwriteException && e.type === 'oauth2_invalid_user_code') {
-        setError('That code is invalid or has expired. Check your device and try again.')
+      if (
+        e instanceof AppwriteException &&
+        e.type === 'oauth2_invalid_user_code'
+      ) {
+        setError(
+          'That code is invalid or has expired. Check your device and try again.',
+        )
       } else {
         setError(getErrorMessage(e, 'Could not verify that code.'))
       }
@@ -142,7 +141,9 @@ function OAuth2DevicePage() {
                 </div>
                 <div className="space-y-1">
                   <h1 className="text-xl font-semibold tracking-tight">
-                    {hasPrefilledCode ? 'Confirm your code' : 'Connect a device'}
+                    {hasPrefilledCode
+                      ? 'Confirm your code'
+                      : 'Connect a device'}
                   </h1>
                   <p className="text-muted-foreground text-sm">
                     {hasPrefilledCode
@@ -170,9 +171,7 @@ function OAuth2DevicePage() {
                   disabled={submitMutation.isPending}
                   className="text-center font-mono text-2xl uppercase tracking-[0.3em]"
                 />
-                {error && (
-                  <p className="text-destructive text-sm">{error}</p>
-                )}
+                {error && <p className="text-destructive text-sm">{error}</p>}
               </div>
 
               <div className="flex flex-col gap-2">

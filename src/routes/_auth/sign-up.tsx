@@ -18,7 +18,10 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination, resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import {
+  prefetchPostAuthDestination,
+  resolvePostAuthRedirect,
+} from '@/lib/post-auth-navigation'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -114,11 +117,7 @@ function SignUpPage() {
     onSuccess: async () => {
       setLastLoginMethod('email')
       const account = await refreshConsoleAccountAfterAuth(queryClient)
-      await prefetchPostAuthDestination(
-        queryClient,
-        account,
-        search.redirect,
-      )
+      await prefetchPostAuthDestination(queryClient, account, search.redirect)
       await router.invalidate()
 
       const features = getActiveProfileFeatures()

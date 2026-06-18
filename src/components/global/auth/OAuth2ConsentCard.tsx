@@ -60,7 +60,10 @@ export function OAuth2ConsentCard({
 }: OAuth2ConsentCardProps) {
   const [error, setError] = useState<string | null>(null)
 
-  const scopes = useMemo(() => describeScopes(grant.scopes ?? []), [grant.scopes])
+  const scopes = useMemo(
+    () => describeScopes(grant.scopes ?? []),
+    [grant.scopes],
+  )
   const details = useMemo(
     () => parseAuthorizationDetails(grant.authorizationDetails ?? ''),
     [grant.authorizationDetails],
@@ -205,7 +208,8 @@ export function OAuth2ConsentCard({
           <p className="text-muted-foreground text-center text-xs">
             {accountLabel ? (
               <>
-                Signed in as <span className="font-medium">{accountLabel}</span>.{' '}
+                Signed in as <span className="font-medium">{accountLabel}</span>
+                .{' '}
               </>
             ) : null}
             {flow === 'authorization' && redirectHost ? (

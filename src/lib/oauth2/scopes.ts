@@ -3,13 +3,7 @@
  * screen. Built-in OIDC scopes are described explicitly; anything else (project
  * scopes) falls back to a generic, readable label derived from the scope id.
  */
-import {
-  User,
-  Mail,
-  IdCard,
-  KeyRound,
-  type LucideIcon,
-} from 'lucide-react'
+import { User, Mail, IdCard, KeyRound, type LucideIcon } from 'lucide-react'
 
 export interface ScopeDescriptor {
   id: string

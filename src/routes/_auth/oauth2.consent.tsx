@@ -37,16 +37,14 @@ function OAuth2ConsentPage() {
   const [phase, setPhase] = useState<Phase>('loading')
   const [grant, setGrant] = useState<Models.Oauth2Grant | null>(null)
   const [app, setApp] = useState<Models.App | null>(null)
-  const [account, setAccount] = useState<Models.User<Models.Preferences> | null>(
-    null,
-  )
+  const [account, setAccount] =
+    useState<Models.User<Models.Preferences> | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    const currentRelativeUrl =
-      window.location.pathname + window.location.search
+    const currentRelativeUrl = window.location.pathname + window.location.search
 
     const goSignIn = () => {
       navigate({
@@ -70,7 +68,9 @@ function OAuth2ConsentPage() {
           ? Promise.resolve(knownAccount)
           : (sdk.forConsole.account
               .get()
-              .catch(() => null) as Promise<Models.User<Models.Preferences> | null>),
+              .catch(
+                () => null,
+              ) as Promise<Models.User<Models.Preferences> | null>),
       ])
       if (cancelled) return
       setGrant(loadedGrant)
@@ -91,7 +91,12 @@ function OAuth2ConsentPage() {
             goSignIn()
             return
           }
-          setError(getErrorMessage(e, 'This authorization request is invalid or has expired.'))
+          setError(
+            getErrorMessage(
+              e,
+              'This authorization request is invalid or has expired.',
+            ),
+          )
           setPhase('error')
         }
         return
@@ -145,7 +150,9 @@ function OAuth2ConsentPage() {
         return
       }
 
-      setError('Missing authorization request. Open this page from an application sign-in.')
+      setError(
+        'Missing authorization request. Open this page from an application sign-in.',
+      )
       setPhase('error')
     }
 
