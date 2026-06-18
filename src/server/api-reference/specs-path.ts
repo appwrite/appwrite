@@ -23,13 +23,13 @@ function resolveSpecsPackageRoot(): string {
     process.env.APPWRITE_SPECS_ROOT,
     // Docker / local dev: full repo with node_modules at cwd.
     join(cwd, 'node_modules', '@appwrite.io', 'specs'),
-    // Bundled SSR chunk at dist/server/assets/* -> dist/server/appwrite-specs.
-    join(moduleDir, '..', SPECS_DIR_NAME),
-    // Legacy / full-dist layout.
+    // Bundled SSR chunk at dist/server/assets/* -> dist/appwrite-specs.
     join(moduleDir, '..', '..', SPECS_DIR_NAME),
     // Sites-style layout: cwd is dist/ (server at dist/server/assets).
     join(cwd, SPECS_DIR_NAME),
     join(cwd, 'dist', SPECS_DIR_NAME),
+    // Back-compat for older deploys that copied into dist/server/.
+    join(moduleDir, '..', SPECS_DIR_NAME),
   ].filter((value): value is string => Boolean(value))
 
   for (const candidate of candidates) {
@@ -37,7 +37,7 @@ function resolveSpecsPackageRoot(): string {
   }
 
   throw new Error(
-    'Could not locate @appwrite.io/specs data. Expected specs/ under node_modules or dist/server/appwrite-specs.',
+    'Could not locate @appwrite.io/specs data. Expected specs/ under node_modules or dist/appwrite-specs.',
   )
 }
 
