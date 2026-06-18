@@ -154,17 +154,12 @@ export function KeyboardLayoutVisualizer({
   return (
     <div
       className={cn(
-        compact ? 'px-6 py-3' : 'border-t border-border/40 px-3 py-3',
+        compact ? 'flex min-h-0 flex-col px-6 py-3' : 'border-t border-border/40 px-3 py-3',
         className,
       )}
       aria-hidden
     >
-      <div
-        className={cn(
-          'mb-2 flex items-center justify-between px-0.5',
-          compact && 'mx-auto max-w-[640px]',
-        )}
-      >
+      <div className="mb-2 flex shrink-0 items-center justify-between px-0.5">
         <span className="text-[11px] font-medium uppercase tracking-wider text-foreground/60 dark:text-muted-foreground">
           Keyboard layout
         </span>
@@ -174,7 +169,7 @@ export function KeyboardLayoutVisualizer({
           </span>
         )}
       </div>
-      <div className={cn(compact && 'flex justify-center')}>
+      <div className={cn(compact && 'flex min-h-0 flex-1 items-center justify-center')}>
         <div
           className={cn(
             'rounded-xl border p-3 shadow-sm backdrop-blur-md',

@@ -1,3 +1,8 @@
+import {
+  GLOBAL_SHORTCUT_IDS,
+  GLOBAL_SHORTCUT_REFS,
+} from '@/lib/keyboard-shortcuts/global-shortcuts'
+
 export type KeyId = string
 
 export interface ParsedShortcut {
@@ -10,7 +15,34 @@ export interface ParsedShortcut {
   isSequential: boolean
 }
 
-const MODIFIERS = new Set(['mod', 'meta', 'command', 'cmd', '⌘', 'ctrl', 'control', 'alt', 'opt', 'option', 'shift'])
+const MODIFIERS = new Set([
+  'mod',
+  'meta',
+  'command',
+  'cmd',
+  '⌘',
+  'ctrl',
+  'control',
+  'alt',
+  'opt',
+  'option',
+  'shift',
+])
+
+const SHORTCUT_GROUP_ORDER = [
+  'Global',
+  'Navigation',
+  'Create',
+  'Actions',
+  'SQL editor',
+  'Terminal',
+  'Help',
+  'Theme',
+] as const
+
+function normalizeShortcutRaw(raw: string) {
+  return raw.trim().toLowerCase()
+}
 
 export function isMacPlatform() {
   return (
@@ -161,6 +193,8 @@ export function buildShortcutGroups(
 
   for (const cmd of commands) {
     if (!cmd.shortcut) continue
+    if (GLOBAL_SHORTCUT_IDS.has(cmd.id)) continue
+
     const label = cmd.group ?? groupLabelForKind(cmd.kind)
     const arr = buckets.get(label) ?? []
     arr.push({
@@ -174,51 +208,49 @@ export function buildShortcutGroups(
     buckets.set(label, arr)
   }
 
-  buckets.set('Global', [
-    {
-      id: 'global.command-center',
-      description: 'Open command center',
-      raw: 'mod+k',
-      displayKeys: formatDisplayKeys('mod+k', isMac),
-      highlightKeys: parseHighlightKeys('mod+k', isMac),
-      isSequential: false,
-    },
-    {
-      id: 'global.shortcuts',
-      description: 'Show keyboard shortcuts',
-      raw: '?',
-      displayKeys: formatDisplayKeys('?', isMac),
-      highlightKeys: parseHighlightKeys('?', isMac),
-      isSequential: false,
-    },
-    {
-      id: 'global.back',
-      description: 'Close / go back',
-      raw: 'escape',
-      displayKeys: formatDisplayKeys('escape', isMac),
-      highlightKeys: parseHighlightKeys('escape', isMac),
-      isSequential: false,
-    },
-    {
-      id: 'global.search',
-      description: 'Focus search',
-      raw: '/',
-      displayKeys: formatDisplayKeys('/', isMac),
-      highlightKeys: parseHighlightKeys('/', isMac),
-      isSequential: false,
-    },
-  ])
+  buckets.set(
+    'Global',
+    buildShortcutRefGroup('Global', GLOBAL_SHORTCUT_REFS, isMac).shortcuts,
+  )
 
-  const groups = Array.from(buckets.entries()).map(([label, shortcuts]) => ({
-    label,
-    shortcuts,
-  }))
+  const groups = Array.from(buckets.entries())
+    .map(([label, shortcuts]) => ({
+      label,
+      shortcuts,
+    }))
+    .filter((group) => group.shortcuts.length > 0)
 
   groups.sort((a, b) => {
-    if (a.label === 'Global') return -1
-    if (b.label === 'Global') return 1
+    const ai = SHORTCUT_GROUP_ORDER.indexOf(
+      a.label as (typeof SHORTCUT_GROUP_ORDER)[number],
+    )
+    const bi = SHORTCUT_GROUP_ORDER.indexOf(
+      b.label as (typeof SHORTCUT_GROUP_ORDER)[number],
+    )
+    if (ai !== -1 || bi !== -1) {
+      if (ai === -1) return 1
+      if (bi === -1) return -1
+      return ai - bi
+    }
     return a.label.localeCompare(b.label)
   })
 
+  return dedupeShortcutGroups(groups)
+}
+
+/** Drop duplicate shortcut rows (same binding and label). */
+export function dedupeShortcutGroups(groups: ShortcutGroup[]): ShortcutGroup[] {
+  const seen = new Set<string>()
+
   return groups
+    .map((group) => ({
+      ...group,
+      shortcuts: group.shortcuts.filter((shortcut) => {
+        const key = `${normalizeShortcutRaw(shortcut.raw)}::${shortcut.description.toLowerCase()}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      }),
+    }))
+    .filter((group) => group.shortcuts.length > 0)
 }

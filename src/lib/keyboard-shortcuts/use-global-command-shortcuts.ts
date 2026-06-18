@@ -1,4 +1,5 @@
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { useThemeShortcuts } from '@/lib/keyboard-shortcuts/theme-shortcuts'
 
 /** Cmd/Ctrl+K must work inside Monaco and other text fields. */
 export const OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS = {
@@ -60,4 +61,6 @@ export function useGlobalCommandShortcuts({
     },
     { enabled: active, capture: true },
   )
+
+  useThemeShortcuts({ enabled: active })
 }

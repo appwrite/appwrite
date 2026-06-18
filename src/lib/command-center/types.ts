@@ -48,6 +48,7 @@ export interface CommandContext {
     onOrgInviteMember?: () => void
     onOrgCreateProject?: () => void
     onToggleTerminal?: () => void
+    onSetTheme?: (theme: 'light' | 'dark' | 'system') => void
   }
 }
 

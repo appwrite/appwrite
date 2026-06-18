@@ -8,7 +8,6 @@ import {
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import {
-  isPostgresSqlEditorPath,
   usePostgresSqlEditorActions,
 } from '@/lib/postgres-sql-editor-actions'
 import {
@@ -62,6 +61,7 @@ import {
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { useNavigate, useLocation } from '@tanstack/react-router'
+import { useTheme } from 'next-themes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   DEFAULT_GROUP_LABELS,
@@ -203,7 +203,7 @@ function commandCenterDialogClass(isMobile: boolean, page?: string) {
     isMobile
       ? 'h-[100dvh] w-screen max-w-none rounded-none border-0 flex flex-col'
       : page === 'shortcuts'
-        ? 'flex w-full flex-col sm:max-w-4xl h-[85dvh] max-h-[85dvh]'
+        ? 'flex w-full flex-col sm:max-w-5xl h-[85dvh] max-h-[85dvh]'
         : 'w-full sm:max-w-2xl',
   )
 }
@@ -286,6 +286,7 @@ export function CommandCenter({
   const navigate = useNavigate()
   const location = useLocation()
   const { features } = useConsoleProfile()
+  const { setTheme } = useTheme()
   const isOrgContext = context === 'org'
   const isProjectContext = context === 'project'
   const isConsoleDocsPreviewContext = isConsoleDocsPreviewPath(location.pathname)
@@ -298,8 +299,6 @@ export function CommandCenter({
   const { access: rbacAccess } = useOrganizationScopes(scopesOrgId)
   const access = rbacAccess ?? FULL_ACCESS
   usePostgresSqlEditorActions()
-  const showPostgresSqlEditorShortcuts =
-    isProjectContext && isPostgresSqlEditorPath(location.pathname)
 
   // Build the runtime CommandContext used by registry entries.
   const closeCommandCenter = useCallback(
@@ -366,6 +365,7 @@ export function CommandCenter({
         onOrgInviteMember: onInviteMember,
         onOrgCreateProject,
         onToggleTerminal,
+        onSetTheme: setTheme,
       },
     }),
     [
@@ -387,6 +387,7 @@ export function CommandCenter({
       onInviteMember,
       onOrgCreateProject,
       onToggleTerminal,
+      setTheme,
     ],
   )
 
@@ -447,7 +448,6 @@ export function CommandCenter({
         description: 'See all keyboard shortcuts',
         icon: Keyboard,
         kind: 'action',
-        shortcut: '?',
         keywords: ['help', 'keys', 'hotkeys', 'shortcuts'],
         select: () => setPages((p) => [...p, 'shortcuts']),
       })
@@ -476,7 +476,6 @@ export function CommandCenter({
           description: 'Open project activity log',
           icon: Terminal,
           kind: 'action',
-          shortcut: isMobile ? undefined : 'L',
           keywords: ['logs', 'activity', 'audit', 'console'],
           select: () => {
             onOpenChange(false)
@@ -1433,7 +1432,6 @@ export function CommandCenter({
             commands={allCommands}
             isMobile={isMobile}
             showTerminalShortcuts={isProjectContext && !!onToggleTerminal}
-            showPostgresSqlEditorShortcuts={showPostgresSqlEditorShortcuts}
             onBack={() => setPages([])}
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}

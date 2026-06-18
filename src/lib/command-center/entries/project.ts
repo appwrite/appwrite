@@ -26,6 +26,7 @@ import {
 import {
   canShowConnectSection,
   canShowProjectSettings,
+  canSeeUsageNav,
 } from '@/lib/console-access-checks'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
@@ -193,8 +194,11 @@ const PROJECT_NAV: CommandEntry[] = [
     label: 'Usage',
     description: 'Usage statistics and quotas',
     icon: BarChart3,
+    shortcut: 'G U',
     keywords: ['stats', 'metrics', 'usage', 'quota', 'limits'],
-    available: (ctx) => Boolean(ctx.features.usageStats),
+    available: (ctx) =>
+      Boolean(ctx.features.usageStats) &&
+      canSeeUsageNav(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/usage`,
   },
   {
@@ -216,6 +220,18 @@ const PROJECT_NAV: CommandEntry[] = [
     icon: Settings,
     shortcut: 'G E',
     keywords: ['config', 'preferences', 'options', 'settings', 'env'],
+    available: (ctx) => canShowProjectSettings(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/settings`,
+  },
+  {
+    id: 'project.nav.settings-comma',
+    scopes: ['project'],
+    kind: 'navigation',
+    label: 'Settings',
+    description: 'Project settings (comma shortcut)',
+    icon: Settings,
+    shortcut: 'G ,',
+    keywords: ['config', 'preferences', 'options', 'settings', 'env', 'comma'],
     available: (ctx) => canShowProjectSettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/settings`,
   },
