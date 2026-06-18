@@ -11,7 +11,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -390,15 +389,9 @@ function ReferenceServicesNav({
                         <DocsRouteLink
                           href={service.href}
                           onClick={onNavigate}
-                          className={cn(
-                            docsSidebarNavLinkClassName(isActive),
-                            'flex items-center justify-between gap-2',
-                          )}
+                          className={docsSidebarNavLinkClassName(isActive)}
                         >
                           <span className="truncate">{service.label}</span>
-                          <Badge variant="secondary" className="text-[10px] shrink-0">
-                            {service.methodCount}
-                          </Badge>
                         </DocsRouteLink>
                       </li>
                     )
