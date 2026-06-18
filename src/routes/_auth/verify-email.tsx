@@ -13,6 +13,7 @@ import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
   resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
 
@@ -81,7 +82,7 @@ function VerifyEmailPage() {
         // profiles and would otherwise drop the pending authorization.
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {
-          navigate({ to: targetRedirect })
+          navigate(toRedirectNavigateOptions(targetRedirect))
           return
         }
 

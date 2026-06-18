@@ -21,6 +21,7 @@ import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
   resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
@@ -147,7 +148,7 @@ function SignUpPage() {
       // flow), go straight there without provisioning a personal org/project.
       const targetRedirect = resolvePostAuthRedirect(search.redirect)
       if (targetRedirect) {
-        navigate({ to: targetRedirect })
+        navigate(toRedirectNavigateOptions(targetRedirect))
         return
       }
 

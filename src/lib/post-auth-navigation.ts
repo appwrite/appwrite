@@ -60,6 +60,23 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
   return redirect
 }
 
+/**
+ * Split a validated relative redirect into the `{ to, search }` shape TanStack
+ * Router needs. Passing a URL with a query string directly as `to` drops the
+ * search params — which would lose OAuth2 params like `client_id` (consent) or
+ * `user_code` (device) when returning to the flow after sign-up / verification.
+ */
+export function toRedirectNavigateOptions(redirect: string): {
+  to: string
+  search: Record<string, string>
+} {
+  const url = new URL(redirect, 'http://localhost')
+  return {
+    to: url.pathname,
+    search: Object.fromEntries(url.searchParams),
+  }
+}
+
 async function prefetchOrganizationOverviewSafe(
   queryClient: QueryClient,
   orgId: string,
