@@ -21,6 +21,10 @@ import {
   resolvePrismPreSurfaceStyle,
   stripPrismTokenBackground,
 } from '@/lib/code-block-prism-theme'
+import {
+  isHtmlDarkChrome,
+  isResolvedThemeDarkChrome,
+} from '@/lib/html-theme'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
@@ -220,6 +224,11 @@ function loadLanguage(lang: string): Promise<void> {
   })
 }
 
+/** Docs and API reference pages use JSON heavily; preload to avoid plaintext flash. */
+if (typeof window !== 'undefined') {
+  void loadLanguage('json')
+}
+
 export type CodeBlockVariant = 'default' | 'headless'
 
 export type CodeBlockSurface = 'default' | 'muted' | 'transparent'
@@ -303,6 +312,10 @@ export function CodeBlock({
   // Bump when async Prism grammars finish loading so Highlight re-tokenizes.
   const [, setLoadGeneration] = useState(0)
   const { resolvedTheme } = useTheme()
+  const isDarkChrome =
+    resolvedTheme !== undefined
+      ? isResolvedThemeDarkChrome(resolvedTheme)
+      : isHtmlDarkChrome()
 
   const handleWheel = (e: React.WheelEvent<HTMLPreElement>) => {
     const pre = preRef.current
@@ -353,7 +366,7 @@ export function CodeBlock({
   const displayCode = useMemo(() => normalizeCodeBlockContent(code), [code])
   const prismTheme = useMemo(
     () => buildCodeBlockPrismTheme(resolvedTheme),
-    [resolvedTheme],
+    [isDarkChrome],
   )
 
   const isHeadless = variant === 'headless'

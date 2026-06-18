@@ -43,7 +43,7 @@ const DOCS: CommandEntry[] = [
     scopes: ['docs'],
     kind: 'navigation',
     label: 'API references',
-    description: 'Browse API reference documentation',
+    description: 'Browse API references documentation',
     icon: FileText,
     keywords: ['api', 'reference', 'sdk'],
     to: () => '/docs/references',

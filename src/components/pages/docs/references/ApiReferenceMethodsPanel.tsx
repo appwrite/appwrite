@@ -1,0 +1,198 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { Search, X } from 'lucide-react'
+import { groupMethodsByResource } from '@/lib/api-explorer/parse-spec'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { StartTruncatedText } from '@/components/global/shared/StartTruncatedText'
+import type { ApiReferenceMethod } from '@/lib/docs/references/types'
+import { cn } from '@/lib/utils'
+import {
+  getHttpMethodVariant,
+  REFERENCE_COLUMN_HEADER_CLASS,
+  REFERENCE_SCROLL_AREA_CLASS,
+} from './explorer-styles'
+
+type ApiReferenceMethodsPanelProps = {
+  serviceLabel: string
+  methods: ApiReferenceMethod[]
+  selectedMethodId?: string
+  onSelectMethod: (methodId: string) => void
+}
+
+function methodMatchesSearch(method: ApiReferenceMethod, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  return (
+    method.summary.toLowerCase().includes(q) ||
+    method.path.toLowerCase().includes(q) ||
+    method.id.toLowerCase().includes(q) ||
+    method.httpMethod.toLowerCase().includes(q) ||
+    (method.resourceGroup?.toLowerCase().includes(q) ?? false)
+  )
+}
+
+type MethodListProps = {
+  methods: ApiReferenceMethod[]
+  selectedMethodId?: string
+  onSelectMethod: (methodId: string) => void
+  selectedMethodRef: RefObject<HTMLButtonElement | null>
+}
+
+function MethodList({
+  methods,
+  selectedMethodId,
+  onSelectMethod,
+  selectedMethodRef,
+}: MethodListProps) {
+  return (
+    <div className="divide-y divide-border/50">
+      {methods.map((method) => {
+        const isActive = method.id === selectedMethodId
+        return (
+          <button
+            key={method.id}
+            ref={
+              isActive
+                ? (node) => {
+                    selectedMethodRef.current = node
+                  }
+                : undefined
+            }
+            type="button"
+            onClick={() => onSelectMethod(method.id)}
+            className={cn(
+              'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 px-2.5 py-2 text-left transition-colors',
+              isActive
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <div className="flex w-full min-w-0 max-w-full items-center gap-2">
+              <Badge
+                variant={getHttpMethodVariant(method.httpMethod)}
+                className="text-[10px] shrink-0 uppercase"
+              >
+                {method.httpMethod}
+              </Badge>
+              <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+                {method.summary}
+              </span>
+            </div>
+            <StartTruncatedText
+              text={method.path}
+              className="font-mono text-[11px] text-muted-foreground"
+            />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export function ApiReferenceMethodsPanel({
+  serviceLabel,
+  methods,
+  selectedMethodId,
+  onSelectMethod,
+}: ApiReferenceMethodsPanelProps) {
+  const selectedMethodRef = useRef<HTMLButtonElement | null>(null)
+  const [searchValue, setSearchValue] = useState('')
+
+  const resourceGroups = useMemo(
+    () => groupMethodsByResource(methods),
+    [methods],
+  )
+
+  const filteredGroups = useMemo(() => {
+    const query = searchValue.trim()
+    if (!query) return resourceGroups
+
+    return resourceGroups
+      .map((group) => ({
+        ...group,
+        methods: group.methods.filter((method) => methodMatchesSearch(method, query)),
+      }))
+      .filter((group) => group.methods.length > 0)
+  }, [resourceGroups, searchValue])
+
+  useEffect(() => {
+    selectedMethodRef.current?.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest',
+    })
+  }, [selectedMethodId, filteredGroups])
+
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
+      <div
+        className={cn(
+          REFERENCE_COLUMN_HEADER_CLASS,
+          'min-w-0 items-center overflow-hidden',
+        )}
+      >
+        <p className="truncate text-[13px] font-medium text-foreground">
+          {serviceLabel}
+        </p>
+      </div>
+
+      <div className="shrink-0 border-b border-border bg-muted/20 px-2 py-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+            placeholder="Search methods…"
+            className="h-8 border-border/60 bg-background pl-8 pr-8 text-[13px]"
+            aria-label="Search methods"
+          />
+          {searchValue ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+              aria-label="Clear method search"
+              onClick={() => setSearchValue('')}
+            >
+              <X className="size-3.5" />
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <ScrollArea className={REFERENCE_SCROLL_AREA_CLASS}>
+        <div className="box-border w-full max-w-full min-w-0 space-y-3 p-2">
+          {methods.length === 0 ? (
+            <p className="px-2 py-4 text-[13px] text-muted-foreground">
+              No methods available.
+            </p>
+          ) : filteredGroups.length === 0 ? (
+            <p className="px-2 py-4 text-[13px] text-muted-foreground">
+              No methods match your search.
+            </p>
+          ) : (
+            filteredGroups.map((group) => (
+              <div key={group.id || 'default'} className="space-y-1.5">
+                {group.label ? (
+                  <p className="px-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                    {group.label}
+                  </p>
+                ) : null}
+                <MethodList
+                  methods={group.methods}
+                  selectedMethodId={selectedMethodId}
+                  onSelectMethod={onSelectMethod}
+                  selectedMethodRef={selectedMethodRef}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  )
+}

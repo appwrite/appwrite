@@ -182,6 +182,11 @@ export const API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT = [58, 42] as const
 export const API_EXPLORER_RESPONSE_SPLIT_MIN = [20, 15] as const
 export const API_EXPLORER_RESPONSE_SPLIT_MAX = [85, 75] as const
 
+/** Docs API reference: methods + request columns (explorer columns 2 and 3 proportions). */
+export const API_REFERENCE_COLUMNS_DEFAULT_LAYOUT = [24, 76] as const
+export const API_REFERENCE_COLUMNS_MIN = [18, 36] as const
+export const API_REFERENCE_COLUMNS_MAX = [34, 100] as const
+
 function normalizePanelLayout(
   sizes: number[],
   mins: readonly number[],
@@ -220,6 +225,15 @@ export function normalizeApiExplorerResponseSplitLayout(
     API_EXPLORER_RESPONSE_SPLIT_MIN,
     API_EXPLORER_RESPONSE_SPLIT_MAX,
     API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
+  )
+}
+
+export function normalizeApiReferenceColumnsLayout(sizes: number[]): number[] {
+  return normalizePanelLayout(
+    sizes,
+    API_REFERENCE_COLUMNS_MIN,
+    API_REFERENCE_COLUMNS_MAX,
+    API_REFERENCE_COLUMNS_DEFAULT_LAYOUT,
   )
 }
 

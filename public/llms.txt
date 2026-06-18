@@ -291,8 +291,6 @@
 - [Start with TanStack Start](https://appwrite.io/docs/quick-starts/tanstack-start): Learn how to use Appwrite to add authentication, user management, file storage, and more to your TanStack Start apps.
 - [Start with Vue.js](https://appwrite.io/docs/quick-starts/vue): Build Vue.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.
 - [Start with Web](https://appwrite.io/docs/quick-starts/web): Build JavaScript or Typescript web apps with Appwrite. Add authentication, user management, file storage, and more. Read our guide to get started!
-- [API reference](https://appwrite.io/docs/references): Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.
-- [Quick start](https://appwrite.io/docs/references/quick-start): Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.
 - [SDKs](https://appwrite.io/docs/sdks): Get started with Appwrite SDKs and learn how to use them to add authentication, user management, file storage, and more to your apps.
 - [AI](https://appwrite.io/docs/tooling/ai): Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.
 - [AGENTS.md](https://appwrite.io/docs/tooling/ai/agents-md): Generate an AGENTS.md file to give AI agents project-specific context about Appwrite SDKs, APIs, and services.

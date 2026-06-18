@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
 import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
+import { CloudMarkIcon } from '@/components/global/shared/CloudMarkIcon'
 
 let logoCloudLockedUntilPointerLeave = false
 const logoCloudLockListeners = new Set<() => void>()
@@ -49,28 +50,6 @@ function FilledAppwriteMark({ className }: { className?: string }) {
       <path
         fill="currentColor"
         d="M24.4429 9.46094V14.9383H14.4492C15.4906 13.94 16.1401 12.5248 16.1401 10.9548C16.1401 10.4369 16.0696 9.93598 15.9373 9.46094H24.4429Z"
-      />
-    </svg>
-  )
-}
-
-/**
- * Solid cloud silhouette (Heroicons 24/solid Cloud - MIT).
- * Rounded "weather" cloud reads clearer than stroke icons at small sizes.
- */
-function FilledCloudMark({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={cn('h-6 w-6 shrink-0', className)}
-      aria-hidden
-    >
-      <path
-        fillRule="evenodd"
-        d="M4.5 9.75a6 6 0 0 1 11.573-2.226 3.75 3.75 0 0 1 4.133 4.303A4.5 4.5 0 0 1 18 20.25H6.75a5.25 5.25 0 0 1-2.23-10.004 6.072 6.072 0 0 1-.02-.496Z"
-        clipRule="evenodd"
       />
     </svg>
   )
@@ -155,7 +134,7 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
           className="absolute inset-0 flex items-center justify-center text-[var(--brand-cta)] [backface-visibility:hidden]"
           style={{ transform: 'rotateY(180deg)' }}
         >
-          <FilledCloudMark />
+          <CloudMarkIcon />
         </div>
       </div>
     </div>

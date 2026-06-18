@@ -1,6 +1,7 @@
 export type AppwriteAdditionalMethod = {
   name: string
   desc?: string
+  weight?: number
   auth?: Record<string, string[]>
   parameters?: string[]
   required?: string[]

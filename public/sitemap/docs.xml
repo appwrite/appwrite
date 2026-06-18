@@ -1461,16 +1461,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://appwrite.io/docs/references</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://appwrite.io/docs/references/quick-start</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://appwrite.io/docs/sdks</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

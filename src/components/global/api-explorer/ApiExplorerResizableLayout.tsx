@@ -16,8 +16,11 @@ import {
   API_EXPLORER_COLUMNS_MIN,
   API_EXPLORER_RESPONSE_SPLIT_MAX,
   API_EXPLORER_RESPONSE_SPLIT_MIN,
+  API_REFERENCE_COLUMNS_MAX,
+  API_REFERENCE_COLUMNS_MIN,
   normalizeApiExplorerColumnsLayout,
   normalizeApiExplorerResponseSplitLayout,
+  normalizeApiReferenceColumnsLayout,
 } from '@/lib/resizable-layout'
 
 const PERSIST_DEBOUNCE_MS = 250
@@ -214,6 +217,41 @@ export function ExplorerResponseSplitResizableLayout({
       panelClassName="min-h-0 overflow-hidden"
     >
       {[request, response]}
+    </PersistedResizablePanelGroup>
+  )
+}
+
+type ReferenceColumnsLayoutProps = {
+  layout: number[]
+  persistLayout: (layout: number[]) => void
+  handleClassName: string
+  className?: string
+  methods: ReactNode
+  request: ReactNode
+}
+
+/** Docs API reference: methods list + request detail (explorer columns 2 and 3). */
+export function ReferenceColumnsResizableLayout({
+  layout,
+  persistLayout,
+  handleClassName,
+  className,
+  methods,
+  request,
+}: ReferenceColumnsLayoutProps) {
+  return (
+    <PersistedResizablePanelGroup
+      direction="horizontal"
+      layout={layout}
+      persistLayout={persistLayout}
+      normalizeLayout={normalizeApiReferenceColumnsLayout}
+      mins={API_REFERENCE_COLUMNS_MIN}
+      maxs={API_REFERENCE_COLUMNS_MAX}
+      className={className}
+      handleClassName={handleClassName}
+      panelClassName="min-h-0 min-w-0 overflow-hidden"
+    >
+      {[methods, request]}
     </PersistedResizablePanelGroup>
   )
 }

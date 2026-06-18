@@ -1,6 +1,14 @@
+'use client'
+
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
+import { resolveFenceCodeLanguage } from '@/lib/code-language'
+import {
+  DOCS_PROSE_DETAIL_CLASSES,
+  DOCS_PROSE_WRAPPER_CLASS,
+} from '@/lib/docs/prose-typography'
 import { cn } from '@/lib/utils'
 
 const APPWRITE_DOCS_ORIGIN = 'https://appwrite.io'
@@ -46,11 +54,33 @@ function isExternalDomainLink(href?: string): boolean {
 type MethodDescriptionMarkdownProps = {
   content: string
   className?: string
+  /** `docs` renders like a docs article; `card` is the bordered explorer panel (default). */
+  variant?: 'card' | 'docs'
 }
+
+const CARD_WRAPPER_CLASS = cn(
+  'rounded-lg border border-border bg-muted/25 px-4 py-3.5',
+  'text-[14px] leading-[1.65] tracking-[0.01em] text-foreground/88',
+  '[&_p]:my-0 [&_p+p]:mt-3',
+  '[&_strong]:font-semibold [&_strong]:text-foreground',
+  '[&_em]:text-foreground/90',
+  'prose-links-neutral',
+  '[&_code]:rounded-sm [&_code]:bg-background/80 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[12px] [&_code]:text-foreground [&_code]:ring-1 [&_code]:ring-border/60',
+  '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5',
+  '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-5',
+  '[&_li]:text-foreground/88',
+)
+
+const DOCS_WRAPPER_CLASS = cn(
+  DOCS_PROSE_WRAPPER_CLASS,
+  'prose-links-neutral min-w-0',
+  ...DOCS_PROSE_DETAIL_CLASSES,
+)
 
 export function MethodDescriptionMarkdown({
   content,
   className,
+  variant = 'card',
 }: MethodDescriptionMarkdownProps) {
   const normalized = useMemo(
     () => normalizeApiDescriptionMarkdown(content),
@@ -60,16 +90,7 @@ export function MethodDescriptionMarkdown({
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-muted/25 px-4 py-3.5',
-        'text-[14px] leading-[1.65] tracking-[0.01em] text-foreground/88',
-        '[&_p]:my-0 [&_p+p]:mt-3',
-        '[&_strong]:font-semibold [&_strong]:text-foreground',
-        '[&_em]:text-foreground/90',
-        'prose-links-neutral',
-        '[&_code]:rounded-sm [&_code]:bg-background/80 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[12px] [&_code]:text-foreground [&_code]:ring-1 [&_code]:ring-border/60',
-        '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5',
-        '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-5',
-        '[&_li]:text-foreground/88',
+        variant === 'docs' ? DOCS_WRAPPER_CLASS : CARD_WRAPPER_CLASS,
         className,
       )}
     >
@@ -95,20 +116,18 @@ export function MethodDescriptionMarkdown({
           },
           code({ className: codeClassName, children, ...props }) {
             if (!codeClassName) {
-              return (
-                <code {...props}>{children}</code>
-              )
+              return <code {...props}>{children}</code>
             }
 
+            const rawCode = String(children ?? '').replace(/\n$/, '')
+            const language = resolveFenceCodeLanguage(
+              codeClassName.match(/language-([a-zA-Z0-9_-]+)/)?.[1],
+            )
+
             return (
-              <code
-                className={cn(
-                  'block overflow-x-auto whitespace-pre-wrap break-words p-3 font-mono text-[12px] leading-relaxed text-foreground',
-                  'rounded-md border border-border bg-background/80',
-                )}
-              >
-                {String(children ?? '').replace(/\n$/, '')}
-              </code>
+              <div className="not-prose my-3">
+                <ConnectCodeExample code={rawCode} language={language} />
+              </div>
             )
           },
         }}

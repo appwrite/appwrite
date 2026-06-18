@@ -20,10 +20,15 @@ export function getDocsOgImageUrl(title: string, subtitle = 'Documentation'): st
   return `https://og.appwrite.global/image.png?${params.toString()}`
 }
 
-export function getDocsMetaTags(meta: DocsPageMeta, slug: string) {
+export function getDocsMetaTags(
+  meta: DocsPageMeta,
+  slug: string,
+  options?: { canonicalSlug?: string },
+) {
   const isOverview = slug.split('/').pop() === slug.split('/')[0] && !slug.includes('/')
   const title = getDocsPageTitle(meta, isOverview)
-  const canonical = getDocsCanonicalUrl(slug)
+  const canonicalSlug = options?.canonicalSlug ?? slug
+  const canonical = getDocsCanonicalUrl(canonicalSlug)
   const ogImage = getDocsOgImageUrl(meta.title)
 
   return [
@@ -42,8 +47,13 @@ export function getDocsMetaTags(meta: DocsPageMeta, slug: string) {
   ] as const
 }
 
-export function getDocsBreadcrumbSchema(meta: DocsPageMeta, slug: string) {
-  const parts = slug ? slug.split('/') : []
+export function getDocsBreadcrumbSchema(
+  meta: DocsPageMeta,
+  slug: string,
+  options?: { canonicalSlug?: string },
+) {
+  const effectiveSlug = options?.canonicalSlug ?? slug
+  const parts = effectiveSlug ? effectiveSlug.split('/') : []
   const items = [
     { name: 'Docs', item: `${SITE_ORIGIN}/docs` },
     ...parts.map((part, index) => ({
@@ -53,7 +63,10 @@ export function getDocsBreadcrumbSchema(meta: DocsPageMeta, slug: string) {
   ]
 
   if (parts.length > 0) {
-    items[items.length - 1] = { name: meta.title, item: getDocsCanonicalUrl(slug) }
+    items[items.length - 1] = {
+      name: meta.title,
+      item: getDocsCanonicalUrl(effectiveSlug),
+    }
   }
 
   return {
@@ -68,13 +81,18 @@ export function getDocsBreadcrumbSchema(meta: DocsPageMeta, slug: string) {
   }
 }
 
-export function getDocsArticleSchema(meta: DocsPageMeta, slug: string) {
+export function getDocsArticleSchema(
+  meta: DocsPageMeta,
+  slug: string,
+  options?: { canonicalSlug?: string },
+) {
+  const effectiveSlug = options?.canonicalSlug ?? slug
   return {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
     headline: meta.title,
     description: meta.description,
-    url: getDocsCanonicalUrl(slug),
+    url: getDocsCanonicalUrl(effectiveSlug),
     ...(meta.readingTimeMinutes
       ? { timeRequired: `PT${meta.readingTimeMinutes}M` }
       : {}),

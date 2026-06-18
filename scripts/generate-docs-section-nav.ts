@@ -258,42 +258,10 @@ async function buildTutorialSections(): Promise<SectionConfig[]> {
 }
 
 function buildReferencesSection(): SectionConfig {
-  const prefix = '/docs/references/cloud/client-web'
-  const services: Array<{ label: string; slug: string }> = [
-    { label: 'Account', slug: 'account' },
-    { label: 'Users', slug: 'users' },
-    { label: 'Teams', slug: 'teams' },
-    { label: 'Databases', slug: 'databases' },
-    { label: 'TablesDB', slug: 'tablesDB' },
-    { label: 'Sites', slug: 'sites' },
-    { label: 'Storage', slug: 'storage' },
-    { label: 'Functions', slug: 'functions' },
-    { label: 'Messaging', slug: 'messaging' },
-    { label: 'Localization', slug: 'locale' },
-    { label: 'Avatars', slug: 'avatars' },
-    { label: 'Presences', slug: 'presences' },
-    { label: 'Project', slug: 'project' },
-  ]
-
   return {
     prefix: 'references',
-    parent: { href: '/docs', label: 'API reference' },
-    navigation: [
-      {
-        label: 'Getting started',
-        items: [
-          { label: 'Overview', href: '/docs/references' },
-          { label: 'Quick start', href: '/docs/references/quick-start' },
-        ],
-      },
-      {
-        label: 'APIs',
-        items: services.map((service) => ({
-          label: service.label,
-          href: `${prefix}/${service.slug}`,
-        })),
-      },
-    ],
+    parent: { href: '/docs', label: 'API references' },
+    navigation: [],
   }
 }
 

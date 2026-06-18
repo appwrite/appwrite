@@ -15,6 +15,8 @@ type DocsLayoutProps = {
   readingTimeMinutes?: number
   toc?: DocsTocItem[]
   headerActions?: ReactNode
+  /** When true, hides the TOC column and lets content use the full docs container width. */
+  wideContent?: boolean
   children: ReactNode
 }
 
@@ -25,6 +27,7 @@ export function DocsLayout({
   readingTimeMinutes,
   toc = [],
   headerActions,
+  wideContent = false,
   children,
 }: DocsLayoutProps) {
   const { parent, navigation: sectionNav } = getDocsSectionNav(slug)
@@ -44,7 +47,14 @@ export function DocsLayout({
             'mx-auto w-full max-w-7xl overflow-visible pb-8 pl-8 pr-4 pt-8 @[480px]:pl-10 @[480px]:pr-6 @[480px]:pt-10 @[900px]:pl-12',
           )}
         >
-          <div className="grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,52rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
+          <div
+            className={cn(
+              'grid items-start gap-8 overflow-visible',
+              wideContent
+                ? 'grid-cols-1'
+                : '@[900px]:grid-cols-[minmax(0,52rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16',
+            )}
+          >
             <article className="min-w-0">
               <DocsArticleHeader
                 title={title}
@@ -55,14 +65,18 @@ export function DocsLayout({
               />
               <div className="min-w-0 overflow-x-hidden">
                 {children}
-                <DocsFeedback />
+                {!wideContent ? <DocsFeedback /> : null}
               </div>
             </article>
-            <div
-              aria-hidden
-              className="hidden w-px self-stretch bg-border @[900px]:block"
-            />
-            <DocsToc items={toc} />
+            {!wideContent ? (
+              <>
+                <div
+                  aria-hidden
+                  className="hidden w-px self-stretch bg-border @[900px]:block"
+                />
+                <DocsToc items={toc} />
+              </>
+            ) : null}
           </div>
         </div>
       </div>

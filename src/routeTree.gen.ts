@@ -110,6 +110,8 @@ import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './rou
 import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
 import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
 import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
+import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/docs/references.$version.models.$model'
+import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
 import { Route as PublicProjectsProjectIdSitesUsageRouteImport } from './routes/_public/projects.$projectId.sites.usage'
 import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
@@ -830,6 +832,18 @@ const PublicOrganizationsOrgIdDomainsIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const DocsReferencesVersionModelsModelRoute =
+  DocsReferencesVersionModelsModelRouteImport.update({
+    id: '/references/$version/models/$model',
+    path: '/references/$version/models/$model',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsReferencesVersionPlatformServiceRoute =
+  DocsReferencesVersionPlatformServiceRouteImport.update({
+    id: '/references/$version/$platform/$service',
+    path: '/references/$version/$platform/$service',
+    getParentRoute: () => DocsRoute,
   } as any)
 const PublicProjectsProjectIdStorageBucketIdRoute =
   PublicProjectsProjectIdStorageBucketIdRouteImport.update({
@@ -2165,6 +2179,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
+  '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
+  '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
@@ -2419,6 +2435,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
+  '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
+  '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthIndexRoute
@@ -2687,6 +2705,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/_public/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
+  '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
+  '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/_public/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/_public/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/_public/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
@@ -2965,6 +2985,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create'
     | '/projects/$projectId/sites/usage'
     | '/projects/$projectId/storage/$bucketId'
+    | '/docs/references/$version/$platform/$service'
+    | '/docs/references/$version/models/$model'
     | '/organizations/$orgId/domains/'
     | '/organizations/$orgId/marketplace/'
     | '/projects/$projectId/auth/'
@@ -3219,6 +3241,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/sites/usage'
+    | '/docs/references/$version/$platform/$service'
+    | '/docs/references/$version/models/$model'
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/marketplace'
     | '/projects/$projectId/auth'
@@ -3486,6 +3510,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create'
     | '/_public/projects/$projectId/sites/usage'
     | '/_public/projects/$projectId/storage/$bucketId'
+    | '/docs/references/$version/$platform/$service'
+    | '/docs/references/$version/models/$model'
     | '/_public/organizations/$orgId/domains/'
     | '/_public/organizations/$orgId/marketplace/'
     | '/_public/projects/$projectId/auth/'
@@ -4384,6 +4410,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/domains/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/docs/references/$version/models/$model': {
+      id: '/docs/references/$version/models/$model'
+      path: '/references/$version/models/$model'
+      fullPath: '/docs/references/$version/models/$model'
+      preLoaderRoute: typeof DocsReferencesVersionModelsModelRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/references/$version/$platform/$service': {
+      id: '/docs/references/$version/$platform/$service'
+      path: '/references/$version/$platform/$service'
+      fullPath: '/docs/references/$version/$platform/$service'
+      preLoaderRoute: typeof DocsReferencesVersionPlatformServiceRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/_public/projects/$projectId/storage/$bucketId': {
       id: '/_public/projects/$projectId/storage/$bucketId'
@@ -6840,6 +6880,8 @@ interface DocsRouteChildren {
   DocsQuickStartsRoute: typeof DocsQuickStartsRoute
   DocsTutorialsRoute: typeof DocsTutorialsRoute
   DocsIndexRoute: typeof DocsIndexRoute
+  DocsReferencesVersionPlatformServiceRoute: typeof DocsReferencesVersionPlatformServiceRoute
+  DocsReferencesVersionModelsModelRoute: typeof DocsReferencesVersionModelsModelRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
@@ -6847,6 +6889,9 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsQuickStartsRoute: DocsQuickStartsRoute,
   DocsTutorialsRoute: DocsTutorialsRoute,
   DocsIndexRoute: DocsIndexRoute,
+  DocsReferencesVersionPlatformServiceRoute:
+    DocsReferencesVersionPlatformServiceRoute,
+  DocsReferencesVersionModelsModelRoute: DocsReferencesVersionModelsModelRoute,
 }
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
