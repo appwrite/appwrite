@@ -1,0 +1,29 @@
+/**
+ * Copies @appwrite.io/specs data into dist for production runtimes that only
+ * ship the Vite build output (e.g. Appwrite Sites) without node_modules.
+ *
+ * Run: bun run scripts/copy-appwrite-specs.ts
+ */
+import { cp, mkdir } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const ROOT = join(__dirname, '..')
+const require = createRequire(import.meta.url)
+const specsPackageRoot = dirname(require.resolve('@appwrite.io/specs/package.json'))
+const destRoot = join(ROOT, 'dist', 'server', 'appwrite-specs')
+
+async function run() {
+  await mkdir(destRoot, { recursive: true })
+  await cp(join(specsPackageRoot, 'specs'), join(destRoot, 'specs'), {
+    recursive: true,
+  })
+  await cp(join(specsPackageRoot, 'examples'), join(destRoot, 'examples'), {
+    recursive: true,
+  })
+  console.log(`Copied @appwrite.io/specs to ${destRoot}`)
+}
+
+await run()
