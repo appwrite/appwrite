@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ComponentProps } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, type ComponentProps } from 'react'
 import {
   Bug,
   ChevronRight,
@@ -96,6 +96,17 @@ import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
 } from '@/lib/init/use-init-low-power-animations'
+import {
+  clampDebugMenuPosition,
+  DEBUG_MENU_EDGE_OFFSET_PX,
+  getDebugMenuPopoverPlacement,
+  getDebugMenuTooltipSide,
+  readDebugMenuPosition,
+  writeDebugMenuPosition,
+  type DebugMenuPosition,
+} from '@/lib/debug-menu-position'
+
+const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 interface DebugAction {
   label: string
   onClick: () => void
@@ -500,6 +511,138 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     useDebugEndpoint()
   const navigate = useNavigate()
   const initLowPowerDecision = useInitLowPowerAnimationDecision()
+  const [position, setPosition] = useState<DebugMenuPosition>(() =>
+    readDebugMenuPosition(),
+  )
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragPosition, setDragPosition] = useState<DebugMenuPosition | null>(null)
+  const dragStateRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    moved: false,
+  })
+  const suppressClickRef = useRef(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition((current) => {
+        const clamped = clampDebugMenuPosition(
+          current,
+          window.innerWidth,
+          window.innerHeight,
+        )
+        writeDebugMenuPosition(clamped)
+        return clamped
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+    handleResize()
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const displayPosition =
+    isDragging && dragPosition
+      ? clampDebugMenuPosition(
+          dragPosition,
+          window.innerWidth,
+          window.innerHeight,
+        )
+      : position
+
+  const popoverPlacement = useMemo(
+    () =>
+      getDebugMenuPopoverPlacement(
+        displayPosition,
+        window.innerWidth,
+        window.innerHeight,
+      ),
+    [displayPosition],
+  )
+  const tooltipSide = useMemo(
+    () => getDebugMenuTooltipSide(displayPosition, window.innerWidth),
+    [displayPosition],
+  )
+
+  const handleDragPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (isOpen) return
+
+      dragStateRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        moved: false,
+      }
+      event.currentTarget.setPointerCapture(event.pointerId)
+    },
+    [isOpen],
+  )
+
+  const handleDragPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      const dragState = dragStateRef.current
+      if (dragState.pointerId !== event.pointerId) return
+
+      const deltaX = event.clientX - dragState.startX
+      const deltaY = event.clientY - dragState.startY
+
+      if (
+        !dragState.moved &&
+        Math.hypot(deltaX, deltaY) >= DEBUG_MENU_DRAG_THRESHOLD_PX
+      ) {
+        dragState.moved = true
+        setIsDragging(true)
+        setIsOpen(false)
+      }
+
+      if (dragState.moved) {
+        setDragPosition(
+          clampDebugMenuPosition(
+            { x: event.clientX, y: event.clientY },
+            window.innerWidth,
+            window.innerHeight,
+          ),
+        )
+      }
+    },
+    [],
+  )
+
+  const finishDrag = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      const dragState = dragStateRef.current
+      if (dragState.pointerId !== event.pointerId) return
+
+      event.currentTarget.releasePointerCapture(event.pointerId)
+      dragState.pointerId = -1
+
+      if (dragState.moved) {
+        const clamped = clampDebugMenuPosition(
+          { x: event.clientX, y: event.clientY },
+          window.innerWidth,
+          window.innerHeight,
+        )
+        setPosition(clamped)
+        writeDebugMenuPosition(clamped)
+        suppressClickRef.current = true
+      }
+
+      dragState.moved = false
+      setIsDragging(false)
+      setDragPosition(null)
+    },
+    [],
+  )
+
+  const handleDragClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    if (suppressClickRef.current) {
+      event.preventDefault()
+      event.stopPropagation()
+      suppressClickRef.current = false
+    }
+  }, [])
 
   const applyOverrideAndReload = (action: () => void) => {
     setIsOpen(false)
@@ -1494,34 +1637,52 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   if (!isVisible) return null
 
   return (
-    <DismissableLayerBranch className="pointer-events-auto fixed bottom-4 right-4 z-[10060]">
+    <DismissableLayerBranch
+      className="pointer-events-auto fixed z-[10060]"
+      style={{
+        left: displayPosition.x,
+        top: displayPosition.y,
+        transform: 'translate(-50%, -50%)',
+      }}
+    >
       <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip>
+        <Tooltip open={isDragging ? false : undefined}>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-violet-500/30 bg-violet-600 text-white shadow-md transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className={cn(
+                  'flex h-11 w-11 select-none items-center justify-center rounded-xl border border-violet-500/30 bg-violet-600 text-white shadow-md transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  isDragging ? 'cursor-grabbing touch-none' : 'cursor-grab',
+                )}
                 aria-label="Debug menu"
+                onPointerDown={handleDragPointerDown}
+                onPointerMove={handleDragPointerMove}
+                onPointerUp={finishDrag}
+                onPointerCancel={finishDrag}
+                onClick={handleDragClick}
+                onDragStart={(event) => event.preventDefault()}
               >
                 <img
                   src="/icons/appwrite-white.svg"
                   alt=""
                   aria-hidden="true"
-                  className="h-6 w-6"
+                  draggable={false}
+                  className="pointer-events-none h-6 w-6"
                 />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent side="left" sideOffset={8}>
+          <TooltipContent side={tooltipSide} sideOffset={8}>
             Debug menu
           </TooltipContent>
         </Tooltip>
         <PopoverContent
-          side="top"
-          align="end"
+          side={popoverPlacement.side}
+          align={popoverPlacement.align}
           sideOffset={8}
+          collisionPadding={DEBUG_MENU_EDGE_OFFSET_PX}
           className={cn(
-            'z-[10060] max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
+            'z-[10060] flex max-h-[min(85dvh,var(--radix-popper-available-height,100dvh))] flex-col overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
@@ -1531,8 +1692,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
+          onWheelCapture={(event) => {
+            event.stopPropagation()
+          }}
         >
-          <div className="sticky top-0 z-10 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
+          <div className="shrink-0 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               {currentSubmenu && (
                 <button
@@ -1551,10 +1715,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             </div>
           </div>
 
-          <div
-            className="overflow-y-auto p-3"
-            style={{ maxHeight: 'calc(85dvh - 52px)' }}
-          >
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
             {currentSubmenu ? (
               currentSubmenu.submenuVariant === 'profileComparison' ? (
                 <div className="px-1" aria-label={currentSubmenu.title}>
