@@ -25,6 +25,8 @@ import {
   Boxes,
   Keyboard,
   Terminal,
+  Search,
+  X,
 } from 'lucide-react'
 import {
   Popover,
@@ -39,6 +41,7 @@ import {
 import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
 import { Switch } from '@/components/ui/switch'
+import { Input } from '@/components/ui/input'
 import { useTheme } from 'next-themes'
 import {
   loadDebugOverrides,
@@ -161,6 +164,26 @@ function isFeatureFlagOverridden(item: MenuItem): boolean {
     item.switchValue !== item.defaultValue &&
     Boolean(item.onResetToDefault)
   )
+}
+
+function matchesFeatureFlagSearch(item: MenuItem, query: string): boolean {
+  const trimmed = query.trim()
+  if (!trimmed) return true
+  if (item.label === 'Reset all feature flags') return true
+
+  const q = trimmed.toLowerCase()
+  return (
+    item.label.toLowerCase().includes(q) ||
+    (item.description?.toLowerCase().includes(q) ?? false)
+  )
+}
+
+function filterFeatureFlagMenuItems(
+  items: MenuItem[],
+  query: string,
+): MenuItem[] {
+  if (!query.trim()) return items
+  return items.filter((item) => matchesFeatureFlagSearch(item, query))
 }
 
 function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
@@ -506,6 +529,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
   const { profileId, features } = useConsoleProfile()
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
@@ -683,6 +707,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   useEffect(() => {
     if (!isOpen) {
       setActiveSubmenu(null)
+      setFeatureFlagsSearch('')
     }
   }, [isOpen])
 
@@ -1634,6 +1659,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     [activeSubmenu, sections],
   )
 
+  const isFeatureFlagsSubmenu = currentSubmenu?.title === 'Feature flags'
+
+  const filteredFeatureFlagItems = useMemo(() => {
+    if (!isFeatureFlagsSubmenu || !currentSubmenu) return []
+    return filterFeatureFlagMenuItems(currentSubmenu.items, featureFlagsSearch)
+  }, [currentSubmenu, featureFlagsSearch, isFeatureFlagsSubmenu])
+
+  useEffect(() => {
+    if (!isFeatureFlagsSubmenu) {
+      setFeatureFlagsSearch('')
+    }
+  }, [isFeatureFlagsSubmenu])
+
   if (!isVisible) return null
 
   return (
@@ -1732,8 +1770,50 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ) : currentSubmenu.submenuVariant === 'terminalSettings' ? (
                 <DebugMenuTerminalPanel />
               ) : (
-                <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
-                  {currentSubmenu.items.map((item, itemIndex) => {
+                <div className="space-y-2">
+                  {isFeatureFlagsSubmenu ? (
+                    <div className="px-1">
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9B87F5]/60" />
+                        <Input
+                          autoFocus
+                          value={featureFlagsSearch}
+                          onChange={(event) =>
+                            setFeatureFlagsSearch(event.target.value)
+                          }
+                          placeholder="Search flags…"
+                          className="h-8 border-[#9B87F5]/25 bg-black/20 pl-8 pr-8 text-[12px] text-[#E5DEFF] placeholder:text-[#9B87F5]/50"
+                        />
+                        {featureFlagsSearch ? (
+                          <button
+                            type="button"
+                            onClick={() => setFeatureFlagsSearch('')}
+                            className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[#9B87F5]/70 transition-colors hover:bg-[#9B87F5]/15 hover:text-[#E5DEFF]"
+                            aria-label="Clear search"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+                  <nav
+                    className="space-y-0.5"
+                    aria-label={currentSubmenu.title}
+                  >
+                    {isFeatureFlagsSubmenu &&
+                    featureFlagsSearch.trim() &&
+                    filteredFeatureFlagItems.every(
+                      (item) => item.label === 'Reset all feature flags',
+                    ) ? (
+                      <p className="px-3 py-2 text-[11px] text-[#9B87F5]/70">
+                        No matching flags
+                      </p>
+                    ) : null}
+                    {(isFeatureFlagsSubmenu
+                      ? filteredFeatureFlagItems
+                      : currentSubmenu.items
+                    ).map((item, itemIndex) => {
                     const nestedSubmenuKey = activeSubmenu
                       ? `${activeSubmenu}-${item.label}`
                       : null
@@ -1790,7 +1870,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       </button>
                     )
                   })}
-                </nav>
+                  </nav>
+                </div>
               )
             ) : (
               <nav className="space-y-5" aria-label="Debug options">
