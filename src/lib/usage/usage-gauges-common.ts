@@ -33,10 +33,10 @@ interface ListUsageGaugeGroupsParams {
 async function listUsageGaugeGroups(
   projectId: string,
   params: ListUsageGaugeGroupsParams,
-): Promise<Models.UsageGroup[]> {
+): Promise<Models.UsageDataPoint[]> {
   const projectSdk = sdk.forProject(projectId)
   const request: {
-    metric: string
+    metrics: string[]
     interval?: string
     startAt: string
     endAt: string
@@ -44,7 +44,7 @@ async function listUsageGaugeGroups(
     resourceId?: string
     teamId?: string
   } = {
-    metric: params.metric,
+    metrics: [params.metric],
     startAt: params.startAt,
     endAt: params.endAt,
   }
@@ -63,11 +63,11 @@ async function listUsageGaugeGroups(
   }
 
   const response = await projectSdk.usage.listGauges(request)
-  return response.groups ?? []
+  return response.metrics?.find((m) => m.metric === params.metric)?.points ?? []
 }
 
 function mapGaugeResourceBreakdownGroups(
-  groups: Models.UsageGroup[],
+  groups: Models.UsageDataPoint[],
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
   const latestByResource = new Map<string, { value: number; timeMs: number }>()

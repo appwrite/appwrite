@@ -23,6 +23,11 @@ export const DEBUG_OVERRIDE_KEYS = {
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
   keyboardLayout: 'debug:keyboardLayout',
   disableUsageBreakdownQueries: 'debug:disableUsageBreakdownQueries',
+  disableOverviewBandwidthChart: 'debug:disableOverviewBandwidthChart',
+  disableOverviewRequestsChart: 'debug:disableOverviewRequestsChart',
+  disableOverviewStorageChart: 'debug:disableOverviewStorageChart',
+  disableOverviewExecutionsChart: 'debug:disableOverviewExecutionsChart',
+  disableOverviewComputeChart: 'debug:disableOverviewComputeChart',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -76,6 +81,12 @@ export type DebugOverrides = {
   keyboardLayout: KeyboardLayoutOverride
   /** When true, skip usage listEvents/listGauges calls that pass dimensions (overview breakdown panels). */
   disableUsageBreakdownQueries: boolean
+  /** When true, hide the matching usage chart tab on the project overview. */
+  disableOverviewBandwidthChart: boolean
+  disableOverviewRequestsChart: boolean
+  disableOverviewStorageChart: boolean
+  disableOverviewExecutionsChart: boolean
+  disableOverviewComputeChart: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -165,6 +176,26 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.disableUsageBreakdownQueries,
       false,
     ),
+    disableOverviewBandwidthChart: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.disableOverviewBandwidthChart,
+      false,
+    ),
+    disableOverviewRequestsChart: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.disableOverviewRequestsChart,
+      false,
+    ),
+    disableOverviewStorageChart: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.disableOverviewStorageChart,
+      false,
+    ),
+    disableOverviewExecutionsChart: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.disableOverviewExecutionsChart,
+      false,
+    ),
+    disableOverviewComputeChart: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.disableOverviewComputeChart,
+      false,
+    ),
   }
 }
 
@@ -214,6 +245,11 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
   'disableUsageBreakdownQueries',
+  'disableOverviewBandwidthChart',
+  'disableOverviewRequestsChart',
+  'disableOverviewStorageChart',
+  'disableOverviewExecutionsChart',
+  'disableOverviewComputeChart',
 ] as const satisfies readonly (keyof DebugOverrides)[]
 
 export type FeatureFlagsMenuDebugKey =
@@ -230,6 +266,11 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
   disableUsageBreakdownQueries: false,
+  disableOverviewBandwidthChart: false,
+  disableOverviewRequestsChart: false,
+  disableOverviewStorageChart: false,
+  disableOverviewExecutionsChart: false,
+  disableOverviewComputeChart: false,
 }
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */

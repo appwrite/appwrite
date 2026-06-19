@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import {
   OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   overviewChartPanelBodyClass,
+  overviewChartPanelChartAreaClass,
   overviewTopBreakdownListClass,
   overviewTopBreakdownRowClass,
 } from './chart-panel'
@@ -43,7 +44,12 @@ export function OverviewChartPanelSkeleton({
 
 function StorageSkeleton() {
   return (
-    <div className="flex min-h-[240px] flex-1 flex-col justify-center gap-2">
+    <div
+      className={cn(
+        overviewChartPanelChartAreaClass,
+        'justify-center gap-2',
+      )}
+    >
       <Skeleton className="h-4 w-56 max-w-full" />
       <Skeleton className="h-9 w-32 max-w-[60%]" />
     </div>

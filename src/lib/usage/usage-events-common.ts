@@ -116,7 +116,7 @@ interface ListUsageEventGroupsParams {
   resourceId?: string
 }
 
-function mergeValuesByTime(groups: Models.UsageGroup[]): Map<string, number> {
+function mergeValuesByTime(groups: Models.UsageDataPoint[]): Map<string, number> {
   const merged = new Map<string, number>()
   for (const group of groups) {
     merged.set(group.time, (merged.get(group.time) ?? 0) + group.value)
@@ -230,7 +230,7 @@ export type { UsageMetricSeriesResult }
 const TOP_ENDPOINTS_DIMENSIONS = ['path'] as const
 
 function mapBreakdownGroupsToEndpoints(
-  groups: Models.UsageGroup[],
+  groups: Models.UsageDataPoint[],
   dimensions: readonly string[],
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
@@ -426,15 +426,15 @@ export function fillChartPointsGaps(
 }
 
 function splitGroupsByPeriod(
-  groups: Models.UsageGroup[],
+  groups: Models.UsageDataPoint[],
   currentFrom: Date,
 ): {
-  current: Models.UsageGroup[]
-  previous: Models.UsageGroup[]
+  current: Models.UsageDataPoint[]
+  previous: Models.UsageDataPoint[]
 } {
   const currentFromMs = currentFrom.getTime()
-  const current: Models.UsageGroup[] = []
-  const previous: Models.UsageGroup[] = []
+  const current: Models.UsageDataPoint[] = []
+  const previous: Models.UsageDataPoint[] = []
 
   for (const group of groups) {
     const groupMs = parseISO(group.time).getTime()
@@ -451,10 +451,10 @@ function splitGroupsByPeriod(
 async function listUsageEventGroups(
   projectId: string,
   params: ListUsageEventGroupsParams,
-): Promise<Models.UsageGroup[]> {
+): Promise<Models.UsageDataPoint[]> {
   const projectSdk = sdk.forProject(projectId)
   const request: {
-    metric: string
+    metrics: string[]
     interval?: string
     startAt: string
     endAt: string
@@ -462,7 +462,7 @@ async function listUsageEventGroups(
     resource?: string
     resourceId?: string
   } = {
-    metric: params.metric,
+    metrics: [params.metric],
     startAt: params.startAt,
     endAt: params.endAt,
   }
@@ -481,14 +481,14 @@ async function listUsageEventGroups(
   }
 
   const response = await projectSdk.usage.listEvents(request)
-  return response.groups ?? []
+  return response.metrics?.find((m) => m.metric === params.metric)?.points ?? []
 }
 
 async function listUsageEventGroupsForMetrics(
   projectId: string,
   metrics: readonly string[],
   params: Omit<ListUsageEventGroupsParams, 'metric'>,
-): Promise<Models.UsageGroup[]> {
+): Promise<Models.UsageDataPoint[]> {
   const results = await Promise.all(
     metrics.map((metric) =>
       listUsageEventGroups(projectId, { ...params, metric }),

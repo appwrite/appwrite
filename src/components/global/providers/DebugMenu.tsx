@@ -52,6 +52,11 @@ import {
   type KeyboardLayoutOverride,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
+import {
+  OVERVIEW_CHART_TAB_ORDER,
+  OVERVIEW_CHART_TAB_DISABLE_KEYS,
+  OVERVIEW_CHART_TAB_LABELS,
+} from '@/lib/overview-chart-tabs'
 import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
@@ -1258,6 +1263,38 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   })
                 },
               ),
+              ...OVERVIEW_CHART_TAB_ORDER.map((tabId) => {
+                const disableKey = OVERVIEW_CHART_TAB_DISABLE_KEYS[tabId]
+                const label = OVERVIEW_CHART_TAB_LABELS[tabId]
+                return createDebugFeatureFlagItem(
+                  `Disable overview ${label.toLowerCase()} chart`,
+                  `Hide the ${label} tab and usage queries on the project overview.`,
+                  disableKey,
+                  overrides[disableKey],
+                  (checked) => {
+                    setOverrides((prev) => ({
+                      ...prev,
+                      [disableKey]: checked,
+                    }))
+                    setDebugOverride(disableKey, checked)
+                    void queryClient.invalidateQueries({
+                      predicate: (query) =>
+                        query.queryKey[0] === 'usage-events' ||
+                        query.queryKey[0] === 'usage-gauges' ||
+                        query.queryKey[0] === 'usage-breakdown',
+                    })
+                  },
+                  () => {
+                    setOverrides(loadDebugOverrides())
+                    void queryClient.invalidateQueries({
+                      predicate: (query) =>
+                        query.queryKey[0] === 'usage-events' ||
+                        query.queryKey[0] === 'usage-gauges' ||
+                        query.queryKey[0] === 'usage-breakdown',
+                    })
+                  },
+                )
+              }),
               {
                 label: 'Reset all feature flags',
                 description:

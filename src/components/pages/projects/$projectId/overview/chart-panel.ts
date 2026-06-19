@@ -1,6 +1,15 @@
 /** Shared layout tokens for overview chart + side breakdown panels. */
 export const OVERVIEW_CHART_HEIGHT = 240
 
+/** Header block above chart/breakdown body — fixed so tabs do not shift vertically. */
+export const OVERVIEW_CHART_PANEL_HEADER_MIN_HEIGHT = 56
+
+/** Desktop row height when the breakdown column is visible (padding + header + list). */
+export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_WITH_BREAKDOWN = 388
+
+/** Desktop row height for chart-only layout (padding + header + chart). */
+export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_CHART_ONLY = 352
+
 import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 
 /** Max rows shown in the overview top-endpoints breakdown (matches usage API limit). */
@@ -18,41 +27,61 @@ export const overviewTopBreakdownListClass =
 export const overviewTopBreakdownRowClass =
   'flex h-9 min-h-9 w-full min-w-0 shrink-0 items-center gap-2 overflow-hidden rounded-md px-2'
 
-/** Chart + breakdown row min height (column padding + header + breakdown list). */
+/** Stacks tab panels in one grid cell so the card keeps a stable height. */
+export const overviewChartTabPanelsContainerClass =
+  'grid w-full [&>*]:col-start-1 [&>*]:row-start-1 [&>*]:w-full'
+
+/** Tab panel visibility — keep in layout for stable sizing, hide visually when inactive. */
+export function overviewChartTabPanelVisibilityClass(
+  isActive: boolean,
+): string {
+  return isActive ? '' : 'invisible pointer-events-none'
+}
+
+/** Chart + breakdown row — fixed height on wide layouts. */
+export function overviewChartContentRowClassName(
+  withBreakdown = true,
+): string {
+  return withBreakdown
+    ? 'flex min-h-[740px] min-w-0 flex-col @[700px]:h-[388px] @[700px]:min-h-[388px] @[700px]:max-h-[388px] @[700px]:flex-row @[700px]:items-stretch'
+    : 'flex min-h-[352px] min-w-0 flex-col @[700px]:h-[352px] @[700px]:min-h-[352px] @[700px]:max-h-[352px] @[700px]:flex-row @[700px]:items-stretch'
+}
+
+/** @deprecated Use overviewChartContentRowClassName(withBreakdown) */
 export const overviewChartContentRowClass =
-  'flex min-w-0 flex-col @[700px]:min-h-[368px] @[700px]:flex-row @[700px]:items-stretch'
+  overviewChartContentRowClassName(true)
 
 /** Left chart column — grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
-  'flex w-full min-w-0 flex-col border-b border-border p-5 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-r'
+  'flex h-full w-full min-w-0 flex-col border-b border-border p-5 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-r'
 
 /** Right breakdown column (top endpoints / consumers). */
 export const overviewBreakdownColumnClass =
-  'flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[400px] @[700px]:shrink-0'
+  'flex h-full min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[400px] @[700px]:shrink-0'
 
 export const overviewChartPanelHeaderClass =
-  'mb-4 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2'
+  'mb-4 flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2'
 
 /** Legend rows, links, and other header actions — full width below the title on narrow containers. */
 export const overviewChartPanelHeaderActionsClass =
   'flex w-full min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-1.5 @[420px]:w-auto @[420px]:justify-start'
 
 export const overviewChartPanelBodyClass =
-  'flex w-full min-w-0 flex-col text-muted-foreground @[700px]:min-h-0 @[700px]:flex-1'
+  'flex min-h-0 w-full min-w-0 flex-1 flex-col text-muted-foreground'
 
-/** Fixed height on mobile so Recharts can measure; grows on wide layouts. */
+/** Chart canvas — fixed on narrow viewports; fills remaining column height on wide layouts. */
 export const overviewChartPanelChartAreaClass =
-  'relative flex h-[240px] w-full min-w-0 shrink-0 flex-col @[700px]:h-full @[700px]:min-h-[240px] @[700px]:flex-1'
+  'relative flex h-[240px] w-full min-w-0 shrink-0 flex-col @[700px]:min-h-0 @[700px]:h-auto @[700px]:flex-1'
 
 /** Fills the chart area so ResponsiveContainer can measure 100% width and height. */
 export const overviewChartPanelChartFillClass =
-  'absolute inset-0 min-h-[240px] min-w-0'
+  'absolute inset-0 min-h-0 min-w-0'
 
 export const overviewChartPanelEmptyClass =
-  'flex min-h-[240px] w-full flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'
+  'flex h-full min-h-[240px] w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'
 
 export const overviewChartPanelErrorClass =
-  'flex min-h-[240px] w-full flex-1 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center'
+  'flex h-full min-h-[240px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center'
 
 export const OVERVIEW_METRIC_NOT_AVAILABLE = 'N/A'
 

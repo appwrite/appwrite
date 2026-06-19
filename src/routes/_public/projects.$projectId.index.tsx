@@ -12,12 +12,57 @@ import {
 } from '@/lib/react-query/hooks'
 import { ensureProjectRegion } from '@/lib/project-region'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
+import {
+  isOverviewChartTabEnabled,
+  OVERVIEW_CHART_TAB_ORDER,
+  type OverviewChartTabId,
+} from '@/lib/overview-chart-tabs'
 import { pageTitle } from '@/lib/utils/page-title'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import {
   getDefaultUsageChartDateRange,
   serializeUsageChartDateRange,
 } from '@/lib/usage/usage-date-range'
+
+const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
+  OverviewChartTabId,
+  (
+    projectId: string,
+    parsedRange: { from: Date; to: Date },
+  ) => ReturnType<typeof bandwidthOverviewQueryOptions>
+> = {
+  bandwidth: (projectId, parsedRange) =>
+    bandwidthOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      DEFAULT_USAGE_CHART_INTERVAL,
+    ),
+  requests: (projectId, parsedRange) =>
+    requestsOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      DEFAULT_USAGE_CHART_INTERVAL,
+    ),
+  executions: (projectId, parsedRange) =>
+    executionsOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      DEFAULT_USAGE_CHART_INTERVAL,
+    ),
+  gbhours: (projectId, parsedRange) =>
+    gbHoursOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      DEFAULT_USAGE_CHART_INTERVAL,
+    ),
+  storage: (projectId, parsedRange) =>
+    storageOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      DEFAULT_USAGE_CHART_INTERVAL,
+    ),
+}
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
   head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
@@ -51,45 +96,18 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
           from: new Date(chartDateRange.from),
           to: new Date(chartDateRange.to),
         }
+        const debugOverrides = loadDebugOverrides()
 
         // Usage is non-critical: prefetch in background; page renders with chart skeletons.
-        void Promise.all([
+        const usagePrefetchTasks = OVERVIEW_CHART_TAB_ORDER.filter((tabId) =>
+          isOverviewChartTabEnabled(tabId, debugOverrides),
+        ).map((tabId) =>
           queryClient.prefetchQuery(
-            bandwidthOverviewQueryOptions(
-              projectId,
-              parsedRange,
-              DEFAULT_USAGE_CHART_INTERVAL,
-            ),
+            OVERVIEW_CHART_PREFETCH_BY_TAB[tabId](projectId, parsedRange),
           ),
-          queryClient.prefetchQuery(
-            requestsOverviewQueryOptions(
-              projectId,
-              parsedRange,
-              DEFAULT_USAGE_CHART_INTERVAL,
-            ),
-          ),
-          queryClient.prefetchQuery(
-            executionsOverviewQueryOptions(
-              projectId,
-              parsedRange,
-              DEFAULT_USAGE_CHART_INTERVAL,
-            ),
-          ),
-          queryClient.prefetchQuery(
-            gbHoursOverviewQueryOptions(
-              projectId,
-              parsedRange,
-              DEFAULT_USAGE_CHART_INTERVAL,
-            ),
-          ),
-          queryClient.prefetchQuery(
-            storageOverviewQueryOptions(
-              projectId,
-              parsedRange,
-              DEFAULT_USAGE_CHART_INTERVAL,
-            ),
-          ),
-        ]).catch(() => undefined)
+        )
+
+        void Promise.all(usagePrefetchTasks).catch(() => undefined)
       }
 
       return {

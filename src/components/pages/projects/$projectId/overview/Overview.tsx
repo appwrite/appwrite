@@ -19,6 +19,11 @@ import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrol
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import {
+  OVERVIEW_CHART_TAB_ORDER,
+  type OverviewChartTabId,
+  isOverviewChartTabEnabled,
+} from '@/lib/overview-chart-tabs'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
@@ -105,9 +110,12 @@ import {
   OVERVIEW_GB_HOURS_ERROR,
   OVERVIEW_STORAGE_ERROR,
   overviewChartColumnClass,
-  overviewChartContentRowClass,
+  overviewChartContentRowClassName,
+  overviewChartTabPanelsContainerClass,
+  overviewChartTabPanelVisibilityClass,
   overviewBreakdownColumnClass,
   overviewChartPanelBodyClass,
+  overviewChartPanelChartAreaClass,
   overviewChartPanelHeaderClass,
   OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT,
 } from './chart-panel'
@@ -223,12 +231,35 @@ export function View({ projectId, initialData }: ViewProps) {
   }
 
   const usageStatsEnabled = features.usageStats
-  const { disableUsageBreakdownQueries } = useDebugOverrides()
+  const debugOverrides = useDebugOverrides()
+  const { disableUsageBreakdownQueries } = debugOverrides
   const showUsageBreakdownPanels = !disableUsageBreakdownQueries
+  const isOverviewChartTabVisible = (tabId: OverviewChartTabId) =>
+    usageStatsEnabled && isOverviewChartTabEnabled(tabId, debugOverrides)
+  const visibleOverviewChartTabs = useMemo(
+    () =>
+      OVERVIEW_CHART_TAB_ORDER.filter((tabId) =>
+        isOverviewChartTabVisible(tabId),
+      ),
+    [usageStatsEnabled, debugOverrides],
+  )
   const overviewMainChartColumnClass = cn(
     overviewChartColumnClass,
     !showUsageBreakdownPanels && '@[700px]:border-r-0',
   )
+  const overviewChartRowClassName = useMemo(
+    () => overviewChartContentRowClassName(showUsageBreakdownPanels),
+    [showUsageBreakdownPanels],
+  )
+
+  useEffect(() => {
+    if (
+      visibleOverviewChartTabs.length > 0 &&
+      !visibleOverviewChartTabs.includes(activeTab as OverviewChartTabId)
+    ) {
+      setActiveTab(visibleOverviewChartTabs[0])
+    }
+  }, [visibleOverviewChartTabs, activeTab])
 
   const {
     data: bandwidthUsage,
@@ -238,7 +269,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectBandwidthOverview(
     projectId,
     dashboardChartDateRange,
-    usageStatsEnabled,
+    isOverviewChartTabVisible('bandwidth'),
     chartInterval,
   )
 
@@ -250,7 +281,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectRequestsOverview(
     projectId,
     dashboardChartDateRange,
-    usageStatsEnabled,
+    isOverviewChartTabVisible('requests'),
     chartInterval,
   )
 
@@ -262,7 +293,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectExecutionsOverview(
     projectId,
     dashboardChartDateRange,
-    usageStatsEnabled,
+    isOverviewChartTabVisible('executions'),
     chartInterval,
   )
 
@@ -274,7 +305,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectGbHoursOverview(
     projectId,
     dashboardChartDateRange,
-    usageStatsEnabled,
+    isOverviewChartTabVisible('gbhours'),
     chartInterval,
   )
 
@@ -286,7 +317,7 @@ export function View({ projectId, initialData }: ViewProps) {
   } = useProjectStorageOverview(
     projectId,
     dashboardChartDateRange,
-    usageStatsEnabled,
+    isOverviewChartTabVisible('storage'),
     chartInterval,
   )
 
@@ -318,7 +349,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const { data: executionBreakdownResources } = useComputeBreakdownResources(
     projectId,
     executionBreakdownIds,
-    usageStatsEnabled &&
+    isOverviewChartTabVisible('executions') &&
       showUsageBreakdownPanels &&
       executionBreakdownIds.length > 0,
   )
@@ -326,7 +357,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
     projectId,
     gbHoursBreakdownIds,
-    usageStatsEnabled &&
+    isOverviewChartTabVisible('gbhours') &&
       showUsageBreakdownPanels &&
       gbHoursBreakdownIds.length > 0,
   )
@@ -450,13 +481,15 @@ export function View({ projectId, initialData }: ViewProps) {
             change: gbHoursUsage?.changePercent ?? 0,
           }
 
-    return [
-      bandwidthTab,
-      requestsTab,
-      storageTab,
-      executionsTab,
-      gbHoursTab,
-    ]
+    const tabsById = {
+      bandwidth: bandwidthTab,
+      requests: requestsTab,
+      storage: storageTab,
+      executions: executionsTab,
+      gbhours: gbHoursTab,
+    } satisfies Record<OverviewChartTabId, OverviewTab>
+
+    return visibleOverviewChartTabs.map((tabId) => tabsById[tabId])
   }, [
     bandwidthUsage,
     isBandwidthError,
@@ -473,6 +506,7 @@ export function View({ projectId, initialData }: ViewProps) {
     showStorageChartLoading,
     showExecutionsChartLoading,
     showGbHoursChartLoading,
+    visibleOverviewChartTabs,
   ])
 
   const goToAddAppWizard = (kind?: AddAppKind) => {
@@ -768,7 +802,7 @@ export function View({ projectId, initialData }: ViewProps) {
       {/* Content area */}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
         {/* Charts card - usage stats (cloud only) */}
-        {features.usageStats && (
+        {visibleOverviewChartTabs.length > 0 && (
           <div className="@container rounded-xl border border-border bg-card/50">
             {/* Metric tabs + date range - same row */}
             <div className="border-b border-border px-5">
@@ -847,12 +881,15 @@ export function View({ projectId, initialData }: ViewProps) {
               </div>
             </div>
 
-            {/* Chart content — keep real-data panels mounted; hide inactive tabs so first reveal can animate */}
+            {/* Chart content — stacked in one grid cell for stable height across tabs */}
+            <div className={overviewChartTabPanelsContainerClass}>
+            {isOverviewChartTabVisible('bandwidth') ? (
             <div
               className={cn(
-                overviewChartContentRowClass,
-                activeTab !== 'bandwidth' && 'hidden',
+                overviewChartRowClassName,
+                overviewChartTabPanelVisibilityClass(activeTab === 'bandwidth'),
               )}
+              aria-hidden={activeTab !== 'bandwidth'}
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
@@ -889,12 +926,15 @@ export function View({ projectId, initialData }: ViewProps) {
                   </div>
                 ) : null}
               </div>
+            ) : null}
 
+            {isOverviewChartTabVisible('requests') ? (
             <div
               className={cn(
-                overviewChartContentRowClass,
-                activeTab !== 'requests' && 'hidden',
+                overviewChartRowClassName,
+                overviewChartTabPanelVisibilityClass(activeTab === 'requests'),
               )}
+              aria-hidden={activeTab !== 'requests'}
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
@@ -935,12 +975,15 @@ export function View({ projectId, initialData }: ViewProps) {
                   </div>
                 ) : null}
               </div>
+            ) : null}
 
+            {isOverviewChartTabVisible('storage') ? (
             <div
               className={cn(
-                overviewChartContentRowClass,
-                activeTab !== 'storage' && 'hidden',
+                overviewChartRowClassName,
+                overviewChartTabPanelVisibilityClass(activeTab === 'storage'),
               )}
+              aria-hidden={activeTab !== 'storage'}
             >
                 <div className={overviewMainChartColumnClass}>
                   <div className="flex h-full min-w-0 flex-col">
@@ -959,7 +1002,12 @@ export function View({ projectId, initialData }: ViewProps) {
                       ) : showStorageChartLoading ? (
                         <OverviewChartPanelSkeleton variant="storage" embedded />
                       ) : (
-                        <div className="flex min-h-[240px] flex-1 flex-col justify-center gap-2">
+                        <div
+                          className={cn(
+                            overviewChartPanelChartAreaClass,
+                            'justify-center gap-2',
+                          )}
+                        >
                           <p className="text-[13px] text-muted-foreground">
                             Current file storage in selected period
                           </p>
@@ -993,12 +1041,15 @@ export function View({ projectId, initialData }: ViewProps) {
                   </div>
                 ) : null}
               </div>
+            ) : null}
 
+            {isOverviewChartTabVisible('executions') ? (
             <div
               className={cn(
-                overviewChartContentRowClass,
-                activeTab !== 'executions' && 'hidden',
+                overviewChartRowClassName,
+                overviewChartTabPanelVisibilityClass(activeTab === 'executions'),
               )}
+              aria-hidden={activeTab !== 'executions'}
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
@@ -1043,12 +1094,15 @@ export function View({ projectId, initialData }: ViewProps) {
                   </div>
                 ) : null}
               </div>
+            ) : null}
 
+            {isOverviewChartTabVisible('gbhours') ? (
             <div
               className={cn(
-                overviewChartContentRowClass,
-                activeTab !== 'gbhours' && 'hidden',
+                overviewChartRowClassName,
+                overviewChartTabPanelVisibilityClass(activeTab === 'gbhours'),
               )}
+              aria-hidden={activeTab !== 'gbhours'}
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
@@ -1094,12 +1148,14 @@ export function View({ projectId, initialData }: ViewProps) {
                   </div>
                 ) : null}
               </div>
+            ) : null}
+            </div>
             <UsageHistoricDataNote variant="footer" />
           </div>
         )}
 
         {/* Integrations Section */}
-        <div className={features.usageStats ? 'mt-6' : 'mt-0'}>
+        <div className={visibleOverviewChartTabs.length > 0 ? 'mt-6' : 'mt-0'}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
             <Button

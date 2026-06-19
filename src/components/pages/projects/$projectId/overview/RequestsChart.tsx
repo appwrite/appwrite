@@ -346,7 +346,7 @@ export function RequestsChart({
       }
 
   return (
-    <div className={cn('flex w-full min-w-0 flex-col @[700px]:h-full', className)}>
+    <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
       <div className={overviewChartPanelHeaderClass}>
         <div className="flex min-w-0 items-center gap-1.5">
           {title ? (
