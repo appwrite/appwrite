@@ -1,0 +1,110 @@
+---
+layout: integration
+title: MCP with Cursor
+description: Connect to Appwrite project with the MCP within Cursor.
+date: 2025-07-01
+featured: true
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-cursor/cover.avif
+category: mcp
+product: 
+    avatar: '/images/integrations/avatars/cursor.avif'
+    vendor: Cursor
+    description: 'Cursor is an AI-powered code editor based on VS Code, designed for context-aware development and seamless collaboration with large language models.'
+platform: 
+    - 'Self-hosted'
+    - 'Cloud'
+images: 
+    - /images/integrations/mcp-cursor/cover.avif
+    - /images/integrations/mcp-cursor/appwrite-api-key.avif
+    - /images/docs/mcp/cursor/cursor-create-user.avif
+---
+
+Cursor is an AI-powered code editor built on VS Code, designed to enhance developer workflows with intelligent, context-aware assistance. It offers features like inline code generation, natural language explanations, and project-aware chat, enabling developers to prototype, debug, and refactor code faster with the help of integrated large language models such as Anthropic's Claude 4.0 Sonnet, Google's Gemini 2.5 Pro, and OpenAI's GPT-4.1.
+
+# How does the integration work?
+
+The Appwrite MCP server integrates with Cursor Agent using the Model Context Protocol (MCP), allowing you to connect your Appwrite project to Cursor. 
+
+This integration enables you to perform various operations on your Appwrite resources, such as creating users, managing databases, and more, directly from the Cursor editor using natural language commands.
+
+# How to implement
+
+To implement the MCP with Cursor integration, there are several steps you must complete:
+
+## Step 1: Create an Appwrite API key
+
+First, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven't already.
+
+Select your project (or create a new one), and head to the **Overview** page from the left sidebar. Under the **Integrations** section, click on the **API Keys** tab, and then click on **Create API Key**. Select the scopes for whichever Appwrite services you want to work with, set the duration, and create the API key. You must then copy it for future usage.
+
+![Create API Key](/images/integrations/mcp-cursor/appwrite-api-key.avif)
+
+Then, head to the **Settings** page from the left sidebar, and copy the **Project ID** and **API Endpoint** for future usage.
+
+## Step 2: Configure the MCP server on Cursor
+
+{% info title="Pre-requisite: Install uv" %}
+
+You must install [uv](https://docs.astral.sh/uv/getting-started/installation/) on your system to use the MCP server.
+
+{% /info %}
+
+To configure the MCP server on Cursor, head to the **Cursor Settings** page, navigate to the **MCP** tab, and click on **Add new global MCP server**. This will open the `mcp.json` file, where you must add the following:
+
+```json
+{
+    "mcpServers": {
+        "appwrite": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-appwrite"
+            ],
+            "env": {
+                "APPWRITE_API_KEY": "<your-api-key>",
+                "APPWRITE_PROJECT_ID": "<your-project-id>",
+                "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
+            }
+        }
+    }
+}
+```
+
+This configuration will set up the MCP server to connect to your Appwrite project using the API key, project ID, and endpoint, which you must update before saving and exiting the file.
+
+Once you have updated and saved the `mcp.json` file, Cursor will connect with the Appwrite MCP server and load all available tools. You may need to restart Cursor if it is unable to start the MCP server.
+
+### Skip this step, directly add the server to Cursor
+
+Once you have understood how the Appwrite MCP server is configured in Cursor, you can skip this step by directly adding the MCP server using the following link.
+
+{% only_light %}
+{% cards %}
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=integrations-catalog" title="Add to Cursor" image="/images/docs/mcp/logos/cursor-ai.svg" %}
+{% /cards_item %}
+{% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+{% cards_item href="https://apwr.dev/api-mcp-cursor?ref=integrations-catalog" title="Add to Cursor" image="/images/docs/mcp/logos/dark/cursor-ai.svg" %}
+{% /cards_item %}
+{% /cards %}
+{% /only_dark %}
+
+This will automatically configure the MCP server, and you will only need to update your Appwrite API key, project ID, and endpoint.
+
+## Step 3: Test the integration
+
+Finally, you can test the integration by asking Cursor Agent to create a new user in your Appwrite project.
+
+![Cursor Agent](/images/docs/mcp/cursor/cursor-create-user.avif)
+
+# Read more about MCP with Cursor
+
+If you would like to learn more about MCP with Cursor, we have some resources that you should visit:
+
+- [Appwrite MCP documentation](/docs/tooling/mcp)
+- [What exactly is MCP, and why is it trending?](/blog/post/what-is-mcp)
+- [Download Cursor](https://www.cursor.com/)

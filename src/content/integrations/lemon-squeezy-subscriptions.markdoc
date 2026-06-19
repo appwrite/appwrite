@@ -1,0 +1,93 @@
+---
+layout: integration
+title: Subscriptions with Lemon Squeezy
+description: Connect Lemon Squeezy subscriptions service to Appwrite to receive and manage recurring payments in your application.
+date: 2024-07-30
+featured: false
+isPartner: true
+isNew: false
+cover: /images/integrations/lemon-squeezy-subscriptions/cover.avif
+category: payments
+product: 
+    avatar: '/images/integrations/avatars/lemon-squeezy.avif'
+    vendor: Lemon Squeezy
+    description: 'Lemon Squeezy is a platform designed to simplify the process of selling digital products online.'
+platform: 
+    - 'Self-hosted'
+    - 'Cloud'
+images: 
+    - /images/integrations/lemon-squeezy-subscriptions/cover.avif
+    - /images/integrations/lemon-squeezy-subscriptions/dashboard.avif
+    - /images/integrations/lemon-squeezy-subscriptions/template.avif
+    - /images/integrations/lemon-squeezy-subscriptions/variables.avif
+    - /images/integrations/lemon-squeezy-subscriptions/web-platform.avif
+    - /images/integrations/lemon-squeezy-subscriptions/demo.avif
+    - /images/integrations/lemon-squeezy-subscriptions/user.avif
+---
+
+Lemon Squeezy is a platform designed to simplify the process of selling digital products online. Their product focuses on providing an all-in-one solution for creators to manage sales, subscriptions, and digital delivery. It includes features such as easy product creation, automated tax handling, customizable checkout pages, and robust analytics. This comprehensive tool is tailored for digital entrepreneurs, allowing them to focus on creating content while Lemon Squeezy handles the technical aspects of online sales.
+
+# How does the integration work?
+
+You can utilize a pre-built Appwrite function template to enable subscriptions via Lemon Squeezy in your app. This will allow you to accept recurring payments from your customers and grant them extra permissions.
+
+# How to implement
+
+To implement the Lemon Squeezy subscriptions integration, there are several steps you must complete:
+
+## Step 1: Setup Lemon Squeezy
+
+First, [sign up on Lemon Squeezy](https://www.lemonsqueezy.com/) and add a new store. 
+
+![Lemon Squeezy dashboard](/images/integrations/lemon-squeezy-subscriptions/dashboard.avif)
+
+From your Lemon Squeezy dashboard, save the following details for further usage:
+
+| Field name |  |
+| --- | --- |
+| Variant ID | Head to **Store** > **Products** from the left sidebar. Create a new product with the pricing type as **Subscription** and add all other mandatory details such as name, price, payment schedule, and tax category. Click on the product dropdown menu (…) to get the variant ID. |
+| Store ID | Head to **Settings** > **Stores** from the left sidebar. The store ID will be a number visible next to your store’s URL. |
+| API key | Head to **Settings** > **API** from the left sidebar. Create a new API key. |
+| Webhook secret | Head to **Settings** > **Webhooks** from the left sidebar. Add a temporary endpoint `https://temporary-endpoint` (we will replace this with our final endpoint later), create a new webhook secret, and select the events `subscription_created` and `subscription_expired`. |
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. If you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
+
+Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Subscriptions with Lemon Squeezy** function template.
+
+![Function template](/images/integrations/lemon-squeezy-subscriptions/template.avif)
+
+During the setup process, click the checkbox to generate an Appwrite API key on completion and add the **Lemon Squeezy API key**, **webhook secret**, **store ID**, and **variant ID** in the **Variables** step. If you are self-hosting Appwrite, click on the **optional variables** dropdown and update the Appwrite endpoint to your instance’s publicly accessible endpoint. 
+
+![Env variables](/images/integrations/lemon-squeezy-subscriptions/variables.avif)
+
+Then, create a new repository with the default branch and root directory settings. You can edit this repository later to update the function logic. Once the function is deployed, go to the **Domains** tab on the **Function** page, copy the domain, and update it in your **Webhooks settings** in the following format:
+
+```bash
+https://DEPLOYED_FUNCTION_DOMAIN/webhook
+```
+
+Additionally, edit the product you created and add your function URL as the **Button link** under the **Confirmation modal** section.
+
+## Step 3: Test the function
+
+Once all the steps are complete, it is time to test the function! First, copy the function URL, go to the **Appwrite project dashboard**, and add it to the **Platforms** section as a web app. This will register your function URL as an authorized hostname to interact with Appwrite (to prevent CORS).
+
+![Add web platform](/images/integrations/lemon-squeezy-subscriptions/web-platform.avif)
+
+Then, open it in your browser to test the function and access the pre-built interactive UI. You can anonymously log in through this UI and create a subscription using [Lemon Squeezy's test card number](https://docs.lemonsqueezy.com/help/getting-started/test-mode#test-card-numbers). As soon as this process is complete, the function UI will show that you are subscribed. 
+
+![Demo](/images/integrations/lemon-squeezy-subscriptions/demo.avif)
+
+Additionally, your user on Appwrite will feature the `subscriber` label, which you can verify by visiting the **Auth** page in your Appwrite project and clicking on the user.
+
+![Subscribed user](/images/integrations/lemon-squeezy-subscriptions/user.avif)
+
+# Read more about Lemon Squeezy Subscriptions and Appwrite Functions
+
+If you would like to learn more about Lemon Squeezy Subscriptions and Appwrite Functions, we have some resources that you should visit:
+
+- [Sign up for Lemon Squeezy](https://lemonsqueezy.com)
+- [Add a new product to your Lemon Squeezy store](https://docs.lemonsqueezy.com/help/products/adding-products)
+- [Learn more about Functions templates in Appwrite docs](https://appwrite.io/docs/products/functions/templates)

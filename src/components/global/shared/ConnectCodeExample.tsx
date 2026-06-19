@@ -45,7 +45,7 @@ export function ConnectCodePanel({
   wrapLines = false,
 }: ConnectCodePanelProps) {
   return (
-    <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
+    <div className={cn('flex min-h-0 min-w-0 w-full flex-1 flex-col', className)}>
       <CodeBlock
         code={code}
         language={language}
@@ -95,7 +95,7 @@ export function ConnectCodeExample({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col overflow-hidden',
+        'flex w-full min-w-0 flex-col overflow-hidden',
         !headless && 'rounded-xl border border-border',
         fixedHeight && 'min-h-0',
         className,

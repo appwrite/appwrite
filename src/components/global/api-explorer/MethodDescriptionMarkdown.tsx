@@ -125,7 +125,7 @@ export function MethodDescriptionMarkdown({
             )
 
             return (
-              <div className="not-prose my-3">
+              <div className="not-prose my-3 w-full">
                 <ConnectCodeExample code={rawCode} language={language} />
               </div>
             )

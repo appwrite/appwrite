@@ -8,12 +8,13 @@ export const WEBSITE_ROOT = resolve(VIBES_ROOT, '..', 'website')
 export const WEBSITE_STATIC_IMAGES = join(WEBSITE_ROOT, 'static', 'images')
 export const PUBLIC_IMAGES_ROOT = join(VIBES_ROOT, 'public', 'images')
 
-/** Image trees copied from the website repo for docs, blog, changelog, and author avatars. */
+/** Image trees copied from the website repo for docs, blog, changelog, author avatars, and integrations. */
 export const CONTENT_IMAGE_SECTIONS = [
   'blog',
   'docs',
   'changelog',
   'avatars',
+  'integrations',
 ] as const
 
 export type ContentImageSection = (typeof CONTENT_IMAGE_SECTIONS)[number]

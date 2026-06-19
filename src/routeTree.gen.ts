@@ -28,6 +28,7 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
+import { Route as IntegrationsIndexRouteImport } from './routes/integrations.index'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
@@ -36,6 +37,7 @@ import { Route as ThreadsThreadIdRouteImport } from './routes/threads.$threadId'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as IntegrationsSlugRouteImport } from './routes/integrations.$slug'
 import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
@@ -385,6 +387,11 @@ const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
   path: '/threads/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegrationsIndexRoute = IntegrationsIndexRouteImport.update({
+  id: '/integrations/',
+  path: '/integrations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -423,6 +430,11 @@ const LlmsTxtRoute = LlmsTxtRouteImport.update({
 const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
   id: '/llms-full/txt',
   path: '/llms-full/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsSlugRoute = IntegrationsSlugRouteImport.update({
+  id: '/integrations/$slug',
+  path: '/integrations/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DomainsContinueRoute = DomainsContinueRouteImport.update({
@@ -2118,6 +2130,7 @@ export interface FileRoutesByFullPath {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
+  '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -2126,6 +2139,7 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/integrations': typeof IntegrationsIndexRoute
   '/threads': typeof ThreadsIndexRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -2398,6 +2412,7 @@ export interface FileRoutesByTo {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
+  '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -2406,6 +2421,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
+  '/integrations': typeof IntegrationsIndexRoute
   '/threads': typeof ThreadsIndexRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -2651,6 +2667,7 @@ export interface FileRoutesById {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
+  '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -2659,6 +2676,7 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/integrations/': typeof IntegrationsIndexRoute
   '/threads/': typeof ThreadsIndexRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -2935,6 +2953,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
+    | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
@@ -2943,6 +2962,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/changelog'
     | '/docs/'
+    | '/integrations'
     | '/threads'
     | '/oauth2/consent'
     | '/oauth2/device'
@@ -3215,6 +3235,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
+    | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
@@ -3223,6 +3244,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/changelog'
     | '/docs'
+    | '/integrations'
     | '/threads'
     | '/oauth2/consent'
     | '/oauth2/device'
@@ -3467,6 +3489,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
+    | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/products/$productId'
@@ -3475,6 +3498,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/changelog/'
     | '/docs/'
+    | '/integrations/'
     | '/threads/'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
@@ -3734,12 +3758,14 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiHelloRoute: typeof ApiHelloRoute
   BlogPageRoute: typeof BlogPageRoute
+  IntegrationsSlugRoute: typeof IntegrationsSlugRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   ThreadsThreadIdRoute: typeof ThreadsThreadIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ChangelogIndexRoute: typeof ChangelogIndexRoute
+  IntegrationsIndexRoute: typeof IntegrationsIndexRoute
   ThreadsIndexRoute: typeof ThreadsIndexRoute
   BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
   BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
@@ -3885,6 +3911,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integrations/': {
+      id: '/integrations/'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs/': {
       id: '/docs/'
       path: '/'
@@ -3939,6 +3972,13 @@ declare module '@tanstack/react-router' {
       path: '/llms-full/txt'
       fullPath: '/llms-full/txt'
       preLoaderRoute: typeof LlmsFullTxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations/$slug': {
+      id: '/integrations/$slug'
+      path: '/integrations/$slug'
+      fullPath: '/integrations/$slug'
+      preLoaderRoute: typeof IntegrationsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/domains/continue': {
@@ -7027,12 +7067,14 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiHelloRoute: ApiHelloRoute,
   BlogPageRoute: BlogPageRoute,
+  IntegrationsSlugRoute: IntegrationsSlugRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ThreadsThreadIdRoute: ThreadsThreadIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   ChangelogIndexRoute: ChangelogIndexRoute,
+  IntegrationsIndexRoute: IntegrationsIndexRoute,
   ThreadsIndexRoute: ThreadsIndexRoute,
   BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
   BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,

@@ -7,6 +7,7 @@ import {
 import { getBlogSitemapEntries } from './providers/blog'
 import { getChangelogSitemapEntries } from './providers/changelog'
 import { getDocsSitemapEntries } from './providers/docs'
+import { getIntegrationsSitemapEntries } from './providers/integrations'
 import { getMarketingSitemapEntries } from './providers/marketing'
 import type { SitemapBuildResult, SitemapEntry, SitemapSection } from './types'
 
@@ -20,6 +21,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
   { id: 'docs', getEntries: getDocsSitemapEntries },
   { id: 'blog', getEntries: getBlogSitemapEntries },
   { id: 'changelog', getEntries: getChangelogSitemapEntries },
+  { id: 'integrations', getEntries: getIntegrationsSitemapEntries },
 ]
 
 function dedupeEntries(entries: SitemapEntry[]): SitemapEntry[] {

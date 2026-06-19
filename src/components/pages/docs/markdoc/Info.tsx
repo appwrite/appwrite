@@ -15,6 +15,7 @@ const docsNoteContentClassName = cn(
   '[&_ul]:my-2 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-4',
   '[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-4',
   '[&_li]:leading-[1.65]',
+  '[&_.not-prose]:w-full',
   'prose-links-neutral',
 )
 
@@ -25,6 +26,7 @@ const blogNoteContentClassName = cn(
   '[&_ul]:my-2 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-4',
   '[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-4',
   '[&_li]:leading-[1.65]',
+  '[&_.not-prose]:w-full',
   'prose-links-neutral',
 )
 

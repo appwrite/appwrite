@@ -59,7 +59,7 @@ export function MultiCode({ children }: { children: ReactNode }) {
 
   return (
     <MultiCodeContext.Provider value={value}>
-      <div className="not-prose my-6">
+      <div className="not-prose my-6 w-full">
         {activeLanguage && activeContent ? (
           <ConnectCodeExample
             code={activeContent}

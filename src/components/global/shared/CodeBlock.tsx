@@ -415,7 +415,8 @@ export function CodeBlock({
   return (
     <div
       className={cn(
-        isHeadless ? 'w-full space-y-0' : 'space-y-1.5',
+        'w-full',
+        isHeadless ? 'space-y-0' : 'space-y-1.5',
         className,
       )}
     >

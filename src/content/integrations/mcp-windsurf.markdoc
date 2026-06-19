@@ -1,0 +1,90 @@
+---
+layout: integration
+title: MCP with Windsurf
+description: Connect to Appwrite project with the MCP within Windsurf Editor.
+date: 2025-07-01
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-windsurf/cover.avif
+category: mcp
+product: 
+    avatar: '/images/integrations/avatars/windsurf.avif'
+    vendor: Windsurf
+    description: 'Windsurf Editor is an AI-native, agent-powered IDE that enhances developer productivity with AI-driven code generation, debugging, and refactoring capabilities.'
+platform: 
+    - 'Self-hosted'
+    - 'Cloud'
+images: 
+    - /images/integrations/mcp-windsurf/cover.avif
+    - /images/integrations/mcp-windsurf/appwrite-api-key.avif
+    - /images/docs/mcp/windsurf/windsurf-cascade-chat.avif
+---
+
+Windsurf Editor is a next-gen IDE that embeds a powerful AI agent called Cascade directly into your coding workflow. Unlike tools limited to autocomplete or single-file assistance, Cascade understands your entire project context and can generate code across files, run terminal commands, debug issues, and even deploy applications, all triggered by natural language prompts. With features like Supercomplete, inline AI chat, memories, and live previews, Windsurf aims to keep you in a deep focus state by eliminating context switching and handling repetitive tasks automatically, while still giving you full control over what gets merged or executed.
+
+# How does the integration work?
+
+The Appwrite MCP server integrates with Windsurf Editor's Cascade chat using the Model Context Protocol (MCP), allowing you to connect your Appwrite project to Windsurf Editor. 
+
+This integration enables you to perform various operations on your Appwrite resources, such as creating users, managing databases, and more, directly from the Windsurf Editor using natural language commands.
+
+# How to implement
+
+To implement the MCP with Windsurf Editor integration, there are several steps you must complete:
+
+## Step 1: Create an Appwrite API key
+
+First, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven't already.
+
+Select your project (or create a new one), and head to the **Overview** page from the left sidebar. Under the **Integrations** section, click on the **API Keys** tab, and then click on **Create API Key**. Select the scopes for whichever Appwrite services you want to work with, set the duration, and create the API key. You must then copy it for future usage.
+
+![Create API Key](/images/integrations/mcp-windsurf/appwrite-api-key.avif)
+
+Then, head to the **Settings** page from the left sidebar, and copy the **Project ID** and **API Endpoint** for future usage.
+
+## Step 2: Configure the MCP server on Windsurf Editor
+
+{% info title="Pre-requisite: Install uv" %}
+
+You must install [uv](https://docs.astral.sh/uv/getting-started/installation/) on your system to use the MCP server.
+
+{% /info %}
+
+To configure the MCP server on Windsurf Editor, head to the **Windsurf Editor Settings** page, navigate to the **Model Context Protocol (MCP) Servers** section, and click on **View raw config**. This will open the `mcp_config.json` file, where you must add the following:
+
+```json
+{
+    "mcpServers": {
+        "appwrite": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-appwrite"
+            ],
+            "env": {
+                "APPWRITE_API_KEY": "<your-api-key>",
+                "APPWRITE_PROJECT_ID": "<your-project-id>",
+                "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"
+            }
+        }
+    }
+}
+```
+
+This configuration will set up the MCP server to connect to your Appwrite project using the API key, project ID, and endpoint, which you must update before saving and exiting the file.
+
+Once you have updated and saved the `mcp_config.json` file, return to the MCP Servers section in the Windsurf Settings and click on **Refresh**.
+
+## Step 3: Test the integration
+
+Finally, you can test the integration by asking the Cascade chat in the Windsurf Editor to query your database.
+
+![Windsurf Editor Cascade Chat](/images/docs/mcp/windsurf/windsurf-cascade-chat.avif)
+
+# Read more about MCP with Windsurf Editor
+
+If you would like to learn more about MCP with Cursor, we have some resources that you should visit:
+
+- [Appwrite MCP documentation](/docs/tooling/mcp)
+- [What exactly is MCP, and why is it trending?](/blog/post/what-is-mcp)
+- [Download Windsurf Editor](https://windsurf.com/download)

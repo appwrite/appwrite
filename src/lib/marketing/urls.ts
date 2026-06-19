@@ -17,6 +17,7 @@ export type MarketingPagePath =
   | '/blog'
   | '/threads'
   | '/domains'
+  | '/integrations'
   | '/home'
 
 /**

@@ -4,6 +4,7 @@ import {
   Loader2,
   Code,
   Upload,
+  ArrowUpDown,
   Globe,
   AlertTriangle,
   Copy,
@@ -144,7 +145,7 @@ const PROJECT_PROTOCOLS: ProjectProtocol[] = [
     id: ProjectProtocolId.Rest,
     label: 'REST',
     description: 'Standard HTTP API requests from client SDKs.',
-    icon: Globe,
+    icon: ArrowUpDown,
   },
   {
     id: ProjectProtocolId.Graphql,

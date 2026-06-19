@@ -1,0 +1,84 @@
+---
+layout: integration
+title: Search with Algolia
+description: Integrate Algolia search into your Appwrite database
+date: 2024-07-30
+featured: false
+isPartner: true
+isNew: false
+cover: /images/integrations/search-algolia/cover.avif
+category: search
+product: 
+    avatar: '/images/integrations/avatars/algolia.avif'
+    vendor: Algolia
+    description: 'Algolia is a search platform that helps you add fast and relevant search capabilities to your app.'
+platform: 
+    - 'Self-hosted'
+    - 'Cloud'
+images: 
+    - /images/integrations/search-algolia/cover.avif
+    - /images/integrations/search-algolia/overview.avif
+    - /images/integrations/search-algolia/index.avif
+    - /images/integrations/search-algolia/template.avif
+    - /images/integrations/search-algolia/variables.avif
+    - /images/integrations/search-algolia/demo.avif
+---
+
+Algolia is a search platform that helps you add fast and relevant search capabilities to your app. It makes it easy to find and explore data quickly.
+
+# How does the integration work?
+
+By integrating Algolia with Appwrite, you can use Algolia's search features directly in your Appwrite database. This lets you leverage Algolia’s comprehensive search capabilities with your Appwrite backend.
+
+# How to implement
+
+To implement the Algolia integration, follow these simple steps:
+
+## Step 1: Set up an Algolia account
+
+First, [sign up on Algolia](https://dashboard.algolia.com/users/sign_up) and create a new application. Save the **Application ID**, **Search API Key**, and **Write API Key** for further usage.
+
+![Algolia overview](/images/integrations/search-algolia/overview.avif)
+
+Then, click on the **Search** page from the left sidebar and **create a new Index** to store your searchable data. Save your **Index ID** for further usage.
+
+![New index](/images/integrations/search-algolia/index.avif)
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. In case you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates. Additionally, for this template, you must have an Appwrite Database and Collection filled with data in advance.
+
+Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Algolia** function template.
+
+![Function template](/images/integrations/search-algolia/template.avif)
+
+During the setup process, click on the checkbox to create an Appwrite API key on completion and add the Appwrite Database ID and Collection ID for the data you want to index and search as well as the **Algolia application ID**, **search API key**, **write API key** (under Admin API Key), and **index ID** in the **Variables** step. If you are self-hosting Appwrite, click on the **optional variables** dropdown and update the Appwrite endpoint to your instance’s publicly accessible endpoint. 
+
+![Env variables](/images/integrations/search-algolia/variables.avif)
+
+Then, create a new repository with the default branch and root directory settings. You can edit this repository later to update the function logic.
+
+## Step 3: Test the function
+
+Once all the steps are complete, it is time to test the function! Before we go further, visit the **Domains** tab on the **Functions** page and copy the domain URL to test the function.
+
+Send a POST (HTTP) Request to the function URL to index the Appwrite Collection in Algolia. 
+
+```bash
+curl -XPOST https://DEPLOYED_FUNCTION_DOMAIN
+```
+
+In case you have a large collection of data and your function executions timeout, you can head to the **Settings** tab on the **Functions** page and increase the function timeout limit from **15 seconds** to **900 seconds** (maximum).
+    
+Then, open your function URL in the browser to try the interactive search UI.
+    
+
+![Demo](/images/integrations/search-algolia/demo.avif)
+
+# Read more about Algolia
+
+If you would like to learn more about Algolia, we have some resources that you should visit:
+
+- [Sign up for Algolia](https://dashboard.algolia.com/users/sign_up)
+- [Learn more about Functions templates in Appwrite docs](https://appwrite.io/docs/products/functions/templates)
+- [Connect with other developers and the Appwrite team on Discord.](https://discord.com/invite/appwrite)

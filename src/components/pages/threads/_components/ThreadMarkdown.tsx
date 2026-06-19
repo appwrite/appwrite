@@ -155,7 +155,7 @@ export function ThreadMarkdown({
             )
 
             return (
-              <div className="not-prose my-4">
+              <div className="not-prose my-4 w-full">
                 <ConnectCodeExample code={rawCode} language={language} />
               </div>
             )

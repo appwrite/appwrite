@@ -23,14 +23,14 @@ export function Fence({ content, language }: FenceProps) {
 
   if (tabs) {
     return (
-      <div className="not-prose my-2">
+      <div className="not-prose my-2 w-full">
         <ConnectCodeExample code={content} language={resolvedLanguage} />
       </div>
     )
   }
 
   return (
-    <div className="not-prose my-4">
+    <div className="not-prose my-4 w-full">
       <ConnectCodeExample code={content} language={resolvedLanguage} />
     </div>
   )

@@ -1,4 +1,4 @@
-import { Tags } from 'lucide-react'
+import { ArrowUpDown, Tags } from 'lucide-react'
 import { CloudMarkIcon } from '@/components/global/shared/CloudMarkIcon'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -53,11 +53,9 @@ export function ReferencePlatformIcon({
 
   if (platform === 'client-rest' || platform === 'server-rest') {
     return (
-      <img
-        src="/icons/globe.svg"
-        alt=""
+      <ArrowUpDown
+        className={cn(ICON_SIZE_CLASS, 'text-muted-foreground', className)}
         aria-hidden
-        className={cn(ICON_SIZE_CLASS, PUBLIC_ICON_MUTED_CLASSES, className)}
       />
     )
   }

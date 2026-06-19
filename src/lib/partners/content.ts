@@ -102,7 +102,7 @@ export const partnerWays = [
     title: 'Integrations',
     description:
       'For innovative software companies striving to create solutions that integrate seamlessly with our platform. Partner with Appwrite to create a better developer experience.',
-    href: 'https://appwrite.io/integrations',
+    href: '/integrations',
     label: 'Find an Integration',
   },
 ] as const

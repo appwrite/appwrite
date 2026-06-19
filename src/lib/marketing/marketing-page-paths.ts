@@ -22,6 +22,7 @@ export const MARKETING_PAGE_PATHS = [
   '/products/messaging',
   '/products/sites',
   '/domains',
+  '/integrations',
   '/llms/txt',
   '/llms-full/txt',
 ] as const

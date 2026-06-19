@@ -1,0 +1,73 @@
+---
+layout: integration
+title: Speech recognition with Hugging Face
+description: Process speech audio into text
+date: 2024-07-30
+featured: false
+isPartner: true
+isNew: false
+cover: /images/integrations/ai-hugging-face-speech-recognition/cover.avif
+category: ai
+product: 
+    avatar: '/images/integrations/avatars/hugging-face.avif'
+    vendor: Hugging Face
+    description: 'Hugging Face is a leading AI company that offers an extensive library of pre-trained models for various natural language processing and computer vision tasks, including image classification.'
+platform: 
+    - 'Self-hosted'
+    - 'Cloud'
+images: 
+    - /images/integrations/ai-hugging-face-speech-recognition/cover.avif
+    - /images/integrations/ai-hugging-face-speech-recognition/token.avif
+    - /images/integrations/ai-hugging-face-speech-recognition/template.avif
+    - /images/integrations/ai-hugging-face-speech-recognition/variables.avif
+---
+
+Speech recognition is a transformative technology that converts spoken language into text. Hugging Face, a prominent AI company offers a comprehensive library of pre-trained models for various natural language processing tasks, including speech recognition. By integrating Hugging Face's models with your applications, you can automate and enhance the transcription and analysis of audio content.
+
+# How does the integration work?
+
+You can utilize a pre-built Appwrite function template to add speech recognition with Hugging Face to your app. This will allow you to upload an audio file to an Appwrite storage bucket and store the recognized speech in an Appwrite collection as text.
+
+# How to implement
+
+To implement the Hugging Face speech recognition function, there are several steps you must complete:
+
+## Step 1: Sign up for Hugging Face
+
+First, you must [sign up for a Hugging Face account](https://huggingface.co/join). Once your account is set up, visit your profile settings, head to the [Access Tokens](https://huggingface.co/settings/tokens) page, and create an **access token** with the **Inference** permissions. Save this token for further usage.
+
+![Create API token](/images/integrations/ai-hugging-face-speech-recognition/token.avif)
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](https://cloud.appwrite.io/register) or [self-host Appwrite](https://appwrite.io/docs/advanced/self-hosting) if you haven’t already. If you decide to self-host Appwrite, there are [additional setup steps](https://appwrite.io/docs/advanced/self-hosting/functions) to use Appwrite Function templates.
+
+Head over to the Appwrite console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Speech Recognition** function template.
+
+![Function template](/images/integrations/ai-hugging-face-speech-recognition/template.avif)
+
+During the setup process, click the checkbox to generate an Appwrite API key on completion and add the **Hugging Face access token** in the **Variables** step. If you are self-hosting Appwrite, click the **optional variables** dropdown and update the Appwrite endpoint to your instance’s publicly accessible endpoint. 
+
+![Env variables](/images/integrations/ai-hugging-face-speech-recognition/variables.avif)
+
+Then, create a new repository with the default branch and root directory settings. You can edit this repository later to update the function logic.
+
+## Step 3: Test the Function
+
+Once all the steps are complete, it is time to test the function! Use the Appwrite console or one of Appwrite’s SDKs to [upload an audio file](https://appwrite.io/docs/references/cloud/client-web/storage#createFile) to the `speech_recognition` storage bucket. If successful, you will find a response saved in the `speech_recognition` collection in the `ai` database in the following format:
+
+| audio | speech |
+| --- | --- |
+| 66a7b386000a1042305c | my thought i have nobody by a beauty and will as you've poured mr rochester is sub and that so don't find simpus and devoted about to at might in a |
+
+The `audio` attribute contains the ID of the audio file uploaded to the `speech_recognition` storage bucket, and the `speech` attribute contains the response from Hugging Face.
+    
+
+# Read more about Hugging Face and Appwrite  Functions
+
+If you would like to learn more about Hugging Face and Appwrite Functions, we have some resources that you should visit:
+
+- [Sign up for Hugging Face](https://huggingface.co/login)
+- [Set up the Hugging Face provider in Appwrite](https://appwrite.io/docs/products/ai/tutorials/object-detection)
+- [Find more function templates](https://appwrite.io/docs/products/functions/templates)
+- [Appwrite Functions API reference](https://appwrite.io/docs/references)

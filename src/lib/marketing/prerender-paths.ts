@@ -9,6 +9,10 @@ import {
   getChangelogEntryPrerenderPaths,
   getChangelogEntryPrerenderPathsFromClient,
 } from '../changelog/prerender-paths'
+import {
+  getIntegrationPrerenderPaths,
+  isIntegrationPrerenderPath,
+} from '../integrations/prerender-paths'
 import { MARKETING_PAGE_PATHS } from './marketing-page-paths'
 
 export const MARKETING_PRERENDER_PATHS = MARKETING_PAGE_PATHS
@@ -22,8 +26,14 @@ export function getAllMarketingPrerenderPaths(
   const blogPaths = clientDirectory
     ? getBlogPrerenderPathsFromClient(clientDirectory)
     : getBlogPrerenderPaths()
+  const integrationPaths = getIntegrationPrerenderPaths()
 
-  return [...MARKETING_PRERENDER_PATHS, ...changelogPaths, ...blogPaths]
+  return [
+    ...MARKETING_PRERENDER_PATHS,
+    ...changelogPaths,
+    ...blogPaths,
+    ...integrationPaths,
+  ]
 }
 
 export function isMarketingPrerenderPath(path: string): boolean {
@@ -36,7 +46,9 @@ export function isMarketingPrerenderPath(path: string): boolean {
     return true
   }
 
-  return isBlogPrerenderPath(normalized)
+  if (isBlogPrerenderPath(normalized)) return true
+
+  return isIntegrationPrerenderPath(normalized)
 }
 
 /** Prerendered HTML pages (excludes llms txt exports). */
