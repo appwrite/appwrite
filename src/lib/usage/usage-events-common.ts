@@ -227,7 +227,7 @@ interface UsageMetricSeriesResult {
 
 export type { UsageMetricSeriesResult }
 
-const TOP_ENDPOINTS_DIMENSIONS = ['path', 'method', 'status'] as const
+const TOP_ENDPOINTS_DIMENSIONS = ['path'] as const
 
 function mapBreakdownGroupsToEndpoints(
   groups: Models.UsageGroup[],
@@ -249,13 +249,11 @@ function mapBreakdownGroupsToEndpoints(
     })
   } else {
     items = groups.map((group, index) => {
-      const method = group.method || 'GET'
-      const statusCode = Number.parseInt(group.status ?? '', 10) || 0
       const path = group.path || '/'
       return {
-        id: `${method}|${statusCode}|${path}|${index}`,
-        method,
-        statusCode,
+        id: path || `path-${index}`,
+        method: '',
+        statusCode: 0,
         path,
         count: group.value,
       }

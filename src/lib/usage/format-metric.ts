@@ -142,10 +142,22 @@ function trimGbHoursValue(gbHours: number): string {
   return gbHours.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')
 }
 
+export const GB_HOURS_UNIT_SHORT = 'GBH'
+
+export const GB_HOURS_UNIT_TOOLTIP =
+  'GB hours (GBH). Compute time based on memory allocated to functions and sites multiplied by execution duration.'
+
+function formatGbHoursCore(gbHours: number): string {
+  if (!Number.isFinite(gbHours) || gbHours <= 0) return '0'
+  if (gbHours >= 1_000) {
+    return `${trimGbHoursValue(gbHours / 1_000)}k`
+  }
+  return trimGbHoursValue(gbHours)
+}
+
 /** Compact GB-hours formatter for overview KPIs, lists, and charts. */
 export function formatGbHoursTotal(gbHours: number): string {
-  if (!Number.isFinite(gbHours) || gbHours <= 0) return '0'
-  return trimGbHoursValue(gbHours)
+  return `${formatGbHoursCore(gbHours)}${GB_HOURS_UNIT_SHORT}`
 }
 
 export function formatGbHoursValue(gbHours: number): string {
@@ -154,9 +166,5 @@ export function formatGbHoursValue(gbHours: number): string {
 
 /** Short Y-axis labels for GB-hours. */
 export function formatGbHoursAxisValue(gbHours: number): string {
-  if (!Number.isFinite(gbHours) || gbHours <= 0) return '0'
-  if (gbHours >= 1_000) {
-    return `${trimGbHoursValue(gbHours / 1_000)}k`
-  }
-  return trimGbHoursValue(gbHours)
+  return formatGbHoursCore(gbHours)
 }

@@ -2,8 +2,6 @@ import { useState, useMemo, useEffect, useLayoutEffect } from 'react'
 import { getDefaultUsageChartDateRange, parseUsageChartDateRange, type SerializedUsageChartDateRange } from '@/lib/usage/usage-date-range'
 import type { DateRange } from 'react-day-picker'
 import {
-  TrendingUp,
-  TrendingDown,
   Plus,
   Plug2,
   Check,
@@ -17,12 +15,14 @@ import {
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrollFade'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
+import { MetricValueWithUnit } from './MetricValueWithUnit'
 import {
   useProject,
   usePlatforms,
@@ -113,6 +113,7 @@ import {
 } from './chart-panel'
 import { OverviewChartPanelError } from './OverviewChartPanelError'
 import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
+import { OverviewTabMetricContent } from './OverviewTabMetricContent'
 
 interface OverviewTab {
   id: string
@@ -429,14 +430,14 @@ export function View({ projectId, initialData }: ViewProps) {
       ? {
           id: 'gbhours',
           value: OVERVIEW_METRIC_NOT_AVAILABLE,
-          label: 'GB-hours',
+          label: 'Compute',
           change: null,
         }
       : showGbHoursChartLoading
         ? {
             id: 'gbhours',
             value: '',
-            label: 'GB-hours',
+            label: 'Compute',
             change: null,
             isLoading: true,
           }
@@ -445,7 +446,7 @@ export function View({ projectId, initialData }: ViewProps) {
             value: formatGbHoursTotal(
               sumUsageChartPoints(gbHoursUsage?.chartPoints ?? []),
             ),
-            label: 'GB-hours',
+            label: 'Compute',
             change: gbHoursUsage?.changePercent ?? 0,
           }
 
@@ -772,16 +773,14 @@ export function View({ projectId, initialData }: ViewProps) {
             {/* Metric tabs + date range - same row */}
             <div className="border-b border-border px-5">
               <div className="flex min-w-0 items-center gap-3">
-                <div
-                  className="min-w-0 flex-1 overflow-x-auto"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                <HorizontalScrollFade
+                  className="min-w-0 flex-1"
+                  fadeFromClassName="from-card/50"
                 >
+                  <TooltipProvider delayDuration={0}>
                   <div className="flex min-w-max" role="tablist">
                     {overviewTabs.map((tab, index) => {
                       const isActive = activeTab === tab.id
-                      const showChange = tab.change !== null
-                      const isPositive = showChange && tab.change > 0
-                      const isNegative = showChange && tab.change < 0
 
                       return (
                         <div key={tab.id} className="flex">
@@ -796,90 +795,20 @@ export function View({ projectId, initialData }: ViewProps) {
                             aria-selected={isActive}
                             onClick={() => handleOverviewTabChange(tab.id)}
                             className={cn(
-                              'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
+                              'relative flex min-w-[168px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
                               'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                               isActive
                                 ? 'text-foreground'
                                 : 'text-muted-foreground hover:text-foreground/80',
                             )}
                           >
-                            <div className="flex items-baseline gap-2">
-                              {tab.isLoading ? (
-                                <>
-                                  <Skeleton className="h-6 w-[4.5rem] rounded-md" />
-                                  <Skeleton className="h-3 w-10 rounded-md" />
-                                </>
-                              ) : (
-                                <>
-                              <span
-                                className={cn(
-                                  'text-[18px] font-semibold tracking-tight sm:text-[20px]',
-                                  isActive
-                                    ? 'text-foreground'
-                                    : 'text-muted-foreground',
-                                )}
-                              >
-                                {tab.value}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {showChange ? (
-                                  <>
-                                    {isPositive && (
-                                      <TrendingUp
-                                        className={cn(
-                                          'h-3 w-3',
-                                          isActive
-                                            ? 'text-emerald-500'
-                                            : 'text-emerald-500/60',
-                                        )}
-                                      />
-                                    )}
-                                    {isNegative && (
-                                      <TrendingDown
-                                        className={cn(
-                                          'h-3 w-3',
-                                          isActive
-                                            ? 'text-red-500'
-                                            : 'text-red-500/60',
-                                        )}
-                                      />
-                                    )}
-                                    <span
-                                      className={cn(
-                                        'text-[11px] font-medium',
-                                        isPositive &&
-                                          (isActive
-                                            ? 'text-emerald-500'
-                                            : 'text-emerald-500/60'),
-                                        isNegative &&
-                                          (isActive
-                                            ? 'text-red-500'
-                                            : 'text-red-500/60'),
-                                        !isPositive &&
-                                          !isNegative &&
-                                          'text-muted-foreground',
-                                      )}
-                                    >
-                                      {isPositive && '+'}
-                                      {tab.change}%
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span
-                                    className={cn(
-                                      'text-[11px] font-medium',
-                                      isActive
-                                        ? 'text-muted-foreground'
-                                        : 'text-muted-foreground/70',
-                                    )}
-                                  >
-                                    {OVERVIEW_METRIC_NOT_AVAILABLE}
-                                  </span>
-                                )}
-                              </div>
-                                </>
-                              )}
-                            </div>
+                            <OverviewTabMetricContent
+                              tabId={tab.id}
+                              isLoading={tab.isLoading}
+                              value={tab.value}
+                              change={tab.change}
+                              isActive={isActive}
+                            />
                             <span
                               className={cn(
                                 'text-[12px]',
@@ -900,7 +829,8 @@ export function View({ projectId, initialData }: ViewProps) {
                       )
                     })}
                   </div>
-                </div>
+                  </TooltipProvider>
+                </HorizontalScrollFade>
                 <div className="flex shrink-0 items-center gap-2 py-3">
                   <UsageChartIntervalToggle
                     value={chartInterval}
@@ -932,8 +862,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     title="Bandwidth over time"
                     metric="bandwidth"
                     dateRange={dashboardChartDateRange}
+                    chartInterval={chartInterval}
                     chartData={
-                      isBandwidthError ? [] : bandwidthUsage?.dualChartPoints
+                      isBandwidthError ? [] : (bandwidthUsage?.dualChartPoints ?? [])
                     }
                     isLoading={showBandwidthChartLoading}
                     isError={isBandwidthError}
@@ -973,8 +904,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     title="Requests over time"
                     metric="requests"
                     dateRange={dashboardChartDateRange}
+                    chartInterval={chartInterval}
                     chartData={
-                      isRequestsError ? [] : requestsUsage?.chartPoints
+                      isRequestsError ? [] : (requestsUsage?.chartPoints ?? [])
                     }
                     isLoading={showRequestsChartLoading}
                     isError={isRequestsError}
@@ -1025,15 +957,17 @@ export function View({ projectId, initialData }: ViewProps) {
                           onRetry={() => void refetchStorage()}
                         />
                       ) : showStorageChartLoading ? (
-                        <OverviewChartPanelSkeleton variant="chart" embedded />
+                        <OverviewChartPanelSkeleton variant="storage" embedded />
                       ) : (
                         <div className="flex min-h-[240px] flex-1 flex-col justify-center gap-2">
                           <p className="text-[13px] text-muted-foreground">
                             Current file storage in selected period
                           </p>
-                          <p className="text-[28px] font-semibold tabular-nums text-foreground">
-                            {formatStorageTotal(storageUsage?.latestValue ?? 0)}
-                          </p>
+                          <MetricValueWithUnit
+                            value={formatStorageTotal(storageUsage?.latestValue ?? 0)}
+                            className="text-[28px] font-semibold text-foreground"
+                            amountClassName="tabular-nums"
+                          />
                         </div>
                       )}
                     </div>
@@ -1074,8 +1008,9 @@ export function View({ projectId, initialData }: ViewProps) {
                     title="Executions over time"
                     metric="executions"
                     dateRange={dashboardChartDateRange}
+                    chartInterval={chartInterval}
                     chartData={
-                      isExecutionsError ? [] : executionsUsage?.chartPoints
+                      isExecutionsError ? [] : (executionsUsage?.chartPoints ?? [])
                     }
                     isLoading={showExecutionsChartLoading}
                     isError={isExecutionsError}
@@ -1120,11 +1055,12 @@ export function View({ projectId, initialData }: ViewProps) {
                     className="@[700px]:min-h-0 @[700px]:flex-1"
                     showSession={chartShowSession}
                     isPanelVisible={activeTab === 'gbhours'}
-                    title="GB-hours over time"
+                    title="Compute over time"
                     metric="gbhours"
                     dateRange={dashboardChartDateRange}
+                    chartInterval={chartInterval}
                     chartData={
-                      isGbHoursError ? [] : gbHoursUsage?.chartPoints
+                      isGbHoursError ? [] : (gbHoursUsage?.chartPoints ?? [])
                     }
                     isLoading={showGbHoursChartLoading}
                     isError={isGbHoursError}
@@ -1138,8 +1074,9 @@ export function View({ projectId, initialData }: ViewProps) {
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="min-h-0 flex-1"
-                      title="Top GB-hours consumers"
+                      title="Top compute consumers"
                       metric="gbhours"
+                      showUnitInfo
                       breakdownVariant="resource"
                       projectId={projectId}
                       resourceLookup={gbHoursBreakdownResources?.resources}

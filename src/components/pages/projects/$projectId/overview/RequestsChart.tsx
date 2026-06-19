@@ -1,29 +1,23 @@
-import { cn } from '@/lib/utils'
-import {
-  OVERVIEW_BANDWIDTH_ERROR,
-  overviewChartPanelBodyClass,
-  overviewChartPanelChartAreaClass,
-  overviewChartPanelEmptyClass,
-  overviewChartPanelHeaderClass,
-} from './chart-panel'
-import { OverviewChartPanelError } from './OverviewChartPanelError'
-import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Cell,
-} from 'recharts'
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Link, useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
-import { endOfDay, isWithinInterval, startOfDay, subDays } from 'date-fns'
+import { cn } from '@/lib/utils'
+import {
+  OVERVIEW_BANDWIDTH_ERROR,
+  OVERVIEW_CHART_HEIGHT,
+  overviewChartPanelBodyClass,
+  overviewChartPanelChartAreaClass,
+  overviewChartPanelChartFillClass,
+  overviewChartPanelEmptyClass,
+  overviewChartPanelHeaderClass,
+  overviewChartPanelHeaderActionsClass,
+} from './chart-panel'
+import { OverviewChartPanelError } from './OverviewChartPanelError'
+import { GbHoursUnitInfo } from './GbHoursUnitInfo'
+import { MetricValueWithUnit } from './MetricValueWithUnit'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import type { DateRange } from 'react-day-picker'
 import {
   formatCompactBytes,
@@ -31,6 +25,16 @@ import {
   formatCompactCountAxis,
   formatGbHoursAxisValue,
 } from '@/lib/usage/format-metric'
+import {
+  fillChartPointsGaps,
+  type UsageChartPoint,
+} from '@/lib/usage/usage-events-common'
+import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
 
 type MetricType =
   | 'bandwidth'
@@ -39,15 +43,7 @@ type MetricType =
   | 'executions'
   | 'gbhours'
 
-interface ChartPoint {
-  date: string
-  day: Date
-  successful: number
-  errors: number
-  total: number
-}
-
-type RealChartPoint = {
+type ChartPoint = {
   date: string
   day: Date
   total: number
@@ -57,13 +53,11 @@ type RealChartPoint = {
 
 interface RequestsChartProps {
   className?: string
-  variant?: 'line' | 'bar'
   title?: string
   metric?: MetricType
-  /** When omitted, the chart shows the last 30 days of the generated series */
   dateRange?: DateRange
-  /** Real usage data (e.g. bandwidth from usage.listEvents). When set, mock data is skipped. */
-  chartData?: RealChartPoint[]
+  chartInterval?: UsageChartInterval
+  chartData?: ChartPoint[]
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
@@ -76,77 +70,82 @@ interface RequestsChartProps {
   isPanelVisible?: boolean
 }
 
-const CHART_HISTORY_DAYS = 366
 const CHART_ANIMATION_DURATION = 800
+
+/** Soft greyscale placeholder — visible on the real chart canvas. */
+const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
+const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_FILL_TOP_OPACITY = 0.14
+const SKELETON_CHART_FILL_BOTTOM_OPACITY = 0.02
+const SKELETON_WAVE = [
+  0.42, 0.58, 0.51, 0.68, 0.59, 0.72, 0.64, 0.7, 0.55, 0.74, 0.62, 0.69,
+] as const
+
+function getSkeletonPeak(metric: MetricType): number {
+  switch (metric) {
+    case 'bandwidth':
+      return 80_000_000
+    case 'requests':
+      return 80_000
+    case 'executions':
+      return 8_000
+    case 'gbhours':
+      return 160
+    default:
+      return 1_000
+  }
+}
+
+function buildSkeletonChartData(
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  metric: MetricType = 'requests',
+): ChartPoint[] {
+  const { from, to } = resolveUsageDateBounds(dateRange)
+  const resolvedInterval = resolveUsageChartIntervalForRange(interval, dateRange)
+  const shell = fillChartPointsGaps(new Map(), from, to, resolvedInterval)
+  const points =
+    shell.length > 0
+      ? shell
+      : buildFallbackSkeletonShell(from, to, resolvedInterval)
+  const peak = getSkeletonPeak(metric)
+
+  return points.map((point, index) => ({
+    date: point.date,
+    day: point.day,
+    total: Math.round(peak * SKELETON_WAVE[index % SKELETON_WAVE.length]),
+  }))
+}
+
+function buildFallbackSkeletonShell(
+  from: Date,
+  to: Date,
+  interval: UsageChartInterval,
+): UsageChartPoint[] {
+  const shell = fillChartPointsGaps(
+    new Map(),
+    from,
+    to,
+    interval === '1h' ? '1d' : interval,
+  )
+  if (shell.length > 0) return shell
+
+  return SKELETON_WAVE.map((weight, index) => ({
+    date: `${index + 1}`,
+    day: new Date(from.getTime() + index * 60 * 60 * 1000),
+    total: 0,
+  }))
+}
 
 /** Remount key for chart enter animation — tied to visibility context, not fetched data. */
 function buildChartShowKey(
   metric: MetricType,
-  variant: 'line' | 'bar',
   dateRange: DateRange | undefined,
   showSession?: number,
 ) {
   const from = dateRange?.from?.toISOString() ?? 'default-from'
   const to = dateRange?.to?.toISOString() ?? 'default-to'
-  return `${metric}-${variant}-${from}-${to}-${showSession ?? 0}`
-}
-
-// Deterministic pseudo-random so the series is stable across navigations (same day index → same values)
-function seededNoise(seed: number) {
-  const x = Math.sin(seed * 12.9898) * 43758.5453
-  return x - Math.floor(x)
-}
-
-function generateFullChartData(): ChartPoint[] {
-  const data: ChartPoint[] = []
-  const end = startOfDay(new Date())
-
-  for (let i = CHART_HISTORY_DAYS - 1; i >= 0; i--) {
-    const day = subDays(end, i)
-    const dateStr = day.toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'short',
-    })
-    const s = day.getTime()
-    const baseRequests = 5000 + seededNoise(s) * 4000
-    const errorRate = 0.08 + seededNoise(s + 1) * 0.15
-    const successful = Math.floor(baseRequests * (1 - errorRate))
-    const errors = Math.floor(baseRequests * errorRate)
-
-    data.push({
-      date: dateStr,
-      day,
-      successful,
-      errors,
-      total: successful + errors,
-    })
-  }
-  return data
-}
-
-const FULL_CHART_DATA = generateFullChartData()
-
-function filterChartDataByRange(
-  data: ChartPoint[],
-  dateRange: DateRange | undefined,
-): ChartPoint[] {
-  const to = endOfDay(new Date())
-  const fromDefault = startOfDay(subDays(to, 29))
-
-  if (!dateRange?.from) {
-    return data.filter((d) =>
-      isWithinInterval(d.day, { start: fromDefault, end: to }),
-    )
-  }
-
-  const from = startOfDay(dateRange.from)
-  const toBound = dateRange.to
-    ? endOfDay(dateRange.to)
-    : endOfDay(dateRange.from)
-
-  return data.filter((d) =>
-    isWithinInterval(d.day, { start: from, end: toBound }),
-  )
+  return `${metric}-line-${from}-${to}-${showSession ?? 0}`
 }
 
 interface CustomTooltipProps {
@@ -154,19 +153,24 @@ interface CustomTooltipProps {
   payload?: Array<{
     value: number
     dataKey: string
-    payload: ChartPoint | RealChartPoint
+    payload: ChartPoint
   }>
-  label?: string
   formatValue?: (value: number) => string
-  showBreakdown?: boolean
   metric?: MetricType
 }
+
+const FormattedMetricValue = ({ value }: { value: string }) => (
+  <MetricValueWithUnit
+    value={value}
+    className="text-[12px] font-medium text-foreground"
+    unitClassName="text-muted-foreground"
+  />
+)
 
 const CustomTooltip = ({
   active,
   payload,
   formatValue,
-  showBreakdown = true,
   metric = 'requests',
 }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
@@ -175,8 +179,6 @@ const CustomTooltip = ({
 
     if (
       metric === 'bandwidth' &&
-      'inbound' in data &&
-      'outbound' in data &&
       typeof data.inbound === 'number' &&
       typeof data.outbound === 'number'
     ) {
@@ -189,19 +191,19 @@ const CustomTooltip = ({
             <div className="flex items-center justify-between gap-6">
               <span className="text-[11px] text-muted-foreground">Inbound</span>
               <span className="text-[12px] font-medium text-foreground">
-                {format(data.inbound)}
+                <FormattedMetricValue value={format(data.inbound)} />
               </span>
             </div>
             <div className="flex items-center justify-between gap-6">
               <span className="text-[11px] text-muted-foreground">Outbound</span>
               <span className="text-[12px] font-medium text-foreground">
-                {format(data.outbound)}
+                <FormattedMetricValue value={format(data.outbound)} />
               </span>
             </div>
             <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
               <span className="text-[11px] text-muted-foreground">Total</span>
               <span className="text-[12px] font-medium text-foreground">
-                {format(data.total)}
+                <FormattedMetricValue value={format(data.total)} />
               </span>
             </div>
           </div>
@@ -209,59 +211,19 @@ const CustomTooltip = ({
       )
     }
 
-    const total = 'total' in data ? data.total : 0
-
-    if (!showBreakdown || !('successful' in data)) {
-      return (
-        <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
-          <p className="mb-1 text-[12px] font-medium text-foreground">
-            {data.date}
-          </p>
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-[11px] text-muted-foreground">
-              {metric === 'bandwidth' ? 'Bandwidth' : 'Value'}
-            </span>
-            <span className="text-[12px] font-medium text-foreground">
-              {format(total)}
-            </span>
-          </div>
-        </div>
-      )
-    }
-
-    const successPercent = Math.round((data.successful / data.total) * 100)
-    const errorPercent = 100 - successPercent
-
     return (
       <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
-        <p className="mb-2 text-[12px] font-medium text-foreground">
+        <p className="mb-1 text-[12px] font-medium text-foreground">
           {data.date}
         </p>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-[11px] text-muted-foreground">Total</span>
-            <span className="text-[12px] font-medium text-foreground">
-              {data.total.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-[11px] text-muted-foreground">
-              Successful
-            </span>
-            <span className="text-[12px] text-muted-foreground">
-              {successPercent}% {data.successful.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-[11px] text-muted-foreground">Error</span>
-            <span className="text-[12px] text-muted-foreground">
-              {errorPercent}% {data.errors.toLocaleString()}
-            </span>
-          </div>
+        <div className="flex items-center justify-between gap-6">
+          <span className="text-[11px] text-muted-foreground">
+            {metric === 'bandwidth' ? 'Bandwidth' : 'Value'}
+          </span>
+          <span className="text-[12px] font-medium text-foreground">
+            <FormattedMetricValue value={format(data.total)} />
+          </span>
         </div>
-        <p className="mt-2 text-[10px] text-muted-foreground/50">
-          Click to view day
-        </p>
       </div>
     )
   }
@@ -270,11 +232,11 @@ const CustomTooltip = ({
 
 export function RequestsChart({
   className,
-  variant = 'line',
   title,
   metric = 'requests',
   dateRange,
-  chartData: chartDataProp,
+  chartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  chartData: chartDataProp = [],
   isLoading = false,
   isError = false,
   onRetry,
@@ -284,60 +246,25 @@ export function RequestsChart({
   showSession = 0,
   isPanelVisible = true,
 }: RequestsChartProps) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [chartMountKey, setChartMountKey] = useState<string | null>(null)
   const { projectId } = useParams({ strict: false })
 
-  const usesRealData = chartDataProp !== undefined
-
-  const mockChartData = useMemo(
-    () => filterChartDataByRange(FULL_CHART_DATA, dateRange),
-    [dateRange],
+  const chartData = chartDataProp
+  const skeletonChartData = useMemo(
+    () => buildSkeletonChartData(dateRange, chartInterval, metric),
+    [dateRange, chartInterval, metric],
   )
-
-  const chartData = usesRealData ? (chartDataProp ?? []) : mockChartData
   const showBandwidthDualSeries =
-    usesRealData &&
+    !isLoading &&
     metric === 'bandwidth' &&
     chartData.some(
       (point) =>
         typeof point.inbound === 'number' && typeof point.outbound === 'number',
     )
 
-  const { successRate, errorRate } = useMemo(() => {
-    if (usesRealData) {
-      return { successRate: 0, errorRate: 0 }
-    }
-    const totalSuccessful = mockChartData.reduce((sum, d) => sum + d.successful, 0)
-    const totalErrors = mockChartData.reduce((sum, d) => sum + d.errors, 0)
-    const totalRequests = totalSuccessful + totalErrors
-    if (totalRequests === 0) {
-      return { successRate: 0, errorRate: 0 }
-    }
-    const sr = Math.round((totalSuccessful / totalRequests) * 100)
-    return { successRate: sr, errorRate: 100 - sr }
-  }, [mockChartData, usesRealData])
-
-  const getMetricLabel = () => {
-    switch (metric) {
-      case 'bandwidth':
-        return { primary: 'Transfer rate', secondary: 'Avg. bandwidth' }
-      case 'storage':
-        return { primary: 'Usage trend', secondary: 'Avg. storage' }
-      case 'executions':
-        return { primary: 'Execution time', secondary: 'Avg. duration' }
-      case 'gbhours':
-        return { primary: 'Compute usage', secondary: 'Avg. GB-hours' }
-      default:
-        return { primary: '200ms', secondary: 'Avg. latency' }
-    }
-  }
-
-  const labels = getMetricLabel()
-  const effectiveVariant = usesRealData ? 'line' : variant
   const chartShowKey = useMemo(
-    () => buildChartShowKey(metric, effectiveVariant, dateRange, showSession),
-    [metric, effectiveVariant, dateRange?.from, dateRange?.to, showSession],
+    () => buildChartShowKey(metric, dateRange, showSession),
+    [metric, dateRange?.from, dateRange?.to, showSession],
   )
   const showChartSkeleton = isLoading && chartData.length === 0
   const showEmptyState = !isLoading && chartData.length === 0
@@ -346,8 +273,8 @@ export function RequestsChart({
   showChartSkeletonRef.current = showChartSkeleton
   const chartDataLengthRef = useRef(chartData.length)
   chartDataLengthRef.current = chartData.length
-  const mountedForKeyRef = useRef<string | null>(null)
   const areaGradientId = `overview-chart-gradient-${metric}`
+  const skeletonGradientId = `overview-chart-gradient-skeleton-${metric}`
   const inboundGradientId = 'overview-chart-gradient-inbound'
   const outboundGradientId = 'overview-chart-gradient-outbound'
   const valueFormatter =
@@ -357,23 +284,21 @@ export function RequestsChart({
       : metric === 'gbhours'
         ? (value: number) => String(value)
         : (value: number) => formatCompactBytes(value, { compact: true }))
-  const yAxisTickFormatter = usesRealData
-    ? metric === 'requests' || metric === 'executions'
+  const yAxisTickFormatter =
+    metric === 'requests' || metric === 'executions'
       ? (value: number) => formatCompactCountAxis(value)
       : metric === 'gbhours'
         ? (value: number) => formatGbHoursAxisValue(value)
         : (value: number) => formatCompactBytesAxis(value)
-    : (value: number) => {
-        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`
-        return value.toString()
-      }
   const tooltipContent = (
-    <CustomTooltip
-      formatValue={usesRealData ? valueFormatter : undefined}
-      showBreakdown={!usesRealData}
-      metric={metric}
-    />
+    <CustomTooltip formatValue={valueFormatter} metric={metric} />
   )
+  const activeChartData = showChartSkeleton ? skeletonChartData : chartData
+  const isSkeleton = showChartSkeleton
+  const renderChart =
+    isPanelVisible &&
+    activeChartData.length > 0 &&
+    (showChartSkeleton || showChart)
 
   useLayoutEffect(() => {
     if (
@@ -382,7 +307,6 @@ export function RequestsChart({
       showChartSkeleton ||
       chartData.length === 0
     ) {
-      mountedForKeyRef.current = null
       setChartMountKey(null)
       return
     }
@@ -401,7 +325,6 @@ export function RequestsChart({
           return
         }
 
-        mountedForKeyRef.current = chartShowKey
         setChartMountKey(chartShowKey)
       })
     }, 0)
@@ -413,41 +336,31 @@ export function RequestsChart({
     }
   }, [chartShowKey, isError, isPanelVisible, showChartSkeleton, chartData.length])
 
-  const areaAnimationProps = {
-    isAnimationActive: true,
-    animationDuration: CHART_ANIMATION_DURATION,
-    animationEasing: 'ease-out' as const,
-    animationBegin: 0,
-  }
-
-  const barAnimationProps = {
-    isAnimationActive: true,
-    animationDuration: CHART_ANIMATION_DURATION,
-    animationEasing: 'ease-out' as const,
-    animationBegin: 0,
-  }
+  const areaAnimationProps = isSkeleton
+    ? { isAnimationActive: false }
+    : {
+        isAnimationActive: true,
+        animationDuration: CHART_ANIMATION_DURATION,
+        animationEasing: 'ease-out' as const,
+        animationBegin: 0,
+      }
 
   return (
-    <div className={cn('flex w-full flex-col @[700px]:h-full', className)}>
-      {/* Chart header with latency and legend */}
+    <div className={cn('flex w-full min-w-0 flex-col @[700px]:h-full', className)}>
       <div className={overviewChartPanelHeaderClass}>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
           {title ? (
             <span className="text-[13px] font-medium text-foreground">
               {title}
             </span>
-          ) : (
-            <>
-              <span className="text-[13px] font-medium text-foreground">
-                {labels.primary}
-              </span>
-              <span className="text-[12px] text-muted-foreground">
-                {labels.secondary}
-              </span>
-            </>
-          )}
+          ) : null}
+          {metric === 'gbhours' ? (
+            <TooltipProvider delayDuration={0}>
+              <GbHoursUnitInfo />
+            </TooltipProvider>
+          ) : null}
         </div>
-        <div className="flex items-center gap-4">
+        <div className={overviewChartPanelHeaderActionsClass}>
           {showBandwidthDualSeries && (
             <>
               <div className="flex items-center gap-1.5">
@@ -470,31 +383,10 @@ export function RequestsChart({
               </div>
             </>
           )}
-          {!usesRealData && (
-            <>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="text-[11px] text-muted-foreground">
-                  Successful
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  {successRate}%
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                <span className="text-[11px] text-muted-foreground">Error</span>
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  {errorRate}%
-                </span>
-              </div>
-            </>
-          )}
           {projectId && (
             <Link
               to="/projects/$projectId/usage"
               params={{ projectId }}
-              className="ml-2"
             >
               <Button
                 variant="ghost"
@@ -509,7 +401,6 @@ export function RequestsChart({
         </div>
       </div>
 
-      {/* Chart */}
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
           <OverviewChartPanelError
@@ -518,31 +409,53 @@ export function RequestsChart({
             onRetry={onRetry}
           />
         ) : (
-          <div className={cn(overviewChartPanelChartAreaClass, 'relative')}>
-            {showChartSkeleton ? (
-              <OverviewChartPanelSkeleton
-                variant="chart"
-                embedded
-                className="absolute inset-0 z-10 h-full"
-              />
-            ) : null}
+          <div
+            className={cn(
+              overviewChartPanelChartAreaClass,
+              'text-muted-foreground',
+              isSkeleton && 'pointer-events-none',
+            )}
+            aria-busy={isSkeleton}
+            aria-label={isSkeleton ? 'Loading usage data' : undefined}
+          >
             {showEmptyState ? (
               <div className={overviewChartPanelEmptyClass}>
                 No data for this date range
               </div>
             ) : null}
-            {showChart && effectiveVariant === 'line' ? (
-              <ResponsiveContainer
-                key={chartMountKey}
-                width="100%"
-                height="100%"
-              >
+            {renderChart ? (
+              <div className={overviewChartPanelChartFillClass}>
+                <ResponsiveContainer
+                  key={isSkeleton ? 'skeleton' : chartMountKey}
+                  width="100%"
+                  height="100%"
+                  minHeight={OVERVIEW_CHART_HEIGHT}
+                >
                 <AreaChart
-                  data={chartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  data={activeChartData}
+                  margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
                 >
                   <defs>
-                    {showBandwidthDualSeries ? (
+                    {isSkeleton ? (
+                      <linearGradient
+                        id={skeletonGradientId}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={SKELETON_CHART_FILL}
+                          stopOpacity={SKELETON_CHART_FILL_TOP_OPACITY}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={SKELETON_CHART_FILL}
+                          stopOpacity={SKELETON_CHART_FILL_BOTTOM_OPACITY}
+                        />
+                      </linearGradient>
+                    ) : showBandwidthDualSeries ? (
                       <>
                         <linearGradient
                           id={inboundGradientId}
@@ -602,34 +515,47 @@ export function RequestsChart({
                       </linearGradient>
                     )}
                   </defs>
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                dy={10}
-                interval="preserveStartEnd"
-                tickFormatter={(value, index) => {
-                  if (index % 5 === 0) return value
-                  return ''
-                }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                tickFormatter={yAxisTickFormatter}
-                dx={-5}
-                width={usesRealData ? 48 : 40}
-              />
-              <Tooltip content={tooltipContent} cursor={false} />
-                  {showBandwidthDualSeries ? (
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: 'currentColor',
+                      fontSize: 10,
+                    }}
+                    dy={10}
+                    interval="preserveStartEnd"
+                    tickFormatter={(value, index) => {
+                      if (index % 5 === 0) return value
+                      return ''
+                    }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: 'currentColor',
+                      fontSize: 10,
+                    }}
+                    tickFormatter={yAxisTickFormatter}
+                    dx={-5}
+                    width={48}
+                  />
+                  {!isSkeleton ? (
+                    <Tooltip content={tooltipContent} cursor={false} />
+                  ) : null}
+                  {isSkeleton ? (
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke={SKELETON_CHART_STROKE}
+                      strokeWidth={2}
+                      fill={`url(#${skeletonGradientId})`}
+                      dot={false}
+                      activeDot={false}
+                      {...areaAnimationProps}
+                    />
+                  ) : showBandwidthDualSeries ? (
                     <>
                       <Area
                         type="monotone"
@@ -683,94 +609,7 @@ export function RequestsChart({
                   )}
                 </AreaChart>
               </ResponsiveContainer>
-            ) : null}
-            {showChart && effectiveVariant === 'bar' ? (
-              <ResponsiveContainer
-                key={chartMountKey}
-                width="100%"
-                height="100%"
-              >
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-                  barCategoryGap="15%"
-              onMouseMove={(state) => {
-                if (
-                  state.activeTooltipIndex !== undefined &&
-                  typeof state.activeTooltipIndex === 'number'
-                ) {
-                  setHoveredIndex(state.activeTooltipIndex)
-                }
-              }}
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                dy={10}
-                interval="preserveStartEnd"
-                tickFormatter={(value, index) => {
-                  if (index % 5 === 0) return value
-                  return ''
-                }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                tickFormatter={yAxisTickFormatter}
-                dx={-5}
-                width={usesRealData ? 48 : 40}
-              />
-              <Tooltip content={tooltipContent} cursor={false} />
-                  <Bar
-                    dataKey="successful"
-                    stackId="requests"
-                    fill="#10b981"
-                    radius={[0, 0, 0, 0]}
-                    {...barAnimationProps}
-                  >
-                {chartData.map((_, index) => (
-                  <Cell
-                    key={`successful-${index}`}
-                    fill={hoveredIndex === index ? '#34d399' : '#10b981'}
-                    opacity={
-                      hoveredIndex !== null && hoveredIndex !== index ? 0.5 : 1
-                    }
-                  />
-                ))}
-              </Bar>
-                  <Bar
-                    dataKey="errors"
-                    stackId="requests"
-                    fill="hsl(var(--muted-foreground) / 0.2)"
-                    radius={[2, 2, 0, 0]}
-                    {...barAnimationProps}
-                  >
-                {chartData.map((_, index) => (
-                  <Cell
-                    key={`errors-${index}`}
-                    fill={
-                      hoveredIndex === index
-                        ? 'hsl(var(--muted-foreground) / 0.35)'
-                        : 'hsl(var(--muted-foreground) / 0.2)'
-                    }
-                    opacity={
-                      hoveredIndex !== null && hoveredIndex !== index ? 0.5 : 1
-                    }
-                  />
-                ))}
-              </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              </div>
             ) : null}
           </div>
         )}

@@ -31,14 +31,22 @@ export const overviewBreakdownColumnClass =
   'flex min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[400px] @[700px]:shrink-0'
 
 export const overviewChartPanelHeaderClass =
-  'mb-4 flex min-h-9 shrink-0 items-center justify-between gap-3'
+  'mb-4 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2'
+
+/** Legend rows, links, and other header actions — full width below the title on narrow containers. */
+export const overviewChartPanelHeaderActionsClass =
+  'flex w-full min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-1.5 @[420px]:w-auto @[420px]:justify-start'
 
 export const overviewChartPanelBodyClass =
-  'flex w-full flex-col text-muted-foreground @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1'
+  'flex w-full min-w-0 flex-col text-muted-foreground @[700px]:min-h-0 @[700px]:flex-1'
 
 /** Fixed height on mobile so Recharts can measure; grows on wide layouts. */
 export const overviewChartPanelChartAreaClass =
-  'flex h-[240px] w-full shrink-0 flex-col @[700px]:h-full @[700px]:min-h-[240px] @[700px]:flex-1'
+  'relative flex h-[240px] w-full min-w-0 shrink-0 flex-col @[700px]:h-full @[700px]:min-h-[240px] @[700px]:flex-1'
+
+/** Fills the chart area so ResponsiveContainer can measure 100% width and height. */
+export const overviewChartPanelChartFillClass =
+  'absolute inset-0 min-h-[240px] min-w-0'
 
 export const overviewChartPanelEmptyClass =
   'flex min-h-[240px] w-full flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'
@@ -67,7 +75,7 @@ export const OVERVIEW_EXECUTIONS_ERROR = {
 } as const
 
 export const OVERVIEW_GB_HOURS_ERROR = {
-  title: "Couldn't load GB-hours",
+  title: "Couldn't load compute",
   message:
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const

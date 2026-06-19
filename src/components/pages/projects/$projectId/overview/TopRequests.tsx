@@ -12,11 +12,17 @@ import {
   OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   overviewChartPanelBodyClass,
   overviewChartPanelHeaderClass,
+  overviewChartPanelHeaderActionsClass,
   overviewTopBreakdownListClass,
   overviewTopBreakdownRowClass,
 } from './chart-panel'
 import { OverviewChartPanelError } from './OverviewChartPanelError'
 import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
+import { GbHoursUnitInfo } from './GbHoursUnitInfo'
+import { MetricValueWithUnit } from './MetricValueWithUnit'
+import {
+  TooltipProvider,
+} from '@/components/ui/tooltip'
 
 /** Character cap for middle truncation after ID compaction. */
 const PATH_DISPLAY_MAX = 42
@@ -36,13 +42,14 @@ interface TopRequestsProps {
   className?: string
   title?: string
   metric?: MetricType
-  /** Endpoint rows (method/status/path) vs resource ID rows. */
+  /** Path-only endpoint rows vs resource ID rows. */
   breakdownVariant?: 'endpoint' | 'resource'
   projectId?: string
   resourceLookup?: ComputeBreakdownResourceMap
   itemCount?: number
   items?: RequestItem[]
   formatCount?: (value: number) => string
+  showUnitInfo?: boolean
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
@@ -111,14 +118,6 @@ const topRequests: RequestItem[] = [
   },
 ]
 
-function getStatusColor(statusCode: number): string {
-  if (statusCode >= 500) return 'text-red-500 dark:text-red-400'
-  if (statusCode >= 400) return 'text-amber-500 dark:text-amber-400'
-  if (statusCode >= 300) return 'text-blue-500 dark:text-blue-400'
-  if (statusCode >= 200) return 'text-emerald-500 dark:text-emerald-400'
-  return 'text-muted-foreground'
-}
-
 export function TopRequests({
   className,
   title,
@@ -128,6 +127,7 @@ export function TopRequests({
   itemCount = OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   items,
   formatCount,
+  showUnitInfo = false,
   isLoading = false,
   isError = false,
   onRetry,
@@ -149,12 +149,21 @@ export function TopRequests({
   return (
     <div className={cn('flex h-full min-w-0 flex-col', className)}>
       <div className={overviewChartPanelHeaderClass}>
-        <h3 className="text-[13px] font-medium text-foreground">
-          {displayTitle}
-        </h3>
-        <button className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
-          View all
-        </button>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <h3 className="min-w-0 text-[13px] font-medium text-foreground">
+            {displayTitle}
+          </h3>
+          {showUnitInfo ? (
+            <TooltipProvider delayDuration={0}>
+              <GbHoursUnitInfo />
+            </TooltipProvider>
+          ) : null}
+        </div>
+        <div className={overviewChartPanelHeaderActionsClass}>
+          <button className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+            View all
+          </button>
+        </div>
       </div>
 
       <div className={overviewChartPanelBodyClass}>
@@ -188,21 +197,6 @@ export function TopRequests({
                   />
 
                   <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                    {!isResourceBreakdown && (
-                      <>
-                        <span className="w-9 shrink-0 text-[11px] font-medium text-muted-foreground">
-                          {request.method}
-                        </span>
-                        <span
-                          className={cn(
-                            'w-9 shrink-0 text-center text-[12px] font-medium tabular-nums',
-                            getStatusColor(request.statusCode),
-                          )}
-                        >
-                          {request.statusCode || '—'}
-                        </span>
-                      </>
-                    )}
                     {(() => {
                       const resource =
                         isResourceBreakdown && projectId
@@ -245,9 +239,11 @@ export function TopRequests({
                         </span>
                       )
                     })()}
-                    <span className="shrink-0 text-right text-[12px] font-medium tabular-nums text-muted-foreground">
-                      {formatValue(request.count)}
-                    </span>
+                    <MetricValueWithUnit
+                      value={formatValue(request.count)}
+                      className="shrink-0 text-[12px] font-medium tabular-nums text-muted-foreground"
+                      unitClassName="text-muted-foreground/80"
+                    />
                   </div>
                 </div>
               ) : (

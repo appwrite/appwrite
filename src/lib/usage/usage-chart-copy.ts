@@ -1,2 +1,2 @@
 export const USAGE_HISTORIC_DATA_NOTE =
-  'Not all historic data is available through the new usage API.'
+  'Historic data is not available through the new usage API.'
