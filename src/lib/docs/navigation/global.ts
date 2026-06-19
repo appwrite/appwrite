@@ -9,7 +9,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
       { label: 'SDKs', href: '/docs/sdks', icon: 'cog' },
       { label: 'Blog', href: '/blog', icon: 'document-text', openInNewTab: true },
       { label: 'Changelog', href: '/changelog', icon: 'clock', openInNewTab: true },
-      { label: 'Integrations', href: '/integrations', icon: 'puzzle' },
+      { label: 'Integrations', href: '/integrations', icon: 'puzzle', openInNewTab: true },
       { label: 'API references', href: '/docs/references', icon: 'code', isParent: true },
     ],
   },
