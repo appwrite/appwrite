@@ -1,14 +1,12 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import {
-  isDatabaseRouteKind,
-  databaseRouteKindFromApiType,
-} from '@/lib/database-routes'
+import { isDatabaseRouteKind } from '@/lib/database-routes'
 import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
-import type { DatabaseType } from '@appwrite.io/console'
 import {
-  databaseQueryOptions,
+  productRouteKindQueryOptions,
   projectQueryOptions,
+  resolveProductRouteKindForDatabase,
+  seedDatabaseProductRouteKind,
 } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -28,12 +26,41 @@ export const Route = createFileRoute(
     }
     const { queryClient } = context
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    const db = await queryClient.ensureQueryData(
-      databaseQueryOptions(projectId, databaseId),
-    )
-    const expected = databaseRouteKindFromApiType(
-      (db as { databaseType?: DatabaseType } | null)?.databaseType,
-    )
+
+    const routeKindKey = productRouteKindQueryOptions(projectId, databaseId)
+      .queryKey
+    let expected = queryClient.getQueryData<
+      Awaited<ReturnType<typeof resolveProductRouteKindForDatabase>>
+    >(routeKindKey)
+
+    if (expected !== dbKind) {
+      const resolved = await resolveProductRouteKindForDatabase(
+        projectId,
+        databaseId,
+        dbKind,
+      )
+      if (resolved != null) {
+        expected = resolved
+        queryClient.setQueryData(routeKindKey, resolved)
+      }
+    }
+
+    if (expected == null) {
+      expected = await resolveProductRouteKindForDatabase(
+        projectId,
+        databaseId,
+      )
+      if (expected != null) {
+        queryClient.setQueryData(routeKindKey, expected)
+      }
+    }
+    if (!expected) {
+      throw redirect({
+        to: '/projects/$projectId/databases',
+        params: { projectId },
+        replace: true,
+      })
+    }
     if (dbKind !== expected) {
       throw redirect({
         to: '/projects/$projectId/databases/$dbKind/$databaseId',
@@ -41,6 +68,8 @@ export const Route = createFileRoute(
         replace: true,
       })
     }
+
+    seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
   },
   component: DatabaseKindLayout,
 })

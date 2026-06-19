@@ -29,6 +29,8 @@ import {
   useOrganizationScopes,
   createProjectTable,
   invalidateDatabaseModel,
+  updateProjectDatabase,
+  deleteProjectDatabase,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
@@ -72,7 +74,6 @@ import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
 
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
-import { sdk } from '@/lib/appwrite/sdk'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
@@ -398,10 +399,7 @@ export function Overview({
         throw new Error('Database ID is required')
       }
 
-      const projectSdk = sdk.forProject(projectId)
-      // Use object parameter format: update({ databaseId, name })
-      await projectSdk.tablesDB.update({
-        databaseId,
+      await updateProjectDatabase(projectId, databaseId, {
         name: trimmedName,
       })
     },
@@ -426,10 +424,8 @@ export function Overview({
     mutationFn: async (enabled: boolean) => {
       if (!projectId || !databaseId || !database)
         throw new Error('Project ID, Database ID, and Database are required')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.tablesDB.update({
-        databaseId,
-        name: database.name, // Required parameter
+      return await updateProjectDatabase(projectId, databaseId, {
+        name: database.name,
         enabled,
       })
     },
@@ -459,8 +455,7 @@ export function Overview({
   // Mutation to delete database
   const deleteDatabaseMutation = useMutation({
     mutationFn: async (databaseId: string) => {
-      const projectSdk = sdk.forProject(projectId)
-      await projectSdk.tablesDB.delete({ databaseId })
+      await deleteProjectDatabase(projectId, databaseId)
     },
     onSuccess: async () => {
       invalidateDatabaseModel(projectId, databaseId)
@@ -1532,7 +1527,7 @@ export function Overview({
                 </div>
               </div>
 
-              {features.dedicatedDbsTablesDB && (
+              {features.dedicatedDbsVectorsDB && (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">

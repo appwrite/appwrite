@@ -4,11 +4,14 @@
  * Generates database schema in various formats for AI agents and IDEs
  */
 
+import { DatabaseType } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
 import {
   fetchProjectTableColumns,
   fetchProjectTableIndexes,
+  fetchProjectTables,
+  getDatabaseModel,
 } from '@/lib/react-query/hooks/databases'
 
 export interface DatabaseSchema {
@@ -59,6 +62,16 @@ function toSchemaNumber(v: unknown): number | null {
   return null
 }
 
+function readRowSecurity(
+  table: Record<string, unknown>,
+  kind: DatabaseType,
+): boolean {
+  if (kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb) {
+    return table.documentSecurity === true
+  }
+  return table.rowSecurity === true
+}
+
 /**
  * Fetches complete database schema including all tables, columns, and indexes
  */
@@ -66,57 +79,68 @@ export async function fetchDatabaseSchema(
   projectId: string,
   databaseId: string,
 ): Promise<DatabaseSchema> {
-  const projectSdk = sdk.forProject(projectId)
+  const db = await getDatabaseModel(projectId, databaseId)
+  if (!db) {
+    throw new Error('Database not found')
+  }
 
-  // Fetch database
-  const db = await projectSdk.tablesDB.get({ databaseId })
-
-  // Fetch all tables
-  const tablesResponse = await projectSdk.tablesDB.listTables({
+  const kind = db.type ?? DatabaseType.Tablesdb
+  const tablesResponse = await fetchProjectTables(
+    projectId,
     databaseId,
-    queries: [],
-  })
+    0,
+    1000,
+  )
 
   const tables: TableSchema[] = await Promise.all(
-    (tablesResponse.tables || []).map(async (table: unknown) => {
-      // Fetch columns and indexes for each table
+    (tablesResponse.tables || []).map(async (table: Record<string, unknown>) => {
+      const tableId = String(table.$id ?? '')
       const [columnsResponse, indexesResponse] = await Promise.all([
-        fetchProjectTableColumns(projectId, databaseId, table.$id),
-        fetchProjectTableIndexes(projectId, databaseId, table.$id),
+        fetchProjectTableColumns(projectId, databaseId, tableId),
+        fetchProjectTableIndexes(projectId, databaseId, tableId),
       ])
 
       const columns: ColumnSchema[] = (columnsResponse.columns || []).map(
-        (col: unknown) => ({
-          key: col.key || col.$id,
-          type: col.type || 'string',
+        (col: Record<string, unknown>) => ({
+          key: String(col.key ?? col.$id ?? ''),
+          type: String(col.type || 'string'),
           required: col.required === true,
           array: col.array === true,
           size: toSchemaNumber(col.size) ?? null,
-          default: col.default ?? null,
-          format: col.format || undefined,
-          elements: col.elements || undefined,
+          default: (col.default as string | null | undefined) ?? null,
+          format: (col.format as string | undefined) || undefined,
+          elements: (col.elements as string[] | undefined) || undefined,
           min: toSchemaNumber(col.min) ?? null,
           max: toSchemaNumber(col.max) ?? null,
-          relatedTable: col.relatedTable || col.relatedCollection || undefined,
-          relatedColumn: col.relatedColumn || col.relatedAttribute || undefined,
-          relationType: col.relationType || col.relation || undefined,
+          relatedTable:
+            (col.relatedTable as string | undefined) ||
+            (col.relatedCollection as string | undefined) ||
+            undefined,
+          relatedColumn:
+            (col.relatedColumn as string | undefined) ||
+            (col.relatedAttribute as string | undefined) ||
+            undefined,
+          relationType:
+            (col.relationType as string | undefined) ||
+            (col.relation as string | undefined) ||
+            undefined,
         }),
       )
 
       const indexes: IndexSchema[] = (indexesResponse.indexes || []).map(
-        (idx: unknown) => ({
-          key: idx.key || idx.$id,
-          type: idx.type || 'key',
-          attributes: idx.attributes || [],
-          orders: idx.orders || undefined,
+        (idx: Record<string, unknown>) => ({
+          key: String(idx.key ?? idx.$id ?? ''),
+          type: String(idx.type || 'key'),
+          attributes: (idx.attributes as string[] | undefined) || [],
+          orders: (idx.orders as string[] | undefined) || undefined,
         }),
       )
 
       return {
-        id: table.$id,
-        name: table.name || 'Unnamed Table',
+        id: tableId,
+        name: String(table.name || 'Unnamed Table'),
         enabled: table.enabled !== false,
-        rowSecurity: table.rowSecurity === true,
+        rowSecurity: readRowSecurity(table, kind),
         columns,
         indexes,
       }

@@ -1,8 +1,17 @@
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { useProjectDedicatedDatabases } from '@/lib/react-query/hooks'
-import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import {
+  productRouteKindQueryOptions,
+  useProjectDedicatedDatabases,
+} from '@/lib/react-query/hooks'
+import {
+  dedicatedDatabaseHomeLink,
+  needsDedicatedProductTypeLookup,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
+import { useQueries } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
+import { useMemo } from 'react'
 import { AlertCircle, Cpu, Loader2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -81,23 +90,20 @@ function DedicatedDatabaseStatusBadge({ status }: { status: string }) {
   )
 }
 
-function isPostgresDatabase(db: Models.DedicatedDatabase): boolean {
-  return db.engine?.toLowerCase() === 'postgres'
-}
-
-function dedicatedDatabaseLink(projectId: string, db: Models.DedicatedDatabase) {
-  if (!isPostgresDatabase(db)) return null
-  return postgresDatabaseHome({ projectId, databaseId: db.$id, tableId: '-' })
-}
-
 function DedicatedDatabaseCard({
   db,
   projectId,
+  productRouteKindByDedicatedId,
 }: {
   db: Models.DedicatedDatabase
   projectId: string
+  productRouteKindByDedicatedId: Map<string, DatabaseRouteKind>
 }) {
-  const link = dedicatedDatabaseLink(projectId, db)
+  const link = dedicatedDatabaseHomeLink(
+    projectId,
+    db,
+    productRouteKindByDedicatedId.get(db.$id),
+  )
   const card = (
     <ResourceCard
       interactive={!!link}
@@ -144,6 +150,26 @@ export function DedicatedDatabasesSection({
     error,
     refetch,
   } = useProjectDedicatedDatabases(projectId)
+
+  const dedicatedDatabasesNeedingProductType = useMemo(
+    () => databases.filter(needsDedicatedProductTypeLookup),
+    [databases],
+  )
+
+  const productRouteKindLookups = useQueries({
+    queries: dedicatedDatabasesNeedingProductType.map((db) =>
+      productRouteKindQueryOptions(projectId, db.$id),
+    ),
+  })
+
+  const productRouteKindByDedicatedId = useMemo(() => {
+    const map = new Map<string, DatabaseRouteKind>()
+    dedicatedDatabasesNeedingProductType.forEach((db, index) => {
+      const kind = productRouteKindLookups[index]?.data
+      if (kind) map.set(db.$id, kind)
+    })
+    return map
+  }, [dedicatedDatabasesNeedingProductType, productRouteKindLookups])
 
   const errorMessage = error ? getErrorMessage(error) : null
 
@@ -231,7 +257,11 @@ export function DedicatedDatabasesSection({
                 </TableHeader>
                 <TableBody>
                   {databases.map((db) => {
-                    const link = dedicatedDatabaseLink(projectId, db)
+                    const link = dedicatedDatabaseHomeLink(
+                      projectId,
+                      db,
+                      productRouteKindByDedicatedId.get(db.$id),
+                    )
                     return (
                     <TableRow
                       key={db.$id}
@@ -320,7 +350,12 @@ export function DedicatedDatabasesSection({
           ) : null}
           <div className={cn(RESOURCE_CARD_GRID_CLASSNAME)}>
             {databases.map((db) => (
-              <DedicatedDatabaseCard key={db.$id} db={db} projectId={projectId} />
+              <DedicatedDatabaseCard
+                key={db.$id}
+                db={db}
+                projectId={projectId}
+                productRouteKindByDedicatedId={productRouteKindByDedicatedId}
+              />
             ))}
             {databases.length === 0 ? (
               <div className="col-span-full">

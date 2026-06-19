@@ -76,6 +76,17 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+
+function routeKindForDatabase(
+  database:
+    | { databaseType?: ApiDatabaseType; type?: ApiDatabaseType }
+    | null
+    | undefined,
+): DatabaseRouteKind {
+  return databaseRouteKindFromApiType(
+    database?.databaseType ?? database?.type ?? ApiDatabaseType.Documentsdb,
+  )
+}
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -125,7 +136,15 @@ import {
 import { Input } from '@/components/ui/input'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { RowsSpreadsheet, TableSecurity, TableSettings } from './Spreadsheet'
+import {
+  DocumentsRowCreateBridge,
+  RowsSpreadsheet,
+  TableSecurity,
+  TableSettings,
+} from './Spreadsheet'
+import { IndexesSpreadsheet } from '../tablesdb/Spreadsheet'
+import { CollectionAttributesSpreadsheet } from '../_components/CollectionAttributesSpreadsheet'
+import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadsheet'
 import { Overview } from './Overview'
 import {
   DATABASE_TAB_LABELS,
@@ -259,6 +278,8 @@ export function Workspace({
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
+  const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
+  const [canCreateIndex, setCanCreateIndex] = useState(true)
   const [isRefreshingRows, setIsRefreshingRows] = useState(false)
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
@@ -418,7 +439,7 @@ export function Workspace({
   // Create database mutation for workspace (rows view sidebar)
   const createDatabaseMutation = useMutation({
     mutationFn: (data: { databaseId?: string; name: string }) =>
-      createProjectDatabase(projectId!, data),
+      createProjectDatabase(projectId!, data, ApiDatabaseType.Documentsdb),
     onSuccess: async (database) => {
       toast.success(`${database.name} has been created`)
       await queryClient.refetchQueries({
@@ -438,9 +459,7 @@ export function Workspace({
         const firstTable = (tablesData.tables || [])[0] as
           | { $id?: string }
           | undefined
-        const nextKind = databaseRouteKindFromApiType(
-          (database as { databaseType?: ApiDatabaseType }).databaseType,
-        )
+        const nextKind = routeKindForDatabase(database)
         const nextNav = dbNavLink(nextKind)
         if (firstTable?.$id) {
           navigate({
@@ -462,9 +481,7 @@ export function Workspace({
           })
         }
       } catch {
-        const nextKind = databaseRouteKindFromApiType(
-          (database as { databaseType?: ApiDatabaseType }).databaseType,
-        )
+        const nextKind = routeKindForDatabase(database)
         navigate({
           ...dbNavLink(nextKind).dataGrid({
             projectId,
@@ -736,6 +753,11 @@ export function Workspace({
     setRowsFiltersOpen(false)
   }
 
+  const tableDetailFilterMap = useMemo(
+    () => queryParamToMap((search?.query as string | undefined) ?? null),
+    [search?.query],
+  )
+
   const getCreateLabel = () => {
     switch (activeTab) {
       case 'rows':
@@ -743,7 +765,7 @@ export function Workspace({
       case 'documents':
         return dbLabels.createRecord
       case 'columns':
-        return dbLabels.createSchema
+        return undefined
       case 'indexes':
         return dbLabels.createIndex
       default:
@@ -821,9 +843,7 @@ export function Workspace({
                 const newDb = await queryClient.ensureQueryData(
                   databaseQueryOptions(projectId, newDatabaseId),
                 )
-                const nextDbKind = databaseRouteKindFromApiType(
-                  (newDb as { databaseType?: ApiDatabaseType }).databaseType,
-                )
+                const nextDbKind = routeKindForDatabase(newDb)
                 // Same query/order as sidebar first page (useProjectTables)
                 const tablesData = await queryClient.ensureQueryData(
                   tablesQueryOptions(
@@ -853,9 +873,7 @@ export function Workspace({
                   const newDb = await queryClient.ensureQueryData(
                     databaseQueryOptions(projectId, newDatabaseId),
                   )
-                  nextDbKind = databaseRouteKindFromApiType(
-                    (newDb as { databaseType?: ApiDatabaseType }).databaseType,
-                  )
+                  nextDbKind = routeKindForDatabase(newDb)
                 } catch {
                   // keep workspace db kind when type lookup fails
                 }
@@ -1246,9 +1264,10 @@ export function Workspace({
         createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
         createDisabled={
           !isDatabaseLevelView &&
-          (activeTab === 'rows' || activeTab === 'documents'
+          ((activeTab === 'rows' || activeTab === 'documents'
             ? noCreateRowPermission
-            : false)
+            : false) ||
+            (activeTab === 'indexes' && !canCreateIndex))
         }
         createDisabledTooltip={
           !isDatabaseLevelView ? createPermissionTooltip : undefined
@@ -1261,6 +1280,11 @@ export function Workspace({
                   openCreateRowDrawerRef.current()
                 } else if (activeTab === 'documents') {
                   navigateToRowsWithOpenCreate()
+                } else if (
+                  activeTab === 'indexes' &&
+                  openCreateIndexDialogRef.current
+                ) {
+                  openCreateIndexDialogRef.current()
                 }
               }
         }
@@ -1449,10 +1473,7 @@ export function Workspace({
                     const newDb = await queryClient.ensureQueryData(
                       databaseQueryOptions(projectId, newDatabaseId),
                     )
-                    const nextDbKind = databaseRouteKindFromApiType(
-                      (newDb as { databaseType?: ApiDatabaseType })
-                        .databaseType,
-                    )
+                    const nextDbKind = routeKindForDatabase(newDb)
                     const tablesData = await queryClient.ensureQueryData(
                       tablesQueryOptions(
                         projectId,
@@ -1481,10 +1502,7 @@ export function Workspace({
                       const newDb = await queryClient.ensureQueryData(
                         databaseQueryOptions(projectId, newDatabaseId),
                       )
-                      nextDbKind = databaseRouteKindFromApiType(
-                        (newDb as { databaseType?: ApiDatabaseType })
-                          .databaseType,
-                      )
+                      nextDbKind = routeKindForDatabase(newDb)
                     } catch {
                       // keep workspace db kind when type lookup fails
                     }
@@ -1651,6 +1669,46 @@ export function Workspace({
                   onNavigateToRowsList={navigateToRowsList}
                 />
               </div>
+            ) : null}
+            {selectedTable && activeTab === 'documents' && (
+              <>
+                <DocumentsJsonSpreadsheet
+                  table={selectedTable}
+                  canWriteRows={!noCreateRowPermission}
+                  rowsUrlSearch={rowsUrlSearch}
+                  rowsUrlPage={rowsUrlPage}
+                  rowsUrlLimit={rowsUrlLimit}
+                  rowsFilterQueries={rowsFilterQueries}
+                  rowsFilterQueryString={rowsFilterQueryString}
+                  rowsSortBy={rowsSortBy}
+                  rowsSortOrder={rowsSortOrder}
+                  onNavigateToList={navigateToRowsList}
+                  onRefetchReady={(refetchFn) => {
+                    rowsRefetchRef.current = refetchFn
+                  }}
+                  onRowsCountChange={handleRowsCountChange}
+                />
+                <DocumentsRowCreateBridge
+                  table={selectedTable}
+                  onCreateRowReady={(openFn) => {
+                    openCreateRowDrawerRef.current = openFn
+                  }}
+                />
+              </>
+            )}
+            {activeTab === 'columns' && selectedTable ? (
+              <CollectionAttributesSpreadsheet table={selectedTable} />
+            ) : null}
+            {activeTab === 'indexes' && selectedTable ? (
+              <IndexesSpreadsheet
+                table={selectedTable}
+                canWriteTables={!noCreateTablePermission}
+                filterMap={tableDetailFilterMap}
+                onCreateReady={(openDialog) => {
+                  openCreateIndexDialogRef.current = openDialog
+                }}
+                onIndexesAbilityChange={setCanCreateIndex}
+              />
             ) : null}
             {activeTab === 'security' && (
               <TableSecurity table={selectedTable!} />

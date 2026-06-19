@@ -1,11 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { DATABASE_HOME_TO } from '@/lib/database-routes'
 import {
-  databaseRouteKindFromApiType,
-  DATABASE_HOME_TO,
-} from '@/lib/database-routes'
-import type { DatabaseType } from '@appwrite.io/console'
-import {
-  databaseQueryOptions,
+  productRouteKindQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 
@@ -21,12 +17,16 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    const db = await queryClient.ensureQueryData(
-      databaseQueryOptions(projectId, databaseId),
+    const dbKind = await queryClient.ensureQueryData(
+      productRouteKindQueryOptions(projectId, databaseId),
     )
-    const dbKind = databaseRouteKindFromApiType(
-      (db as { databaseType?: DatabaseType } | null)?.databaseType,
-    )
+    if (!dbKind) {
+      throw redirect({
+        to: '/projects/$projectId/databases',
+        params: { projectId },
+        replace: true,
+      })
+    }
     throw redirect({
       to: DATABASE_HOME_TO,
       params: { projectId, dbKind, databaseId },

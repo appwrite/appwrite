@@ -36,6 +36,7 @@ import {
   createProjectDatabase,
   createProjectTable,
   invalidateDatabaseModel,
+  deleteProjectDatabase,
 } from '@/lib/react-query/hooks'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -511,11 +512,9 @@ export function View() {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      const projectSdk = sdk.forProject(projectId)
-      // Delete all databases in parallel
       await Promise.all(
         databaseIds.map((databaseId) =>
-          projectSdk.tablesDB.delete({ databaseId }),
+          deleteProjectDatabase(projectId, databaseId),
         ),
       )
       databaseIds.forEach((id) => invalidateDatabaseModel(projectId, id))

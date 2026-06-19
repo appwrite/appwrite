@@ -33,12 +33,17 @@ import {
   createNativeDatabase,
   createProjectDatabase,
   databaseSpecificationsQueryOptions,
+  seedCreatedDatabaseCaches,
   useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { DatabaseType, type Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
+import {
+  DATABASE_HOME_TO,
+  databaseRouteKindFromApiType,
+} from '@/lib/database-routes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
@@ -188,7 +193,11 @@ export function CreateDatabaseWizardView() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isTablesDB = dbType === 'TablesDB'
+  const isDocumentsDB = dbType === 'DocumentsDB'
+  const isVectorsDB = dbType === 'VectorsDB'
   const isNativeDb = isNativeDatabaseType(dbType)
+  const usesDedicatedCompute =
+    isDocumentsDB || isVectorsDB || isNativeDb
 
   const dbTypeOptions = useMemo(
     () =>
@@ -204,16 +213,15 @@ export function CreateDatabaseWizardView() {
     [features.nativeDbsPostgres, features.nativeDbsMySQL],
   )
 
-  /** Show specs section only when the selected DB type has dedicated support enabled. */
+  /** Show specs section for native DBs and Documents/Vectors (always dedicated compute). */
   const showSpecsForType =
-    (dbType === 'TablesDB' && features.dedicatedDbsTablesDB) ||
-    (dbType === 'DocumentsDB' && features.dedicatedDbsDocumentsDB) ||
-    (dbType === 'VectorsDB' && features.dedicatedDbsVectorsDB) ||
-    (dbType === 'Postgres' && features.nativeDbsPostgres) ||
-    (dbType === 'MySQL' && features.nativeDbsMySQL)
+    isDocumentsDB ||
+    isVectorsDB ||
+    (isTablesDB && features.dedicatedDbsTablesDB) ||
+    isNativeDb
 
   const selectableSpecs = useMemo(() => {
-    if (isNativeDb) {
+    if (isNativeDb || isDocumentsDB || isVectorsDB) {
       return apiSpecOptions
     }
     if (isTablesDB) {
@@ -224,7 +232,7 @@ export function CreateDatabaseWizardView() {
       ]
     }
     return apiSpecOptions
-  }, [apiSpecOptions, isNativeDb, isTablesDB])
+  }, [apiSpecOptions, isNativeDb, isTablesDB, isDocumentsDB, isVectorsDB])
 
   const selectedSpec = useMemo(
     () => (specId ? selectableSpecs.find((s) => s.id === specId) : null),
@@ -236,7 +244,7 @@ export function CreateDatabaseWizardView() {
   )
 
   const showDedicatedOptions = Boolean(
-    isNativeDb &&
+    usesDedicatedCompute &&
       selectedSpec &&
       !selectedSpec.comingSoon &&
       typeof selectedSpec.priceUsd === 'number',
@@ -297,6 +305,8 @@ export function CreateDatabaseWizardView() {
     setDbType(option.id)
     if (option.id === 'TablesDB') {
       setSpecId('shared')
+    } else if (option.id === 'DocumentsDB' || option.id === 'VectorsDB') {
+      setSpecId(getDefaultEnabledSpecId(apiSpecOptions))
     } else {
       setSpecId(getDefaultEnabledSpecId(apiSpecOptions))
     }
@@ -342,19 +352,23 @@ export function CreateDatabaseWizardView() {
           pitrEnabled,
         })
       }
-      return createProjectDatabase(pid, data, wizardBackend(dbType))
+      return createProjectDatabase(pid, data, wizardBackend(dbType), {
+        specification: specId ?? undefined,
+        region: project?.region,
+        haReplicaCount,
+        pitrEnabled,
+      })
     },
     onSuccess: async (database) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: ['databases', 'project', pid],
-          type: 'all',
-        }),
-        queryClient.refetchQueries({
-          queryKey: ['dedicated-databases', 'project', pid],
-          type: 'all',
-        }),
-      ])
+      if (!isNativeDatabaseType(dbType) && database.$id && dbType) {
+        seedCreatedDatabaseCaches(
+          queryClient,
+          pid,
+          database.$id,
+          wizardBackend(dbType),
+          database as Models.Database,
+        )
+      }
       track('Resource Created', {
         surface: 'create_database_wizard',
         resource: 'database',
@@ -381,9 +395,26 @@ export function CreateDatabaseWizardView() {
         return
       }
       navigate({
-        to: '/projects/$projectId/databases/$databaseId',
-        params: { projectId: pid, databaseId: database.$id },
+        to: DATABASE_HOME_TO,
+        params: {
+          projectId: pid,
+          dbKind: databaseRouteKindFromApiType(
+            (database as { type?: DatabaseType }).type ??
+              (dbType ? wizardBackend(dbType) : undefined),
+          ),
+          databaseId: database.$id,
+        },
       })
+      void Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['databases', 'project', pid],
+          type: 'all',
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['dedicated-databases', 'project', pid],
+          type: 'all',
+        }),
+      ])
     },
     onError: (error) => {
       track('Resource Creation Failed', {
@@ -394,9 +425,12 @@ export function CreateDatabaseWizardView() {
         error_name: error instanceof Error ? error.name : 'unknown',
       })
       const fallback = 'Failed to create database'
-      const message = isNativeDatabaseType(dbType)
-        ? formatDedicatedDatabaseCreateError(error, fallback)
-        : getErrorMessage(error) || fallback
+      const message =
+        isNativeDatabaseType(dbType) ||
+        dbType === 'DocumentsDB' ||
+        dbType === 'VectorsDB'
+          ? formatDedicatedDatabaseCreateError(error, fallback)
+          : getErrorMessage(error) || fallback
       toast.error(message)
     },
   })
@@ -405,6 +439,11 @@ export function CreateDatabaseWizardView() {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) newErrors.name = 'Name is required'
     if (isNativeDatabaseType(dbType)) {
+      const dedicatedIdError = databaseId?.trim()
+        ? getDedicatedDatabaseIdError(databaseId)
+        : null
+      if (dedicatedIdError) newErrors.databaseId = dedicatedIdError
+    } else if (isDocumentsDB || isVectorsDB) {
       const dedicatedIdError = databaseId?.trim()
         ? getDedicatedDatabaseIdError(databaseId)
         : null
@@ -523,7 +562,11 @@ export function CreateDatabaseWizardView() {
                 maxLength={36}
                 placeholder="Leave blank to auto-generate"
                 idFormat={
-                  isNativeDatabaseType(dbType) ? 'dedicated' : 'default'
+                  isNativeDatabaseType(dbType) ||
+                  dbType === 'DocumentsDB' ||
+                  dbType === 'VectorsDB'
+                    ? 'dedicated'
+                    : 'default'
                 }
               />
               {errors.databaseId && (

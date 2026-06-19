@@ -76,6 +76,8 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { IndexesSpreadsheet } from '../tablesdb/Spreadsheet'
+import { CollectionAttributesSpreadsheet } from '../_components/CollectionAttributesSpreadsheet'
 import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadsheet'
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
@@ -264,6 +266,8 @@ export function Workspace({
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
+  const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
+  const [canCreateIndex, setCanCreateIndex] = useState(true)
   const [isRefreshingRows, setIsRefreshingRows] = useState(false)
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
@@ -423,7 +427,7 @@ export function Workspace({
   // Create database mutation for workspace (rows view sidebar)
   const createDatabaseMutation = useMutation({
     mutationFn: (data: { databaseId?: string; name: string }) =>
-      createProjectDatabase(projectId!, data),
+      createProjectDatabase(projectId!, data, ApiDatabaseType.Vectorsdb),
     onSuccess: async (database) => {
       toast.success(`${database.name} has been created`)
       await queryClient.refetchQueries({
@@ -744,6 +748,11 @@ export function Workspace({
     setRowsFiltersOpen(false)
   }
 
+  const tableDetailFilterMap = useMemo(
+    () => queryParamToMap((search?.query as string | undefined) ?? null),
+    [search?.query],
+  )
+
   const getCreateLabel = () => {
     switch (activeTab) {
       case 'rows':
@@ -751,7 +760,7 @@ export function Workspace({
       case 'documents':
         return dbLabels.createRecord
       case 'columns':
-        return dbLabels.createSchema
+        return undefined
       case 'indexes':
         return dbLabels.createIndex
       default:
@@ -1254,9 +1263,10 @@ export function Workspace({
         createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
         createDisabled={
           !isDatabaseLevelView &&
-          (activeTab === 'rows' || activeTab === 'documents'
+          ((activeTab === 'rows' || activeTab === 'documents'
             ? noCreateRowPermission
-            : false)
+            : false) ||
+            (activeTab === 'indexes' && !canCreateIndex))
         }
         createDisabledTooltip={
           !isDatabaseLevelView ? createPermissionTooltip : undefined
@@ -1269,6 +1279,11 @@ export function Workspace({
                   openCreateRowDrawerRef.current()
                 } else if (activeTab === 'documents') {
                   navigateToRowsWithOpenCreate()
+                } else if (
+                  activeTab === 'indexes' &&
+                  openCreateIndexDialogRef.current
+                ) {
+                  openCreateIndexDialogRef.current()
                 }
               }
         }
@@ -1693,6 +1708,20 @@ export function Workspace({
                 />
               </>
             )}
+            {activeTab === 'columns' && selectedTable ? (
+              <CollectionAttributesSpreadsheet table={selectedTable} />
+            ) : null}
+            {activeTab === 'indexes' && selectedTable ? (
+              <IndexesSpreadsheet
+                table={selectedTable}
+                canWriteTables={!noCreateTablePermission}
+                filterMap={tableDetailFilterMap}
+                onCreateReady={(openDialog) => {
+                  openCreateIndexDialogRef.current = openDialog
+                }}
+                onIndexesAbilityChange={setCanCreateIndex}
+              />
+            ) : null}
             {activeTab === 'security' && (
               <TableSecurity table={selectedTable!} />
             )}

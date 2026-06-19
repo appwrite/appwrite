@@ -1,4 +1,5 @@
 import { DatabaseType } from '@appwrite.io/console'
+import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
 
 /**
  * URL / route-file segment for the three database products.
@@ -161,4 +162,81 @@ export function dbNavLink(kind: DatabaseRouteKind) {
       }
     },
   }
+}
+
+export type DedicatedDatabaseLinkInput = {
+  $id: string
+  api: string
+  engine: string
+}
+
+export type TanStackNavLink = {
+  to: string
+  params: Record<string, string>
+}
+
+function dedicatedApiToRouteKind(api: string): DatabaseRouteKind | null {
+  const normalized = api.toLowerCase().trim()
+  if (normalized === 'documentsdb') return 'documentsdb'
+  if (normalized === 'vectorsdb') return 'vectorsdb'
+  if (normalized === 'tablesdb') return 'tablesdb'
+  return null
+}
+
+export function needsDedicatedProductTypeLookup(
+  db: DedicatedDatabaseLinkInput,
+): boolean {
+  if (isPostgresDedicatedEngine(db.engine)) return false
+  return dedicatedApiToRouteKind(db.api) === null
+}
+
+export function isPostgresDedicatedEngine(
+  engine: string | null | undefined,
+): boolean {
+  const normalized = engine?.toLowerCase() ?? ''
+  return normalized === 'postgres' || normalized === 'postgresql'
+}
+
+function productDatabaseDeepLink(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+): TanStackNavLink {
+  return dbNavLink(dbKind).dataGrid({
+    projectId,
+    dbKind,
+    databaseId,
+    resourceId: '-',
+  })
+}
+
+/**
+ * Resolve the console home link for a dedicated compute database row.
+ * Postgres uses the native postgres route tree; product APIs use tablesdb /
+ * documentsdb / vectorsdb. When compute omits `api` (e.g. mongodb edge for
+ * DocumentsDB / VectorsDB), pass the resolved product route kind if known.
+ */
+export function dedicatedDatabaseHomeLink(
+  projectId: string,
+  db: DedicatedDatabaseLinkInput,
+  productRouteKind?: DatabaseRouteKind | null,
+): TanStackNavLink | null {
+  if (isPostgresDedicatedEngine(db.engine)) {
+    return postgresDatabaseHome({
+      projectId,
+      databaseId: db.$id,
+      tableId: '-',
+    })
+  }
+
+  const apiKind = dedicatedApiToRouteKind(db.api)
+  if (apiKind) {
+    return productDatabaseDeepLink(projectId, db.$id, apiKind)
+  }
+
+  if (productRouteKind) {
+    return productDatabaseDeepLink(projectId, db.$id, productRouteKind)
+  }
+
+  return null
 }
