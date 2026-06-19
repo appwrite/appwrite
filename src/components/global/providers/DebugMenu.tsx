@@ -43,9 +43,12 @@ import { useTheme } from 'next-themes'
 import {
   loadDebugOverrides,
   resetFeatureFlagsMenuDebugOverrides,
+  resetFeatureFlagsMenuDebugOverride,
+  FEATURE_FLAGS_MENU_DEBUG_DEFAULTS,
   setDebugOverride,
   subscribeToDebugOverrides,
   type DebugOverrides,
+  type FeatureFlagsMenuDebugKey,
   type KeyboardLayoutOverride,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
@@ -58,6 +61,8 @@ import {
   setDebugProfileOverride,
   setDebugProfileFeatureOverride,
   resetDebugProfileFeatureOverrides,
+  resetDebugProfileFeatureOverride,
+  getCanonicalProfileFeatures,
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
@@ -73,7 +78,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 import { cn } from '@/lib/utils'
-import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import type {
+  ConsoleProfileFeatures,
+  ConsoleProfileId,
+} from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
@@ -103,6 +111,9 @@ interface MenuItem {
   variant?: 'button' | 'switch'
   switchValue?: boolean
   switchOnChange?: (checked: boolean) => void
+  /** Canonical default for feature-flag switches (shown next to the label). */
+  defaultValue?: boolean
+  onResetToDefault?: () => void
   description?: string
   submenu?: MenuItem[]
   /** Opens the profile comparison table instead of a submenu list. */
@@ -121,6 +132,124 @@ interface MenuSection {
   title: string
   icon?: React.ReactNode
   items: MenuItem[]
+}
+
+function formatFeatureFlagDefaultLabel(defaultValue: boolean): string {
+  return defaultValue ? 'Default: On' : 'Default: Off'
+}
+
+function isFeatureFlagOverridden(item: MenuItem): boolean {
+  return (
+    item.defaultValue !== undefined &&
+    item.switchValue !== undefined &&
+    item.switchValue !== item.defaultValue &&
+    Boolean(item.onResetToDefault)
+  )
+}
+
+function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
+  const showReset = isFeatureFlagOverridden(item)
+
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10',
+        item.disabled && 'opacity-50',
+        item.rowClassName,
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          <div className="text-[13px] font-medium text-[#E5DEFF]">
+            {item.label}
+          </div>
+          {item.defaultValue !== undefined && (
+            <span className="text-[11px] font-normal text-[#9B87F5]/70">
+              {formatFeatureFlagDefaultLabel(item.defaultValue)}
+            </span>
+          )}
+        </div>
+        {item.description && (
+          <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+            {item.description}
+          </div>
+        )}
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-1.5">
+        {showReset && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => item.onResetToDefault?.()}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[#9B87F5]/80 transition-colors hover:bg-[#9B87F5]/20 hover:text-[#E5DEFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
+                aria-label={`Reset ${item.label} to default`}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Reset to default</TooltipContent>
+          </Tooltip>
+        )}
+        <Switch
+          checked={item.switchValue}
+          onCheckedChange={item.switchOnChange}
+          disabled={item.disabled}
+          className="flex-shrink-0"
+        />
+      </div>
+    </div>
+  )
+}
+
+function createProfileFeatureFlagItem(
+  label: string,
+  description: string,
+  key: keyof ConsoleProfileFeatures,
+  profileId: ConsoleProfileId,
+  currentValue: boolean,
+  options?: { disabled?: boolean },
+): MenuItem {
+  const defaultValue = getCanonicalProfileFeatures(profileId)[key]
+
+  return {
+    label,
+    description,
+    variant: 'switch',
+    switchValue: currentValue,
+    defaultValue,
+    disabled: options?.disabled,
+    switchOnChange: (checked: boolean) => {
+      setTimeout(() => setDebugProfileFeatureOverride(key, checked), 0)
+    },
+    onResetToDefault: () => {
+      resetDebugProfileFeatureOverride(key)
+    },
+  }
+}
+
+function createDebugFeatureFlagItem(
+  label: string,
+  description: string,
+  key: FeatureFlagsMenuDebugKey,
+  currentValue: boolean,
+  onChange: (checked: boolean) => void,
+  onReset?: () => void,
+): MenuItem {
+  const defaultValue = FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
+
+  return {
+    label,
+    description,
+    variant: 'switch',
+    switchValue: currentValue,
+    defaultValue,
+    switchOnChange: onChange,
+    onResetToDefault: () => {
+      resetFeatureFlagsMenuDebugOverride(key)
+      onReset?.()
+    },
+  }
 }
 
 type ResolvedSubmenu = {
@@ -963,241 +1092,150 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               'Console profile overrides (dedicated DBs, org features, and more)',
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
-              {
-                label: 'Dedicated DBs support (global)',
-                description:
-                  'Use fullscreen create wizard and show spec upgrade for supported DB types.',
-                variant: 'switch' as const,
-                switchValue: features.dedicatedDbsSupport,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride(
-                        'dedicatedDbsSupport',
-                        checked,
-                      ),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Dedicated DBs: Tables DB',
-                description:
-                  'Spec selector in wizard and "Upgrade database specs" in rows view.',
-                variant: 'switch' as const,
-                switchValue: features.dedicatedDbsTablesDB,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride(
-                        'dedicatedDbsTablesDB',
-                        checked,
-                      ),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Dedicated DBs: Documents DB',
-                description: 'Dedicated DBs support for Documents DB.',
-                variant: 'switch' as const,
-                switchValue: features.dedicatedDbsDocumentsDB,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride(
-                        'dedicatedDbsDocumentsDB',
-                        checked,
-                      ),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Dedicated DBs: Vectors DB',
-                description: 'Dedicated DBs support for Vectors DB.',
-                variant: 'switch' as const,
-                switchValue: features.dedicatedDbsVectorsDB,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride(
-                        'dedicatedDbsVectorsDB',
-                        checked,
-                      ),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Native DBs: Postgres',
-                description:
-                  'Enable dedicated Postgres databases in the create wizard.',
-                variant: 'switch' as const,
-                switchValue: features.nativeDbsPostgres,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride(
-                        'nativeDbsPostgres',
-                        checked,
-                      ),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Native DBs: MySQL',
-                description:
-                  'Enable dedicated MySQL databases in the create wizard.',
-                variant: 'switch' as const,
-                switchValue: features.nativeDbsMySQL,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride('nativeDbsMySQL', checked),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Console user verification',
-                description:
-                  'Require email verification after signup; redirect to verify-email page on cloud.',
-                variant: 'switch' as const,
-                switchValue: features.userVerification,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride(
-                        'userVerification',
-                        checked,
-                      ),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Organization OAuth apps',
-                description:
-                  'Org settings OAuth apps tab and /settings/oauth-apps route.',
-                variant: 'switch' as const,
-                switchValue: features.oauthApps,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () => setDebugProfileFeatureOverride('oauthApps', checked),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Organization API keys',
-                description:
-                  'Org settings API keys tab and /settings/api-keys route.',
-                variant: 'switch' as const,
-                switchValue: features.orgApiKeys,
-                switchOnChange: (checked: boolean) => {
-                  setTimeout(
-                    () => setDebugProfileFeatureOverride('orgApiKeys', checked),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Organization marketplace',
-                description:
-                  profileId === 'cloud'
-                    ? 'Org Marketplace tab (browse and publish apps). Cloud profile only; off by default.'
-                    : 'Cloud profile only — switch to Cloud profile to preview.',
-                variant: 'switch' as const,
-                switchValue:
-                  profileId === 'cloud' ? features.marketplace : false,
-                disabled: profileId !== 'cloud',
-                switchOnChange: (checked: boolean) => {
-                  if (profileId !== 'cloud') return
-                  setTimeout(
-                    () =>
-                      setDebugProfileFeatureOverride('marketplace', checked),
-                    0,
-                  )
-                },
-              },
-              {
-                label: 'Activity chart',
-                description:
-                  'Show the activity log volume chart above the activity table.',
-                variant: 'switch' as const,
-                switchValue: overrides.showActivityChart,
-                switchOnChange: (checked: boolean) => {
+              createProfileFeatureFlagItem(
+                'Dedicated DBs support (global)',
+                'Use fullscreen create wizard and show spec upgrade for supported DB types.',
+                'dedicatedDbsSupport',
+                profileId,
+                features.dedicatedDbsSupport,
+              ),
+              createProfileFeatureFlagItem(
+                'Dedicated DBs: Tables DB',
+                'Spec selector in wizard and "Upgrade database specs" in rows view.',
+                'dedicatedDbsTablesDB',
+                profileId,
+                features.dedicatedDbsTablesDB,
+              ),
+              createProfileFeatureFlagItem(
+                'Dedicated DBs: Documents DB',
+                'Dedicated DBs support for Documents DB.',
+                'dedicatedDbsDocumentsDB',
+                profileId,
+                features.dedicatedDbsDocumentsDB,
+              ),
+              createProfileFeatureFlagItem(
+                'Dedicated DBs: Vectors DB',
+                'Dedicated DBs support for Vectors DB.',
+                'dedicatedDbsVectorsDB',
+                profileId,
+                features.dedicatedDbsVectorsDB,
+              ),
+              createProfileFeatureFlagItem(
+                'Native DBs: Postgres',
+                'Enable dedicated Postgres databases in the create wizard.',
+                'nativeDbsPostgres',
+                profileId,
+                features.nativeDbsPostgres,
+              ),
+              createProfileFeatureFlagItem(
+                'Native DBs: MySQL',
+                'Enable dedicated MySQL databases in the create wizard.',
+                'nativeDbsMySQL',
+                profileId,
+                features.nativeDbsMySQL,
+              ),
+              createProfileFeatureFlagItem(
+                'Console user verification',
+                'Require email verification after signup; redirect to verify-email page on cloud.',
+                'userVerification',
+                profileId,
+                features.userVerification,
+              ),
+              createProfileFeatureFlagItem(
+                'Organization OAuth apps',
+                'Org settings OAuth apps tab and /settings/oauth-apps route.',
+                'oauthApps',
+                profileId,
+                features.oauthApps,
+              ),
+              createProfileFeatureFlagItem(
+                'Organization API keys',
+                'Org settings API keys tab and /settings/api-keys route.',
+                'orgApiKeys',
+                profileId,
+                features.orgApiKeys,
+              ),
+              createProfileFeatureFlagItem(
+                'Organization marketplace',
+                profileId === 'cloud'
+                  ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'
+                  : 'Cloud profile only. Switch to Cloud profile to preview.',
+                'marketplace',
+                profileId,
+                profileId === 'cloud' ? features.marketplace : false,
+                { disabled: profileId !== 'cloud' },
+              ),
+              createDebugFeatureFlagItem(
+                'Activity chart',
+                'Show the activity log volume chart above the activity table.',
+                'showActivityChart',
+                overrides.showActivityChart,
+                (checked) => {
                   setOverrides((prev) => ({
                     ...prev,
                     showActivityChart: checked,
                   }))
                   setDebugOverride('showActivityChart', checked)
                 },
-              },
-              {
-                label: 'AI assistant',
-                description:
-                  'In-app AI assistant chat panel and header button.',
-                variant: 'switch' as const,
-                switchValue: overrides.showAIAssistant,
-                switchOnChange: (checked: boolean) => {
+              ),
+              createDebugFeatureFlagItem(
+                'AI assistant',
+                'In-app AI assistant chat panel and header button.',
+                'showAIAssistant',
+                overrides.showAIAssistant,
+                (checked) => {
                   setOverrides((prev) => ({
                     ...prev,
                     showAIAssistant: checked,
                   }))
                   setDebugOverride('showAIAssistant', checked)
                 },
-              },
-              {
-                label: 'Show native app bar',
-                description: 'App bar above header (native OS).',
-                variant: 'switch' as const,
-                switchValue: overrides.showNativeAppBar,
-                switchOnChange: (checked: boolean) => {
+              ),
+              createDebugFeatureFlagItem(
+                'Show native app bar',
+                'App bar above header (native OS).',
+                'showNativeAppBar',
+                overrides.showNativeAppBar,
+                (checked) => {
                   setOverrides((prev) => ({
                     ...prev,
                     showNativeAppBar: checked,
                   }))
                   setDebugOverride('showNativeAppBar', checked)
                 },
-              },
-              {
-                label: 'Success team card',
-                description:
-                  'Show the success team card on organization overview (custom plans).',
-                variant: 'switch' as const,
-                switchValue: overrides.showSuccessTeamCard,
-                switchOnChange: (checked: boolean) => {
+              ),
+              createDebugFeatureFlagItem(
+                'Success team card',
+                'Show the success team card on organization overview (custom plans).',
+                'showSuccessTeamCard',
+                overrides.showSuccessTeamCard,
+                (checked) => {
                   setOverrides((prev) => ({
                     ...prev,
                     showSuccessTeamCard: checked,
                   }))
                   setDebugOverride('showSuccessTeamCard', checked)
                 },
-              },
-              {
-                label: 'Functions local editor',
-                description:
-                  'Functions list “Local editor” button and /functions/editor (Monaco, gzip for deploy).',
-                variant: 'switch' as const,
-                switchValue: overrides.showFunctionsLocalEditor,
-                switchOnChange: (checked: boolean) => {
+              ),
+              createDebugFeatureFlagItem(
+                'Functions local editor',
+                'Functions list “Local editor” button and /functions/editor (Monaco, gzip for deploy).',
+                'showFunctionsLocalEditor',
+                overrides.showFunctionsLocalEditor,
+                (checked) => {
                   setOverrides((prev) => ({
                     ...prev,
                     showFunctionsLocalEditor: checked,
                   }))
                   setDebugOverride('showFunctionsLocalEditor', checked)
                 },
-              },
-              {
-                label: 'Disable usage breakdown queries',
-                description:
-                  'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
-                variant: 'switch' as const,
-                switchValue: overrides.disableUsageBreakdownQueries,
-                switchOnChange: (checked: boolean) => {
+              ),
+              createDebugFeatureFlagItem(
+                'Disable usage breakdown queries',
+                'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
+                'disableUsageBreakdownQueries',
+                overrides.disableUsageBreakdownQueries,
+                (checked) => {
                   setOverrides((prev) => ({
                     ...prev,
                     disableUsageBreakdownQueries: checked,
@@ -1210,15 +1248,30 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       query.queryKey[0] === 'usage-breakdown',
                   })
                 },
-              },
+                () => {
+                  setOverrides(loadDebugOverrides())
+                  void queryClient.invalidateQueries({
+                    predicate: (query) =>
+                      query.queryKey[0] === 'usage-events' ||
+                      query.queryKey[0] === 'usage-gauges' ||
+                      query.queryKey[0] === 'usage-breakdown',
+                  })
+                },
+              ),
               {
-                label: 'Reset feature flags',
+                label: 'Reset all feature flags',
                 description:
-                  'Restore profile toggles on this list to canonical defaults and clear local switches (marketplace, activity chart, AI assistant, native app bar, success team card, functions local editor, usage breakdown).',
+                  'Restore every flag on this list to its default for your current profile.',
                 onClick: () => {
                   resetDebugProfileFeatureOverrides()
                   resetFeatureFlagsMenuDebugOverrides()
                   setOverrides(loadDebugOverrides())
+                  void queryClient.invalidateQueries({
+                    predicate: (query) =>
+                      query.queryKey[0] === 'usage-events' ||
+                      query.queryKey[0] === 'usage-gauges' ||
+                      query.queryKey[0] === 'usage-breakdown',
+                  })
                   setIsOpen(false)
                 },
                 icon: <RotateCcw className="h-3 w-3" />,
@@ -1489,30 +1542,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     const hasNestedSubmenu = menuItemHasSubmenu(item)
 
                     return item.variant === 'switch' ? (
-                      <div
+                      <DebugMenuSwitchRow
                         key={`submenu-${itemIndex}`}
-                        className={cn(
-                          'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10',
-                          item.disabled && 'opacity-50',
-                        )}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-medium text-[#E5DEFF]">
-                            {item.label}
-                          </div>
-                          {item.description && (
-                            <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
-                              {item.description}
-                            </div>
-                          )}
-                        </div>
-                        <Switch
-                          checked={item.switchValue}
-                          onCheckedChange={item.switchOnChange}
-                          disabled={item.disabled}
-                          className="flex-shrink-0"
-                        />
-                      </div>
+                        item={item}
+                      />
                     ) : (
                       <button
                         key={`submenu-${itemIndex}`}
@@ -1575,27 +1608,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       {section.items.map((item, itemIndex) => {
                         if (item.variant === 'switch') {
                           return (
-                            <div
+                            <DebugMenuSwitchRow
                               key={`${section.title}-${itemIndex}`}
-                              className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <div className="text-[13px] font-medium text-[#E5DEFF]">
-                                  {item.label}
-                                </div>
-                                {item.description && (
-                                  <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
-                                    {item.description}
-                                  </div>
-                                )}
-                              </div>
-                              <Switch
-                                checked={item.switchValue}
-                                onCheckedChange={item.switchOnChange}
-                                disabled={item.disabled}
-                                className="flex-shrink-0"
-                              />
-                            </div>
+                              item={item}
+                            />
                           )
                         }
 

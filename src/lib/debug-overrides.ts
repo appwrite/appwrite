@@ -207,14 +207,30 @@ export function resetDebugOverrides() {
 }
 
 /** Keys toggled from Debug → Settings → Feature flags (not other debug sections). */
-const FEATURE_FLAGS_MENU_DEBUG_KEYS: (keyof DebugOverrides)[] = [
+export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showAIAssistant',
   'showActivityChart',
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
   'disableUsageBreakdownQueries',
-]
+] as const satisfies readonly (keyof DebugOverrides)[]
+
+export type FeatureFlagsMenuDebugKey =
+  (typeof FEATURE_FLAGS_MENU_DEBUG_KEYS)[number]
+
+/** Default values for debug overrides shown in the Feature flags submenu. */
+export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
+  DebugOverrides,
+  FeatureFlagsMenuDebugKey
+> = {
+  showAIAssistant: false,
+  showActivityChart: false,
+  showNativeAppBar: false,
+  showSuccessTeamCard: false,
+  showFunctionsLocalEditor: false,
+  disableUsageBreakdownQueries: false,
+}
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */
 export function resetFeatureFlagsMenuDebugOverrides() {
@@ -222,6 +238,13 @@ export function resetFeatureFlagsMenuDebugOverrides() {
   FEATURE_FLAGS_MENU_DEBUG_KEYS.forEach((key) => {
     localStorage.removeItem(DEBUG_OVERRIDE_KEYS[key])
   })
+  window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
+}
+
+/** Reset a single debug override from the Feature flags submenu to its default. */
+export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey) {
+  if (!isBrowser) return
+  localStorage.removeItem(DEBUG_OVERRIDE_KEYS[key])
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 

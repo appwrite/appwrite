@@ -138,12 +138,12 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: true,
       databaseBackups: true,
       databaseInsights: true,
-      dedicatedDbsSupport: true,
-      dedicatedDbsTablesDB: true,
+      dedicatedDbsSupport: false,
+      dedicatedDbsTablesDB: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
-      nativeDbsPostgres: true,
-      nativeDbsMySQL: true,
+      nativeDbsPostgres: false,
+      nativeDbsMySQL: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -345,6 +345,16 @@ export function getActiveProfileFeatures(): ConsoleProfileFeatures {
   return getActiveProfile().features
 }
 
+/** Canonical feature defaults for a profile id (includes cloud-only gates). */
+export function getCanonicalProfileFeatures(
+  profileId: ConsoleProfileId,
+): ConsoleProfileFeatures {
+  return applyCloudOnlyFeatureGates(
+    profileId,
+    CONSOLE_PROFILES[profileId].features,
+  )
+}
+
 /**
  * Check if a specific feature is enabled.
  */
@@ -411,6 +421,30 @@ export function resetDebugProfileFeatureOverrides() {
   if (!VALID_PROFILE_IDS.includes(stored.id)) return
   const canonical = CONSOLE_PROFILES[stored.id]
   localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(canonical))
+  window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
+}
+
+/** Reset a single profile feature override to the canonical default for the stored profile. */
+export function resetDebugProfileFeatureOverride<
+  K extends keyof ConsoleProfileFeatures,
+>(key: K) {
+  if (typeof window === 'undefined') return
+  const stored = getStoredProfile()
+  if (!stored?.features || !(key in stored.features)) return
+  if (!VALID_PROFILE_IDS.includes(stored.id)) return
+
+  const canonical = CONSOLE_PROFILES[stored.id]
+  const nextFeatures = { ...stored.features }
+  delete nextFeatures[key]
+
+  localStorage.setItem(
+    DEBUG_PROFILE_KEY,
+    JSON.stringify({
+      ...canonical,
+      id: stored.id,
+      features: nextFeatures,
+    }),
+  )
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 
