@@ -622,8 +622,10 @@ Http::post('/v1/users/:userId/targets')
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, ?string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+        $providerId = $providerId ?? '';
+        $name = $name ?? '';
 
         $provider = $dbForProject->getDocument('providers', $providerId);
 
@@ -1877,7 +1879,11 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, ?string $identifier, ?string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $identifier = $identifier ?? '';
+        $providerId = $providerId ?? '';
+        $name = $name ?? '';
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2475,7 +2481,10 @@ Http::post('/v1/users/:userId/tokens')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, ?int $length, ?int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $length = $length ?? 6;
+        $expire = $expire ?? TOKEN_EXPIRATION_GENERIC;
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
