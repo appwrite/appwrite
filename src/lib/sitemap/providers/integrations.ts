@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getFrontmatterDate, parseIntegrationFrontmatter } from '@/lib/integrations/frontmatter'
+import { getIntegrationPrerenderPaths } from '@/lib/integrations/prerender-paths'
 import type { SitemapChangeFreq, SitemapEntry } from '../types'
 
 const packageRoot = path.resolve(
@@ -37,23 +38,26 @@ function readIntegrationLastmodBySlug(): Map<string, string> {
   return lastmodBySlug
 }
 
+function integrationsPriority(pathname: string): number {
+  return pathname === '/integrations' ? 0.8 : 0.7
+}
+
+function integrationsChangeFreq(pathname: string): SitemapChangeFreq {
+  return pathname === '/integrations' ? 'weekly' : 'monthly'
+}
+
 export function getIntegrationsSitemapEntries(): SitemapEntry[] {
   const lastmodBySlug = readIntegrationLastmodBySlug()
-  const slugs = [...lastmodBySlug.keys()].sort()
 
-  const entries: SitemapEntry[] = [
-    {
-      path: '/integrations',
-      priority: 0.8,
-      changefreq: 'weekly',
-    },
-    ...slugs.map((slug) => ({
-      path: `/integrations/${slug}`,
-      lastmod: lastmodBySlug.get(slug),
-      priority: 0.7,
-      changefreq: 'monthly' as SitemapChangeFreq,
-    })),
-  ]
-
-  return entries.sort((a, b) => a.path.localeCompare(b.path))
+  return getIntegrationPrerenderPaths()
+    .map((pathname) => {
+      const slug = pathname.match(/^\/integrations\/(.+)$/)?.[1]
+      return {
+        path: pathname,
+        lastmod: slug ? lastmodBySlug.get(slug) : undefined,
+        priority: integrationsPriority(pathname),
+        changefreq: integrationsChangeFreq(pathname),
+      } satisfies SitemapEntry
+    })
+    .sort((a, b) => a.path.localeCompare(b.path))
 }
