@@ -26,6 +26,8 @@ class Indexes extends Validator
     protected array $supportedOrders = [
         Database::ORDER_ASC,
         Database::ORDER_DESC,
+        'asc',
+        'desc',
     ];
 
     /**
