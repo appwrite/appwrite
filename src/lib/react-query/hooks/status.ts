@@ -80,7 +80,13 @@ export type AppwriteCloudServiceSummary = {
 }
 
 export type AppwriteCloudStatusSummary = {
+  /** Raw aggregate state from the status page API. */
   aggregateState: AppwriteCloudAggregateState
+  /**
+   * Console banner/loader alert state: worst state among core services only.
+   * Stays operational when non-core monitors (e.g. Support) are the sole issue.
+   */
+  consoleAlertState: AppwriteCloudAggregateState
   /**
    * Affected regions (and similar) when the page is not fully operational.
    * Uses the active incident report when present, otherwise live regional monitors.
@@ -113,6 +119,15 @@ export const DEFAULT_APPWRITE_CLOUD_SERVICE_NAMES = [
   'DNS ns2.appwrite.zone',
 ] as const
 
+/**
+ * Non-core monitors (Support, Documentation, etc.) should not trigger the global
+ * console status banner when they are the only services affected.
+ */
+export const STATUS_BANNER_EXCLUDED_SERVICE_NAMES = new Set<string>([
+  'Support',
+  'Documentation',
+])
+
 function normalizeServiceState(
   value: string | undefined,
 ): AppwriteCloudServiceState {
@@ -140,6 +155,32 @@ function getServiceStateWeight(state: AppwriteCloudServiceState): number {
     default:
       return 0
   }
+}
+
+function getAggregateStateWeight(
+  state: AppwriteCloudAggregateState,
+): number {
+  return getServiceStateWeight(state)
+}
+
+export function computeConsoleAlertState(
+  services: AppwriteCloudServiceSummary[],
+): AppwriteCloudAggregateState {
+  let worst: AppwriteCloudAggregateState = 'operational'
+
+  for (const service of services) {
+    if (STATUS_BANNER_EXCLUDED_SERVICE_NAMES.has(service.name)) continue
+    if (service.status === 'operational' || service.status === 'not_monitored') {
+      continue
+    }
+
+    const nextState = service.status as AppwriteCloudAggregateState
+    if (getAggregateStateWeight(nextState) > getAggregateStateWeight(worst)) {
+      worst = nextState
+    }
+  }
+
+  return worst
 }
 
 function compareServiceNames(left: string, right: string) {
@@ -284,6 +325,7 @@ function regionCodesFromLiveNonOperationalCloud(
 function emptyAppwriteCloudStatusSummary(): AppwriteCloudStatusSummary {
   return {
     aggregateState: 'operational',
+    consoleAlertState: 'operational',
     services: [],
   }
 }
@@ -376,6 +418,8 @@ function parseAppwriteStatusPayload(
     .map(([name, status]) => ({ name, status }))
     .sort((left, right) => compareServiceNames(left.name, right.name))
 
+  const consoleAlertState = computeConsoleAlertState(services)
+
   const now = Date.now()
   const activeReports = reports.filter((report) => {
     if (report.aggregateState === 'resolved') return false
@@ -390,10 +434,10 @@ function parseAppwriteStatusPayload(
   })
 
   const activeReport =
-    aggregateState === 'operational'
+    consoleAlertState === 'operational'
       ? undefined
       : (activeReports.find(
-          (report) => report.aggregateState === aggregateState,
+          (report) => report.aggregateState === consoleAlertState,
         ) ??
         activeReports.find(
           (report) => report.aggregateState !== 'maintenance',
@@ -401,7 +445,7 @@ function parseAppwriteStatusPayload(
         activeReports[0])
 
   const regionsLine =
-    aggregateState === 'operational'
+    consoleAlertState === 'operational'
       ? undefined
       : buildStatusRegionsLine(
           activeReport?.title ?? '',
@@ -413,6 +457,7 @@ function parseAppwriteStatusPayload(
 
   return {
     aggregateState,
+    consoleAlertState,
     regionsLine,
     activeReport: activeReport
       ? {

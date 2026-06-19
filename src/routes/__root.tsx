@@ -386,17 +386,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     showCloudStatusToOperator &&
     isLoaderVisible &&
     isStatusSuccess &&
-    statusData?.aggregateState &&
-    statusData.aggregateState !== 'operational'
+    statusData?.consoleAlertState &&
+    statusData.consoleAlertState !== 'operational'
       ? {
-          ...getStatusBannerParts(statusData.aggregateState, {
+          ...getStatusBannerParts(statusData.consoleAlertState, {
             reportTitle: statusData.activeReport?.title,
             startsAt: statusData.activeReport?.startsAt,
             endsAt: statusData.activeReport?.endsAt,
             regionsLine: statusData.regionsLine,
           }),
           href: STATUS_PAGE_URL,
-          state: statusData.aggregateState,
+          state: statusData.consoleAlertState,
         }
       : undefined
 

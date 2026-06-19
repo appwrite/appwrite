@@ -159,7 +159,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
   const statusState: DisplayCloudStatusState =
     mockCloudStatusAlert !== 'live'
       ? mockCloudStatusAlert
-      : (statusData?.aggregateState ?? 'operational')
+      : (statusData?.consoleAlertState ?? 'operational')
 
   const statusMeta = getStatusMeta(statusState)
 

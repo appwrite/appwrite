@@ -1,6 +1,6 @@
 # Compute Service Endpoints
 
-Source: `@appwrite.io/console` v14.0.0 (`2677607`).
+Source: `@appwrite.io/console` (`c77f704`).
 
 This reference documents the object-parameter SDK methods on `Compute`. Deprecated positional overloads are omitted. All calls use the configured Appwrite endpoint plus the path shown below and include `X-Appwrite-Project` from the SDK client configuration.
 
@@ -34,7 +34,7 @@ This reference documents the object-parameter SDK methods on `Compute`. Deprecat
 | `deleteDatabaseConnection` | `DELETE` | `/compute/databases/{databaseId}/connections/{connectionId}` |
 | `getDatabaseCredentials` | `GET` | `/compute/databases/{databaseId}/credentials` |
 | `updateDatabaseCredentials` | `PATCH` | `/compute/databases/{databaseId}/credentials` |
-| `createDatabaseExecution` | `POST` | `/compute/databases/{databaseId}/execution` |
+| `createDatabaseExecution` | `POST` | `/compute/databases/{databaseId}/executions` |
 | `createDatabaseQueryExplanation` | `POST` | `/compute/databases/{databaseId}/explanation` |
 | `listDatabaseQueries` | `GET` | `/compute/databases/{databaseId}/slow-queries` |
 | `listDatabaseExtensions` | `GET` | `/compute/databases/{databaseId}/extensions` |
@@ -457,9 +457,9 @@ Returns: `Models.DedicatedDatabaseCredentials`
 
 ### `createDatabaseExecution`
 
-`POST /compute/databases/{databaseId}/execution`
+`POST /compute/databases/{databaseId}/executions`
 
-Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/execute` with an `X-Appwrite-Key` header - that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values - the API does not interpolate raw strings.
+Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header - that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values - the API does not interpolate raw strings.
 
 Returns: `Models.DedicatedDatabaseExecution`
 
