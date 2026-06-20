@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import type { MarketplaceApp } from '@/lib/marketplace/mock-data'
+import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { cn } from '@/lib/utils'
 import { BadgeCheck } from 'lucide-react'
 

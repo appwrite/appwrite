@@ -550,19 +550,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
   useEffect(() => {
     const handleResize = () => {
-      setPosition((current) => {
-        const clamped = clampDebugMenuPosition(
-          current,
-          window.innerWidth,
-          window.innerHeight,
-        )
-        writeDebugMenuPosition(clamped)
-        return clamped
-      })
+      setPosition(readDebugMenuPosition())
     }
 
     window.addEventListener('resize', handleResize)
-    handleResize()
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 

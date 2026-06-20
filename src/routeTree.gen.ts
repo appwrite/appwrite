@@ -102,6 +102,7 @@ import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_p
 import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './routes/_public/organizations.$orgId.marketplace'
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
+import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
@@ -115,6 +116,7 @@ import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './rou
 import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
 import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
 import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
+import { Route as PublicOrganizationsOrgIdAppsIndexRouteImport } from './routes/_public/organizations.$orgId.apps.index'
 import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/docs/references.$version.models.$model'
 import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
@@ -152,6 +154,7 @@ import { Route as PublicOrganizationsOrgIdSettingsApiKeysRouteImport } from './r
 import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
 import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
+import { Route as PublicOrganizationsOrgIdAppsAppIdRouteImport } from './routes/_public/organizations.$orgId.apps.$appId'
 import { Route as PublicProjectsProjectIdStoresAppIdIndexRouteImport } from './routes/_public/projects.$projectId.stores.$appId.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdIndexRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.index'
 import { Route as PublicProjectsProjectIdSitesCreateIndexRouteImport } from './routes/_public/projects.$projectId.sites.create.index'
@@ -163,7 +166,9 @@ import { Route as PublicProjectsProjectIdMessagingProvidersIndexRouteImport } fr
 import { Route as PublicProjectsProjectIdMessagingMessageIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId.index'
 import { Route as PublicProjectsProjectIdFunctionsCreateIndexRouteImport } from './routes/_public/projects.$projectId.functions.create.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.index'
+import { Route as PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.$appId.index'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.index'
+import { Route as PublicOrganizationsOrgIdAppsAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdSettingsRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.settings'
 import { Route as PublicProjectsProjectIdStorageBucketIdSecurityRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.security'
 import { Route as PublicProjectsProjectIdSitesCreateManualRouteImport } from './routes/_public/projects.$projectId.sites.create.manual'
@@ -200,6 +205,12 @@ import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from
 import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
 import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from './routes/_public/projects.$projectId.auth.policies.emails'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.settings'
+import { Route as PublicOrganizationsOrgIdAppsAppIdSupportRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.support'
+import { Route as PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.settings'
+import { Route as PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.secrets'
+import { Route as PublicOrganizationsOrgIdAppsAppIdOauthRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.oauth'
+import { Route as PublicOrganizationsOrgIdAppsAppIdLegalRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.legal'
+import { Route as PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.branding'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.index'
 import { Route as PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains.index'
 import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.index'
@@ -788,6 +799,12 @@ const PublicOrganizationsOrgIdBillingRoute =
     path: '/billing',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
+const PublicOrganizationsOrgIdAppsRoute =
+  PublicOrganizationsOrgIdAppsRouteImport.update({
+    id: '/apps',
+    path: '/apps',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
 const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   id: '/_api/init/ticket/$eventSlug',
   path: '/init/ticket/$eventSlug',
@@ -864,6 +881,12 @@ const PublicOrganizationsOrgIdDomainsIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsIndexRoute =
+  PublicOrganizationsOrgIdAppsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsRoute,
   } as any)
 const DocsReferencesVersionModelsModelRoute =
   DocsReferencesVersionModelsModelRouteImport.update({
@@ -1087,6 +1110,12 @@ const PublicOrganizationsOrgIdDomainsDomainIdRoute =
     path: '/$domainId',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
   } as any)
+const PublicOrganizationsOrgIdAppsAppIdRoute =
+  PublicOrganizationsOrgIdAppsAppIdRouteImport.update({
+    id: '/$appId',
+    path: '/$appId',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsRoute,
+  } as any)
 const PublicProjectsProjectIdStoresAppIdIndexRoute =
   PublicProjectsProjectIdStoresAppIdIndexRouteImport.update({
     id: '/$appId/',
@@ -1153,11 +1182,23 @@ const PublicProjectsProjectIdFunctionsFunctionIdIndexRoute =
     path: '/',
     getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
   } as any)
+const PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute =
+  PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport.update({
+    id: '/$appId/',
+    path: '/$appId/',
+    getParentRoute: () => PublicOrganizationsOrgIdMarketplaceRoute,
+  } as any)
 const PublicOrganizationsOrgIdDomainsDomainIdIndexRoute =
   PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdIndexRoute =
+  PublicOrganizationsOrgIdAppsAppIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
   } as any)
 const PublicProjectsProjectIdStorageBucketIdSettingsRoute =
   PublicProjectsProjectIdStorageBucketIdSettingsRouteImport.update({
@@ -1374,6 +1415,42 @@ const PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute =
     id: '/settings',
     path: '/settings',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdSupportRoute =
+  PublicOrganizationsOrgIdAppsAppIdSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdSettingsRoute =
+  PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdSecretsRoute =
+  PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport.update({
+    id: '/secrets',
+    path: '/secrets',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdOauthRoute =
+  PublicOrganizationsOrgIdAppsAppIdOauthRouteImport.update({
+    id: '/oauth',
+    path: '/oauth',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdLegalRoute =
+  PublicOrganizationsOrgIdAppsAppIdLegalRouteImport.update({
+    id: '/legal',
+    path: '/legal',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdBrandingRoute =
+  PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport.update({
+    id: '/branding',
+    path: '/branding',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
   } as any)
 const PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute =
   PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport.update({
@@ -2160,6 +2237,7 @@ export interface FileRoutesByFullPath {
   '/account/': typeof PublicAccountIndexRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
@@ -2186,6 +2264,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
   '/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
+  '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
@@ -2223,6 +2302,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
+  '/organizations/$orgId/apps/': typeof PublicOrganizationsOrgIdAppsIndexRoute
   '/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
@@ -2234,6 +2314,12 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
+  '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
+  '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
+  '/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
+  '/organizations/$orgId/apps/$appId/settings': typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
+  '/organizations/$orgId/apps/$appId/support': typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
   '/organizations/$orgId/domains/$domainId/settings': typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
   '/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
@@ -2270,7 +2356,9 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create/manual': typeof PublicProjectsProjectIdSitesCreateManualRoute
   '/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
+  '/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
+  '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -2484,6 +2572,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
+  '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsIndexRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthIndexRoute
@@ -2495,6 +2584,12 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresIndexRoute
+  '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
+  '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
+  '/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
+  '/organizations/$orgId/apps/$appId/settings': typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
+  '/organizations/$orgId/apps/$appId/support': typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
   '/organizations/$orgId/domains/$domainId/settings': typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
   '/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
@@ -2522,7 +2617,9 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/create/manual': typeof PublicProjectsProjectIdSitesCreateManualRoute
   '/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
+  '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
+  '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -2697,6 +2794,7 @@ export interface FileRoutesById {
   '/_public/account/': typeof PublicAccountIndexRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_public/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/_public/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
@@ -2723,6 +2821,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
   '/_public/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/_public/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
+  '/_public/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/_public/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/_public/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
   '/_public/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
@@ -2760,6 +2859,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
+  '/_public/organizations/$orgId/apps/': typeof PublicOrganizationsOrgIdAppsIndexRoute
   '/_public/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/_public/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/_public/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
@@ -2771,6 +2871,12 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/_public/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/_public/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
+  '/_public/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/_public/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
+  '/_public/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
+  '/_public/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
+  '/_public/organizations/$orgId/apps/$appId/settings': typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
+  '/_public/organizations/$orgId/apps/$appId/support': typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
   '/_public/organizations/$orgId/domains/$domainId/settings': typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
   '/_public/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   '/_public/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
@@ -2807,7 +2913,9 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create/manual': typeof PublicProjectsProjectIdSitesCreateManualRoute
   '/_public/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/_public/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
+  '/_public/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/_public/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
+  '/_public/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/_public/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/_public/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/_public/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -2983,6 +3091,7 @@ export interface FileRouteTypes {
     | '/account/'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/organizations/$orgId/apps'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/marketplace'
@@ -3009,6 +3118,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/usage'
     | '/organizations/$orgId/'
     | '/projects/$projectId/'
+    | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/domains/buy'
     | '/organizations/$orgId/domains/transfer-in'
@@ -3046,6 +3156,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/$bucketId'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
+    | '/organizations/$orgId/apps/'
     | '/organizations/$orgId/domains/'
     | '/organizations/$orgId/marketplace/'
     | '/projects/$projectId/auth/'
@@ -3057,6 +3168,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites'
     | '/projects/$projectId/storage/'
     | '/projects/$projectId/stores/'
+    | '/organizations/$orgId/apps/$appId/branding'
+    | '/organizations/$orgId/apps/$appId/legal'
+    | '/organizations/$orgId/apps/$appId/oauth'
+    | '/organizations/$orgId/apps/$appId/secrets'
+    | '/organizations/$orgId/apps/$appId/settings'
+    | '/organizations/$orgId/apps/$appId/support'
     | '/organizations/$orgId/domains/$domainId/settings'
     | '/projects/$projectId/auth/policies/emails'
     | '/projects/$projectId/auth/policies/memberships'
@@ -3093,7 +3210,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/manual'
     | '/projects/$projectId/storage/$bucketId/security'
     | '/projects/$projectId/storage/$bucketId/settings'
+    | '/organizations/$orgId/apps/$appId/'
     | '/organizations/$orgId/domains/$domainId/'
+    | '/organizations/$orgId/marketplace/$appId'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
@@ -3307,6 +3426,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/usage'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
+    | '/organizations/$orgId/apps'
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/marketplace'
     | '/projects/$projectId/auth'
@@ -3318,6 +3438,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites'
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
+    | '/organizations/$orgId/apps/$appId/branding'
+    | '/organizations/$orgId/apps/$appId/legal'
+    | '/organizations/$orgId/apps/$appId/oauth'
+    | '/organizations/$orgId/apps/$appId/secrets'
+    | '/organizations/$orgId/apps/$appId/settings'
+    | '/organizations/$orgId/apps/$appId/support'
     | '/organizations/$orgId/domains/$domainId/settings'
     | '/projects/$projectId/auth/policies/emails'
     | '/projects/$projectId/auth/policies/memberships'
@@ -3345,7 +3471,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/manual'
     | '/projects/$projectId/storage/$bucketId/security'
     | '/projects/$projectId/storage/$bucketId/settings'
+    | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
+    | '/organizations/$orgId/marketplace/$appId'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/messaging/$messageId'
@@ -3519,6 +3647,7 @@ export interface FileRouteTypes {
     | '/_public/account/'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_public/organizations/$orgId/apps'
     | '/_public/organizations/$orgId/billing'
     | '/_public/organizations/$orgId/domains'
     | '/_public/organizations/$orgId/marketplace'
@@ -3545,6 +3674,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/usage'
     | '/_public/organizations/$orgId/'
     | '/_public/projects/$projectId/'
+    | '/_public/organizations/$orgId/apps/$appId'
     | '/_public/organizations/$orgId/domains/$domainId'
     | '/_public/organizations/$orgId/domains/buy'
     | '/_public/organizations/$orgId/domains/transfer-in'
@@ -3582,6 +3712,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/storage/$bucketId'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
+    | '/_public/organizations/$orgId/apps/'
     | '/_public/organizations/$orgId/domains/'
     | '/_public/organizations/$orgId/marketplace/'
     | '/_public/projects/$projectId/auth/'
@@ -3593,6 +3724,12 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/'
     | '/_public/projects/$projectId/storage/'
     | '/_public/projects/$projectId/stores/'
+    | '/_public/organizations/$orgId/apps/$appId/branding'
+    | '/_public/organizations/$orgId/apps/$appId/legal'
+    | '/_public/organizations/$orgId/apps/$appId/oauth'
+    | '/_public/organizations/$orgId/apps/$appId/secrets'
+    | '/_public/organizations/$orgId/apps/$appId/settings'
+    | '/_public/organizations/$orgId/apps/$appId/support'
     | '/_public/organizations/$orgId/domains/$domainId/settings'
     | '/_public/projects/$projectId/auth/policies/emails'
     | '/_public/projects/$projectId/auth/policies/memberships'
@@ -3629,7 +3766,9 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create/manual'
     | '/_public/projects/$projectId/storage/$bucketId/security'
     | '/_public/projects/$projectId/storage/$bucketId/settings'
+    | '/_public/organizations/$orgId/apps/$appId/'
     | '/_public/organizations/$orgId/domains/$domainId/'
+    | '/_public/organizations/$orgId/marketplace/$appId/'
     | '/_public/projects/$projectId/functions/$functionId/'
     | '/_public/projects/$projectId/functions/create/'
     | '/_public/projects/$projectId/messaging/$messageId/'
@@ -4429,6 +4568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdBillingRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
+    '/_public/organizations/$orgId/apps': {
+      id: '/_public/organizations/$orgId/apps'
+      path: '/apps'
+      fullPath: '/organizations/$orgId/apps'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
     '/_api/init/ticket/$eventSlug': {
       id: '/_api/init/ticket/$eventSlug'
       path: '/init/ticket/$eventSlug'
@@ -4519,6 +4665,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/domains/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/_public/organizations/$orgId/apps/': {
+      id: '/_public/organizations/$orgId/apps/'
+      path: '/'
+      fullPath: '/organizations/$orgId/apps/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsRoute
     }
     '/docs/references/$version/models/$model': {
       id: '/docs/references/$version/models/$model'
@@ -4779,6 +4932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
     }
+    '/_public/organizations/$orgId/apps/$appId': {
+      id: '/_public/organizations/$orgId/apps/$appId'
+      path: '/$appId'
+      fullPath: '/organizations/$orgId/apps/$appId'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsRoute
+    }
     '/_public/projects/$projectId/stores/$appId/': {
       id: '/_public/projects/$projectId/stores/$appId/'
       path: '/$appId'
@@ -4856,12 +5016,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
     }
+    '/_public/organizations/$orgId/marketplace/$appId/': {
+      id: '/_public/organizations/$orgId/marketplace/$appId/'
+      path: '/$appId'
+      fullPath: '/organizations/$orgId/marketplace/$appId'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
+    }
     '/_public/organizations/$orgId/domains/$domainId/': {
       id: '/_public/organizations/$orgId/domains/$domainId/'
       path: '/'
       fullPath: '/organizations/$orgId/domains/$domainId/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/': {
+      id: '/_public/organizations/$orgId/apps/$appId/'
+      path: '/'
+      fullPath: '/organizations/$orgId/apps/$appId/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
     }
     '/_public/projects/$projectId/storage/$bucketId/settings': {
       id: '/_public/projects/$projectId/storage/$bucketId/settings'
@@ -5114,6 +5288,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/domains/$domainId/settings'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/support': {
+      id: '/_public/organizations/$orgId/apps/$appId/support'
+      path: '/support'
+      fullPath: '/organizations/$orgId/apps/$appId/support'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSupportRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/settings': {
+      id: '/_public/organizations/$orgId/apps/$appId/settings'
+      path: '/settings'
+      fullPath: '/organizations/$orgId/apps/$appId/settings'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/secrets': {
+      id: '/_public/organizations/$orgId/apps/$appId/secrets'
+      path: '/secrets'
+      fullPath: '/organizations/$orgId/apps/$appId/secrets'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/oauth': {
+      id: '/_public/organizations/$orgId/apps/$appId/oauth'
+      path: '/oauth'
+      fullPath: '/organizations/$orgId/apps/$appId/oauth'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdOauthRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/legal': {
+      id: '/_public/organizations/$orgId/apps/$appId/legal'
+      path: '/legal'
+      fullPath: '/organizations/$orgId/apps/$appId/legal'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/branding': {
+      id: '/_public/organizations/$orgId/apps/$appId/branding'
+      path: '/branding'
+      fullPath: '/organizations/$orgId/apps/$appId/branding'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
     }
     '/_public/projects/$projectId/sites/$siteId/settings/': {
       id: '/_public/projects/$projectId/sites/$siteId/settings/'
@@ -5836,6 +6052,57 @@ const PublicAccountRouteWithChildren = PublicAccountRoute._addFileChildren(
   PublicAccountRouteChildren,
 )
 
+interface PublicOrganizationsOrgIdAppsAppIdRouteChildren {
+  PublicOrganizationsOrgIdAppsAppIdBrandingRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  PublicOrganizationsOrgIdAppsAppIdLegalRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
+  PublicOrganizationsOrgIdAppsAppIdOauthRoute: typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
+  PublicOrganizationsOrgIdAppsAppIdSecretsRoute: typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
+  PublicOrganizationsOrgIdAppsAppIdSettingsRoute: typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
+  PublicOrganizationsOrgIdAppsAppIdSupportRoute: typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
+  PublicOrganizationsOrgIdAppsAppIdIndexRoute: typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
+}
+
+const PublicOrganizationsOrgIdAppsAppIdRouteChildren: PublicOrganizationsOrgIdAppsAppIdRouteChildren =
+  {
+    PublicOrganizationsOrgIdAppsAppIdBrandingRoute:
+      PublicOrganizationsOrgIdAppsAppIdBrandingRoute,
+    PublicOrganizationsOrgIdAppsAppIdLegalRoute:
+      PublicOrganizationsOrgIdAppsAppIdLegalRoute,
+    PublicOrganizationsOrgIdAppsAppIdOauthRoute:
+      PublicOrganizationsOrgIdAppsAppIdOauthRoute,
+    PublicOrganizationsOrgIdAppsAppIdSecretsRoute:
+      PublicOrganizationsOrgIdAppsAppIdSecretsRoute,
+    PublicOrganizationsOrgIdAppsAppIdSettingsRoute:
+      PublicOrganizationsOrgIdAppsAppIdSettingsRoute,
+    PublicOrganizationsOrgIdAppsAppIdSupportRoute:
+      PublicOrganizationsOrgIdAppsAppIdSupportRoute,
+    PublicOrganizationsOrgIdAppsAppIdIndexRoute:
+      PublicOrganizationsOrgIdAppsAppIdIndexRoute,
+  }
+
+const PublicOrganizationsOrgIdAppsAppIdRouteWithChildren =
+  PublicOrganizationsOrgIdAppsAppIdRoute._addFileChildren(
+    PublicOrganizationsOrgIdAppsAppIdRouteChildren,
+  )
+
+interface PublicOrganizationsOrgIdAppsRouteChildren {
+  PublicOrganizationsOrgIdAppsAppIdRoute: typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
+  PublicOrganizationsOrgIdAppsIndexRoute: typeof PublicOrganizationsOrgIdAppsIndexRoute
+}
+
+const PublicOrganizationsOrgIdAppsRouteChildren: PublicOrganizationsOrgIdAppsRouteChildren =
+  {
+    PublicOrganizationsOrgIdAppsAppIdRoute:
+      PublicOrganizationsOrgIdAppsAppIdRouteWithChildren,
+    PublicOrganizationsOrgIdAppsIndexRoute:
+      PublicOrganizationsOrgIdAppsIndexRoute,
+  }
+
+const PublicOrganizationsOrgIdAppsRouteWithChildren =
+  PublicOrganizationsOrgIdAppsRoute._addFileChildren(
+    PublicOrganizationsOrgIdAppsRouteChildren,
+  )
+
 interface PublicOrganizationsOrgIdDomainsDomainIdRouteChildren {
   PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
   PublicOrganizationsOrgIdDomainsDomainIdIndexRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
@@ -5880,12 +6147,15 @@ const PublicOrganizationsOrgIdDomainsRouteWithChildren =
 
 interface PublicOrganizationsOrgIdMarketplaceRouteChildren {
   PublicOrganizationsOrgIdMarketplaceIndexRoute: typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
+  PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute: typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
 }
 
 const PublicOrganizationsOrgIdMarketplaceRouteChildren: PublicOrganizationsOrgIdMarketplaceRouteChildren =
   {
     PublicOrganizationsOrgIdMarketplaceIndexRoute:
       PublicOrganizationsOrgIdMarketplaceIndexRoute,
+    PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute:
+      PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute,
   }
 
 const PublicOrganizationsOrgIdMarketplaceRouteWithChildren =
@@ -5924,6 +6194,7 @@ const PublicOrganizationsOrgIdSettingsRouteWithChildren =
   )
 
 interface PublicOrganizationsOrgIdRouteChildren {
+  PublicOrganizationsOrgIdAppsRoute: typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   PublicOrganizationsOrgIdBillingRoute: typeof PublicOrganizationsOrgIdBillingRoute
   PublicOrganizationsOrgIdDomainsRoute: typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   PublicOrganizationsOrgIdMarketplaceRoute: typeof PublicOrganizationsOrgIdMarketplaceRouteWithChildren
@@ -5935,6 +6206,8 @@ interface PublicOrganizationsOrgIdRouteChildren {
 
 const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildren =
   {
+    PublicOrganizationsOrgIdAppsRoute:
+      PublicOrganizationsOrgIdAppsRouteWithChildren,
     PublicOrganizationsOrgIdBillingRoute: PublicOrganizationsOrgIdBillingRoute,
     PublicOrganizationsOrgIdDomainsRoute:
       PublicOrganizationsOrgIdDomainsRouteWithChildren,

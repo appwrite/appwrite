@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import type {
+  MarketplaceApp,
+  MarketplaceAppCategory,
+} from '@/lib/marketplace/types'
+import { MARKETPLACE_CATEGORY_ORDER } from '@/lib/marketplace/types'
 import {
-  MOCK_MARKETPLACE_CATALOG,
-  MOCK_MARKETPLACE_OWNED,
-  type MarketplaceApp,
-  type MarketplaceAppCategory,
-} from '@/lib/marketplace/mock-data'
-import {
-  MARKETPLACE_CATEGORY_ORDER,
   MARKETPLACE_SIDEBAR_LINKS,
   buildMarketplaceNavGroups,
   countAppsForNav,
@@ -16,15 +15,21 @@ import {
   type MarketplaceNavId,
   type MarketplaceLinkItem,
 } from '@/lib/marketplace/marketplace-nav'
+import {
+  useCreateOrganizationApp,
+  useMarketplaceCatalog,
+  useOrganizationApps,
+  useOrganizations,
+} from '@/lib/react-query/hooks'
 import { MarketplaceAppCard } from './_components/MarketplaceAppCard'
 import { CreateMarketplaceApp } from './_components/CreateMarketplaceApp'
 import type { CreateMarketplaceAppInput } from './_components/CreateMarketplaceApp'
-import { AppDetailDrawer } from './_components/AppDetailDrawer'
 import { MarketplaceExplore } from './_components/MarketplaceExplore'
 import { MarketplaceSidebar } from './_components/MarketplaceSidebar'
 import { toast } from 'sonner'
-import { Store } from 'lucide-react'
+import { Loader2, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { z } from 'zod'
 
 export const marketplaceSearchSchema = z.object({}).passthrough()
@@ -43,18 +48,45 @@ function filterApps(apps: MarketplaceApp[], query: string): MarketplaceApp[] {
 }
 
 export function View() {
+  const { orgId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const { organizations } = useOrganizations()
+
+  const teamNamesById = useMemo(
+    () =>
+      Object.fromEntries(
+        organizations.map((org) => [org.$id, org.name] as const),
+      ),
+    [organizations],
+  )
+
+  const {
+    apps: catalogApps,
+    isLoading: catalogLoading,
+    isFetching: catalogFetching,
+  } = useMarketplaceCatalog(orgId, teamNamesById)
+  const {
+    apps: ownedApps,
+    isLoading: ownedLoading,
+    isFetching: ownedFetching,
+  } = useOrganizationApps(orgId, teamNamesById)
+
+  const createAppMutation = useCreateOrganizationApp(orgId)
+
   const navGroups = useMemo(() => buildMarketplaceNavGroups(), [])
   const [activeNavId, setActiveNavId] = useState<MarketplaceNavId>('explore')
   const [searchValue, setSearchValue] = useState('')
-  const [catalogApps, setCatalogApps] = useState(MOCK_MARKETPLACE_CATALOG)
-  const [ownedApps, setOwnedApps] = useState(MOCK_MARKETPLACE_OWNED)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [detailApp, setDetailApp] = useState<MarketplaceApp | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
 
   const searchActive = searchValue.trim().length > 0
   const isExplore = activeNavId === 'explore'
   const activeItem = getMarketplaceNavItem(activeNavId, navGroups)
+
+  const listLoading =
+    (catalogLoading || ownedLoading) &&
+    catalogApps.length === 0 &&
+    ownedApps.length === 0
+  const listFetching = catalogFetching || ownedFetching
 
   const filteredCatalog = useMemo(
     () => filterApps(catalogApps, searchValue),
@@ -109,39 +141,35 @@ export function View() {
     ).length
   }
 
-  const handleCreateApp = (input: CreateMarketplaceAppInput) => {
-    const newApp: MarketplaceApp = {
-      $id: `app-${input.slug}-${Date.now()}`,
-      name: input.name,
-      slug: input.slug,
-      description: input.description,
-      shortDescription: input.shortDescription,
-      category: input.category,
-      author: 'Your organization',
-      creators: [{ name: 'You', role: 'Creator' }],
-      installs: 0,
-      rating: 0,
-      featured: false,
-      isOfficial: false,
-      isVerified: false,
-      isOwned: true,
-      status: 'draft',
-      tags: [input.category],
-      $createdAt: new Date().toISOString(),
+  const handleCreateApp = async (input: CreateMarketplaceAppInput) => {
+    try {
+      const app = await createAppMutation.mutateAsync(input)
+      setCreateDialogOpen(false)
+      toast.success('App created as draft')
+      if (orgId && app?.$id) {
+        navigate({
+          to: '/organizations/$orgId/apps/$appId',
+          params: { orgId, appId: app.$id },
+        })
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to create app'))
     }
-    setOwnedApps((prev) => [newApp, ...prev])
-    setActiveNavId('my-apps')
-    toast.success('App saved as draft')
-  }
-
-  const handleInstall = (app: MarketplaceApp) => {
-    toast.success(`${app.name} will be available when install APIs ship`)
-    setDetailOpen(false)
   }
 
   const openDetail = (app: MarketplaceApp) => {
-    setDetailApp(app)
-    setDetailOpen(true)
+    if (!orgId) return
+    if (app.isOwned) {
+      navigate({
+        to: '/organizations/$orgId/apps/$appId',
+        params: { orgId, appId: app.$id },
+      })
+      return
+    }
+    navigate({
+      to: '/organizations/$orgId/marketplace/$appId',
+      params: { orgId, appId: app.$id },
+    })
   }
 
   const handleLinkAction = (link: MarketplaceLinkItem) => {
@@ -150,9 +178,7 @@ export function View() {
       return
     }
     if (link.action === 'publisher-guidelines') {
-      toast.info(
-        'Publisher guidelines will be available when marketplace APIs ship',
-      )
+      window.open('https://appwrite.io/docs', '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -171,16 +197,24 @@ export function View() {
     ? 'Try adjusting or clearing your search.'
     : activeNavId === 'my-apps'
       ? 'Add your first app to share it with other organizations.'
-      : 'New integrations will appear here when available.'
+      : 'Published apps from other organizations will appear here.'
 
   const mainContent = () => {
+    if (listLoading) {
+      return (
+        <div className="flex min-h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )
+    }
+
     if (isExplore && !searchActive) {
       if (!exploreHasContent) {
         return (
           <EmptyState
             icon={Store}
             title="Marketplace is empty"
-            description="Apps will appear here when listings are available."
+            description="Apps will appear here when other organizations publish listings."
             variant="card"
           />
         )
@@ -216,14 +250,21 @@ export function View() {
     }
 
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {displayedApps.map((app) => (
-          <MarketplaceAppCard
-            key={app.$id}
-            app={app}
-            onClick={() => openDetail(app)}
-          />
-        ))}
+      <div className="relative">
+        {listFetching && (
+          <div className="absolute right-0 top-0 z-10">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {displayedApps.map((app) => (
+            <MarketplaceAppCard
+              key={app.$id}
+              app={app}
+              onClick={() => openDetail(app)}
+            />
+          ))}
+        </div>
       </div>
     )
   }
@@ -248,13 +289,7 @@ export function View() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreate={handleCreateApp}
-      />
-
-      <AppDetailDrawer
-        app={detailApp}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-        onInstall={handleInstall}
+        isSubmitting={createAppMutation.isPending}
       />
     </div>
   )

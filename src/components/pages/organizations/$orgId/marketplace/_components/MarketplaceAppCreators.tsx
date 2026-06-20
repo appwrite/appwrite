@@ -1,5 +1,5 @@
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import type { MarketplaceAppCreator } from '@/lib/marketplace/mock-data'
+import type { MarketplaceAppCreator } from '@/lib/marketplace/types'
 
 type MarketplaceAppCreatorsProps = {
   creators: MarketplaceAppCreator[]

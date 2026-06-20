@@ -10,9 +10,12 @@ import {
 import {
   MARKETPLACE_CATEGORY_ICONS,
   MARKETPLACE_CATEGORY_LABELS,
+  MARKETPLACE_CATEGORY_ORDER,
   type MarketplaceApp,
   type MarketplaceAppCategory,
-} from '@/lib/marketplace/mock-data'
+} from '@/lib/marketplace/types'
+
+export { MARKETPLACE_CATEGORY_ORDER }
 
 export type MarketplaceNavId =
   | 'explore'
@@ -42,16 +45,6 @@ export type MarketplaceLinkItem = {
   external?: boolean
   action?: 'add-app' | 'publisher-guidelines'
 }
-
-export const MARKETPLACE_CATEGORY_ORDER: MarketplaceAppCategory[] = [
-  'auth',
-  'storage',
-  'analytics',
-  'payments',
-  'ai',
-  'messaging',
-  'devtools',
-]
 
 export function buildMarketplaceNavGroups(): MarketplaceNavGroup[] {
   return [

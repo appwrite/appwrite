@@ -172,6 +172,7 @@ import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
+import { View as OrgAppsView } from '../apps/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
@@ -210,7 +211,6 @@ import {
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { ComingSoonView } from '@/components/global/shared/ComingSoonView'
 import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
@@ -711,6 +711,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/members': '/organizations/$orgId/settings/members',
         'settings/billing': '/organizations/$orgId/settings/billing',
         'settings/compliance': '/organizations/$orgId/settings/compliance',
+        'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
       }
 
       const route = tabRoutes[tab]
@@ -2937,7 +2938,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     ) : settingsSubTab === 'compliance' ? (
                       <ComplianceTab />
                     ) : settingsSubTab === 'oauth-apps' ? (
-                      <ComingSoonView title="OAuth apps" comingSoon />
+                      <OrgAppsView />
                     ) : settingsSubTab === 'api-keys' ? (
                       <SettingsCardsList
                         className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6"

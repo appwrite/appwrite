@@ -82,7 +82,7 @@ function NavButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors',
+        'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors',
         isActive
           ? 'bg-accent text-foreground'
           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -142,7 +142,7 @@ function SidebarLinks({
       {links.map((link) => {
         const Icon = link.icon
         const className = cn(
-          'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors',
+          'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors',
           link.action === 'add-app'
             ? 'text-foreground hover:bg-accent/50'
             : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

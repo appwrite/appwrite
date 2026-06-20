@@ -1,5 +1,5 @@
-import type { MarketplaceApp } from '@/lib/marketplace/mock-data'
-import { MARKETPLACE_CATEGORY_ICONS } from '@/lib/marketplace/mock-data'
+import type { MarketplaceApp } from '@/lib/marketplace/types'
+import { MARKETPLACE_CATEGORY_ICONS } from '@/lib/marketplace/types'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MarketplaceAppBadges } from './MarketplaceAppBadges'
 
@@ -10,15 +10,13 @@ type MarketplaceAppCardProps = {
 
 function statusVariant(
   status: MarketplaceApp['status'],
-): 'success' | 'warning' | 'info' {
+): 'success' | 'info' {
   if (status === 'published') return 'success'
-  if (status === 'pending') return 'warning'
   return 'info'
 }
 
 function statusLabel(status: MarketplaceApp['status']): string {
   if (status === 'published') return 'Published'
-  if (status === 'pending') return 'Pending review'
   return 'Draft'
 }
 

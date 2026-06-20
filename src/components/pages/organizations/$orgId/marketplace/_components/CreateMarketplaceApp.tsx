@@ -20,7 +20,7 @@ import {
 import {
   MARKETPLACE_CATEGORY_LABELS,
   type MarketplaceAppCategory,
-} from '@/lib/marketplace/mock-data'
+} from '@/lib/marketplace/types'
 
 export type CreateMarketplaceAppInput = {
   name: string
@@ -33,7 +33,8 @@ export type CreateMarketplaceAppInput = {
 interface CreateMarketplaceAppProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (input: CreateMarketplaceAppInput) => void
+  onCreate: (input: CreateMarketplaceAppInput) => void | Promise<void>
+  isSubmitting?: boolean
 }
 
 function slugify(value: string): string {
@@ -48,6 +49,7 @@ export function CreateMarketplaceApp({
   open,
   onOpenChange,
   onCreate,
+  isSubmitting = false,
 }: CreateMarketplaceAppProps) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -73,17 +75,16 @@ export function CreateMarketplaceApp({
     }
   }, [name, slugTouched])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !shortDescription.trim()) return
-    onCreate({
+    if (!name.trim() || !shortDescription.trim() || isSubmitting) return
+    await onCreate({
       name: name.trim(),
       slug: slug.trim() || slugify(name),
       shortDescription: shortDescription.trim(),
       description: description.trim() || shortDescription.trim(),
       category,
     })
-    onOpenChange(false)
   }
 
   const canSubmit = name.trim().length > 0 && shortDescription.trim().length > 0
@@ -94,8 +95,8 @@ export function CreateMarketplaceApp({
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Add app</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Submit a new app listing to the marketplace. It will be saved as a
-            draft until review APIs are available.
+            Create an OAuth2 app listing for the marketplace. It is saved as a
+            draft until you publish it.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -183,7 +184,7 @@ export function CreateMarketplaceApp({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={!canSubmit}>
+            <Button type="submit" disabled={!canSubmit || isSubmitting}>
               Add app
             </Button>
           </div>

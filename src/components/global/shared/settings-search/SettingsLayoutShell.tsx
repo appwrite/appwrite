@@ -151,7 +151,7 @@ function SettingsLayoutShellContent({
     )
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
+    <div className="flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:gap-8">
       <div className="lg:hidden space-y-2" aria-label={mobileNavAriaLabel}>
         <SettingsSearchInput
           value={query}

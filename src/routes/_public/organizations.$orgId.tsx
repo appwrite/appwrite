@@ -71,9 +71,15 @@ function OrganizationLayout() {
   const isOrgDomainsWizardRoute =
     pathname.includes('/domains/buy') ||
     pathname.includes('/domains/transfer-in')
+  const isMarketplaceAppDetailRoute =
+    pathname.includes('/marketplace/') && !pathname.endsWith('/marketplace')
+  const isOrgAppDetailRoute =
+    pathname.includes('/apps/') && !pathname.endsWith('/apps')
   const isUpgradeWizardRoute = pathname === '/upgrade'
   const renderOutletOnly =
     isDomainDetailRoute ||
+    isMarketplaceAppDetailRoute ||
+    isOrgAppDetailRoute ||
     isSupportRoute ||
     isOrgDomainsWizardRoute ||
     isUpgradeWizardRoute

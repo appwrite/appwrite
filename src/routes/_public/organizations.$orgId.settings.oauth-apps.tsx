@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { fetchOrganizations } from '@/lib/react-query/hooks'
+import { fetchOrganizations, organizationAppsQueryOptions } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export const Route = createFileRoute(
@@ -18,14 +18,18 @@ export const Route = createFileRoute(
   head: () => ({
     meta: [{ title: pageTitle('OAuth apps', 'Organization') }],
   }),
-  loader: async ({ context }) => {
+  loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
+    const { orgId } = params
     const { queryClient } = context
     await queryClient.prefetchQuery({
       queryKey: ['organizations', 'console'],
       queryFn: fetchOrganizations,
       staleTime: 5 * 60 * 1000,
     })
+    if (orgId) {
+      await queryClient.ensureQueryData(organizationAppsQueryOptions(orgId))
+    }
   },
   component: OAuthAppsPage,
 })
