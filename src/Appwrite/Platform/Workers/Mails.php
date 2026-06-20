@@ -144,12 +144,13 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var callable(): EmailAdapter $buildAdapter */
-        $buildAdapter = function () use ($smtp, $register, $telemetry): EmailAdapter {
-            /** @var EmailAdapter $adapter */
-            $adapter = empty($smtp)
-                ? $register->get('smtp')
-                : new SMTP(
+        /**
+         * Build a fresh SMTP adapter each call — never reuse a cached registry instance,
+         * as the registry singleton carries a stale keepalive socket on retry.
+         */
+        $buildAdapter = function () use ($smtp, $telemetry): EmailAdapter {
+            if (!empty($smtp)) {
+                $adapter = new SMTP(
                     host: $smtp['host'],
                     port: (int) $smtp['port'],
                     username: $smtp['username'] ?? '',
@@ -161,6 +162,21 @@ class Mails extends Action
                     keepAlive: true,
                     timelimit: 30,
                 );
+            } else {
+                // Cloud path — build fresh instead of reusing registry singleton
+                $adapter = new SMTP(
+                    host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+                    port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+                    username: System::getEnv('_APP_SMTP_USERNAME', ''),
+                    password: System::getEnv('_APP_SMTP_PASSWORD', ''),
+                    smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+                    smtpAutoTLS: false,
+                    xMailer: 'Appwrite Mailer',
+                    timeout: 10,
+                    keepAlive: true,
+                    timelimit: 30,
+                );
+            }
             $adapter->setTelemetry($telemetry);
             return $adapter;
         };
@@ -225,12 +241,12 @@ class Mails extends Action
          *
          * @throws Exception
          */
-        $sendAndCheck = function (EmailAdapter $adapter) use ($emailMessage, $type): void {
+        $sendAndCheck = function (EmailAdapter $adapter) use ($emailMessage): void {
             $response = $adapter->send($emailMessage);
             $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
             if (!empty($failed)) {
                 $error = array_values($failed)[0]['error'] ?? 'Unknown error';
-                throw new Exception('Error sending mail: ' . $error, $type === 'smtp' ? 401 : 500);
+                throw new Exception($error);
             }
         };
 
@@ -238,13 +254,16 @@ class Mails extends Action
             $sendAndCheck($buildAdapter());
         } catch (\Throwable $error) {
             // Retry once on 421 — stale keepalive connection dropped by server or NAT.
-            // Force a fresh adapter instance so PHPMailer opens a new socket.
-            if ($type === 'smtp' && str_contains($error->getMessage(), '421')) {
+            // Fresh adapter forces PHPMailer to open a new socket.
+            if (str_contains($error->getMessage(), '421')) {
                 try {
                     $sendAndCheck($buildAdapter());
                 } catch (\Throwable $retryError) {
                     Span::add('mail.status', 'failure');
-                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
+                    if ($type === 'smtp') {
+                        throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
+                    }
+                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), 500);
                 }
             } else {
                 Span::add('mail.status', 'failure');
