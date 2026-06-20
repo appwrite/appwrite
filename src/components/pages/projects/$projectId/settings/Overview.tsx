@@ -29,6 +29,8 @@ import {
   useProject,
   useOrganizations,
   PROJECT_NAME_MAX_LENGTH,
+  formatProjectNameForDisplay,
+  getProjectNameDisplayTitle,
 } from '@/lib/react-query/hooks'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -1272,7 +1274,14 @@ function ChangeOrganizationSection({
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
-            <DialogTitle>Transfer project {project.name}</DialogTitle>
+            <DialogTitle>
+              Transfer project{' '}
+              <span
+                title={getProjectNameDisplayTitle(project.name) ?? project.name}
+              >
+                {formatProjectNameForDisplay(project.name)}
+              </span>
+            </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Consider the following before transferring your project:
             </DialogDescription>
@@ -1396,8 +1405,11 @@ function DeleteProjectSection({
             <div className="flex items-center gap-3 mt-4">
               <InitialsAvatar name={project.name} size="md" />
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-medium text-foreground truncate">
-                  {project.name}
+                <p
+                  className="text-[14px] font-medium text-foreground truncate"
+                  title={getProjectNameDisplayTitle(project.name) ?? project.name}
+                >
+                  {formatProjectNameForDisplay(project.name)}
                 </p>
                 {supportsMultiRegion && project.region && (
                   <p className="text-[12px] text-muted-foreground">
@@ -1428,8 +1440,11 @@ function DeleteProjectSection({
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete{' '}
                   {project && (
-                    <span className="font-medium text-foreground">
-                      {project.name}
+                    <span
+                      className="font-medium text-foreground"
+                      title={getProjectNameDisplayTitle(project.name) ?? project.name}
+                    >
+                      {formatProjectNameForDisplay(project.name)}
                     </span>
                   )}{' '}
                   and all its databases, functions, and files? This action
@@ -1443,8 +1458,14 @@ function DeleteProjectSection({
                     <div className="flex items-center gap-3">
                       <InitialsAvatar name={project.name} size="sm" />
                       <div>
-                        <p className="text-[13px] font-medium text-foreground">
-                          {project.name}
+                        <p
+                          className="text-[13px] font-medium text-foreground truncate"
+                          title={
+                            getProjectNameDisplayTitle(project.name) ??
+                            project.name
+                          }
+                        >
+                          {formatProjectNameForDisplay(project.name)}
                         </p>
                         {supportsMultiRegion && project.region && (
                           <p className="text-[11px] text-muted-foreground">

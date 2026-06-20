@@ -14,6 +14,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   type ProjectListItem,
   type ProjectListPlatformsEntry,
+  PROJECT_NAME_DISPLAY_MAX_WIDE,
 } from '@/lib/react-query/hooks/projects'
 import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
 import { cn } from '@/lib/utils'
@@ -156,7 +157,7 @@ export function ProjectsListTable({
                         <ProjectListName
                           name={project.name}
                           className="min-w-0 flex-1"
-                          maxLength={36}
+                          maxLength={PROJECT_NAME_DISPLAY_MAX_WIDE}
                         />
                         <FailedInvoiceWarningIcon
                           show={showFailedInvoiceOrgAlert}

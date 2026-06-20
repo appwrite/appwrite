@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/tooltip'
 import { formatCurrency, formatDate } from './utils'
 import { cn } from '@/lib/utils'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import {
   Collapsible,
   CollapsibleContent,
@@ -677,9 +678,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                     >
                       <CollapsibleTrigger asChild>
                         <button className="flex w-full items-center justify-between rounded-md px-2 py-2 text-[13px] hover:bg-accent/50 transition-colors -mx-2">
-                          <span className="flex items-center gap-2 text-foreground">
-                            <Folder className="h-3.5 w-3.5 text-muted-foreground" />
-                            {project.projectName}
+                          <span
+                            className="flex items-center gap-2 text-foreground min-w-0"
+                            title={project.projectName}
+                          >
+                            <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="truncate">
+                              {formatProjectNameForDisplay(project.projectName)}
+                            </span>
                           </span>
                           <span className="flex items-center gap-2">
                             <span className="font-medium text-foreground">

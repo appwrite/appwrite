@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 
 const SELECTION_PAGE_SIZE = 5
 const SELECTION_ROW_HEIGHT_CLASS = 'h-[46px]'
@@ -107,8 +108,11 @@ export function DowngradeProjectSelection({
                         disabled && 'cursor-not-allowed',
                       )}
                     >
-                      <p className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
-                        {project.name}
+                      <p
+                        className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground"
+                        title={project.name}
+                      >
+                        {formatProjectNameForDisplay(project.name)}
                       </p>
                     </Label>
                   </div>

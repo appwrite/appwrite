@@ -1,8 +1,12 @@
-import { truncateMiddle } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import {
+  formatProjectNameForDisplay,
+  getProjectNameDisplayTitle,
+  PROJECT_NAME_DISPLAY_MAX,
+} from '@/lib/react-query/hooks/projects'
 
-/** Visible project name length in org list/grid cards (full name in title tooltip). */
-export const PROJECT_LIST_NAME_DISPLAY_MAX = 28
+/** @deprecated Use {@link PROJECT_NAME_DISPLAY_MAX} from projects hooks. */
+export const PROJECT_LIST_NAME_DISPLAY_MAX = PROJECT_NAME_DISPLAY_MAX
 
 type ProjectListNameProps = {
   name: string
@@ -16,9 +20,9 @@ export function ProjectListName({
   name,
   className,
   as: Component = 'span',
-  maxLength = PROJECT_LIST_NAME_DISPLAY_MAX,
+  maxLength = PROJECT_NAME_DISPLAY_MAX,
 }: ProjectListNameProps) {
-  const displayName = truncateMiddle(name, maxLength)
+  const displayName = formatProjectNameForDisplay(name, maxLength)
 
   return (
     <Component
@@ -27,7 +31,7 @@ export function ProjectListName({
         Component === 'h3' ? 'text-[14px]' : 'text-[13px]',
         className,
       )}
-      title={name.length > maxLength ? name : undefined}
+      title={getProjectNameDisplayTitle(name, maxLength)}
     >
       {displayName}
     </Component>

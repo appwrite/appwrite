@@ -23,6 +23,8 @@ import {
   useSettingsSearch,
 } from './SettingsSearchContext'
 
+export const SETTINGS_LAYOUT_NAV_WIDTH_CLASS = 'w-56'
+
 export type SettingsLayoutNavItem = {
   id: string
   label: string
@@ -92,7 +94,7 @@ function SettingsLayoutShellContent({
   searchPlaceholder = 'Search settings...',
   mobileNavAriaLabel = 'Settings section',
   desktopNavAriaLabel = 'Settings navigation',
-  navWidthClassName = 'w-48',
+  navWidthClassName = SETTINGS_LAYOUT_NAV_WIDTH_CLASS,
 }: Omit<SettingsLayoutShellProps, 'searchQuery' | 'onSearchQueryChange'>) {
   const { query, setQuery } = useSettingsSearch()
   const q = query.trim().toLowerCase()

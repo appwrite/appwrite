@@ -112,7 +112,6 @@ export function ProjectResourceSettingsShell({
       navItems={layoutNavItems}
       activeSectionId={activeSection}
       cardIndex={cardIndex}
-      navWidthClassName="w-56"
       onNavigateToSection={(sectionId) => {
         const item = navItems.find((n) => n.id === sectionId)
         if (!item) return

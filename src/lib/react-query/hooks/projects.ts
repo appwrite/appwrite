@@ -40,6 +40,7 @@ import {
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
 } from './constants'
+import { truncateMiddle } from '@/lib/utils'
 
 // ============================================================================
 // LIST SELECT - minimal fields for project list/cards (selector, org overview)
@@ -56,6 +57,37 @@ const PROJECT_LIST_SELECT = [
 
 /** Appwrite project name max length (see organization.createProject). */
 export const PROJECT_NAME_MAX_LENGTH = 128
+
+/** Default visible length for project names in lists and compact UI. */
+export const PROJECT_NAME_DISPLAY_MAX = 28
+
+/** Wider limit for table rows and selector triggers when space allows. */
+export const PROJECT_NAME_DISPLAY_MAX_WIDE = 36
+
+/** Limit when shown beside an organization name in the project selector. */
+export const PROJECT_NAME_DISPLAY_MAX_COMPACT = 22
+
+/** Limit for the project selector trigger (single-tenant layout). */
+export const PROJECT_NAME_DISPLAY_MAX_SELECTOR = 30
+
+/** @deprecated Use {@link PROJECT_NAME_DISPLAY_MAX}. */
+export const PROJECT_LIST_NAME_DISPLAY_MAX = PROJECT_NAME_DISPLAY_MAX
+
+export function formatProjectNameForDisplay(
+  name: string,
+  maxLength: number = PROJECT_NAME_DISPLAY_MAX,
+): string {
+  if (!name) return name
+  return truncateMiddle(name, maxLength)
+}
+
+export function getProjectNameDisplayTitle(
+  name: string,
+  maxLength: number = PROJECT_NAME_DISPLAY_MAX,
+): string | undefined {
+  if (!name || name.length <= maxLength) return undefined
+  return name
+}
 
 export type ProjectListItem = {
   $id: string

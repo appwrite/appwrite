@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import type { Models } from '@appwrite.io/console'
+import { formatIpForDisplay } from '@/lib/format-ip'
 import { getExecutionStatusBadge, getStatusCodeBadge } from './Executions'
 import {
   fetchFunctionExecution,
@@ -93,6 +94,96 @@ function parseQueryParams(
 
 function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+type ExecutionRequestContextFields = {
+  requestHost?: string
+  clientIp?: string
+  hostname?: string
+  ip?: string
+}
+
+function normalizeOptionalString(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed || undefined
+}
+
+function normalizeHeaderValue(value: unknown): string | undefined {
+  if (value == null) return undefined
+  if (typeof value === 'string') return normalizeOptionalString(value)
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const normalized = normalizeHeaderValue(item)
+      if (normalized) return normalized
+    }
+  }
+  return undefined
+}
+
+function getRequestHeaderValue(
+  headers: Models.Headers[] | undefined,
+  name: string,
+): string | undefined {
+  if (!headers?.length) return undefined
+  const target = name.toLowerCase()
+
+  for (const header of headers) {
+    if (!header || typeof header !== 'object') continue
+
+    if (
+      typeof header.name === 'string' &&
+      header.name.toLowerCase() === target
+    ) {
+      return normalizeHeaderValue(header.value)
+    }
+
+    for (const [key, value] of Object.entries(header)) {
+      if (key === 'name' || key === 'value') continue
+      if (key.toLowerCase() === target) {
+        return normalizeHeaderValue(value)
+      }
+    }
+  }
+
+  return undefined
+}
+
+function getExecutionHostname(execution: Models.Execution): string | undefined {
+  const ext = execution as Models.Execution & ExecutionRequestContextFields
+  return (
+    normalizeOptionalString(ext.requestHost) ||
+    normalizeOptionalString(ext.hostname) ||
+    getRequestHeaderValue(execution.requestHeaders, 'host')
+  )
+}
+
+function getExecutionClientIp(execution: Models.Execution): string | undefined {
+  const ext = execution as Models.Execution & ExecutionRequestContextFields
+  const fromField =
+    normalizeOptionalString(ext.clientIp) ||
+    normalizeOptionalString(ext.ip)
+  if (fromField) return fromField
+
+  const appwriteIp = getRequestHeaderValue(
+    execution.requestHeaders,
+    'x-appwrite-client-ip',
+  )
+  if (appwriteIp) return appwriteIp
+
+  const forwardedFor = getRequestHeaderValue(
+    execution.requestHeaders,
+    'x-forwarded-for',
+  )
+  if (forwardedFor) {
+    const first = forwardedFor.split(',')[0]?.trim()
+    if (first) return first
+  }
+
+  return getRequestHeaderValue(execution.requestHeaders, 'x-real-ip')
 }
 
 function formatExecutionLogContent(
@@ -254,6 +345,11 @@ export function ExecutionDetailsDrawer({
   const statusBadge = getExecutionStatusBadge(execution.status)
   const statusCodeBadge = execution.responseStatusCode
     ? getStatusCodeBadge(execution.responseStatusCode)
+    : null
+  const requestHostname = getExecutionHostname(execution)
+  const clientIp = getExecutionClientIp(execution)
+  const clientIpDisplay = clientIp
+    ? (formatIpForDisplay(clientIp, 44) ?? clientIp)
     : null
 
   const handlePrevious = () => {
@@ -471,6 +567,43 @@ export function ExecutionDetailsDrawer({
                       <p className="text-[14px] text-foreground font-medium">
                         {execution.requestMethod?.toUpperCase() || 'N/A'}
                       </p>
+                    </div>
+
+                    {/* Hostname */}
+                    <div>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Hostname
+                      </p>
+                      {requestHostname ? (
+                        <CopyableId
+                          id={requestHostname}
+                          size="sm"
+                          maxWidth={280}
+                        />
+                      ) : (
+                        <span className="text-[14px] text-muted-foreground">
+                          N/A
+                        </span>
+                      )}
+                    </div>
+
+                    {/* IP address */}
+                    <div>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        IP address
+                      </p>
+                      {clientIp ? (
+                        <CopyableId
+                          id={clientIp}
+                          displayText={clientIpDisplay ?? clientIp}
+                          size="sm"
+                          maxWidth={360}
+                        />
+                      ) : (
+                        <span className="text-[14px] text-muted-foreground">
+                          N/A
+                        </span>
+                      )}
                     </div>
 
                     {/* Status Code */}

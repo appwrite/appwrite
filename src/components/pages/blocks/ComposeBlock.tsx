@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import {
   ORDERED_RESOURCE_TYPES,
   RESOURCE_TYPE_META,
@@ -265,8 +266,13 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
                   </span>
                 )}{' '}
                 in{' '}
-                <span className="font-medium text-foreground">
-                  {meta?.projectName || projectId}
+                <span
+                  className="font-medium text-foreground"
+                  title={meta?.projectName || projectId}
+                >
+                  {formatProjectNameForDisplay(
+                    meta?.projectName || projectId,
+                  )}
                 </span>
                 {meta?.organizationName && (
                   <>

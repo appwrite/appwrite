@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import type { Models } from '@appwrite.io/console'
 
 interface OrganizationUsageLimitsProps {
@@ -127,8 +128,11 @@ export const OrganizationUsageLimits = forwardRef<
                     disabled && 'cursor-not-allowed',
                   )}
                 >
-                  <div className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground">
-                    {project.name}
+                  <div
+                    className="min-w-0 truncate text-[13px] font-medium leading-normal text-foreground"
+                    title={project.name}
+                  >
+                    {formatProjectNameForDisplay(project.name)}
                   </div>
                   <div className="min-w-0 truncate text-[12px] leading-normal text-muted-foreground mt-0.5">
                     {project.$id}

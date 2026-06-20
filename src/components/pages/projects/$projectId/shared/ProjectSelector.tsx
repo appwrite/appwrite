@@ -36,6 +36,11 @@ import {
 } from '@tanstack/react-query'
 import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import { truncateMiddle } from '@/lib/utils'
+import {
+  formatProjectNameForDisplay,
+  PROJECT_NAME_DISPLAY_MAX_COMPACT,
+  PROJECT_NAME_DISPLAY_MAX_SELECTOR,
+} from '@/lib/react-query/hooks'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useNavigate } from '@tanstack/react-router'
@@ -542,7 +547,10 @@ export function ProjectSelector({
                 className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
                 title={resolvedProject.name}
               >
-                {truncateMiddle(resolvedProject.name, 30)}
+                {formatProjectNameForDisplay(
+                  resolvedProject.name,
+                  PROJECT_NAME_DISPLAY_MAX_SELECTOR,
+                )}
               </p>
             </div>
             {supportsMultiTenancy && (
@@ -654,10 +662,17 @@ export function ProjectSelector({
                       currentProjectTeam?.name || resolvedTeam.name,
                       20,
                     )}{' '}
-                    / {truncateMiddle(resolvedProject.name, 22)}
+                    /{' '}
+                    {formatProjectNameForDisplay(
+                      resolvedProject.name,
+                      PROJECT_NAME_DISPLAY_MAX_COMPACT,
+                    )}
                   </>
                 ) : (
-                  truncateMiddle(resolvedProject.name, 30)
+                  formatProjectNameForDisplay(
+                    resolvedProject.name,
+                    PROJECT_NAME_DISPLAY_MAX_SELECTOR,
+                  )
                 )}
               </p>
               {isCloud && currentProjectOrg && (
@@ -964,8 +979,11 @@ function ProjectSelectorContent({
                     >
                       <InitialsAvatar name={project.name} size="sm" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                        <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
-                          {project.name}
+                        <span
+                          className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
+                          title={project.name}
+                        >
+                          {formatProjectNameForDisplay(project.name)}
                           {isCurrentProject && (
                             <Badge
                               variant="outline"
@@ -1286,8 +1304,11 @@ function MobileProjectSelectorContent({
                       >
                         <InitialsAvatar name={project.name} size="sm" />
                         <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                          <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground">
-                            {project.name}
+                          <span
+                            className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground"
+                            title={project.name}
+                          >
+                            {formatProjectNameForDisplay(project.name)}
                             {isCurrentProject && (
                               <Badge
                                 variant="outline"

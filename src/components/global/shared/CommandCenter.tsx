@@ -61,6 +61,7 @@ import {
   useProjectProviders,
   useProject,
   useOrganizationScopes,
+  formatProjectNameForDisplay,
 } from '@/lib/react-query/hooks'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
@@ -954,7 +955,7 @@ export function CommandCenter({
       orgProjects.forEach((project) => {
         items.push({
           id: `project-${project.$id}`,
-          label: project.name,
+          label: formatProjectNameForDisplay(project.name),
           description: features.multiRegion
             ? `Project · ${project.region || 'unknown'}`
             : 'Project',

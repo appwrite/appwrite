@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, Fragment } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { Zap, Clock } from 'lucide-react'
-import { cn, truncateMiddle } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -76,9 +76,6 @@ function LogsTableColGroup() {
 }
 
 const logsTableClassName = 'w-full min-w-[77rem] table-fixed'
-
-/** Character cap for middle truncation; container width handles the rest. */
-const PATH_DISPLAY_MAX = 48
 
 function LogsTableHead() {
   return (
@@ -424,14 +421,18 @@ export function LogsListView({
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         {path !== 'N/A' ? (
-                          <CopyableId
-                            id={path}
-                            displayText={truncateMiddle(path, PATH_DISPLAY_MAX)}
-                            size="md"
-                            variant="inline"
-                            constrainToContainer
-                            className="w-full max-w-full"
-                          />
+                          <div
+                            className="inline-block max-w-full min-w-0"
+                            title={path}
+                          >
+                            <CopyableId
+                              id={path}
+                              size="md"
+                              variant="inline"
+                              constrainToContainer
+                              className="w-full max-w-full"
+                            />
+                          </div>
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
                             -

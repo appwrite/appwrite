@@ -6,6 +6,7 @@ import {
   type DowngradeResourceImpact,
 } from '@/lib/billing/downgrade-plan-limits'
 import type { DeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 
 interface DowngradeImpactSummaryProps {
   keptOrganizationName?: string
@@ -113,8 +114,11 @@ function ProjectResourceImpactSection({
                 key={projectId}
                 className="rounded-lg border border-border bg-card/50 p-3"
               >
-                <p className="truncate text-[13px] font-medium leading-normal text-foreground">
-                  {projectName}
+                <p
+                  className="truncate text-[13px] font-medium leading-normal text-foreground"
+                  title={projectName}
+                >
+                  {formatProjectNameForDisplay(projectName)}
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {resourceLines.map(({ id, label }) => (

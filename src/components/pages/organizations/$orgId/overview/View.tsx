@@ -69,6 +69,7 @@ import {
   mapProjectToListItem,
   useProjectListPlatforms,
   useProjectListRequestsUsage,
+  formatProjectNameForDisplay,
 } from '@/lib/react-query/hooks'
 import {
   parsePinnedProjectIds,
@@ -3870,8 +3871,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       .map((project, index) => (
                                                         <span key={project.$id}>
                                                           {index > 0 && ', '}
-                                                          <span className="font-medium text-foreground">
-                                                            {project.name}
+                                                          <span
+                                                            className="font-medium text-foreground"
+                                                            title={project.name}
+                                                          >
+                                                            {formatProjectNameForDisplay(
+                                                              project.name,
+                                                            )}
                                                           </span>
                                                         </span>
                                                       ))}

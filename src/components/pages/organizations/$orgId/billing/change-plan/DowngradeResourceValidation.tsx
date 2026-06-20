@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { fetchProjectDowngradeResources } from '@/lib/billing/fetch-project-downgrade-resources'
 import {
   buildResourcesToDelete,
@@ -674,8 +675,11 @@ export function DowngradeResourceValidation({
                         )}
                       >
                         <span className="min-w-0">
-                          <span className="block truncate text-[13px] font-medium leading-normal text-foreground">
-                            {project.name}
+                          <span
+                            className="block truncate text-[13px] font-medium leading-normal text-foreground"
+                            title={project.name}
+                          >
+                            {formatProjectNameForDisplay(project.name)}
                           </span>
                           {isLoadingProject ? (
                             <span className="block text-[12px] leading-normal text-muted-foreground mt-0.5">

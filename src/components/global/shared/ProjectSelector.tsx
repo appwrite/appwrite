@@ -25,6 +25,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { activeProjectsQueryOptions } from '@/lib/react-query/hooks'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
@@ -145,7 +146,9 @@ export function ProjectSelector({
               {projects.map((p) => {
                 const content = (
                   <>
-                    <span className="truncate">{p.name}</span>
+                    <span className="truncate" title={p.name}>
+                      {formatProjectNameForDisplay(p.name)}
+                    </span>
                     {p.paused && (
                       <Badge
                         variant="outline"

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useBlocks } from '@/lib/react-query/hooks/manager'
+import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 
 export function TargetBar({
   draft,
@@ -80,8 +81,10 @@ export function TargetBar({
         {meta?.projectName && (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-md border border-border bg-background px-4 py-3 text-[13px]">
             <dt className="text-muted-foreground">Project</dt>
-            <dd className="flex flex-wrap items-center gap-2 font-medium text-foreground">
-              <span>{meta.projectName}</span>
+            <dd className="flex flex-wrap items-center gap-2 font-medium text-foreground min-w-0">
+              <span className="truncate" title={meta.projectName}>
+                {formatProjectNameForDisplay(meta.projectName)}
+              </span>
               {meta.region && (
                 <Badge
                   variant="secondary"
