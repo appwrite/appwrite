@@ -11,6 +11,12 @@ import {
   type OAuth2ServerTimeUnit,
 } from '@/lib/oauth2-server/duration'
 import { getOAuth2ServerDiscoveryUrl } from '@/lib/oauth2-server/discovery'
+import {
+  mergeOAuth2Scopes,
+  oauth2ScopesEqual,
+  optionalOAuth2Scopes,
+  REQUIRED_OAUTH2_SCOPES,
+} from '@/lib/oauth2-server/scopes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { projectQueryOptions, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -58,7 +64,7 @@ function formStateFromProject(project: Models.Project): OAuth2ServerFormState {
   return {
     enabled: project.oAuth2ServerEnabled ?? false,
     authorizationUrl: project.oAuth2ServerAuthorizationUrl ?? '',
-    scopes: project.oAuth2ServerScopes ?? [],
+    scopes: mergeOAuth2Scopes(project.oAuth2ServerScopes ?? []),
     accessTokenDuration: project.oAuth2ServerAccessTokenDuration ?? null,
     refreshTokenDuration: project.oAuth2ServerRefreshTokenDuration ?? null,
     publicAccessTokenDuration:
@@ -78,10 +84,6 @@ function validateScopes(scopes: string[]): string | null {
     return `Scope "${invalid}" exceeds ${MAX_SCOPE_LENGTH} characters.`
   }
   return null
-}
-
-function scopesEqual(a: string[], b: string[]) {
-  return a.length === b.length && a.every((scope, index) => scope === b[index])
 }
 
 function tokensStateEqual(
@@ -400,7 +402,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     if (!serverState) return
     setEnabled(serverState.enabled)
     setAuthorizationUrl(serverState.authorizationUrl)
-    setScopes(serverState.scopes)
+    setScopes(mergeOAuth2Scopes(serverState.scopes))
     setConfidentialPkce(serverState.confidentialPkce)
 
     const accessToken = oauth2DurationFromSeconds(
@@ -436,7 +438,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     () => ({
       enabled,
       authorizationUrl,
-      scopes,
+      scopes: mergeOAuth2Scopes(scopes),
       confidentialPkce,
       accessTokenDuration: oauth2DurationToSeconds(
         accessTokenValue,
@@ -477,9 +479,11 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   )
 
   const isStatusUnchanged = serverState ? enabled === serverState.enabled : true
+  const optionalScopes = useMemo(() => optionalOAuth2Scopes(scopes), [scopes])
+
   const isIntegrationUnchanged = serverState
     ? authorizationUrl === serverState.authorizationUrl &&
-      scopesEqual(scopes, serverState.scopes)
+      oauth2ScopesEqual(scopes, serverState.scopes)
     : true
   const isTokensUnchanged = serverState
     ? tokensStateEqual(currentFormState, serverState)
@@ -492,7 +496,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
       if (requiresAuthorizationUrl) {
         throw new Error('Authorization URL is required when the server is enabled.')
       }
-      const scopeError = validateScopes(scopes)
+      const scopeError = validateScopes(mergeOAuth2Scopes(scopes))
       if (scopeError) throw new Error(scopeError)
 
       return sdk
@@ -500,7 +504,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         .project.updateOAuth2Server({
           enabled,
           authorizationUrl: authorizationUrl.trim(),
-          scopes,
+          scopes: mergeOAuth2Scopes(scopes),
           accessTokenDuration: currentFormState.accessTokenDuration ?? undefined,
           refreshTokenDuration:
             currentFormState.refreshTokenDuration ?? undefined,
@@ -621,15 +625,16 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             <div className="space-y-2">
               <FieldHint
                 label="Scopes"
-                hint={`Up to ${MAX_SCOPES} scopes, each up to ${MAX_SCOPE_LENGTH} characters.`}
+                hint={`openid, profile, and email are always included. Add up to ${MAX_SCOPES} scopes total, each up to ${MAX_SCOPE_LENGTH} characters.`}
               />
               <InputTags
                 id="oauth2-scopes"
-                value={scopes}
+                value={optionalScopes}
+                lockedTags={[...REQUIRED_OAUTH2_SCOPES]}
                 disabled={!canEdit}
                 splitOnComma
-                placeholder="e.g. openid, profile"
-                onChange={setScopes}
+                placeholder="Add custom scopes"
+                onChange={(next) => setScopes(mergeOAuth2Scopes(next))}
               />
             </div>
           </SettingsSection>

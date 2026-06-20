@@ -95,7 +95,7 @@ import { CreateTeamDrawer } from './CreateTeamDrawer'
 import { AuthSettings } from './Settings'
 import { SocialProviders } from './SocialProviders'
 import { Templates } from './Templates'
-import { View as OAuth2ServerView } from './oauth2-server/View'
+import { OAuth2ServerLayout } from './oauth2-server/Layout'
 import {
   PoliciesLayout,
   type PoliciesSubTab,
@@ -1118,7 +1118,7 @@ export function View({
                   {
                     id: 'oauth2-server' as const,
                     label: 'OAuth2 server',
-                    to: '/projects/$projectId/auth/oauth2-server',
+                    to: '/projects/$projectId/auth/oauth2-server/settings',
                     params: { projectId: projectId as string },
                   },
                 ]
@@ -2229,7 +2229,7 @@ export function View({
         )}
 
         {activeTab === 'oauth2-server' && projectId && (
-          <OAuth2ServerView projectId={projectId} />
+          <OAuth2ServerLayout projectId={projectId} />
         )}
 
         {activeTab === 'templates' && projectId && (

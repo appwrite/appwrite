@@ -14,6 +14,7 @@ import {
   Bell,
   Code,
   Globe,
+  KeyRound,
   Layers,
   Mail,
   Megaphone,
@@ -165,11 +166,11 @@ const PROJECT_TABS: CommandEntry[] = [
     to: (ctx) => `/projects/${ctx.projectId}/auth/social-providers`,
   },
   {
-    id: 'project.tab.auth.oauth2-server',
+    id: 'project.tab.auth.oauth2-server.settings',
     scopes: ['project'],
     kind: 'tab',
     group: 'Auth',
-    label: 'Auth · OAuth2 server',
+    label: 'Auth · OAuth2 server · Settings',
     description: 'Configure OAuth2 authorization server for third-party apps',
     icon: Server,
     keywords: [
@@ -179,10 +180,24 @@ const PROJECT_TABS: CommandEntry[] = [
       'openid',
       'authorization server',
       'discovery',
+      'tokens',
     ],
     available: (ctx) =>
       canShowProjectOAuth2Server(ctx.access, ctx.features),
-    to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server`,
+    to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server/settings`,
+  },
+  {
+    id: 'project.tab.auth.oauth2-server.apps',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Auth',
+    label: 'Auth · OAuth2 server · Apps',
+    description: 'Manage OAuth2 client apps for this project',
+    icon: KeyRound,
+    keywords: ['oauth', 'oauth2', 'clients', 'apps', 'redirect'],
+    available: (ctx) =>
+      canShowProjectOAuth2Server(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server/apps`,
   },
   {
     id: 'project.tab.auth.templates',

@@ -427,6 +427,7 @@ const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
+  apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),
   backups: new Backups(clientProject),
   compute: new Compute(clientProject),

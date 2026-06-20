@@ -14,6 +14,8 @@ interface InputTagsProps {
   /** When true, comma also commits tags and pasted comma-separated values are split. */
   splitOnComma?: boolean
   disabled?: boolean
+  /** Tags shown inside the field that cannot be removed. */
+  lockedTags?: string[]
   /**
    * Fills the text field when `id` changes (e.g. example chip clicked).
    * Does not add a tag until the user presses Enter or comma.
@@ -31,6 +33,7 @@ export function InputTags({
   validateEmail = false,
   splitOnComma = false,
   disabled = false,
+  lockedTags = [],
   prefillRequest,
   onPrefillConsumed,
 }: InputTagsProps) {
@@ -87,7 +90,7 @@ export function InputTags({
         setError('Please enter a valid email address')
         return
       }
-      if (next.includes(tag)) continue
+      if (lockedTags.includes(tag) || next.includes(tag)) continue
       next.push(tag)
       added = true
     }
@@ -166,6 +169,15 @@ export function InputTags({
           disabled && 'cursor-not-allowed opacity-50',
         )}
       >
+        {lockedTags.map((tag) => (
+          <Badge
+            key={`locked-${tag}`}
+            variant="secondary"
+            className="h-6 shrink-0 px-2 py-0 text-[12px] font-normal"
+          >
+            <span className="font-mono">{tag}</span>
+          </Badge>
+        ))}
         {value.map((tag) => (
           <Badge
             key={tag}
