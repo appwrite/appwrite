@@ -218,12 +218,24 @@ class Mails extends Action
         try {
             $adapter->send($emailMessage);
         } catch (\Throwable $error) {
-            Span::add('mail.status', 'failure');
+            // Retry once on SMTP 421 timeout — stale keepalive connection dropped by server or NAT.
+            // First send fails with "MAIL FROM command failed, Timeout - closing connection".
+            // The failed send closes the socket; retry opens a fresh connection and succeeds.
+            if ($type === 'smtp' && str_contains($error->getMessage(), '421')) {
+                try {
+                    $adapter->send($emailMessage);
+                } catch (\Throwable $retryError) {
+                    Span::add('mail.status', 'failure');
+                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
+                }
+            } else {
+                Span::add('mail.status', 'failure');
 
-            if ($type === 'smtp') {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+                if ($type === 'smtp') {
+                    throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+                }
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
             }
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
 
         Span::add('mail.status', 'success');
