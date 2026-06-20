@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import type { ImperativePanelHandle } from 'react-resizable-panels'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -23,6 +24,7 @@ import {
   CLI_SHELL_SESSIONS_STRIP_MAX_WIDTH_PX,
   CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX,
   computeTwoPanelHorizontalLayout,
+  syncPanelGroupFirstPanePx,
 } from '@/lib/resizable-layout'
 import { cn } from '@/lib/utils'
 import { CliTerminalLayoutProvider } from './CliTerminalLayoutContext'
@@ -48,6 +50,8 @@ export function CliTerminalResizableLayout({
   onSidebarResizingChange,
 }: CliTerminalResizableLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const firstPanelRef = useRef<ImperativePanelHandle>(null)
+  const prevContainerWidthRef = useRef(0)
   const [containerWidth, setContainerWidth] = useState(0)
   const { account } = useAuth()
   const accountPrefs = account as { prefs?: Record<string, unknown> } | undefined
@@ -106,6 +110,36 @@ export function CliTerminalResizableLayout({
       secondMinPx: CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
     })
   }, [containerWidth, effectiveSidebarPx, isStripLayout])
+
+  useLayoutEffect(() => {
+    if (isStripLayout || containerWidth <= 0 || mountedSidebarPx === null) return
+    if (isSidebarResizingRef.current) return
+
+    const prevWidth = prevContainerWidthRef.current
+    prevContainerWidthRef.current = containerWidth
+    if (prevWidth <= 0 || prevWidth === containerWidth) return
+
+    const mainPx = containerWidth - mountedSidebarPx
+    const nextMainPx = syncPanelGroupFirstPanePx(
+      firstPanelRef.current,
+      containerWidth,
+      mainPx,
+      {
+        firstMinPx: Math.max(
+          CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX,
+          containerWidth - CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX,
+        ),
+        firstMaxPx: containerWidth - CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
+        secondMinPx: CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX,
+      },
+    )
+    const nextSidebarPx = clampCliShellSessionsSidebarWidthPx(
+      containerWidth - nextMainPx,
+    )
+    if (nextSidebarPx !== mountedSidebarPx) {
+      setMountedSidebarPx(nextSidebarPx)
+    }
+  }, [containerWidth, isStripLayout, mountedSidebarPx])
 
   const persistTimerRef = useRef<number | null>(null)
   const lastPersistedPxRef = useRef(sidebarWidthPx)
@@ -235,6 +269,7 @@ export function CliTerminalResizableLayout({
         onLayout={handleLayout}
       >
         <ResizablePanel
+          ref={firstPanelRef}
           defaultSize={panelLayout.firstPercent}
           minSize={panelLayout.firstMinPercent}
           maxSize={panelLayout.firstMaxPercent}

@@ -149,20 +149,20 @@ function SettingsSection({
 }) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="flex items-center justify-between gap-3 px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
-        {headerExtra}
+      <div className="px-6 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+            {description ? (
+              <p className="mt-2 text-[13px] text-muted-foreground">{description}</p>
+            ) : null}
+          </div>
+          {headerExtra}
+        </div>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4 @container">
-        <div className="flex gap-6 @[600px]:flex-row flex-col">
-          {description ? (
-            <div className="@[600px]:w-64 shrink-0">
-              <p className="text-[13px] text-muted-foreground">{description}</p>
-            </div>
-          ) : null}
-          <div className="min-w-0 flex-1 space-y-4">{children}</div>
-        </div>
+      <div className="px-6 py-4">
+        <div className="space-y-4">{children}</div>
       </div>
       {footer ? (
         <>

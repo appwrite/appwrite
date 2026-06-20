@@ -1,4 +1,5 @@
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
 import { getActiveLaunchEvent } from './events'
@@ -127,8 +128,9 @@ export function isInitEventDuring(options?: {
   return phase === 'during'
 }
 
-/** Static promo banner content (env profile + calendar only; no API or client hooks). */
+/** Promo banner content from env profile, calendar, and persisted debug overrides. */
 export function getStaticInitOrgPromoBannerContent(): InitOrgPromoBannerContent | null {
   if (!getEnvProfileFeatures().init) return null
-  return getInitOrgPromoBannerContent()
+  const { mockInitCurrentDay } = loadDebugOverrides()
+  return getInitOrgPromoBannerContent({ mockCurrentDay: mockInitCurrentDay })
 }

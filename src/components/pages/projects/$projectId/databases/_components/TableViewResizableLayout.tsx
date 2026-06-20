@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import type { ImperativePanelHandle } from 'react-resizable-panels'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -24,6 +25,7 @@ import {
 import {
   clampTableViewSidebarWidthPx,
   computeTwoPanelHorizontalLayout,
+  syncPanelGroupFirstPanePx,
   TABLE_VIEW_MAIN_MIN_WIDTH_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
   TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
@@ -61,6 +63,8 @@ export function TableViewResizableLayout({
   sidebarWidthScope = 'databases',
 }: TableViewResizableLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const firstPanelRef = useRef<ImperativePanelHandle>(null)
+  const prevContainerWidthRef = useRef(0)
   const [containerWidth, setContainerWidth] = useState(0)
   const { account } = useAuth()
   const accountPrefs = account as { prefs?: Record<string, unknown> } | undefined
@@ -116,6 +120,29 @@ export function TableViewResizableLayout({
     })
   }, [containerWidth, mountedSidebarPx])
 
+  useLayoutEffect(() => {
+    if (mountedSidebarPx === null || containerWidth <= 0) return
+    if (isSidebarResizingRef.current) return
+
+    const prevWidth = prevContainerWidthRef.current
+    prevContainerWidthRef.current = containerWidth
+    if (prevWidth <= 0 || prevWidth === containerWidth) return
+
+    const nextPx = syncPanelGroupFirstPanePx(
+      firstPanelRef.current,
+      containerWidth,
+      mountedSidebarPx,
+      {
+        firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+        firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+        secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
+      },
+    )
+    if (nextPx !== mountedSidebarPx) {
+      setMountedSidebarPx(nextPx)
+    }
+  }, [containerWidth, mountedSidebarPx])
+
   const latestSidebarPxRef = useRef(sidebarWidthPx)
 
   useEffect(() => {
@@ -125,6 +152,7 @@ export function TableViewResizableLayout({
 
   const handleLayout = useCallback(
     (sizes: number[]) => {
+      if (!isSidebarResizingRef.current) return
       const percent = sizes[0]
       if (typeof percent !== 'number' || !Number.isFinite(percent)) return
       if (containerWidth <= 0) return
@@ -196,6 +224,7 @@ export function TableViewResizableLayout({
         onLayout={handleLayout}
       >
         <ResizablePanel
+          ref={firstPanelRef}
           defaultSize={panelLayout.firstPercent}
           minSize={panelLayout.firstMinPercent}
           maxSize={panelLayout.firstMaxPercent}

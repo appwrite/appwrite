@@ -6,6 +6,7 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react'
+import type { ImperativePanelHandle } from 'react-resizable-panels'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
@@ -70,6 +71,7 @@ import {
   FUNCTIONS_EDITOR_EXPLORER_MAX_WIDTH_PX,
   FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX,
   FUNCTIONS_EDITOR_MAIN_MIN_WIDTH_PX,
+  syncPanelGroupFirstPanePx,
 } from '@/lib/resizable-layout'
 import {
   DEFAULT_FILES,
@@ -483,6 +485,8 @@ export function View() {
     column: number
   } | null>(null)
   const editorSplitContainerRef = useRef<HTMLDivElement>(null)
+  const explorerPanelRef = useRef<ImperativePanelHandle>(null)
+  const prevEditorSplitWidthRef = useRef(0)
   const [editorSplitWidth, setEditorSplitWidth] = useState(0)
 
   useLayoutEffect(() => {
@@ -512,6 +516,25 @@ export function View() {
       mainMin: layout.secondMinPercent,
     }
   }, [editorSplitWidth])
+
+  useLayoutEffect(() => {
+    if (!explorerOpen || editorSplitWidth <= 0) return
+
+    const prevWidth = prevEditorSplitWidthRef.current
+    prevEditorSplitWidthRef.current = editorSplitWidth
+    if (prevWidth <= 0 || prevWidth === editorSplitWidth) return
+
+    syncPanelGroupFirstPanePx(
+      explorerPanelRef.current,
+      editorSplitWidth,
+      FUNCTIONS_EDITOR_EXPLORER_DEFAULT_WIDTH_PX,
+      {
+        firstMinPx: FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX,
+        firstMaxPx: FUNCTIONS_EDITOR_EXPLORER_MAX_WIDTH_PX,
+        secondMinPx: FUNCTIONS_EDITOR_MAIN_MIN_WIDTH_PX,
+      },
+    )
+  }, [editorSplitWidth, explorerOpen])
 
   const isMac =
     typeof navigator !== 'undefined' &&
@@ -1085,6 +1108,7 @@ export function View() {
             className="h-full min-w-0 flex-1"
           >
             <ResizablePanel
+              ref={explorerPanelRef}
               defaultSize={explorerPanelLayout.explorerDefault}
               minSize={explorerPanelLayout.explorerMin}
               maxSize={explorerPanelLayout.explorerMax}

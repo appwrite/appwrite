@@ -102,13 +102,51 @@ export type TwoPanelHorizontalLayout = {
  * Derives `react-resizable-panels` % sizes from px constraints. Ensures mins fit
  * in the group (sidebar + main cannot require more than 100%).
  */
-export function computeTwoPanelHorizontalLayout(input: {
-  containerWidth: number
-  firstPx: number
+type TwoPanelHorizontalConstraints = {
   firstMinPx: number
   firstMaxPx: number
   secondMinPx: number
-}): TwoPanelHorizontalLayout {
+}
+
+/**
+ * Keeps the first pane at a stable px width when the panel group container
+ * resizes (e.g. devtools open/close). Optionally imperatively resizes the panel.
+ */
+export function syncPanelGroupFirstPanePx(
+  panel: { getSize: () => number; resize: (size: number) => void } | null | undefined,
+  containerWidth: number,
+  firstPx: number,
+  constraints: TwoPanelHorizontalConstraints,
+): number {
+  if (containerWidth <= 0) return firstPx
+
+  const fittedFirstPx = fitSplitFirstPaneWidthOnContainerResize(
+    firstPx,
+    containerWidth,
+    constraints.firstMinPx,
+    constraints.firstMaxPx,
+    constraints.secondMinPx,
+  )
+  const layout = computeTwoPanelHorizontalLayout({
+    containerWidth,
+    firstPx: fittedFirstPx,
+    ...constraints,
+  })
+
+  if (panel) {
+    const currentSize = panel.getSize()
+    if (Math.abs(currentSize - layout.firstPercent) > 0.5) {
+      panel.resize(layout.firstPercent)
+    }
+  }
+
+  return layout.firstPx
+}
+
+export function computeTwoPanelHorizontalLayout(input: {
+  containerWidth: number
+  firstPx: number
+} & TwoPanelHorizontalConstraints): TwoPanelHorizontalLayout {
   const w = effectivePanelGroupWidthPx(input.containerWidth)
   const firstPx = clampSplitFirstPaneWidthPx(
     input.firstPx,

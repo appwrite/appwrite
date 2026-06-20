@@ -1,12 +1,15 @@
 import { Link } from '@tanstack/react-router'
+import { useMemo } from 'react'
+import type { ReactNode } from 'react'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
+import { getEnvProfileFeatures } from '@/lib/console-profiles'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
-  getStaticInitOrgPromoBannerContent,
+  getInitOrgPromoBannerContent,
   type InitOrgPromoPhase,
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
-import type { ReactNode } from 'react'
 
 const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
   {
@@ -49,7 +52,11 @@ function InitOrgPromoBannerLink({
 }
 
 export function InitOrgPromoBanner() {
-  const content = getStaticInitOrgPromoBannerContent()
+  const { mockInitCurrentDay } = useDebugOverrides()
+  const content = useMemo(() => {
+    if (!getEnvProfileFeatures().init) return null
+    return getInitOrgPromoBannerContent({ mockCurrentDay: mockInitCurrentDay })
+  }, [mockInitCurrentDay])
   if (!content) return null
 
   return (
