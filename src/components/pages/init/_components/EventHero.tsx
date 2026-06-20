@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
+import { isExternalInitHref } from '@/lib/init/links'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
@@ -137,8 +138,9 @@ function CollapsedHeroBar({
                     >
                       <a
                         href={liveBanner.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        {...(isExternalInitHref(liveBanner.href)
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
                       >
                         Watch
                         <ChevronRight className="size-3.5" />
@@ -168,7 +170,12 @@ function CollapsedHeroBar({
                 </div>
                 {liveBanner.href ? (
                   <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
-                    <a href={liveBanner.href} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={liveBanner.href}
+                      {...(isExternalInitHref(liveBanner.href)
+                        ? { target: '_blank', rel: 'noopener noreferrer' }
+                        : {})}
+                    >
                       Watch
                       <ChevronRight className="size-3.5" />
                     </a>

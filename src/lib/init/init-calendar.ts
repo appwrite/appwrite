@@ -2,7 +2,21 @@ import { parseDateOnly, resolveInitDayUnlockDate } from './dates'
 import { resolveInitCurrentDay, resolveInitRecapMode } from './event-visibility'
 import type { LaunchEvent, LaunchEventScheduleItem } from './types'
 
-const INIT_PAGE_URL = 'https://appwrite.io/init'
+const INIT_PAGE_PATH = '/init'
+
+function resolveInitPageUrl(origin?: string): string {
+  if (origin) {
+    return `${origin.replace(/\/+$/, '')}${INIT_PAGE_PATH}`
+  }
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${INIT_PAGE_PATH}`
+  }
+  return INIT_PAGE_PATH
+}
+
+function initPageAnchor(dayNumber: number): string {
+  return `${INIT_PAGE_PATH}#day-${dayNumber}`
+}
 
 export type InitCalendarVisibilityOptions = {
   now?: Date
@@ -58,14 +72,14 @@ function getInitCalendarDayDescription(
       '',
       `This launch unlocks on ${day.dateLabel}. Check back on Init for announcements, resources, and sessions.`,
       '',
-      INIT_PAGE_URL,
+      INIT_PAGE_PATH,
     ].join('\n')
   }
 
   return [
     day.description,
     '',
-    `View on Init: ${INIT_PAGE_URL}#day-${dayNumber}`,
+    `View on Init: ${initPageAnchor(dayNumber)}`,
   ].join('\n')
 }
 
@@ -138,7 +152,7 @@ function buildInitDayCalendarEvent(
     `DTEND;VALUE=DATE:${formatIcsDateOnly(endDate)}`,
     foldIcsLine(`SUMMARY:${escapeIcsText(summary)}`),
     foldIcsLine(`DESCRIPTION:${escapeIcsText(description)}`),
-    `URL:${INIT_PAGE_URL}#day-${dayNumber}`,
+    `URL:${resolveInitPageUrl()}#day-${dayNumber}`,
     'END:VEVENT',
   ]
 
@@ -266,7 +280,7 @@ function getInitScheduleItemDescription(
   const details = [
     `${getInitScheduleItemPlatformLabel(item.platform)} · ${item.timeLabel}`,
     '',
-    `View on Init: ${INIT_PAGE_URL}#day-${item.day}`,
+    `View on Init: ${initPageAnchor(item.day)}`,
   ]
 
   if (item.href) {
@@ -305,7 +319,7 @@ function buildInitScheduleItemCalendarEvent(
     foldIcsLine(
       `DESCRIPTION:${escapeIcsText(getInitScheduleItemDescription(event, item))}`,
     ),
-    `URL:${INIT_PAGE_URL}#day-${item.day}`,
+    `URL:${resolveInitPageUrl()}#day-${item.day}`,
     'END:VEVENT',
   ].join('\r\n')
 }
@@ -340,7 +354,7 @@ export function buildGoogleCalendarScheduleItemEventUrl(
     text: getInitScheduleItemSummary(item),
     dates,
     details: getInitScheduleItemDescription(event, item),
-    location: item.href ?? INIT_PAGE_URL,
+    location: item.href ?? resolveInitPageUrl(),
   })
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`
@@ -366,7 +380,7 @@ function buildInitCalendarWeekDetails(
     'Daily launches:',
     ...dayLines,
     '',
-    INIT_PAGE_URL,
+    INIT_PAGE_PATH,
   ].join('\n')
 }
 
@@ -384,7 +398,7 @@ export function buildGoogleCalendarWeekEventUrl(
     text: `Init ${event.dateRangeLabel}`,
     dates: `${formatGoogleCalendarDate(start)}/${formatGoogleCalendarDate(end)}`,
     details: buildInitCalendarWeekDetails(event, options),
-    location: INIT_PAGE_URL,
+    location: resolveInitPageUrl(),
   })
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`
@@ -408,7 +422,7 @@ export function buildGoogleCalendarDayEventUrl(
     text: getInitCalendarDaySummary(event, dayNumber, options),
     dates: `${formatGoogleCalendarDate(unlockDate)}/${formatGoogleCalendarDate(endDate)}`,
     details: getInitCalendarDayDescription(event, dayNumber, options),
-    location: INIT_PAGE_URL,
+    location: resolveInitPageUrl(),
   })
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`

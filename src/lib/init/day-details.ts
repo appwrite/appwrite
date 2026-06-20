@@ -28,8 +28,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Discover Appwrite 2.0',
-      href: 'https://appwrite.io',
-      external: true,
+      href: '/home',
+      external: false,
     },
     resources: [
       {
@@ -74,8 +74,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Explore DocumentsDB & VectorsDB',
-      href: 'https://appwrite.io/docs/products/databases',
-      external: true,
+      href: '/docs/products/databases',
+      external: false,
     },
     resources: [
       {
@@ -89,7 +89,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day2-docs',
         typeLabel: 'Docs',
         title: 'Databases documentation',
-        href: 'https://appwrite.io/docs/products/databases',
+        href: '/docs/products/databases',
         actionLabel: 'Visit docs',
       },
     ],
@@ -113,8 +113,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Spin up Dedicated DBs',
-      href: 'https://appwrite.io/docs/products/databases',
-      external: true,
+      href: '/docs/products/databases',
+      external: false,
     },
     resources: [
       {
@@ -128,7 +128,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day3-docs',
         typeLabel: 'Docs',
         title: 'Database compute',
-        href: 'https://appwrite.io/docs/products/databases',
+        href: '/docs/products/databases',
         actionLabel: 'Visit docs',
       },
     ],
@@ -152,8 +152,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 2,
     headerNavCta: {
       label: 'Try S3 for Storage',
-      href: 'https://appwrite.io/docs/products/storage',
-      external: true,
+      href: '/docs/products/storage',
+      external: false,
     },
     resources: [
       {
@@ -167,7 +167,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day4-docs',
         typeLabel: 'Docs',
         title: 'Storage & S3',
-        href: 'https://appwrite.io/docs/products/storage',
+        href: '/docs/products/storage',
         actionLabel: 'Visit docs',
       },
     ],
@@ -191,8 +191,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     sessionCount: 3,
     headerNavCta: {
       label: 'Meet Appwrite Firewall',
-      href: 'https://appwrite.io/docs',
-      external: true,
+      href: '/docs',
+      external: false,
     },
     resources: [
       {
@@ -206,7 +206,7 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
         id: 'day5-docs',
         typeLabel: 'Docs',
         title: 'Firewall documentation',
-        href: 'https://appwrite.io/docs',
+        href: '/docs',
         actionLabel: 'Visit docs',
       },
     ],
@@ -288,7 +288,7 @@ export const INIT_JULY_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     platform: 'discord',
     title: 'Init closing party',
     timeLabel: '5:00 PM',
-    href: 'https://appwrite.io/discord',
+    href: '/discord',
   },
   {
     id: 'sched-reddit-recap-ama',

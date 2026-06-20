@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { InitTicketPeek } from './InitTicketPeek'
+import { INIT_TICKET_SECTION_HASH } from '@/lib/init/links'
 
 interface InitReactionsBarProps {
   event: InitDisplayEvent
@@ -37,7 +38,7 @@ export function InitReactionsBar({ event }: InitReactionsBarProps) {
         <InitTicketPeek
           dateRangeLabel={event.dateRangeLabel}
           account={account}
-          ticketHref="https://appwrite.io/init/ticket"
+          ticketHref={INIT_TICKET_SECTION_HASH}
         />
 
         <div className="relative flex min-h-14 items-center justify-center gap-0.5 py-2 sm:gap-1 sm:py-2.5">

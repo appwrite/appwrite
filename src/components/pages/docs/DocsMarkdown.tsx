@@ -4,7 +4,6 @@ import Markdoc from '@markdoc/markdoc'
 import React, { useMemo } from 'react'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import {
-  DOCS_BODY_TEXT_CLASS,
   DOCS_PROSE_DETAIL_CLASSES,
   DOCS_PROSE_WRAPPER_CLASS,
 } from '@/lib/docs/prose-typography'
@@ -30,14 +29,9 @@ import {
   OnlyDark,
   OnlyLight,
 } from './markdoc/Nodes'
+import { MarkdocAccordion, MarkdocAccordionItem } from './markdoc/Accordion'
 import { Tabs, TabsItem } from './markdoc/Tabs'
 import { MarkdocYoutube } from './markdoc/Youtube'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 
 const baseMarkdocComponents = {
   MultiCode,
@@ -93,32 +87,9 @@ function createMarkdocComponents(compact: boolean) {
     Heading: (props: React.ComponentProps<typeof Heading>) => (
       <Heading {...props} compact={compact} />
     ),
-    Accordion: ({ children }: { children?: React.ReactNode }) => (
-      <Accordion type="single" collapsible className="not-prose my-6">
-        {children}
-      </Accordion>
-    ),
-    AccordionItem: ({ title, children }: { title?: string; children?: React.ReactNode }) => (
-      <AccordionItem value={title ?? 'item'} className="rounded-lg border border-border px-4">
-        <AccordionTrigger
-          className={
-            compact
-              ? 'text-[13px] font-medium hover:no-underline @[480px]:text-[14px]'
-              : cn(DOCS_BODY_TEXT_CLASS, 'font-medium hover:no-underline')
-          }
-        >
-          {title}
-        </AccordionTrigger>
-        <AccordionContent
-          className={cn(
-            compact
-              ? 'text-[13px] leading-[1.6] text-muted-foreground @[480px]:text-[14px]'
-              : DOCS_BODY_TEXT_CLASS,
-          )}
-        >
-          {children}
-        </AccordionContent>
-      </AccordionItem>
+    Accordion: MarkdocAccordion,
+    AccordionItem: (props: React.ComponentProps<typeof MarkdocAccordionItem>) => (
+      <MarkdocAccordionItem {...props} compact={compact} />
     ),
   }
 }

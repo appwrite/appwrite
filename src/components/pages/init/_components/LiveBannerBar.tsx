@@ -1,4 +1,5 @@
 import type { LaunchEvent } from '@/lib/init/types'
+import { isExternalInitHref } from '@/lib/init/links'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronRight } from 'lucide-react'
@@ -21,7 +22,12 @@ export function LiveBannerBar({ liveBanner }: LiveBannerBarProps) {
         </div>
         {liveBanner.href ? (
           <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
-            <a href={liveBanner.href} target="_blank" rel="noopener noreferrer">
+            <a
+              href={liveBanner.href}
+              {...(isExternalInitHref(liveBanner.href)
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
               Watch
               <ChevronRight className="size-3.5" />
             </a>

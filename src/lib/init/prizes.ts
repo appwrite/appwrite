@@ -76,7 +76,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
     sessionTitle: 'Init closing party',
     platform: 'discord',
     timeLabel: '5:00 PM',
-    href: 'https://appwrite.io/discord',
+    href: '/discord',
     title: 'Claude Max 20x · 12 months free',
     description: 'Expanded Claude Code access for one winner.',
     eligibility: 'Share Init on social during the week to enter.',

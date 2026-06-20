@@ -1,6 +1,7 @@
 import { Heart } from 'lucide-react'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
-const APPWRITE_PRESENCES_DOCS_URL = 'https://appwrite.io/docs/apis/realtime/presences'
+const APPWRITE_PRESENCES_DOCS_URL = '/docs/apis/realtime/presences'
 const ACETERNITY_GLOBE_URL = 'https://ui.aceternity.com/components/github-globe'
 
 const CREDIT_LINE_CLASS = 'text-[12px] leading-relaxed text-muted-foreground'
@@ -25,14 +26,9 @@ export function InitPageCredits({
       {showPresenceCredit ? (
         <p className={CREDIT_LINE_CLASS}>
           Realtime powered by{' '}
-          <a
-            href={APPWRITE_PRESENCES_DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={CREDIT_LINK_CLASS}
-          >
+          <DocsRouteLink href={APPWRITE_PRESENCES_DOCS_URL} className={CREDIT_LINK_CLASS}>
             Appwrite Presences
-          </a>
+          </DocsRouteLink>
         </p>
       ) : null}
       <p className={CREDIT_LINE_CLASS}>

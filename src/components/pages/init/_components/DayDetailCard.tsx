@@ -16,7 +16,9 @@ import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, BookOpen, FileText, Play } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
-import { parseBlogPagePath } from '@/lib/marketing/urls'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { isExternalInitHref } from '@/lib/init/links'
+import { parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
 const CARD_SHELL =
@@ -51,11 +53,11 @@ function VideoThumbnail({
   )
 
   if (href) {
+    const external = isExternalInitHref(href)
     return (
       <a
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="group block transition-opacity hover:opacity-90"
       >
         {inner}
@@ -143,6 +145,7 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const type = resource.typeLabel.toLowerCase()
   const ResourceIcon = type === 'docs' ? BookOpen : FileText
   const isBlogLink = Boolean(parseBlogPagePath(resource.href))
+  const isDocsLink = Boolean(parseDocsPagePath(resource.href))
   const rowClassName =
     'group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-accent/30'
   const rowContent = (
@@ -172,11 +175,16 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
         <BlogPageAnchor href={resource.href} className={rowClassName}>
           {rowContent}
         </BlogPageAnchor>
+      ) : isDocsLink ? (
+        <DocsRouteLink href={resource.href} className={rowClassName}>
+          {rowContent}
+        </DocsRouteLink>
       ) : (
         <a
           href={resource.href}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...(isExternalInitHref(resource.href)
+            ? { target: '_blank', rel: 'noopener noreferrer' }
+            : {})}
           className={rowClassName}
         >
           {rowContent}

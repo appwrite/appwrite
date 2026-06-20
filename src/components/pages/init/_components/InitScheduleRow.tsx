@@ -8,6 +8,7 @@ import { buildInitCheckingScheduleActivity } from '@/lib/init/init-presence-acti
 import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isExternalInitHref } from '@/lib/init/links'
 import { InitScheduleCalendarButton } from './InitScheduleCalendarButton'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
@@ -42,6 +43,7 @@ export function InitScheduleRow({
       ? event.liveBanner?.href ?? INIT_YOUTUBE_FALLBACK_HREF
       : undefined)
   const actionLabel = item.platform === 'youtube' ? 'Watch' : 'Join event'
+  const actionExternal = actionHref ? isExternalInitHref(actionHref) : false
   const badge = (
     <span
       className={cn(
@@ -98,8 +100,7 @@ export function InitScheduleRow({
     !inlineWhenWide && actionHref ? (
       <a
         href={actionHref}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="flex min-w-0 flex-1 items-start gap-4"
       >
         {badge}
@@ -141,8 +142,7 @@ export function InitScheduleRow({
             ) : null}
             <a
               href={actionHref}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground hover:text-foreground"
             >
               {actionLabel}

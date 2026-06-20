@@ -1,5 +1,6 @@
 import type { Models } from '@appwrite.io/console'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
+import { INIT_TICKET_SECTION_HASH, isExternalInitHref } from '@/lib/init/links'
 import { cn } from '@/lib/utils'
 
 interface InitTicketPeekProps {
@@ -12,7 +13,7 @@ interface InitTicketPeekProps {
 export function InitTicketPeek({
   dateRangeLabel,
   account,
-  ticketHref = 'https://appwrite.io/init/ticket',
+  ticketHref = INIT_TICKET_SECTION_HASH,
   className,
 }: InitTicketPeekProps) {
   const holderName = account?.name?.trim() || account?.email?.split('@')[0] || 'Guest'
@@ -67,8 +68,9 @@ export function InitTicketPeek({
       {ticketHref ? (
         <a
           href={ticketHref}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...(isExternalInitHref(ticketHref)
+            ? { target: '_blank', rel: 'noopener noreferrer' }
+            : {})}
           className="pointer-events-auto outline-none"
           aria-label={account ? 'View your Init ticket' : 'Claim your Init ticket'}
         >

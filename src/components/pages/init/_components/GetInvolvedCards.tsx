@@ -4,6 +4,7 @@ import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitExploringActivity } from '@/lib/init/init-presence-activity'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isExternalInitHref } from '@/lib/init/links'
 
 import { INIT_GET_INVOLVED_SECTION_ID, INIT_TICKET_SECTION_ID } from '@/lib/init/init-section-ids'
 
@@ -92,8 +93,7 @@ export function GetInvolvedCards({ event, account }: GetInvolvedCardsProps) {
             onBlur: () => setTransientActivity(null),
           }
 
-          const isExternalLink =
-            item.href?.startsWith('http://') || item.href?.startsWith('https://')
+          const isExternalLink = item.href ? isExternalInitHref(item.href) : false
 
           if (item.href) {
             return (

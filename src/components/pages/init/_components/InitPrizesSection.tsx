@@ -12,6 +12,7 @@ import {
   buildInitViewingGrandPrizeActivity,
 } from '@/lib/init/init-presence-activity'
 import { cn } from '@/lib/utils'
+import { isExternalInitHref } from '@/lib/init/links'
 import { ArrowUpRight, Gift, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
@@ -179,11 +180,11 @@ function DailyPrizeCell({
   )
 
   if (giveaway.href) {
+    const external = isExternalInitHref(giveaway.href)
     return (
       <a
         href={giveaway.href}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className={shellClass}
         {...presenceHandlers}
       >

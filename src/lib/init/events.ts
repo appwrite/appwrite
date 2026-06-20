@@ -48,18 +48,18 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     headerNavCta: {
       beforeEvent: {
         label: 'Back to Appwrite',
-        href: 'https://appwrite.io',
+        href: '/home',
         external: false,
       },
       duringAfterEvent: {
         label: 'Explore Appwrite',
-        href: 'https://appwrite.io',
-        external: true,
+        href: '/home',
+        external: false,
       },
     },
     liveBanner: {
       title: 'Appwrite 2.0 launch',
-      href: 'https://appwrite.io/init/keynote',
+      href: '/init/keynote',
     },
     onlineCount: 0,
     othersOnlineCount: 0,
@@ -112,7 +112,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         title: 'Join the conversation',
         description: 'Share feedback and connect with the community.',
         iconSrc: '/icons/discord-simple.svg',
-        href: 'https://appwrite.io/discord',
+        href: '/discord',
       },
       {
         id: 'swag',
@@ -138,14 +138,14 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
           title: 'Explore Appwrite',
           description: 'Try the launches from Init week in your project today.',
           icon: Rocket,
-          href: 'https://appwrite.io',
+          href: '/home',
         },
         {
           id: 'community',
           title: 'Join the conversation',
           description: 'Share feedback and stay connected with the Appwrite community.',
           iconSrc: '/icons/discord-simple.svg',
-          href: 'https://appwrite.io/discord',
+          href: '/discord',
         },
       ],
       ticket: {
@@ -173,7 +173,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     endDate: '2026-09-19',
     status: 'upcoming',
     tickets: INIT_SEP_2026_TICKET_CONFIG,
-    primaryCta: { label: 'Save the date', href: 'https://appwrite.io/init' },
+    primaryCta: { label: 'Save the date', href: '/init', external: false },
     onlineCount: 0,
     othersOnlineCount: 0,
     days: [],
@@ -187,7 +187,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         title: 'Get notified',
         description: 'Be the first to know when registration opens.',
         icon: Ticket,
-        href: 'https://appwrite.io/init',
+        href: '/init',
       },
     ],
   },
@@ -244,14 +244,14 @@ export function getLaunchEventBySlug(slug: string): LaunchEvent | undefined {
 
 const DEFAULT_INIT_HEADER_NAV_BEFORE: LaunchEventHeaderNavCta = {
   label: 'Back to Appwrite',
-  href: 'https://appwrite.io',
+  href: '/home',
   external: false,
 }
 
 const DEFAULT_INIT_HEADER_NAV_DURING_AFTER: LaunchEventHeaderNavCta = {
   label: 'Explore Appwrite',
-  href: 'https://appwrite.io',
-  external: true,
+  href: '/home',
+  external: false,
 }
 
 function dayHeaderNavCtaToHeaderNav(

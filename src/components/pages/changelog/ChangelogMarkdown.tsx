@@ -2,12 +2,7 @@
 
 import Markdoc from '@markdoc/markdoc'
 import React, { useMemo, type ReactNode } from 'react'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { MarkdocAccordion, MarkdocAccordionItem } from '@/components/pages/docs/markdoc/Accordion'
 import { Cards, CardsItem } from '@/components/pages/docs/markdoc/Cards'
 import { Fence } from '@/components/pages/docs/markdoc/Fence'
 import { MarkdocIcon, MarkdocIconImage } from '@/components/pages/docs/markdoc/Icon'
@@ -72,19 +67,8 @@ const markdocComponents = {
   MarkdocTableRow,
   MarkdocTableHead,
   MarkdocTableCell,
-  Accordion: ({ children }: { children?: React.ReactNode }) => (
-    <Accordion type="single" collapsible className="not-prose my-6">
-      {children}
-    </Accordion>
-  ),
-  AccordionItem: ({ title, children }: { title?: string; children?: React.ReactNode }) => (
-    <AccordionItem value={title ?? 'item'} className="rounded-lg border border-border px-4">
-      <AccordionTrigger className={cn(DOCS_BODY_TEXT_CLASS, 'font-medium hover:no-underline')}>
-        {title}
-      </AccordionTrigger>
-      <AccordionContent className={DOCS_BODY_TEXT_CLASS}>{children}</AccordionContent>
-    </AccordionItem>
-  ),
+  Accordion: MarkdocAccordion,
+  AccordionItem: MarkdocAccordionItem,
   Section: () => null,
   ArrowLink: ({ href, children }: { href?: string; children?: ReactNode }) => (
     <ChangelogArrowLink href={href}>{children}</ChangelogArrowLink>
