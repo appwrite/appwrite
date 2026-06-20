@@ -218,12 +218,12 @@ class Mails extends Action
         try {
     $response = $adapter->send($emailMessage);
 
-    // Detect silent 421 failure — PHPMailer returns false instead of throwing
+    // PHPMailer returns false on 421 (no exception) — check results array
     $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
     $firstError = !empty($failed) ? (array_values($failed)[0]['error'] ?? '') : '';
 
     if ($type === 'smtp' && str_contains($firstError, '421')) {
-        // Stale keepalive conn dropped — retry once with fresh connection
+        // Stale keepalive conn — retry once with fresh connection
         $response = $adapter->send($emailMessage);
         $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
         if (!empty($failed)) {
@@ -237,14 +237,32 @@ class Mails extends Action
         throw new Exception('Error sending mail: ' . $errorMsg, $type === 'smtp' ? 401 : 500);
     }
 } catch (\Throwable $error) {
-    if (!($error instanceof Exception && str_starts_with($error->getMessage(), 'Error sending mail:'))) {
+    // Re-throw already-formatted errors from above
+    if ($error instanceof Exception && str_starts_with($error->getMessage(), 'Error sending mail:')) {
+        throw $error;
+    }
+
+    // Handle thrown 421 (some adapters may throw instead of returning failed results)
+    if ($type === 'smtp' && str_contains($error->getMessage(), '421')) {
+        try {
+            $response = $adapter->send($emailMessage);
+            $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
+            if (!empty($failed)) {
+                $retryError = array_values($failed)[0]['error'] ?? 'Unknown error';
+                Span::add('mail.status', 'failure');
+                throw new Exception('Error sending mail: ' . $retryError, 401);
+            }
+        } catch (\Throwable $retryError) {
+            Span::add('mail.status', 'failure');
+            throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
+        }
+    } else {
         Span::add('mail.status', 'failure');
         if ($type === 'smtp') {
             throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
         }
         throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
     }
-    throw $error;
 }
 
 Span::add('mail.status', 'success');
