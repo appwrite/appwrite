@@ -144,42 +144,24 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /**
-         * Build a fresh SMTP adapter each call — never reuse a cached registry instance,
-         * as the registry singleton carries a stale keepalive socket on retry.
-         */
-        $buildAdapter = function () use ($smtp, $telemetry): EmailAdapter {
-            if (!empty($smtp)) {
-                $adapter = new SMTP(
-                    host: $smtp['host'],
-                    port: (int) $smtp['port'],
-                    username: $smtp['username'] ?? '',
-                    password: $smtp['password'] ?? '',
-                    smtpSecure: $smtp['secure'] ?? '',
-                    smtpAutoTLS: false,
-                    xMailer: 'Appwrite Mailer',
-                    timeout: 10,
-                    keepAlive: true,
-                    timelimit: 30,
-                );
-            } else {
-                // Cloud path — build fresh instead of reusing registry singleton
-                $adapter = new SMTP(
-                    host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
-                    port: (int) System::getEnv('_APP_SMTP_PORT', 25),
-                    username: System::getEnv('_APP_SMTP_USERNAME', ''),
-                    password: System::getEnv('_APP_SMTP_PASSWORD', ''),
-                    smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
-                    smtpAutoTLS: false,
-                    xMailer: 'Appwrite Mailer',
-                    timeout: 10,
-                    keepAlive: true,
-                    timelimit: 30,
-                );
-            }
-            $adapter->setTelemetry($telemetry);
-            return $adapter;
-        };
+        // First attempt — preserve original registry behavior (keepAlive: true is intentional;
+        // the worker reuses this instance across queue messages to amortize SMTP handshakes)
+        /** @var EmailAdapter $adapter */
+        $adapter = empty($smtp)
+            ? $register->get('smtp')
+            : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: true,
+                timelimit: 30,
+            );
+        $adapter->setTelemetry($telemetry);
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -238,6 +220,7 @@ class Mails extends Action
          * Send email and inspect response results for failures.
          * PHPMailer returns false on 421 timeout rather than throwing,
          * so we must check the results array to detect silent failures.
+         * Throws the raw provider error string — caller adds the prefix once.
          *
          * @throws Exception
          */
@@ -251,26 +234,56 @@ class Mails extends Action
         };
 
         try {
-            $sendAndCheck($buildAdapter());
+            $sendAndCheck($adapter);
         } catch (\Throwable $error) {
-            // Retry once on 421 — stale keepalive connection dropped by server or NAT.
-            // Fresh adapter forces PHPMailer to open a new socket.
-            if (str_contains($error->getMessage(), '421')) {
+            $msg = $error->getMessage();
+            // Detect stale keepalive connection: SMTP 421 + Timeout indicator.
+            // Combining both prevents false-positives from recipient addresses or
+            // provider messages that happen to contain "421".
+            $is421Timeout = str_contains($msg, '421') && str_contains($msg, 'Timeout');
+
+            if ($is421Timeout) {
+                // Retry with a guaranteed-fresh adapter (keepAlive: false — single-use recovery).
+                // Build directly from config rather than the registry singleton, which holds
+                // the same stale PHPMailer instance that just failed.
+                $fresh = empty($smtp)
+                    ? new SMTP(
+                        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+                        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+                        username: System::getEnv('_APP_SMTP_USERNAME', ''),
+                        password: System::getEnv('_APP_SMTP_PASSWORD', ''),
+                        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+                        smtpAutoTLS: false,
+                        xMailer: 'Appwrite Mailer',
+                        timeout: 10,
+                        keepAlive: false,
+                        timelimit: 30,
+                    )
+                    : new SMTP(
+                        host: $smtp['host'],
+                        port: (int) $smtp['port'],
+                        username: $smtp['username'] ?? '',
+                        password: $smtp['password'] ?? '',
+                        smtpSecure: $smtp['secure'] ?? '',
+                        smtpAutoTLS: false,
+                        xMailer: 'Appwrite Mailer',
+                        timeout: 10,
+                        keepAlive: false,
+                        timelimit: 30,
+                    );
+                $fresh->setTelemetry($telemetry);
+
                 try {
-                    $sendAndCheck($buildAdapter());
+                    $sendAndCheck($fresh);
                 } catch (\Throwable $retryError) {
                     Span::add('mail.status', 'failure');
-                    if ($type === 'smtp') {
-                        throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
-                    }
-                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), 500);
+                    $code = ($type === 'smtp') ? 401 : 500;
+                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), $code);
                 }
             } else {
                 Span::add('mail.status', 'failure');
-                if ($type === 'smtp') {
-                    throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
-                }
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+                $code = ($type === 'smtp') ? 401 : 500;
+                throw new Exception('Error sending mail: ' . $msg, $code);
             }
         }
 
