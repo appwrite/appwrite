@@ -12,12 +12,12 @@ import {
 export function isMarketingPagePath(pathname: string): boolean {
   const normalized = normalizeMarketingPath(pathname)
 
-  if (normalized === '/docs' || normalized.startsWith('/docs/')) {
-    return true
-  }
-
   if (!getActiveProfileFeatures().marketing) {
     return false
+  }
+
+  if (normalized === '/docs' || normalized.startsWith('/docs/')) {
+    return true
   }
 
   if (normalized === '/changelog' || normalized.startsWith('/changelog/')) {

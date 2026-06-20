@@ -228,7 +228,7 @@ export function PostgresQueriesSidebarPanel({
   ))
 
   return (
-    <div className="flex min-h-full flex-col pt-2">
+    <div className="flex min-h-0 flex-1 flex-col pt-2">
       <div className="shrink-0 pb-2">
         <div className="flex min-w-0 items-center gap-2">
           <div className="relative min-w-0 flex-1">

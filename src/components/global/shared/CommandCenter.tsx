@@ -88,6 +88,8 @@ import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCen
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
+import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
+import { openInNewWindow } from '@/lib/utils/context-menu'
 import type {
   CommandCenterContext,
   CreateResourceType,
@@ -342,6 +344,11 @@ export function CommandCenter({
     (slug: string) => {
       onOpenChange(false)
 
+      if (!features.marketing) {
+        openInNewWindow(getDocsPageUrlFromSlug(slug, false))
+        return
+      }
+
       if (isConsoleDocsPreviewContext) {
         openDocsPreview(slug)
         return
@@ -353,7 +360,13 @@ export function CommandCenter({
       }
       navigate({ to: '/docs/$', params: { _splat: slug } })
     },
-    [navigate, onOpenChange, isConsoleDocsPreviewContext, openDocsPreview],
+    [
+      navigate,
+      onOpenChange,
+      isConsoleDocsPreviewContext,
+      openDocsPreview,
+      features.marketing,
+    ],
   )
 
   const ctx: CommandContext = useMemo(

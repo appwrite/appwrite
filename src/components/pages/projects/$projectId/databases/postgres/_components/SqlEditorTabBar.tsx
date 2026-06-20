@@ -104,9 +104,9 @@ function SortableTab({
       >
         <div
           className={cn(
-            'group relative flex max-w-[220px] items-center rounded-t-md border-x border-b-0 transition-opacity',
+            'group relative flex max-w-[220px] items-center rounded-t-md border-x border-t border-b-0 transition-opacity',
             isActive
-              ? 'z-[1] -mb-px h-10 border-border border-b-background bg-background text-foreground shadow-[inset_0_1px_0_0_var(--border)]'
+              ? 'z-[1] h-10 border-border border-b-background bg-background text-foreground shadow-[inset_0_1px_0_0_var(--border)]'
               : 'h-10 border-border/45 text-muted-foreground/70 opacity-85 shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--border)_40%,transparent)] hover:opacity-100 hover:border-border/65 hover:bg-background/50 hover:text-muted-foreground',
           )}
         >
@@ -222,7 +222,7 @@ export function SqlEditorTabBar({
       type="button"
       variant="ghost"
       size="icon"
-      className="ml-2 h-7 w-7 shrink-0 self-center text-muted-foreground hover:text-foreground"
+      className="mb-1.5 h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
       onClick={onCreateTab}
       aria-label="New query tab"
     >
@@ -230,11 +230,8 @@ export function SqlEditorTabBar({
     </Button>
   )
 
-  const tabList = (
-    <div
-      ref={tabListRef}
-      className="flex min-w-0 flex-1 items-end gap-1.5 overflow-x-auto pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-    >
+  const sortableTabs = (
+    <div className="flex min-w-max items-end gap-1.5">
       {tabs.map((tab) => (
         <SortableTab
           key={tab.id}
@@ -248,65 +245,76 @@ export function SqlEditorTabBar({
           onCloseTab={onCloseTab}
         />
       ))}
-      {newTabButton}
     </div>
   )
 
+  const sortableTabsRegion = canReorder ? (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      modifiers={tabDragModifiers}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={tabs.map((tab) => tab.id)}
+        strategy={horizontalListSortingStrategy}
+      >
+        {sortableTabs}
+      </SortableContext>
+      <DragOverlay dropAnimation={null}>
+        {activeDragTab ? (
+          <TabPreview tab={activeDragTab} isActive={activeDragTab.id === activeTabId} />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  ) : (
+    sortableTabs
+  )
+
   return (
-    <div className="flex min-h-11 shrink-0 items-end gap-2 border-b border-border bg-background px-4 pb-px sm:px-6">
-      <div className="flex min-w-0 flex-1 items-end">
-        {canReorder ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={tabDragModifiers}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={tabs.map((tab) => tab.id)}
-              strategy={horizontalListSortingStrategy}
-            >
-              {tabList}
-            </SortableContext>
-            <DragOverlay dropAnimation={null}>
-              {activeDragTab ? (
-                <TabPreview
-                  tab={activeDragTab}
-                  isActive={activeDragTab.id === activeTabId}
-                />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        ) : (
-          tabList
-        )}
+    <div
+      className={cn(
+        'relative z-20 flex h-10 min-w-0 w-full shrink-0 items-stretch border-b border-border bg-background px-4 sm:px-6',
+        headerCollapsed ? 'mt-3 sm:mt-4' : 'mt-2',
+      )}
+    >
+      <div
+        ref={tabListRef}
+        className="flex min-w-0 flex-1 items-center overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex min-w-max items-end gap-1.5 pr-1.5">
+          {sortableTabsRegion}
+          {newTabButton}
+        </div>
       </div>
       {onToggleHeaderCollapsed ? (
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onToggleHeaderCollapsed}
-                className="h-7 w-7 shrink-0 self-center text-muted-foreground hover:text-foreground"
-                aria-label={headerCollapsed ? 'Expand header' : 'Collapse header'}
-              >
-                <ChevronUp
-                  className={cn(
-                    'h-3 w-3 transition-transform duration-200',
-                    headerCollapsed && 'rotate-180',
-                  )}
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>{headerCollapsed ? 'Expand header' : 'Collapse header'}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="relative z-[1] flex shrink-0 items-center bg-background">
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggleHeaderCollapsed}
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label={headerCollapsed ? 'Expand header' : 'Collapse header'}
+                >
+                  <ChevronUp
+                    className={cn(
+                      'h-3 w-3 transition-transform duration-200',
+                      headerCollapsed && 'rotate-180',
+                    )}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>{headerCollapsed ? 'Expand header' : 'Collapse header'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       ) : null}
     </div>
   )

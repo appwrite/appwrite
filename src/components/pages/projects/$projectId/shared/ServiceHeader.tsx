@@ -482,7 +482,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         )}
 
         {/* Content after border separator */}
-        {contentAfterBorder}
+        {contentAfterBorder ? (
+          <div className="min-w-0">{contentAfterBorder}</div>
+        ) : null}
 
         {/* Toolbar Row - Search, Filters, CTA */}
         {showToolbarRow && (

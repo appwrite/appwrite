@@ -227,33 +227,27 @@ export function SqlWorkbench({
           className="relative flex h-full min-h-0 flex-col"
           data-postgres-sql-workbench
         >
-          <div className="shrink-0 bg-background">
+          <div className="relative z-20 shrink-0 overflow-hidden bg-background">
             <ServiceHeader
               title="SQL editor"
               fullWidthBorder
               fullWidth
               hideTitle={isHeaderCollapsed}
               contentAfterBorder={
-                <div
-                  className={cn(
-                    isHeaderCollapsed ? 'pt-3 sm:pt-4' : 'pt-2',
-                  )}
-                >
-                  <SqlEditorTabBar
-                    projectId={projectId}
-                    databaseId={databaseId}
-                    tabs={tabs}
-                    activeTabId={activeTabId}
-                    onSelectTab={onSelectTab}
-                    onCreateTab={onCreateTab}
-                    onCloseTab={onCloseTab}
-                    onReorderTabs={onReorderTabs}
-                    headerCollapsed={isHeaderCollapsed}
-                    onToggleHeaderCollapsed={() =>
-                      setIsHeaderCollapsed((collapsed) => !collapsed)
-                    }
-                  />
-                </div>
+                <SqlEditorTabBar
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  tabs={tabs}
+                  activeTabId={activeTabId}
+                  onSelectTab={onSelectTab}
+                  onCreateTab={onCreateTab}
+                  onCloseTab={onCloseTab}
+                  onReorderTabs={onReorderTabs}
+                  headerCollapsed={isHeaderCollapsed}
+                  onToggleHeaderCollapsed={() =>
+                    setIsHeaderCollapsed((collapsed) => !collapsed)
+                  }
+                />
               }
             />
           </div>

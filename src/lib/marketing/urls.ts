@@ -109,3 +109,15 @@ export function getDocsPageUrl(path: string, marketingEnabled: boolean): string 
 
   return marketingEnabled ? docsPath : `${MARKETING_SITE_ORIGIN}${docsPath}`
 }
+
+export function isDocsPageExternal(marketingEnabled: boolean): boolean {
+  return !marketingEnabled
+}
+
+export function getDocsPageUrlFromSlug(
+  slug: string,
+  marketingEnabled: boolean,
+): string {
+  const path = slug ? `/docs/${slug}` : '/docs'
+  return getDocsPageUrl(path, marketingEnabled)
+}

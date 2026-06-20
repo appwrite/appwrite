@@ -24,8 +24,8 @@ export function PostgresHistorySidebarPanel() {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="min-h-0 flex-1 space-y-0.5">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto">
         {recentQueries.map((query) => (
           <button
             key={query.id}

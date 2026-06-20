@@ -13,6 +13,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { getMarketingPageUrl } from '@/lib/marketing/urls'
+import { openInNewWindow } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -123,6 +124,10 @@ function NotFoundContent({
             <a
               href={docsHref}
               className="link-neutral"
+              onClick={(event) => {
+                event.preventDefault()
+                openInNewWindow(docsHref)
+              }}
             >
               Browse documentation
             </a>

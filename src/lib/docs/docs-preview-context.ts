@@ -1,3 +1,4 @@
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 
 const CONSOLE_RIGHT_PANE_PREFIXES = [
@@ -32,5 +33,6 @@ export function isConsoleRightPanePath(pathname: string): boolean {
  * public pages should navigate to /docs instead.
  */
 export function isConsoleDocsPreviewPath(pathname: string): boolean {
+  if (!getActiveProfileFeatures().marketing) return false
   return matchesConsoleRightPanePath(pathname)
 }
