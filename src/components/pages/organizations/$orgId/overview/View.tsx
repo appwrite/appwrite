@@ -404,6 +404,33 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return false
   }, [matches, location.pathname])
 
+  // App detail (owned or catalog): pathname updates before matches during navigation.
+  const isAppDetailRoute = useMemo(() => {
+    const isDetailRouteByMatch = matches.some(
+      (match) =>
+        match.routeId.includes('/apps/$appId') ||
+        match.routeId.includes('/marketplace/$appId'),
+    )
+
+    if (isDetailRouteByMatch) {
+      return true
+    }
+
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
+
+    if (orgIndex < 0) {
+      return false
+    }
+
+    const segment = pathParts[orgIndex + 2]
+    const resourceId = pathParts[orgIndex + 3]
+
+    return (
+      !!resourceId && (segment === 'apps' || segment === 'marketplace')
+    )
+  }, [matches, location.pathname])
+
   // Check if we should render children (domains / marketplace list) vs tab content
   const shouldRenderChildren = useMemo(() => {
     // If we're on a domain detail route, definitely don't render children
@@ -448,7 +475,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (tabProp) return tabProp
 
     // If we're on a detail route, don't set active tab (let child route handle it)
-    if (isDomainDetailRoute) {
+    if (isDomainDetailRoute || isAppDetailRoute) {
       return null
     }
 
@@ -474,7 +501,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
-  }, [tabProp, location.pathname, isDomainDetailRoute])
+  }, [tabProp, location.pathname, isDomainDetailRoute, isAppDetailRoute])
 
   // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'api-keys'
   const settingsSubTab = useMemo(() => {

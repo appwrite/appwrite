@@ -143,6 +143,7 @@ import { Route as PublicProjectsProjectIdAuthSocialProvidersRouteImport } from '
 import { Route as PublicProjectsProjectIdAuthSettingsRouteImport } from './routes/_public/projects.$projectId.auth.settings'
 import { Route as PublicProjectsProjectIdAuthSecurityRouteImport } from './routes/_public/projects.$projectId.auth.security'
 import { Route as PublicProjectsProjectIdAuthPoliciesRouteImport } from './routes/_public/projects.$projectId.auth.policies'
+import { Route as PublicProjectsProjectIdAuthOauth2ServerRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server'
 import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
 import { Route as PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport } from './routes/_public/projects.$projectId.analytics.$websiteId'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
@@ -1042,6 +1043,12 @@ const PublicProjectsProjectIdAuthPoliciesRoute =
   PublicProjectsProjectIdAuthPoliciesRouteImport.update({
     id: '/policies',
     path: '/policies',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthOauth2ServerRoute =
+  PublicProjectsProjectIdAuthOauth2ServerRouteImport.update({
+    id: '/oauth2-server',
+    path: '/oauth2-server',
     getParentRoute: () => PublicProjectsProjectIdAuthRoute,
   } as any)
 const PublicProjectsProjectIdAppsAddRoute =
@@ -2276,6 +2283,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
+  '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRoute
   '/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
   '/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -2554,6 +2562,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
+  '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRoute
   '/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
   '/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -2833,6 +2842,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
+  '/_public/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRoute
   '/_public/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
   '/_public/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/_public/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -3130,6 +3140,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/apps/add'
+    | '/projects/$projectId/auth/oauth2-server'
     | '/projects/$projectId/auth/policies'
     | '/projects/$projectId/auth/security'
     | '/projects/$projectId/auth/settings'
@@ -3408,6 +3419,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/apps/add'
+    | '/projects/$projectId/auth/oauth2-server'
     | '/projects/$projectId/auth/policies'
     | '/projects/$projectId/auth/security'
     | '/projects/$projectId/auth/settings'
@@ -3686,6 +3698,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/projects/$projectId/analytics/$websiteId'
     | '/_public/projects/$projectId/apps/add'
+    | '/_public/projects/$projectId/auth/oauth2-server'
     | '/_public/projects/$projectId/auth/policies'
     | '/_public/projects/$projectId/auth/security'
     | '/_public/projects/$projectId/auth/settings'
@@ -4853,6 +4866,13 @@ declare module '@tanstack/react-router' {
       path: '/policies'
       fullPath: '/projects/$projectId/auth/policies'
       preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/oauth2-server': {
+      id: '/_public/projects/$projectId/auth/oauth2-server'
+      path: '/oauth2-server'
+      fullPath: '/projects/$projectId/auth/oauth2-server'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthRoute
     }
     '/_public/projects/$projectId/apps/add': {
@@ -6342,6 +6362,7 @@ const PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren =
   )
 
 interface PublicProjectsProjectIdAuthRouteChildren {
+  PublicProjectsProjectIdAuthOauth2ServerRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRoute
   PublicProjectsProjectIdAuthPoliciesRoute: typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
   PublicProjectsProjectIdAuthSecurityRoute: typeof PublicProjectsProjectIdAuthSecurityRoute
   PublicProjectsProjectIdAuthSettingsRoute: typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -6354,6 +6375,8 @@ interface PublicProjectsProjectIdAuthRouteChildren {
 
 const PublicProjectsProjectIdAuthRouteChildren: PublicProjectsProjectIdAuthRouteChildren =
   {
+    PublicProjectsProjectIdAuthOauth2ServerRoute:
+      PublicProjectsProjectIdAuthOauth2ServerRoute,
     PublicProjectsProjectIdAuthPoliciesRoute:
       PublicProjectsProjectIdAuthPoliciesRouteWithChildren,
     PublicProjectsProjectIdAuthSecurityRoute:

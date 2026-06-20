@@ -41,6 +41,8 @@ export type ConsoleProfileFeatures = {
   compliance: boolean
   /** Organization OAuth apps */
   oauthApps: boolean
+  /** Project-level OAuth2 authorization server settings */
+  oauth2Server: boolean
   /** Organization API keys */
   orgApiKeys: boolean
   /** In-app AI assistant chat panel and header button */
@@ -92,6 +94,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountIdentities: 'Account identities',
   compliance: 'Compliance',
   oauthApps: 'OAuth apps',
+  oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
   aiAssistant: 'AI assistant',
   databaseBackups: 'Database backups',
@@ -134,6 +137,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountIdentities: true,
       compliance: true,
       oauthApps: false,
+      oauth2Server: true,
       orgApiKeys: false,
       aiAssistant: true,
       databaseBackups: true,
@@ -168,6 +172,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountIdentities: false,
       compliance: false,
       oauthApps: false,
+      oauth2Server: false,
       orgApiKeys: false,
       aiAssistant: false,
       databaseBackups: false,
@@ -316,6 +321,7 @@ function applyCloudOnlyFeatureGates(
       init: false,
       marketing: false,
       multiTenancy: false,
+      oauth2Server: false,
     }
   }
   return features

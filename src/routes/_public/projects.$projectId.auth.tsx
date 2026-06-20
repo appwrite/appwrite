@@ -77,13 +77,10 @@ function AuthPage() {
   }
 
   return (
-    <>
-      <View
-        key={`auth-${projectId}`}
-        usersListSearch={usersListSearch}
-        authSocialProvidersInitialData={authSocialProvidersInitialData}
-      />
-      <Outlet />
-    </>
+    <View
+      key={`auth-${projectId}`}
+      usersListSearch={usersListSearch}
+      authSocialProvidersInitialData={authSocialProvidersInitialData}
+    />
   )
 }

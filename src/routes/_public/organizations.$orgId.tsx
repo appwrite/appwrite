@@ -44,8 +44,7 @@ function OrganizationLayout() {
   const matches = useMatches()
   const location = useLocation()
 
-  // Use pathname as well as matches so we switch to wizard immediately on navigation
-  // (matches can lag one frame, causing a flash of projects list when clicking Upgrade)
+  // Use pathname for wizards only (matches can lag one frame on /upgrade).
   const pathname = location.pathname
 
   // Check if we're on a domain detail route (should not have org header/tabs)
@@ -71,10 +70,16 @@ function OrganizationLayout() {
   const isOrgDomainsWizardRoute =
     pathname.includes('/domains/buy') ||
     pathname.includes('/domains/transfer-in')
-  const isMarketplaceAppDetailRoute =
-    pathname.includes('/marketplace/') && !pathname.endsWith('/marketplace')
-  const isOrgAppDetailRoute =
-    pathname.includes('/apps/') && !pathname.endsWith('/apps')
+
+  // Match-based (same as domain detail): pathname updates before the loader, which caused
+  // OrgOverview to unmount while the marketplace list was still visible.
+  const isMarketplaceAppDetailRoute = matches.some((match) =>
+    match.routeId.includes('/marketplace/$appId'),
+  )
+  const isOrgAppDetailRoute = matches.some((match) =>
+    match.routeId.includes('/apps/$appId'),
+  )
+
   const isUpgradeWizardRoute = pathname === '/upgrade'
   const renderOutletOnly =
     isDomainDetailRoute ||

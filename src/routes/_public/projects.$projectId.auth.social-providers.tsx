@@ -40,4 +40,5 @@ export const Route = createFileRoute(
 
     return { catalog, providerList } satisfies AuthOAuth2SettingsInitialData
   },
+  component: () => null,
 })

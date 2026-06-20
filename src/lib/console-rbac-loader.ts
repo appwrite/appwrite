@@ -11,6 +11,7 @@ import {
   canShowTableSecuritySettings,
   canShowProjectSettings,
   canShowAuthSecuritySettings,
+  canShowProjectOAuth2Server,
   canShowBucketSecuritySettings,
   canShowFunctionSecuritySettings,
   canShowSiteSettingsTab,
@@ -112,6 +113,17 @@ export async function canAccessAuthSecuritySettings(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowAuthSecuritySettings(access, features)
+}
+
+export async function canAccessProjectOAuth2Server(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  const features = getActiveProfileFeatures()
+  if (!features.oauth2Server) return false
+  if (!access) return true
+  return canShowProjectOAuth2Server(access, features)
 }
 
 /** Storage bucket Security/Settings and file Security. */

@@ -21,12 +21,14 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  Server,
   Sliders,
   Users,
   Zap,
 } from 'lucide-react'
 import {
   canShowAuthSecuritySettings,
+  canShowProjectOAuth2Server,
   canShowProjectSettings,
 } from '@/lib/console-access-checks'
 import { registerCommands } from '../registry'
@@ -161,6 +163,26 @@ const PROJECT_TABS: CommandEntry[] = [
     keywords: ['oauth', 'oauth2', 'social', 'providers', 'google', 'github'],
     available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/social-providers`,
+  },
+  {
+    id: 'project.tab.auth.oauth2-server',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Auth',
+    label: 'Auth · OAuth2 server',
+    description: 'Configure OAuth2 authorization server for third-party apps',
+    icon: Server,
+    keywords: [
+      'oauth',
+      'oauth2',
+      'oidc',
+      'openid',
+      'authorization server',
+      'discovery',
+    ],
+    available: (ctx) =>
+      canShowProjectOAuth2Server(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server`,
   },
   {
     id: 'project.tab.auth.templates',

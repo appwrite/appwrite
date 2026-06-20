@@ -1,23 +1,19 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
-import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
+import { canAccessProjectOAuth2Server } from '@/lib/console-rbac-loader'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
-import { projectAuthSecurityQueryOptions } from '@/lib/project-settings'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/auth/settings',
+  '/_public/projects/$projectId/auth/oauth2-server',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Settings', 'Auth') }] }),
+  head: () => ({ meta: [{ title: pageTitle('OAuth2 server', 'Auth') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return undefined
-    const canAccess = await canAccessAuthSecuritySettings(
-      queryClient,
-      projectId,
-    )
+
+    const canAccess = await canAccessProjectOAuth2Server(queryClient, projectId)
     if (!canAccess) {
       throw redirect({
         to: '/projects/$projectId/auth',
@@ -27,13 +23,6 @@ export const Route = createFileRoute(
     }
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-
-    const project = queryClient.getQueryData<Models.Project>(
-      projectQueryOptions(projectId).queryKey,
-    )
-    await queryClient.ensureQueryData(
-      projectAuthSecurityQueryOptions(projectId, project?.region),
-    )
   },
   component: () => null,
 })

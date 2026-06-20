@@ -1313,6 +1313,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 features.oauthApps,
               ),
               createProfileFeatureFlagItem(
+                'Project OAuth2 server',
+                profileId === 'cloud'
+                  ? 'Project settings OAuth2 authorization server card on overview. Cloud profile only.'
+                  : 'Cloud profile only. Switch to Cloud profile to preview.',
+                'oauth2Server',
+                profileId,
+                profileId === 'cloud' ? features.oauth2Server : false,
+                { disabled: profileId !== 'cloud' },
+              ),
+              createProfileFeatureFlagItem(
                 'Organization API keys',
                 'Org settings API keys tab and /settings/api-keys route.',
                 'orgApiKeys',
@@ -1628,6 +1638,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMySQL,
     features.userVerification,
     features.oauthApps,
+    features.oauth2Server,
     features.orgApiKeys,
     features.marketplace,
     features.init,

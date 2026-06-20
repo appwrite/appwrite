@@ -216,6 +216,13 @@ export function canShowAuthSecuritySettings(
   )
 }
 
+export function canShowProjectOAuth2Server(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!features.oauth2Server && canShowAuthSecuritySettings(access, features)
+}
+
 export function canShowTopicSettingsTab(
   access: ConsoleAccess,
   features: AccessCheckFeatures,

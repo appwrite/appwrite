@@ -95,6 +95,7 @@ import { CreateTeamDrawer } from './CreateTeamDrawer'
 import { AuthSettings } from './Settings'
 import { SocialProviders } from './SocialProviders'
 import { Templates } from './Templates'
+import { View as OAuth2ServerView } from './oauth2-server/View'
 import {
   PoliciesLayout,
   type PoliciesSubTab,
@@ -231,6 +232,7 @@ export function View({
             'teams',
             'policies',
             'social-providers',
+            'oauth2-server',
             'templates',
             'settings',
           ].includes(tabFromPath)
@@ -264,6 +266,7 @@ export function View({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
+  const showOAuth2Server = features.oauth2Server && showAuthSecuritySettings
 
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
@@ -1110,6 +1113,16 @@ export function View({
               to: '/projects/$projectId/auth/social-providers',
               params: { projectId: projectId as string },
             },
+            ...(showOAuth2Server
+              ? [
+                  {
+                    id: 'oauth2-server' as const,
+                    label: 'OAuth2 server',
+                    to: '/projects/$projectId/auth/oauth2-server',
+                    params: { projectId: projectId as string },
+                  },
+                ]
+              : []),
             {
               id: 'templates' as const,
               label: 'Templates',
@@ -1125,25 +1138,34 @@ export function View({
           ]
         : []),
     ],
-    [projectId, showAuthSecuritySettings],
+    [projectId, showAuthSecuritySettings, showOAuth2Server],
   )
 
-  // Redirect from policies/social-providers/templates/settings when user lacks permission
+  // Redirect from policies/social-providers/oauth2-server/templates/settings when user lacks permission
   useEffect(() => {
-    if (showAuthSecuritySettings || !projectId) return
+    if (!projectId) return
     if (
-      activeTab === 'policies' ||
-      activeTab === 'social-providers' ||
-      activeTab === 'settings' ||
-      activeTab === 'templates'
+      !showAuthSecuritySettings &&
+      (activeTab === 'policies' ||
+        activeTab === 'social-providers' ||
+        activeTab === 'settings' ||
+        activeTab === 'templates')
     ) {
       navigate({
         to: '/projects/$projectId/auth/',
         params: { projectId },
         replace: true,
       })
+      return
     }
-  }, [showAuthSecuritySettings, activeTab, projectId, navigate])
+    if (activeTab === 'oauth2-server' && !showOAuth2Server) {
+      navigate({
+        to: '/projects/$projectId/auth/',
+        params: { projectId },
+        replace: true,
+      })
+    }
+  }, [showAuthSecuritySettings, showOAuth2Server, activeTab, projectId, navigate])
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -1268,6 +1290,7 @@ export function View({
         searchPlaceholder={
           activeTab === 'policies' ||
           activeTab === 'social-providers' ||
+          activeTab === 'oauth2-server' ||
           activeTab === 'settings' ||
           activeTab === 'templates'
             ? undefined
@@ -1379,6 +1402,7 @@ export function View({
           'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
           (activeTab === 'policies' ||
             activeTab === 'social-providers' ||
+            activeTab === 'oauth2-server' ||
             activeTab === 'templates' ||
             activeTab === 'settings') &&
             'pt-4 sm:pt-6',
@@ -2202,6 +2226,10 @@ export function View({
             projectId={projectId}
             initialData={authSocialProvidersInitialData}
           />
+        )}
+
+        {activeTab === 'oauth2-server' && projectId && (
+          <OAuth2ServerView projectId={projectId} />
         )}
 
         {activeTab === 'templates' && projectId && (
