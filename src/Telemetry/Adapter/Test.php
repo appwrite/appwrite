@@ -136,16 +136,17 @@ class Test implements Adapter
      */
     public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
     {
-        $gauge = new class extends ObservableGauge {
-            public ?\Closure $callback = null;
+        // Cache by name to mirror the real OpenTelemetry adapter: many sources sharing a metric
+        // name (e.g. one per pool) get the same instrument and each contributes its own callback.
+        return $this->observableGauges[$name] ??= new class extends ObservableGauge {
+            /** @var list<\Closure> */
+            public array $callbacks = [];
 
             public function observe(callable $callback): void
             {
-                $this->callback = \Closure::fromCallable($callback);
+                $this->callbacks[] = \Closure::fromCallable($callback);
             }
         };
-        $this->observableGauges[$name] = $gauge;
-        return $gauge;
     }
 
     public function collect(): bool
