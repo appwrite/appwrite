@@ -1,5 +1,6 @@
 import type { DocsNavParent, DocsNavTree } from '../types'
-import { DOCS_SECTION_NAVS, type DocsSectionNavConfig } from './sections'
+import type { DocsSectionNavConfig } from './sections'
+import { getAllDocsSectionNavs } from './section-navs'
 
 export { DOCS_GLOBAL_NAV } from './global'
 
@@ -10,7 +11,7 @@ export function getDocsSectionNav(slug: string): {
   if (!slug) return { parent: null, navigation: null }
 
   let best: DocsSectionNavConfig | null = null
-  for (const config of DOCS_SECTION_NAVS) {
+  for (const config of getAllDocsSectionNavs()) {
     if (slug === config.prefix || slug.startsWith(`${config.prefix}/`)) {
       if (!best || config.prefix.length > best.prefix.length) {
         best = config

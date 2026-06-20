@@ -4,21 +4,38 @@ import { preloadPartialsForContent, resolvePartials } from './partials'
 import { extractDocsToc } from './toc'
 import type { DocsPageData, DocsPageMeta } from './types'
 
-const contentLoaders = import.meta.glob('/src/content/docs/**/index.markdoc', {
+const importedContentLoaders = import.meta.glob('/src/content/docs/**/index.markdoc', {
   query: '?raw',
   import: 'default',
 }) as Record<string, () => Promise<string>>
 
-function slugFromModulePath(modulePath: string): string {
-  const match = modulePath.match(/\/src\/content\/docs\/(.*)\/index\.markdoc$/)
+const localContentLoaders = import.meta.glob(
+  '/src/content/docs-local/**/index.markdoc',
+  {
+    query: '?raw',
+    import: 'default',
+  },
+) as Record<string, () => Promise<string>>
+
+function slugFromModulePath(modulePath: string, base: 'docs' | 'docs-local'): string {
+  const pattern =
+    base === 'docs-local'
+      ? /\/src\/content\/docs-local\/(.*)\/index\.markdoc$/
+      : /\/src\/content\/docs\/(.*)\/index\.markdoc$/
+  const match = modulePath.match(pattern)
   if (!match) return ''
   return match[1]
 }
 
 const contentPathBySlug = new Map<string, string>()
-for (const modulePath of Object.keys(contentLoaders)) {
-  contentPathBySlug.set(slugFromModulePath(modulePath), modulePath)
+for (const modulePath of Object.keys(importedContentLoaders)) {
+  contentPathBySlug.set(slugFromModulePath(modulePath, 'docs'), modulePath)
 }
+for (const modulePath of Object.keys(localContentLoaders)) {
+  contentPathBySlug.set(slugFromModulePath(modulePath, 'docs-local'), modulePath)
+}
+
+const contentLoaders = { ...importedContentLoaders, ...localContentLoaders }
 
 const rawContentCache = new Map<string, string>()
 /** Bound SSR doc cache so crawlers cannot retain every markdoc file in memory. */

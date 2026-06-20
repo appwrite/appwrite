@@ -62,9 +62,10 @@ export function PolicyToc({ items, currentPolicy, className }: PolicyTocProps) {
           <PolicySidebarSection title="On this page" ariaLabel="Table of contents">
             <ul className="space-y-0.5">
               {items.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="min-w-0">
                   <a
                     href={`#${item.id}`}
+                    title={item.label}
                     className={policySidebarLinkClassName(activeId === item.id)}
                   >
                     {item.label}

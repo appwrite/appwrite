@@ -22,6 +22,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
       { label: 'Functions', href: '/docs/products/functions', icon: 'zap', isParent: true },
       { label: 'Messaging', href: '/docs/products/messaging', icon: 'send', isParent: true },
       { label: 'Sites', href: '/docs/products/sites', icon: 'globe', isParent: true },
+      { label: 'Domains', href: '/docs/products/domains', icon: 'link', isParent: true },
     ],
   },
   {

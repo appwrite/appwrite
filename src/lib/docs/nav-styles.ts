@@ -24,7 +24,7 @@ export function docsSidebarNavLinkClassName(active: boolean) {
 /** Right-rail table of contents links. */
 export function docsTocLinkClassName(active: boolean) {
   return cn(
-    'block rounded-md px-2 py-1.5 font-medium transition-colors',
+    'block min-w-0 truncate rounded-md px-2 py-1.5 font-medium transition-colors',
     DOCS_TOC_LINK_TEXT_CLASS,
     active
       ? cn(DOCS_NAV_ACTIVE_BG_CLASS, 'text-foreground/90')

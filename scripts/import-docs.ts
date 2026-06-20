@@ -1,5 +1,6 @@
 /**
  * Imports docs content from the Appwrite website repo into src/content/docs.
+ * Vibes-native docs live in src/content/docs-local and are not touched by this script.
  * Run: bun run scripts/import-docs.ts
  */
 import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises'

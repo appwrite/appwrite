@@ -56,9 +56,10 @@ export function CompareToc({ className }: { className?: string }) {
       <PolicySidebarSection title="On this page" ariaLabel="Compare plans sections">
         <ul className="space-y-0.5">
           {comparisonPageSections.map((section) => (
-            <li key={section.id}>
+            <li key={section.id} className="min-w-0">
               <a
                 href={`#${section.id}`}
+                title={section.label}
                 onClick={(event) => handleClick(event, section.id)}
                 className={policySidebarLinkClassName(activeId === section.id)}
                 aria-current={activeId === section.id ? 'location' : undefined}

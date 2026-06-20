@@ -54,14 +54,13 @@ export function BlogToc({ items }: BlogTocProps) {
               const label = `${item.step ? `${item.step}. ` : ''}${item.label}`
 
               return (
-                <li key={item.id}>
+                <li key={item.id} className="min-w-0">
                   <a
                     href={`#${item.id}`}
                     title={label}
                     className={cn(
                       docsTocLinkClassName(activeId === item.id),
                       item.level > 2 && 'ps-4',
-                      'block truncate',
                     )}
                   >
                     {label}

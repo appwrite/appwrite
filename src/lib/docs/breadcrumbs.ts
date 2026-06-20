@@ -5,7 +5,8 @@ import {
 } from './docs-preview-menu'
 import { DOCS_GLOBAL_NAV } from './navigation/global'
 import { isDocsNavGroup } from './navigation/index'
-import { DOCS_SECTION_NAVS, type DocsSectionNavConfig } from './navigation/sections'
+import type { DocsSectionNavConfig } from './navigation/sections'
+import { getAllDocsSectionNavs } from './navigation/section-navs'
 import type { DocsNavTree } from './types'
 
 type DocsPageLookup = Record<string, { title: string } | undefined>
@@ -16,7 +17,7 @@ function slugToHref(slug: string): string {
 
 function getSectionConfig(slug: string): DocsSectionNavConfig | null {
   let best: DocsSectionNavConfig | null = null
-  for (const config of DOCS_SECTION_NAVS) {
+  for (const config of getAllDocsSectionNavs()) {
     if (slug === config.prefix || slug.startsWith(`${config.prefix}/`)) {
       if (!best || config.prefix.length > best.prefix.length) {
         best = config
@@ -243,7 +244,7 @@ export function getDocsPageBreadcrumbItems(
   if (!slug) return [DOCS_HOME_BREADCRUMB]
 
   if (options?.previewView === 'menu' && canShowDocsPreviewMenu(slug)) {
-    const config = DOCS_SECTION_NAVS.find((entry) => entry.prefix === slug)
+    const config = getAllDocsSectionNavs().find((entry) => entry.prefix === slug)
     if (config) return getSectionMenuBreadcrumbItems(config)
     const globalNav = getGlobalNavItemBySlug(slug)
     if (globalNav) {

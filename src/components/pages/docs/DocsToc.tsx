@@ -42,7 +42,7 @@ export function DocsToc({ items }: DocsTocProps) {
     <aside
       aria-hidden={items.length === 0 ? true : undefined}
       className={cn(
-        'sticky top-12 z-10 hidden w-full min-w-[192px] max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-8 @[900px]:block',
+        'sticky top-12 z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-8 @[900px]:block',
         'max-h-[calc(100dvh-5rem)]',
       )}
     >
@@ -50,20 +50,24 @@ export function DocsToc({ items }: DocsTocProps) {
         <nav aria-label="Table of contents">
           <p className={DOCS_TOC_SECTION_TITLE_CLASS}>On this page</p>
           <ul className="space-y-0.5">
-            {items.map((item) => (
-              <li key={item.id}>
-                <a
-                  href={`#${item.id}`}
-                  className={cn(
-                    docsTocLinkClassName(activeId === item.id),
-                    item.level > 2 && 'ps-4',
-                  )}
-                >
-                  {item.step ? `${item.step}. ` : ''}
-                  {item.label}
-                </a>
-              </li>
-            ))}
+            {items.map((item) => {
+              const label = `${item.step ? `${item.step}. ` : ''}${item.label}`
+
+              return (
+                <li key={item.id} className="min-w-0">
+                  <a
+                    href={`#${item.id}`}
+                    title={label}
+                    className={cn(
+                      docsTocLinkClassName(activeId === item.id),
+                      item.level > 2 && 'ps-4',
+                    )}
+                  >
+                    {label}
+                  </a>
+                </li>
+              )
+            })}
           </ul>
         </nav>
       ) : null}

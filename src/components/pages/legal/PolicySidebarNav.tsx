@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 export function policySidebarLinkClassName(active: boolean) {
   return cn(
-    'block rounded-md px-2 py-1.5 text-[13px] font-medium leading-5 transition-colors',
+    'block min-w-0 truncate rounded-md px-2 py-1.5 text-[13px] font-medium leading-5 transition-colors',
     active
       ? 'bg-accent text-foreground'
       : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

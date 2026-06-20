@@ -1992,6 +1992,160 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/domains",
+    "title": "Domains",
+    "description": "Register, transfer, and manage domains with Appwrite. Buy domains, configure DNS, and connect them to Sites, Functions, and APIs from your organization.",
+    "excerpt": "Appwrite **Domains** is organization-level domain management on Appwrite Cloud. You can register new names, transfer existing registrations, delegate DNS for domains you own elsewhere, and connect hostnames to Sites, Functions, and custom API endpoints. Appwrite acts as your registrar for purchases and transfers. Billing, renewal, and registrant details are tied to your organization. You can also change organization to move a domain between orgs you control without transferring registration away from Appwrite. How it works Domain setup on Appwrite has…",
+    "breadcrumbs": [
+      "Domains",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "products/domains/change-organization",
+    "title": "Change organization",
+    "description": "Reassign a domain from one Appwrite organization to another. This is not a registrar transfer.",
+    "excerpt": "You can reassign a domain to a different Appwrite organization from the domain **Settings** tab. The domain keeps its DNS zone and registration state. Only which organization owns the domain in the Console changes. **Change organization** updates which Appwrite organization manages the domain. It does not move registration to or from Appwrite at the registry. For that, use Transfer a domain. Before you change organization - You must be a member of both the source and destination organizations. - The…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Change organization"
+    ]
+  },
+  {
+    "slug": "products/domains/connect",
+    "title": "Connect to products",
+    "description": "Connect apex domains and subdomains to Appwrite Sites, Functions, and custom API endpoints. Covers DNS methods, verification, and multi-product layouts.",
+    "excerpt": "Custom domains on Appwrite work in two layers: 1. **Organization domain** (apex zone, for example ) proves your organization controls the name and can host its DNS zone. 2. **Product domain** (any hostname, for example or ) is a proxy rule that routes HTTPS traffic to a Site, Function, or project API. This guide walks through apex vs subdomain setup, what to configure in each product, and how organization **Domains** fits together with project-level **Add domain** flows. Before you connect…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Connect to products"
+    ]
+  },
+  {
+    "slug": "products/domains/delete",
+    "title": "Delete a domain",
+    "description": "Remove a domain and its DNS zone from Appwrite, including bulk delete from the organization list.",
+    "excerpt": "Deleting a domain removes it from your organization and deletes all DNS records Appwrite hosted for that zone. This action cannot be undone. This guide covers single and bulk delete and what happens for Appwrite-registered versus external domains. Before you delete - Update or remove product connections (Sites, Functions, API custom domains) that use the hostname. - For **external domains**, plan nameserver changes at your registrar if DNS should continue elsewhere. Deleting in Appwrite does not cancel registration at your…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Delete a domain"
+    ]
+  },
+  {
+    "slug": "products/domains/dns",
+    "title": "DNS records",
+    "description": "Learn how DNS zones work for organization domains in Appwrite, including record types and locked entries.",
+    "excerpt": "When a domain is verified with Appwrite nameservers, Appwrite hosts the authoritative DNS zone for that domain. The zone contains all records for that domain and is managed under **Organization** > **Domains**. This applies to Appwrite-registered domains and external domains alike. For platform-wide DNS behavior (apex domains, CNAME flattening, TLS), see Appwrite DNS service. Zones and verification A verified domain uses Appwrite nameservers ( and ). The **Records** tab on the domain shows the full zone Appwrite serves. Until verification…",
+    "breadcrumbs": [
+      "Domains",
+      "Concepts",
+      "DNS records"
+    ]
+  },
+  {
+    "slug": "products/domains/external",
+    "title": "Add external domain",
+    "description": "Add a domain registered with another registrar and delegate DNS to Appwrite without moving registration.",
+    "excerpt": "If you already registered a domain elsewhere, you can add it to Appwrite and delegate DNS without transferring registration. The Console shows an external registrar for these domains. Appwrite manages DNS once nameservers are verified. This guide walks you through adding the domain, updating nameservers, and restoring DNS records. Add a domain 1. Open **Domains** in your organization. 2. Click **Add domain**. 3. Enter the domain name without a protocol (for example or ). 4. Click **Add domain** to create…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Add external domain"
+    ]
+  },
+  {
+    "slug": "products/domains/manage-dns",
+    "title": "Manage DNS records",
+    "description": "Create, update, import, and filter DNS records for organization domains in Appwrite.",
+    "excerpt": "You manage DNS records for verified organization domains from the domain **Records** tab. This guide covers day-to-day record operations, zone import, and email provider presets. For record types and locked entries, see DNS records. Open the records table 1. Open **Organization** > **Domains**. 2. Select a verified domain. 3. Open the **DNS Records** tab. The table lists all records in the zone, including locked records Appwrite created for network routing. Use search filters to narrow by type, name, or value.…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Manage DNS records"
+    ]
+  },
+  {
+    "slug": "products/domains/presets",
+    "title": "DNS presets",
+    "description": "Add email provider DNS records to organization domains with one-click presets in Appwrite Cloud.",
+    "excerpt": "**DNS presets** are curated record sets for common email providers. They add the MX (and in some cases TXT) records your provider expects at the apex of your domain (), so you can route mail without typing each record manually. Presets are available on verified organization domains where Appwrite hosts the DNS zone. They do not replace provider-specific setup such as domain verification TXT, DKIM, or DMARC. Add those records separately after applying a preset. For manual record operations, see…",
+    "breadcrumbs": [
+      "Domains",
+      "Concepts",
+      "DNS presets"
+    ]
+  },
+  {
+    "slug": "products/domains/pricing",
+    "title": "Pricing",
+    "description": "Learn how Appwrite prices domain registration, transfers, and renewals, including premium names and registration periods.",
+    "excerpt": "Appwrite quotes domain prices before you register or transfer a domain. Prices depend on the TLD, whether the name is premium, and the registration period required by the registry. Registration and transfer quotes When you search for a domain in the Console buy flow or start a transfer in, Appwrite fetches a price quote for each name. Quotes include: - **Price**: total cost for the quoted registration or transfer period (in your organization's billing currency). - **Available**: whether the name…",
+    "breadcrumbs": [
+      "Domains",
+      "Concepts",
+      "Pricing"
+    ]
+  },
+  {
+    "slug": "products/domains/quick-start",
+    "title": "Start with Domains",
+    "description": "Register or add your first domain in Appwrite Cloud and verify DNS in a few steps.",
+    "excerpt": "You can register a new domain or add one you already own in minutes. Both paths end with a verified domain in your organization that you can connect to Appwrite products. Open Domains 1. Sign in to Appwrite Cloud. 2. Select your organization. 3. Open **Domains** in the sidebar. If you do not see **Domains**, confirm your organization is on a Cloud plan that includes the feature. Register or add a domain Choose the path that matches how you want…",
+    "breadcrumbs": [
+      "Domains",
+      "Getting started",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "products/domains/register",
+    "title": "Register a domain",
+    "description": "Search for available domain names and register them through Appwrite with transparent pricing and organization billing.",
+    "excerpt": "You can register domain names directly from the Appwrite Console. Appwrite is the registrar for these domains: registration, renewal, and billing run through your organization. This guide walks you through search, checkout, and payment. Search 1. In your organization, open **Domains**. 2. Click **Buy domain**. 3. Enter a name in the search field. The wizard shows suggestions across many TLDs (for example , , , ). Prices load as results appear. Each result indicates whether the name is available, the…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Register a domain"
+    ]
+  },
+  {
+    "slug": "products/domains/registration",
+    "title": "Registration",
+    "description": "Learn how domain registration works in Appwrite, including Appwrite-registered and external domains, organization scope, and verification.",
+    "excerpt": "In Appwrite Domains, **registration** describes who holds the domain at the registry and how the domain is added to your organization. DNS management in Appwrite is separate from registration: you can delegate DNS to Appwrite for domains registered elsewhere. Domain types Appwrite distinguishes domains by how they are managed: | Type | How it is added | Registrar in Console | Auto-renewal | |------|-----------------|----------------------|--------------| | **Appwrite-registered** | Register or transfer in through Appwrite | Appwrite | Available | | **External**…",
+    "breadcrumbs": [
+      "Domains",
+      "Concepts",
+      "Registration"
+    ]
+  },
+  {
+    "slug": "products/domains/renewal",
+    "title": "Renewal",
+    "description": "Learn how domain expiry, auto-renewal, and billing work for Appwrite-registered domains.",
+    "excerpt": "Renewal applies to domains where **Appwrite is the registrar** (registered or transferred in through Appwrite). External domains renew at your external registrar. Appwrite does not charge renewal for those names. Expiry and renewal dates On the domain detail page and **Settings** tab, Appwrite shows: - **Expiry date**: when the current registration period ends if not renewed - **Renewal date**: when the next renewal cycle applies (aligned with registry data) Track these dates for domains with auto-renewal disabled. Auto-renewal Auto-renewal is…",
+    "breadcrumbs": [
+      "Domains",
+      "Concepts",
+      "Renewal"
+    ]
+  },
+  {
+    "slug": "products/domains/transfer",
+    "title": "Transfer a domain",
+    "description": "Transfer domain registration into or out of Appwrite, including authorization codes, fees, and transfer status.",
+    "excerpt": "You can transfer domain registration **into** Appwrite from another registrar and **out** to another registrar when the domain is registered with Appwrite. This guide covers transfer in, transfer status, and transfer out. To reassign a domain between Appwrite organizations without changing registrar, see Change organization. Transfer in Use transfer in when you want Appwrite to become the registrar for a domain you already own elsewhere. Before you start - Unlock the domain at your current registrar. - Request an **authorization…",
+    "breadcrumbs": [
+      "Domains",
+      "Journeys",
+      "Transfer a domain"
+    ]
+  },
+  {
     "slug": "products/functions",
     "title": "Functions",
     "description": "Appwrite Functions is your gateway to scalable applications. Explore our complete guide to building and deploying serverless functions effortlessly.",

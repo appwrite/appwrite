@@ -1,0 +1,63 @@
+---
+layout: article
+title: Start with Domains
+description: Register or add your first domain in Appwrite Cloud and verify DNS in a few steps.
+difficulty: beginner
+readtime: 5
+---
+
+You can register a new domain or add one you already own in minutes. Both paths end with a verified domain in your organization that you can connect to Appwrite products.
+
+# Open Domains {% #open-domains %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Select your organization.
+3. Open **Domains** in the sidebar.
+
+If you do not see **Domains**, confirm your organization is on a Cloud plan that includes the feature.
+
+# Register or add a domain {% #register-or-add %}
+
+Choose the path that matches how you want to manage the domain.
+
+### Register
+
+1. Click **Buy domain**.
+2. Search for a name (for example `myapp` or `myapp.com`).
+3. Review availability and pricing, then continue to checkout.
+4. Enter registrant contact details, select a billing address and payment method, and complete payment.
+
+After payment succeeds, Appwrite registers the domain and opens its detail page. See [Register a domain](/docs/products/domains/register) for the full flow.
+
+### Transfer in
+
+1. Click **Transfer domain**.
+2. Enter the full domain name and the authorization code from your current registrar.
+3. Select a payment method and confirm the transfer fee.
+
+Transfer progress appears on the domain detail page. See [Transfer a domain](/docs/products/domains/transfer) for status details and troubleshooting.
+
+### Add external
+
+1. Click **Add domain**.
+2. Enter the domain name (for example `example.com`).
+3. At your current DNS host, set the domain nameservers to `ns1.appwrite.zone` and `ns2.appwrite.zone`.
+4. In the Console, click **Verify** once nameserver changes have propagated.
+
+See [Add external domain](/docs/products/domains/external) for record migration and apex-domain notes.
+
+# Manage DNS records {% #manage-dns-records %}
+
+After verification, open the domain and use the **Records** tab to add or edit DNS entries. Appwrite creates locked records required for network routing. You can add MX, TXT, and other records for email and third-party services.
+
+See [DNS records](/docs/products/domains/dns) for supported record types and locked entries. To add or import records, see [Manage DNS records](/docs/products/domains/manage-dns).
+
+# Connect to a product {% #connect-to-a-product %}
+
+Use your verified domain with Appwrite compute and APIs:
+
+1. Choose a hostname (apex or subdomain) for each product.
+2. Add the domain on the Site, Function, or project **Custom domains** settings.
+3. Create the CNAME or nameserver records the Console shows, then verify.
+
+See [Connect to products](/docs/products/domains/connect) for apex vs subdomain setup, example layouts (`www`, `api`, `staging`), and per-product steps.

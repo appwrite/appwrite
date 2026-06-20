@@ -1270,6 +1270,104 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/domains",
+    "title": "Domains",
+    "description": "Register, transfer, and manage domains with Appwrite. Buy domains, configure DNS, and connect them to Sites, Functions, and APIs from your organization.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/domains/change-organization",
+    "title": "Change organization",
+    "description": "Reassign a domain from one Appwrite organization to another. This is not a registrar transfer.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/connect",
+    "title": "Connect to products",
+    "description": "Connect apex domains and subdomains to Appwrite Sites, Functions, and custom API endpoints. Covers DNS methods, verification, and multi-product layouts.",
+    "layout": "article",
+    "readingTimeMinutes": 8
+  },
+  {
+    "slug": "products/domains/delete",
+    "title": "Delete a domain",
+    "description": "Remove a domain and its DNS zone from Appwrite, including bulk delete from the organization list.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/dns",
+    "title": "DNS records",
+    "description": "Learn how DNS zones work for organization domains in Appwrite, including record types and locked entries.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/domains/external",
+    "title": "Add external domain",
+    "description": "Add a domain registered with another registrar and delegate DNS to Appwrite without moving registration.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/manage-dns",
+    "title": "Manage DNS records",
+    "description": "Create, update, import, and filter DNS records for organization domains in Appwrite.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/presets",
+    "title": "DNS presets",
+    "description": "Add email provider DNS records to organization domains with one-click presets in Appwrite Cloud.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/domains/pricing",
+    "title": "Pricing",
+    "description": "Learn how Appwrite prices domain registration, transfers, and renewals, including premium names and registration periods.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/domains/quick-start",
+    "title": "Start with Domains",
+    "description": "Register or add your first domain in Appwrite Cloud and verify DNS in a few steps.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/register",
+    "title": "Register a domain",
+    "description": "Search for available domain names and register them through Appwrite with transparent pricing and organization billing.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/domains/registration",
+    "title": "Registration",
+    "description": "Learn how domain registration works in Appwrite, including Appwrite-registered and external domains, organization scope, and verification.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/renewal",
+    "title": "Renewal",
+    "description": "Learn how domain expiry, auto-renewal, and billing work for Appwrite-registered domains.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/domains/transfer",
+    "title": "Transfer a domain",
+    "description": "Transfer domain registration into or out of Appwrite, including authorization codes, fees, and transfer status.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/functions",
     "title": "Functions",
     "description": "Appwrite Functions is your gateway to scalable applications. Explore our complete guide to building and deploying serverless functions effortlessly.",

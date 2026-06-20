@@ -73,21 +73,25 @@ export function DocsPreviewInlineToc({
     <nav aria-label="Table of contents" className="mt-5">
       <p className={DOCS_TOC_SECTION_TITLE_CLASS}>On this page</p>
       <ul className="mt-2 space-y-0.5">
-        {items.map((item) => (
-          <li key={item.id}>
-            <a
-              href={`#${item.id}`}
-              onClick={(event) => handleTocClick(event, item.id)}
-              className={cn(
-                docsTocLinkClassName(activeId === item.id),
-                item.level > 2 && 'ps-4',
-              )}
-            >
-              {item.step ? `${item.step}. ` : ''}
-              {item.label}
-            </a>
-          </li>
-        ))}
+        {items.map((item) => {
+          const label = `${item.step ? `${item.step}. ` : ''}${item.label}`
+
+          return (
+            <li key={item.id} className="min-w-0">
+              <a
+                href={`#${item.id}`}
+                title={label}
+                onClick={(event) => handleTocClick(event, item.id)}
+                className={cn(
+                  docsTocLinkClassName(activeId === item.id),
+                  item.level > 2 && 'ps-4',
+                )}
+              >
+                {label}
+              </a>
+            </li>
+          )
+        })}
       </ul>
     </nav>
   )

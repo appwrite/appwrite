@@ -1,4 +1,4 @@
-import { DOCS_SECTION_NAVS } from './navigation/sections'
+import { getAllDocsSectionNavs } from './navigation/section-navs'
 
 export type DocsPreviewView = 'article' | 'menu'
 
@@ -8,7 +8,7 @@ const HUB_ONLY_MENU_SLUGS = new Set(['quick-starts', 'tutorials'])
 export function canShowDocsPreviewMenu(slug: string): boolean {
   if (!slug) return false
   if (HUB_ONLY_MENU_SLUGS.has(slug)) return true
-  return DOCS_SECTION_NAVS.some((config) => config.prefix === slug)
+  return getAllDocsSectionNavs().some((config) => config.prefix === slug)
 }
 
 export function resolveDocsPreviewView(
@@ -44,7 +44,7 @@ export function getDocsPreviewMenuMeta(slug: string): DocsPreviewMenuMeta | null
   const hubMeta = PREVIEW_HUB_META[slug]
   if (hubMeta) return hubMeta
 
-  const config = DOCS_SECTION_NAVS.find((entry) => entry.prefix === slug)
+  const config = getAllDocsSectionNavs().find((entry) => entry.prefix === slug)
   if (!config) return null
 
   return { title: config.parent.label }

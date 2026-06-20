@@ -236,7 +236,7 @@ export function SchemaTablesSidebar({
                 <div className="relative min-w-0 flex-1">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    type="search"
+                    type="text"
                     value={tableSearch}
                     onChange={(event) => setTableSearch(event.target.value)}
                     placeholder="Search tables"
