@@ -128,10 +128,9 @@ class Mails extends Action
 
             $previewLen = strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace = str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
             }
         }
-
 
         $bodyTemplate->setParam('{{preview}}', $preview);
         $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
@@ -145,22 +144,26 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
-        $adapter->setTelemetry($telemetry);
+        /** @var callable(): EmailAdapter $buildAdapter */
+        $buildAdapter = function () use ($smtp, $register, $telemetry): EmailAdapter {
+            /** @var EmailAdapter $adapter */
+            $adapter = empty($smtp)
+                ? $register->get('smtp')
+                : new SMTP(
+                    host: $smtp['host'],
+                    port: (int) $smtp['port'],
+                    username: $smtp['username'] ?? '',
+                    password: $smtp['password'] ?? '',
+                    smtpSecure: $smtp['secure'] ?? '',
+                    smtpAutoTLS: false,
+                    xMailer: 'Appwrite Mailer',
+                    timeout: 10,
+                    keepAlive: true,
+                    timelimit: 30,
+                );
+            $adapter->setTelemetry($telemetry);
+            return $adapter;
+        };
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -215,56 +218,43 @@ class Mails extends Action
         );
         $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        try {
-    $response = $adapter->send($emailMessage);
-
-    // PHPMailer returns false on 421 (no exception) — check results array
-    $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
-    $firstError = !empty($failed) ? (array_values($failed)[0]['error'] ?? '') : '';
-
-    if ($type === 'smtp' && str_contains($firstError, '421')) {
-        // Stale keepalive conn — retry once with fresh connection
-        $response = $adapter->send($emailMessage);
-        $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
-        if (!empty($failed)) {
-            $retryError = array_values($failed)[0]['error'] ?? 'Unknown error';
-            Span::add('mail.status', 'failure');
-            throw new Exception('Error sending mail: ' . $retryError, 401);
-        }
-    } elseif (!empty($failed)) {
-        Span::add('mail.status', 'failure');
-        $errorMsg = $firstError ?: 'Unknown error';
-        throw new Exception('Error sending mail: ' . $errorMsg, $type === 'smtp' ? 401 : 500);
-    }
-} catch (\Throwable $error) {
-    // Re-throw already-formatted errors from above
-    if ($error instanceof Exception && str_starts_with($error->getMessage(), 'Error sending mail:')) {
-        throw $error;
-    }
-
-    // Handle thrown 421 (some adapters may throw instead of returning failed results)
-    if ($type === 'smtp' && str_contains($error->getMessage(), '421')) {
-        try {
+        /**
+         * Send email and inspect response results for failures.
+         * PHPMailer returns false on 421 timeout rather than throwing,
+         * so we must check the results array to detect silent failures.
+         *
+         * @throws Exception
+         */
+        $sendAndCheck = function (EmailAdapter $adapter) use ($emailMessage, $type): void {
             $response = $adapter->send($emailMessage);
             $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
             if (!empty($failed)) {
-                $retryError = array_values($failed)[0]['error'] ?? 'Unknown error';
-                Span::add('mail.status', 'failure');
-                throw new Exception('Error sending mail: ' . $retryError, 401);
+                $error = array_values($failed)[0]['error'] ?? 'Unknown error';
+                throw new Exception('Error sending mail: ' . $error, $type === 'smtp' ? 401 : 500);
             }
-        } catch (\Throwable $retryError) {
-            Span::add('mail.status', 'failure');
-            throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
-        }
-    } else {
-        Span::add('mail.status', 'failure');
-        if ($type === 'smtp') {
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
-        }
-        throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
-    }
-}
+        };
 
-Span::add('mail.status', 'success');
+        try {
+            $sendAndCheck($buildAdapter());
+        } catch (\Throwable $error) {
+            // Retry once on 421 — stale keepalive connection dropped by server or NAT.
+            // Force a fresh adapter instance so PHPMailer opens a new socket.
+            if ($type === 'smtp' && str_contains($error->getMessage(), '421')) {
+                try {
+                    $sendAndCheck($buildAdapter());
+                } catch (\Throwable $retryError) {
+                    Span::add('mail.status', 'failure');
+                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), 401);
+                }
+            } else {
+                Span::add('mail.status', 'failure');
+                if ($type === 'smtp') {
+                    throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+                }
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+            }
+        }
+
+        Span::add('mail.status', 'success');
     }
 }
