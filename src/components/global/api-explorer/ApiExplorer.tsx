@@ -110,6 +110,7 @@ import { API_EXPLORER_SEND_REQUEST_SHORTCUT_RAW } from '@/lib/api-explorer/short
 import { useApiExplorerShortcuts } from '@/lib/api-explorer/use-api-explorer-shortcuts'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { copyToClipboard } from '@/lib/utils/context-menu'
+import { formatBytes } from '@/lib/utils/mock-data'
 import {
   useApiExplorerColumnsLayout,
   useApiExplorerExpandedProductGroup,
@@ -1968,6 +1969,14 @@ function ResponseHeadersPanel({ headers }: { headers: Record<string, string> }) 
   )
 }
 
+function ResponseSizeFooter({ byteSize }: { byteSize: number }) {
+  return (
+    <div className="shrink-0 border-t-2 border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground">
+      {formatBytes(byteSize)}
+    </div>
+  )
+}
+
 function ResponseSection({ response, isRefreshing = false }: ResponseSectionProps) {
   const imagePreviewUrl = response.imagePreviewUrl
   const bodyTabLabel = imagePreviewUrl ? 'Preview' : 'Body'
@@ -1985,7 +1994,7 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
 
   return (
     <Tabs
-      key={`${response.status}:${response.durationMs}:${response.binaryByteSize ?? response.body.length}`}
+      key={`${response.status}:${response.durationMs}:${response.responseByteSize}`}
       defaultValue="body"
       className="flex h-full min-h-0 flex-col gap-0"
     >
@@ -2029,25 +2038,24 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
                 className="max-h-full max-w-full rounded-lg border border-border object-contain"
               />
             </div>
-            {response.binaryByteSize != null ? (
-              <div className="shrink-0 border-t-2 border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground">
-                {response.binaryByteSize.toLocaleString()} bytes
-              </div>
-            ) : null}
+            <ResponseSizeFooter byteSize={response.responseByteSize} />
           </div>
         ) : (
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <CodeBlock
-              code={code}
-              language={language}
-              variant="headless"
-              copyInside
-              showCopy
-              showFullscreen
-              wrapLines
-              fixedHeight="100%"
-              className="flex h-full min-h-0 flex-col"
-            />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-b-2 border-border">
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <CodeBlock
+                code={code}
+                language={language}
+                variant="headless"
+                copyInside
+                showCopy
+                showFullscreen
+                wrapLines
+                fixedHeight="100%"
+                className="flex h-full min-h-0 flex-col"
+              />
+            </div>
+            <ResponseSizeFooter byteSize={response.responseByteSize} />
           </div>
         )}
       </TabsContent>

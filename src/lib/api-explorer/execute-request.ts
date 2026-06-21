@@ -1,3 +1,4 @@
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import type {
   ApiExplorerMethod,
   ApiExplorerConfig,
@@ -137,7 +138,7 @@ function arrayBufferToDataUrl(buffer: ArrayBuffer, mediaType: string): string {
 }
 
 function formatBinaryImageBody(mediaType: string, byteSize: number): string {
-  return `(binary image, ${mediaType}, ${byteSize.toLocaleString()} bytes)`
+  return `(binary image, ${mediaType}, ${formatDecimalBytes(byteSize)})`
 }
 
 function buildExecuteApiRequestResult(input: {
@@ -162,11 +163,12 @@ function buildExecuteApiRequestResult(input: {
       ok: input.ok,
       imagePreviewUrl: arrayBufferToDataUrl(input.bodyBytes, imageContentType),
       responseContentType: imageContentType,
-      binaryByteSize: input.bodyBytes.byteLength,
+      responseByteSize: input.bodyBytes.byteLength,
     }
   }
 
   const responseText = new TextDecoder().decode(input.bodyBytes)
+  const responseContentType = getResponseHeader(input.headers, 'content-type')
 
   return {
     status: input.status,
@@ -175,6 +177,8 @@ function buildExecuteApiRequestResult(input: {
     body: formatResponseBody(responseText),
     durationMs: input.durationMs,
     ok: input.ok,
+    responseContentType,
+    responseByteSize: input.bodyBytes.byteLength,
   }
 }
 

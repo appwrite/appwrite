@@ -221,5 +221,6 @@ export type ExecuteApiRequestResult = {
   /** Data URL when the response Content-Type is an image. */
   imagePreviewUrl?: string
   responseContentType?: string
-  binaryByteSize?: number
+  /** Raw response body size in bytes. */
+  responseByteSize: number
 }
