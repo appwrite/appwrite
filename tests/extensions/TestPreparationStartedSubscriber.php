@@ -21,6 +21,6 @@ class TestPreparationStartedSubscriber implements PreparationStartedSubscriber
 
     public function notify(PreparationStarted $event): void
     {
-        self::$startSeconds[$event->test()->id()] = $event->telemetryInfo()->durationSinceStart()->seconds();
+        self::$startSeconds[$event->test()->id()] = $event->telemetryInfo()->durationSinceStart()->asFloat();
     }
 }
