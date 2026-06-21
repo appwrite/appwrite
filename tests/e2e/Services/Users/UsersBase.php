@@ -1307,7 +1307,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'search' => $newName,
         ]);
-
+var_dump($response);
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
