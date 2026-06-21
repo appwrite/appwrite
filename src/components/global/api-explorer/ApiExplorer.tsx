@@ -42,7 +42,6 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { CodeBlock, type CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { RateLimitDescription } from '@/components/global/shared/RateLimitDescription'
-import { AuthRequirementDescription } from '@/components/global/shared/AuthRequirementDescription'
 import {
   ExplorerColumnsResizableLayout,
   ExplorerResponseSplitResizableLayout,
@@ -60,8 +59,7 @@ import {
   executeApiRequest,
   executeApiMultipartRequest,
   filterAllowedServices,
-  findMethodByOperationId,
-  findServiceForMethod,
+  resolveExplorerSelection,
   generateSampleRequestBody,
   getProjectApiExplorerAllowedServices,
   getRequestBodyFormFields,
@@ -76,6 +74,8 @@ import {
   buildMultipartFormData,
   buildCurlCommand,
   getMissingRequiredFormField,
+  getMissingRequiredFieldInJsonBody,
+  stripEmptyCreatableIdFieldsFromJson,
   hasRequestBodyForMethod,
   paramFormValuesToStrings,
   parameterToFormField,
@@ -382,6 +382,7 @@ export function ApiExplorer({
   const [bodyJsonValue, setBodyJsonValue] = useState('')
   const [bodyInputMode, setBodyInputMode] = useState<'form' | 'json'>('form')
   const [response, setResponse] = useState<ExecuteApiRequestResult | null>(null)
+  const [showResponsePanel, setShowResponsePanel] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false)
   const {
@@ -417,47 +418,6 @@ export function ApiExplorer({
         if (cancelled) return
         setParsedSpec(parsed)
         setSpecLoading(false)
-
-        const visibleServices = filterAllowedServices(
-          parsed.services,
-          allowedServices,
-        )
-
-        const preservedMethod = findMethodByOperationId(
-          visibleServices,
-          selectedOperationRef.current,
-        )
-        const initialMethod = findMethodByOperationId(
-          visibleServices,
-          initialOperationId,
-        )
-        const initialService =
-          visibleServices.find((s) => s.id === initialServiceId) ??
-          findServiceForMethod(visibleServices, preservedMethod ?? initialMethod) ??
-          visibleServices[0]
-
-        const method =
-          preservedMethod ??
-          initialMethod ??
-          initialService?.methods[0] ??
-          visibleServices[0]?.methods[0]
-
-        if (initialService && !preservedMethod && !initialMethod) {
-          setSelectedServiceId(initialService.id)
-        } else if (method) {
-          setSelectedServiceId(method.service)
-        }
-        if (method) {
-          selectedOperationRef.current = method.operationId
-          setSelectedMethod(method)
-          applyMethodFormState(method, {
-            setPathFormValues,
-            setQueryFormValues,
-            setBodyFormValues,
-            setBodyJsonValue,
-            setBodyInputMode,
-          })
-        }
       })
       .catch((error: unknown) => {
         if (cancelled) return
@@ -468,38 +428,13 @@ export function ApiExplorer({
     return () => {
       cancelled = true
     }
-  }, [activePlatform, allowedServices, initialOperationId, initialServiceId])
+  }, [activePlatform])
 
   const visibleServices = useMemo(
     () =>
       filterAllowedServices(parsedSpec?.services ?? [], allowedServices),
     [parsedSpec?.services, allowedServices],
   )
-
-  useEffect(() => {
-    if (!parsedSpec || specLoading) return
-
-    const currentMethod = findMethodByOperationId(
-      visibleServices,
-      selectedOperationRef.current,
-    )
-    if (currentMethod) return
-
-    const fallbackMethod = visibleServices[0]?.methods[0]
-    if (!fallbackMethod) return
-
-    selectedOperationRef.current = fallbackMethod.operationId
-    setSelectedServiceId(fallbackMethod.service)
-    setSelectedMethod(fallbackMethod)
-    applyMethodFormState(fallbackMethod, {
-      setPathFormValues,
-      setQueryFormValues,
-      setBodyFormValues,
-      setBodyJsonValue,
-      setBodyInputMode,
-    })
-    setResponse(null)
-  }, [allowedServices, parsedSpec, specLoading, visibleServices])
 
   useEffect(() => {
     if (activePlatform !== 'server' || !selectedMethod) return
@@ -558,72 +493,103 @@ export function ApiExplorer({
     [serviceProductGroups, setExpandedProductGroup],
   )
 
-  const handleSelectService = useCallback((service: ApiExplorerService) => {
-    setSelectedServiceId(service.id)
-    expandProductGroupForService(service.id)
-    const firstMethod = service.methods[0]
-    if (!firstMethod) return
-    selectedOperationRef.current = firstMethod.operationId
-    setSelectedMethod(firstMethod)
-    applyMethodFormState(firstMethod, {
-      setPathFormValues,
-      setQueryFormValues,
-      setBodyFormValues,
-      setBodyJsonValue,
-      setBodyInputMode,
-    })
-    setResponse(null)
-    onSelectionChange?.({
-      serviceId: service.id,
-      operationId: firstMethod.operationId,
-    })
-  }, [expandProductGroupForService, onSelectionChange])
-
-  const handleSelectMethod = useCallback((method: ApiExplorerMethod) => {
-    selectedOperationRef.current = method.operationId
-    setSelectedMethod(method)
-    setSelectedServiceId(method.service)
-    expandProductGroupForService(method.service)
-    applyMethodFormState(method, {
-      setPathFormValues,
-      setQueryFormValues,
-      setBodyFormValues,
-      setBodyJsonValue,
-      setBodyInputMode,
-    })
-    setResponse(null)
-    onSelectionChange?.({
-      serviceId: method.service,
-      operationId: method.operationId,
-    })
-  }, [expandProductGroupForService, onSelectionChange])
+  const applyExplorerSelection = useCallback(
+    (method: ApiExplorerMethod, options?: { syncUrl?: boolean; clearResponse?: boolean }) => {
+      selectedOperationRef.current = method.operationId
+      setSelectedServiceId(method.service)
+      setSelectedMethod(method)
+      expandProductGroupForService(method.service)
+      applyMethodFormState(method, {
+        setPathFormValues,
+        setQueryFormValues,
+        setBodyFormValues,
+        setBodyJsonValue,
+        setBodyInputMode,
+      })
+      if (options?.clearResponse) {
+        setResponse(null)
+      }
+      if (options?.syncUrl) {
+        onSelectionChange?.({
+          serviceId: method.service,
+          operationId: method.operationId,
+        })
+      }
+    },
+    [expandProductGroupForService, onSelectionChange],
+  )
 
   useEffect(() => {
-    if (!parsedSpec || specLoading || !initialOperationId) return
-    if (selectedOperationRef.current === initialOperationId) return
+    if (!parsedSpec || specLoading) return
 
-    const method = findMethodByOperationId(visibleServices, initialOperationId)
-    if (!method) return
-
-    selectedOperationRef.current = method.operationId
-    setSelectedServiceId(method.service)
-    setSelectedMethod(method)
-    expandProductGroupForService(method.service)
-    applyMethodFormState(method, {
-      setPathFormValues,
-      setQueryFormValues,
-      setBodyFormValues,
-      setBodyJsonValue,
-      setBodyInputMode,
+    const { method, serviceId } = resolveExplorerSelection({
+      visibleServices,
+      initialServiceId,
+      initialOperationId,
+      preservedOperationId: selectedOperationRef.current,
     })
-    setResponse(null)
+
+    if (!method) {
+      if (serviceId && serviceId !== selectedServiceId) {
+        setSelectedServiceId(serviceId)
+      }
+      return
+    }
+
+    const urlMatchesSelection =
+      initialServiceId === method.service &&
+      initialOperationId === method.operationId
+
+    if (
+      selectedMethod?.operationId === method.operationId &&
+      selectedServiceId === method.service
+    ) {
+      if (!urlMatchesSelection) {
+        onSelectionChange?.({
+          serviceId: method.service,
+          operationId: method.operationId,
+        })
+      }
+      return
+    }
+
+    applyExplorerSelection(method, {
+      syncUrl: !urlMatchesSelection,
+      clearResponse: false,
+    })
   }, [
-    expandProductGroupForService,
+    applyExplorerSelection,
     initialOperationId,
+    initialServiceId,
+    onSelectionChange,
     parsedSpec,
+    selectedMethod?.operationId,
+    selectedServiceId,
     specLoading,
     visibleServices,
   ])
+
+  const handleSelectService = useCallback((service: ApiExplorerService) => {
+    const firstMethod = service.methods[0]
+    if (!firstMethod) {
+      setSelectedServiceId(service.id)
+      expandProductGroupForService(service.id)
+      setResponse(null)
+      return
+    }
+
+    applyExplorerSelection(firstMethod, {
+      syncUrl: true,
+      clearResponse: true,
+    })
+  }, [applyExplorerSelection, expandProductGroupForService])
+
+  const handleSelectMethod = useCallback((method: ApiExplorerMethod) => {
+    applyExplorerSelection(method, {
+      syncUrl: true,
+      clearResponse: true,
+    })
+  }, [applyExplorerSelection])
 
   const bodyFormFields = useMemo(
     () => (selectedMethod ? getRequestBodyFormFields(selectedMethod) : []),
@@ -671,16 +637,36 @@ export function ApiExplorer({
         }
         formData = buildMultipartFormData(bodyFormFields, bodyFormValues)
       } else if (bodyInputMode === 'json') {
-        body = bodyJsonValue
-        if (body.trim()) {
+        const missingField = getMissingRequiredFieldInJsonBody(
+          bodyFormFields,
+          bodyJsonValue,
+        )
+        if (missingField) {
+          toast.error(`Missing required field: ${missingField.label}`)
+          return
+        }
+        if (bodyJsonValue.trim()) {
           try {
-            JSON.parse(body)
+            body = stripEmptyCreatableIdFieldsFromJson(
+              bodyFormFields,
+              bodyJsonValue,
+            )
           } catch {
             toast.error('Invalid JSON in request body.')
             return
           }
+        } else {
+          body = bodyJsonValue
         }
       } else {
+        const missingField = getMissingRequiredFormField(
+          bodyFormFields,
+          bodyFormValues,
+        )
+        if (missingField) {
+          toast.error(`Missing required field: ${missingField.label}`)
+          return
+        }
         try {
           body = serializeBodyFromForm(bodyFormFields, bodyFormValues)
         } catch (error: unknown) {
@@ -691,6 +677,7 @@ export function ApiExplorer({
     }
 
     setIsExecuting(true)
+    setShowResponsePanel(true)
 
     try {
       let requestAuth:
@@ -802,10 +789,46 @@ export function ApiExplorer({
 
     if (hasRequestBodyForMethod(selectedMethod)) {
       if (multipart) {
+        const missingField = getMissingRequiredFormField(
+          bodyFormFields,
+          bodyFormValues,
+        )
+        if (missingField) {
+          toast.error(`Missing required field: ${missingField.label}`)
+          return
+        }
         formData = buildMultipartFormData(bodyFormFields, bodyFormValues)
       } else if (bodyInputMode === 'json') {
-        body = bodyJsonValue
+        const missingField = getMissingRequiredFieldInJsonBody(
+          bodyFormFields,
+          bodyJsonValue,
+        )
+        if (missingField) {
+          toast.error(`Missing required field: ${missingField.label}`)
+          return
+        }
+        if (bodyJsonValue.trim()) {
+          try {
+            body = stripEmptyCreatableIdFieldsFromJson(
+              bodyFormFields,
+              bodyJsonValue,
+            )
+          } catch {
+            toast.error('Invalid JSON in request body.')
+            return
+          }
+        } else {
+          body = bodyJsonValue
+        }
       } else {
+        const missingField = getMissingRequiredFormField(
+          bodyFormFields,
+          bodyFormValues,
+        )
+        if (missingField) {
+          toast.error(`Missing required field: ${missingField.label}`)
+          return
+        }
         try {
           body = serializeBodyFromForm(bodyFormFields, bodyFormValues)
         } catch (error: unknown) {
@@ -989,6 +1012,7 @@ export function ApiExplorer({
               hasRequestBody={hasRequestBody}
               hasJsonBodySchema={hasJsonBodySchema}
               isExecuting={isExecuting}
+              showResponsePanel={showResponsePanel}
               response={response}
               onPathFormValuesChange={setPathFormValues}
               onQueryFormValuesChange={setQueryFormValues}
@@ -1294,6 +1318,7 @@ type RequestPanelProps = {
   hasRequestBody: boolean
   hasJsonBodySchema: boolean
   isExecuting: boolean
+  showResponsePanel: boolean
   response: ExecuteApiRequestResult | null
   onPathFormValuesChange: (values: Record<string, FormValue>) => void
   onQueryFormValuesChange: (values: Record<string, FormValue>) => void
@@ -1309,14 +1334,6 @@ type RequestPanelProps = {
 
 /** Character cap for middle truncation in the request details endpoint row. */
 const ENDPOINT_URL_DISPLAY_MAX = 64
-
-function splitMetadataList(value?: string): string[] {
-  if (!value?.trim()) return []
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
 
 function getDeprecatedWarningCopy(method: ApiExplorerMethod): {
   title: string
@@ -1470,21 +1487,14 @@ function MethodRequestFooter({
 function MethodDetailsCard({
   endpoint,
   method,
-  platform,
 }: {
   endpoint: string
   method: ApiExplorerMethod
-  platform: ApiExplorerProjectPlatform
 }) {
   const [copied, setCopied] = useState(false)
   const fullUrl = `${endpoint.replace(/\/$/, '')}${method.path}`
-  const scopes = splitMetadataList(method.scope)
   const rateLimit = method.xAppwrite?.['rate-limit']
-  const hasAuth = Boolean(
-    method.xAppwrite?.auth && Object.keys(method.xAppwrite.auth).length > 0,
-  ) || Boolean(method.security?.length)
-  const hasMetadata =
-    scopes.length > 0 || hasAuth || (rateLimit !== undefined && rateLimit > 0)
+  const hasMetadata = rateLimit !== undefined && rateLimit > 0
 
   const handleCopyEndpoint = async () => {
     try {
@@ -1556,34 +1566,6 @@ function MethodDetailsCard({
         <>
           <div className="border-t border-border" />
           <div className="grid gap-4 px-6 py-4 sm:grid-cols-2">
-            {scopes.length > 0 && (
-              <div className="space-y-2 sm:col-span-2">
-                <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Required scopes
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {scopes.map((scope) => (
-                    <Badge
-                      key={scope}
-                      variant="info"
-                      className="text-[10px] shrink-0 font-mono"
-                    >
-                      {scope}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {hasAuth && (
-              <div className="space-y-2 sm:col-span-2">
-                <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Authentication
-                </p>
-                <AuthRequirementDescription method={method} platform={platform} />
-              </div>
-            )}
-
             {rateLimit !== undefined && rateLimit > 0 && (
               <div className="space-y-2">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1622,6 +1604,7 @@ function RequestPanel({
   hasRequestBody,
   hasJsonBodySchema,
   isExecuting,
+  showResponsePanel,
   response,
   onPathFormValuesChange,
   onQueryFormValuesChange,
@@ -1689,29 +1672,33 @@ function RequestPanel({
       />
       <MethodDeprecatedWarning method={method} />
       <div className="min-h-0 flex-1 overflow-hidden">
-        <ExplorerResponseSplitResizableLayout
-          layout={responseSplitLayout}
-          persistLayout={persistResponseSplitLayout}
-          handleClassName={VERTICAL_HANDLE_CLASS}
-          className="h-full min-h-0 overflow-hidden"
-          request={
-            <ScrollArea className="h-full min-h-0">
-              {requestPanelContent}
-            </ScrollArea>
-          }
-          response={
-            response ? (
-              <ResponseSection
-                response={response}
-                isRefreshing={isExecuting}
-              />
-            ) : (
-              <div className="flex h-full min-h-0 items-center justify-center px-4 text-center text-[13px] text-muted-foreground/70">
-                Send a request to see the response here.
-              </div>
-            )
-          }
-        />
+        {showResponsePanel ? (
+          <ExplorerResponseSplitResizableLayout
+            layout={responseSplitLayout}
+            persistLayout={persistResponseSplitLayout}
+            handleClassName={VERTICAL_HANDLE_CLASS}
+            className="h-full min-h-0 overflow-hidden"
+            request={
+              <ScrollArea className="h-full min-h-0">
+                {requestPanelContent}
+              </ScrollArea>
+            }
+            response={
+              response ? (
+                <ResponseSection
+                  response={response}
+                  isRefreshing={isExecuting}
+                />
+              ) : (
+                <div className="flex h-full min-h-0 items-center justify-center px-4 text-center text-[13px] text-muted-foreground/70">
+                  Send a request to see the response here.
+                </div>
+              )
+            }
+          />
+        ) : (
+          <ScrollArea className="h-full min-h-0">{requestPanelContent}</ScrollArea>
+        )}
       </div>
       <MethodRequestFooter
         isExecuting={isExecuting}
@@ -1801,7 +1788,7 @@ function RequestPanelContent({
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <MethodDetailsCard endpoint={endpoint} method={method} platform={platform} />
+      <MethodDetailsCard endpoint={endpoint} method={method} />
 
       <ApiExplorerAuthSection
         projectId={projectId}

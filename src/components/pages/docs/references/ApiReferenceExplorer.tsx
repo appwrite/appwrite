@@ -165,6 +165,7 @@ export function ApiReferenceExplorer({
       >
         <ApiReferenceMethodPanel
           method={selectedMethod}
+          serviceId={data.id}
           version={version}
           platform={platform}
         />
@@ -188,6 +189,7 @@ export function ApiReferenceExplorer({
           request={
             <ApiReferenceMethodPanel
               method={selectedMethod}
+              serviceId={data.id}
               version={version}
               platform={platform}
             />

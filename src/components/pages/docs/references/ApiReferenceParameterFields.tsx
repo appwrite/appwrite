@@ -22,7 +22,7 @@ const REFERENCE_PARAM_NAME_CELL =
   'flex min-h-[44px] min-w-0 items-center px-4 py-2'
 
 const REFERENCE_PARAM_TYPE_CELL =
-  'flex min-h-[44px] items-center justify-start border-l border-border/50 px-3 py-2'
+  'flex min-h-[44px] items-center justify-center border-l border-border/50 px-3 py-2'
 
 const REFERENCE_PARAM_REQUIRED_CELL =
   'flex min-h-[44px] items-center justify-center border-l border-border/50 px-3 py-2 text-center'

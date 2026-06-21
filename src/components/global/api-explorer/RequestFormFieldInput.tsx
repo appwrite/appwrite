@@ -3,6 +3,7 @@ import type { ComponentProps, FocusEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,11 +37,13 @@ import {
   getFormFieldTypeLabel,
   type FormValue,
   type RequestFormField,
-  type RequestFormFieldKind,
 } from '@/lib/api-explorer/request-form'
 import {
+  FORM_FIELD_TYPE_PILL_CLASS,
+  getFormFieldTypeBadgeVariant,
+} from '@/lib/api-explorer/form-field-type-badge'
+import {
   REQUEST_BUILDER_HELPER_CELL,
-  REQUEST_BUILDER_HELPER_ICON_BUTTON,
   REQUEST_BUILDER_HELPER_LINK,
   REQUEST_BUILDER_HELPER_SLOT,
   REQUEST_BUILDER_INPUT,
@@ -130,7 +133,6 @@ export function RequestFormFieldInput({
   method,
 }: RequestFormFieldInputProps) {
   const inputId = `${idPrefix}-${field.name}`
-  const typeDisplay = getFieldTypeDisplay(field.kind)
   const hasHelperField = Boolean(field.helper)
   const isHelperArrayField =
     field.helper?.type === 'permissions' || field.helper?.type === 'queries'
@@ -142,11 +144,6 @@ export function RequestFormFieldInput({
     Array.isArray(value)
       ? value.length
       : 0
-  const [passwordRevealed, setPasswordRevealed] = useState(false)
-
-  useEffect(() => {
-    setPasswordRevealed(false)
-  }, [inputId])
 
   const isComplex =
     (isHelperArrayField && helperArrayItemCount > 0) ||
@@ -174,7 +171,12 @@ export function RequestFormFieldInput({
       </div>
 
       <div className={REQUEST_BUILDER_TYPE_CELL}>
-        <FieldTypeLabel label={typeDisplay.label} tone={typeDisplay.tone} />
+        <Badge
+          variant={getFormFieldTypeBadgeVariant(field.kind)}
+          className={FORM_FIELD_TYPE_PILL_CLASS}
+        >
+          {getFormFieldTypeLabel(field.kind)}
+        </Badge>
       </div>
 
       {useCombinedHelperArrayLayout ? (
@@ -193,7 +195,6 @@ export function RequestFormFieldInput({
               projectId,
               formValues,
               method,
-              passwordRevealed,
               true,
             )}
           </ValueCell>
@@ -210,7 +211,6 @@ export function RequestFormFieldInput({
                 projectId,
                 formValues,
                 method,
-                passwordRevealed,
                 false,
               )}
             </ValueCell>
@@ -231,8 +231,6 @@ export function RequestFormFieldInput({
                 projectId,
                 formValues,
                 method,
-                passwordRevealed,
-                () => setPasswordRevealed((current) => !current),
               )}
             </div>
           </div>
@@ -317,66 +315,6 @@ function ParameterNameLabel({
   )
 }
 
-type FieldTypeTone = 'string' | 'enum' | 'object' | 'array' | 'boolean' | 'number'
-
-function getFieldTypeDisplay(kind: RequestFormFieldKind): {
-  label: string
-  tone: FieldTypeTone
-} {
-  const label = getFormFieldTypeLabel(kind)
-  switch (kind) {
-    case 'boolean':
-      return { label, tone: 'boolean' }
-    case 'integer':
-    case 'number':
-      return { label, tone: 'number' }
-    case 'enum':
-      return { label, tone: 'enum' }
-    case 'array-string':
-    case 'array-number':
-    case 'array-enum':
-      return { label, tone: 'array' }
-    case 'json':
-      return { label, tone: 'object' }
-    case 'binary':
-      return { label, tone: 'number' }
-    case 'password':
-    case 'email':
-    case 'url':
-    case 'phone':
-    case 'datetime':
-    case 'ip':
-    case 'id':
-    case 'string':
-    default:
-      return { label, tone: 'string' }
-  }
-}
-
-function FieldTypeLabel({
-  label,
-  tone,
-}: {
-  label: string
-  tone: FieldTypeTone
-}) {
-  return (
-    <span
-      className={cn(
-        'text-[11px] font-medium leading-none',
-        tone === 'string' && 'text-emerald-600/55 dark:text-emerald-400/55',
-        tone === 'enum' && 'text-rose-500/55 dark:text-rose-400/55',
-        tone === 'object' && 'text-sky-600/55 dark:text-sky-400/55',
-        tone === 'array' && 'text-amber-600/55 dark:text-amber-400/55',
-        tone === 'boolean' && 'text-violet-600/55 dark:text-violet-400/55',
-        tone === 'number' && 'text-muted-foreground/55',
-      )}
-    >
-      {label}
-    </span>
-  )
-}
-
 function renderValueControl(
   field: RequestFormField,
   value: FormValue,
@@ -385,7 +323,6 @@ function renderValueControl(
   projectId?: string,
   formValues?: Record<string, FormValue>,
   method?: ApiExplorerMethod,
-  passwordRevealed?: boolean,
   combinedHelperArrayLayout = false,
 ) {
   if (field.helper?.type === 'permissions') {
@@ -553,7 +490,6 @@ function renderValueControl(
           inputId={inputId}
           value={String(value ?? '')}
           onChange={(next) => onChange(next)}
-          revealed={passwordRevealed ?? false}
         />
       )
 
@@ -642,6 +578,7 @@ function renderValueControl(
           inputId={inputId}
           value={String(value ?? '')}
           onChange={(next) => onChange(next)}
+          required={field.required}
         />
       )
 
@@ -679,8 +616,6 @@ function renderHelperControl(
   projectId?: string,
   formValues?: Record<string, FormValue>,
   method?: ApiExplorerMethod,
-  passwordRevealed?: boolean,
-  onTogglePasswordReveal?: () => void,
 ) {
   if (field.helper?.type === 'permissions') {
     return (
@@ -741,25 +676,6 @@ function renderHelperControl(
           value={value instanceof File ? value : null}
           onChange={onChange}
         />
-      )
-
-    case 'password':
-      return (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className={REQUEST_BUILDER_HELPER_ICON_BUTTON}
-          onClick={onTogglePasswordReveal}
-          aria-label={passwordRevealed ? 'Hide password' : 'Show password'}
-          title={passwordRevealed ? 'Hide password' : 'Show password'}
-        >
-          {passwordRevealed ? (
-            <EyeOff className="h-3.5 w-3.5" />
-          ) : (
-            <Eye className="h-3.5 w-3.5" />
-          )}
-        </Button>
       )
 
     case 'json':
@@ -884,25 +800,44 @@ function ExplorerPasswordValue({
   inputId,
   value,
   onChange,
-  revealed,
 }: {
   inputId: string
   value: string
   onChange: (value: string) => void
-  revealed: boolean
 }) {
+  const [revealed, setRevealed] = useState(false)
+
+  useEffect(() => {
+    setRevealed(false)
+  }, [inputId])
+
   return (
-    <ExplorerParamInput
-      fieldKey={inputId}
-      id={inputId}
-      type={revealed ? 'text' : 'password'}
-      placeholder={getFormFieldPlaceholder('password')}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className={REQUEST_BUILDER_INPUT}
-      autoComplete="new-password"
-      spellCheck={false}
-    />
+    <div className="relative w-full">
+      <ExplorerParamInput
+        fieldKey={inputId}
+        id={inputId}
+        type={revealed ? 'text' : 'password'}
+        placeholder={getFormFieldPlaceholder('password')}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={cn(REQUEST_BUILDER_INPUT, 'pr-10')}
+        autoComplete="new-password"
+        spellCheck={false}
+      />
+      <button
+        type="button"
+        onClick={() => setRevealed((current) => !current)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+        aria-label={revealed ? 'Hide password' : 'Show password'}
+        title={revealed ? 'Hide password' : 'Show password'}
+      >
+        {revealed ? (
+          <EyeOff className="h-4 w-4" />
+        ) : (
+          <Eye className="h-4 w-4" />
+        )}
+      </button>
+    </div>
   )
 }
 
@@ -910,17 +845,19 @@ function ExplorerIdValue({
   inputId,
   value,
   onChange,
+  required,
 }: {
   inputId: string
   value: string
   onChange: (value: string) => void
+  required: boolean
 }) {
   return (
     <ExplorerParamInput
       fieldKey={inputId}
       id={inputId}
       type="text"
-      placeholder="// auto-generate if empty"
+      placeholder={getFormFieldPlaceholder('id', { required })}
       value={value}
       onChange={(event) => onChange(event.target.value)}
       className={REQUEST_BUILDER_INPUT}

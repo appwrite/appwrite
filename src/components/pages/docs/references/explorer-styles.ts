@@ -1,19 +1,14 @@
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
-import type { RequestFormFieldKind } from '@/lib/api-explorer/request-form'
 import {
-  getFormFieldOpenApiTypeLabel,
-  normalizeOpenApiPrimitiveType,
-} from '@/lib/api-explorer/request-form'
+  FORM_FIELD_TYPE_PILL_CLASS,
+  getOpenApiTypeBadgeVariant,
+  type FormFieldTypeBadgeVariant,
+} from '@/lib/api-explorer/form-field-type-badge'
+import { normalizeOpenApiPrimitiveType } from '@/lib/api-explorer/request-form'
 import type { ApiReferencePropertyTypeKind } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
 
-export type ReferenceTypeBadgeVariant =
-  | 'processing'
-  | 'success'
-  | 'warning'
-  | 'info'
-  | 'inactive'
-  | 'secondary'
+export type ReferenceTypeBadgeVariant = FormFieldTypeBadgeVariant
 
 /**
  * Container on the explorer root (measures `main` content width only).
@@ -63,10 +58,12 @@ export function getHttpMethodVariant(
 export const REFERENCE_PILL_CLASS = 'border-0 shadow-none'
 
 /** Type and status pills in reference tables. */
-export const REFERENCE_TYPE_PILL_CLASS = cn(
-  REFERENCE_PILL_CLASS,
-  'shrink-0 font-mono text-[10px]',
-)
+export const REFERENCE_TYPE_PILL_CLASS = FORM_FIELD_TYPE_PILL_CLASS
+
+export {
+  getFormFieldTypeBadgeVariant,
+  getOpenApiTypeBadgeVariant,
+} from '@/lib/api-explorer/form-field-type-badge'
 
 /** Subtle method-colored accents for endpoint boxes and nav selection. */
 export function getHttpMethodAccentClasses(method: string): {
@@ -114,30 +111,6 @@ export function getResponseStatusVariant(
   return 'inactive'
 }
 
-export function getOpenApiTypeBadgeVariant(type: string): ReferenceTypeBadgeVariant {
-  const normalized = type.toLowerCase().trim()
-
-  switch (normalized) {
-    case 'boolean':
-      return 'info'
-    case 'integer':
-    case 'number':
-      return 'warning'
-    case 'string':
-      return 'processing'
-    case 'file':
-    case 'binary':
-      return 'inactive'
-    case 'array':
-      return 'success'
-    case 'object':
-      return 'info'
-    default:
-      if (normalized.includes('|')) return 'warning'
-      return 'processing'
-  }
-}
-
 export function formatOpenApiTypeLabel(type: string): string {
   const normalized = normalizeOpenApiPrimitiveType(type)
   const lower = normalized.toLowerCase().trim()
@@ -164,13 +137,4 @@ export function getModelPropertyTypeBadgeVariant(
   if (typeKind === 'array') return 'success'
   if (typeKind === 'object') return 'info'
   return getOpenApiTypeBadgeVariant(formatOpenApiTypeLabel(type))
-}
-
-export function getFormFieldTypeBadgeVariant(
-  kind: RequestFormFieldKind,
-): ReferenceTypeBadgeVariant {
-  if (kind === 'enum' || kind === 'array-enum') return 'warning'
-  if (kind === 'array-string' || kind === 'array-number') return 'success'
-  if (kind === 'json') return 'info'
-  return getOpenApiTypeBadgeVariant(getFormFieldOpenApiTypeLabel(kind))
 }

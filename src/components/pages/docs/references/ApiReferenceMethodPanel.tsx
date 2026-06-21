@@ -22,6 +22,7 @@ import type { ApiReferenceMethod } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
 import { ApiReferenceMethodDetails } from './ApiReferenceMethodDetails'
 import { ApiReferenceMethodActions } from './ApiReferenceMethodActions'
+import { ApiReferenceOpenInExplorer } from './ApiReferenceOpenInExplorer'
 import {
   ApiReferenceParameterFields,
   ApiReferenceResponsesPanel,
@@ -61,12 +62,14 @@ function getDeprecatedWarningCopy(method: ApiReferenceMethod): {
 
 type ApiReferenceMethodPanelProps = {
   method?: ApiReferenceMethod
+  serviceId: string
   version: ReferenceVersion
   platform: ReferencePlatform
 }
 
 export function ApiReferenceMethodPanel({
   method,
+  serviceId,
   version,
   platform,
 }: ApiReferenceMethodPanelProps) {
@@ -133,11 +136,17 @@ export function ApiReferenceMethodPanel({
         <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
           {method.summary}
         </p>
-        <ApiReferenceMethodActions
-          method={method}
-          version={version}
-          platform={platform}
-        />
+        <div className="flex shrink-0 items-center gap-1">
+          <ApiReferenceOpenInExplorer
+            serviceId={serviceId}
+            operationId={method.operationId}
+          />
+          <ApiReferenceMethodActions
+            method={method}
+            version={version}
+            platform={platform}
+          />
+        </div>
       </div>
 
       {deprecatedCopy ? (

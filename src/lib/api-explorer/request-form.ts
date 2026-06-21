@@ -79,35 +79,7 @@ export function normalizeOpenApiPrimitiveType(type: string): string {
 }
 
 export function getFormFieldTypeLabel(kind: RequestFormFieldKind): string {
-  switch (kind) {
-    case 'boolean':
-      return 'Boolean'
-    case 'integer':
-      return 'Integer'
-    case 'number':
-      return 'Number'
-    case 'enum':
-      return 'Enum'
-    case 'array-string':
-    case 'array-number':
-    case 'array-enum':
-      return 'Array'
-    case 'json':
-      return 'Object'
-    case 'binary':
-      return 'File'
-    case 'id':
-      return 'ID'
-    case 'password':
-    case 'email':
-    case 'url':
-    case 'phone':
-    case 'datetime':
-    case 'ip':
-    case 'string':
-    default:
-      return 'String'
-  }
+  return getFormFieldOpenApiTypeLabel(kind)
 }
 
 /** Base OpenAPI primitive for API reference type badges and tables. */
@@ -127,6 +99,8 @@ export function getFormFieldOpenApiTypeLabel(kind: RequestFormFieldKind): string
       return 'array'
     case 'json':
       return 'object'
+    case 'binary':
+      return 'file'
     case 'password':
     case 'email':
     case 'url':
@@ -134,14 +108,16 @@ export function getFormFieldOpenApiTypeLabel(kind: RequestFormFieldKind): string
     case 'datetime':
     case 'ip':
     case 'id':
-    case 'binary':
     case 'string':
     default:
       return 'string'
   }
 }
 
-export function getFormFieldPlaceholder(kind: RequestFormFieldKind): string {
+export function getFormFieldPlaceholder(
+  kind: RequestFormFieldKind,
+  options?: { required?: boolean },
+): string {
   switch (kind) {
     case 'password':
       return '// enter password'
@@ -155,6 +131,8 @@ export function getFormFieldPlaceholder(kind: RequestFormFieldKind): string {
       return '// select date and time'
     case 'ip':
       return '// 127.0.0.1'
+    case 'id':
+      return options?.required ? '// required custom ID' : '// optional custom ID'
     case 'json':
       return '// enter JSON object'
     case 'integer':
@@ -471,6 +449,65 @@ export function getMissingRequiredFormField(
   )
 }
 
+function isEmptyCreatableIdValue(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'string' && value.trim() === '')
+  )
+}
+
+export function getMissingRequiredFieldInJsonBody(
+  fields: RequestFormField[],
+  json: string,
+): RequestFormField | undefined {
+  const trimmed = json.trim()
+  if (!trimmed) {
+    return fields.find((field) => field.required)
+  }
+
+  let parsed: Record<string, unknown>
+  try {
+    parsed = JSON.parse(trimmed) as Record<string, unknown>
+  } catch {
+    return undefined
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return fields.find((field) => field.required)
+  }
+
+  return fields.find((field) => {
+    if (!field.required) return false
+    if (!(field.name in parsed)) return true
+    return isEmptyFormValue(valueFromParsed(field, parsed[field.name]))
+  })
+}
+
+/** Remove empty creatable ID values so the API is not sent invalid empty strings. */
+export function stripEmptyCreatableIdFieldsFromJson(
+  fields: RequestFormField[],
+  json: string,
+): string {
+  const trimmed = json.trim()
+  if (!trimmed) return trimmed
+
+  const parsed = JSON.parse(trimmed) as Record<string, unknown>
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return trimmed
+  }
+
+  const next = { ...parsed }
+  for (const field of fields) {
+    if (field.kind !== 'id') continue
+    if (isEmptyCreatableIdValue(next[field.name])) {
+      delete next[field.name]
+    }
+  }
+
+  return JSON.stringify(next, null, 2)
+}
+
 export function buildMultipartFormData(
   fields: RequestFormField[],
   values: Record<string, FormValue>,
@@ -563,6 +600,9 @@ export function serializeBodyFromForm(
 
     const value = values[field.name]
     if (isEmptyFormValue(value)) {
+      if (field.kind === 'id') {
+        continue
+      }
       if (field.required) {
         payload[field.name] = serializeFieldValue(field, value ?? defaultValueForField(field))
       }

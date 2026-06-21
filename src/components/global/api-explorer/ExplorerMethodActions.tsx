@@ -9,24 +9,13 @@ import type {
   ApiExplorerMethod,
   ApiExplorerProjectPlatform,
 } from '@/lib/api-explorer/types'
+import { getExplorerMethodLinkUrl } from '@/lib/api-explorer/get-explorer-method-route'
 import { ApiMethodHeaderActions } from './ApiMethodHeaderActions'
 
 function toReferencePlatform(
   platform: ApiExplorerProjectPlatform,
 ): ReferencePlatform {
   return platform === 'client' ? 'client-rest' : 'server-rest'
-}
-
-function buildExplorerMethodLink(
-  projectId: string,
-  serviceId: string,
-  operationId: string,
-): string {
-  const url = new URL(window.location.origin)
-  url.pathname = `/projects/${projectId}/explorer`
-  url.searchParams.set('service', serviceId)
-  url.searchParams.set('operation', operationId)
-  return url.toString()
 }
 
 type ExplorerMethodActionsProps = {
@@ -49,7 +38,12 @@ export function ExplorerMethodActions({
   const referencePlatform = toReferencePlatform(platform)
 
   const getPageUrl = useCallback(
-    () => buildExplorerMethodLink(projectId, serviceId, method.operationId),
+    () =>
+      getExplorerMethodLinkUrl({
+        projectId,
+        serviceId,
+        operationId: method.operationId,
+      }),
     [method.operationId, projectId, serviceId],
   )
 

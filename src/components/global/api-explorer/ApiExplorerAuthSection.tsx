@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { AuthRequirementDescription } from '@/components/global/shared/AuthRequirementDescription'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { useProjectUsers } from '@/lib/react-query/hooks'
@@ -70,6 +71,14 @@ function scopeSetsEqual(left: string[], right: string[]): boolean {
   if (left.length !== right.length) return false
   const rightSet = new Set(right)
   return left.every((scope) => rightSet.has(scope))
+}
+
+function splitMetadataList(value?: string): string[] {
+  if (!value?.trim()) return []
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function ScopeRow({
@@ -151,6 +160,10 @@ export function ApiExplorerAuthSection({
   const supportsServerApiKey = methodSupportsServerApiKey(method, platform)
   const requiresApiKey = methodRequiresApiKey(method, platform)
   const endpointScopes = useMemo(() => getMethodRequiredScopes(method), [method])
+  const requiredScopes = useMemo(
+    () => splitMetadataList(method.scope),
+    [method.scope],
+  )
   const missingKeyScopes = useMemo(
     () =>
       getScopesMissingFromKey(serverAuth.ephemeralKeyScopes, endpointScopes),
@@ -267,12 +280,27 @@ export function ApiExplorerAuthSection({
           <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
             Authentication
           </p>
-          <p className="text-[13px] text-muted-foreground">
-            {platform === 'client'
-              ? 'Choose guest or user session for test requests.'
-              : 'Use a manual key or generate a short-lived key for server requests.'}
-          </p>
+          <AuthRequirementDescription method={method} platform={platform} />
         </div>
+
+        {requiredScopes.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Required scopes
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {requiredScopes.map((scope) => (
+                <Badge
+                  key={scope}
+                  variant="info"
+                  className="text-[10px] shrink-0 font-mono"
+                >
+                  {scope}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
         <ScopeRow label="Project">
           <CopyableId id={projectId} size="sm" maxWidth={280} />

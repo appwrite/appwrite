@@ -51,6 +51,8 @@ export interface SearchableSelectProps {
   onLoadMore?: () => void
   /** Optional footer below the list (e.g. "Showing X of Y"). */
   listFooter?: ReactNode
+  /** Called when the popover opens or closes. */
+  onOpenChange?: (open: boolean) => void
 }
 
 export function SearchableSelect({
@@ -70,6 +72,7 @@ export function SearchableSelect({
   isFetchingNextPage = false,
   onLoadMore,
   listFooter,
+  onOpenChange,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   const listScrollRef = useRef<HTMLDivElement>(null)
@@ -108,6 +111,7 @@ export function SearchableSelect({
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen)
+        onOpenChange?.(nextOpen)
         if (!nextOpen && onSearchChange) {
           onSearchChange('')
         }

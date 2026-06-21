@@ -7,7 +7,7 @@ export const REQUEST_BUILDER_PANEL =
  * Name, type, value, and required are fixed; helper flexes to fill remaining space.
  */
 export const REQUEST_BUILDER_NAME_WIDTH_PX = 152
-export const REQUEST_BUILDER_TYPE_WIDTH_PX = 72
+export const REQUEST_BUILDER_TYPE_WIDTH_PX = 80
 export const REQUEST_BUILDER_VALUE_MIN_WIDTH_PX = 200
 export const REQUEST_BUILDER_VALUE_MAX_WIDTH_PX = 280
 export const REQUEST_BUILDER_HELPER_MIN_WIDTH_PX = 120
@@ -16,7 +16,7 @@ export const REQUEST_BUILDER_ID_SELECTOR_POPOVER_CLASS = 'max-w-[240px]'
 export const REQUEST_BUILDER_REQUIRED_WIDTH_PX = 88
 
 export const REQUEST_BUILDER_ROW =
-  'group grid grid-cols-1 border-b border-border/50 last:border-b-0 hover:bg-muted/[0.07] sm:grid-cols-[152px_72px_minmax(200px,280px)_minmax(120px,1fr)_88px] sm:min-h-[44px]'
+  'group grid grid-cols-1 border-b border-border/50 last:border-b-0 hover:bg-muted/[0.07] sm:grid-cols-[152px_80px_minmax(200px,280px)_minmax(120px,1fr)_88px] sm:min-h-[44px]'
 
 export const REQUEST_BUILDER_ROW_COMPLEX = 'sm:items-stretch'
 
@@ -24,7 +24,7 @@ export const REQUEST_BUILDER_NAME_CELL =
   'flex min-h-[44px] min-w-0 items-center px-4 py-2 sm:w-[152px] sm:max-w-[152px] sm:py-0'
 
 export const REQUEST_BUILDER_TYPE_CELL =
-  'flex min-h-[44px] w-[72px] shrink-0 items-center border-border/50 px-3 py-2 sm:border-l sm:py-0'
+  'flex min-h-[44px] w-[80px] shrink-0 items-center justify-center border-border/50 px-3 py-2 sm:border-l sm:py-0'
 
 export const REQUEST_BUILDER_VALUE_CELL =
   'flex min-h-[44px] min-w-0 items-center border-border/50 sm:border-l'

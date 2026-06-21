@@ -462,6 +462,16 @@ export function generateSampleRequestBody(
   return JSON.stringify(sample, null, 2)
 }
 
+/** Appwrite creatable resource IDs mention ID.unique() in OpenAPI descriptions. */
+const CREATABLE_ID_DESCRIPTION =
+  /(?:choose a custom .{0,40}? id|generate a random id|id\.unique\(\))/i
+
+function isCreatableIdSchemaForSample(schema: OpenApiSchema): boolean {
+  const description = schema.description?.trim() ?? ''
+  if (!description) return false
+  return CREATABLE_ID_DESCRIPTION.test(description)
+}
+
 export function buildSampleValue(schema: OpenApiSchema): unknown {
   if (schema.example !== undefined) {
     if (!isOpenApiPlaceholderExample(schema.example)) return schema.example
@@ -476,6 +486,7 @@ export function buildSampleValue(schema: OpenApiSchema): unknown {
     case 'object': {
       const obj: Record<string, unknown> = {}
       for (const [key, prop] of Object.entries(schema.properties ?? {})) {
+        if (isCreatableIdSchemaForSample(prop)) continue
         obj[key] = buildSampleValue(prop)
       }
       return obj
