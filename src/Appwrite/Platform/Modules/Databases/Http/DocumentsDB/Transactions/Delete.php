@@ -49,7 +49,8 @@ class Delete extends TransactionsDelete
             ->param('transactionId', '', new UID(), 'Transaction ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
+            ->inject('project')
             ->callback($this->action(...));
     }
 }

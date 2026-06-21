@@ -111,7 +111,7 @@ trait ProjectCustom
                 'x-appwrite-project' => 'console',
             ], [
                 'keyId' => ID::unique(),
-                'name' => 'Demo Project Key',
+                'name' => 'Demo Project Key ' . $project['body']['$id'],
                 'scopes' => [
                     'users.read',
                     'users.write',
@@ -173,10 +173,14 @@ trait ProjectCustom
                     'oauth2.write',
                     'mocks.read',
                     'mocks.write',
-                    'policies.read',
-                    'policies.write',
+                    'project.policies.read',
+                    'project.policies.write',
                     'templates.read',
                     'templates.write',
+                    'insights.read',
+                    'insights.write',
+                    'reports.read',
+                    'reports.write',
                 ],
             ]);
 

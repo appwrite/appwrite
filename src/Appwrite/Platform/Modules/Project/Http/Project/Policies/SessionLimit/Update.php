@@ -32,7 +32,7 @@ class Update extends Action
             ->httpAlias('/v1/projects/:projectId/auth/max-sessions')
             ->desc('Update session limit policy')
             ->groups(['api', 'project'])
-            ->label('scope', 'policies.write')
+            ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')

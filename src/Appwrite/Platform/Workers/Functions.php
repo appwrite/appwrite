@@ -5,11 +5,13 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -45,7 +47,7 @@ class Functions extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('bus')
@@ -60,7 +62,7 @@ class Functions extends Action
         Message $message,
         Database $dbForProject,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
@@ -77,20 +79,27 @@ class Functions extends Action
             );
         }
 
-        $type = $payload['type'] ?? '';
+        $functionMessage = FunctionMessage::fromArray($payload);
+        $type = $functionMessage->type;
 
-        $events = $payload['events'] ?? [];
-        $data = $payload['body'] ?? '';
-        $eventData = $payload['payload'] ?? '';
-        $platform = $payload['platform'] ?? Config::getParam('platform', []);
-        $function = new Document($payload['function'] ?? []);
-        $functionId = $payload['functionId'] ?? '';
-        $user = new Document($payload['user'] ?? []);
-        $userId = $payload['userId'] ?? '';
-        $method = $payload['method'] ?? 'POST';
-        $headers = $payload['headers'] ?? [];
-        $path = $payload['path'] ?? '/';
-        $jwt = $payload['jwt'] ?? '';
+        Span::add('project.id', $project->getId());
+        Span::add('payload.type', $type);
+        Span::add('queue.pid', $message->getPid());
+        Span::add('queue.name', $message->getQueue());
+        Span::add('message.timestamp', (string) $message->getTimestamp());
+
+        $events = $functionMessage->events;
+        $data = $functionMessage->body;
+        $eventData = $functionMessage->payload;
+        $platform = !empty($functionMessage->platform) ? $functionMessage->platform : Config::getParam('platform', []);
+        $function = $functionMessage->function ?? new Document();
+        $functionId = $functionMessage->functionId ?? '';
+        $user = $functionMessage->user ?? new Document();
+        $userId = $functionMessage->userId ?? '';
+        $method = $functionMessage->method ?: 'POST';
+        $headers = $functionMessage->headers;
+        $path = $functionMessage->path ?: '/';
+        $jwt = $functionMessage->jwt;
 
         if ($user->isEmpty() && !empty($userId)) {
             $user = $dbForProject->getDocument('users', $userId);
@@ -117,19 +126,7 @@ class Functions extends Action
         $log->addTag('type', $type);
 
         if (empty($events) && !$function->isEmpty()) {
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
-                Span::init('execution.trace.functions_worker_dequeue');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $function->getId());
-                Span::add('payloadType', $type);
-                Span::add('queuePid', $message->getPid());
-                Span::add('queueName', $message->getQueue());
-                Span::add('messageTimestamp', (string) $message->getTimestamp());
-                Span::current()?->finish();
-            }
+            Span::add('function.id', $function->getId());
         }
 
         if (!empty($events)) {
@@ -171,7 +168,7 @@ class Functions extends Action
                         log: $log,
                         dbForProject: $dbForProject,
                         queueForWebhooks: $queueForWebhooks,
-                        queueForFunctions: $queueForFunctions,
+                        publisherForFunctions: $publisherForFunctions,
                         queueForRealtime: $queueForRealtime,
                         queueForEvents: $queueForEvents,
                         bus: $bus,
@@ -190,7 +187,7 @@ class Functions extends Action
                         user: $user,
                         jwt: null,
                         event: $events[0],
-                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
+                        eventData: \json_encode($eventData) ?: null,
                         executionId: null,
                     );
                     Console::success('Triggered function: ' . $events[0]);
@@ -215,7 +212,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
-                    queueForFunctions: $queueForFunctions,
+                    publisherForFunctions: $publisherForFunctions,
                     queueForRealtime: $queueForRealtime,
                     queueForEvents: $queueForEvents,
                     bus: $bus,
@@ -241,7 +238,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
-                    queueForFunctions: $queueForFunctions,
+                    publisherForFunctions: $publisherForFunctions,
                     queueForRealtime: $queueForRealtime,
                     queueForEvents: $queueForEvents,
                     bus: $bus,
@@ -321,19 +318,11 @@ class Functions extends Action
             'duration' => 0.0,
         ]);
 
-        $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-        $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-        if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
-            Span::init('execution.trace.functions_worker_before_execution_completed_bus_fail');
-            Span::add('datetime', gmdate('c'));
-            Span::add('projectId', $project->getId());
-            Span::add('functionId', $function->getId());
-            Span::add('executionId', $execution->getId());
-            Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
-            Span::add('trigger', $trigger);
-            Span::add('status', $execution->getAttribute('status', ''));
-            Span::current()?->finish();
-        }
+        Span::add('function.id', $function->getId());
+        Span::add('execution.id', $execution->getId());
+        Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
+        Span::add('execution.trigger', $trigger);
+        Span::add('execution.status', $execution->getAttribute('status', ''));
 
         $bus->dispatch(new ExecutionCompleted(
             execution: $execution->getArrayCopy(),
@@ -344,7 +333,7 @@ class Functions extends Action
     /**
      * @param Log $log
      * @param Database $dbForProject
-     * @param Func $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
      * @param Document $project
@@ -366,7 +355,7 @@ class Functions extends Action
         Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
@@ -389,6 +378,10 @@ class Functions extends Action
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
+        Span::add('function.id', $functionId);
+        Span::add('deployment.id', $deploymentId);
+        Span::add('execution.trigger', $trigger);
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -448,6 +441,8 @@ class Functions extends Action
             $executionId = ID::unique();
         }
         $headers['x-appwrite-execution-id'] = $executionId;
+
+        Span::add('execution.id', $executionId);
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
@@ -553,36 +548,28 @@ class Functions extends Action
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $functionId === $traceFunctionId) {
-                Span::init('execution.trace.functions_worker_before_executor');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $functionId);
-                Span::add('executionId', $executionId);
-                Span::add('deploymentId', $deployment->getId());
-                Span::add('trigger', $trigger);
-                Span::current()?->finish();
+            try {
+                $executionResponse = $executor->createExecution(
+                    projectId: $project->getId(),
+                    deploymentId: $deploymentId,
+                    body: \strlen($body) > 0 ? $body : null,
+                    variables: $vars,
+                    timeout: $function->getAttribute('timeout', 0),
+                    image: $runtime['image'],
+                    source: $source,
+                    entrypoint: $deployment->getAttribute('entrypoint', ''),
+                    version: $version,
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    runtimeEntrypoint: $command,
+                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+                    logging: $function->getAttribute('logging', true),
+                );
+            } catch (ExecutorTimeout $th) {
+                throw new AppwriteException(AppwriteException::FUNCTION_ASYNCHRONOUS_TIMEOUT, previous: $th);
             }
-            $executionResponse = $executor->createExecution(
-                projectId: $project->getId(),
-                deploymentId: $deploymentId,
-                body: \strlen($body) > 0 ? $body : null,
-                variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
-                image: $runtime['image'],
-                source: $source,
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $version,
-                path: $path,
-                method: $method,
-                headers: $headers,
-                runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                logging: $function->getAttribute('logging', true),
-            );
 
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
@@ -637,19 +624,8 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $functionId === $traceFunctionId) {
-                Span::init('execution.trace.functions_worker_before_execution_completed_bus');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $functionId);
-                Span::add('executionId', $execution->getId());
-                Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
-                Span::add('status', $execution->getAttribute('status', ''));
-                Span::add('trigger', $trigger);
-                Span::current()?->finish();
-            }
+            Span::add('execution.status', $execution->getAttribute('status', ''));
+
             $bus->dispatch(new ExecutionCompleted(
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
@@ -675,9 +651,15 @@ class Functions extends Action
             ->trigger();
 
         /** Trigger Functions */
-        $queueForFunctions
-            ->from($queueForEvents)
-            ->trigger();
+        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+            event: $queueForEvents->getEvent(),
+            params: $queueForEvents->getParams(),
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            userId: $queueForEvents->getUserId(),
+            payload: $queueForEvents->getPayload(),
+            platform: $queueForEvents->getPlatform(),
+        ));
 
         /** Trigger Realtime Events */
         $queueForRealtime

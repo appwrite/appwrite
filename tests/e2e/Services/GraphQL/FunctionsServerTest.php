@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
@@ -11,7 +13,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class FunctionsServerTest extends Scope
+final class FunctionsServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -55,10 +57,10 @@ class FunctionsServerTest extends Scope
 
         $query = '
             mutation createVariables($functionId: String!) {
-                var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
+                var1: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "name", value: "John Doe") {
                     _id
                 }
-                var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
+                var2: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "age", value: "42") {
                     _id
                 }
             }
@@ -313,7 +315,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
-    public function testGetDeployments()
+    public function testGetDeployments(): array
     {
         $function = $this->setupFunction();
 
@@ -343,7 +345,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
-    public function testGetDeployment()
+    public function testGetDeployment(): array
     {
         $deployment = $this->setupDeployment();
 

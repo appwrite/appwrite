@@ -15,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
@@ -85,7 +86,7 @@ class Create extends Action
                 ],
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.')
+            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.', enum: new Enum(name: 'ScheduleResourceType'))
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)

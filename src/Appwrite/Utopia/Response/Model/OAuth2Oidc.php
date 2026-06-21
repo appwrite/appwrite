@@ -42,13 +42,13 @@ class OAuth2Oidc extends OAuth2Base
                 'default' => '',
                 'example' => 'https://myoauth.com/oauth2/authorize',
             ])
-            ->addRule('tokenUrl', [
+            ->addRule('tokenURL', [
                 'type' => self::TYPE_STRING,
                 'description' => 'OpenID Connect token endpoint URL.',
                 'default' => '',
                 'example' => 'https://myoauth.com/oauth2/token',
             ])
-            ->addRule('userInfoUrl', [
+            ->addRule('userInfoURL', [
                 'type' => self::TYPE_STRING,
                 'description' => 'OpenID Connect user info endpoint URL.',
                 'default' => '',

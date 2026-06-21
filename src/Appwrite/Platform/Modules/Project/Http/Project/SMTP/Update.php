@@ -7,6 +7,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Throwable;
@@ -14,6 +15,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -60,13 +62,13 @@ class Update extends Action
             ))
             ->param('host', null, new Nullable(new Hostname()), 'SMTP server hostname (domain)', optional: true)
             ->param('port', null, new Nullable(new Integer()), 'SMTP server port', optional: true)
-            ->param('username', null, new Nullable(new Text(256)), 'SMTP server username. Leave empty for no authorization.', optional: true)
-            ->param('password', null, new Nullable(new Text(256)), 'SMTP server password. Leave empty for no authorization. This property is stored securely and cannot be read in future (write-only).', optional: true)
-            ->param('senderEmail', null, new Nullable(new Email()), 'Email address shown in inbox as the sender of the email.', optional: true)
-            ->param('senderName', null, new Nullable(new Text(256)), 'Name shown in inbox as the sender of the email.', optional: true)
-            ->param('replyToEmail', null, new Nullable(new Email()), 'Email used when user replies to the email.', optional: true)
-            ->param('replyToName', null, new Nullable(new Text(256)), 'Name used when user replies to the email.', optional: true)
-            ->param('secure', null, new Nullable(new WhiteList(['tls', 'ssl'], true)), 'Configures if communication with SMTP server is encrypted. Allowed values are: tls, ssl. Leave empty for no encryption.', optional: true)
+            ->param('username', null, new Nullable(new Text(256, 0)), 'SMTP server username. Pass an empty string to clear a previously set value.', optional: true)
+            ->param('password', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'SMTP server password. Pass an empty string to clear a previously set value. This property is stored securely and cannot be read in future (write-only).', optional: true)
+            ->param('senderEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)
+            ->param('senderName', null, new Nullable(new Text(256, 0)), 'Name shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)
+            ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email used when user replies to the email. Pass an empty string to clear a previously set value.', optional: true)
+            ->param('replyToName', null, new Nullable(new Text(256, 0)), 'Name used when user replies to the email. Pass an empty string to clear a previously set value.', optional: true)
+            ->param('secure', null, new Nullable(new WhiteList(['tls', 'ssl'], true)), 'Configures if communication with SMTP server is encrypted. Allowed values are: tls, ssl. Leave empty for no encryption.', optional: true, enum: new Enum(name: 'ProjectSMTPSecure'))
             ->param('enabled', null, new Nullable(new Boolean()), 'Enable or disable custom SMTP. Custom SMTP is useful for branding purposes, but also allows use of custom email templates.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -95,7 +97,8 @@ class Update extends Action
         // Fetch current configuration
         $smtp = $project->getAttribute('smtp', []);
 
-        // Apply changes
+        // Apply changes — null means "not provided, keep existing".
+        // Empty string explicitly clears a previously-set value.
         $keys = ['host', 'port', 'username', 'password', 'senderEmail', 'senderName', 'replyToEmail', 'replyToName', 'secure', 'enabled'];
         foreach ($keys as $key) {
             if (!\is_null(${$key})) {
@@ -120,7 +123,7 @@ class Update extends Action
         // Validate when the caller is explicitly enabling or hasn't expressed a preference
         // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
         // explicitly keeping/turning SMTP off.
-        if (\is_null($enabled) || $enabled === true) {
+        if ((\is_null($enabled) || $enabled === true) && !empty($smtp['senderEmail'] ?? '')) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
 

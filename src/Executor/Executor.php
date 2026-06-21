@@ -2,9 +2,9 @@
 
 namespace Executor;
 
-use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Fetch\BodyMultipart;
-use Exception;
+use Executor\Exception as ExecutorException;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Utopia\System\System;
 
 class Executor
@@ -71,7 +71,8 @@ class Executor
         array $variables = [],
         ?string $command = null,
         string $outputDirectory = '',
-        string $runtimeEntrypoint = ''
+        string $runtimeEntrypoint = '',
+        string $cacheKey = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
@@ -95,7 +96,8 @@ class Executor
             'version' => $version,
             'timeout' => $timeout,
             'outputDirectory' => $outputDirectory,
-            'runtimeEntrypoint' => $runtimeEntrypoint
+            'runtimeEntrypoint' => $runtimeEntrypoint,
+            'cacheKey' => $cacheKey
         ];
 
 
@@ -104,7 +106,7 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         return $response['body'];
@@ -163,7 +165,7 @@ class Executor
         }
 
         if ($status >= 400) {
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         return $response['body'];
@@ -247,7 +249,7 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         $headers = $response['body']['headers'] ?? [];
@@ -281,7 +283,7 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         return $response['body'];
@@ -401,7 +403,7 @@ class Executor
                     $json = json_decode($responseBody, true);
 
                     if ($json === null) {
-                        throw new Exception('Failed to parse response: ' . $responseBody);
+                        throw new ExecutorException('Failed to parse response: ' . $responseBody);
                     }
 
                     $responseBody = $json;
@@ -412,9 +414,9 @@ class Executor
 
         if ($curlError) {
             if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
+                throw new ExecutorTimeout('Executor request timed out', $timeout);
             }
-            throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
+            throw new ExecutorException($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
 
         $responseHeaders['status-code'] = $responseStatus;

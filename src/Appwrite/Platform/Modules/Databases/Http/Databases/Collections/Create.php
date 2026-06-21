@@ -94,7 +94,7 @@ class Create extends Action
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -102,6 +102,15 @@ class Create extends Action
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
+
+        // Resolve the data-plane database BEFORE writing the metadata row. For a
+        // dedicated product database this throws while provisioning (no DSN yet);
+        // writing the row first would leave an orphaned collection with no backing
+        // collection, which lists fine but fails every document operation.
+        /**
+         * @var Database $dbForDatabases
+         */
+        $dbForDatabases = $getDatabasesDB($database);
 
         try {
             $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([
@@ -121,11 +130,6 @@ class Create extends Action
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
-
-        /**
-         * @var Database $dbForDatabases
-         */
-        $dbForDatabases = $getDatabasesDB($database);
 
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
@@ -172,7 +176,7 @@ class Create extends Action
         $indexDocuments = [];
         try {
             foreach ($indexes as $indexDef) {
-                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
+                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes, $dbForDatabases);
                 $collectionIndexes[] = $idxDoc['collection'];
                 $indexDocuments[] = $idxDoc['document'];
             }
@@ -290,13 +294,15 @@ class Create extends Action
         }
 
         if (isset($attribute['min']) || isset($attribute['max'])) {
-            $format = $type === Database::VAR_INTEGER
-                ? APP_DATABASE_ATTRIBUTE_INT_RANGE
-                : APP_DATABASE_ATTRIBUTE_FLOAT_RANGE;
+            $format = match($type) {
+                Database::VAR_INTEGER => APP_DATABASE_ATTRIBUTE_INT_RANGE,
+                Database::VAR_BIGINT => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
+            };
 
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($type === Database::VAR_INTEGER ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($type === Database::VAR_INTEGER ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $attribute['min'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
+                'max' => $attribute['max'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
             ];
         }
 
@@ -344,7 +350,7 @@ class Create extends Action
      *
      * @return array{collection: Document, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -368,6 +374,11 @@ class Create extends Action
                 if ($attrArray === true) {
                     $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;
+
+                    if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+                        // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                        throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                    }
                 }
             } else {
                 if (empty($lengths[$i])) {

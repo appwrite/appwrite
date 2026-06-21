@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Builds;
 
-use Appwrite\Event\Build;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, Build $queueForBuilds, Response $response): void
+    public function action(int|string $threshold, BuildPublisher $publisherForBuilds, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForBuilds->getSize();
+        $size = $publisherForBuilds->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 

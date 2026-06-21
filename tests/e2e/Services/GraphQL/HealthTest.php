@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -7,13 +9,13 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class HealthTest extends Scope
+final class HealthTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
 
-    public function testGetHTTPHealth()
+    public function testGetHTTPHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_HTTP_HEALTH);
@@ -34,7 +36,7 @@ class HealthTest extends Scope
         return $httpHealth;
     }
 
-    public function testGetDBHealth()
+    public function testGetDBHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_DB_HEALTH);
@@ -57,7 +59,7 @@ class HealthTest extends Scope
         return $dbHealth;
     }
 
-    public function testGetCacheHealth()
+    public function testGetCacheHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_CACHE_HEALTH);
@@ -80,7 +82,7 @@ class HealthTest extends Scope
         return $cacheHealth;
     }
 
-    public function testGetTimeHealth()
+    public function testGetTimeHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_TIME_HEALTH);
@@ -101,7 +103,7 @@ class HealthTest extends Scope
         return $timeHealth;
     }
 
-    public function testGetWebhooksQueueHealth()
+    public function testGetWebhooksQueueHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_WEBHOOKS_QUEUE_HEALTH);
@@ -122,7 +124,7 @@ class HealthTest extends Scope
         return $webhooksQueueHealth;
     }
 
-    public function testGetLogsQueueHealth()
+    public function testGetLogsQueueHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_LOGS_QUEUE_HEALTH);
@@ -143,7 +145,7 @@ class HealthTest extends Scope
         return $logsQueueHealth;
     }
 
-    public function testGetCertificatesQueueHealth()
+    public function testGetCertificatesQueueHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_CERTIFICATES_QUEUE_HEALTH);
@@ -164,7 +166,7 @@ class HealthTest extends Scope
         return $certificatesQueueHealth;
     }
 
-    public function testGetFunctionsQueueHealth()
+    public function testGetFunctionsQueueHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FUNCTION_QUEUE_HEALTH);
@@ -185,7 +187,7 @@ class HealthTest extends Scope
         return $functionsQueueHealth;
     }
 
-    public function testGetLocalStorageHealth()
+    public function testGetLocalStorageHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_LOCAL_STORAGE_HEALTH);
@@ -206,7 +208,7 @@ class HealthTest extends Scope
         return $localStorageHealth;
     }
 
-    public function testGetAntiVirusHealth()
+    public function testGetAntiVirusHealth(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_ANITVIRUS_HEALTH);

@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia;
 
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Request\Filter;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
+use Tests\Unit\Utopia\Request\Filters\ThrowingFilter;
 use Utopia\Http\Route;
 
-class RequestTest extends TestCase
+final class RequestTest extends TestCase
 {
     protected ?Request $request = null;
 
@@ -161,35 +165,153 @@ class RequestTest extends TestCase
         $this->assertSame($secondRoute, $secondRequest->getRoute());
     }
 
-    public function testGetHeaderReturnsStringValue(): void
+    public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
 
-        $this->assertSame('https://example.com', $this->request->getHeader('referer'));
+        $this->assertSame('https://example.com', $this->request->getHeaderLine('referer'));
     }
 
-    public function testGetHeaderReturnsDefaultWhenMissing(): void
+    public function testGetHeaderLineReturnsDefaultWhenMissing(): void
     {
-        $this->assertSame('', $this->request->getHeader('referer'));
-        $this->assertSame('fallback', $this->request->getHeader('referer', 'fallback'));
+        $this->assertSame('', $this->request->getHeaderLine('referer'));
+        $this->assertSame('fallback', $this->request->getHeaderLine('referer', 'fallback'));
     }
 
-    public function testGetHeaderCoercesArrayToFirstElement(): void
+    public function testGetHeaderLineJoinsMultipleValues(): void
     {
         $swoole = new SwooleRequest();
         $swoole->header = ['referer' => ['https://a.example', 'https://b.example']];
         $request = new Request($swoole);
 
-        $this->assertSame('https://a.example', $request->getHeader('referer'));
+        $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
     }
 
-    public function testGetHeaderReturnsDefaultWhenValueNotString(): void
+    public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void
     {
+        // Swoole parses the Cookie header into its cookie jar, so getHeaders()
+        // must rebuild it for consumers that forward request headers onward
+        // (e.g. function/site executions).
         $swoole = new SwooleRequest();
-        $swoole->header = ['referer' => 123];
+        $swoole->header = ['host' => 'example.com'];
+        $swoole->cookie = ['custom-session-id' => 'abcd123', 'custom-user-id' => 'efgh456'];
         $request = new Request($swoole);
 
-        $this->assertSame('fallback', $request->getHeader('referer', 'fallback'));
+        $headers = $request->getHeaders();
+
+        $this->assertSame(['custom-session-id=abcd123; custom-user-id=efgh456'], $headers['cookie']);
+    }
+
+    public function testGetHeadersOmitsCookieHeaderWhenNoCookies(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $request = new Request($swoole);
+
+        $this->assertArrayNotHasKey('cookie', $request->getHeaders());
+    }
+
+    public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void
+    {
+        /*
+        * Regression: when a request filter throws a 4xx exception during
+        * Request::getParams() (e.g. RequestV20 rejecting an unparseable
+        * queries[]), the framework's error path calls getParams() again to
+        * build error-hook arguments. Without caching, that second call
+        * re-runs the filter and re-throws, which the framework wraps as
+        * "Error handler had an error: ..." (HTTP 500), masking the intended
+        * 400. This test pins that behavior: the first call throws (so the
+        * action's argument resolution aborts), but the second call returns
+        * the raw, pre-filter params without re-invoking filters.
+        */
+        $filter = new ThrowingFilter(400, 'invalid input');
+
+        $this->setupSingleMethodRoute($filter);
+        $this->request->setQueryString(['foo' => 'bar']);
+
+        $threw = false;
+        try {
+            $this->request->getParams();
+        } catch (\Throwable $e) {
+            $threw = true;
+            $this->assertSame(400, $e->getCode());
+            $this->assertSame('invalid input', $e->getMessage());
+        }
+        $this->assertTrue($threw, 'First getParams() call must rethrow the filter exception.');
+        $this->assertSame(1, $filter->calls, 'Filter ran once on the first call.');
+
+        // Second call: framework's error hook arg resolution. Must return raw
+        // params without re-invoking the filter.
+        $params = $this->request->getParams();
+        $this->assertSame(['foo' => 'bar'], $params);
+        $this->assertSame(1, $filter->calls, 'Filter must not run again after a cached 4xx failure.');
+    }
+
+    public function testGetParamsDoesNotCacheRawParamsForServerError(): void
+    {
+        /*
+        * 5xx filter throws indicate genuine server-side problems, not
+        * user-input mistakes. They must keep rethrowing on every call so
+        * the framework's normal error handling sees the failure each time
+        * — caching raw params would silently swallow real bugs.
+        */
+        $filter = new ThrowingFilter(500, 'boom');
+
+        $this->setupSingleMethodRoute($filter);
+        $this->request->setQueryString(['foo' => 'bar']);
+
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            $threw = false;
+            try {
+                $this->request->getParams();
+            } catch (\Throwable $e) {
+                $threw = true;
+                $this->assertSame(500, $e->getCode());
+            }
+            $this->assertTrue($threw, "Call #$attempt must rethrow.");
+            $this->assertSame($attempt, $filter->calls, "Filter must run on call #$attempt.");
+        }
+    }
+
+    public function testGetParamsDoesNotCacheRawParamsForUncodedException(): void
+    {
+        // \Exception with the default code of 0 is treated as "unknown" and
+        // must propagate every call — same reasoning as 5xx.
+        $filter = new ThrowingFilter(0, 'unknown');
+
+        $this->setupSingleMethodRoute($filter);
+        $this->request->setQueryString(['foo' => 'bar']);
+
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            $threw = false;
+            try {
+                $this->request->getParams();
+            } catch (\Throwable) {
+                $threw = true;
+            }
+            $this->assertTrue($threw, "Call #$attempt must rethrow.");
+            $this->assertSame($attempt, $filter->calls, "Filter must run on call #$attempt.");
+        }
+    }
+
+    /**
+     * Helper to attach a route with a single SDK method and one filter.
+     */
+    private function setupSingleMethodRoute(Filter $filter): void
+    {
+        $route = new Route(Request::METHOD_GET, '/single');
+        $route->label('sdk', new Method(
+            namespace: 'namespace',
+            group: 'group',
+            name: 'method',
+            description: 'description',
+            auth: [],
+            responses: [],
+        ));
+
+        $this->request->addHeader('EXAMPLE', 'VALUE');
+        $this->request->setRoute($route);
+        $this->request->addFilter($filter);
     }
 
     /**

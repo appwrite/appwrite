@@ -12,8 +12,8 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -43,12 +43,14 @@ class Create extends Action
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                group: null,
+                group: 'rules',
                 name: 'createAPIRule',
                 description: <<<EOT
                 Create a new proxy rule for serving Appwrite's API on custom domain.
+
+                Rule ID is automatically generated as MD5 hash of a rule domain for performance purposes.
                 EOT,
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -67,11 +69,21 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('log')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, Response $response, Document $project, Certificate $publisherForCertificates, Event $queueForEvents, Database $dbForPlatform, array $platform, Log $log)
-    {
+    public function action(
+        string $domain,
+        Response $response,
+        Document $project,
+        Certificate $publisherForCertificates,
+        Event $queueForEvents,
+        Database $dbForPlatform,
+        array $platform,
+        Log $log,
+        Authorization $authorization,
+    ) {
         $this->validateDomainRestrictions($domain, $platform);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -107,11 +119,7 @@ class Create extends Action
             }
         }
 
-        try {
-            $rule = $dbForPlatform->createDocument('rules', $rule);
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
@@ -125,6 +133,13 @@ class Create extends Action
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());
+
+        // Rename 'created' status to 'unverified' for consistency.
+        // 'verifying' and 'verified' statuses stay as is.
+        // 'unverified' in the meaning of failed certificate generation stays as is.
+        if ($rule->getAttribute('status') === 'created') {
+            $rule->setAttribute('status', 'unverified');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

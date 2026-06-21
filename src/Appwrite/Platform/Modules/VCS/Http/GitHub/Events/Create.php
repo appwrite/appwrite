@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
-use Appwrite\Event\Build;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -41,7 +41,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('getProjectDB')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -53,16 +53,16 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         array $platform
     ) {
         $this->preprocessEvent($request);
 
-        $event = $request->getHeader('x-github-event', '');
+        $event = $request->getHeaderLine('x-github-event', '');
         Span::add('vcs.github.event.name', $event);
 
         $payload = $request->getRawPayload();
-        $signature = $request->getHeader('x-hub-signature-256', '');
+        $signature = $request->getHeaderLine('x-hub-signature-256', '');
         $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
         $valid = empty($secretKey) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
@@ -78,8 +78,8 @@ class Create extends Action
 
         match ($event) {
             $github::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization),
-            $github::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $githubAppId, $privateKey, $github, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform),
-            $github::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $privateKey, $githubAppId, $github, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform),
+            $github::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $githubAppId, $privateKey, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            $github::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $privateKey, $githubAppId, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
         };
 
@@ -129,11 +129,10 @@ class Create extends Action
         GitHub $github,
         Database $dbForPlatform,
         Authorization $authorization,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
     ) {
-        $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
         $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
         $providerBranch = $parsedPayload["branch"] ?? '';
         $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
@@ -164,7 +163,8 @@ class Create extends Action
 
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
-            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+            $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
+            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         }
     }
 
@@ -175,7 +175,7 @@ class Create extends Action
         GitHub $github,
         Database $dbForPlatform,
         Authorization $authorization,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
     ) {
@@ -211,12 +211,19 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
+            $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            $providerAffectedFiles = [
+                ...array_column($prFiles, 'filename'),
+                // Only renamed files include previous_filename; skip missing values from other file changes.
+                ...array_filter(array_column($prFiles, 'previous_filename'))
+            ];
+
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
                 Query::orderDesc('$createdAt')
             ]));
 
-            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup
 

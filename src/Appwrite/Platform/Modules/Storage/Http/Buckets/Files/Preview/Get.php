@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Storage\Config\CacheControl;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -23,7 +26,7 @@ use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Image\Image;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -68,13 +71,14 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::IMAGE
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID')
             ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
             ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-            ->param('gravity', Image::GRAVITY_CENTER, new WhiteList(Image::getGravityTypes()), 'Image crop gravity. Can be one of ' . implode(",", Image::getGravityTypes()), true)
+            ->param('gravity', Image::GRAVITY_CENTER, new WhiteList(Image::getGravityTypes()), 'Image crop gravity. Can be one of ' . implode(",", Image::getGravityTypes()), true, enum: new Enum(name: 'ImageGravity'))
             ->param('quality', -1, new Range(-1, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
             ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
             ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
@@ -82,7 +86,7 @@ class Get extends Action
             ->param('opacity', 1, new Range(0, 1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
             ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
             ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
+            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, enum: new Enum(name: 'ImageFormat'))
             // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
             ->param('token', '', new Text(512), 'File token for accessing this file.', true)
             ->inject('request')
@@ -94,6 +98,7 @@ class Get extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('user')
+            ->inject('cacheControlForStorage')
             ->callback($this->action(...));
     }
 
@@ -120,17 +125,17 @@ class Get extends Action
         Device $deviceForLocal,
         Document $project,
         Authorization $authorization,
-        User $user
+        User $user,
+        callable $cacheControlForStorage
     ) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        /* @type Document $bucket */
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
@@ -151,7 +156,6 @@ class Get extends Action
         if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
-            /* @type Document $file */
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
@@ -241,26 +245,41 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
         }
 
-        $image->crop((int) $width, (int) $height, $gravity);
+        if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
+            Span::add('storage.transform.crop.width', $width);
+            Span::add('storage.transform.crop.height', $height);
+            Span::add('storage.transform.crop.gravity', $gravity);
+            $image->crop($width, $height, $gravity);
+        }
 
-        if (!empty($opacity)) {
+        if ($opacity !== 1.0) {
+            Span::add('storage.transform.opacity', $opacity);
             $image->setOpacity($opacity);
         }
 
         if (!empty($background)) {
+            Span::add('storage.transform.background', $background);
             $image->setBackground('#' . $background);
         }
 
-        if (!empty($borderWidth)) {
+        if ($borderWidth > 0) {
+            Span::add('storage.transform.border.width', $borderWidth);
+            Span::add('storage.transform.border.color', $borderColor);
             $image->setBorder($borderWidth, '#' . $borderColor);
         }
 
-        if (!empty($borderRadius)) {
+        if ($borderRadius > 0) {
+            Span::add('storage.transform.borderRadius', $borderRadius);
             $image->setBorderRadius($borderRadius);
         }
 
-        if (!empty($rotation)) {
+        if ($rotation !== 0) {
+            Span::add('storage.transform.rotation', $rotation);
             $image->setRotation(($rotation + 360) % 360);
+        }
+
+        if ($quality !== -1) {
+            Span::add('storage.transform.quality', $quality);
         }
 
         $data = $image->output($output, $quality);
@@ -294,8 +313,20 @@ class Get extends Action
             }
         }
 
+        $maxAge = 2592000; // 30 days
+        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+            source: CacheControl::SOURCE_ACTION,
+            user: $user,
+            maxAge: $maxAge,
+            project: $project,
+            bucket: $bucket,
+            file: $file,
+            resourceToken: $resourceToken,
+            fileSecurity: $fileSecurity,
+        ));
+
         $response
-            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->addHeader('Cache-Control', $cacheControl)
             ->setContentType($contentType)
             ->file($data);
 

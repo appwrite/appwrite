@@ -50,6 +50,8 @@ class Comment
 
     protected string $statePrefix = '[appwrite]: #';
 
+    protected ?string $tip = null;
+
     /**
      * @var mixed[] $builds
      */
@@ -81,7 +83,14 @@ class Comment
 
     public function generateComment(): string
     {
-        $json = \json_encode($this->builds);
+        if ($this->tip === null) {
+            $this->tip = $this->tips[\array_rand($this->tips)];
+        }
+
+        $json = \json_encode([
+            'builds' => $this->builds,
+            'tip' => $this->tip,
+        ]);
 
         $text = $this->statePrefix . \base64_encode($json) . "\n\n";
 
@@ -226,8 +235,7 @@ class Comment
             $i++;
         }
 
-        $tip = $this->tips[array_rand($this->tips)];
-        $text .= "\n<br>\n\n> [!TIP]\n> $tip\n\n";
+        $text .= "\n<br>\n\n> [!TIP]\n> {$this->tip}\n\n";
 
         return $text;
     }
@@ -252,8 +260,15 @@ class Comment
 
         $json = \base64_decode($state);
 
-        $builds = \json_decode($json, true);
-        $this->builds = \is_array($builds) ? $builds : [];
+        $data = \json_decode($json, true);
+
+        if (\is_array($data) && \array_key_exists('builds', $data)) {
+            $this->builds = \is_array($data['builds']) ? $data['builds'] : [];
+            $this->tip = $data['tip'] ?? null;
+        } else {
+            // Backward compatibility with old state format (builds array only)
+            $this->builds = \is_array($data) ? $data : [];
+        }
 
         return $this;
     }

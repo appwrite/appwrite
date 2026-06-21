@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Tests\Async;
@@ -10,7 +12,7 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
-class MessagingConsoleClientTest extends Scope
+final class MessagingConsoleClientTest extends Scope
 {
     use Async;
 
@@ -29,7 +31,7 @@ class MessagingConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -62,7 +64,7 @@ class MessagingConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals($logs['headers']['status-code'], 200);
+            $this->assertEquals(200, $logs['headers']['status-code']);
             $this->assertIsArray($logs['body']['logs']);
             $this->assertIsNumeric($logs['body']['total']);
             $this->assertCount(2, $logs['body']['logs']);
@@ -77,7 +79,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -91,7 +93,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -105,7 +107,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -122,7 +124,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -133,7 +135,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -144,7 +146,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -155,7 +157,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -166,7 +168,7 @@ class MessagingConsoleClientTest extends Scope
             ]
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testGetTopicLogs(): void
@@ -180,7 +182,7 @@ class MessagingConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -208,7 +210,7 @@ class MessagingConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals($logs['headers']['status-code'], 200);
+            $this->assertEquals(200, $logs['headers']['status-code']);
             $this->assertIsArray($logs['body']['logs']);
             $this->assertCount(2, $logs['body']['logs']);
             $this->assertIsNumeric($logs['body']['total']);
@@ -223,7 +225,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -237,7 +239,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -251,7 +253,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -268,7 +270,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -279,7 +281,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -290,7 +292,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -301,7 +303,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -312,7 +314,7 @@ class MessagingConsoleClientTest extends Scope
             ]
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testGetMessageLogs(): void
@@ -334,7 +336,7 @@ class MessagingConsoleClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -365,7 +367,7 @@ class MessagingConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
         $this->assertCount(2, $logs['body']['logs']);
@@ -379,7 +381,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -393,7 +395,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -407,7 +409,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -424,7 +426,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -435,7 +437,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -446,7 +448,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -457,7 +459,7 @@ class MessagingConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',
@@ -468,6 +470,6 @@ class MessagingConsoleClientTest extends Scope
             ]
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 }

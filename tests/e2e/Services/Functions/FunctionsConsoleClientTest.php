@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Functions;
 
 use Tests\E2E\Client;
@@ -7,10 +9,12 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Console;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
-class FunctionsConsoleClientTest extends Scope
+final class FunctionsConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -70,6 +74,7 @@ class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => 'APP_TEST',
                 'value' => 'TESTINGVALUE',
                 'secret' => false
@@ -82,6 +87,7 @@ class FunctionsConsoleClientTest extends Scope
         $secretVariable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => 'APP_TEST_1',
                 'value' => 'TESTINGVALUE_1',
                 'secret' => true
@@ -139,7 +145,7 @@ class FunctionsConsoleClientTest extends Scope
             'range' => '24h'
         ]);
         $this->assertEquals(200, $usage['headers']['status-code']);
-        $this->assertEquals(24, count($usage['body']));
+        $this->assertCount(24, $usage['body']);
         $this->assertEquals('24h', $usage['body']['range']);
         $this->assertIsNumeric($usage['body']['deploymentsTotal']);
         $this->assertIsNumeric($usage['body']['deploymentsStorageTotal']);
@@ -196,6 +202,7 @@ class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => 'APP_TEST',
                 'value' => 'TESTINGVALUE',
                 'secret' => false
@@ -208,6 +215,7 @@ class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => 'APP_TEST_1',
                 'value' => 'TESTINGVALUE_1',
                 'secret' => true
@@ -226,6 +234,7 @@ class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => 'APP_TEST',
                 'value' => 'ANOTHERTESTINGVALUE',
                 'secret' => false
@@ -234,10 +243,47 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(409, $variable['headers']['status-code']);
 
+        // Test for invalid variableId
+        $variable = $this->createVariable(
+            $functionId,
+            [
+                'variableId' => '!invalid-id!',
+                'key' => 'INVALID_ID_KEY',
+                'value' => 'value',
+            ]
+        );
+
+        $this->assertEquals(400, $variable['headers']['status-code']);
+
+        // Test for duplicate variableId
+        $duplicateVariableId = ID::unique();
+        $variable = $this->createVariable(
+            $functionId,
+            [
+                'variableId' => $duplicateVariableId,
+                'key' => 'DUP_ID_KEY_1',
+                'value' => 'value1',
+            ]
+        );
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        $duplicate = $this->createVariable(
+            $functionId,
+            [
+                'variableId' => $duplicateVariableId,
+                'key' => 'DUP_ID_KEY_2',
+                'value' => 'value2',
+            ]
+        );
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
         // Test for invalid key
         $variable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => str_repeat("A", 256),
                 'value' => 'TESTINGVALUE'
             ]
@@ -249,6 +295,7 @@ class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
+                'variableId' => ID::unique(),
                 'key' => 'LONGKEY',
                 'value' => str_repeat("#", 8193),
             ]
@@ -271,7 +318,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, sizeof($response['body']['variables']));
+        $this->assertCount(2, $response['body']['variables']);
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
@@ -281,6 +328,150 @@ class FunctionsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
+    }
+
+    public function testListVariablesWithLimit(): void
+    {
+        // Create a fresh function for this test
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test List Variables With Limit',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $variable1 = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'LIMIT_KEY_1',
+            'value' => 'limit-value-1',
+        ]);
+        $this->assertEquals(201, $variable1['headers']['status-code']);
+
+        $variable2 = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'LIMIT_KEY_2',
+            'value' => 'limit-value-2',
+        ]);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+
+        // List with limit of 1
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['variables']);
+        $this->assertGreaterThanOrEqual(2, $response['body']['total']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testListVariablesWithoutTotal(): void
+    {
+        // Create a fresh function for this test
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test List Variables Without Total',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'NO_TOTAL_KEY',
+            'value' => 'no-total-value',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        // List with total=false
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($response['body']['variables']));
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testListVariablesCursorPagination(): void
+    {
+        // Create a fresh function for this test
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test List Variables Cursor Pagination',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $variable1 = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'CURSOR_KEY_1',
+            'value' => 'cursor-value-1',
+        ]);
+        $this->assertEquals(201, $variable1['headers']['status-code']);
+
+        $variable2 = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'CURSOR_KEY_2',
+            'value' => 'cursor-value-2',
+        ]);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+
+        // Get first page with limit 1
+        $page1 = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $page1['headers']['status-code']);
+        $this->assertCount(1, $page1['body']['variables']);
+        $cursorId = $page1['body']['variables'][0]['$id'];
+
+        // Get next page using cursor
+        $page2 = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $page2['headers']['status-code']);
+        $this->assertCount(1, $page2['body']['variables']);
+        $this->assertNotEquals($cursorId, $page2['body']['variables'][0]['$id']);
+
+        $this->cleanupFunction($functionId);
     }
 
     public function testGetVariable(): void
@@ -337,6 +528,7 @@ class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
             'key' => 'APP_TEST',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -345,6 +537,7 @@ class FunctionsConsoleClientTest extends Scope
         $variableId = $variable['body']['$id'];
 
         $secretVariable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
             'key' => 'APP_TEST_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -457,6 +650,7 @@ class FunctionsConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
+        // Update with no parameters should fail with 400
         $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -464,6 +658,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        // Update with only value should succeed
         $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -471,7 +666,7 @@ class FunctionsConsoleClientTest extends Scope
             'value' => 'TESTINGVALUEUPDATED_2'
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $longKey = str_repeat("A", 256);
         $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
@@ -496,6 +691,110 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testUpdateVariableKey(): void
+    {
+        // Create a fresh function and variable for this test
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Update Variable Key',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'KEY_BEFORE',
+            'value' => 'unchanged-value',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update only key (key is nullable, but we provide a new key)
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'KEY_AFTER',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('KEY_AFTER', $response['body']['key']);
+        $this->assertEquals('unchanged-value', $response['body']['value']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testUpdateVariableValueOnly(): void
+    {
+        // Create a fresh function and variable for this test
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Update Variable Value',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'UNCHANGED_KEY',
+            'value' => 'value-before',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update only value
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'value' => 'value-after',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('UNCHANGED_KEY', $response['body']['key']);
+        $this->assertEquals('value-after', $response['body']['value']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testUpdateVariableNotFound(): void
+    {
+        // Create a fresh function for this test
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Update Variable Not Found',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/non-existent-id', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'NEW_KEY',
+            'value' => 'new-value',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('variable_not_found', $response['body']['type']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testDeleteVariable(): void
     {
         // Create a fresh function and variables for this test since it deletes them
@@ -512,6 +811,7 @@ class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
             'key' => 'APP_TEST',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -520,6 +820,7 @@ class FunctionsConsoleClientTest extends Scope
         $variableId = $variable['body']['$id'];
 
         $secretVariable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
             'key' => 'APP_TEST_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -551,7 +852,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, sizeof($response['body']['variables']));
+        $this->assertCount(0, $response['body']['variables']);
         $this->assertEquals(0, $response['body']['total']);
 
         /**
@@ -585,6 +886,7 @@ class FunctionsConsoleClientTest extends Scope
 
         // create variable
         $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'a_secret_value',
             'secret' => true,
@@ -650,7 +952,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $buildMd5 = \md5($response['body']);
 
-        $this->assertNotEquals($deploymentMd5, $buildMd5);
+        $this->assertNotSame($deploymentMd5, $buildMd5);
 
         $this->cleanupFunction($functionId);
     }

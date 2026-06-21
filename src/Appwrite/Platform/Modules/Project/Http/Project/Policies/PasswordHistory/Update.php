@@ -32,7 +32,7 @@ class Update extends Action
             ->httpAlias('/v1/projects/:projectId/auth/password-history')
             ->desc('Update password history policy')
             ->groups(['api', 'project'])
-            ->label('scope', 'policies.write')
+            ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')

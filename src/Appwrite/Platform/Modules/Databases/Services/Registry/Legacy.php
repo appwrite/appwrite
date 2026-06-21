@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Services\Registry;
 
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\BigInt\Create as CreateBigIntAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\BigInt\Update as UpdateBigIntAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Create as CreateBooleanAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Update as UpdateBooleanAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Datetime\Create as CreateDatetimeAttribute;
@@ -170,6 +172,10 @@ class Legacy extends Base
         // Attribute: Integer
         $service->addAction(CreateIntegerAttribute::getName(), new CreateIntegerAttribute());
         $service->addAction(UpdateIntegerAttribute::getName(), new UpdateIntegerAttribute());
+
+        // Attribute: BigInt
+        $service->addAction(CreateBigIntAttribute::getName(), new CreateBigIntAttribute());
+        $service->addAction(UpdateBigIntAttribute::getName(), new UpdateBigIntAttribute());
 
         // Attribute: IP
         $service->addAction(CreateIPAttribute::getName(), new CreateIPAttribute());

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class MigrationsQueueTest extends HealthBase
+final class MigrationsQueueTest extends HealthBase
 {
     public function testMigrationsQueue(): void
     {

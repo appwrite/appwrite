@@ -1047,6 +1047,95 @@ trait MessagingBase
         }
     }
 
+    public function testSesProvider(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Create with full credentials but no fromEmail, so the provider stays disabled.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
+            'providerId' => ID::unique(),
+            'name' => 'SES1',
+            'accessKey' => 'my-access-key',
+            'secretKey' => 'my-secret-key',
+            'region' => 'us-east-1',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('SES1', $response['body']['name']);
+        $this->assertEquals('ses', $response['body']['provider']);
+        $this->assertEquals('email', $response['body']['type']);
+        $this->assertEquals(false, $response['body']['enabled']);
+        $this->assertEquals('my-access-key', $response['body']['credentials']['accessKey']);
+        $this->assertEquals('my-secret-key', $response['body']['credentials']['secretKey']);
+        $this->assertEquals('us-east-1', $response['body']['credentials']['region']);
+        $this->assertArrayHasKey('fromEmail', $response['body']['options']);
+        $this->assertArrayNotHasKey('accessKey', $response['body']['options']);
+
+        $providerId = $response['body']['$id'];
+
+        // Create enabled: all credentials plus fromEmail present.
+        $enabledResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
+            'providerId' => ID::unique(),
+            'name' => 'SES-enabled',
+            'accessKey' => 'my-access-key',
+            'secretKey' => 'my-secret-key',
+            'region' => 'us-east-1',
+            'fromName' => 'Sender Name',
+            'fromEmail' => 'sender-email@my-domain.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $enabledResponse['headers']['status-code']);
+        $this->assertEquals(true, $enabledResponse['body']['enabled']);
+        $this->assertEquals('sender-email@my-domain.com', $enabledResponse['body']['options']['fromEmail']);
+
+        // Sparse update: change only the region, credentials must be preserved.
+        $updateResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'name' => 'SES2',
+            'region' => 'eu-west-1',
+        ]);
+
+        $this->assertEquals(200, $updateResponse['headers']['status-code']);
+        $this->assertEquals('SES2', $updateResponse['body']['name']);
+        $this->assertEquals('eu-west-1', $updateResponse['body']['credentials']['region']);
+        $this->assertEquals('my-access-key', $updateResponse['body']['credentials']['accessKey']);
+        $this->assertEquals('my-secret-key', $updateResponse['body']['credentials']['secretKey']);
+
+        // Regression: enabling while fromEmail is still empty must be rejected, not silently enabled.
+        $enableWithoutFromEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $enableWithoutFromEmail['headers']['status-code']);
+        $this->assertEquals('provider_missing_credentials', $enableWithoutFromEmail['body']['type']);
+
+        // Enable the first provider once fromEmail is supplied.
+        $enableResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'fromEmail' => 'sender-email@my-domain.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $enableResponse['headers']['status-code']);
+        $this->assertEquals(true, $enableResponse['body']['enabled']);
+
+        // Updating an SES provider through a different provider route is rejected.
+        $wrongTypeResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/sendgrid/' . $providerId, $headers, [
+            'name' => 'Wrong',
+        ]);
+
+        $this->assertEquals(400, $wrongTypeResponse['headers']['status-code']);
+
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, $headers);
+        $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+
+        $deleteEnabledResponse = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $enabledResponse['body']['$id'], $headers);
+        $this->assertEquals(204, $deleteEnabledResponse['headers']['status-code']);
+    }
+
     public function testCreateTopic(): void
     {
         $response1 = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
@@ -2523,6 +2612,119 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+    }
+
+    public function testCreatePushNotificationWithUsersRecipients(): void
+    {
+        if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+            $this->markTestSkipped('Push DSN empty');
+        }
+
+        $dsn = new DSN(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $dsn->getParam('to');
+        $serviceAccountJSON = $dsn->getParam('serviceAccountJSON');
+
+        if (empty($to) || empty($serviceAccountJSON)) {
+            $this->markTestSkipped('Push provider not configured');
+        }
+
+        $provider1 = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => ID::unique(),
+            'name' => 'FCM-Users-1',
+            'serviceAccountJSON' => $serviceAccountJSON,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider1['headers']['status-code']);
+
+        $provider2 = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => ID::unique(),
+            'name' => 'FCM-Users-2',
+            'serviceAccountJSON' => $serviceAccountJSON,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider2['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@mail.org",
+            'password' => 'password',
+            'name' => 'Messaging User Recipients',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $target1 = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider1['body']['$id'],
+            'identifier' => $to,
+        ]);
+
+        $this->assertEquals(201, $target1['headers']['status-code']);
+
+        $target2 = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider2['body']['$id'],
+            'identifier' => $to,
+        ]);
+
+        $this->assertEquals(201, $target2['headers']['status-code']);
+
+        $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'users' => [$user['body']['$id']],
+            'title' => 'Test-Notification-Users',
+            'body' => 'Test-Notification-Body-Users',
+        ]);
+
+        $this->assertEquals(201, $push['headers']['status-code']);
+
+        $pushMessageId = $push['body']['$id'];
+        $this->assertEventually(function () use ($pushMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(2, $message['body']['deliveredTotal'] + \count($message['body']['deliveryErrors']));
     }
 
     public function testUpdatePushNotification(): void

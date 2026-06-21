@@ -1,32 +1,24 @@
 <?php
 
-use Appwrite\Event\Build;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -48,18 +40,13 @@ return function (Container $container): void {
         return $authorization;
     }, []);
 
-    $container->set('dbForPlatform', function (Cache $cache, Group $pools, Authorization $authorization) {
-        $adapter = new DatabasePool($pools->get('console'));
-        $dbForPlatform = new Database($adapter, $cache);
+    $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+        $pools,
+        $cache,
+        $authorization
+    ), ['pools', 'cache', 'authorization']);
 
-        $dbForPlatform
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setNamespace('_console')
-            ->setDocumentType('users', User::class);
-
-        return $dbForPlatform;
-    }, ['cache', 'pools', 'authorization']);
+    $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];
@@ -69,250 +56,70 @@ return function (Container $container): void {
             return $project;
         }
 
-        return $dbForPlatform->getDocument('projects', $project->getId());
+        $project = $dbForPlatform->getDocument('projects', $project->getId());
+
+        Span::add('project.id', $project->getId());
+
+        return $project;
     }, ['message', 'dbForPlatform']);
 
-    $container->set('dbForProject', function (Cache $cache, Group $pools, Document $project, Database $dbForPlatform, Authorization $authorization) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForPlatform;
-        }
+    $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
+        ? $dbForPlatform
+        : $databaseFactory->project(
+            $project,
+            APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
+        ), ['databaseFactory', 'project', 'dbForPlatform']);
 
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, $cache);
-        $database->setDocumentType('users', User::class);
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($projectsGlobalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-
-        return $database;
-    }, ['cache', 'pools', 'project', 'dbForPlatform', 'authorization']);
-
-    $container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, Cache $cache, Authorization $authorization) {
-        $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-        return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases): Database {
+    $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
+        return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
             if ($project->isEmpty() || $project->getId() === 'console') {
                 return $dbForPlatform;
             }
 
-            try {
-                $dsn = new DSN($project->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-            }
-
-            if (isset($databases[$dsn->getHost()])) {
-                $database = $databases[$dsn->getHost()];
-                $database->setAuthorization($authorization);
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-                if (\in_array($dsn->getHost(), $sharedTables)) {
-                    /** @var array $collections */
-                    $collections = Config::getParam('collections', []);
-                    $projectCollections = $collections['projects'] ?? [];
-                    $projectsGlobalCollections = array_keys($projectCollections);
-                    $projectsGlobalCollections[] = 'audit';
-
-                    $database
-                        ->setSharedTables(true)
-                        ->setGlobalCollections($projectsGlobalCollections)
-                        ->setTenant($project->getSequence())
-                        ->setNamespace($dsn->getParam('namespace'));
-                } else {
-                    $database
-                        ->setSharedTables(false)
-                        ->setTenant(null)
-                        ->setNamespace('_' . $project->getSequence());
-                }
-
-                return $database;
-            }
-
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
-            $database = new Database($adapter, $cache);
-
-            $databases[$dsn->getHost()] = $database;
-
-            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-            if (\in_array($dsn->getHost(), $sharedTables)) {
-                /** @var array $collections */
-                $collections = Config::getParam('collections', []);
-                $projectCollections = $collections['projects'] ?? [];
-                $projectsGlobalCollections = array_keys($projectCollections);
-                $projectsGlobalCollections[] = 'audit';
-
-                $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($projectsGlobalCollections)
-                    ->setTenant($project->getSequence())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-
-            return $database;
+            return $databaseFactory->project(
+                $project,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER
+            );
         };
-    }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
+    }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
-        return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project) {
+        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project): Database {
             $projectDocument ??= $project;
-            $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
-            $databaseType = $database->getAttribute('type', '');
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
             // in the "database" attribute. In that case, fall back to the project's database DSN.
-            if ($databaseDSN === '') {
-                $databaseDSN = $projectDocument->getAttribute('database', '');
-            }
+            $databaseConfig = $database->getAttribute('database', '') === ''
+                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
+                : $database;
 
-            try {
-                $databaseDSN = new DSN($databaseDSN);
-            } catch (\InvalidArgumentException) {
-                $databaseDSN = new DSN('mysql://' . $databaseDSN);
-            }
-
-            try {
-                $dsn = new DSN($projectDocument->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // Temporary fallback until all projects use shared tables
-                $dsn = new DSN('mysql://' . $projectDocument->getAttribute('database'));
-            }
-
-            $pools = $register->get('pools');
-            $databaseHost = $databaseDSN->getHost();
-            $pool = $pools->get($databaseHost);
-
-            $adapter = new DatabasePool($pool);
-            $database = new Database($adapter, $cache);
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization);
-            $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
-
-            $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
-
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database->setGlobalCollections($projectsGlobalCollections);
-
-            // For separate pools (documentsdb/vectorsdb), check their own shared tables config.
-            // If not configured, use dedicated mode to avoid cross-engine tenant type mismatches.
-            if ($databaseHost !== $dsn->getHost()) {
-                $dbTypeSharedTables = match ($databaseType) {
-                    DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
-                    VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
-                    default => [],
-                };
-
-                if (\in_array($databaseHost, $dbTypeSharedTables)) {
-                    $database
-                        ->setSharedTables(true)
-                        ->setGlobalCollections($projectsGlobalCollections)
-                        ->setTenant($projectDocument->getSequence())
-                        ->setNamespace($databaseDSN->getParam('namespace'));
-                } else {
-                    $database
-                        ->setSharedTables(false)
-                        ->setTenant(null)
-                        ->setNamespace('_' . $projectDocument->getSequence());
-                }
-            } elseif (\in_array($dsn->getHost(), $sharedTables, true)) {
-                $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($projectsGlobalCollections)
-                    ->setTenant($projectDocument->getSequence())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $projectDocument->getSequence());
-            }
-
-            $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-            return $database;
+            return $databaseFactory->tenant(
+                $databaseConfig,
+                $projectDocument,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
+            );
         };
-    }, ['cache', 'register', 'project', 'authorization']);
+    }, ['databaseFactory', 'project']);
 
-    $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
+    $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
         $database = null;
 
-        return function (?Document $project = null) use ($pools, $cache, $authorization, &$database) {
+        return function (?Document $project = null) use ($databaseFactory, &$database) {
             if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
                 $database->setTenant($project->getSequence());
 
                 return $database;
             }
 
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $logsCollections = $collections['logs'] ?? [];
-            $logsCollections = array_keys($logsCollections);
-
-            $adapter = new DatabasePool($pools->get('logs'));
-            $database = new Database($adapter, $cache);
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setSharedTables(true)
-                ->setGlobalCollections($logsCollections)
-                ->setNamespace('logsV1')
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
-
-            if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-                $database->setTenant($project->getSequence());
-            }
+            $database = $databaseFactory->logs(
+                $project,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
+                APP_DATABASE_QUERY_MAX_VALUES_WORKER
+            );
 
             return $database;
         };
-    }, ['pools', 'cache', 'authorization']);
+    }, ['databaseFactory']);
 
     $container->set('abuseRetention', function () {
         return \time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
@@ -330,36 +137,12 @@ return function (Container $container): void {
         return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
     }, []);
 
-    $container->set('queueForDatabase', function (Publisher $publisher) {
-        return new EventDatabase($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForMessaging', function (Publisher $publisher) {
-        return new Messaging($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForMails', function (Publisher $publisher) {
-        return new Mail($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForBuilds', function (Publisher $publisher) {
-        return new Build($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForDeletes', function (Publisher $publisher) {
-        return new Delete($publisher);
-    }, ['publisher']);
-
     $container->set('queueForEvents', function (Publisher $publisher) {
         return new Event($publisher);
     }, ['publisher']);
 
     $container->set('queueForWebhooks', function (Publisher $publisher) {
         return new Webhook($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForFunctions', function (Publisher $publisher) {
-        return new Func($publisher);
     }, ['publisher']);
 
     $container->set('queueForRealtime', function () {

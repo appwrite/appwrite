@@ -28,6 +28,7 @@ class Attribute extends Model
                 'default' => '',
                 'example' => 'available',
                 'enum' => ['available', 'processing', 'deleting', 'stuck', 'failed'],
+                'enumSDKName' => 'AttributeStatus',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,

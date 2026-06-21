@@ -31,7 +31,7 @@ class Update extends Action
             ->httpAlias('/v1/projects/:projectId/auth/memberships-privacy')
             ->desc('Update membership privacy policy')
             ->groups(['api', 'project'])
-            ->label('scope', 'policies.write')
+            ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
@@ -55,6 +55,7 @@ class Update extends Action
             ->param('userPhone', null, new Boolean(), 'Set to true if you want make user phone number visible to all team members, or false to hide it.', optional: true)
             ->param('userName', null, new Boolean(), 'Set to true if you want make user name visible to all team members, or false to hide it.', optional: true)
             ->param('userMFA', null, new Boolean(), 'Set to true if you want make user MFA status visible to all team members, or false to hide it.', optional: true)
+            ->param('userAccessedAt', null, new Boolean(), 'Set to true if you want make user last access time visible to all team members, or false to hide it.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -69,6 +70,7 @@ class Update extends Action
         ?bool $userPhone,
         ?bool $userName,
         ?bool $userMFA,
+        ?bool $userAccessedAt,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -91,6 +93,9 @@ class Update extends Action
         }
         if ($userMFA !== null) {
             $auths['membershipsMfa'] = $userMFA;
+        }
+        if ($userAccessedAt !== null) {
+            $auths['membershipsUserAccessedAt'] = $userAccessedAt;
         }
 
         $updates = new Document([

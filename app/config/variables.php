@@ -1337,6 +1337,15 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_MIGRATION_HOST',
+                'description' => 'Internal hostname the migrations worker uses to reach this instance\'s API (for migrations and CSV/JSON imports & exports). Defaults to \'appwrite\', the API service name in the standard Docker Compose setup. Only change this for non-standard deployments.',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_ID',
                 'description' => 'Google OAuth client ID. You can find it in your GCP application settings.',
                 'introduction' => '1.4.0',

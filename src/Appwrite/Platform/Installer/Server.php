@@ -114,7 +114,6 @@ class Server
         }
 
         if (isset($opts['docker'])) {
-            $this->printInstallerUrl($host, $port);
             $this->startDockerInstaller($opts);
         }
 
@@ -154,7 +153,7 @@ class Server
 
         $nativeServer = $adapter->getNativeServer();
 
-        $container = $adapter->getContainer();
+        $container = $adapter->resources();
         $container->set('installerState', fn () => $state);
         $container->set('installerConfig', fn () => $config);
         $container->set('installerPaths', fn () => $paths);
@@ -365,9 +364,13 @@ class Server
             '-i',
             '--rm',
             '--name', $container,
+            '--label', 'com.docker.compose.project=appwrite-installer',
+            '--label', 'com.docker.compose.service=appwrite-installer',
+            '--add-host', 'host.docker.internal:host-gateway',
             '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT,
             '--volume', '/var/run/docker.sock:/var/run/docker.sock',
             '--volume', "$volumePath:/usr/src/code:rw",
+            '--volume', "$volumePath:$volumePath:rw",
         ];
         $args[] = '-e';
         $args[] = 'APPWRITE_INSTALLER_CONFIG=' . $configJson;
