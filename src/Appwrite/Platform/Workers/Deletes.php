@@ -1672,20 +1672,45 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param Document $document rule document
-     * @return void
-     */
-    protected function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
-    {
-        $domain = $document->getAttribute('domain');
-        $certificates->deleteCertificate($domain);
+ * @param Database $dbForPlatform
+ * @param Document $document rule document
+ * @return void
+ */
+protected function deleteRule(
+    Database $dbForPlatform,
+    Document $document,
+    CertificatesAdapter $certificates
+): void {
+    $domain = $document->getAttribute('domain');
 
-        // Delete certificate document, so Appwrite is aware of change
-        if (isset($document['certificateId'])) {
-            $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
+    try {
+        $certificates->deleteCertificate($domain);
+    } catch (Throwable $th) {
+        Console::error(
+            'Failed to delete certificate for domain '
+            . $domain
+            . ': '
+            . $th->getMessage()
+        );
+    }
+
+    // Delete certificate document, so Appwrite is aware of change
+    if (isset($document['certificateId'])) {
+        try {
+            $dbForPlatform->deleteDocument(
+                'certificates',
+                $document['certificateId']
+            );
+        } catch (Throwable $th) {
+            Console::error(
+                'Failed to delete certificate document '
+                . $document['certificateId']
+                . ': '
+                . $th->getMessage()
+            );
         }
     }
+}
 
     /**
      * @param callable $getProjectDB
