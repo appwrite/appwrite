@@ -430,6 +430,12 @@ export function groupMethodsByResource(
   }))
 }
 
+/** OpenAPI specs use angle-bracket tokens as documentation placeholders, not literal API values. */
+export function isOpenApiPlaceholderExample(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  return /^<[A-Z][A-Z0-9_]*>$/.test(value.trim())
+}
+
 export function getDefaultParamValue(param: OpenApiParameter): string {
   const schema = param.schema
   if (!schema) return ''
@@ -438,7 +444,9 @@ export function getDefaultParamValue(param: OpenApiParameter): string {
   }
   const example = schema.example ?? schema['x-example']
   if (example !== undefined && example !== null) {
-    return String(example)
+    const exampleString = String(example)
+    if (isOpenApiPlaceholderExample(exampleString)) return ''
+    return exampleString
   }
   if (schema.enum?.length) return String(schema.enum[0])
   if (schema.type === 'boolean') return 'false'
@@ -455,8 +463,12 @@ export function generateSampleRequestBody(
 }
 
 export function buildSampleValue(schema: OpenApiSchema): unknown {
-  if (schema.example !== undefined) return schema.example
-  if (schema['x-example'] !== undefined) return schema['x-example']
+  if (schema.example !== undefined) {
+    if (!isOpenApiPlaceholderExample(schema.example)) return schema.example
+  }
+  if (schema['x-example'] !== undefined) {
+    if (!isOpenApiPlaceholderExample(schema['x-example'])) return schema['x-example']
+  }
   if (schema.default !== undefined) return schema.default
   if (schema.enum?.length) return schema.enum[0]
 

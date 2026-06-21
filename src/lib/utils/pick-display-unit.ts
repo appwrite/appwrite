@@ -67,3 +67,37 @@ export function pickUnitWithSmallestIntegerValue<T extends string>(
     unit: smallestScale.unit,
   }
 }
+
+/**
+ * Pick the largest unit whose converted value is at least minConvertedValue (default 1).
+ * Example: 999999 bytes → ~1000 KB, not 999999 B.
+ */
+export function pickUnitWithLargestReadableValue<T extends string>(
+  baseValue: number,
+  scales: readonly UnitScale<T>[],
+  options: PickDisplayUnitOptions = {},
+): { value: number; unit: T } {
+  const minConverted = options.minConvertedValue ?? 1
+
+  if (scales.length === 0) {
+    throw new Error('pickUnitWithLargestReadableValue requires at least one scale')
+  }
+
+  const smallestScale = scales.reduce((a, b) => (a.factor <= b.factor ? a : b))
+
+  if (!Number.isFinite(baseValue) || baseValue <= 0) {
+    return { value: 0, unit: smallestScale.unit }
+  }
+
+  const sorted = [...scales].sort((a, b) => b.factor - a.factor)
+
+  for (const scale of sorted) {
+    if (scale.factor <= smallestScale.factor) continue
+    const converted = baseValue / scale.factor
+    if (converted >= minConverted) {
+      return { value: converted, unit: scale.unit }
+    }
+  }
+
+  return { value: baseValue / smallestScale.factor, unit: smallestScale.unit }
+}

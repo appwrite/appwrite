@@ -6,6 +6,7 @@ type ConsoleKeyScopeEntry = NonNullable<
 >[number]
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Accordion,
   AccordionContent,
@@ -16,19 +17,23 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleProjectScopes } from '@/lib/react-query/hooks/console-project-scopes'
 import {
   compareScopeEditorRowsForDisplay,
   compareScopeRowsDeprecatedLast,
   consoleKeyScopesToEditorRows,
+  filterScopeEditorRows,
   getScopeCategoryIcon,
+  isOAuth2AppsCatalogScope,
+  isOAuth2AppsScopeEditorRow,
   isCloudEnvironment,
   scopeEditorCategory,
   scopeRowDeprecated,
   sortScopeCategories,
   type ScopeEditorRow,
 } from '@/lib/console-project-scopes'
-import { Loader2, MoreHorizontal } from 'lucide-react'
+import { Loader2, MoreHorizontal, Search } from 'lucide-react'
 
 interface ScopeEditorProps {
   value: string[]
@@ -42,8 +47,10 @@ export function ScopeEditor({
   disabled = false,
 }: ScopeEditorProps) {
   const isCloud = isCloudEnvironment()
+  const { features } = useConsoleProfile()
   const { data: scopeList, isLoading, isError, error } = useConsoleProjectScopes()
 
+  const [searchQuery, setSearchQuery] = useState('')
   const [openCategories, setOpenCategories] = useState<string[]>([])
   const openCategoriesRef = useRef<string[]>([])
   const previousValueRef = useRef<string[]>(value)
@@ -55,12 +62,19 @@ export function ScopeEditor({
     )
     const base = consoleKeyScopesToEditorRows(scopeList, {
       isCloud,
+      oauth2Server: features.oauth2Server,
       selectedScopeIds: value,
     })
     const byId = new Map(base.map((r) => [r.scope, r]))
     for (const v of value) {
       if (byId.has(v)) continue
       const orphanEntry = scopeById.get(v)
+      if (
+        !features.oauth2Server &&
+        isOAuth2AppsCatalogScope(v, orphanEntry?.category)
+      ) {
+        continue
+      }
       const categoryLooksDeprecated =
         (orphanEntry?.category ?? '').trim().toLowerCase() === 'deprecated'
       const deprecatedBadge = scopeRowDeprecated(
@@ -79,12 +93,22 @@ export function ScopeEditor({
       })
     }
 
-    return Array.from(byId.values()).sort(compareScopeEditorRowsForDisplay)
-  }, [scopeList, isCloud, value])
+    return Array.from(byId.values())
+      .filter(
+        (row) =>
+          features.oauth2Server || !isOAuth2AppsScopeEditorRow(row),
+      )
+      .sort(compareScopeEditorRowsForDisplay)
+  }, [features.oauth2Server, scopeList, isCloud, value])
+
+  const filteredScopes = useMemo(
+    () => filterScopeEditorRows(availableScopes, searchQuery),
+    [availableScopes, searchQuery],
+  )
 
   const scopesByCategory = useMemo(() => {
     const grouped: Record<string, ScopeEditorRow[]> = {}
-    for (const row of availableScopes) {
+    for (const row of filteredScopes) {
       if (!grouped[row.category]) grouped[row.category] = []
       grouped[row.category].push(row)
     }
@@ -92,29 +116,39 @@ export function ScopeEditor({
       grouped[k]!.sort(compareScopeRowsDeprecatedLast)
     }
     return grouped
-  }, [availableScopes])
+  }, [filteredScopes])
 
   const categoryKeys = useMemo(
     () => sortScopeCategories(Object.keys(scopesByCategory)),
     [scopesByCategory],
   )
 
+  const isFiltering = searchQuery.trim().length > 0
+
   useEffect(() => {
     openCategoriesRef.current = openCategories
   }, [openCategories])
 
   useEffect(() => {
+    if (!isFiltering) return
+    setOpenCategories(categoryKeys)
+    openCategoriesRef.current = categoryKeys
+  }, [categoryKeys, isFiltering, searchQuery])
+
+  useEffect(() => {
     const valueChanged =
       JSON.stringify(previousValueRef.current) !== JSON.stringify(value)
     if (valueChanged && !isUserInteractionRef.current) {
-      setOpenCategories([])
-      openCategoriesRef.current = []
+      if (!isFiltering) {
+        setOpenCategories([])
+        openCategoriesRef.current = []
+      }
     }
     if (isUserInteractionRef.current) {
       isUserInteractionRef.current = false
     }
     previousValueRef.current = value
-  }, [value])
+  }, [isFiltering, value])
 
   const displayScopes = useMemo(() => Array.from(new Set(value)), [value])
 
@@ -148,11 +182,11 @@ export function ScopeEditor({
     isSelectingAllRef.current = true
     isUserInteractionRef.current = true
     const allIds = new Set<string>()
-    availableScopes.forEach((scopeDef) => {
+    filteredScopes.forEach((scopeDef) => {
       if (scopeDef.deprecated) return
       allIds.add(scopeDef.scope)
     })
-    onChange(Array.from(allIds))
+    onChange([...new Set([...value, ...allIds])])
     requestAnimationFrame(() => {
       isSelectingAllRef.current = false
     })
@@ -163,7 +197,8 @@ export function ScopeEditor({
     e.stopPropagation()
     isSelectingAllRef.current = true
     isUserInteractionRef.current = true
-    onChange([])
+    const filteredIds = new Set(filteredScopes.map((scopeDef) => scopeDef.scope))
+    onChange(value.filter((scope) => !filteredIds.has(scope)))
     requestAnimationFrame(() => {
       isSelectingAllRef.current = false
     })
@@ -232,124 +267,146 @@ export function ScopeEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end gap-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 px-2.5 text-[12px]"
-          onClick={handleSelectAll}
-          disabled={disabled}
-        >
-          Select all
-        </Button>
-        <Separator orientation="vertical" className="h-3" />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 px-2.5 text-[12px]"
-          onClick={handleDeselectAll}
-          disabled={disabled}
-        >
-          Deselect all
-        </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search scopes…"
+            className="h-9 pl-9 text-[13px]"
+            disabled={disabled}
+          />
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 px-2.5 text-[12px]"
+            onClick={handleSelectAll}
+            disabled={disabled || filteredScopes.length === 0}
+          >
+            {isFiltering ? 'Select shown' : 'Select all'}
+          </Button>
+          <Separator orientation="vertical" className="h-3" />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 px-2.5 text-[12px]"
+            onClick={handleDeselectAll}
+            disabled={disabled || filteredScopes.length === 0}
+          >
+            {isFiltering ? 'Clear shown' : 'Deselect all'}
+          </Button>
+        </div>
       </div>
 
-      <Accordion
-        type="multiple"
-        value={openCategories}
-        onValueChange={handleAccordionChange}
-        className="w-full"
-      >
-        {categoryKeys.map((category, categoryIndex) => {
-          const categoryScopes = scopesByCategory[category] || []
-          if (categoryScopes.length === 0) return null
+      {isFiltering ? (
+        <p className="text-[12px] text-muted-foreground">
+          {filteredScopes.length === 0
+            ? 'No scopes match your search.'
+            : `Showing ${filteredScopes.length} of ${availableScopes.length} scopes.`}
+        </p>
+      ) : null}
 
-          const Icon = categoryScopes[0]?.icon || MoreHorizontal
-          const selectedCount = getCategorySelectedCount(category)
-          const categoryState = getCategoryState(category)
-          const isLastCategory = categoryIndex === categoryKeys.length - 1
+      {filteredScopes.length === 0 ? null : (
+        <Accordion
+          type="multiple"
+          value={openCategories}
+          onValueChange={handleAccordionChange}
+          className="w-full"
+        >
+          {categoryKeys.map((category, categoryIndex) => {
+            const categoryScopes = scopesByCategory[category] || []
+            if (categoryScopes.length === 0) return null
 
-          return (
-            <AccordionItem
-              key={category}
-              value={category}
-              className={cn('border-b', isLastCategory && 'border-b-0')}
-            >
-              <AccordionHeader className="flex w-full min-w-0 items-stretch">
-                <div className="flex shrink-0 items-center self-center py-4 pl-1 pr-2">
-                  <Checkbox
-                    checked={
-                      categoryState === 'checked'
-                        ? true
-                        : categoryState === 'indeterminate'
-                          ? 'indeterminate'
-                          : false
-                    }
-                    onCheckedChange={(checked) => {
-                      handleCategoryToggle(category, checked === true)
-                    }}
-                    disabled={disabled}
-                  />
-                </div>
-                <AccordionRowTrigger className="hover:no-underline min-w-0 flex-1">
-                  <div className="flex min-w-0 flex-1 items-center justify-between pr-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="truncate text-[13px] font-medium text-foreground">
-                        {category}
-                      </span>
-                    </div>
-                    <Badge variant="secondary" className="shrink-0 text-[12px]">
-                      {selectedCount} {selectedCount === 1 ? 'Scope' : 'Scopes'}
-                    </Badge>
+            const Icon = categoryScopes[0]?.icon || MoreHorizontal
+            const selectedCount = getCategorySelectedCount(category)
+            const categoryState = getCategoryState(category)
+            const isLastCategory = categoryIndex === categoryKeys.length - 1
+
+            return (
+              <AccordionItem
+                key={category}
+                value={category}
+                className={cn('border-b', isLastCategory && 'border-b-0')}
+              >
+                <AccordionHeader className="flex w-full min-w-0 items-stretch">
+                  <div className="flex shrink-0 items-center self-center py-4 pl-1 pr-2">
+                    <Checkbox
+                      checked={
+                        categoryState === 'checked'
+                          ? true
+                          : categoryState === 'indeterminate'
+                            ? 'indeterminate'
+                            : false
+                      }
+                      onCheckedChange={(checked) => {
+                        handleCategoryToggle(category, checked === true)
+                      }}
+                      disabled={disabled}
+                    />
                   </div>
-                </AccordionRowTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <div className="space-y-2 pt-2">
-                  {categoryScopes.map((scopeDef) => {
-                    const isSelected = displayScopes.includes(scopeDef.scope)
-                    return (
-                      <label
-                        key={scopeDef.scope}
-                        className={cn(
-                          'flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors',
-                          'hover:bg-accent/50 cursor-pointer',
-                          disabled && 'cursor-not-allowed opacity-50',
-                        )}
-                      >
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={(checked) => {
-                            handleScopeToggle(scopeDef.scope, checked === true)
-                          }}
-                          disabled={disabled}
-                          className="mt-0.5"
-                        />
-                        <div className="flex-1 space-y-0.5">
-                          <div className="flex flex-wrap items-center gap-2 text-[13px] font-mono text-foreground">
-                            <span>{scopeDef.scope}</span>
-                            {scopeDef.deprecated ? (
-                              <Badge variant="warning" className="text-[10px] shrink-0">
-                                Deprecated
-                              </Badge>
-                            ) : null}
+                  <AccordionRowTrigger className="hover:no-underline min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-1 items-center justify-between pr-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate text-[13px] font-medium text-foreground">
+                          {category}
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0 text-[12px]">
+                        {selectedCount} {selectedCount === 1 ? 'Scope' : 'Scopes'}
+                      </Badge>
+                    </div>
+                  </AccordionRowTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  <div className="space-y-2 pt-2">
+                    {categoryScopes.map((scopeDef) => {
+                      const isSelected = displayScopes.includes(scopeDef.scope)
+                      return (
+                        <label
+                          key={scopeDef.scope}
+                          className={cn(
+                            'flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors',
+                            'hover:bg-accent/50 cursor-pointer',
+                            disabled && 'cursor-not-allowed opacity-50',
+                          )}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              handleScopeToggle(scopeDef.scope, checked === true)
+                            }}
+                            disabled={disabled}
+                            className="mt-0.5"
+                          />
+                          <div className="flex-1 space-y-0.5">
+                            <div className="flex flex-wrap items-center gap-2 text-[13px] font-mono text-foreground">
+                              <span>{scopeDef.scope}</span>
+                              {scopeDef.deprecated ? (
+                                <Badge variant="warning" className="text-[10px] shrink-0">
+                                  Deprecated
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <div className="text-[12px] text-muted-foreground">
+                              {scopeDef.description}
+                            </div>
                           </div>
-                          <div className="text-[12px] text-muted-foreground">
-                            {scopeDef.description}
-                          </div>
-                        </div>
-                      </label>
-                    )
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )
-        })}
-      </Accordion>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )
+          })}
+        </Accordion>
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { Search, X } from 'lucide-react'
 import { groupMethodsByResource } from '@/lib/api-explorer/parse-spec'
+import { apiNavMethodItemClassName } from '@/lib/api-explorer/nav-styles'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +13,6 @@ import type { ApiReferenceMethod } from '@/lib/docs/references/types'
 import { cn } from '@/lib/utils'
 import {
   getHttpMethodVariant,
-  getHttpMethodAccentClasses,
   REFERENCE_PILL_CLASS,
   REFERENCE_SCROLL_AREA_CLASS,
 } from './explorer-styles'
@@ -43,54 +43,46 @@ function MethodList({
   selectedMethodRef,
 }: MethodListProps) {
   return (
-    <div className="divide-y divide-border/50">
+    <ul className="space-y-0.5">
       {methods.map((method) => {
         const isActive = method.id === selectedMethodId
-        const methodAccent = getHttpMethodAccentClasses(method.httpMethod)
         return (
-          <button
-            key={method.id}
-            ref={
-              isActive
-                ? (node) => {
-                    selectedMethodRef.current = node
-                  }
-                : undefined
-            }
-            type="button"
-            onClick={() => onSelectMethod(method.id)}
-            className={cn(
-              'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 border-l-2 px-2.5 py-2 text-left transition-colors',
-              isActive
-                ? cn(
-                    'border-l-current bg-accent text-foreground',
-                    methodAccent.methodText,
-                  )
-                : 'border-l-transparent text-muted-foreground hover:border-l-border hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <div className="flex w-full min-w-0 max-w-full items-center gap-2">
-              <Badge
-                variant={getHttpMethodVariant(method.httpMethod)}
-                className={cn(
-                  'text-[10px] shrink-0 uppercase',
-                  REFERENCE_PILL_CLASS,
-                )}
-              >
-                {method.httpMethod}
-              </Badge>
-              <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
-                {method.summary}
-              </span>
-            </div>
-            <StartTruncatedText
-              text={method.path}
-              className="font-mono text-[11px] text-muted-foreground"
-            />
-          </button>
+          <li key={method.id}>
+            <button
+              ref={
+                isActive
+                  ? (node) => {
+                      selectedMethodRef.current = node
+                    }
+                  : undefined
+              }
+              type="button"
+              onClick={() => onSelectMethod(method.id)}
+              className={apiNavMethodItemClassName(isActive)}
+            >
+              <div className="flex w-full min-w-0 max-w-full items-center gap-2">
+                <Badge
+                  variant={getHttpMethodVariant(method.httpMethod)}
+                  className={cn(
+                    'text-[10px] shrink-0 uppercase',
+                    REFERENCE_PILL_CLASS,
+                  )}
+                >
+                  {method.httpMethod}
+                </Badge>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+                  {method.summary}
+                </span>
+              </div>
+              <StartTruncatedText
+                text={method.path}
+                className="font-mono text-[11px] text-muted-foreground"
+              />
+            </button>
+          </li>
         )
       })}
-    </div>
+    </ul>
   )
 }
 

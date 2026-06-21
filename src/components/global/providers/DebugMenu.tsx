@@ -145,6 +145,8 @@ interface MenuItem {
     | 'terminalSettings'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
+  /** Feature flags submenu: group label for categorized lists. */
+  category?: string
 }
 
 interface MenuSection {
@@ -174,7 +176,8 @@ function matchesFeatureFlagSearch(item: MenuItem, query: string): boolean {
   const q = trimmed.toLowerCase()
   return (
     item.label.toLowerCase().includes(q) ||
-    (item.description?.toLowerCase().includes(q) ?? false)
+    (item.description?.toLowerCase().includes(q) ?? false) ||
+    (item.category?.toLowerCase().includes(q) ?? false)
   )
 }
 
@@ -184,6 +187,39 @@ function filterFeatureFlagMenuItems(
 ): MenuItem[] {
   if (!query.trim()) return items
   return items.filter((item) => matchesFeatureFlagSearch(item, query))
+}
+
+function groupFeatureFlagMenuItems(items: MenuItem[]): Array<{
+  category: string | null
+  items: MenuItem[]
+}> {
+  const categoryOrder: string[] = []
+  const categoryGroups = new Map<string, MenuItem[]>()
+  const uncategorized: MenuItem[] = []
+
+  for (const item of items) {
+    if (!item.category) {
+      uncategorized.push(item)
+      continue
+    }
+
+    if (!categoryGroups.has(item.category)) {
+      categoryOrder.push(item.category)
+      categoryGroups.set(item.category, [])
+    }
+    categoryGroups.get(item.category)?.push(item)
+  }
+
+  const groups = categoryOrder.map((category) => ({
+    category,
+    items: categoryGroups.get(category) ?? [],
+  }))
+
+  if (uncategorized.length > 0) {
+    groups.push({ category: null, items: uncategorized })
+  }
+
+  return groups
 }
 
 function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
@@ -241,19 +277,80 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
   )
 }
 
+function renderDebugSubmenuItemRow(
+  item: MenuItem,
+  itemIndex: number,
+  keyPrefix: string,
+  nestedSubmenuParentKey: string | null,
+  setActiveSubmenu: (key: string | null) => void,
+) {
+  const nestedSubmenuKey = nestedSubmenuParentKey
+    ? `${nestedSubmenuParentKey}-${item.label}`
+    : null
+  const hasNestedSubmenu = menuItemHasSubmenu(item)
+  const key = `${keyPrefix}-${itemIndex}`
+
+  if (item.variant === 'switch') {
+    return <DebugMenuSwitchRow key={key} item={item} />
+  }
+
+  return (
+    <button
+      key={key}
+      type="button"
+      onClick={() => {
+        if (hasNestedSubmenu && nestedSubmenuKey) {
+          setActiveSubmenu(nestedSubmenuKey)
+        } else if (item.onClick) {
+          item.onClick()
+        }
+      }}
+      disabled={item.disabled}
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
+        item.disabled
+          ? 'cursor-not-allowed opacity-50'
+          : item.active
+            ? 'bg-[#9B87F5]/25 text-white'
+            : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
+      } ${item.rowClassName ?? ''}`}
+    >
+      {item.icon && (
+        <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
+      )}
+      <span className="flex-1">
+        <span className="block font-medium">{item.label}</span>
+        {item.description && (
+          <span className="mt-0.5 block text-[11px] font-normal opacity-80">
+            {item.description}
+          </span>
+        )}
+      </span>
+      {item.badge !== undefined && (
+        <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
+          {item.badge}
+        </span>
+      )}
+      {hasNestedSubmenu && (
+        <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
+      )}
+    </button>
+  )
+}
+
 function createProfileFeatureFlagItem(
   label: string,
   description: string,
   key: keyof ConsoleProfileFeatures,
   profileId: ConsoleProfileId,
   currentValue: boolean,
-  options?: { disabled?: boolean },
+  options?: { disabled?: boolean; category?: string },
 ): MenuItem {
   const defaultValue = getCanonicalProfileFeatures(profileId)[key]
 
   return {
     label,
     description,
+    category: options?.category,
     variant: 'switch',
     switchValue: currentValue,
     defaultValue,
@@ -274,12 +371,14 @@ function createDebugFeatureFlagItem(
   currentValue: boolean,
   onChange: (checked: boolean) => void,
   onReset?: () => void,
+  category?: string,
 ): MenuItem {
   const defaultValue = FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
 
   return {
     label,
     description,
+    category,
     variant: 'switch',
     switchValue: currentValue,
     defaultValue,
@@ -1262,6 +1361,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'dedicatedDbsSupport',
                 profileId,
                 features.dedicatedDbsSupport,
+                { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
                 'Dedicated DBs: Tables DB',
@@ -1269,6 +1369,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'dedicatedDbsTablesDB',
                 profileId,
                 features.dedicatedDbsTablesDB,
+                { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
                 'Dedicated DBs: Documents DB',
@@ -1276,6 +1377,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'dedicatedDbsDocumentsDB',
                 profileId,
                 features.dedicatedDbsDocumentsDB,
+                { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
                 'Dedicated DBs: Vectors DB',
@@ -1283,6 +1385,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'dedicatedDbsVectorsDB',
                 profileId,
                 features.dedicatedDbsVectorsDB,
+                { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
                 'Native DBs: Postgres',
@@ -1290,6 +1393,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'nativeDbsPostgres',
                 profileId,
                 features.nativeDbsPostgres,
+                { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
                 'Native DBs: MySQL',
@@ -1297,6 +1401,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'nativeDbsMySQL',
                 profileId,
                 features.nativeDbsMySQL,
+                { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
                 'Console user verification',
@@ -1304,13 +1409,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'userVerification',
                 profileId,
                 features.userVerification,
-              ),
-              createProfileFeatureFlagItem(
-                'Organization OAuth apps',
-                'Org settings OAuth apps tab and /settings/oauth-apps route.',
-                'oauthApps',
-                profileId,
-                features.oauthApps,
+                { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
                 'Project OAuth2 server',
@@ -1320,7 +1419,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'oauth2Server',
                 profileId,
                 profileId === 'cloud' ? features.oauth2Server : false,
-                { disabled: profileId !== 'cloud' },
+                {
+                  disabled: profileId !== 'cloud',
+                  category: 'Auth & security',
+                },
+              ),
+              createProfileFeatureFlagItem(
+                'Organization OAuth apps',
+                'Org settings OAuth apps tab and /settings/oauth-apps route.',
+                'oauthApps',
+                profileId,
+                features.oauthApps,
+                { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
                 'Organization API keys',
@@ -1328,6 +1438,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'orgApiKeys',
                 profileId,
                 features.orgApiKeys,
+                { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
                 'Organization marketplace',
@@ -1337,7 +1448,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'marketplace',
                 profileId,
                 profileId === 'cloud' ? features.marketplace : false,
-                { disabled: profileId !== 'cloud' },
+                {
+                  disabled: profileId !== 'cloud',
+                  category: 'Organization',
+                },
               ),
               createDebugFeatureFlagItem(
                 'Activity chart',
@@ -1351,6 +1465,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   }))
                   setDebugOverride('showActivityChart', checked)
                 },
+                undefined,
+                'Usage & analytics',
               ),
               createDebugFeatureFlagItem(
                 'AI assistant',
@@ -1364,6 +1480,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   }))
                   setDebugOverride('showAIAssistant', checked)
                 },
+                undefined,
+                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Show native app bar',
@@ -1377,6 +1495,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   }))
                   setDebugOverride('showNativeAppBar', checked)
                 },
+                undefined,
+                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Success team card',
@@ -1390,6 +1510,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   }))
                   setDebugOverride('showSuccessTeamCard', checked)
                 },
+                undefined,
+                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Functions local editor',
@@ -1403,6 +1525,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   }))
                   setDebugOverride('showFunctionsLocalEditor', checked)
                 },
+                undefined,
+                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Disable usage breakdown queries',
@@ -1431,6 +1555,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       query.queryKey[0] === 'usage-breakdown',
                   })
                 },
+                'Usage & analytics',
               ),
               ...OVERVIEW_CHART_TAB_ORDER.map((tabId) => {
                 const disableKey = OVERVIEW_CHART_TAB_DISABLE_KEYS[tabId]
@@ -1462,6 +1587,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         query.queryKey[0] === 'usage-breakdown',
                     })
                   },
+                  'Usage & analytics',
                 )
               }),
               {
@@ -1668,6 +1794,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return filterFeatureFlagMenuItems(currentSubmenu.items, featureFlagsSearch)
   }, [currentSubmenu, featureFlagsSearch, isFeatureFlagsSubmenu])
 
+  const groupedFeatureFlagItems = useMemo(() => {
+    if (!isFeatureFlagsSubmenu) return []
+    return groupFeatureFlagMenuItems(filteredFeatureFlagItems)
+  }, [filteredFeatureFlagItems, isFeatureFlagsSubmenu])
+
   useEffect(() => {
     if (!isFeatureFlagsSubmenu) {
       setFeatureFlagsSearch('')
@@ -1736,23 +1867,51 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             event.stopPropagation()
           }}
         >
-          <div className="shrink-0 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              {currentSubmenu && (
-                <button
-                  onClick={() =>
-                    setActiveSubmenu(currentSubmenu.parentSubmenuKey)
-                  }
-                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[#9B87F5]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
-                  aria-label="Back"
-                >
-                  <ChevronLeft className="h-4 w-4 text-[#9B87F5]" />
-                </button>
-              )}
-              <span className="text-[13px] font-semibold text-[#E5DEFF]">
-                {currentSubmenu ? currentSubmenu.title : 'Debug'}
-              </span>
+          <div className="shrink-0 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 backdrop-blur-sm">
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-2">
+                {currentSubmenu && (
+                  <button
+                    onClick={() =>
+                      setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+                    }
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[#9B87F5]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
+                    aria-label="Back"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-[#9B87F5]" />
+                  </button>
+                )}
+                <span className="text-[13px] font-semibold text-[#E5DEFF]">
+                  {currentSubmenu ? currentSubmenu.title : 'Debug'}
+                </span>
+              </div>
             </div>
+            {isFeatureFlagsSubmenu ? (
+              <div className="px-4 pb-3">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9B87F5]/60" />
+                  <Input
+                    autoFocus
+                    value={featureFlagsSearch}
+                    onChange={(event) =>
+                      setFeatureFlagsSearch(event.target.value)
+                    }
+                    placeholder="Search flags…"
+                    className="h-8 border-[#9B87F5]/25 bg-black/20 pl-8 pr-8 text-[12px] text-[#E5DEFF] placeholder:text-[#9B87F5]/50"
+                  />
+                  {featureFlagsSearch ? (
+                    <button
+                      type="button"
+                      onClick={() => setFeatureFlagsSearch('')}
+                      className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[#9B87F5]/70 transition-colors hover:bg-[#9B87F5]/15 hover:text-[#E5DEFF]"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
@@ -1772,108 +1931,53 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ) : currentSubmenu.submenuVariant === 'terminalSettings' ? (
                 <DebugMenuTerminalPanel />
               ) : (
-                <div className="space-y-2">
-                  {isFeatureFlagsSubmenu ? (
-                    <div className="px-1">
-                      <div className="relative">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9B87F5]/60" />
-                        <Input
-                          autoFocus
-                          value={featureFlagsSearch}
-                          onChange={(event) =>
-                            setFeatureFlagsSearch(event.target.value)
-                          }
-                          placeholder="Search flags…"
-                          className="h-8 border-[#9B87F5]/25 bg-black/20 pl-8 pr-8 text-[12px] text-[#E5DEFF] placeholder:text-[#9B87F5]/50"
-                        />
-                        {featureFlagsSearch ? (
-                          <button
-                            type="button"
-                            onClick={() => setFeatureFlagsSearch('')}
-                            className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[#9B87F5]/70 transition-colors hover:bg-[#9B87F5]/15 hover:text-[#E5DEFF]"
-                            aria-label="Clear search"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
+                <nav
+                  className="space-y-0.5"
+                  aria-label={currentSubmenu.title}
+                >
+                  {isFeatureFlagsSubmenu &&
+                  featureFlagsSearch.trim() &&
+                  filteredFeatureFlagItems.every(
+                    (item) => item.label === 'Reset all feature flags',
+                  ) ? (
+                    <p className="px-3 py-2 text-[11px] text-[#9B87F5]/70">
+                      No matching flags
+                    </p>
                   ) : null}
-                  <nav
-                    className="space-y-0.5"
-                    aria-label={currentSubmenu.title}
-                  >
-                    {isFeatureFlagsSubmenu &&
-                    featureFlagsSearch.trim() &&
-                    filteredFeatureFlagItems.every(
-                      (item) => item.label === 'Reset all feature flags',
-                    ) ? (
-                      <p className="px-3 py-2 text-[11px] text-[#9B87F5]/70">
-                        No matching flags
-                      </p>
-                    ) : null}
-                    {(isFeatureFlagsSubmenu
-                      ? filteredFeatureFlagItems
-                      : currentSubmenu.items
-                    ).map((item, itemIndex) => {
-                    const nestedSubmenuKey = activeSubmenu
-                      ? `${activeSubmenu}-${item.label}`
-                      : null
-                    const hasNestedSubmenu = menuItemHasSubmenu(item)
-
-                    return item.variant === 'switch' ? (
-                      <DebugMenuSwitchRow
-                        key={`submenu-${itemIndex}`}
-                        item={item}
-                      />
-                    ) : (
-                      <button
-                        key={`submenu-${itemIndex}`}
-                        type="button"
-                        onClick={() => {
-                          if (hasNestedSubmenu && nestedSubmenuKey) {
-                            setActiveSubmenu(nestedSubmenuKey)
-                          } else if (item.onClick) {
-                            item.onClick()
-                          }
-                        }}
-                        disabled={item.disabled}
-                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
-                          item.disabled
-                            ? 'cursor-not-allowed opacity-50'
-                            : item.active
-                              ? 'bg-[#9B87F5]/25 text-white'
-                              : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
-                        } ${item.rowClassName ?? ''}`}
-                      >
-                        {item.icon && (
-                          <span className="flex-shrink-0 text-[#9B87F5]">
-                            {item.icon}
-                          </span>
-                        )}
-                        <span className="flex-1">
-                          <span className="block font-medium">
-                            {item.label}
-                          </span>
-                          {item.description && (
-                            <span className="mt-0.5 block text-[11px] font-normal opacity-80">
-                              {item.description}
-                            </span>
+                  {isFeatureFlagsSubmenu
+                    ? groupedFeatureFlagItems.map((group, groupIndex) => (
+                        <div key={`feature-flag-group-${groupIndex}`}>
+                          {group.category ? (
+                            <div
+                              className={cn(
+                                'px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[#9B87F5]/80',
+                                groupIndex === 0 ? 'pt-0' : 'pt-3',
+                              )}
+                            >
+                              {group.category}
+                            </div>
+                          ) : null}
+                          {group.items.map((item, itemIndex) =>
+                            renderDebugSubmenuItemRow(
+                              item,
+                              itemIndex,
+                              `feature-flag-${groupIndex}`,
+                              activeSubmenu,
+                              setActiveSubmenu,
+                            ),
                           )}
-                        </span>
-                        {item.badge !== undefined && (
-                          <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
-                            {item.badge}
-                          </span>
-                        )}
-                        {hasNestedSubmenu && (
-                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
-                        )}
-                      </button>
-                    )
-                  })}
-                  </nav>
-                </div>
+                        </div>
+                      ))
+                    : currentSubmenu.items.map((item, itemIndex) =>
+                        renderDebugSubmenuItemRow(
+                          item,
+                          itemIndex,
+                          'submenu',
+                          activeSubmenu,
+                          setActiveSubmenu,
+                        ),
+                      )}
+                </nav>
               )
             ) : (
               <nav className="space-y-5" aria-label="Debug options">

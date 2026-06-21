@@ -70,6 +70,8 @@ interface ServiceHeaderProps {
   fullWidth?: boolean
   /** Custom content after search/filters in the left toolbar cluster (e.g. list/grid toggle) */
   rightContent?: React.ReactNode
+  /** Custom content before the search input in the left toolbar cluster */
+  beforeSearchButtons?: React.ReactNode
   /** Custom buttons to render in the action buttons group (right before the create button) */
   beforeCreateButtons?: React.ReactNode
   /** Renders in the right toolbar cluster immediately before the refresh button */
@@ -228,6 +230,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       rightContent,
       beforeCreateButtons,
       beforeRefreshButtons,
+      beforeSearchButtons,
       showRefresh = false,
       onRefresh,
       isRefreshing = false,
@@ -259,7 +262,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       showImport ||
       showExport ||
       beforeCreateButtons ||
-      beforeRefreshButtons
+      beforeRefreshButtons ||
+      beforeSearchButtons
     const showToolbarRow = hasToolbar || collapsible
 
     // Show tabs if we have tabs and either:
@@ -500,6 +504,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             )}
           >
             <div className="flex min-w-0 items-center gap-2 @[640px]:gap-3">
+              {beforeSearchButtons ? (
+                <div className="flex shrink-0 items-center gap-1.5 @[640px]:gap-2">
+                  {beforeSearchButtons}
+                </div>
+              ) : null}
+
               {/* Search */}
               {onSearchChange && (
                 <div className="relative min-w-0 w-full max-w-xs flex-1 shrink @[520px]:w-64 @[520px]:max-w-none @[520px]:flex-none @[520px]:shrink-0">

@@ -1875,6 +1875,7 @@ pre.prism-code .token-line > span {
   /* Neutral inline links — dotted underline, no brand pink. */
   .link-neutral,
   :is(.docs-prose, .policy-prose, .prose-links-neutral) a[href]:not(.link-unstyled) {
+    cursor: pointer;
     font-weight: 500;
     color: color-mix(in oklch, var(--foreground) 85%, transparent);
     text-decoration-line: underline;

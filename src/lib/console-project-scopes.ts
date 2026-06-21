@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   ScanSearch,
   Network,
+  Plug2,
 } from 'lucide-react'
 
 export function isCloudEnvironment(): boolean {
@@ -22,6 +23,15 @@ export function isCloudEnvironment(): boolean {
   } catch {
     return false
   }
+}
+
+/** Project OAuth2 client app scopes (Auth → OAuth2 server → Apps). */
+export function isOAuth2AppsCatalogScope(
+  scopeId: string,
+  apiCategory?: string,
+): boolean {
+  if (scopeId.toLowerCase().startsWith('apps.')) return true
+  return (apiCategory ?? '').trim().toLowerCase() === 'apps'
 }
 
 /** Scopes only available on Appwrite Cloud (e.g. backups). */
@@ -84,6 +94,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   }
   if (/^(sites|log)\./.test(id)) return 'Sites'
   if (/^presences\./.test(id)) return 'Presences'
+  if (/^apps\./.test(id)) return 'Apps'
   if (
     /^(projects|platforms|keys|webhooks|mocks|templates|oauth2|events|policies)\./.test(
       id,
@@ -192,6 +203,9 @@ export function getScopeCategoryIcon(
   if (c.includes('presence')) {
     return UsersRound
   }
+  if (c === 'apps') {
+    return Plug2
+  }
   if (c.includes('advisor')) {
     return ScanSearch
   }
@@ -225,6 +239,7 @@ export function getScopeCategoryIcon(
     }
     if (/^(sites|log)\./.test(id)) return Globe
     if (/^presences\./.test(id)) return UsersRound
+    if (/^apps\./.test(id)) return Plug2
     if (/^advisor\./.test(id)) return ScanSearch
     if (/^proxy\./.test(id)) return Network
   }
@@ -233,13 +248,14 @@ export function getScopeCategoryIcon(
 
 export function buildAllAvailableScopeIds(
   list: Models.ConsoleKeyScopeList | undefined,
-  isCloud: boolean,
+  opts: { isCloud: boolean; oauth2Server: boolean },
 ): string[] {
   if (!list?.scopes?.length) return []
   const out: string[] = []
   for (const s of list.scopes) {
     if (s.deprecated) continue
-    if (CLOUD_ONLY_SCOPE_IDS.has(s.$id) && !isCloud) continue
+    if (CLOUD_ONLY_SCOPE_IDS.has(s.$id) && !opts.isCloud) continue
+    if (isOAuth2AppsCatalogScope(s.$id, s.category) && !opts.oauth2Server) continue
     out.push(s.$id)
   }
   return out
@@ -252,6 +268,12 @@ export type ScopeEditorRow = {
   icon: LucideIcon
   /** When true, show the Deprecated badge (catalog `deprecated` only). */
   deprecated?: boolean
+}
+
+export function isOAuth2AppsScopeEditorRow(
+  row: Pick<ScopeEditorRow, 'scope' | 'category'>,
+): boolean {
+  return row.category === 'Apps' || isOAuth2AppsCatalogScope(row.scope)
 }
 
 /** Within a category: non-deprecated first, then alphabetical by scope id. */
@@ -273,15 +295,46 @@ export function compareScopeEditorRowsForDisplay(
   return compareScopeRowsDeprecatedLast(a, b)
 }
 
+export function scopeEditorRowMatchesQuery(
+  row: Pick<ScopeEditorRow, 'scope' | 'description' | 'category'>,
+  query: string,
+): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+
+  return (
+    row.scope.toLowerCase().includes(normalized) ||
+    row.description.toLowerCase().includes(normalized) ||
+    row.category.toLowerCase().includes(normalized)
+  )
+}
+
+export function filterScopeEditorRows(
+  rows: ScopeEditorRow[],
+  query: string,
+): ScopeEditorRow[] {
+  const normalized = query.trim()
+  if (!normalized) return rows
+  return rows.filter((row) => scopeEditorRowMatchesQuery(row, normalized))
+}
+
 export function consoleKeyScopesToEditorRows(
   list: Models.ConsoleKeyScopeList | undefined,
-  opts: { isCloud: boolean; selectedScopeIds?: readonly string[] },
+  opts: {
+    isCloud: boolean
+    oauth2Server: boolean
+    selectedScopeIds?: readonly string[]
+  },
 ): ScopeEditorRow[] {
   if (!list?.scopes?.length) return []
   const selected = new Set(opts.selectedScopeIds ?? [])
   return list.scopes
     .filter(
       (s) => !CLOUD_ONLY_SCOPE_IDS.has(s.$id) || opts.isCloud,
+    )
+    .filter(
+      (s) =>
+        !isOAuth2AppsCatalogScope(s.$id, s.category) || opts.oauth2Server,
     )
     .filter((s) => {
       if (!LEGACY_CATALOG_ONLY_WHEN_ON_KEY.has(s.$id)) return true

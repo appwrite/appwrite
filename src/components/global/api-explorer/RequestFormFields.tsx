@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import type { FormValue, RequestFormField } from '@/lib/api-explorer/request-form'
+import type { ApiExplorerMethod } from '@/lib/api-explorer/types'
 import { RequestFormFieldInput } from './RequestFormFieldInput'
 
 type RequestFormFieldsProps = {
@@ -9,6 +10,9 @@ type RequestFormFieldsProps = {
   onChange: (name: string, value: FormValue) => void
   idPrefix: string
   className?: string
+  projectId?: string
+  formValues?: Record<string, FormValue>
+  method?: ApiExplorerMethod
 }
 
 export function RequestFormFields({
@@ -17,6 +21,9 @@ export function RequestFormFields({
   onChange,
   idPrefix,
   className,
+  projectId,
+  formValues,
+  method,
 }: RequestFormFieldsProps) {
   if (fields.length === 0) return null
 
@@ -29,6 +36,9 @@ export function RequestFormFields({
           value={values[field.name]}
           onChange={(next) => onChange(field.name, next)}
           idPrefix={idPrefix}
+          projectId={projectId}
+          formValues={formValues}
+          method={method}
         />
       ))}
     </div>

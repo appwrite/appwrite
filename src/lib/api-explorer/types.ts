@@ -46,6 +46,23 @@ export type ApiExplorerProjectPlatform = 'server' | 'client'
 
 export type ApiExplorerSessionAuthMode = 'guest' | 'user'
 
+export type ApiExplorerServerAuthMode = 'manual' | 'ephemeral'
+
+export type ApiExplorerClientAuthState = {
+  mode: ApiExplorerSessionAuthMode
+  userId: string
+}
+
+export type ApiExplorerServerAuthState = {
+  mode: ApiExplorerServerAuthMode
+  manualApiKey: string
+  ephemeralApiKey: string
+  /** Scopes selected for the next ephemeral key generation. */
+  ephemeralDraftScopes: string[]
+  /** Scopes granted to the currently generated ephemeral key. */
+  ephemeralKeyScopes: string[]
+}
+
 export type ApiExplorerRequestAuth = {
   mode: ApiExplorerSessionAuthMode
   jwt?: string
@@ -187,6 +204,13 @@ export type ExecuteApiRequestInput = {
   requestAuth?: ApiExplorerRequestAuth
 }
 
+export type ExecuteApiMultipartRequestInput = Omit<
+  ExecuteApiRequestInput,
+  'body'
+> & {
+  formData: FormData
+}
+
 export type ExecuteApiRequestResult = {
   status: number
   statusText: string
@@ -194,4 +218,8 @@ export type ExecuteApiRequestResult = {
   body: string
   durationMs: number
   ok: boolean
+  /** Data URL when the response Content-Type is an image. */
+  imagePreviewUrl?: string
+  responseContentType?: string
+  binaryByteSize?: number
 }

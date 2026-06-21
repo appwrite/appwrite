@@ -1,7 +1,15 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+} from 'react'
 import { Plus, X, Users, User, Building2, Tag, Code } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -36,10 +44,18 @@ import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 
+export type PermissionsEditorHandle = {
+  getPermissions: () => string[]
+}
+
 export interface PermissionsEditorProps {
   permissions: string[]
-  onPermissionsChange: (permissions: string[]) => void
+  onPermissionsChange?: (permissions: string[]) => void
+  /** When true, skip live export; read final values via ref.getPermissions() instead. */
+  deferChanges?: boolean
   withCreate?: boolean
+  /** When true, show write instead of create (e.g. storage files). */
+  withWrite?: boolean
   /** When true, only parse/display "execute" permission (e.g. for functions) */
   executeOnly?: boolean
   projectId?: string
@@ -52,24 +68,40 @@ interface PermissionActions {
   read: boolean
   update: boolean
   delete: boolean
+  write: boolean
   execute: boolean
 }
 
-type PermissionAction = 'create' | 'read' | 'update' | 'delete' | 'execute'
+type PermissionAction =
+  | 'create'
+  | 'read'
+  | 'update'
+  | 'delete'
+  | 'write'
+  | 'execute'
 
 const EMPTY_ACTIONS: PermissionActions = {
   create: false,
   read: false,
   update: false,
   delete: false,
+  write: false,
   execute: false,
+}
+
+type PermissionMode = {
+  executeOnly?: boolean
+  withWrite?: boolean
 }
 
 function hasAnyPermission(
   actions: PermissionActions,
-  executeOnly: boolean,
+  mode: PermissionMode,
 ): boolean {
-  if (executeOnly) return actions.execute
+  if (mode.executeOnly) return actions.execute
+  if (mode.withWrite) {
+    return actions.read || actions.update || actions.delete || actions.write
+  }
   return actions.create || actions.read || actions.update || actions.delete
 }
 
@@ -78,7 +110,7 @@ function hasAnyPermission(
  */
 function parsePermissions(
   perms: string[],
-  executeOnly?: boolean,
+  mode: PermissionMode,
 ): Map<string, PermissionActions> {
   const roleMap = new Map<string, PermissionActions>()
 
@@ -99,8 +131,17 @@ function parsePermissions(
         roleMap.set(role, { ...EMPTY_ACTIONS })
       }
       const actions = roleMap.get(role)!
-      if (executeOnly) {
+      if (mode.executeOnly) {
         if (action === 'execute') actions.execute = true
+      } else if (mode.withWrite) {
+        if (
+          action === 'read' ||
+          action === 'update' ||
+          action === 'delete' ||
+          action === 'write'
+        ) {
+          actions[action] = true
+        }
       } else if (
         action === 'create' ||
         action === 'read' ||
@@ -109,7 +150,7 @@ function parsePermissions(
       ) {
         actions[action] = true
       }
-    } else if (executeOnly && perm.trim()) {
+    } else if (mode.executeOnly && perm.trim()) {
       // Function execute array can be plain role names (e.g. ["any"], ["users"])
       const role = perm.trim()
       if (!roleMap.has(role)) {
@@ -127,11 +168,11 @@ function parsePermissions(
  */
 function exportPermissions(
   roleMap: Map<string, PermissionActions>,
-  executeOnly?: boolean,
+  mode: PermissionMode & { withCreate?: boolean },
 ): string[] {
   const perms: string[] = []
 
-  if (executeOnly) {
+  if (mode.executeOnly) {
     // Function execute attribute expects plain role names (e.g. ["any"], ["users"])
     roleMap.forEach((actions, role) => {
       if (actions.execute) {
@@ -142,7 +183,16 @@ function exportPermissions(
   }
 
   roleMap.forEach((actions, role) => {
-    ;(['create', 'read', 'update', 'delete'] as const).forEach((action) => {
+    const exportActions = mode.withWrite
+      ? (['read', 'update', 'delete', 'write'] as const)
+      : ([
+          ...(mode.withCreate ? (['create'] as const) : []),
+          'read',
+          'update',
+          'delete',
+        ] as const)
+
+    exportActions.forEach((action) => {
       if (actions[action]) {
         perms.push(`${action}("${role}")`)
       }
@@ -877,16 +927,32 @@ function CustomRoleInputModal({
 /**
  * Main PermissionsEditor component
  */
-export function PermissionsEditor({
-  permissions,
-  onPermissionsChange,
-  withCreate = false,
-  executeOnly = false,
-  projectId: projectIdProp,
-  compact = false,
-}: PermissionsEditorProps) {
+export const PermissionsEditor = forwardRef<
+  PermissionsEditorHandle,
+  PermissionsEditorProps
+>(function PermissionsEditor(
+  {
+    permissions,
+    onPermissionsChange,
+    deferChanges = false,
+    withCreate = false,
+    withWrite = false,
+    executeOnly = false,
+    projectId: projectIdProp,
+    compact = false,
+  },
+  ref,
+) {
   const params = useParams({ strict: false })
   const projectId = projectIdProp || (params.projectId as string | undefined)
+  const permissionMode = useMemo(
+    () => ({ executeOnly, withWrite }),
+    [executeOnly, withWrite],
+  )
+  const exportMode = useMemo(
+    () => ({ executeOnly, withWrite, withCreate }),
+    [executeOnly, withWrite, withCreate],
+  )
 
   const d = compact
     ? {
@@ -947,12 +1013,12 @@ export function PermissionsEditor({
       if (permissions.length > 0) {
         lastExportedRef.current = permissionsStr
       }
-      const newMap = parsePermissions(permissions, executeOnly)
+      const newMap = parsePermissions(permissions, permissionMode)
       setPermissionsMap(newMap)
       // Initialize rolesWithPermissions with roles that already have permissions
       const rolesWithPerms = new Set<string>()
       newMap.forEach((actions, role) => {
-        if (hasAnyPermission(actions, executeOnly)) {
+        if (hasAnyPermission(actions, permissionMode)) {
           rolesWithPerms.add(role)
         }
       })
@@ -969,12 +1035,12 @@ export function PermissionsEditor({
     // If we had empty permissions initially and now have real permissions, initialize
     if (!lastExportedRef.current && permissions.length > 0) {
       lastExportedRef.current = permissionsStr
-      const newMap = parsePermissions(permissions, executeOnly)
+      const newMap = parsePermissions(permissions, permissionMode)
       setPermissionsMap(newMap)
       // Initialize rolesWithPermissions
       const rolesWithPerms = new Set<string>()
       newMap.forEach((actions, role) => {
-        if (hasAnyPermission(actions, executeOnly)) {
+        if (hasAnyPermission(actions, permissionMode)) {
           rolesWithPerms.add(role)
         }
       })
@@ -983,7 +1049,7 @@ export function PermissionsEditor({
     }
 
     // Permissions changed externally - merge with current state to preserve newly added roles
-    const newMap = parsePermissions(permissions, executeOnly)
+    const newMap = parsePermissions(permissions, permissionMode)
 
     // If current map is empty and we have new permissions, just set them directly
     setPermissionsMap((prevMap) => {
@@ -991,7 +1057,7 @@ export function PermissionsEditor({
       if (prevMap.size === 0) {
         const rolesWithPerms = new Set<string>()
         newMap.forEach((actions, role) => {
-          if (hasAnyPermission(actions, executeOnly)) {
+          if (hasAnyPermission(actions, permissionMode)) {
             rolesWithPerms.add(role)
           }
         })
@@ -1016,7 +1082,7 @@ export function PermissionsEditor({
       // Update rolesWithPermissions
       const rolesWithPerms = new Set<string>()
       mergedMap.forEach((actions, role) => {
-        if (hasAnyPermission(actions, executeOnly)) {
+        if (hasAnyPermission(actions, permissionMode)) {
           rolesWithPerms.add(role)
         }
       })
@@ -1024,16 +1090,28 @@ export function PermissionsEditor({
 
       return mergedMap
     })
-  }, [permissions, executeOnly])
+  }, [permissions, permissionMode])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      getPermissions: () => exportPermissions(permissionsMap, exportMode),
+    }),
+    [permissionsMap, exportMode],
+  )
 
   // Export permissions when map changes (but not during initialization)
   useEffect(() => {
+    if (deferChanges || !onPermissionsChange) {
+      return
+    }
+
     // Skip export during initial mount
     if (isInitialMountRef.current) {
       return
     }
 
-    const exported = exportPermissions(permissionsMap, executeOnly)
+    const exported = exportPermissions(permissionsMap, exportMode)
     const exportedStr = JSON.stringify([...exported].sort())
 
     // Only export if:
@@ -1046,7 +1124,13 @@ export function PermissionsEditor({
       lastExportedRef.current = exportedStr
       onPermissionsChange(exported)
     }
-  }, [permissionsMap, permissions, onPermissionsChange, executeOnly])
+  }, [
+    permissionsMap,
+    permissions,
+    onPermissionsChange,
+    exportMode,
+    deferChanges,
+  ])
 
   const handlePermissionChange = useCallback(
     (role: string, action: PermissionAction, enabled: boolean) => {
@@ -1056,7 +1140,7 @@ export function PermissionsEditor({
           newMap.set(role, { ...EMPTY_ACTIONS })
         }
         const actions = newMap.get(role)!
-        const hadPermissionsBefore = hasAnyPermission(actions, executeOnly)
+        const hadPermissionsBefore = hasAnyPermission(actions, permissionMode)
         actions[action] = enabled
 
         // Track if this role has had permissions set
@@ -1071,7 +1155,7 @@ export function PermissionsEditor({
         // 2. It previously had permissions enabled (user had configured it before)
         // 3. It's NOT a newly added role (extra safety check - newly added roles should never be auto-removed)
         const isNewlyAdded = newlyAddedRolesRef.current.has(role)
-        const allDisabled = !hasAnyPermission(actions, executeOnly)
+        const allDisabled = !hasAnyPermission(actions, permissionMode)
 
         // NEVER remove newly added roles, even if all permissions are disabled
         // Only remove if it had permissions before AND all are now disabled AND it's not newly added
@@ -1087,7 +1171,7 @@ export function PermissionsEditor({
         return newMap
       })
     },
-    [executeOnly],
+    [permissionMode],
   )
 
   const handleRemoveRole = useCallback((role: string) => {
@@ -1326,6 +1410,13 @@ export function PermissionsEditor({
               >
                 Delete
               </TableHead>
+              {withWrite && (
+                <TableHead
+                  className={cn(d.pad, d.head, 'text-center', d.actMin)}
+                >
+                  Write
+                </TableHead>
+              )}
               <TableHead
                 className={cn(d.pad, d.head, d.rmCol)}
               ></TableHead>
@@ -1381,6 +1472,17 @@ export function PermissionsEditor({
                       aria-label={`Delete permission for ${role}`}
                     />
                   </TableCell>
+                  {withWrite && (
+                    <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
+                      <Checkbox
+                        checked={actions.write}
+                        onCheckedChange={(checked) =>
+                          handlePermissionChange(role, 'write', checked === true)
+                        }
+                        aria-label={`Write permission for ${role}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className={cn(d.pad, d.rmCol)}>
                     <Button
                       variant="ghost"
@@ -1437,7 +1539,7 @@ export function PermissionsEditor({
       />
     </div>
   )
-}
+})
 
 /**
  * AddRoleDropdown - dropdown menu for adding roles

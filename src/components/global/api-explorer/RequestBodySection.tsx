@@ -6,6 +6,7 @@ import {
   RequestFormFields,
 } from './RequestFormFields'
 import type { FormValue, RequestFormField } from '@/lib/api-explorer/request-form'
+import type { ApiExplorerMethod } from '@/lib/api-explorer/types'
 import {
   parseBodyToFormValues,
   serializeBodyFromForm,
@@ -20,8 +21,12 @@ type RequestBodySectionProps = {
   onFormValuesChange: (values: Record<string, FormValue>) => void
   onJsonValueChange: (value: string) => void
   onInputModeChange: (mode: 'form' | 'json') => void
+  showJsonToggle?: boolean
   embedded?: boolean
   showTopBorder?: boolean
+  projectId?: string
+  allFormValues?: Record<string, FormValue>
+  method?: ApiExplorerMethod
 }
 
 export function RequestBodySection({
@@ -33,8 +38,12 @@ export function RequestBodySection({
   onFormValuesChange,
   onJsonValueChange,
   onInputModeChange,
+  showJsonToggle = true,
   embedded = false,
   showTopBorder = false,
+  projectId,
+  allFormValues,
+  method,
 }: RequestBodySectionProps) {
   const switchToJson = () => {
     onJsonValueChange(serializeBodyFromForm(fields, formValues))
@@ -83,6 +92,9 @@ export function RequestBodySection({
             onFormValuesChange({ ...formValues, [name]: value })
           }
           idPrefix="body"
+          projectId={projectId}
+          formValues={allFormValues}
+          method={method}
         />
       ) : (
         <p className="px-4 py-3 font-mono text-[13px] text-muted-foreground/70">
@@ -104,7 +116,7 @@ export function RequestBodySection({
     return (
       <RequestBuilderSection
         title={title}
-        action={modeToggle}
+        action={showJsonToggle ? modeToggle : undefined}
         showTopBorder={showTopBorder}
       >
         {content}
@@ -114,7 +126,10 @@ export function RequestBodySection({
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <RequestBuilderSection title={title} action={modeToggle}>
+      <RequestBuilderSection
+        title={title}
+        action={showJsonToggle ? modeToggle : undefined}
+      >
         {content}
       </RequestBuilderSection>
     </div>

@@ -1,14 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import {
-  ApiExplorer,
-  ApiExplorerDownloadSpecButton,
-  ApiExplorerPlatformToggle,
-} from '@/components/global/api-explorer'
+import { ApiExplorer } from '@/components/global/api-explorer'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { useProject } from '@/lib/react-query/hooks'
 import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
-import type { ApiExplorerProjectPlatform } from '@/lib/api-explorer'
 
 export function View() {
   const { projectId } = useParams({ strict: false })
@@ -18,8 +13,6 @@ export function View() {
   }
   const navigate = useNavigate()
   useProject(projectId)
-  const [searchValue, setSearchValue] = useState('')
-  const [platform, setPlatform] = useState<ApiExplorerProjectPlatform>('server')
 
   const handleSelectionChange = useCallback(
     ({
@@ -56,21 +49,7 @@ export function View() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ServiceHeader
-        title="Explorer"
-        fullWidthBorder
-        fullWidth
-        searchPlaceholder="Search services and methods…"
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        beforeRefreshButtons={
-          <>
-            <ApiExplorerDownloadSpecButton />
-            <ApiExplorerPlatformToggle value={platform} onChange={setPlatform} />
-          </>
-        }
-        showToolbarBottomBorder
-      />
+      <ServiceHeader title="Explorer" fullWidthBorder fullWidth />
       <ApiExplorer
         config={{
           endpoint,
@@ -80,11 +59,6 @@ export function View() {
         initialServiceId={search.service}
         initialOperationId={search.operation}
         onSelectionChange={handleSelectionChange}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        platform={platform}
-        onPlatformChange={setPlatform}
-        hideToolbar
         className="min-h-0 flex-1"
       />
     </div>

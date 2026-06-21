@@ -180,7 +180,7 @@ export function ExplorerColumnsResizableLayout({
       maxs={API_EXPLORER_COLUMNS_MAX}
       className={className}
       handleClassName={handleClassName}
-      panelClassName="min-h-0 min-w-0 overflow-hidden"
+      panelClassName="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
       {[services, methods, request]}
     </PersistedResizablePanelGroup>

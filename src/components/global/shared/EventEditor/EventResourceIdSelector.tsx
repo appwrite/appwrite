@@ -78,7 +78,10 @@ export interface EventResourceIdSelectorProps {
   value: string | '*' | undefined
   onSelect: (value: string | '*') => void
   placeholder?: string
+  /** When false, omits the wildcard "All (*)" row (e.g. API explorer needs a concrete ID). */
+  allowAllOption?: boolean
   triggerClassName?: string
+  contentClassName?: string
 }
 
 const ICONS = {
@@ -120,7 +123,9 @@ export function EventResourceIdSelector({
   value,
   onSelect,
   placeholder = 'All',
+  allowAllOption = true,
   triggerClassName,
+  contentClassName,
 }: EventResourceIdSelectorProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -356,7 +361,7 @@ export function EventResourceIdSelector({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors',
+            'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[12px] font-medium leading-normal transition-colors',
             value && value !== '*'
               ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
               : 'border-border bg-background hover:bg-muted',
@@ -364,12 +369,15 @@ export function EventResourceIdSelector({
           )}
         >
           <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate">{displayValue}</span>
+          <span className="min-w-0 truncate leading-normal">{displayValue}</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] min-w-[200px] max-w-[280px] p-0"
+        className={cn(
+          'w-[var(--radix-popover-trigger-width)] min-w-[200px] max-w-[280px] p-0',
+          contentClassName,
+        )}
         align="start"
       >
         <Command shouldFilter={false}>
@@ -395,15 +403,17 @@ export function EventResourceIdSelector({
               {isFetching ? 'Loading...' : 'No results found'}
             </CommandEmpty>
             <CommandGroup>
-              <CommandItem
-                value="__all__"
-                onSelect={() => {
-                  onSelect('*')
-                  setOpen(false)
-                }}
-              >
-                <span className="text-muted-foreground">All (*)</span>
-              </CommandItem>
+              {allowAllOption ? (
+                <CommandItem
+                  value="__all__"
+                  onSelect={() => {
+                    onSelect('*')
+                    setOpen(false)
+                  }}
+                >
+                  <span className="text-muted-foreground">All (*)</span>
+                </CommandItem>
+              ) : null}
               {items.map(
                 (item: {
                   $id?: string

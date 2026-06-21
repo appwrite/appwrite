@@ -1,4 +1,5 @@
 import {
+  pickUnitWithLargestReadableValue,
   pickUnitWithSmallestIntegerValue,
   type UnitScale,
 } from '@/lib/utils/pick-display-unit'
@@ -48,34 +49,43 @@ export function pickBinaryByteDisplayUnit(bytes: number): {
   return pickUnitWithSmallestIntegerValue(bytes, BINARY_BYTE_SCALES)
 }
 
-export function formatDecimalBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
-
-  const { value, unit } = pickDecimalByteDisplayUnit(bytes)
-  const label =
-    unit === 'bytes' ? 'B' : unit
-
-  if (unit === 'bytes') {
-    return `${Math.round(value)} ${label}`
+function formatByteDisplayValue(
+  value: number,
+  unitLabel: string,
+  isBytesUnit: boolean,
+): string {
+  if (isBytesUnit) {
+    return `${Math.round(value)} ${unitLabel}`
   }
 
   if (Number.isInteger(value)) {
-    return `${value} ${label}`
+    return `${value} ${unitLabel}`
   }
 
-  return `${parseFloat(value.toFixed(2))} ${label}`
+  return `${parseFloat(value.toFixed(2))} ${unitLabel}`
+}
+
+export function formatDecimalBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+
+  const { value, unit } = pickUnitWithLargestReadableValue(
+    bytes,
+    DECIMAL_BYTE_SCALES,
+  )
+  const label = unit === 'bytes' ? 'B' : unit
+
+  return formatByteDisplayValue(value, label, unit === 'bytes')
 }
 
 export function formatBinaryBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return String(bytes)
   if (bytes === 0) return '0 B'
 
-  const { value, unit } = pickBinaryByteDisplayUnit(bytes)
+  const { value, unit } = pickUnitWithLargestReadableValue(
+    bytes,
+    BINARY_BYTE_SCALES,
+  )
   const label = unit === 'bytes' ? 'B' : unit.toUpperCase()
 
-  if (Number.isInteger(value)) {
-    return `${value} ${label}`
-  }
-
-  return `${parseFloat(value.toFixed(2))} ${label}`
+  return formatByteDisplayValue(value, label, unit === 'bytes')
 }

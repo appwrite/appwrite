@@ -1,4 +1,6 @@
-import { buildSampleValue } from './parse-spec'
+import { buildSampleValue, isOpenApiPlaceholderExample } from './parse-spec'
+import { attachFieldHelper } from './field-helpers'
+import type { RequestFormFieldHelper } from './field-helpers'
 import type {
   ApiExplorerMethod,
   OpenApiParameter,
@@ -198,9 +200,10 @@ export type RequestFormField = {
   kind: RequestFormFieldKind
   enumValues?: string[]
   nullable?: boolean
+  helper?: RequestFormFieldHelper
 }
 
-export type FormValue = string | boolean | number | string[] | null
+export type FormValue = string | boolean | number | string[] | File | null
 
 /** Appwrite creatable resource IDs mention ID.unique() or "choose a custom … id" in descriptions. */
 const CREATABLE_ID_DESCRIPTION =
@@ -245,26 +248,54 @@ export function getRequestBodyJsonSchema(
   return method.requestBody?.content?.['application/json']?.schema
 }
 
+export function getRequestBodyContentSchema(
+  method: ApiExplorerMethod,
+): OpenApiSchema | undefined {
+  const content = method.requestBody?.content
+  if (!content) return undefined
+  return (
+    content['application/json']?.schema ??
+    content['multipart/form-data']?.schema
+  )
+}
+
+export function hasRequestBodyForMethod(method: ApiExplorerMethod): boolean {
+  return getRequestBodyFormFields(method).length > 0
+}
+
 export function getRequestBodyFormFields(
   method: ApiExplorerMethod,
 ): RequestFormField[] {
-  const schema = getRequestBodyJsonSchema(method)
+  const schema = getRequestBodyContentSchema(method)
   if (!schema?.properties) return []
 
   const requiredSet = new Set(schema.required ?? [])
   return Object.entries(schema.properties).map(([name, propertySchema]) =>
-    schemaToFormField(name, propertySchema, requiredSet.has(name)),
+    attachFieldHelper(
+      schemaToFormField(name, propertySchema, requiredSet.has(name)),
+      propertySchema,
+      undefined,
+      method,
+    ),
   )
 }
 
-export function parameterToFormField(param: OpenApiParameter): RequestFormField {
+export function parameterToFormField(
+  param: OpenApiParameter,
+  method?: ApiExplorerMethod,
+): RequestFormField {
   const schema = param.schema ?? { type: 'string' }
-  return schemaToFormField(
-    param.name,
+  return attachFieldHelper(
+    schemaToFormField(
+      param.name,
+      schema,
+      Boolean(param.required),
+      param.in,
+      param.description,
+    ),
     schema,
-    Boolean(param.required),
     param.in,
-    param.description,
+    method,
   )
 }
 
@@ -361,6 +392,8 @@ function defaultValueForField(field: RequestFormField, schema?: OpenApiSchema): 
       return []
     case 'json':
       return '{}'
+    case 'binary':
+      return null
     default:
       return ''
   }
@@ -388,7 +421,7 @@ function valueFromParsed(field: RequestFormField, value: unknown): FormValue {
     case 'ip':
     case 'datetime':
     case 'binary':
-      return String(value)
+      return null
     case 'array-string':
     case 'array-enum':
     case 'array-number':
@@ -416,16 +449,78 @@ export function buildDefaultFormValues(
 export function buildDefaultBodyFormValues(
   method: ApiExplorerMethod,
 ): Record<string, FormValue> {
-  const schema = getRequestBodyJsonSchema(method)
+  const schema = getRequestBodyContentSchema(method)
   const fields = getRequestBodyFormFields(method)
   return buildDefaultFormValues(fields, schema?.properties)
 }
 
 function isEmptyFormValue(value: FormValue | undefined): boolean {
+  if (value instanceof File) return false
   if (value === null || value === undefined) return true
   if (typeof value === 'string') return value.trim() === ''
   if (Array.isArray(value)) return value.length === 0
   return false
+}
+
+export function getMissingRequiredFormField(
+  fields: RequestFormField[],
+  values: Record<string, FormValue>,
+): RequestFormField | undefined {
+  return fields.find(
+    (field) => field.required && isEmptyFormValue(values[field.name]),
+  )
+}
+
+export function buildMultipartFormData(
+  fields: RequestFormField[],
+  values: Record<string, FormValue>,
+): FormData {
+  const formData = new FormData()
+
+  for (const field of fields) {
+    const value = values[field.name]
+    if (isEmptyFormValue(value)) continue
+
+    switch (field.kind) {
+      case 'binary':
+        if (value instanceof File) {
+          formData.append(field.name, value, value.name)
+        }
+        break
+      case 'array-string':
+      case 'array-enum':
+      case 'array-number': {
+        const items = Array.isArray(value) ? value : []
+        for (const item of items) {
+          const itemValue = String(item).trim()
+          if (itemValue) {
+            formData.append(`${field.name}[]`, itemValue)
+          }
+        }
+        break
+      }
+      case 'boolean':
+        formData.append(field.name, value ? 'true' : 'false')
+        break
+      case 'integer':
+      case 'number':
+        formData.append(field.name, String(value))
+        break
+      case 'json':
+        formData.append(field.name, String(value))
+        break
+      case 'datetime':
+        formData.append(
+          field.name,
+          serializeDatetimeApiValue(String(value)),
+        )
+        break
+      default:
+        formData.append(field.name, String(value))
+    }
+  }
+
+  return formData
 }
 
 function parseJsonFieldValue(raw: string): unknown {
@@ -464,6 +559,8 @@ export function serializeBodyFromForm(
   const payload: Record<string, unknown> = {}
 
   for (const field of fields) {
+    if (field.kind === 'binary') continue
+
     const value = values[field.name]
     if (isEmptyFormValue(value)) {
       if (field.required) {
@@ -516,8 +613,11 @@ export function serializeParamFormValue(
       return JSON.stringify(Array.isArray(value) ? value : [])
     case 'json':
       return String(value)
-    default:
-      return String(value)
+    default: {
+      const stringValue = String(value)
+      if (isOpenApiPlaceholderExample(stringValue)) return ''
+      return stringValue
+    }
   }
 }
 
@@ -557,10 +657,11 @@ export function parseParamFormValue(
 
 export function buildInitialParamFormValues(
   parameters: OpenApiParameter[],
+  method?: ApiExplorerMethod,
 ): Record<string, FormValue> {
   const values: Record<string, FormValue> = {}
   for (const param of parameters) {
-    const field = parameterToFormField(param)
+    const field = parameterToFormField(param, method)
     const raw = param.schema
       ? getSchemaDefaultString(param.schema)
       : ''
@@ -580,6 +681,9 @@ function getSchemaDefaultString(schema: OpenApiSchema): string {
   }
   const example = schema.example ?? schema['x-example']
   if (example !== undefined && example !== null) {
+    if (typeof example === 'string' && isOpenApiPlaceholderExample(example)) {
+      return ''
+    }
     if (typeof example === 'object') return JSON.stringify(example)
     return String(example)
   }

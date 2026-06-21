@@ -1,6 +1,7 @@
 import type {
   ApiExplorerMethod,
   ApiExplorerProjectPlatform,
+  ApiExplorerServerAuthState,
 } from './types'
 
 function splitAuthLabel(authLabel?: string): string[] {
@@ -37,4 +38,63 @@ export function methodRequiresApiKey(
   return getMethodAuthKeys(method).includes('Key')
 }
 
-export type { ApiExplorerRequestAuth } from './types'
+function allowsApiKeyInSecurity(method: ApiExplorerMethod): boolean {
+  return Boolean(method.security?.[0]?.Key)
+}
+
+/** Server endpoints that require or accept an API key. */
+export function methodSupportsServerApiKey(
+  method: ApiExplorerMethod,
+  platform: ApiExplorerProjectPlatform,
+): boolean {
+  if (platform !== 'server') return false
+  if (methodRequiresApiKey(method, platform)) return true
+  return allowsApiKeyInSecurity(method) && !getMethodAuthKeys(method).includes('Key')
+}
+
+export function getMethodRequiredScopes(method: ApiExplorerMethod): string[] {
+  if (!method.scope?.trim()) return []
+  return method.scope
+    .split(',')
+    .map((scope) => scope.trim())
+    .filter(Boolean)
+}
+
+export function resolveServerAuthApiKey(
+  serverAuth: ApiExplorerServerAuthState,
+): string | undefined {
+  const key =
+    serverAuth.mode === 'manual'
+      ? serverAuth.manualApiKey
+      : serverAuth.ephemeralApiKey
+  const trimmed = key.trim()
+  return trimmed || undefined
+}
+
+export function scopesIncludeRequired(
+  keyScopes: string[],
+  requiredScopes: string[],
+): boolean {
+  if (requiredScopes.length === 0) return true
+  const keySet = new Set(keyScopes)
+  return requiredScopes.every((scope) => keySet.has(scope))
+}
+
+export function getScopesMissingFromKey(
+  keyScopes: string[],
+  requiredScopes: string[],
+): string[] {
+  const keySet = new Set(keyScopes)
+  return requiredScopes.filter((scope) => !keySet.has(scope))
+}
+
+export function mergeUniqueScopes(...scopeLists: string[][]): string[] {
+  return [...new Set(scopeLists.flat())]
+}
+
+export type {
+  ApiExplorerClientAuthState,
+  ApiExplorerRequestAuth,
+  ApiExplorerServerAuthMode,
+  ApiExplorerServerAuthState,
+} from './types'

@@ -21,7 +21,16 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
+import { getQueryFilterColumnsForMethod } from '@/lib/api-explorer/field-helpers'
+import type { ApiExplorerMethod } from '@/lib/api-explorer/types'
 import { cn } from '@/lib/utils'
+import { ExplorerPermissionsField } from './ExplorerPermissionsField'
+import { ExplorerQueryBuilderField } from './ExplorerQueryBuilderField'
+import { ExplorerArrayItemInputs, ExplorerArrayAddControl } from './ExplorerArrayItemInputs'
+import {
+  ExplorerResourceIdHelper,
+  ExplorerResourceIdValue,
+} from './ExplorerResourceIdInput'
 import {
   getFormFieldPlaceholder,
   getFormFieldTypeLabel,
@@ -30,9 +39,14 @@ import {
   type RequestFormFieldKind,
 } from '@/lib/api-explorer/request-form'
 import {
+  REQUEST_BUILDER_HELPER_CELL,
+  REQUEST_BUILDER_HELPER_ICON_BUTTON,
+  REQUEST_BUILDER_HELPER_LINK,
+  REQUEST_BUILDER_HELPER_SLOT,
   REQUEST_BUILDER_INPUT,
   REQUEST_BUILDER_NAME_CELL,
   REQUEST_BUILDER_REQUIRED,
+  REQUEST_BUILDER_REQUIRED_CELL,
   REQUEST_BUILDER_ROW,
   REQUEST_BUILDER_ROW_COMPLEX,
   REQUEST_BUILDER_SELECT,
@@ -100,6 +114,9 @@ type RequestFormFieldInputProps = {
   onChange: (value: FormValue) => void
   idPrefix?: string
   className?: string
+  projectId?: string
+  formValues?: Record<string, FormValue>
+  method?: ApiExplorerMethod
 }
 
 export function RequestFormFieldInput({
@@ -108,14 +125,37 @@ export function RequestFormFieldInput({
   onChange,
   idPrefix = 'field',
   className,
+  projectId,
+  formValues,
+  method,
 }: RequestFormFieldInputProps) {
   const inputId = `${idPrefix}-${field.name}`
   const typeDisplay = getFieldTypeDisplay(field.kind)
+  const hasHelperField = Boolean(field.helper)
+  const isHelperArrayField =
+    field.helper?.type === 'permissions' || field.helper?.type === 'queries'
+  const helperArrayItemCount =
+    isHelperArrayField && Array.isArray(value) ? value.length : 0
+  const plainArrayItemCount =
+    !hasHelperField &&
+    (field.kind === 'array-string' || field.kind === 'array-number') &&
+    Array.isArray(value)
+      ? value.length
+      : 0
+  const [passwordRevealed, setPasswordRevealed] = useState(false)
+
+  useEffect(() => {
+    setPasswordRevealed(false)
+  }, [inputId])
+
   const isComplex =
-    field.kind === 'json' ||
-    field.kind === 'array-string' ||
-    field.kind === 'array-number' ||
-    field.kind === 'array-enum'
+    (isHelperArrayField && helperArrayItemCount > 0) ||
+    plainArrayItemCount > 0 ||
+    (!hasHelperField &&
+      (field.kind === 'json' || field.kind === 'array-enum'))
+
+  const useCombinedHelperArrayLayout =
+    isHelperArrayField && helperArrayItemCount > 0
 
   return (
     <div
@@ -137,35 +177,93 @@ export function RequestFormFieldInput({
         <FieldTypeLabel label={typeDisplay.label} tone={typeDisplay.tone} />
       </div>
 
-      <div className={REQUEST_BUILDER_VALUE_CELL}>
-        <ValueCell required={field.required} complex={isComplex}>
-          {renderControl(field, value, onChange, inputId)}
-        </ValueCell>
+      {useCombinedHelperArrayLayout ? (
+        <div
+          className={cn(
+            REQUEST_BUILDER_VALUE_CELL,
+            'sm:col-span-2 sm:items-start',
+          )}
+        >
+          <ValueCell complex={isComplex}>
+            {renderValueControl(
+              field,
+              value,
+              onChange,
+              inputId,
+              projectId,
+              formValues,
+              method,
+              passwordRevealed,
+              true,
+            )}
+          </ValueCell>
+        </div>
+      ) : (
+        <>
+          <div className={REQUEST_BUILDER_VALUE_CELL}>
+            <ValueCell complex={isComplex}>
+              {renderValueControl(
+                field,
+                value,
+                onChange,
+                inputId,
+                projectId,
+                formValues,
+                method,
+                passwordRevealed,
+                false,
+              )}
+            </ValueCell>
+          </div>
+
+          <div
+            className={cn(
+              REQUEST_BUILDER_HELPER_CELL,
+              isComplex && 'sm:items-start',
+            )}
+          >
+            <div className={REQUEST_BUILDER_HELPER_SLOT}>
+              {renderHelperControl(
+                field,
+                value,
+                onChange,
+                inputId,
+                projectId,
+                formValues,
+                method,
+                passwordRevealed,
+                () => setPasswordRevealed((current) => !current),
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      <div
+        className={cn(
+          REQUEST_BUILDER_REQUIRED_CELL,
+          isComplex && 'sm:items-start',
+        )}
+      >
+        {field.required ? (
+          <span className={REQUEST_BUILDER_REQUIRED}>Required</span>
+        ) : null}
       </div>
     </div>
   )
 }
 
 function ValueCell({
-  required,
   complex,
   children,
 }: {
-  required: boolean
   complex: boolean
   children: ReactNode
 }) {
   if (complex) {
     return (
       <div className={REQUEST_BUILDER_VALUE_INNER_COMPLEX}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">{children}</div>
-          {required && (
-            <span className={cn(REQUEST_BUILDER_REQUIRED, 'pr-0 pt-0.5')}>
-              Required
-            </span>
-          )}
-        </div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     )
   }
@@ -173,7 +271,6 @@ function ValueCell({
   return (
     <div className={REQUEST_BUILDER_VALUE_INNER}>
       <div className="min-w-0 flex-1">{children}</div>
-      {required && <span className={REQUEST_BUILDER_REQUIRED}>Required</span>}
     </div>
   )
 }
@@ -191,7 +288,7 @@ function ParameterNameLabel({
     <Label
       htmlFor={inputId}
       className={cn(
-        'truncate font-mono text-[13px] font-normal text-foreground/85',
+        'block min-w-0 w-full truncate font-mono text-[13px] font-normal text-foreground/85',
         description &&
           'cursor-help underline decoration-dotted decoration-muted-foreground/38 underline-offset-[3px] hover:decoration-muted-foreground/58',
       )}
@@ -201,12 +298,14 @@ function ParameterNameLabel({
   )
 
   if (!description?.trim()) {
-    return label
+    return <div className="min-w-0 w-full">{label}</div>
   }
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{label}</TooltipTrigger>
+      <TooltipTrigger asChild>
+        <div className="min-w-0 w-full">{label}</div>
+      </TooltipTrigger>
       <TooltipContent
         side="top"
         sideOffset={6}
@@ -278,12 +377,53 @@ function FieldTypeLabel({
   )
 }
 
-function renderControl(
+function renderValueControl(
   field: RequestFormField,
   value: FormValue,
   onChange: (value: FormValue) => void,
   inputId: string,
+  projectId?: string,
+  formValues?: Record<string, FormValue>,
+  method?: ApiExplorerMethod,
+  passwordRevealed?: boolean,
+  combinedHelperArrayLayout = false,
 ) {
+  if (field.helper?.type === 'permissions') {
+    return (
+      <ExplorerPermissionsField
+        field={field}
+        value={value}
+        onChange={onChange}
+        inputId={inputId}
+        projectId={projectId}
+        part={combinedHelperArrayLayout ? 'combined' : 'value'}
+      />
+    )
+  }
+
+  if (field.helper?.type === 'queries') {
+    return (
+      <ExplorerQueryBuilderField
+        field={field}
+        value={value}
+        onChange={onChange}
+        inputId={inputId}
+        columns={getQueryFilterColumnsForMethod(method)}
+        part={combinedHelperArrayLayout ? 'combined' : 'value'}
+      />
+    )
+  }
+
+  if (field.helper?.type === 'resource-id') {
+    return (
+      <ExplorerResourceIdValue
+        inputId={inputId}
+        value={String(value ?? '')}
+        onChange={(next) => onChange(next)}
+      />
+    )
+  }
+
   switch (field.kind) {
     case 'boolean':
       return (
@@ -362,55 +502,58 @@ function renderControl(
     case 'array-string':
     case 'array-number':
       return (
-        <ArrayStringInput
-          id={inputId}
-          items={Array.isArray(value) ? value : []}
+        <ExplorerArrayItemInputs
+          idPrefix={inputId}
+          items={Array.isArray(value) ? value.map(String) : []}
+          onChange={(next) => onChange(next)}
           inputType={field.kind === 'array-number' ? 'number' : 'text'}
-          onChange={onChange}
         />
       )
 
     case 'array-enum':
       return (
-        <ArrayEnumInput
-          options={field.enumValues ?? []}
-          selected={Array.isArray(value) ? value : []}
-          onChange={onChange}
-        />
+        <div className="px-4 py-3">
+          <ArrayEnumInput
+            options={field.enumValues ?? []}
+            selected={Array.isArray(value) ? value : []}
+            onChange={onChange}
+          />
+        </div>
       )
 
     case 'json':
       if (!String(value ?? '').trim()) {
         return (
-          <button
-            type="button"
+          <span
             id={inputId}
-            onClick={() => onChange('{}')}
-            className="link-neutral font-mono text-[13px]"
+            className="block px-4 font-mono text-[13px] text-muted-foreground/45"
           >
-            Add object
-          </button>
+            No object
+          </span>
         )
       }
 
       return (
-        <ExplorerParamTextarea
-          fieldKey={inputId}
-          id={inputId}
-          value={String(value ?? '')}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={getFormFieldPlaceholder('json')}
-          className="min-h-[88px] w-full resize-y rounded-none border-0 bg-transparent p-0 font-mono text-[13px] leading-relaxed shadow-none outline-none ring-0 focus-visible:ring-0 dark:bg-transparent placeholder:font-mono placeholder:text-muted-foreground/45"
-          spellCheck={false}
-        />
+        <div className="px-4 py-3">
+          <ExplorerParamTextarea
+            fieldKey={inputId}
+            id={inputId}
+            value={String(value ?? '')}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={getFormFieldPlaceholder('json')}
+            className="min-h-[88px] w-full resize-y rounded-none border-0 bg-transparent p-0 font-mono text-[13px] leading-relaxed shadow-none outline-none ring-0 focus-visible:ring-0 dark:bg-transparent placeholder:font-mono placeholder:text-muted-foreground/45"
+            spellCheck={false}
+          />
+        </div>
       )
 
     case 'password':
       return (
-        <ExplorerPasswordInput
+        <ExplorerPasswordValue
           inputId={inputId}
           value={String(value ?? '')}
           onChange={(next) => onChange(next)}
+          revealed={passwordRevealed ?? false}
         />
       )
 
@@ -495,10 +638,18 @@ function renderControl(
 
     case 'id':
       return (
-        <ExplorerIdInput
+        <ExplorerIdValue
           inputId={inputId}
           value={String(value ?? '')}
           onChange={(next) => onChange(next)}
+        />
+      )
+
+    case 'binary':
+      return (
+        <ExplorerFileValue
+          inputId={inputId}
+          value={value instanceof File ? value : null}
         />
       )
 
@@ -517,167 +668,285 @@ function renderControl(
           autoComplete="off"
         />
       )
-
-    case 'binary':
-      return (
-        <span className="flex min-h-[44px] items-center px-4 font-mono text-[13px] text-muted-foreground/60">
-          File uploads not supported yet
-        </span>
-      )
   }
 }
 
-function ExplorerPasswordInput({
-  inputId,
-  value,
-  onChange,
-}: {
-  inputId: string
-  value: string
-  onChange: (value: string) => void
-}) {
-  const [revealed, setRevealed] = useState(false)
-
-  useEffect(() => {
-    setRevealed(false)
-  }, [inputId])
-
-  return (
-    <div className="flex min-h-[44px] w-full items-center gap-1 pr-4">
-      <ExplorerParamInput
-        fieldKey={inputId}
-        id={inputId}
-        type={revealed ? 'text' : 'password'}
-        placeholder={getFormFieldPlaceholder('password')}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={cn(REQUEST_BUILDER_INPUT, 'min-w-0 flex-1')}
-        autoComplete="new-password"
-        spellCheck={false}
-      />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 shrink-0 p-0 text-muted-foreground"
-        onClick={() => setRevealed((current) => !current)}
-        aria-label={revealed ? 'Hide password' : 'Show password'}
-        title={revealed ? 'Hide password' : 'Show password'}
-      >
-        {revealed ? (
-          <EyeOff className="h-3.5 w-3.5" />
-        ) : (
-          <Eye className="h-3.5 w-3.5" />
-        )}
-      </Button>
-    </div>
-  )
-}
-
-function ExplorerIdInput({
-  inputId,
-  value,
-  onChange,
-}: {
-  inputId: string
-  value: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <div className="flex min-h-[44px] w-full items-center gap-2 pr-4">
-      <ExplorerParamInput
-        fieldKey={inputId}
-        id={inputId}
-        type="text"
-        placeholder="// auto-generate if empty"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={cn(REQUEST_BUILDER_INPUT, 'min-w-0 flex-1')}
-        spellCheck={false}
-        autoComplete="off"
-      />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 shrink-0 px-2 text-[12px] text-muted-foreground"
-        onClick={() => onChange(ID.unique())}
-      >
-        Generate
-      </Button>
-    </div>
-  )
-}
-
-function ArrayStringInput({
-  id,
-  items,
-  inputType,
-  onChange,
-}: {
-  id: string
-  items: string[]
-  inputType: 'text' | 'number'
-  onChange: (value: FormValue) => void
-}) {
-  const updateItem = (index: number, next: string) => {
-    const copy = [...items]
-    copy[index] = next
-    onChange(copy)
-  }
-
-  const removeItem = (index: number) => {
-    onChange(items.filter((_, itemIndex) => itemIndex !== index))
-  }
-
-  const addItem = () => {
-    onChange([...items, ''])
-  }
-
-  if (items.length === 0) {
+function renderHelperControl(
+  field: RequestFormField,
+  value: FormValue,
+  onChange: (value: FormValue) => void,
+  inputId: string,
+  projectId?: string,
+  formValues?: Record<string, FormValue>,
+  method?: ApiExplorerMethod,
+  passwordRevealed?: boolean,
+  onTogglePasswordReveal?: () => void,
+) {
+  if (field.helper?.type === 'permissions') {
     return (
-      <button
-        type="button"
-        onClick={addItem}
-        className="link-neutral font-mono text-[13px]"
-      >
-        Add array
-      </button>
+      <ExplorerPermissionsField
+        field={field}
+        value={value}
+        onChange={onChange}
+        inputId={inputId}
+        projectId={projectId}
+        part="helper"
+      />
     )
   }
 
+  if (field.helper?.type === 'queries') {
+    return (
+      <ExplorerQueryBuilderField
+        field={field}
+        value={value}
+        onChange={onChange}
+        inputId={inputId}
+        columns={getQueryFilterColumnsForMethod(method)}
+        part="helper"
+      />
+    )
+  }
+
+  if (field.helper?.type === 'resource-id') {
+    return (
+      <ExplorerResourceIdHelper
+        resourceType={field.helper.resourceType}
+        value={String(value ?? '')}
+        onChange={(next) => onChange(next)}
+        projectId={projectId}
+        formValues={formValues}
+      />
+    )
+  }
+
+  switch (field.kind) {
+    case 'id':
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 text-[12px]"
+          onClick={() => onChange(ID.unique())}
+        >
+          Generate
+        </Button>
+      )
+
+    case 'binary':
+      return (
+        <ExplorerFileHelper
+          inputId={inputId}
+          value={value instanceof File ? value : null}
+          onChange={onChange}
+        />
+      )
+
+    case 'password':
+      return (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={REQUEST_BUILDER_HELPER_ICON_BUTTON}
+          onClick={onTogglePasswordReveal}
+          aria-label={passwordRevealed ? 'Hide password' : 'Show password'}
+          title={passwordRevealed ? 'Hide password' : 'Show password'}
+        >
+          {passwordRevealed ? (
+            <EyeOff className="h-3.5 w-3.5" />
+          ) : (
+            <Eye className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      )
+
+    case 'json':
+      if (!String(value ?? '').trim()) {
+        return (
+          <button
+            type="button"
+            className={REQUEST_BUILDER_HELPER_LINK}
+            onClick={() => onChange('{}')}
+          >
+            Add object
+          </button>
+        )
+      }
+      return null
+
+    case 'array-string':
+    case 'array-number':
+      return (
+        <ArrayStringHelper
+          items={Array.isArray(value) ? value : []}
+          onChange={onChange}
+        />
+      )
+
+    default:
+      return null
+  }
+}
+
+function ExplorerFileValue({
+  value,
+}: {
+  inputId: string
+  value: File | null
+}) {
   return (
-    <div className="space-y-1.5">
-      {items.map((item, index) => (
-        <div key={`${id}-${index}`} className="flex items-center gap-1">
-          <ExplorerParamInput
-            fieldKey={`${id}-${index}`}
-            type={inputType}
-            placeholder="// enter value"
-            value={item}
-            onChange={(event) => updateItem(index, event.target.value)}
-            className={cn(REQUEST_BUILDER_INPUT, 'min-h-9 flex-1 py-1.5')}
-            spellCheck={false}
-          />
+    <span
+      className={cn(
+        'block min-w-0 truncate px-4 font-mono text-[13px]',
+        value ? 'text-foreground/85' : 'text-muted-foreground/45',
+      )}
+      title={value?.name}
+    >
+      {value?.name ?? '// No file selected'}
+    </span>
+  )
+}
+
+function ExplorerFileHelper({
+  inputId,
+  value,
+  onChange,
+}: {
+  inputId: string
+  value: File | null
+  onChange: (value: FormValue) => void
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleChooseFile = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleClearFile = () => {
+    onChange(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={fileInputRef}
+        id={inputId}
+        type="file"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          onChange(file ?? null)
+        }}
+      />
+      {value ? (
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[12px]"
+            onClick={handleChooseFile}
+          >
+            Change
+          </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="mr-1 h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
-            onClick={() => removeItem(index)}
-            aria-label="Remove item"
+            className="h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
+            onClick={handleClearFile}
+            aria-label="Clear file"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
-      ))}
-      <button
-        type="button"
-        onClick={addItem}
-        className="link-neutral font-mono text-[12px]"
-      >
-        Add item
-      </button>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 text-[12px]"
+          onClick={handleChooseFile}
+        >
+          Choose file
+        </Button>
+      )}
+    </>
+  )
+}
+
+function ExplorerPasswordValue({
+  inputId,
+  value,
+  onChange,
+  revealed,
+}: {
+  inputId: string
+  value: string
+  onChange: (value: string) => void
+  revealed: boolean
+}) {
+  return (
+    <ExplorerParamInput
+      fieldKey={inputId}
+      id={inputId}
+      type={revealed ? 'text' : 'password'}
+      placeholder={getFormFieldPlaceholder('password')}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={REQUEST_BUILDER_INPUT}
+      autoComplete="new-password"
+      spellCheck={false}
+    />
+  )
+}
+
+function ExplorerIdValue({
+  inputId,
+  value,
+  onChange,
+}: {
+  inputId: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <ExplorerParamInput
+      fieldKey={inputId}
+      id={inputId}
+      type="text"
+      placeholder="// auto-generate if empty"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={REQUEST_BUILDER_INPUT}
+      spellCheck={false}
+      autoComplete="off"
+    />
+  )
+}
+
+function ArrayStringHelper({
+  items,
+  onChange,
+}: {
+  items: string[]
+  onChange: (value: FormValue) => void
+}) {
+  if (items.length > 0) {
+    return null
+  }
+
+  return (
+    <div className="flex min-h-[44px] items-center">
+      <ExplorerArrayAddControl
+        items={items}
+        onChange={(next) => onChange(next)}
+      />
     </div>
   )
 }

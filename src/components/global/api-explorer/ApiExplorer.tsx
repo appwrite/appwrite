@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Copy, Download, ChevronDown, Loader2, AlertCircle } from 'lucide-react'
+import { Check, Copy, Download, ChevronDown, Loader2, AlertCircle, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn, truncateMiddle } from '@/lib/utils'
 import { StartTruncatedText } from '@/components/global/shared/StartTruncatedText'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -17,6 +19,20 @@ import {
 } from '@/components/ui/accordion'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -24,6 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { CodeBlock, type CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { RateLimitDescription } from '@/components/global/shared/RateLimitDescription'
 import { AuthRequirementDescription } from '@/components/global/shared/AuthRequirementDescription'
 import {
@@ -32,6 +49,7 @@ import {
 } from './ApiExplorerResizableLayout'
 import { MethodDescriptionMarkdown } from './MethodDescriptionMarkdown'
 import { ApiExplorerAuthSection } from './ApiExplorerAuthSection'
+import { ExplorerMethodActions } from './ExplorerMethodActions'
 import { RequestBodySection } from './RequestBodySection'
 import {
   RequestBuilderPanel,
@@ -40,8 +58,8 @@ import {
 } from './RequestFormFields'
 import {
   executeApiRequest,
+  executeApiMultipartRequest,
   filterAllowedServices,
-  filterServices,
   findMethodByOperationId,
   findServiceForMethod,
   generateSampleRequestBody,
@@ -55,24 +73,43 @@ import {
   loadParsedApiSpec,
   buildDefaultBodyFormValues,
   buildInitialParamFormValues,
+  buildMultipartFormData,
+  buildCurlCommand,
+  getMissingRequiredFormField,
+  hasRequestBodyForMethod,
   paramFormValuesToStrings,
   parameterToFormField,
   serializeBodyFromForm,
   createUserJwtForExplorer,
+  getMethodRequiredScopes,
+  methodRequiresSendConfirmation,
+  getSendRequestConfirmationCopy,
   methodRequiresSessionAuthChoice,
+  methodRequiresApiKey,
+  methodSupportsServerApiKey,
+  resolveServerAuthApiKey,
+  useApiExplorerAuthPersistence,
   type ApiExplorerConfig,
   type ApiExplorerMethod,
   type ApiExplorerService,
   type ApiExplorerServiceProductGroup,
   type ApiExplorerProjectPlatform,
-  type ApiExplorerSessionAuthMode,
+  type ApiExplorerClientAuthState,
+  type ApiExplorerServerAuthState,
   type ExecuteApiRequestResult,
   type FormValue,
   type OpenApiParameter,
   type ParsedApiSpec,
   type RequestFormField,
 } from '@/lib/api-explorer'
+import {
+  apiNavItemClassName,
+  apiNavMethodItemClassName,
+} from '@/lib/api-explorer/nav-styles'
+import { API_EXPLORER_SEND_REQUEST_SHORTCUT_RAW } from '@/lib/api-explorer/shortcuts'
+import { useApiExplorerShortcuts } from '@/lib/api-explorer/use-api-explorer-shortcuts'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { copyToClipboard } from '@/lib/utils/context-menu'
 import {
   useApiExplorerColumnsLayout,
   useApiExplorerExpandedProductGroup,
@@ -98,10 +135,12 @@ const VERTICAL_HANDLE_CLASS = cn(
 const COLUMN_HEADER_CLASS =
   'flex h-[62px] shrink-0 border-b border-border px-4'
 
-/** Matches ServiceHeader title and toolbar horizontal padding. */
-const EXPLORER_EDGE_PADDING = 'px-4 sm:px-6'
+const COLUMN_REQUEST_FOOTER_CLASS =
+  'flex h-[62px] shrink-0 items-center justify-end border-t border-border bg-muted/30 px-4'
 
-const EXPLORER_SCROLL_AREA_CLASS = 'min-h-0 min-w-0 flex-1 overflow-hidden'
+/** Scrollable methods list body (flex child must shrink below content height). */
+const EXPLORER_METHODS_LIST_SCROLL_CLASS =
+  'min-h-0 flex-1 basis-0 overflow-x-hidden overflow-y-auto'
 
 export type ApiExplorerProps = {
   config: ApiExplorerConfig
@@ -111,11 +150,13 @@ export type ApiExplorerProps = {
     serviceId: string
     operationId: string
   }) => void
+  /** @deprecated Toolbar controls live in the services column. */
   searchValue?: string
+  /** @deprecated Toolbar controls live in the services column. */
   onSearchChange?: (value: string) => void
   platform?: ApiExplorerProjectPlatform
   onPlatformChange?: (platform: ApiExplorerProjectPlatform) => void
-  /** When true, omits the search/platform bar (render via ServiceHeader instead). */
+  /** @deprecated Toolbar controls live in the services column. */
   hideToolbar?: boolean
   className?: string
 }
@@ -228,6 +269,45 @@ export function ApiExplorerDownloadSpecButton({
   )
 }
 
+function ApiExplorerOpenApiSpecDownloadFooter({
+  platform,
+}: {
+  platform: ApiExplorerProjectPlatform
+}) {
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = useCallback(async () => {
+    setIsDownloading(true)
+    try {
+      await downloadOpenApiSpec(platform)
+    } catch {
+      toast.error('Failed to download OpenAPI spec')
+    } finally {
+      setIsDownloading(false)
+    }
+  }, [platform])
+
+  return (
+    <div className="shrink-0 border-t border-border bg-background px-3 py-3">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={isDownloading}
+        onClick={() => void handleDownload()}
+        className="h-9 w-full text-[13px] text-muted-foreground hover:text-foreground"
+      >
+        {isDownloading ? (
+          <Loader2 className="mr-1.5 size-4 animate-spin" />
+        ) : (
+          <Download className="mr-1.5 size-4" />
+        )}
+        OpenAPI spec
+      </Button>
+    </div>
+  )
+}
+
 function getHttpMethodVariant(
   method: string,
 ): 'info' | 'success' | 'warning' | 'error' | 'secondary' {
@@ -259,8 +339,8 @@ function applyMethodFormState(
   const pathParameters = method.parameters.filter((param) => param.in === 'path')
   const queryParameters = method.parameters.filter((param) => param.in === 'query')
 
-  setters.setPathFormValues(buildInitialParamFormValues(pathParameters))
-  setters.setQueryFormValues(buildInitialParamFormValues(queryParameters))
+  setters.setPathFormValues(buildInitialParamFormValues(pathParameters, method))
+  setters.setQueryFormValues(buildInitialParamFormValues(queryParameters, method))
   setters.setBodyFormValues(buildDefaultBodyFormValues(method))
   setters.setBodyJsonValue(
     generateSampleRequestBody(getRequestBodyJsonSchema(method)),
@@ -268,20 +348,13 @@ function applyMethodFormState(
   setters.setBodyInputMode('form')
 }
 
-function hasRequestBodyForMethod(method: ApiExplorerMethod): boolean {
-  return Boolean(method.requestBody?.content?.['application/json']?.schema?.properties)
-}
-
 export function ApiExplorer({
   config,
   initialServiceId,
   initialOperationId,
   onSelectionChange,
-  searchValue: controlledSearchValue,
-  onSearchChange,
   platform: controlledPlatform,
   onPlatformChange,
-  hideToolbar = false,
   className,
 }: ApiExplorerProps) {
   const { account } = useAuth()
@@ -296,9 +369,6 @@ export function ApiExplorer({
   const [parsedSpec, setParsedSpec] = useState<ParsedApiSpec | null>(null)
   const [specError, setSpecError] = useState<string | null>(null)
   const [specLoading, setSpecLoading] = useState(true)
-  const [internalSearchValue, setInternalSearchValue] = useState('')
-  const searchValue = controlledSearchValue ?? internalSearchValue
-  const setSearchValue = onSearchChange ?? setInternalSearchValue
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     initialServiceId ?? null,
   )
@@ -312,12 +382,17 @@ export function ApiExplorer({
   const [bodyInputMode, setBodyInputMode] = useState<'form' | 'json'>('form')
   const [response, setResponse] = useState<ExecuteApiRequestResult | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
-  const [internalPlatform, setInternalPlatform] =
-    useState<ApiExplorerProjectPlatform>(initialPlatform)
+  const [sendConfirmOpen, setSendConfirmOpen] = useState(false)
+  const {
+    internalPlatform,
+    setInternalPlatform,
+    clientAuth,
+    setClientAuth,
+    serverAuth,
+    setServerAuth,
+  } = useApiExplorerAuthPersistence(config.projectId, initialPlatform)
   const activePlatform = controlledPlatform ?? internalPlatform
   const setActivePlatform = onPlatformChange ?? setInternalPlatform
-  const [authMode, setAuthMode] = useState<ApiExplorerSessionAuthMode>('guest')
-  const [authUserId, setAuthUserId] = useState('')
   const selectedOperationRef = useRef<string | undefined>(initialOperationId)
   const { features } = useConsoleProfile()
 
@@ -426,18 +501,18 @@ export function ApiExplorer({
   }, [allowedServices, parsedSpec, specLoading, visibleServices])
 
   useEffect(() => {
-    setAuthMode('guest')
-    setAuthUserId('')
-  }, [selectedMethod?.id, activePlatform])
-
-  const filteredServices = useMemo(
-    () => filterServices(visibleServices, searchValue),
-    [visibleServices, searchValue],
-  )
+    if (activePlatform !== 'server' || !selectedMethod) return
+    const methodScopes = getMethodRequiredScopes(selectedMethod)
+    setServerAuth((previous) => {
+      if (previous.ephemeralDraftScopes.length > 0) return previous
+      if (methodScopes.length === 0) return previous
+      return { ...previous, ephemeralDraftScopes: methodScopes }
+    })
+  }, [activePlatform, selectedMethod?.id])
 
   const serviceProductGroups = useMemo(
-    () => groupServicesByProduct(filteredServices),
-    [filteredServices],
+    () => groupServicesByProduct(visibleServices),
+    [visibleServices],
   )
 
   const resolvedExpandedProductGroupId = useMemo(() => {
@@ -457,12 +532,12 @@ export function ApiExplorer({
   }, [expandedProductGroupId, selectedServiceId, serviceProductGroups])
 
   const selectedService = useMemo(() => {
-    if (!selectedServiceId) return filteredServices[0]
+    if (!selectedServiceId) return visibleServices[0]
     return (
-      filteredServices.find((service) => service.id === selectedServiceId) ??
-      filteredServices[0]
+      visibleServices.find((service) => service.id === selectedServiceId) ??
+      visibleServices[0]
     )
-  }, [filteredServices, selectedServiceId])
+  }, [visibleServices, selectedServiceId])
 
   const openProductGroupId =
     expandedProductGroupId &&
@@ -554,12 +629,20 @@ export function ApiExplorer({
     [selectedMethod],
   )
 
-  const handleExecute = useCallback(async () => {
+  const handleResetRequestForm = useCallback(() => {
     if (!selectedMethod) return
-    if (isMultipartMethod(selectedMethod)) {
-      toast.error('Multipart requests are not supported in the explorer yet.')
-      return
-    }
+
+    applyMethodFormState(selectedMethod, {
+      setPathFormValues,
+      setQueryFormValues,
+      setBodyFormValues,
+      setBodyJsonValue,
+      setBodyInputMode,
+    })
+  }, [selectedMethod])
+
+  const runExecuteRequest = useCallback(async () => {
+    if (!selectedMethod) return
 
     const pathParameters = selectedMethod.parameters.filter(
       (param) => param.in === 'path',
@@ -571,9 +654,22 @@ export function ApiExplorer({
     const pathParams = paramFormValuesToStrings(pathParameters, pathFormValues)
     const queryParams = paramFormValuesToStrings(queryParameters, queryFormValues)
 
+    const multipart = isMultipartMethod(selectedMethod)
     let body = ''
+    let formData: FormData | undefined
+
     if (hasRequestBodyForMethod(selectedMethod)) {
-      if (bodyInputMode === 'json') {
+      if (multipart) {
+        const missingField = getMissingRequiredFormField(
+          bodyFormFields,
+          bodyFormValues,
+        )
+        if (missingField) {
+          toast.error(`Missing required field: ${missingField.label}`)
+          return
+        }
+        formData = buildMultipartFormData(bodyFormFields, bodyFormValues)
+      } else if (bodyInputMode === 'json') {
         body = bodyJsonValue
         if (body.trim()) {
           try {
@@ -594,38 +690,56 @@ export function ApiExplorer({
     }
 
     setIsExecuting(true)
-    setResponse(null)
 
     try {
       let requestAuth:
-        | { mode: ApiExplorerSessionAuthMode; jwt?: string }
+        | { mode: ApiExplorerClientAuthState['mode']; jwt?: string }
         | undefined
+      let apiKey: string | undefined
 
-      if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
-        if (authMode === 'user') {
-          if (!authUserId.trim()) {
-            toast.error('Select a user to act as, or choose Guest.')
-            setIsExecuting(false)
-            return
+      if (activePlatform === 'client') {
+        if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
+          if (clientAuth.mode === 'user') {
+            if (!clientAuth.userId.trim()) {
+              toast.error('Select a user to act as, or choose Guest.')
+              setIsExecuting(false)
+              return
+            }
+            const jwt = await createUserJwtForExplorer(
+              config.projectId,
+              clientAuth.userId.trim(),
+            )
+            requestAuth = { mode: 'user', jwt }
+          } else {
+            requestAuth = { mode: 'guest' }
           }
-          const jwt = await createUserJwtForExplorer(
-            config.projectId,
-            authUserId.trim(),
-          )
-          requestAuth = { mode: 'user', jwt }
-        } else {
-          requestAuth = { mode: 'guest' }
+        }
+      } else if (methodSupportsServerApiKey(selectedMethod, activePlatform)) {
+        apiKey = resolveServerAuthApiKey(serverAuth)
+        if (methodRequiresApiKey(selectedMethod, activePlatform) && !apiKey) {
+          toast.error('Provide an API key or generate an ephemeral key.')
+          setIsExecuting(false)
+          return
         }
       }
 
-      const result = await executeApiRequest({
-        config: { ...config, platform: activePlatform },
+      const requestInput = {
+        config: { ...config, platform: activePlatform, apiKey },
         method: selectedMethod,
         pathParams,
         queryParams,
-        body,
         requestAuth,
-      })
+      }
+
+      const result = multipart
+        ? await executeApiMultipartRequest({
+            ...requestInput,
+            formData: formData ?? new FormData(),
+          })
+        : await executeApiRequest({
+            ...requestInput,
+            body,
+          })
       setResponse(result)
     } catch (error: unknown) {
       toast.error(getErrorMessage(error) || 'Request failed')
@@ -634,8 +748,123 @@ export function ApiExplorer({
     }
   }, [
     activePlatform,
-    authMode,
-    authUserId,
+    clientAuth,
+    serverAuth,
+    bodyFormFields,
+    bodyFormValues,
+    bodyInputMode,
+    bodyJsonValue,
+    config,
+    pathFormValues,
+    queryFormValues,
+    selectedMethod,
+  ])
+
+  const handleExecute = useCallback(() => {
+    if (!selectedMethod) return
+    if (methodRequiresSendConfirmation(selectedMethod)) {
+      setSendConfirmOpen(true)
+      return
+    }
+    void runExecuteRequest()
+  }, [runExecuteRequest, selectedMethod])
+
+  const handleConfirmSendRequest = useCallback(() => {
+    setSendConfirmOpen(false)
+    void runExecuteRequest()
+  }, [runExecuteRequest])
+
+  const sendRequestConfirmation = useMemo(
+    () =>
+      selectedMethod
+        ? getSendRequestConfirmationCopy(selectedMethod)
+        : null,
+    [selectedMethod],
+  )
+
+  const handleCopyCurl = useCallback(async () => {
+    if (!selectedMethod) return
+
+    const pathParameters = selectedMethod.parameters.filter(
+      (param) => param.in === 'path',
+    )
+    const queryParameters = selectedMethod.parameters.filter(
+      (param) => param.in === 'query',
+    )
+
+    const pathParams = paramFormValuesToStrings(pathParameters, pathFormValues)
+    const queryParams = paramFormValuesToStrings(queryParameters, queryFormValues)
+
+    const multipart = isMultipartMethod(selectedMethod)
+    let body = ''
+    let formData: FormData | undefined
+
+    if (hasRequestBodyForMethod(selectedMethod)) {
+      if (multipart) {
+        formData = buildMultipartFormData(bodyFormFields, bodyFormValues)
+      } else if (bodyInputMode === 'json') {
+        body = bodyJsonValue
+      } else {
+        try {
+          body = serializeBodyFromForm(bodyFormFields, bodyFormValues)
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error) || 'Invalid request body')
+          return
+        }
+      }
+    }
+
+    try {
+      let requestAuth:
+        | { mode: ApiExplorerClientAuthState['mode']; jwt?: string }
+        | undefined
+      let apiKey: string | undefined
+
+      if (activePlatform === 'client') {
+        if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
+          if (clientAuth.mode === 'user') {
+            if (!clientAuth.userId.trim()) {
+              toast.error('Select a user to act as, or choose Guest.')
+              return
+            }
+            const jwt = await createUserJwtForExplorer(
+              config.projectId,
+              clientAuth.userId.trim(),
+            )
+            requestAuth = { mode: 'user', jwt }
+          } else {
+            requestAuth = { mode: 'guest' }
+          }
+        }
+      } else if (methodSupportsServerApiKey(selectedMethod, activePlatform)) {
+        apiKey = resolveServerAuthApiKey(serverAuth)
+        if (methodRequiresApiKey(selectedMethod, activePlatform) && !apiKey) {
+          toast.error('Provide an API key or generate an ephemeral key.')
+          return
+        }
+      }
+
+      const curl = buildCurlCommand({
+        config: { ...config, platform: activePlatform, apiKey },
+        method: selectedMethod,
+        pathParams,
+        queryParams,
+        body: formData ? undefined : body,
+        formData,
+        requestAuth,
+      })
+
+      const copied = await copyToClipboard('cURL', curl, { showToast: false })
+      if (copied) {
+        toast.success('cURL copied')
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error) || 'Failed to copy cURL')
+    }
+  }, [
+    activePlatform,
+    clientAuth,
+    serverAuth,
     bodyFormFields,
     bodyFormValues,
     bodyInputMode,
@@ -669,7 +898,20 @@ export function ApiExplorer({
   const hasRequestBody = selectedMethod
     ? hasRequestBodyForMethod(selectedMethod)
     : false
-  const multipart = selectedMethod ? isMultipartMethod(selectedMethod) : false
+  const hasJsonBodySchema = selectedMethod
+    ? Boolean(getRequestBodyJsonSchema(selectedMethod)?.properties)
+    : false
+
+  const canSendRequest = Boolean(selectedMethod && !isExecuting)
+
+  useApiExplorerShortcuts({
+    onSendRequest: handleExecute,
+    enabled: canSendRequest,
+  })
+
+  useEffect(() => {
+    setSendConfirmOpen(false)
+  }, [activePlatform, selectedMethod?.id])
 
   if (specLoading) {
     return (
@@ -699,26 +941,10 @@ export function ApiExplorer({
   }
 
   return (
-    <div className={cn('flex h-full min-h-0 flex-1 flex-col', className)}>
-      {!hideToolbar ? (
-        <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <Input
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                placeholder="Search services and methods…"
-                className="h-9 max-w-md text-[13px]"
-              />
-            </div>
-            <ApiExplorerPlatformToggle
-              value={activePlatform}
-              onChange={handlePlatformChange}
-            />
-          </div>
-        </div>
-      ) : null}
-
+    <div
+      data-api-explorer
+      className={cn('flex h-full min-h-0 flex-1 flex-col', className)}
+    >
       <div className="min-h-0 flex-1">
         <ExplorerColumnsResizableLayout
           layout={columnsLayout}
@@ -727,6 +953,8 @@ export function ApiExplorer({
           className="h-full min-h-0 overflow-hidden"
           services={
             <ServiceListPanel
+              platform={activePlatform}
+              onPlatformChange={handlePlatformChange}
               productGroups={serviceProductGroups}
               selectedServiceId={selectedService?.id}
               onSelectService={handleSelectService}
@@ -747,8 +975,8 @@ export function ApiExplorer({
               projectId={config.projectId}
               platform={activePlatform}
               method={selectedMethod}
-              authMode={authMode}
-              authUserId={authUserId}
+              clientAuth={clientAuth}
+              serverAuth={serverAuth}
               pathFormValues={pathFormValues}
               queryFormValues={queryFormValues}
               bodyFormFields={bodyFormFields}
@@ -758,7 +986,7 @@ export function ApiExplorer({
               pathParameters={pathParameters}
               queryParameters={queryParameters}
               hasRequestBody={hasRequestBody}
-              multipart={multipart}
+              hasJsonBodySchema={hasJsonBodySchema}
               isExecuting={isExecuting}
               response={response}
               onPathFormValuesChange={setPathFormValues}
@@ -766,18 +994,34 @@ export function ApiExplorer({
               onBodyFormValuesChange={setBodyFormValues}
               onBodyJsonValueChange={setBodyJsonValue}
               onBodyInputModeChange={setBodyInputMode}
-              onAuthModeChange={setAuthMode}
-              onAuthUserIdChange={setAuthUserId}
+              onClientAuthChange={setClientAuth}
+              onServerAuthChange={setServerAuth}
               onExecute={handleExecute}
+              onCopyCurl={handleCopyCurl}
+              onResetRequestForm={handleResetRequestForm}
             />
           }
         />
       </div>
+      {sendRequestConfirmation ? (
+        <ConfirmActionDialog
+          open={sendConfirmOpen}
+          onOpenChange={setSendConfirmOpen}
+          title={sendRequestConfirmation.title}
+          description={sendRequestConfirmation.description}
+          confirmLabel="Send request"
+          confirmVariant={sendRequestConfirmation.confirmVariant}
+          onConfirm={handleConfirmSendRequest}
+          isConfirming={isExecuting}
+        />
+      ) : null}
     </div>
   )
 }
 
 type ServiceListPanelProps = {
+  platform: ApiExplorerProjectPlatform
+  onPlatformChange: (platform: ApiExplorerProjectPlatform) => void
   productGroups: ApiExplorerServiceProductGroup[]
   selectedServiceId?: string
   onSelectService: (service: ApiExplorerService) => void
@@ -786,6 +1030,8 @@ type ServiceListPanelProps = {
 }
 
 function ServiceListPanel({
+  platform,
+  onPlatformChange,
   productGroups,
   selectedServiceId,
   onSelectService,
@@ -795,80 +1041,75 @@ function ServiceListPanel({
   const hasServices = productGroups.some((group) => group.services.length > 0)
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
-      <div
-        className={cn(
-          'flex h-[62px] shrink-0 items-center border-b border-border',
-          EXPLORER_EDGE_PADDING,
-        )}
-      >
-        <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Services
-        </p>
-      </div>
-      <ScrollArea className={EXPLORER_SCROLL_AREA_CLASS}>
-        <div
-          className={cn(
-            'box-border w-full max-w-full min-w-0 py-2',
-            EXPLORER_EDGE_PADDING,
-          )}
-        >
-          {!hasServices ? (
-            <p className="py-4 text-[13px] text-muted-foreground">
-              No services match your search.
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-background">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+        <div className="space-y-4">
+          <div className="px-1">
+            <ApiExplorerPlatformToggle
+              value={platform}
+              onChange={onPlatformChange}
+              className="w-full [&>button]:flex-1"
+            />
+          </div>
+
+          <nav aria-label="API services">
+            <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              APIs
             </p>
-          ) : (
-            <Accordion
-              type="single"
-              collapsible
-              value={expandedProductGroupId}
-              onValueChange={(value) =>
-                onExpandedProductGroupChange(value || undefined)
-              }
-              className="w-full space-y-2"
-            >
-              {productGroups.map((group) => (
-                <AccordionItem
-                  key={group.id}
-                  value={group.id}
-                  className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
-                >
-                  <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
-                    <span className="min-w-0 flex-1 truncate text-left">
-                      {group.label}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-2 pt-0">
-                    <div className="ml-1.5 space-y-0.5 border-l border-border/70 pl-1.5">
-                      {group.services.map((service) => {
-                        const isActive = service.id === selectedServiceId
-                        return (
-                          <button
-                            key={service.id}
-                            type="button"
-                            onClick={() => onSelectService(service)}
-                            className={cn(
-                              'flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-[13px] transition-colors',
-                              isActive
-                                ? 'bg-accent text-foreground'
-                                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                            )}
-                          >
-                            <span className="truncate font-medium">{service.label}</span>
-                            <Badge variant="secondary" className="text-[10px] shrink-0">
-                              {service.methods.length}
-                            </Badge>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          )}
+            {!hasServices ? (
+              <p className="px-2 py-2 text-[13px] text-muted-foreground">
+                No services available for this API.
+              </p>
+            ) : (
+              <Accordion
+                type="single"
+                collapsible
+                value={expandedProductGroupId}
+                onValueChange={(value) =>
+                  onExpandedProductGroupChange(value || undefined)
+                }
+                className="w-full space-y-1 px-2"
+              >
+                {productGroups.map((group) => (
+                  <AccordionItem
+                    key={group.id}
+                    value={group.id}
+                    className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
+                  >
+                    <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
+                      <span className="min-w-0 flex-1 truncate text-left">
+                        {group.label}
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-2 pt-0">
+                      <ul className="space-y-0.5">
+                        {group.services.map((service) => {
+                          const isActive = service.id === selectedServiceId
+                          return (
+                            <li key={service.id}>
+                              <button
+                                type="button"
+                                onClick={() => onSelectService(service)}
+                                className={cn(
+                                  'w-full text-left',
+                                  apiNavItemClassName(isActive),
+                                )}
+                              >
+                                <span className="truncate">{service.label}</span>
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </nav>
         </div>
-      </ScrollArea>
+      </div>
+      <ApiExplorerOpenApiSpecDownloadFooter platform={platform} />
     </div>
   )
 }
@@ -879,27 +1120,56 @@ type MethodListPanelProps = {
   onSelectMethod: (method: ApiExplorerMethod) => void
 }
 
+function methodMatchesSearch(method: ApiExplorerMethod, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  return (
+    method.summary.toLowerCase().includes(q) ||
+    method.path.toLowerCase().includes(q) ||
+    method.id.toLowerCase().includes(q) ||
+    method.httpMethod.toLowerCase().includes(q) ||
+    (method.resourceGroup?.toLowerCase().includes(q) ?? false)
+  )
+}
+
 function MethodListPanel({
   service,
   selectedMethodId,
   onSelectMethod,
 }: MethodListPanelProps) {
-  const methodsViewportRef = useRef<HTMLDivElement>(null)
   const selectedMethodRef = useRef<HTMLButtonElement | null>(null)
+  const [searchValue, setSearchValue] = useState('')
+
+  useEffect(() => {
+    setSearchValue('')
+  }, [service?.id])
+
   const resourceGroups = useMemo(
     () => groupMethodsByResource(service?.methods ?? []),
     [service?.methods],
   )
+
+  const filteredGroups = useMemo(() => {
+    const query = searchValue.trim()
+    if (!query) return resourceGroups
+
+    return resourceGroups
+      .map((group) => ({
+        ...group,
+        methods: group.methods.filter((method) => methodMatchesSearch(method, query)),
+      }))
+      .filter((group) => group.methods.length > 0)
+  }, [resourceGroups, searchValue])
 
   useEffect(() => {
     selectedMethodRef.current?.scrollIntoView({
       block: 'nearest',
       inline: 'nearest',
     })
-  }, [service?.id, selectedMethodId])
+  }, [service?.id, selectedMethodId, filteredGroups])
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
       <div
         className={cn(
           COLUMN_HEADER_CLASS,
@@ -914,75 +1184,93 @@ function MethodListPanel({
           <span className="block h-[13px]" aria-hidden />
         )}
       </div>
-      <ScrollArea
-        className={EXPLORER_SCROLL_AREA_CLASS}
-        viewportRef={methodsViewportRef}
-      >
+
+      <div className="shrink-0 border-b border-border bg-muted/20 px-2 py-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+            placeholder="Search methods…"
+            className="h-8 border-border/60 bg-background pl-8 pr-8 text-[13px]"
+            aria-label="Search methods"
+            disabled={!service}
+          />
+          {searchValue ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+              aria-label="Clear method search"
+              onClick={() => setSearchValue('')}
+            >
+              <X className="size-3.5" />
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className={EXPLORER_METHODS_LIST_SCROLL_CLASS}>
         <div className="box-border w-full max-w-full min-w-0 space-y-3 p-2">
           {!service || service.methods.length === 0 ? (
             <p className="px-2 py-4 text-[13px] text-muted-foreground">
               No methods available.
             </p>
+          ) : filteredGroups.length === 0 ? (
+            <p className="px-2 py-4 text-[13px] text-muted-foreground">
+              No methods match your search.
+            </p>
           ) : (
-            <>
-              {service.description && (
-                <MethodDescriptionMarkdown
-                  content={service.description}
-                  className="rounded-md border border-border/60 bg-muted/15 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground prose-links-neutral [&_a]:text-[12px] [&_code]:text-[11px] [&_ol]:my-2 [&_p]:my-0 [&_p+p]:mt-2 [&_p]:text-[12px] [&_p]:leading-relaxed [&_ul]:my-2"
-                />
-              )}
-              {resourceGroups.map((group) => (
-                <div key={group.id || 'default'} className="space-y-0.5">
-                  {group.label && (
-                    <p className="px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            filteredGroups.map((group) => (
+              <div key={group.id || 'default'} className="space-y-1.5">
+                  {group.label ? (
+                    <p className="px-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                       {group.label}
                     </p>
-                  )}
-                  {group.methods.map((method) => {
-                    const isActive = method.id === selectedMethodId
-                    return (
-                      <button
-                        key={method.id}
-                        ref={
-                          isActive
-                            ? (node) => {
-                                selectedMethodRef.current = node
-                              }
-                            : undefined
-                        }
-                        type="button"
-                        onClick={() => onSelectMethod(method)}
-                        className={cn(
-                          'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 rounded-md px-2.5 py-2 text-left transition-colors',
-                          isActive
-                            ? 'bg-accent text-foreground'
-                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                        )}
-                      >
-                        <div className="flex w-full min-w-0 max-w-full items-center gap-2">
-                          <Badge
-                            variant={getHttpMethodVariant(method.httpMethod)}
-                            className="text-[10px] shrink-0 uppercase"
+                  ) : null}
+                  <ul className="space-y-0.5">
+                    {group.methods.map((method) => {
+                      const isActive = method.id === selectedMethodId
+                      return (
+                        <li key={method.id}>
+                          <button
+                            ref={
+                              isActive
+                                ? (node) => {
+                                    selectedMethodRef.current = node
+                                  }
+                                : undefined
+                            }
+                            type="button"
+                            onClick={() => onSelectMethod(method)}
+                            className={apiNavMethodItemClassName(isActive)}
                           >
-                            {method.httpMethod}
-                          </Badge>
-                          <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
-                            {method.summary}
-                          </span>
-                        </div>
-                        <StartTruncatedText
-                          text={method.path}
-                          className="font-mono text-[11px] text-muted-foreground"
-                        />
-                      </button>
-                    )
-                  })}
+                            <div className="flex w-full min-w-0 max-w-full items-center gap-2">
+                              <Badge
+                                variant={getHttpMethodVariant(method.httpMethod)}
+                                className="text-[10px] shrink-0 uppercase"
+                              >
+                                {method.httpMethod}
+                              </Badge>
+                              <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+                                {method.summary}
+                              </span>
+                            </div>
+                            <StartTruncatedText
+                              text={method.path}
+                              className="font-mono text-[11px] text-muted-foreground"
+                            />
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </div>
-              ))}
-            </>
+              ))
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
@@ -992,8 +1280,8 @@ type RequestPanelProps = {
   projectId: string
   platform: ApiExplorerProjectPlatform
   method?: ApiExplorerMethod
-  authMode: ApiExplorerSessionAuthMode
-  authUserId: string
+  clientAuth: ApiExplorerClientAuthState
+  serverAuth: ApiExplorerServerAuthState
   pathFormValues: Record<string, FormValue>
   queryFormValues: Record<string, FormValue>
   bodyFormFields: RequestFormField[]
@@ -1003,7 +1291,7 @@ type RequestPanelProps = {
   pathParameters?: OpenApiParameter[]
   queryParameters?: OpenApiParameter[]
   hasRequestBody: boolean
-  multipart: boolean
+  hasJsonBodySchema: boolean
   isExecuting: boolean
   response: ExecuteApiRequestResult | null
   onPathFormValuesChange: (values: Record<string, FormValue>) => void
@@ -1011,9 +1299,11 @@ type RequestPanelProps = {
   onBodyFormValuesChange: (values: Record<string, FormValue>) => void
   onBodyJsonValueChange: (value: string) => void
   onBodyInputModeChange: (mode: 'form' | 'json') => void
-  onAuthModeChange: (mode: ApiExplorerSessionAuthMode) => void
-  onAuthUserIdChange: (userId: string) => void
+  onClientAuthChange: (state: ApiExplorerClientAuthState) => void
+  onServerAuthChange: (state: ApiExplorerServerAuthState) => void
   onExecute: () => void
+  onCopyCurl: () => void
+  onResetRequestForm: () => void
 }
 
 /** Character cap for middle truncation in the request details endpoint row. */
@@ -1074,32 +1364,103 @@ function MethodDeprecatedWarning({ method }: { method: ApiExplorerMethod }) {
 
 function MethodRequestHeader({
   method,
-  isExecuting,
-  multipart,
-  onExecute,
+  endpoint,
+  platform,
+  projectId,
+  serviceId,
 }: {
   method: ApiExplorerMethod
-  isExecuting: boolean
-  multipart: boolean
-  onExecute: () => void
+  endpoint: string
+  platform: ApiExplorerProjectPlatform
+  projectId: string
+  serviceId: string
 }) {
   return (
-    <div className={cn(COLUMN_HEADER_CLASS, 'items-center')}>
-      <div className="flex w-full items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <p className="truncate text-[13px] font-medium text-foreground">
-            {method.summary}
-          </p>
-        </div>
+    <div className={cn(COLUMN_HEADER_CLASS, 'items-center gap-2.5')}>
+      <Badge
+        variant={getHttpMethodVariant(method.httpMethod)}
+        className="shrink-0 text-[10px] uppercase"
+      >
+        {method.httpMethod}
+      </Badge>
+      <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+        {method.summary}
+      </p>
+      <ExplorerMethodActions
+        method={method}
+        endpoint={endpoint}
+        platform={platform}
+        projectId={projectId}
+        serviceId={serviceId}
+      />
+    </div>
+  )
+}
+
+function MethodRequestFooter({
+  isExecuting,
+  onExecute,
+  onCopyCurl,
+  onResetRequestForm,
+}: {
+  isExecuting: boolean
+  onExecute: () => void
+  onCopyCurl: () => void
+  onResetRequestForm: () => void
+}) {
+  const { isMac } = usePlatform()
+  const sendShortcut = formatDisplayKeys(
+    API_EXPLORER_SEND_REQUEST_SHORTCUT_RAW,
+    isMac,
+  ).join('')
+  const canSend = !isExecuting
+  const sendTooltip = canSend
+    ? `Send request (${sendShortcut})`
+    : 'Request is running.'
+
+  return (
+    <div className={COLUMN_REQUEST_FOOTER_CLASS}>
+      <div className="flex w-full items-center justify-between gap-2">
         <Button
-          variant="brandCta"
+          type="button"
+          variant="outline"
           size="sm"
-          className="h-8 shrink-0 text-[13px] font-medium"
-          disabled={isExecuting || multipart}
-          onClick={onExecute}
+          className="h-9 text-[13px]"
+          disabled={isExecuting}
+          onClick={onResetRequestForm}
         >
-          Send request
+          Reset
         </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={isExecuting}
+            onClick={onCopyCurl}
+          >
+            Copy as cURL
+          </Button>
+          <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">
+              <Button
+                variant="brandCta"
+                size="sm"
+                className="h-9 min-w-[120px] text-[13px] font-medium"
+                disabled={!canSend}
+                onClick={onExecute}
+              >
+                Send request
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={6} className="text-[12px]">
+            {sendTooltip}
+          </TooltipContent>
+        </Tooltip>
+        </div>
       </div>
     </div>
   )
@@ -1247,8 +1608,8 @@ function RequestPanel({
   projectId,
   platform,
   method,
-  authMode,
-  authUserId,
+  clientAuth,
+  serverAuth,
   pathFormValues,
   queryFormValues,
   bodyFormFields,
@@ -1258,7 +1619,7 @@ function RequestPanel({
   pathParameters,
   queryParameters,
   hasRequestBody,
-  multipart,
+  hasJsonBodySchema,
   isExecuting,
   response,
   onPathFormValuesChange,
@@ -1266,9 +1627,11 @@ function RequestPanel({
   onBodyFormValuesChange,
   onBodyJsonValueChange,
   onBodyInputModeChange,
-  onAuthModeChange,
-  onAuthUserIdChange,
+  onClientAuthChange,
+  onServerAuthChange,
   onExecute,
+  onCopyCurl,
+  onResetRequestForm,
 }: RequestPanelProps) {
   const { account } = useAuth()
   const consoleAccount = account as ConsoleAccountCache | undefined
@@ -1286,81 +1649,75 @@ function RequestPanel({
     )
   }
 
+  const requestPanelContent = (
+    <RequestPanelContent
+      endpoint={endpoint}
+      projectId={projectId}
+      platform={platform}
+      method={method}
+      clientAuth={clientAuth}
+      serverAuth={serverAuth}
+      pathFormValues={pathFormValues}
+      queryFormValues={queryFormValues}
+      bodyFormFields={bodyFormFields}
+      bodyFormValues={bodyFormValues}
+      bodyJsonValue={bodyJsonValue}
+      bodyInputMode={bodyInputMode}
+      pathParameters={pathParameters}
+      queryParameters={queryParameters}
+      hasRequestBody={hasRequestBody}
+      hasJsonBodySchema={hasJsonBodySchema}
+      onPathFormValuesChange={onPathFormValuesChange}
+      onQueryFormValuesChange={onQueryFormValuesChange}
+      onBodyFormValuesChange={onBodyFormValuesChange}
+      onBodyJsonValueChange={onBodyJsonValueChange}
+      onBodyInputModeChange={onBodyInputModeChange}
+      onClientAuthChange={onClientAuthChange}
+      onServerAuthChange={onServerAuthChange}
+    />
+  )
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <MethodRequestHeader
         method={method}
-        isExecuting={isExecuting}
-        multipart={multipart}
-        onExecute={onExecute}
+        endpoint={endpoint}
+        platform={platform}
+        projectId={projectId}
+        serviceId={method.service}
       />
       <MethodDeprecatedWarning method={method} />
-      {response ? (
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ExplorerResponseSplitResizableLayout
           layout={responseSplitLayout}
           persistLayout={persistResponseSplitLayout}
           handleClassName={VERTICAL_HANDLE_CLASS}
-          className="min-h-0 flex-1 overflow-hidden"
+          className="h-full min-h-0 overflow-hidden"
           request={
             <ScrollArea className="h-full min-h-0">
-              <RequestPanelContent
-                endpoint={endpoint}
-                projectId={projectId}
-                platform={platform}
-                method={method}
-                authMode={authMode}
-                authUserId={authUserId}
-                pathFormValues={pathFormValues}
-                queryFormValues={queryFormValues}
-                bodyFormFields={bodyFormFields}
-                bodyFormValues={bodyFormValues}
-                bodyJsonValue={bodyJsonValue}
-                bodyInputMode={bodyInputMode}
-                pathParameters={pathParameters}
-                queryParameters={queryParameters}
-                hasRequestBody={hasRequestBody}
-                multipart={multipart}
-                onPathFormValuesChange={onPathFormValuesChange}
-                onQueryFormValuesChange={onQueryFormValuesChange}
-                onBodyFormValuesChange={onBodyFormValuesChange}
-                onBodyJsonValueChange={onBodyJsonValueChange}
-                onBodyInputModeChange={onBodyInputModeChange}
-                onAuthModeChange={onAuthModeChange}
-                onAuthUserIdChange={onAuthUserIdChange}
-              />
+              {requestPanelContent}
             </ScrollArea>
           }
-          response={<ResponseSection response={response} />}
+          response={
+            response ? (
+              <ResponseSection
+                response={response}
+                isRefreshing={isExecuting}
+              />
+            ) : (
+              <div className="flex h-full min-h-0 items-center justify-center px-4 text-center text-[13px] text-muted-foreground/70">
+                Send a request to see the response here.
+              </div>
+            )
+          }
         />
-      ) : (
-        <ScrollArea className="min-h-0 flex-1">
-          <RequestPanelContent
-            endpoint={endpoint}
-            projectId={projectId}
-            platform={platform}
-            method={method}
-            authMode={authMode}
-            authUserId={authUserId}
-            pathFormValues={pathFormValues}
-            queryFormValues={queryFormValues}
-            bodyFormFields={bodyFormFields}
-            bodyFormValues={bodyFormValues}
-            bodyJsonValue={bodyJsonValue}
-            bodyInputMode={bodyInputMode}
-            pathParameters={pathParameters}
-            queryParameters={queryParameters}
-            hasRequestBody={hasRequestBody}
-            multipart={multipart}
-            onPathFormValuesChange={onPathFormValuesChange}
-            onQueryFormValuesChange={onQueryFormValuesChange}
-            onBodyFormValuesChange={onBodyFormValuesChange}
-            onBodyJsonValueChange={onBodyJsonValueChange}
-            onBodyInputModeChange={onBodyInputModeChange}
-            onAuthModeChange={onAuthModeChange}
-            onAuthUserIdChange={onAuthUserIdChange}
-          />
-        </ScrollArea>
-      )}
+      </div>
+      <MethodRequestFooter
+        isExecuting={isExecuting}
+        onExecute={onExecute}
+        onCopyCurl={onCopyCurl}
+        onResetRequestForm={onResetRequestForm}
+      />
     </div>
   )
 }
@@ -1370,8 +1727,8 @@ type RequestPanelContentProps = Pick<
   | 'endpoint'
   | 'projectId'
   | 'platform'
-  | 'authMode'
-  | 'authUserId'
+  | 'clientAuth'
+  | 'serverAuth'
   | 'pathFormValues'
   | 'queryFormValues'
   | 'bodyFormFields'
@@ -1381,14 +1738,14 @@ type RequestPanelContentProps = Pick<
   | 'pathParameters'
   | 'queryParameters'
   | 'hasRequestBody'
-  | 'multipart'
+  | 'hasJsonBodySchema'
   | 'onPathFormValuesChange'
   | 'onQueryFormValuesChange'
   | 'onBodyFormValuesChange'
   | 'onBodyJsonValueChange'
   | 'onBodyInputModeChange'
-  | 'onAuthModeChange'
-  | 'onAuthUserIdChange'
+  | 'onClientAuthChange'
+  | 'onServerAuthChange'
 > & {
   method: ApiExplorerMethod
 }
@@ -1398,8 +1755,8 @@ function RequestPanelContent({
   projectId,
   platform,
   method,
-  authMode,
-  authUserId,
+  clientAuth,
+  serverAuth,
   pathFormValues,
   queryFormValues,
   bodyFormFields,
@@ -1409,22 +1766,32 @@ function RequestPanelContent({
   pathParameters,
   queryParameters,
   hasRequestBody,
-  multipart,
+  hasJsonBodySchema,
   onPathFormValuesChange,
   onQueryFormValuesChange,
   onBodyFormValuesChange,
   onBodyJsonValueChange,
   onBodyInputModeChange,
-  onAuthModeChange,
-  onAuthUserIdChange,
+  onClientAuthChange,
+  onServerAuthChange,
 }: RequestPanelContentProps) {
   const pathFields = useMemo(
-    () => (pathParameters ?? []).map((param) => parameterToFormField(param)),
-    [pathParameters],
+    () =>
+      (pathParameters ?? []).map((param) => parameterToFormField(param, method)),
+    [pathParameters, method],
   )
   const queryFields = useMemo(
-    () => (queryParameters ?? []).map((param) => parameterToFormField(param)),
-    [queryParameters],
+    () =>
+      (queryParameters ?? []).map((param) => parameterToFormField(param, method)),
+    [queryParameters, method],
+  )
+  const allFormValues = useMemo(
+    () => ({
+      ...pathFormValues,
+      ...queryFormValues,
+      ...bodyFormValues,
+    }),
+    [pathFormValues, queryFormValues, bodyFormValues],
   )
 
   const hasPathParams = pathFields.length > 0
@@ -1439,10 +1806,10 @@ function RequestPanelContent({
         projectId={projectId}
         platform={platform}
         method={method}
-        authMode={authMode}
-        authUserId={authUserId}
-        onAuthModeChange={onAuthModeChange}
-        onAuthUserIdChange={onAuthUserIdChange}
+        clientAuth={clientAuth}
+        serverAuth={serverAuth}
+        onClientAuthChange={onClientAuthChange}
+        onServerAuthChange={onServerAuthChange}
       />
 
       {hasRequestSections && (
@@ -1456,6 +1823,9 @@ function RequestPanelContent({
                   onPathFormValuesChange({ ...pathFormValues, [name]: value })
                 }
                 idPrefix="path"
+                projectId={projectId}
+                formValues={allFormValues}
+                method={method}
               />
             </RequestBuilderSection>
           )}
@@ -1472,6 +1842,9 @@ function RequestPanelContent({
                   onQueryFormValuesChange({ ...queryFormValues, [name]: value })
                 }
                 idPrefix="query"
+                projectId={projectId}
+                formValues={allFormValues}
+                method={method}
               />
             </RequestBuilderSection>
           )}
@@ -1486,18 +1859,15 @@ function RequestPanelContent({
               onFormValuesChange={onBodyFormValuesChange}
               onJsonValueChange={onBodyJsonValueChange}
               onInputModeChange={onBodyInputModeChange}
+              showJsonToggle={hasJsonBodySchema}
               embedded
               showTopBorder={hasPathParams || hasQueryParams}
+              projectId={projectId}
+              allFormValues={allFormValues}
+              method={method}
             />
           )}
         </RequestBuilderPanel>
-      )}
-
-      {multipart && (
-        <p className="text-[13px] text-muted-foreground">
-          This endpoint uses multipart form data. File upload support is coming
-          soon.
-        </p>
       )}
     </div>
   )
@@ -1505,6 +1875,7 @@ function RequestPanelContent({
 
 type ResponseSectionProps = {
   response: ExecuteApiRequestResult
+  isRefreshing?: boolean
 }
 
 function formatResponseDisplay(body: string): {
@@ -1526,7 +1897,81 @@ function formatResponseDisplay(body: string): {
   }
 }
 
-function ResponseSection({ response }: ResponseSectionProps) {
+function ResponseHeadersPanel({ headers }: { headers: Record<string, string> }) {
+  const entries = useMemo(
+    () =>
+      Object.entries(headers).sort(([a], [b]) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base' }),
+      ),
+    [headers],
+  )
+
+  const copyText = useMemo(
+    () => entries.map(([name, value]) => `${name}: ${value}`).join('\n'),
+    [entries],
+  )
+
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(copyText)
+    toast.success('Copied headers')
+  }, [copyText])
+
+  if (entries.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center p-4 text-[13px] text-muted-foreground">
+        No response headers
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      <div className="flex shrink-0 items-center justify-end border-b border-border px-3 py-1.5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 px-2 text-[12px]"
+          onClick={handleCopy}
+        >
+          <Copy className="h-3.5 w-3.5" />
+          Copy
+        </Button>
+      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="w-[200px] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Key
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Value
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entries.map(([name, value]) => (
+              <TableRow key={name}>
+                <TableCell className="px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
+                  {name}
+                </TableCell>
+                <TableCell className="min-w-0 px-4 py-3 align-top font-mono text-[13px] break-all whitespace-normal">
+                  {value}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </div>
+  )
+}
+
+function ResponseSection({ response, isRefreshing = false }: ResponseSectionProps) {
+  const imagePreviewUrl = response.imagePreviewUrl
+  const bodyTabLabel = imagePreviewUrl ? 'Preview' : 'Body'
+
   const { code, language } = useMemo(
     () => formatResponseDisplay(response.body),
     [response.body],
@@ -1539,29 +1984,79 @@ function ResponseSection({ response }: ResponseSectionProps) {
       : 'warning'
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border bg-muted/30 px-3">
-        <span className="text-[12px] font-semibold text-foreground">Response</span>
-        <Badge variant={statusVariant} className="text-[10px] shrink-0">
-          {response.status} {response.statusText}
-        </Badge>
-        <Badge variant="secondary" className="text-[10px] shrink-0">
-          {response.durationMs} ms
-        </Badge>
+    <Tabs
+      key={`${response.status}:${response.durationMs}:${response.binaryByteSize ?? response.body.length}`}
+      defaultValue="body"
+      className="flex h-full min-h-0 flex-col gap-0"
+    >
+      <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="text-[12px] font-semibold text-foreground">Response</span>
+          <Badge variant={statusVariant} className="text-[10px] shrink-0">
+            {response.status} {response.statusText}
+          </Badge>
+          <Badge variant="secondary" className="text-[10px] shrink-0">
+            {response.durationMs} ms
+          </Badge>
+          {response.responseContentType ? (
+            <Badge variant="secondary" className="text-[10px] shrink-0">
+              {response.responseContentType}
+            </Badge>
+          ) : null}
+          {isRefreshing ? (
+            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+          ) : null}
+        </div>
+        <TabsList className="h-7 shrink-0">
+          <TabsTrigger value="body" className="h-6 px-2.5 text-[11px]">
+            {bodyTabLabel}
+          </TabsTrigger>
+          <TabsTrigger value="headers" className="h-6 px-2.5 text-[11px]">
+            Headers
+          </TabsTrigger>
+        </TabsList>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <CodeBlock
-          code={code}
-          language={language}
-          variant="headless"
-          copyInside
-          showCopy
-          showFullscreen
-          wrapLines
-          fixedHeight="100%"
-          className="flex h-full min-h-0 flex-col"
-        />
-      </div>
-    </div>
+      <TabsContent
+        value="body"
+        className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        {imagePreviewUrl ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-b-2 border-border">
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-muted/20 p-4">
+              <img
+                src={imagePreviewUrl}
+                alt="Response preview"
+                className="max-h-full max-w-full rounded-lg border border-border object-contain"
+              />
+            </div>
+            {response.binaryByteSize != null ? (
+              <div className="shrink-0 border-t-2 border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground">
+                {response.binaryByteSize.toLocaleString()} bytes
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <CodeBlock
+              code={code}
+              language={language}
+              variant="headless"
+              copyInside
+              showCopy
+              showFullscreen
+              wrapLines
+              fixedHeight="100%"
+              className="flex h-full min-h-0 flex-col"
+            />
+          </div>
+        )}
+      </TabsContent>
+      <TabsContent
+        value="headers"
+        className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <ResponseHeadersPanel headers={response.headers} />
+      </TabsContent>
+    </Tabs>
   )
 }
