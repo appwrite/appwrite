@@ -366,7 +366,7 @@ jobs:
 
       - name: Run Unit Tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        uses: itznotabug/php-retry@d4500b9db3258e2cc8857427980f28e1611eb79c # v3
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
@@ -418,7 +418,7 @@ jobs:
 
       - name: Run General Tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        uses: itznotabug/php-retry@d4500b9db3258e2cc8857427980f28e1611eb79c # v3
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
@@ -508,7 +508,7 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        uses: itznotabug/php-retry@d4500b9db3258e2cc8857427980f28e1611eb79c # v3
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
@@ -583,7 +583,7 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        uses: itznotabug/php-retry@d4500b9db3258e2cc8857427980f28e1611eb79c # v3
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
@@ -649,7 +649,7 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        uses: itznotabug/php-retry@d4500b9db3258e2cc8857427980f28e1611eb79c # v3
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
