@@ -1695,16 +1695,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
-
-                
-                if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
-
-                if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
-                    $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
-                }
-
                 if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
-
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
@@ -1845,16 +1836,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-
-            
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
-
-            if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
-                $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
-            }
-
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
-
                 $failureRedirect(Exception::USER_EMAIL_FREE);
             }
 
