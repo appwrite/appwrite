@@ -704,7 +704,7 @@ class Builds extends Action
             $span = Span::current();
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version, $span) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cacheKey, $cpus, $memory, $timeout, &$err, $version, $span) {
                     try {
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
@@ -732,8 +732,7 @@ class Builds extends Action
                             variables: $vars,
                             command: $command,
                             outputDirectory: $outputDirectory ?? '',
-                            // temporarily disable build cache
-                            // cacheKey: $cacheKey
+                            cacheKey: $cacheKey
                         );
 
                     } catch (ExecutorTimeout $error) {

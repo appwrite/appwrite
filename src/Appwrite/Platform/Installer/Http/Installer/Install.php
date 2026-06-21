@@ -42,7 +42,14 @@ class Install extends Action
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
             ->param('database', '', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database adapter', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
-            ->param('retryStep', null, new Nullable(new WhiteList([Server::STEP_DOCKER_COMPOSE, Server::STEP_ENV_VARS, Server::STEP_DOCKER_CONTAINERS], true)), 'Retry from step', true)
+            ->param('retryStep', null, new Nullable(new WhiteList([
+                Server::STEP_CONFIG_FILES,
+                Server::STEP_DOCKER_COMPOSE,
+                Server::STEP_ENV_VARS,
+                Server::STEP_DOCKER_CONTAINERS,
+                Server::STEP_ACCOUNT_SETUP,
+                Server::STEP_MIGRATION,
+            ], true)), 'Retry from step', true)
             ->param('migrate', false, new \Utopia\Validator\Boolean(true), 'Run database migration after upgrade', true)
             ->inject('request')
             ->inject('response')
