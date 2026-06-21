@@ -101,7 +101,7 @@ final class VariablesCustomServerTest extends Scope
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertSame(200, $deployment['headers']['status-code']);
-        $this->assertStringContainsString('Project Variable Value', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Project Variable Value', (string) $deployment['body']['buildLogs']);
 
         // 6. Execute the function and verify the project variable is in runtime output
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -221,7 +221,7 @@ final class VariablesCustomServerTest extends Scope
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertSame(200, $deployment['headers']['status-code']);
-        $this->assertStringContainsString('ProjectVarTest', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('ProjectVarTest', (string) $deployment['body']['buildLogs']);
 
         // 7. Get the domain and access the site
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
@@ -245,8 +245,8 @@ final class VariablesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Env variable is ProjectVarTest', $response['body']);
-        $this->assertStringNotContainsString('Variable not found', $response['body']);
+        $this->assertStringContainsString('Env variable is ProjectVarTest', (string) $response['body']);
+        $this->assertStringNotContainsString('Variable not found', (string) $response['body']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, [
