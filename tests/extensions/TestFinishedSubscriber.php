@@ -15,7 +15,13 @@ class TestFinishedSubscriber implements FinishedSubscriber
     public function notify(Finished $event): void
     {
         $test = $event->test()->name();
-        $time = $event->telemetryInfo()->durationSinceStart()->seconds();
+        $testId = $event->test()->id();
+
+        $elapsed = $event->telemetryInfo()->durationSinceStart()->seconds();
+        $start = TestPreparedSubscriber::$startSeconds[$testId] ?? null;
+        $time = $start === null ? $elapsed : $elapsed - $start;
+
+        unset(TestPreparedSubscriber::$startSeconds[$testId]);
 
         printf(
             "%s ended in %s milliseconds\n",
