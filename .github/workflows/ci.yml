@@ -91,109 +91,11 @@ jobs:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
 
-  composer:
-    name: Checks / Composer
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Validate
-        run: composer validate
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Audit
-        env:
-          COMPOSER_NO_AUDIT: 0
-        run: composer audit
-
-  format:
-    name: Checks / Format
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 2
-
-      - run: git checkout HEAD^2
-        if: github.event_name == 'pull_request'
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Run Linter
-        run: composer lint
-
-  refactor:
-    name: Checks / Refactor
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Run Rector
-        run: composer refactor:check
-
-  analyze:
-    name: Checks / Analyze
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Cache PHPStan result cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: .phpstan-cache
-          key: phpstan-${{ github.sha }}
-          restore-keys: |
-            phpstan-
-
-      - name: Run PHPStan
-        run: composer analyze -- --no-progress
-
-  specs:
-    name: Checks / Specs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup PHP
@@ -204,10 +106,42 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Validate composer.json
+        run: composer validate
+
       - name: Install dependencies
+        id: install
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
+      - name: Cache PHPStan result cache
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .phpstan-cache
+          key: phpstan-${{ github.sha }}
+          restore-keys: |
+            phpstan-
+
+      - name: Audit dependencies
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          COMPOSER_NO_AUDIT: 0
+        run: composer audit
+
+      - name: Run Linter
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: composer lint
+
+      - name: Run Rector
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: composer refactor:check
+
+      - name: Run PHPStan
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: composer analyze -- --no-progress
+
       - name: Generate specs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
