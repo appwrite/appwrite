@@ -18,10 +18,10 @@ class TestFinishedSubscriber implements FinishedSubscriber
         $testId = $event->test()->id();
 
         $elapsed = $event->telemetryInfo()->durationSinceStart()->seconds();
-        $start = TestPreparedSubscriber::$startSeconds[$testId] ?? null;
+        $start = TestPreparationStartedSubscriber::$startSeconds[$testId] ?? null;
         $time = $start === null ? $elapsed : $elapsed - $start;
 
-        unset(TestPreparedSubscriber::$startSeconds[$testId]);
+        unset(TestPreparationStartedSubscriber::$startSeconds[$testId]);
 
         printf(
             "%s ended in %s milliseconds\n",
