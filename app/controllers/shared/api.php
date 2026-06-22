@@ -570,6 +570,7 @@ Http::init()
     ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser) {
 
         $response->setUser($user);
+        $response->setImpersonatorUser($impersonatorUser);
         $request->setUser($user);
 
         $path = $route->getPath();

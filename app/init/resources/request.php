@@ -508,7 +508,6 @@ return function (Container $context): void {
             if ($targetUser !== null && !$targetUser->isEmpty()) {
                 $impersonatorUser->setAttributes((clone $user)->getArrayCopy());
                 $user = clone $targetUser;
-                $user->setAttribute('impersonatorUserId', $impersonatorUser->getId());
             }
         }
 
