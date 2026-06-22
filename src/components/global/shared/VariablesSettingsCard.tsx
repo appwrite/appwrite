@@ -291,7 +291,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   >([{ key: '', value: '' }])
   const [createSecret, setCreateSecret] = useState(false)
   const [updateValue, setUpdateValue] = useState('')
-  const [updateSecret, setUpdateSecret] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importSecret, setImportSecret] = useState(false)
   const [importError, setImportError] = useState('')
@@ -508,13 +507,12 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         variableId: selectedVar.$id,
         key: selectedVar.key,
         value: updateValue,
-        secret: updateSecret,
+        secret: selectedVar.secret || false,
       })
       toast.success(`${scopeLabel} variable has been updated.`)
       setShowUpdateModal(false)
       setSelectedVar(null)
       setUpdateValue('')
-      setUpdateSecret(false)
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to update variable'))
     }
@@ -753,10 +751,8 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   useEffect(() => {
     if (!showUpdateModal) {
       setUpdateValue('')
-      setUpdateSecret(false)
     } else if (selectedVar) {
       setUpdateValue(selectedVar.secret ? '' : selectedVar.value || '')
-      setUpdateSecret(selectedVar.secret || false)
     }
   }, [showUpdateModal, selectedVar])
 
@@ -1301,19 +1297,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   placeholder="Enter value"
                   className="font-mono text-[13px]"
                 />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="update-secret"
-                  checked={updateSecret}
-                  onCheckedChange={(c) => setUpdateSecret(c === true)}
-                />
-                <Label
-                  htmlFor="update-secret"
-                  className="text-[13px] cursor-pointer"
-                >
-                  Secret
-                </Label>
               </div>
             </div>
           </div>
