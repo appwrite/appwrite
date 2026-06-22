@@ -110,6 +110,7 @@ return function (Container $context): void {
     $context->set('queueForRealtime', fn () => new Realtime(), []);
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
+    $context->set('impersonatorUser', fn () => new Document(), []);
     $context->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
@@ -350,7 +351,7 @@ return function (Container $context): void {
         ['devKey', 'allowedHostnames', 'allowedSchemes']
     );
 
-    $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
+    $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization, Document $impersonatorUser) {
         /**
          * Handles user authentication and session validation.
          *
@@ -505,13 +506,9 @@ return function (Container $context): void {
                 $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
             }
             if ($targetUser !== null && !$targetUser->isEmpty()) {
-                $impersonator = clone $user;
+                $impersonatorUser->setAttributes((clone $user)->getArrayCopy());
                 $user = clone $targetUser;
-                $user->setAttribute('impersonatorUserId', $impersonator->getId());
-                $user->setAttribute('impersonatorUserInternalId', $impersonator->getSequence());
-                $user->setAttribute('impersonatorUserName', $impersonator->getAttribute('name', ''));
-                $user->setAttribute('impersonatorUserEmail', $impersonator->getAttribute('email', ''));
-                $user->setAttribute('impersonatorAccessedAt', $impersonator->getAttribute('accessedAt', 0));
+                $user->setAttribute('impersonatorUserId', $impersonatorUser->getId());
             }
         }
 
@@ -519,7 +516,7 @@ return function (Container $context): void {
         $dbForPlatform->setMetadata('user', $user->getId());
 
         return $user;
-    }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
+    }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization', 'impersonatorUser']);
 
     $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia) {
         /** @var Appwrite\Utopia\Request $request */

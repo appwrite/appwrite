@@ -99,7 +99,8 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->inject('impersonatorUser')
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Document $impersonatorUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -353,7 +354,7 @@ Http::init()
             !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
-                || $user->getAttribute('impersonatorUserId')
+                || !$impersonatorUser->isEmpty()
             )
         ) {
             $scopes[] = 'users.read';
@@ -391,11 +392,10 @@ Http::init()
         }
 
         if (! empty($user->getId())) {
-            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
 
             // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
-            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+            if ($impersonatorUser->isEmpty() && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
@@ -566,7 +566,8 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->inject('impersonatorUser')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser) {
 
         $response->setUser($user);
         $request->setUser($user);
@@ -596,6 +597,7 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
+        $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
 
         /* If a session exists, use the user associated with the session */
         if (! $user->isEmpty()) {

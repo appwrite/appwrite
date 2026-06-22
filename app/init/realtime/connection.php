@@ -209,7 +209,9 @@ return function (Container $container): void {
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
     }, ['platform', 'request', 'project', 'servers', 'authorization']);
 
-    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
+    $container->set('impersonatorUser', fn () => new Document(), []);
+
+    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Document $impersonatorUser) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
         $store = new Store();
         $proofForToken = new Token();
@@ -350,13 +352,9 @@ return function (Container $container): void {
             }
 
             if ($targetUser !== null && !$targetUser->isEmpty()) {
-                $impersonator = clone $user;
+                $impersonatorUser->setAttributes((clone $user)->getArrayCopy());
                 $user = clone $targetUser;
-                $user->setAttribute('impersonatorUserId', $impersonator->getId());
-                $user->setAttribute('impersonatorUserInternalId', $impersonator->getSequence());
-                $user->setAttribute('impersonatorUserName', $impersonator->getAttribute('name', ''));
-                $user->setAttribute('impersonatorUserEmail', $impersonator->getAttribute('email', ''));
-                $user->setAttribute('impersonatorAccessedAt', $impersonator->getAttribute('accessedAt', 0));
+                $user->setAttribute('impersonatorUserId', $impersonatorUser->getId());
             }
         }
 
@@ -364,5 +362,5 @@ return function (Container $container): void {
         $dbForProject->setMetadata('user', $user->getId());
 
         return $user;
-    }, ['request', 'project', 'console', 'authorization']);
+    }, ['request', 'project', 'console', 'authorization', 'impersonatorUser']);
 };

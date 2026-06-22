@@ -74,18 +74,13 @@ class Audits extends Action
         $userAgent = $auditMessage->userAgent;
         $ip = $auditMessage->ip;
         $user = $auditMessage->user;
+        $impersonatorUser = $auditMessage->impersonatorUser;
 
-        $impersonatorUserId = $user->getAttribute('impersonatorUserId');
-        $actorUserId = $impersonatorUserId ?: $user->getId();
-        $actorUserInternalId = $impersonatorUserId
-            ? $user->getAttribute('impersonatorUserInternalId')
-            : $user->getSequence();
-        $actorUserName = $impersonatorUserId
-            ? $user->getAttribute('impersonatorUserName', '')
-            : $user->getAttribute('name', '');
-        $actorUserEmail = $impersonatorUserId
-            ? $user->getAttribute('impersonatorUserEmail', '')
-            : $user->getAttribute('email', '');
+        $isImpersonated = !$impersonatorUser->isEmpty();
+        $actorUserId = $isImpersonated ? $impersonatorUser->getId() : $user->getId();
+        $actorUserInternalId = $isImpersonated ? $impersonatorUser->getSequence() : $user->getSequence();
+        $actorUserName = $isImpersonated ? $impersonatorUser->getAttribute('name', '') : $user->getAttribute('name', '');
+        $actorUserEmail = $isImpersonated ? $impersonatorUser->getAttribute('email', '') : $user->getAttribute('email', '');
         $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
@@ -106,7 +101,7 @@ class Audits extends Action
             'time' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
-        if (!empty($impersonatorUserId)) {
+        if ($isImpersonated) {
             $eventData['data']['data'] = \is_array($auditPayload)
                 ? \array_merge($auditPayload, [
                     'impersonatedUserId' => $user->getId(),
