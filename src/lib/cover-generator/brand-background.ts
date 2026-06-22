@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import sharp from 'sharp'
+import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
 import {
   COVER_HEIGHT,
   COVER_WIDTH,
@@ -150,20 +149,6 @@ export function getTitleFill(
   return gradientTitle ? 'url(#cover-title-gradient)' : brand.foreground
 }
 
-const PUBLIC_DIR = join(process.cwd(), 'public')
-
-export async function readPublicAssetDataUri(
-  publicSrc: string,
-  mimeType: string,
-): Promise<string | null> {
-  try {
-    const buffer = await readFile(join(PUBLIC_DIR, publicSrc.replace(/^\/+/, '')))
-    return `data:${mimeType};base64,${buffer.toString('base64')}`
-  } catch {
-    return null
-  }
-}
-
 export async function resolveCoverImageHref(
   source: string | undefined,
 ): Promise<string | null> {
@@ -184,7 +169,7 @@ export async function resolveCoverImageHref(
               : ext === 'avif'
                 ? 'image/avif'
                 : 'application/octet-stream'
-    return readPublicAssetDataUri(value, mime)
+    return readCoverPublicAssetDataUri(value, mime)
   }
   if (/^https?:\/\//i.test(value)) return value
   return null

@@ -1,7 +1,4 @@
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
-
-const PUBLIC_DIR = join(process.cwd(), 'public')
+import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
 const AEONIK_REGULAR = '/fonts/aeonik-pro/AeonikPro-Regular.woff2'
 const AEONIK_MEDIUM = '/fonts/aeonik-pro/AeonikPro-Medium.woff2'
 const INTER_REGULAR = '/fonts/inter/inter-v8-latin-regular.woff2'
@@ -10,12 +7,7 @@ const INTER_SEMIBOLD = '/fonts/inter/inter-v8-latin-600.woff2'
 let cachedFontFaceCss: string | null = null
 
 async function readFontDataUri(relativePath: string): Promise<string | null> {
-  try {
-    const buffer = await readFile(join(PUBLIC_DIR, relativePath.replace(/^\/+/, '')))
-    return `data:font/woff2;base64,${buffer.toString('base64')}`
-  } catch {
-    return null
-  }
+  return readCoverPublicAssetDataUri(relativePath, 'font/woff2')
 }
 
 export async function getCoverFontFaceCss(): Promise<string> {

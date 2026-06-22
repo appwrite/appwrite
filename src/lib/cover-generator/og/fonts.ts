@@ -1,8 +1,5 @@
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { decompress as decompressWoff2 } from 'wawoff2'
-
-const PUBLIC_DIR = join(process.cwd(), 'public')
+import { readCoverPublicAssetBuffer } from '@/lib/cover-generator/public-assets'
 
 export type CoverOgFont = {
   name: string
@@ -14,7 +11,10 @@ export type CoverOgFont = {
 let cachedFonts: CoverOgFont[] | null = null
 
 async function loadOgFont(relativePath: string, weight: 400 | 600): Promise<CoverOgFont> {
-  const woff2 = await readFile(join(PUBLIC_DIR, relativePath.replace(/^\/+/, '')))
+  const woff2 = await readCoverPublicAssetBuffer(relativePath)
+  if (!woff2) {
+    throw new Error(`Cover OG font not found: ${relativePath}`)
+  }
   const ttf = await decompressWoff2(new Uint8Array(woff2))
   return {
     name: 'Aeonik Pro',
