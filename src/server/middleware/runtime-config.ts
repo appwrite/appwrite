@@ -19,6 +19,10 @@ export const runtimeConfigMiddleware = createMiddleware({
 }).server(async ({ next }) => {
   const result = await next()
   const response = result.response
+  if (!response?.headers) {
+    return result
+  }
+
   const contentType = response.headers.get('content-type') ?? ''
   if (!contentType.includes('text/html')) {
     return result
@@ -26,9 +30,6 @@ export const runtimeConfigMiddleware = createMiddleware({
 
   const html = await response.text()
   const injected = injectRuntimeConfigIntoHtml(html, RUNTIME_CONFIG_JSON)
-  if (injected === html) {
-    return result
-  }
 
   const headers = new Headers(response.headers)
   headers.delete('content-length')
