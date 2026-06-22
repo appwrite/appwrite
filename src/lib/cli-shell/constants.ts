@@ -20,7 +20,7 @@ export const CLI_PROJECT_CWD = '/project'
 export const CLI_APPWRITE_BIN = '/node_modules/.bin/appwrite'
 
 /** Pinned Appwrite CLI version installed in the browser runtime. */
-export const CLI_APPWRITE_CLI_VERSION = '22.0.0'
+export const CLI_APPWRITE_CLI_VERSION = '22.1.2'
 
 /** npm package name for the Appwrite CLI. */
 export const CLI_APPWRITE_CLI_PACKAGE = 'appwrite-cli'

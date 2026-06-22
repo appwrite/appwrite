@@ -11,6 +11,7 @@ export const COVER_HEIGHT = 630
 
 export const COVER_SIZE_PRESETS = [
   { id: 'og', label: 'Open Graph', width: 1200, height: 630 },
+  { id: 'blog', label: 'Blog post (16:9)', width: 1920, height: 1080 },
   { id: 'twitter', label: 'Twitter / X', width: 1600, height: 900 },
   { id: 'square', label: 'Square', width: 1080, height: 1080 },
   { id: 'story', label: 'Story', width: 1080, height: 1920 },

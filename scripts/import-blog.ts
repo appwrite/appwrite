@@ -1,6 +1,7 @@
 /**
  * Imports blog content from the Appwrite website repo into src/content/blog.
- * Run: bun run scripts/import-blog.ts
+ * Vibes-native posts live in src/content/blog-local and are not touched by this script.
+ * Run: bun run scripts/import:blog
  */
 import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'

@@ -23,11 +23,19 @@ import type {
   BlogPostsPage,
 } from './types'
 
-const postLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
+const importedPostLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
+
+const localPostLoaders = import.meta.glob('/src/content/blog-local/posts/*.markdoc', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const postLoaders = { ...importedPostLoaders, ...localPostLoaders }
 
 const categoryLoaders = import.meta.glob('/src/content/blog/categories/*.markdoc', {
   query: '?raw',
@@ -43,7 +51,7 @@ const authorLoaders = import.meta.glob('/src/content/blog/authors/*.markdoc', {
 
 function slugFromModulePath(modulePath: string, segment: string): string {
   const match = modulePath.match(
-    new RegExp(`/src/content/blog/${segment}/(.+)\\.markdoc$`),
+    new RegExp(`/src/content/blog(?:-local)?/${segment}/(.+)\\.markdoc$`),
   )
   return match?.[1] ?? ''
 }

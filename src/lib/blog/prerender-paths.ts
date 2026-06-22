@@ -9,7 +9,10 @@ const packageRoot = path.resolve(
   '../../..',
 )
 
-const postsDirectory = path.join(packageRoot, 'src/content/blog/posts')
+const postsDirectories = [
+  path.join(packageRoot, 'src/content/blog/posts'),
+  path.join(packageRoot, 'src/content/blog-local/posts'),
+]
 const categoriesDirectory = path.join(packageRoot, 'src/content/blog/categories')
 const authorsDirectory = path.join(packageRoot, 'src/content/blog/authors')
 
@@ -85,13 +88,16 @@ function getBlogAuthorPathsFromSlugs(slugs: string[]): string[] {
 
 /** Build-time paths from source markdoc files. */
 export function getBlogPrerenderPaths(): string[] {
-  const postSlugs = readPublicPostSlugsFromDirectory(postsDirectory)
+  const postSlugs = postsDirectories.flatMap((directory) =>
+    readPublicPostSlugsFromDirectory(directory),
+  )
+  const uniquePostSlugs = [...new Set(postSlugs)].sort()
   const categorySlugs = readSlugsFromDirectory(categoriesDirectory)
   const authorSlugs = readSlugsFromDirectory(authorsDirectory)
 
   return [
-    ...getBlogIndexPaths(postSlugs.length),
-    ...getBlogPostPathsFromSlugs(postSlugs),
+    ...getBlogIndexPaths(uniquePostSlugs.length),
+    ...getBlogPostPathsFromSlugs(uniquePostSlugs),
     ...getBlogCategoryPathsFromSlugs(categorySlugs),
     ...getBlogAuthorPathsFromSlugs(authorSlugs),
   ]
