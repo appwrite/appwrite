@@ -80,7 +80,7 @@ class Delete extends Action
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);

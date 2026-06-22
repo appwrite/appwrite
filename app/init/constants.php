@@ -272,6 +272,17 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
+const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_INVITATION = 'invitation';
+const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
+const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
+const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_RECOVERY = 'recovery';
+const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
+const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';
+const MAIL_TEMPLATE_VERIFICATION = 'verification';
+const MAIL_TEMPLATE_WEBHOOK_FAILED = 'webhook-failed';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';

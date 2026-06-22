@@ -97,7 +97,7 @@ class Decrement extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

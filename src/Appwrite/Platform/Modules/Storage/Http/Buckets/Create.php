@@ -129,8 +129,8 @@ class Create extends Action
                     '$id' => $index['$id'],
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]);
             }
 
