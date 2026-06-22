@@ -1269,7 +1269,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.24.1
+    image: openruntimes/executor:0.25.1
     restart: unless-stopped
     networks:
       - appwrite

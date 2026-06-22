@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Logs;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -20,7 +21,6 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action;
 
 class XList extends Action
 {
@@ -67,7 +67,7 @@ class XList extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

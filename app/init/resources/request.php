@@ -1111,7 +1111,11 @@ return function (Container $context): void {
                 return new Document([]);
             }
 
-            $token = $authorization->skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+            try {
+                $token = $authorization->skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+            } catch (\Utopia\Database\Exception\NotFound) {
+                return new Document([]);
+            }
 
             if ($token->isEmpty()) {
                 return new Document([]);
