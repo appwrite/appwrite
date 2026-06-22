@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { CONTENT_BODY_FONT_CLASS } from '@/lib/docs/prose-typography'
 import { cn } from '@/lib/utils'
 import { slugifyHeading } from '@/lib/marketing/slugify'
 
@@ -82,7 +83,9 @@ export function PolicyMarkdown({ content, className }: PolicyMarkdownProps) {
   return (
     <div
       className={cn(
-        'policy-prose text-[14px] leading-7 text-muted-foreground',
+        'policy-prose',
+        CONTENT_BODY_FONT_CLASS,
+        'text-[14px] leading-7 text-muted-foreground',
         '[&_p]:my-0 [&_p+p]:mt-4',
         '[&_h2]:mb-3 [&_h2]:mt-10 [&_h2]:scroll-mt-24 [&_h2]:font-aeonik-pro [&_h2]:text-[20px] [&_h2]:font-normal [&_h2]:text-foreground',
         '[&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:scroll-mt-24 [&_h3]:text-[15px] [&_h3]:font-semibold [&_h3]:text-foreground',

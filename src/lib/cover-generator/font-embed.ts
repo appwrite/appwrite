@@ -1,8 +1,8 @@
 import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
 const AEONIK_REGULAR = '/fonts/aeonik-pro/AeonikPro-Regular.woff2'
 const AEONIK_MEDIUM = '/fonts/aeonik-pro/AeonikPro-Medium.woff2'
-const INTER_REGULAR = '/fonts/inter/inter-v8-latin-regular.woff2'
-const INTER_SEMIBOLD = '/fonts/inter/inter-v8-latin-600.woff2'
+const INTER_REGULAR = '/fonts/inter/inter-latin-400-normal.woff2'
+const INTER_SEMIBOLD = '/fonts/inter/inter-latin-600-normal.woff2'
 
 let cachedFontFaceCss: string | null = null
 

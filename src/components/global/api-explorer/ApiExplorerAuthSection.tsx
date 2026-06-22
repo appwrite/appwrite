@@ -241,11 +241,7 @@ export function ApiExplorerAuthSection({
 
     setIsGeneratingKey(true)
     try {
-      const result = await createEphemeralApiKeyForExplorer(
-        projectId,
-        scopes,
-        method.summary || method.id,
-      )
+      const result = await createEphemeralApiKeyForExplorer(projectId, scopes)
       onServerAuthChange({
         ...serverAuth,
         mode: 'ephemeral',
@@ -258,13 +254,7 @@ export function ApiExplorerAuthSection({
     } finally {
       setIsGeneratingKey(false)
     }
-  }, [
-    method.id,
-    method.summary,
-    onServerAuthChange,
-    projectId,
-    serverAuth,
-  ])
+  }, [onServerAuthChange, projectId, serverAuth])
 
   const showClientAuth = platform === 'client' && requiresSessionAuth
   const showServerAuth = platform === 'server' && supportsServerApiKey

@@ -1,8 +1,14 @@
 import { cn } from '@/lib/utils'
 
+/** Content body font — Inter with website letter-spacing (--web-letter-spacing-tight). */
+export const CONTENT_BODY_FONT_CLASS =
+  'font-inter font-normal tracking-[-0.0045em]'
+
 /** Shared body copy scale for docs articles. */
-export const DOCS_BODY_TEXT_CLASS =
-  'text-[16px] leading-[1.7] text-muted-foreground @[640px]:text-[17px] @[640px]:leading-[1.65]'
+export const DOCS_BODY_TEXT_CLASS = cn(
+  CONTENT_BODY_FONT_CLASS,
+  'text-[16px] leading-[1.7] text-muted-foreground @[640px]:text-[17px] @[640px]:leading-[1.65]',
+)
 
 /** Sidebar TOC links — smaller than article body. */
 export const DOCS_TOC_LINK_TEXT_CLASS =

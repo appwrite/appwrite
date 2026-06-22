@@ -73,9 +73,10 @@ code {
   /* Cloud profile - matches appwrite/website; files in public/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  /* Self-hosted / non-cloud project overview title; files in public/fonts/inter (from appwrite/console) */
-  --font-inter-overview:
-    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  /* Long-form content body copy — matches appwrite/website (--web-font-family-inter) */
+  --font-inter: 'Inter', arial, sans-serif;
+  /* Self-hosted / non-cloud project overview title */
+  --font-inter-overview: var(--font-inter);
 }
 
 .dark {
@@ -515,6 +516,10 @@ code {
 @layer utilities {
   .font-aeonik-pro {
     font-family: var(--font-aeonik-pro);
+  }
+
+  .font-inter {
+    font-family: var(--font-inter);
   }
 
   .font-inter-overview {
