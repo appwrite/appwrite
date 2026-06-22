@@ -1687,6 +1687,7 @@ final class SitesCustomServerTest extends Scope
         // Change the function specs
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1705,6 +1706,7 @@ final class SitesCustomServerTest extends Scope
         // Change the specs to 1vcpu 512mb
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
