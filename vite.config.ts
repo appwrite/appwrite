@@ -183,7 +183,10 @@ export default defineConfig(async () => {
       ],
       // Serve TanStack store packages as native ESM. Pre-bundling cached an older
       // @tanstack/react-store without createAtom when router upgraded first.
-      exclude: ['@tanstack/react-store', '@tanstack/store', 'almostnode'],
+      exclude: ['@tanstack/react-store', '@tanstack/store', 'almostnode', 'sharp'],
+    },
+    ssr: {
+      external: ['sharp'],
     },
     preview: {
       port: 4173,

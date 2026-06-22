@@ -15,6 +15,7 @@ export const MARKETING_PAGE_PATHS = [
   '/changelog',
   '/blog',
   '/assets',
+  '/generator',
   '/products/auth',
   '/products/databases',
   '/products/storage',

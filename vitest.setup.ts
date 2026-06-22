@@ -2,7 +2,8 @@ import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 
 // jsdom doesn't provide matchMedia - mock it globally
-Object.defineProperty(window, 'matchMedia', {
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
@@ -14,4 +15,5 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+  })
+}

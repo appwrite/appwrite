@@ -15,6 +15,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as EnterpriseRouteImport } from './routes/enterprise'
 import { Route as EducationRouteImport } from './routes/education'
 import { Route as DomainsRouteImport } from './routes/domains'
@@ -76,6 +77,7 @@ import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_publi
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
+import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
@@ -105,6 +107,7 @@ import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_p
 import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
+import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/generator/cover.encode'
 import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
 import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
 import { Route as PublicProjectsProjectIdSitesIndexRouteImport } from './routes/_public/projects.$projectId.sites.index'
@@ -337,6 +340,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GeneratorRoute = GeneratorRouteImport.update({
+  id: '/generator',
+  path: '/generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnterpriseRoute = EnterpriseRouteImport.update({
@@ -646,6 +654,11 @@ const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
   path: '/oauth2/consent',
   getParentRoute: () => AuthRoute,
 } as any)
+const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
+  id: '/_api/generator/cover',
+  path: '/generator/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicProjectsProjectIdIndexRoute =
   PublicProjectsProjectIdIndexRouteImport.update({
     id: '/',
@@ -819,6 +832,11 @@ const ApiInitCalendarEventSlugRoute =
     path: '/init/calendar/$eventSlug',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiGeneratorCoverEncodeRoute = ApiGeneratorCoverEncodeRouteImport.update({
+  id: '/encode',
+  path: '/encode',
+  getParentRoute: () => ApiGeneratorCoverRoute,
+} as any)
 const PublicProjectsProjectIdStoresIndexRoute =
   PublicProjectsProjectIdStoresIndexRouteImport.update({
     id: '/',
@@ -2201,6 +2219,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
+  '/generator': typeof GeneratorRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2239,6 +2258,7 @@ export interface FileRoutesByFullPath {
   '/docs/': typeof DocsIndexRoute
   '/integrations': typeof IntegrationsIndexRoute
   '/threads': typeof ThreadsIndexRoute
+  '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2256,6 +2276,7 @@ export interface FileRoutesByFullPath {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account/': typeof PublicAccountIndexRoute
+  '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
@@ -2498,6 +2519,7 @@ export interface FileRoutesByTo {
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
+  '/generator': typeof GeneratorRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2535,6 +2557,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsIndexRoute
   '/integrations': typeof IntegrationsIndexRoute
   '/threads': typeof ThreadsIndexRoute
+  '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2550,6 +2573,7 @@ export interface FileRoutesByTo {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account': typeof PublicAccountIndexRoute
+  '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -2764,6 +2788,7 @@ export interface FileRoutesById {
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
+  '/generator': typeof GeneratorRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2802,6 +2827,7 @@ export interface FileRoutesById {
   '/docs/': typeof DocsIndexRoute
   '/integrations/': typeof IntegrationsIndexRoute
   '/threads/': typeof ThreadsIndexRoute
+  '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2819,6 +2845,7 @@ export interface FileRoutesById {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/_public/account/': typeof PublicAccountIndexRoute
+  '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
   '/_public/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
@@ -3064,6 +3091,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/generator'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -3102,6 +3130,7 @@ export interface FileRouteTypes {
     | '/docs/'
     | '/integrations'
     | '/threads'
+    | '/generator/cover'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/account/billing-addresses'
@@ -3119,6 +3148,7 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/account/'
+    | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/apps'
@@ -3361,6 +3391,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/generator'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -3398,6 +3429,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/integrations'
     | '/threads'
+    | '/generator/cover'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/account/billing-addresses'
@@ -3413,6 +3445,7 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/account'
+    | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
     | '/organizations/$orgId/billing'
@@ -3626,6 +3659,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/generator'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -3664,6 +3698,7 @@ export interface FileRouteTypes {
     | '/docs/'
     | '/integrations/'
     | '/threads/'
+    | '/_api/generator/cover'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
     | '/_public/account/billing-addresses'
@@ -3681,6 +3716,7 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/_public/account/'
+    | '/_api/generator/cover/encode'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
     | '/_public/organizations/$orgId/apps'
@@ -3928,6 +3964,7 @@ export interface RootRouteChildren {
   DomainsRoute: typeof DomainsRouteWithChildren
   EducationRoute: typeof EducationRoute
   EnterpriseRoute: typeof EnterpriseRoute
+  GeneratorRoute: typeof GeneratorRoute
   HomeRoute: typeof HomeRoute
   PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
@@ -3945,6 +3982,7 @@ export interface RootRouteChildren {
   ChangelogIndexRoute: typeof ChangelogIndexRoute
   IntegrationsIndexRoute: typeof IntegrationsIndexRoute
   ThreadsIndexRoute: typeof ThreadsIndexRoute
+  ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
   BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
   BlogPostSlugRoute: typeof BlogPostSlugRoute
@@ -3996,6 +4034,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/generator': {
+      id: '/generator'
+      path: '/generator'
+      fullPath: '/generator'
+      preLoaderRoute: typeof GeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enterprise': {
@@ -4425,6 +4470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthOauth2ConsentRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_api/generator/cover': {
+      id: '/_api/generator/cover'
+      path: '/generator/cover'
+      fullPath: '/generator/cover'
+      preLoaderRoute: typeof ApiGeneratorCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_public/projects/$projectId/': {
       id: '/_public/projects/$projectId/'
       path: '/'
@@ -4627,6 +4679,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/init/calendar/$eventSlug'
       preLoaderRoute: typeof ApiInitCalendarEventSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_api/generator/cover/encode': {
+      id: '/_api/generator/cover/encode'
+      path: '/encode'
+      fullPath: '/generator/cover/encode'
+      preLoaderRoute: typeof ApiGeneratorCoverEncodeRouteImport
+      parentRoute: typeof ApiGeneratorCoverRoute
     }
     '/_public/projects/$projectId/stores/': {
       id: '/_public/projects/$projectId/stores/'
@@ -7400,6 +7459,17 @@ const DomainsRouteChildren: DomainsRouteChildren = {
 const DomainsRouteWithChildren =
   DomainsRoute._addFileChildren(DomainsRouteChildren)
 
+interface ApiGeneratorCoverRouteChildren {
+  ApiGeneratorCoverEncodeRoute: typeof ApiGeneratorCoverEncodeRoute
+}
+
+const ApiGeneratorCoverRouteChildren: ApiGeneratorCoverRouteChildren = {
+  ApiGeneratorCoverEncodeRoute: ApiGeneratorCoverEncodeRoute,
+}
+
+const ApiGeneratorCoverRouteWithChildren =
+  ApiGeneratorCoverRoute._addFileChildren(ApiGeneratorCoverRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
@@ -7413,6 +7483,7 @@ const rootRouteChildren: RootRouteChildren = {
   DomainsRoute: DomainsRouteWithChildren,
   EducationRoute: EducationRoute,
   EnterpriseRoute: EnterpriseRoute,
+  GeneratorRoute: GeneratorRoute,
   HomeRoute: HomeRoute,
   PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,
@@ -7430,6 +7501,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChangelogIndexRoute: ChangelogIndexRoute,
   IntegrationsIndexRoute: IntegrationsIndexRoute,
   ThreadsIndexRoute: ThreadsIndexRoute,
+  ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
   BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,
   BlogPostSlugRoute: BlogPostSlugRoute,
