@@ -208,10 +208,12 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('buildEnabled', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('buildEnabled', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
         $function = $this->createFunction([

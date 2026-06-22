@@ -58,9 +58,13 @@ class XList extends Base
         $specs = [];
         foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
+            $spec['buildEnabled'] = true;
 
             if (array_key_exists('runtimeSpecifications', $plan)) {
                 $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
+            }
+            if (array_key_exists('buildSpecifications', $plan)) {
+                $spec['buildEnabled'] = in_array($spec['slug'], $plan['buildSpecifications']);
             }
 
             $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
