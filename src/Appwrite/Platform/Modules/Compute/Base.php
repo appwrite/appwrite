@@ -56,11 +56,11 @@ class Base extends Action
 
         // If there is no plan use the highest specification
         if (empty($plan)) {
-            return end($allowedSpecifications) ?? $fallback;
+            return end($allowedSpecifications) ?: '';
         }
 
         // Otherwise, use the lowest specification available in the plan
-        return $allowedSpecifications[0] ?? $fallback;
+        return $allowedSpecifications[0] ?? '';
     }
 
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
