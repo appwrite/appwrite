@@ -1,7 +1,14 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
+import { resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import type { BlogAuthor, BlogCategory, BlogFaq, BlogPost, BlogPostMeta } from './types'
 
-const BLOG_OG_IMAGE = `${MARKETING_SITE_ORIGIN}/images/open-graph/blog.avif`
+export type BlogSeoOptions = {
+  siteOrigin?: string
+}
+
+function getBlogDefaultOgImage(siteOrigin?: string): string {
+  return resolveSiteAssetUrl('/images/open-graph/blog.avif', siteOrigin)
+}
 
 export function getBlogCanonicalUrl(path: string): string {
   return `${MARKETING_SITE_ORIGIN}${path}`
@@ -23,19 +30,23 @@ export function getBlogPostOgImageUrl(post: Pick<BlogPostMeta, 'title' | 'descri
   return `https://og.appwrite.global/image.png?${params.toString()}`
 }
 
-export function getBlogPostCoverImageUrl(post: Pick<BlogPostMeta, 'cover'>): string | undefined {
-  return post.cover ? getBlogCanonicalUrl(post.cover) : undefined
+export function getBlogPostCoverImageUrl(
+  post: Pick<BlogPostMeta, 'cover'>,
+  siteOrigin?: string,
+): string | undefined {
+  return post.cover ? resolveSiteAssetUrl(post.cover, siteOrigin) : undefined
 }
 
-export function getBlogPostOgImage(post: BlogPostMeta): string {
-  return getBlogPostCoverImageUrl(post) ?? getBlogPostOgImageUrl(post)
+export function getBlogPostOgImage(post: BlogPostMeta, siteOrigin?: string): string {
+  return getBlogPostCoverImageUrl(post, siteOrigin) ?? getBlogPostOgImageUrl(post)
 }
 
-export function getBlogIndexMetaTags() {
+export function getBlogIndexMetaTags(options?: BlogSeoOptions) {
   const title = getBlogPageTitle('Blog')
   const description =
     'Explore the Appwrite blog for product updates, engineering deep dives, tutorials, and customer stories.'
   const canonical = getBlogCanonicalUrl('/blog')
+  const ogImage = getBlogDefaultOgImage(options?.siteOrigin)
 
   return [
     { title },
@@ -44,20 +55,20 @@ export function getBlogIndexMetaTags() {
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: canonical },
-    { property: 'og:image', content: BLOG_OG_IMAGE },
+    { property: 'og:image', content: ogImage },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: BLOG_OG_IMAGE },
+    { name: 'twitter:image', content: ogImage },
     { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
-export function getBlogPostMetaTags(post: BlogPost) {
+export function getBlogPostMetaTags(post: BlogPost, options?: BlogSeoOptions) {
   const resolvedTitle = getBlogPostTitle(post)
   const title = getBlogPageTitle(resolvedTitle)
   const canonical = getBlogCanonicalUrl(post.href)
-  const ogImage = getBlogPostOgImage(post)
+  const ogImage = getBlogPostOgImage(post, options?.siteOrigin)
 
   return [
     { title },
@@ -75,9 +86,10 @@ export function getBlogPostMetaTags(post: BlogPost) {
   ] as const
 }
 
-export function getBlogCategoryMetaTags(category: BlogCategory) {
+export function getBlogCategoryMetaTags(category: BlogCategory, options?: BlogSeoOptions) {
   const title = getBlogPageTitle(category.name)
   const canonical = getBlogCanonicalUrl(category.href)
+  const ogImage = getBlogDefaultOgImage(options?.siteOrigin)
 
   return [
     { title },
@@ -86,18 +98,19 @@ export function getBlogCategoryMetaTags(category: BlogCategory) {
     { property: 'og:description', content: category.description },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: canonical },
-    { property: 'og:image', content: BLOG_OG_IMAGE },
+    { property: 'og:image', content: ogImage },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: category.description },
-    { name: 'twitter:image', content: BLOG_OG_IMAGE },
+    { name: 'twitter:image', content: ogImage },
     { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
-export function getBlogAuthorMetaTags(author: BlogAuthor) {
+export function getBlogAuthorMetaTags(author: BlogAuthor, options?: BlogSeoOptions) {
   const title = getBlogPageTitle(author.name)
   const canonical = getBlogCanonicalUrl(author.href)
+  const ogImage = getBlogDefaultOgImage(options?.siteOrigin)
 
   return [
     { title },
@@ -106,17 +119,21 @@ export function getBlogAuthorMetaTags(author: BlogAuthor) {
     { property: 'og:description', content: author.bio },
     { property: 'og:type', content: 'profile' },
     { property: 'og:url', content: canonical },
-    { property: 'og:image', content: BLOG_OG_IMAGE },
+    { property: 'og:image', content: ogImage },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: author.bio },
-    { name: 'twitter:image', content: BLOG_OG_IMAGE },
+    { name: 'twitter:image', content: ogImage },
     { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
-export function getBlogPostSchema(post: BlogPost, authors: BlogAuthor[]) {
-  const coverImage = getBlogPostCoverImageUrl(post)
+export function getBlogPostSchema(
+  post: BlogPost,
+  authors: BlogAuthor[],
+  options?: BlogSeoOptions,
+) {
+  const coverImage = getBlogPostCoverImageUrl(post, options?.siteOrigin)
 
   return {
     '@context': 'https://schema.org',

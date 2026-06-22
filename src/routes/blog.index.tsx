@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { View } from '@/components/pages/blog/View'
 import { getBlogPostsPage } from '@/lib/blog/content'
 import { getBlogIndexRouteMetaTags } from '@/lib/blog/route-meta'
+import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
@@ -27,7 +28,7 @@ export const Route = createFileRoute('/blog/')({
     })
   },
   head: () => ({
-    meta: getBlogIndexRouteMetaTags(),
+    meta: getBlogIndexRouteMetaTags({ siteOrigin: getRequestSiteOrigin() }),
   }),
   component: BlogIndexPage,
 })

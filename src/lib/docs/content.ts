@@ -1,5 +1,5 @@
 import { DOCS_PAGE_MAP } from './generated/manifest'
-import { stripFrontmatter } from './frontmatter'
+import { parseFrontmatterString, stripFrontmatter } from './frontmatter'
 import { preloadPartialsForContent, resolvePartials } from './partials'
 import { extractDocsToc } from './toc'
 import type { DocsPageData, DocsPageMeta } from './types'
@@ -95,11 +95,14 @@ function buildDocsPage(meta: DocsPageMeta, raw: string): DocsPageData {
   const preprocessed = preprocessMarkdocContent(withPartials)
   const content = stripFrontmatter(preprocessed)
 
+  const promptPath = parseFrontmatterString(withPartials, 'prompt')
+
   return {
     meta,
     content,
     rawContent: withPartials,
     toc: extractDocsToc(withPartials),
+    ...(promptPath ? { promptPath } : {}),
   }
 }
 

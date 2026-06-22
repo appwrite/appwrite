@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button'
 type DocsPageHeaderActionsProps = {
   slug: string
   buttonClassName?: string
+  /** Hide Copy/Raw when the page has an AI quick-start prompt banner. */
+  showCopyPage?: boolean
 }
 
 export function DocsPageHeaderActions({
   slug,
   buttonClassName = 'h-9 text-[13px]',
+  showCopyPage = true,
 }: DocsPageHeaderActionsProps) {
   const [copying, setCopying] = useState(false)
   const markdownUrl = slug ? `/docs/${slug}.md` : '/docs.md'
@@ -33,22 +36,26 @@ export function DocsPageHeaderActions({
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className={buttonClassName}
-        onClick={handleCopyMarkdown}
-        disabled={copying}
-      >
-        <Copy className="mr-1.5 size-3.5" />
-        Copy
-      </Button>
-      <Button variant="outline" size="sm" className={buttonClassName} asChild>
-        <a href={markdownUrl} target="_blank" rel="noopener noreferrer">
-          <ExternalLink className="mr-1.5 size-3.5" />
-          Raw
-        </a>
-      </Button>
+      {showCopyPage ? (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className={buttonClassName}
+            onClick={handleCopyMarkdown}
+            disabled={copying}
+          >
+            <Copy className="mr-1.5 size-3.5" />
+            Copy
+          </Button>
+          <Button variant="outline" size="sm" className={buttonClassName} asChild>
+            <a href={markdownUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-1.5 size-3.5" />
+              Raw
+            </a>
+          </Button>
+        </>
+      ) : null}
     </>
   )
 }

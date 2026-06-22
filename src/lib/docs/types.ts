@@ -45,4 +45,6 @@ export type DocsPageData = {
   content: string
   rawContent: string
   toc: DocsTocItem[]
+  /** Frontmatter `prompt` path (e.g. `/docs/quick-starts/react`) for prompt_content pages. */
+  promptPath?: string
 }

@@ -13,6 +13,7 @@ import {
   getBlogPostSchema,
 } from '@/lib/blog/seo'
 import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
+import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
@@ -60,11 +61,13 @@ export const Route = createFileRoute('/blog/post/$slug')({
   head: ({ loaderData }) => {
     if (!loaderData?.post) return {}
 
+    const siteOrigin = getRequestSiteOrigin()
+    const seoOptions = { siteOrigin }
     const authors = resolveBlogAuthors(loaderData.post.author)
     const scripts = [
       {
         type: 'application/ld+json',
-        children: JSON.stringify(getBlogPostSchema(loaderData.post, authors)),
+        children: JSON.stringify(getBlogPostSchema(loaderData.post, authors, seoOptions)),
       },
       {
         type: 'application/ld+json',
@@ -89,7 +92,7 @@ export const Route = createFileRoute('/blog/post/$slug')({
     }
 
     return {
-      meta: getBlogPostRouteMetaTags(loaderData.post),
+      meta: getBlogPostRouteMetaTags(loaderData.post, seoOptions),
       scripts,
     }
   },

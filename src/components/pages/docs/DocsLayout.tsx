@@ -63,7 +63,7 @@ export function DocsLayout({
                 parent={parent}
                 actions={headerActions}
               />
-              <div className="min-w-0 overflow-x-hidden">
+              <div className="min-w-0 overflow-x-clip">
                 {children}
                 {!wideContent ? <DocsFeedback /> : null}
               </div>

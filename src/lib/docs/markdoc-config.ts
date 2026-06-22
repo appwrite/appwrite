@@ -46,6 +46,7 @@ export const docsMarkdocConfig: Config = {
       render: 'MarkdocIconImage',
       attributes: { src: { type: String }, alt: { type: String }, size: { type: String } },
     },
+    prompt_content: { selfClosing: true, render: 'PromptContent' },
     table: { render: 'MarkdocTableTag' },
   },
   nodes: {

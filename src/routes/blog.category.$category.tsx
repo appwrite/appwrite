@@ -6,6 +6,7 @@ import {
   getPostsForCategory,
 } from '@/lib/blog/content'
 import { getBlogCategoryRouteMetaTags } from '@/lib/blog/route-meta'
+import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
@@ -30,7 +31,9 @@ export const Route = createFileRoute('/blog/category/$category')({
   head: ({ loaderData }) => {
     if (!loaderData?.category) return {}
     return {
-      meta: getBlogCategoryRouteMetaTags(loaderData.category),
+      meta: getBlogCategoryRouteMetaTags(loaderData.category, {
+        siteOrigin: getRequestSiteOrigin(),
+      }),
     }
   },
   component: BlogCategoryPage,
