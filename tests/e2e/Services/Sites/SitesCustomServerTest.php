@@ -34,29 +34,31 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
-        $this->assertArrayHasKey('enabledForBuilds', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
-        $this->assertArrayHasKey('enabledForBuilds', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
+
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
+        $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
 
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
             'siteId' => ID::unique(),
-            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $buildSpecifications['body']['specifications'][0]['slug'],
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($buildSpecifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $site = $this->getSite($site['body']['$id']);
         $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($buildSpecifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $this->cleanupSite($site['body']['$id']);

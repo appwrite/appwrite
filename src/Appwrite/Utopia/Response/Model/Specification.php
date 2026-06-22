@@ -24,13 +24,7 @@ class Specification extends Model
         ]);
         $this->addRule('enabled', [
             'type' => self::TYPE_BOOLEAN,
-            'description' => 'Is size enabled for runtime.',
-            'default' => false,
-            'example' => true
-        ]);
-        $this->addRule('enabledForBuilds', [
-            'type' => self::TYPE_BOOLEAN,
-            'description' => 'Is size enabled for builds.',
+            'description' => 'Is size enabled.',
             'default' => false,
             'example' => true
         ]);

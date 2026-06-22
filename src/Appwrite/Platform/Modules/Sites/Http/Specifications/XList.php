@@ -12,6 +12,7 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\WhiteList;
 
 class XList extends Base
 {
@@ -46,25 +47,23 @@ class XList extends Base
                     )
                 ]
             ))
+            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds.', true)
             ->inject('response')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, array $plan)
+    public function action(string $type, Response $response, array $plan)
     {
         $allSpecs = Config::getParam('specifications', []);
+        $planKey = $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications';
 
         $specs = [];
         foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
-            $spec['enabledForBuilds'] = true;
 
-            if (array_key_exists('runtimeSpecifications', $plan)) {
-                $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
-            }
-            if (array_key_exists('buildSpecifications', $plan)) {
-                $spec['enabledForBuilds'] = in_array($spec['slug'], $plan['buildSpecifications']);
+            if (array_key_exists($planKey, $plan)) {
+                $spec['enabled'] = in_array($spec['slug'], $plan[$planKey]);
             }
 
             $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
