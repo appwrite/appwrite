@@ -550,6 +550,18 @@ final class OAuth2ProviderTest extends TestCase
                 return $updatedProject;
             });
 
+        // The action re-reads the project fresh (forUpdate) inside a transaction
+        // before merging; in unit tests there's no cache/concurrency, so the
+        // locked read returns the in-memory project and the transaction simply
+        // runs its callback.
+        $dbForPlatform
+            ->method('getDocument')
+            ->willReturn($project);
+
+        $dbForPlatform
+            ->method('withTransaction')
+            ->willReturnCallback(fn (callable $callback): mixed => $callback());
+
         $authorization = $this->createStub(Authorization::class);
         $authorization
             ->method('skip')
