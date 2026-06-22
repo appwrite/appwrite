@@ -76,11 +76,21 @@ class Audits extends Action
         $user = $auditMessage->user;
         $impersonatorUser = $auditMessage->impersonatorUser;
 
-        $isImpersonated = !$impersonatorUser->isEmpty();
-        $actorUserId = $isImpersonated ? $impersonatorUser->getId() : $user->getId();
-        $actorUserInternalId = $isImpersonated ? $impersonatorUser->getSequence() : $user->getSequence();
-        $actorUserName = $isImpersonated ? $impersonatorUser->getAttribute('name', '') : $user->getAttribute('name', '');
-        $actorUserEmail = $isImpersonated ? $impersonatorUser->getAttribute('email', '') : $user->getAttribute('email', '');
+        // Fall back to legacy fields on $user for messages queued before this deploy.
+        $legacyImpersonatorId = $user->getAttribute('impersonatorUserId', '');
+        $isImpersonated = !$impersonatorUser->isEmpty() || !empty($legacyImpersonatorId);
+        $actorUserId = !$impersonatorUser->isEmpty()
+            ? $impersonatorUser->getId()
+            : ($legacyImpersonatorId ?: $user->getId());
+        $actorUserInternalId = !$impersonatorUser->isEmpty()
+            ? $impersonatorUser->getSequence()
+            : ($user->getAttribute('impersonatorUserInternalId') ?: $user->getSequence());
+        $actorUserName = !$impersonatorUser->isEmpty()
+            ? $impersonatorUser->getAttribute('name', '')
+            : ($user->getAttribute('impersonatorUserName', '') ?: $user->getAttribute('name', ''));
+        $actorUserEmail = !$impersonatorUser->isEmpty()
+            ? $impersonatorUser->getAttribute('email', '')
+            : ($user->getAttribute('impersonatorUserEmail', '') ?: $user->getAttribute('email', ''));
         $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data

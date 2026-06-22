@@ -506,7 +506,12 @@ return function (Container $context): void {
                 $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
             }
             if ($targetUser !== null && !$targetUser->isEmpty()) {
-                $impersonatorUser->setAttributes((clone $user)->getArrayCopy());
+                $impersonatorUser->setAttributes([
+                    '$id' => $user->getId(),
+                    '$sequence' => $user->getSequence(),
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                ]);
                 $user = clone $targetUser;
             }
         }

@@ -352,7 +352,12 @@ return function (Container $container): void {
             }
 
             if ($targetUser !== null && !$targetUser->isEmpty()) {
-                $impersonatorUser->setAttributes((clone $user)->getArrayCopy());
+                $impersonatorUser->setAttributes([
+                    '$id' => $user->getId(),
+                    '$sequence' => $user->getSequence(),
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                ]);
                 $user = clone $targetUser;
             }
         }
