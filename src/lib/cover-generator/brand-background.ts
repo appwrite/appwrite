@@ -86,6 +86,13 @@ export function buildCoverExportFontStyleBlock(fontFaceCss = ''): string {
         font-family: 'Inter', Arial, Helvetica, sans-serif;
         font-weight: 400;
       }
+      .cover-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        font-weight: 400;
+        font-variant-ligatures: none;
+        letter-spacing: 0;
+        white-space: pre;
+      }
     </style>
   `
 }

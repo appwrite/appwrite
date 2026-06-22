@@ -4,6 +4,8 @@ import {
   normalizeCoverBarChartData,
   normalizeCoverLineChartData,
 } from '@/lib/cover-generator/chart/constants'
+import { normalizeCoverCliCodeData } from '@/lib/cover-generator/cli-code/constants'
+import { normalizeCoverCodeSnippetData } from '@/lib/cover-generator/code-snippet/constants'
 import {
   createDefaultCoverData,
   parseCoverRenderData,
@@ -49,6 +51,14 @@ function normalizeStoredCoverData(data: CoverRenderData): CoverRenderData {
 
   if (normalizedTheme.template === 'line-chart') {
     return normalizeCoverLineChartData(normalizedTheme)
+  }
+
+  if (normalizedTheme.template === 'cli-code') {
+    return normalizeCoverCliCodeData(normalizedTheme)
+  }
+
+  if (normalizedTheme.template === 'code-snippet') {
+    return normalizeCoverCodeSnippetData(normalizedTheme)
   }
 
   return normalizedTheme

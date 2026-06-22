@@ -6,6 +6,8 @@ import {
 
 export const COVER_TEMPLATE_CATEGORY_IDS = [
   'text',
+  'code',
+  'milestones',
   'logos',
   'product',
   'data',
@@ -26,6 +28,12 @@ export const COVER_TEMPLATE_CATEGORIES: CoverTemplateCategory[] = [
     label: 'Text',
     description: 'Headlines and copy-focused covers.',
     templateIds: ['simple-title'],
+  },
+  {
+    id: 'code',
+    label: 'Code',
+    description: 'Terminal commands and syntax-highlighted snippets.',
+    templateIds: ['cli-code', 'code-snippet'],
   },
   {
     id: 'milestones',

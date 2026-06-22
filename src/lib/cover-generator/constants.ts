@@ -60,6 +60,8 @@ export const COVER_TEMPLATE_IDS = [
   'table',
   'bar-chart',
   'line-chart',
+  'cli-code',
+  'code-snippet',
   'milestone-split',
   'milestone-centered',
 ] as const

@@ -128,18 +128,21 @@ export function View() {
         }}
         showFooter={false}
       >
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <CoverEditorToolbar
-            data={data}
-            recommendsPost={recommendsPost}
-            onChange={setData}
-            onCopyApiUrl={handleCopyApiUrl}
-            onOpenApiDocs={() => setApiDocsOpen(true)}
-            onOpenImage={handleOpenImage}
-            onDownload={handleDownload}
-          />
+        <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="relative z-50 shrink-0 bg-background">
+            <CoverEditorToolbar
+              data={data}
+              recommendsPost={recommendsPost}
+              onChange={setData}
+              onCopyApiUrl={handleCopyApiUrl}
+              onOpenApiDocs={() => setApiDocsOpen(true)}
+              onOpenImage={handleOpenImage}
+              onDownload={handleDownload}
+            />
+          </div>
 
-          <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[280px_minmax(0,1fr)_320px]">
+          <div className="relative z-0 min-h-0 flex-1 overflow-hidden">
+            <div className="grid h-full min-h-0 grid-cols-1 overflow-hidden xl:grid-cols-[280px_minmax(0,1fr)_320px]">
             <div className="hidden min-h-0 overflow-hidden border-border xl:block xl:border-r">
               <CoverTemplatePanel
                 selectedTemplate={data.template}
@@ -180,6 +183,7 @@ export function View() {
                 onResetTemplate={resetCurrentTemplate}
               />
             </div>
+          </div>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import { buildCoverSvgShell } from '@/lib/cover-generator/brand-background'
+import '@/lib/cover-generator/code-snippet/prism-setup'
 import { applyCoverImageFormat } from '@/lib/cover-generator/encode-cover-image-sharp'
 import { getCoverFontFaceCss } from '@/lib/cover-generator/font-embed'
 import { renderIntegrationIconTemplateSvg } from '@/lib/cover-generator/templates/integration-icon'
@@ -10,6 +11,8 @@ import { renderSimpleTitleTemplateSvg } from '@/lib/cover-generator/templates/si
 import { renderTableTemplateSvg } from '@/lib/cover-generator/templates/table'
 import { renderBarChartTemplateSvg } from '@/lib/cover-generator/templates/bar-chart'
 import { renderLineChartTemplateSvg } from '@/lib/cover-generator/templates/line-chart'
+import { renderCliCodeTemplateSvg } from '@/lib/cover-generator/templates/cli-code'
+import { renderCodeSnippetTemplateSvg } from '@/lib/cover-generator/templates/code-snippet'
 import {
   renderMilestoneCenteredTemplateSvg,
   renderMilestoneSplitTemplateSvg,
@@ -48,6 +51,12 @@ async function renderCoverSvg(data: CoverRenderData): Promise<string> {
     case 'line-chart':
       content = renderLineChartTemplateSvg(data, data.theme)
       break
+    case 'cli-code':
+      content = await renderCliCodeTemplateSvg(data, data.theme)
+      break
+    case 'code-snippet':
+      content = renderCodeSnippetTemplateSvg(data, data.theme)
+      break
     case 'milestone-split': {
       const milestone = renderMilestoneSplitTemplateSvg(data, data.theme)
       content = milestone.content
@@ -73,6 +82,7 @@ async function renderCoverSvg(data: CoverRenderData): Promise<string> {
     fontFaceCss,
     titleGradientBounds,
     templateId: data.template,
+    contentAnchor: data.template === 'cli-code' ? 'right' : undefined,
     content,
   })
 }

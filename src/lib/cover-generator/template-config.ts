@@ -14,6 +14,22 @@ import { COVER_TABLE_GRID, COVER_TABLE_DEFAULT_FRAME_WIDTH_PERCENT } from '@/lib
 import {
   COVER_CHART,
 } from '@/lib/cover-generator/chart/constants'
+import {
+  COVER_CLI_CODE_DEFAULT_FRAME_WIDTH_PERCENT,
+  DEFAULT_CLI_CODE,
+  DEFAULT_CLI_CODE_SUBTITLE,
+  DEFAULT_CLI_CODE_TITLE,
+  DEFAULT_CLI_TERMINAL_ICON,
+  DEFAULT_CLI_TERMINAL_TITLE,
+} from '@/lib/cover-generator/cli-code/constants'
+import {
+  COVER_CODE_SNIPPET_DEFAULT_FRAME_WIDTH_PERCENT,
+  COVER_CODE_SNIPPET_FONT_SIZE,
+  COVER_CODE_SNIPPET_LANGUAGE_LABELS,
+  COVER_CODE_SNIPPET_LANGUAGES,
+  DEFAULT_CODE_SNIPPET,
+  DEFAULT_CODE_SNIPPET_TITLE,
+} from '@/lib/cover-generator/code-snippet/constants'
 import { COVER_SCREENSHOT_ANGLED_3D_LIMITS } from '@/lib/perspective-screenshot-card/constants'
 
 const COVER_SCREENSHOT_ANGLED_3D_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
@@ -344,6 +360,107 @@ const COVER_CHART_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
   },
 ]
 
+const COVER_CLI_CODE_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
+  {
+    key: 'title',
+    label: 'Title',
+    type: 'textarea',
+    placeholder: DEFAULT_CLI_CODE_TITLE,
+  },
+  {
+    key: 'subtitle',
+    label: 'Subtitle',
+    type: 'textarea',
+    placeholder: DEFAULT_CLI_CODE_SUBTITLE,
+  },
+  {
+    key: 'code',
+    label: 'Code',
+    type: 'textarea',
+    placeholder: DEFAULT_CLI_CODE,
+    description: 'One command per line. Lines starting with # render as comments.',
+  },
+  {
+    key: 'terminalTitle',
+    label: 'Terminal title',
+    type: 'text',
+    placeholder: DEFAULT_CLI_TERMINAL_TITLE,
+    description: 'Title shown in the terminal window header.',
+  },
+  {
+    key: 'terminalIcon',
+    label: 'Terminal icon',
+    type: 'image',
+    imagePicker: 'builtin-icons',
+    placeholder: DEFAULT_CLI_TERMINAL_ICON,
+    description: 'Icon shown next to the terminal title.',
+  },
+  {
+    key: 'showPrompt',
+    label: 'Show prompt',
+    type: 'boolean',
+    description: 'Prefix each command line with a $ prompt.',
+  },
+  {
+    key: 'frameWidthPercent',
+    label: 'Terminal width',
+    type: 'range',
+    min: COVER_SCREENSHOT_FRAME_WIDTH.minPercent,
+    max: COVER_SCREENSHOT_FRAME_WIDTH.maxPercent,
+    step: COVER_SCREENSHOT_FRAME_WIDTH.step,
+    unit: '%',
+    description: 'Width relative to the template size.',
+  },
+]
+
+const COVER_CODE_SNIPPET_TEMPLATE_FIELDS: CoverFieldDefinition[] = [
+  {
+    key: 'title',
+    label: 'Title',
+    type: 'text',
+    placeholder: DEFAULT_CODE_SNIPPET_TITLE,
+    description: 'Single-line headline centered above the code block.',
+  },
+  {
+    key: 'language',
+    label: 'Language',
+    type: 'select',
+    options: COVER_CODE_SNIPPET_LANGUAGES.map((language) => ({
+      value: language,
+      label: COVER_CODE_SNIPPET_LANGUAGE_LABELS[language],
+    })),
+    description: 'Syntax highlighting language for the code block.',
+  },
+  {
+    key: 'code',
+    label: 'Code',
+    type: 'code',
+    codeLanguageField: 'language',
+    placeholder: DEFAULT_CODE_SNIPPET,
+    description: 'Source code to render with syntax highlighting.',
+  },
+  {
+    key: 'codeFontSize',
+    label: 'Code font size',
+    type: 'range',
+    min: COVER_CODE_SNIPPET_FONT_SIZE.min,
+    max: COVER_CODE_SNIPPET_FONT_SIZE.max,
+    step: COVER_CODE_SNIPPET_FONT_SIZE.step,
+    unit: 'px',
+    description: 'Font size for syntax-highlighted code lines.',
+  },
+  {
+    key: 'frameWidthPercent',
+    label: 'Code block width',
+    type: 'range',
+    min: COVER_SCREENSHOT_FRAME_WIDTH.minPercent,
+    max: COVER_SCREENSHOT_FRAME_WIDTH.maxPercent,
+    step: COVER_SCREENSHOT_FRAME_WIDTH.step,
+    unit: '%',
+    description: 'Width relative to the template size.',
+  },
+]
+
 export const COVER_TEMPLATE_DEFINITIONS: CoverTemplateDefinition[] = [
   {
     id: 'simple-title',
@@ -369,6 +486,18 @@ export const COVER_TEMPLATE_DEFINITIONS: CoverTemplateDefinition[] = [
         placeholder: DEFAULT_COVER_VALUES.subtitle,
       },
     ],
+  },
+  {
+    id: 'cli-code',
+    label: 'CLI code',
+    description: 'Headline on the left with a terminal-style code block on the right.',
+    fields: COVER_CLI_CODE_TEMPLATE_FIELDS,
+  },
+  {
+    id: 'code-snippet',
+    label: 'Code snippet',
+    description: 'Centered headline with a syntax-highlighted code block for sharing examples.',
+    fields: COVER_CODE_SNIPPET_TEMPLATE_FIELDS,
   },
   {
     id: 'milestone-split',

@@ -50,6 +50,22 @@ import {
   getCoverChartLabelKeys,
   getCoverChartValueKeys,
 } from '@/lib/cover-generator/chart/constants'
+import {
+  COVER_CLI_CODE_DEFAULT_FRAME_WIDTH_PERCENT,
+  DEFAULT_CLI_CODE,
+  DEFAULT_CLI_CODE_SUBTITLE,
+  DEFAULT_CLI_CODE_TITLE,
+  DEFAULT_CLI_TERMINAL_ICON,
+  DEFAULT_CLI_TERMINAL_TITLE,
+} from '@/lib/cover-generator/cli-code/constants'
+import {
+  COVER_CODE_SNIPPET_DEFAULT_FRAME_WIDTH_PERCENT,
+  COVER_CODE_SNIPPET_FONT_SIZE,
+  DEFAULT_CODE_SNIPPET,
+  DEFAULT_CODE_SNIPPET_LANGUAGE,
+  DEFAULT_CODE_SNIPPET_TITLE,
+  parseCoverCodeSnippetLanguage,
+} from '@/lib/cover-generator/code-snippet/constants'
 import { COVER_MILESTONE_DEFAULTS } from '@/lib/cover-generator/milestone/constants'
 
 function parseCoverTitle(
@@ -589,6 +605,49 @@ export function parseCoverRenderData(
           ]),
         ),
       }
+    case 'cli-code':
+      return {
+        ...shared,
+        template,
+        title: parseCoverOptionalText(searchParams.get('title')),
+        subtitle: searchParams.get('subtitle')?.trim() || undefined,
+        code: searchParams.get('code')?.trim() || DEFAULT_CLI_CODE,
+        showPrompt: parseBooleanParam(searchParams.get('showPrompt'), true),
+        terminalTitle:
+          searchParams.get('terminalTitle')?.trim() || DEFAULT_CLI_TERMINAL_TITLE,
+        terminalIcon:
+          searchParams.get('terminalIcon')?.trim() || DEFAULT_CLI_TERMINAL_ICON,
+        frameWidthPercent: parseNumberParam(
+          searchParams.get('frameWidthPercent'),
+          COVER_CLI_CODE_DEFAULT_FRAME_WIDTH_PERCENT,
+          COVER_SCREENSHOT_FRAME_WIDTH.minPercent,
+          COVER_SCREENSHOT_FRAME_WIDTH.maxPercent,
+        ),
+      }
+    case 'code-snippet':
+      return {
+        ...shared,
+        template,
+        title:
+          parseCoverOptionalText(searchParams.get('title')) ?? DEFAULT_CODE_SNIPPET_TITLE,
+        code: (() => {
+          const raw = searchParams.get('code')
+          return raw && raw.trim().length > 0 ? raw : DEFAULT_CODE_SNIPPET
+        })(),
+        language: parseCoverCodeSnippetLanguage(searchParams.get('language')),
+        codeFontSize: parseNumberParam(
+          searchParams.get('codeFontSize'),
+          COVER_CODE_SNIPPET_FONT_SIZE.default,
+          COVER_CODE_SNIPPET_FONT_SIZE.min,
+          COVER_CODE_SNIPPET_FONT_SIZE.max,
+        ),
+        frameWidthPercent: parseNumberParam(
+          searchParams.get('frameWidthPercent'),
+          COVER_CODE_SNIPPET_DEFAULT_FRAME_WIDTH_PERCENT,
+          COVER_SCREENSHOT_FRAME_WIDTH.minPercent,
+          COVER_SCREENSHOT_FRAME_WIDTH.maxPercent,
+        ),
+      }
     case 'milestone-split':
       return {
         ...shared,
@@ -742,6 +801,24 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
         setOptional(key, (data as Record<string, number | undefined>)[key])
       }
       break
+    case 'cli-code':
+      setOptional('title', data.title ? stripCoverTitleSuffix(data.title) : undefined)
+      setOptional('subtitle', data.subtitle)
+      setOptional('code', data.code)
+      if (!data.showPrompt) {
+        setOptional('showPrompt', data.showPrompt)
+      }
+      setOptional('terminalTitle', data.terminalTitle)
+      setOptional('terminalIcon', data.terminalIcon)
+      setOptional('frameWidthPercent', data.frameWidthPercent)
+      break
+    case 'code-snippet':
+      params.set('title', stripCoverTitleSuffix(data.title))
+      setOptional('code', data.code)
+      setOptional('language', data.language)
+      setOptional('codeFontSize', data.codeFontSize)
+      setOptional('frameWidthPercent', data.frameWidthPercent)
+      break
     case 'milestone-split':
     case 'milestone-centered':
       appendCoverMilestoneSearchParams(params, data)
@@ -837,6 +914,30 @@ export function createDefaultCoverData(
           }
         : {}
 
+  const cliCodeParams =
+    template === 'cli-code'
+      ? {
+          title: DEFAULT_CLI_CODE_TITLE,
+          subtitle: DEFAULT_CLI_CODE_SUBTITLE,
+          code: DEFAULT_CLI_CODE,
+          showPrompt: String(true),
+          terminalTitle: DEFAULT_CLI_TERMINAL_TITLE,
+          terminalIcon: DEFAULT_CLI_TERMINAL_ICON,
+          frameWidthPercent: String(COVER_CLI_CODE_DEFAULT_FRAME_WIDTH_PERCENT),
+        }
+        : {}
+
+  const codeSnippetParams =
+    template === 'code-snippet'
+      ? {
+          title: DEFAULT_CODE_SNIPPET_TITLE,
+          code: DEFAULT_CODE_SNIPPET,
+          language: DEFAULT_CODE_SNIPPET_LANGUAGE,
+          codeFontSize: String(COVER_CODE_SNIPPET_FONT_SIZE.default),
+          frameWidthPercent: String(COVER_CODE_SNIPPET_DEFAULT_FRAME_WIDTH_PERCENT),
+        }
+      : {}
+
   const milestoneParams =
     template === 'milestone-split' || template === 'milestone-centered'
       ? {
@@ -890,6 +991,8 @@ export function createDefaultCoverData(
       ...cardsAngledGridParams,
       ...tableGridParams,
       ...chartGridParams,
+      ...cliCodeParams,
+      ...codeSnippetParams,
       ...milestoneParams,
       ...(angled3dDefaults
         ? {

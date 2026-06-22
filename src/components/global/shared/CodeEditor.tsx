@@ -35,6 +35,12 @@ export type CodeEditorLanguage =
   | 'go'
   | 'java'
   | 'sql'
+  | 'shell'
+  | 'yaml'
+  | 'rust'
+  | 'graphql'
+  | 'css'
+  | 'html'
   | 'plaintext'
 
 export interface CodeEditorRef {

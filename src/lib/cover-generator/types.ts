@@ -3,6 +3,7 @@ import type {
   CoverTemplateId,
   CoverThemeId,
 } from '@/lib/cover-generator/constants'
+import type { CoverCodeSnippetLanguage } from '@/lib/cover-generator/code-snippet/constants'
 
 export type CoverScreenshotFields = {
   title?: string
@@ -147,6 +148,26 @@ export type CoverLineChartData = {
   showArea: boolean
 } & CoverChartPointFields
 
+export type CoverCliCodeData = {
+  template: 'cli-code'
+  title?: string
+  subtitle?: string
+  code: string
+  showPrompt: boolean
+  terminalTitle: string
+  terminalIcon?: string
+  frameWidthPercent: number
+}
+
+export type CoverCodeSnippetData = {
+  template: 'code-snippet'
+  title: string
+  code: string
+  language: CoverCodeSnippetLanguage
+  codeFontSize: number
+  frameWidthPercent: number
+}
+
 export type CoverMilestoneBaseData = {
   stat: string
   statLabel?: string
@@ -177,6 +198,8 @@ export type CoverTemplateData =
   | CoverTableData
   | CoverBarChartData
   | CoverLineChartData
+  | CoverCliCodeData
+  | CoverCodeSnippetData
   | CoverMilestoneSplitData
   | CoverMilestoneCenteredData
 
@@ -190,6 +213,7 @@ export type CoverRenderData = {
 export type CoverFieldType =
   | 'text'
   | 'textarea'
+  | 'code'
   | 'image'
   | 'boolean'
   | 'number'
@@ -209,6 +233,8 @@ export type CoverFieldDefinition = {
   description?: string
   /** When set on image fields, shows the built-in icon picker above custom URL/upload. */
   imagePicker?: 'builtin-icons'
+  /** When type is `code`, reads the Monaco language from this render-data key. */
+  codeLanguageField?: string
 }
 
 export type CoverTemplateDefinition = {

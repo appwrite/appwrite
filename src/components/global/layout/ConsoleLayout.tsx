@@ -193,7 +193,9 @@ export function ConsoleLayout({
           <div
             className={cn(
               'flex-1',
-              usesSplitMain && 'min-h-0 overflow-y-auto',
+              usesSplitMain && 'min-h-0',
+              usesSplitMain &&
+                (fixedLayout ? 'overflow-hidden' : 'overflow-y-auto'),
               fixedLayout && 'flex flex-col',
             )}
           >

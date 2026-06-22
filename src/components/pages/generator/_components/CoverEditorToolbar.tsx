@@ -45,7 +45,7 @@ export function CoverEditorToolbar({
   }
 
   return (
-    <div className="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-background px-4 py-2.5">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-background px-4 py-2.5">
       <p className="shrink-0 text-[13px] font-medium text-foreground">Cover generator</p>
 
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -77,11 +77,11 @@ export function CoverEditorToolbar({
           Copy URL
         </Button>
 
-        <div className="flex items-stretch">
+        <div className="relative isolate flex shrink-0 items-stretch">
           <Button
             type="button"
             size="sm"
-            className="h-9 rounded-r-none px-4 text-[13px]"
+            className="relative z-[1] h-9 rounded-r-none px-4 text-[13px]"
             onClick={() => handleDownload(data.format, 1)}
           >
             <Download className="mr-1.5 size-3.5" />
@@ -92,7 +92,7 @@ export function CoverEditorToolbar({
               <Button
                 type="button"
                 size="sm"
-                className="h-9 rounded-l-none border-l border-primary-foreground/15 px-2.5"
+                className="relative z-[2] h-9 rounded-l-none border-l border-primary-foreground/15 px-2.5"
                 aria-label="More download options"
               >
                 <ChevronDown className="size-4" />

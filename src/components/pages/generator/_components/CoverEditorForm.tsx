@@ -12,6 +12,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { CodeEditor } from '@/components/global/shared/CodeEditor'
 import {
   CoverBuiltInIconPicker,
 } from '@/components/pages/generator/_components/CoverBuiltInIconPicker'
@@ -24,6 +25,7 @@ import type {
 } from '@/lib/cover-generator/types'
 import { getCoverTemplateDefinition } from '@/lib/cover-generator/template-config'
 import { formatCoverEyebrow } from '@/lib/cover-generator/text-utils'
+import { mapCoverCodeSnippetLanguageToCodeEditorLanguage } from '@/lib/cover-generator/code-snippet/constants'
 import { getCoverCardsAngledLayoutResetFields } from '@/lib/cover-generator/cards-angled/constants'
 import { getCoverScreenshotAngledLayoutResetFields } from '@/lib/cover-generator/cover-screenshot-angled-frame'
 import { isCoverUploadedImageValue } from '@/lib/cover-generator/editor-image-fields'
@@ -107,6 +109,7 @@ function CoverRangeField({
 function CoverFieldInput({
   field,
   value,
+  editorData,
   onValueChange,
   onImageChange,
   onImageFileUpload,
@@ -115,6 +118,7 @@ function CoverFieldInput({
 }: {
   field: CoverFieldDefinition
   value: string | boolean | number | undefined
+  editorData: CoverRenderData
   onValueChange: (value: string | boolean | number) => void
   onImageChange: (value: string | undefined) => void
   onImageFileUpload: (file: File) => void
@@ -274,6 +278,38 @@ function CoverFieldInput({
     )
   }
 
+  if (field.type === 'code') {
+    const languageKey = field.codeLanguageField ?? 'language'
+    const languageValue = (editorData as Record<string, unknown>)[languageKey]
+    const monacoLanguage =
+      editorData.template === 'code-snippet'
+        ? mapCoverCodeSnippetLanguageToCodeEditorLanguage(
+            typeof languageValue === 'string' ? languageValue : undefined,
+          )
+        : 'plaintext'
+
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={field.key} className="text-[13px]">
+          {field.label}
+        </Label>
+        {field.description ? (
+          <p className="text-[12px] text-muted-foreground">{field.description}</p>
+        ) : null}
+        <CodeEditor
+          value={String(value ?? '')}
+          onChange={(next) => onValueChange(next)}
+          language={monacoLanguage}
+          height={280}
+          minimap={false}
+          lineNumbers="on"
+          modelPath={`cover-generator/${editorData.template}/${field.key}`}
+          className="min-h-[280px] rounded-lg"
+        />
+      </div>
+    )
+  }
+
   const commonProps = {
     id: field.key,
     placeholder: field.placeholder,
@@ -395,41 +431,43 @@ export function CoverEditorForm({
         }
 
         items.push(
-          <CoverFieldInput
-            key={field.key}
-            field={field}
-            value={
-              field.type === 'image'
-                ? imageFields[field.key] ?? getFieldValue(data, field.key)
-                : getFieldValue(data, field.key)
-            }
-            onValueChange={(value) => {
-              const nextValue =
-                field.key === 'eyebrow' && typeof value === 'string'
-                  ? formatCoverEyebrow(value) ?? value
-                  : value
-              onChange(setFieldValue(data, field.key, nextValue))
-            }}
-            onImageChange={(value) => {
-              if (value && isCoverUploadedImageValue(value)) {
-                onImageFieldChange(field.key, value)
-                return
+          <div key={field.key}>
+            <CoverFieldInput
+              field={field}
+              editorData={data}
+              value={
+                field.type === 'image'
+                  ? imageFields[field.key] ?? getFieldValue(data, field.key)
+                  : getFieldValue(data, field.key)
               }
+              onValueChange={(value) => {
+                const nextValue =
+                  field.key === 'eyebrow' && typeof value === 'string'
+                    ? formatCoverEyebrow(value) ?? value
+                    : value
+                onChange(setFieldValue(data, field.key, nextValue))
+              }}
+              onImageChange={(value) => {
+                if (value && isCoverUploadedImageValue(value)) {
+                  onImageFieldChange(field.key, value)
+                  return
+                }
 
-              onImageFieldChange(field.key, undefined)
-              onChange(setFieldValue(data, field.key, value))
-            }}
-            onImageFileUpload={(file) => {
-              onImageFileUpload(field.key, file)
-            }}
-            onClearImageField={() => {
-              onImageFieldChange(field.key, undefined)
-            }}
-            onSelectBuiltInIcon={(path) => {
-              onImageFieldChange(field.key, undefined)
-              onChange(setFieldValue(data, field.key, path))
-            }}
-          />,
+                onImageFieldChange(field.key, undefined)
+                onChange(setFieldValue(data, field.key, value))
+              }}
+              onImageFileUpload={(file) => {
+                onImageFileUpload(field.key, file)
+              }}
+              onClearImageField={() => {
+                onImageFieldChange(field.key, undefined)
+              }}
+              onSelectBuiltInIcon={(path) => {
+                onImageFieldChange(field.key, undefined)
+                onChange(setFieldValue(data, field.key, path))
+              }}
+            />
+          </div>,
         )
 
         if (data.template === 'cards-angled' && field.key === 'gap') {

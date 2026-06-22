@@ -186,7 +186,7 @@ export default defineConfig(async () => {
       exclude: ['@tanstack/react-store', '@tanstack/store', 'almostnode', 'sharp'],
     },
     ssr: {
-      external: ['sharp'],
+      external: ['sharp', 'prismjs'],
     },
     preview: {
       port: 4173,
