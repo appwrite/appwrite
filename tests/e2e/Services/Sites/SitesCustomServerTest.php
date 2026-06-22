@@ -1679,6 +1679,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $site['body']['buildSpecification']);
         $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['runtimeSpecification']);
 
         // Change the specs to 1vcpu 512mb
@@ -1696,6 +1697,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $site['body']['buildSpecification']);
         $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['runtimeSpecification']);
 
         /**
