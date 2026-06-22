@@ -15,6 +15,8 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 | `composer lint <file>` | Check formatting of a file |
 | `composer analyze` | Static analysis (PHPStan level 3) |
 | `composer check` | Same as `analyze` |
+| `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
+| `composer refactor` | Apply Rector fixes |
 
 ## Stack
 
