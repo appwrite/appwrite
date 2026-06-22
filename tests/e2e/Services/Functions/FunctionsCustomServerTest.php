@@ -217,21 +217,22 @@ final class FunctionsCustomServerTest extends Scope
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
         $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
         $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
 
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'buildSpecification' => $buildSpecifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals($buildSpecifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $function = $this->getFunction($function['body']['$id']);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($buildSpecifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $this->cleanupFunction($function['body']['$id']);
