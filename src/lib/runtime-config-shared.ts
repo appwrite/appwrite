@@ -69,7 +69,7 @@ export function resolveAppwriteEndpointFallback(
 
 /** Build the config object from a plain env record (process.env or import.meta.env). */
 export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
-  const read = readEnvValue
+  const read = (key: string) => readEnvValue(env, key)
   return {
     appwriteEndpoint: readAppwriteEndpointFromEnv(env),
     consoleProfile: read('VITE_CONSOLE_PROFILE'),
@@ -93,5 +93,27 @@ export function serializeRuntimeConfig(config: RuntimeConfig): string {
   return JSON.stringify(config).replace(
     SCRIPT_UNSAFE,
     (ch) => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'),
+  )
+}
+
+const RUNTIME_CONFIG_SCRIPT_ASSIGNMENT =
+  /window\.__APP_CONFIG__=[^;]*;/g
+
+/** Stamp live runtime config into HTML (SSR, prerender, or static). */
+export function injectRuntimeConfigIntoHtml(
+  html: string,
+  configJson: string,
+): string {
+  if (html.includes(RUNTIME_CONFIG_PLACEHOLDER)) {
+    return html.split(RUNTIME_CONFIG_PLACEHOLDER).join(configJson)
+  }
+
+  if (!html.includes('window.__APP_CONFIG__=')) {
+    return html
+  }
+
+  return html.replace(
+    RUNTIME_CONFIG_SCRIPT_ASSIGNMENT,
+    `window.__APP_CONFIG__=${configJson};`,
   )
 }

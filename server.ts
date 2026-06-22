@@ -69,7 +69,7 @@ import {
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/prerender-paths.ts'
 import {
-  RUNTIME_CONFIG_PLACEHOLDER,
+  injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,
   serializeRuntimeConfig,
 } from './src/lib/runtime-config-shared.ts'
@@ -86,7 +86,7 @@ const RUNTIME_CONFIG = readRuntimeConfigFromEnv(process.env)
 const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
 
 function injectRuntimeConfig(html: string): string {
-  return html.split(RUNTIME_CONFIG_PLACEHOLDER).join(RUNTIME_CONFIG_JSON)
+  return injectRuntimeConfigIntoHtml(html, RUNTIME_CONFIG_JSON)
 }
 
 // Logging utilities for professional output

@@ -266,6 +266,9 @@ importers:
       resolve.exports:
         specifier: ^2.0.3
         version: 2.0.3
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -366,9 +369,6 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.8.3
-      sharp:
-        specifier: ^0.34.5
-        version: 0.34.5
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

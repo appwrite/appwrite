@@ -82,13 +82,20 @@ export function getRuntimeConfig(): RuntimeConfig {
  *   - Dev / client hydration: emit the real values. In dev there's no server.ts
  *     to substitute; on the client we reflect the already-set `window` value so
  *     the markup matches what the server injected (no hydration mismatch).
- *   - Production server (SSR or prerender): emit a placeholder. `server.ts`
- *     replaces it with the live config at serve time, so a single image carries
- *     no environment-specific values.
+ *   - Production server (SSR): emit config from the live process env. Appwrite
+ *     Sites serves SSR without `server.ts`, so a bare placeholder would crash.
+ *   - Production prerender: emit a placeholder. `server.ts` (K8s) or the
+ *     runtime-config middleware (Sites SSR fallback) replaces it at serve time.
  */
 export function getRuntimeConfigScript(): string {
-  if (import.meta.env.DEV || typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
     return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${serializeRuntimeConfig(getRuntimeConfig())}`
   }
-  return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${RUNTIME_CONFIG_PLACEHOLDER}`
+  if (import.meta.env.DEV) {
+    return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${serializeRuntimeConfig(readServerRuntimeConfig())}`
+  }
+  if (process.env.TSS_PRERENDERING === 'true') {
+    return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${RUNTIME_CONFIG_PLACEHOLDER}`
+  }
+  return `window.${RUNTIME_CONFIG_WINDOW_KEY}=${serializeRuntimeConfig(readServerRuntimeConfig())}`
 }
