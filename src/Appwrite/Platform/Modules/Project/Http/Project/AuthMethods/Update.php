@@ -76,12 +76,16 @@ class Update extends Action
         $auth = Config::getParam('auth')[$methodId] ?? [];
         $authKey = $auth['key'] ?? '';
 
-        $auths = $project->getAttribute('auths', []);
-        $auths[$authKey] = $enabled;
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $authKey, $enabled) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'auths' => $auths,
-        ])));
+            $auths = $current->getAttribute('auths', []);
+            $auths[$authKey] = $enabled;
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents->setParam('methodId', $methodId);
 

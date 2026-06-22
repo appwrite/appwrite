@@ -71,20 +71,6 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $auths = $project->getAttribute('auths', []);
-
-        $mockNumbers = $auths['mockNumbers'] ?? [];
-
-        if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
-            throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
-        }
-
-        foreach ($mockNumbers as $mockNumber) {
-            if ($mockNumber['phone'] === $number) {
-                throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
-            }
-        }
-
         // Set to now date
         $mockNumber = [
             'phone' => $number,
@@ -93,14 +79,29 @@ class Create extends Action
             '$updatedAt' => DateTime::now(),
         ];
 
-        $mockNumbers[] = $mockNumber;
-        $auths['mockNumbers'] = $mockNumbers;
+        $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $number, $mockNumber) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
+            $auths = $current->getAttribute('auths', []);
+            $mockNumbers = $auths['mockNumbers'] ?? [];
 
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
+                throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
+            }
+
+            foreach ($mockNumbers as $existing) {
+                if ($existing['phone'] === $number) {
+                    throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
+                }
+            }
+
+            $mockNumbers[] = $mockNumber;
+            $auths['mockNumbers'] = $mockNumbers;
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents->setParam('number', $number);
 

@@ -90,45 +90,50 @@ class Update extends Action
     ) {
         $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
-        // Prevent template update if custom SMTP is not configured
-        $smtp = $project->getAttribute('smtp', []);
-        if (($smtp['enabled'] ?? false) !== true) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP must be enabled on the project to configure custom email templates.');
-        }
+        $template = [];
 
-        // Fetch current configuration
-        $templates = $project->getAttribute('templates', []);
-        $template = $templates['email.' . $templateId . '-' . $locale] ?? [];
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $templateId, $locale, $subject, $message, $senderName, $senderEmail, $replyToEmail, $replyToName, &$template) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        // Apply changes — null means "not provided, keep existing".
-        // Empty string explicitly clears a previously-set value.
-        $keys = ['senderName', 'senderEmail', 'replyToEmail', 'replyToName', 'message', 'subject'];
-        foreach ($keys as $key) {
-            if (!\is_null(${$key})) {
-                $template[$key] = ${$key};
+            // Prevent template update if custom SMTP is not configured
+            $smtp = $current->getAttribute('smtp', []);
+            if (($smtp['enabled'] ?? false) !== true) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP must be enabled on the project to configure custom email templates.');
             }
-        }
 
-        // Backwards compatibility
-        if (!\is_null($template['replyTo'] ?? null)) {
-            $template['replyToEmail'] = $template['replyToEmail'] ?? $template['replyTo'] ?? '';
-        }
+            // Fetch current configuration
+            $templates = $current->getAttribute('templates', []);
+            $template = $templates['email.' . $templateId . '-' . $locale] ?? [];
 
-        // Ensure required fields are set
-        $requiredKeys = ['subject', 'message'];
-        foreach ($requiredKeys as $key) {
-            if (empty($template[$key])) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+            // Apply changes — null means "not provided, keep existing".
+            // Empty string explicitly clears a previously-set value.
+            $keys = ['senderName', 'senderEmail', 'replyToEmail', 'replyToName', 'message', 'subject'];
+            foreach ($keys as $key) {
+                if (!\is_null(${$key})) {
+                    $template[$key] = ${$key};
+                }
             }
-        }
 
-        // Save configuration
-        $templates['email.' . $templateId . '-' . $locale] = $template;
-        $updates = new Document([
-            'templates' => $templates,
-        ]);
+            // Backwards compatibility
+            if (!\is_null($template['replyTo'] ?? null)) {
+                $template['replyToEmail'] = $template['replyToEmail'] ?? $template['replyTo'] ?? '';
+            }
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            // Ensure required fields are set
+            $requiredKeys = ['subject', 'message'];
+            foreach ($requiredKeys as $key) {
+                if (empty($template[$key])) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+                }
+            }
+
+            // Save configuration
+            $templates['email.' . $templateId . '-' . $locale] = $template;
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'templates' => $templates,
+            ]));
+        }));
 
         $queueForEvents->setParam('templateId', $templateId);
 

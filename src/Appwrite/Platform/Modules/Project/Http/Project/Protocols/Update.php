@@ -73,12 +73,16 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $protocols = $project->getAttribute('apis', []);
-        $protocols[$protocolId] = $enabled;
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $protocolId, $enabled) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'apis' => $protocols,
-        ])));
+            $protocols = $current->getAttribute('apis', []);
+            $protocols[$protocolId] = $enabled;
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'apis' => $protocols,
+            ]));
+        }));
 
         $queueForEvents->setParam('protocolId', $protocolId);
 

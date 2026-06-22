@@ -77,32 +77,34 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $auths = $project->getAttribute('auths', []);
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $userId, $userEmail, $userPhone, $userName, $userMFA, $userAccessedAt) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        if ($userId !== null) {
-            $auths['membershipsUserId'] = $userId;
-        }
-        if ($userEmail !== null) {
-            $auths['membershipsUserEmail'] = $userEmail;
-        }
-        if ($userPhone !== null) {
-            $auths['membershipsUserPhone'] = $userPhone;
-        }
-        if ($userName !== null) {
-            $auths['membershipsUserName'] = $userName;
-        }
-        if ($userMFA !== null) {
-            $auths['membershipsMfa'] = $userMFA;
-        }
-        if ($userAccessedAt !== null) {
-            $auths['membershipsUserAccessedAt'] = $userAccessedAt;
-        }
+            $auths = $current->getAttribute('auths', []);
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
+            if ($userId !== null) {
+                $auths['membershipsUserId'] = $userId;
+            }
+            if ($userEmail !== null) {
+                $auths['membershipsUserEmail'] = $userEmail;
+            }
+            if ($userPhone !== null) {
+                $auths['membershipsUserPhone'] = $userPhone;
+            }
+            if ($userName !== null) {
+                $auths['membershipsUserName'] = $userName;
+            }
+            if ($userMFA !== null) {
+                $auths['membershipsMfa'] = $userMFA;
+            }
+            if ($userAccessedAt !== null) {
+                $auths['membershipsUserAccessedAt'] = $userAccessedAt;
+            }
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

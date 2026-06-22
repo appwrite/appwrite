@@ -75,40 +75,48 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $auths = $project->getAttribute('auths', []);
-        $auths['passwordStrength'] = \array_merge([
-            'min' => 8,
-            'uppercase' => false,
-            'lowercase' => false,
-            'number' => false,
-            'symbols' => false,
-        ], $auths['passwordStrength'] ?? []);
+        $passwordStrength = [];
 
-        if ($min !== null) {
-            $auths['passwordStrength']['min'] = $min;
-        }
-        if ($uppercase !== null) {
-            $auths['passwordStrength']['uppercase'] = $uppercase;
-        }
-        if ($lowercase !== null) {
-            $auths['passwordStrength']['lowercase'] = $lowercase;
-        }
-        if ($number !== null) {
-            $auths['passwordStrength']['number'] = $number;
-        }
-        if ($symbols !== null) {
-            $auths['passwordStrength']['symbols'] = $symbols;
-        }
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $min, $uppercase, $lowercase, $number, $symbols, &$passwordStrength) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'auths' => $auths,
-        ])));
+            $auths = $current->getAttribute('auths', []);
+            $auths['passwordStrength'] = \array_merge([
+                'min' => 8,
+                'uppercase' => false,
+                'lowercase' => false,
+                'number' => false,
+                'symbols' => false,
+            ], $auths['passwordStrength'] ?? []);
+
+            if ($min !== null) {
+                $auths['passwordStrength']['min'] = $min;
+            }
+            if ($uppercase !== null) {
+                $auths['passwordStrength']['uppercase'] = $uppercase;
+            }
+            if ($lowercase !== null) {
+                $auths['passwordStrength']['lowercase'] = $lowercase;
+            }
+            if ($number !== null) {
+                $auths['passwordStrength']['number'] = $number;
+            }
+            if ($symbols !== null) {
+                $auths['passwordStrength']['symbols'] = $symbols;
+            }
+
+            $passwordStrength = $auths['passwordStrength'];
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
             ->setParam('policy', 'password-strength');
 
-        $response->dynamic(new Document(\array_merge($auths['passwordStrength'], [
+        $response->dynamic(new Document(\array_merge($passwordStrength, [
             '$id' => 'password-strength',
         ])), Response::MODEL_POLICY_PASSWORD_STRENGTH);
     }

@@ -71,37 +71,41 @@ class Update extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $auths = $project->getAttribute('auths', []);
+        $updatedNumber = [];
 
-        $mockNumbers = $auths['mockNumbers'] ?? [];
+        $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $number, $otp, &$updatedNumber) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $mockNumberIndex = null;
-        foreach ($mockNumbers as $index => $mock) {
-            if ($mock['phone'] === $number) {
-                $mockNumberIndex = $index;
-                break;
+            $auths = $current->getAttribute('auths', []);
+            $mockNumbers = $auths['mockNumbers'] ?? [];
+
+            $mockNumberIndex = null;
+            foreach ($mockNumbers as $index => $mock) {
+                if ($mock['phone'] === $number) {
+                    $mockNumberIndex = $index;
+                    break;
+                }
             }
-        }
 
-        if (\is_null($mockNumberIndex)) {
-            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-        }
+            if (\is_null($mockNumberIndex)) {
+                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+            }
 
-        $mockNumbers[$mockNumberIndex]['otp'] = $otp;
-        $mockNumbers[$mockNumberIndex]['$updatedAt'] = DateTime::now();
+            $mockNumbers[$mockNumberIndex]['otp'] = $otp;
+            $mockNumbers[$mockNumberIndex]['$updatedAt'] = DateTime::now();
 
-        $auths['mockNumbers'] = $mockNumbers;
+            $auths['mockNumbers'] = $mockNumbers;
+            $updatedNumber = $mockNumbers[$mockNumberIndex];
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
-
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents->setParam('number', $number);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic(new Document($mockNumbers[$mockNumberIndex]), Response::MODEL_MOCK_NUMBER);
+            ->dynamic(new Document($updatedNumber), Response::MODEL_MOCK_NUMBER);
     }
 }

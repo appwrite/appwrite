@@ -94,20 +94,27 @@ class Update extends Action
         Document $project,
         Authorization $authorization
     ): void {
-        // Fetch current configuration
+        // Fetch current configuration. This read is only used to validate the
+        // effective config (incl. the SMTP connection test below); the value
+        // actually persisted is re-read fresh under a row lock at write time so
+        // a concurrent update can't be clobbered.
         $smtp = $project->getAttribute('smtp', []);
 
-        // Apply changes — null means "not provided, keep existing".
-        // Empty string explicitly clears a previously-set value.
+        // Collect only the fields the caller provided. null means "not provided,
+        // keep existing"; empty string explicitly clears a previously-set value.
         $keys = ['host', 'port', 'username', 'password', 'senderEmail', 'senderName', 'replyToEmail', 'replyToName', 'secure', 'enabled'];
+        $changes = [];
         foreach ($keys as $key) {
             if (!\is_null(${$key})) {
-                $smtp[$key] = ${$key};
+                $changes[$key] = ${$key};
             }
         }
 
+        // Effective config = stored values overlaid with this request's changes.
+        $smtp = \array_merge($smtp, $changes);
+
         // Backwards compatibility
-        $smtp['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+        $smtp['replyToEmail'] = $changes['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
 
         if (($smtp['enabled'] ?? false) === true) {
             // Ensure required fields are set
@@ -155,7 +162,7 @@ class Update extends Action
                 // Auto-enable if configuration is valid
                 // Dont do this if specifically request to mark disabled
                 if (\is_null($enabled)) {
-                    $smtp['enabled'] = true;
+                    $smtp['enabled'] = $changes['enabled'] = true;
                 }
             } catch (Throwable $error) {
                 if (($smtp['enabled'] ?? null) === true) {
@@ -164,12 +171,18 @@ class Update extends Action
             }
         }
 
-        // Save configuration
-        $updates = new Document([
-            'smtp' => $smtp,
-        ]);
+        // Save configuration. Re-read fresh under a row lock and apply only the
+        // changed keys so a concurrent SMTP update can't be clobbered. The
+        // expensive connection test above intentionally stays outside the lock.
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $changes) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            $smtp = \array_merge($current->getAttribute('smtp', []), $changes);
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'smtp' => $smtp,
+            ]));
+        }));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

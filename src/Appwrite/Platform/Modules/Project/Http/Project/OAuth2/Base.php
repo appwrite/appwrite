@@ -387,33 +387,39 @@ abstract class Base extends Action
         $appSecretKey = $providerId . 'Secret';
         $enabledKey = $providerId . 'Enabled';
 
+        // Collect only the fields the caller provided.
+        $changes = [];
         if (!\is_null($clientId)) {
-            $oAuthProviders[$appIdKey] = $clientId;
+            $changes[$appIdKey] = $clientId;
         }
 
         if (!\is_null($clientSecret)) {
-            $oAuthProviders[$appSecretKey] = $clientSecret;
+            $changes[$appSecretKey] = $clientSecret;
         }
 
         if (!\is_null($enabled)) {
-            $oAuthProviders[$enabledKey] = $enabled;
+            $changes[$enabledKey] = $enabled;
         }
 
         if ($enabled === true || \is_null($enabled)) {
+            // Effective credentials = stored values overlaid with this request's changes.
+            $effectiveAppId = $changes[$appIdKey] ?? $oAuthProviders[$appIdKey] ?? '';
+            $effectiveAppSecret = $changes[$appSecretKey] ?? $oAuthProviders[$appSecretKey] ?? '';
+
             try {
-                if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
+                if (empty($effectiveAppId) || empty($effectiveAppSecret)) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
+                $providerInstance = new $providerClass(appId: $effectiveAppId, appSecret: $effectiveAppSecret, callback: '', state: [], scopes: []);
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {
                     $providerInstance->verifyCredentials();
                 }
 
-                $oAuthProviders[$enabledKey] = true;
+                $changes[$enabledKey] = true;
             } catch (\Throwable $err) {
                 if ($enabled === true) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable OAuth2 provider: ' . $err->getMessage());
@@ -421,11 +427,21 @@ abstract class Base extends Action
             }
         }
 
-        $updates = new Document([
-            'oAuthProviders' => $oAuthProviders
-        ]);
+        // Re-read fresh under a row lock and apply only the changed keys so a
+        // concurrent provider update can't be clobbered. The credentials check
+        // above intentionally stays outside the lock.
+        return $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $changes) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            $oAuthProviders = $current->getAttribute('oAuthProviders', []);
+            foreach ($changes as $key => $value) {
+                $oAuthProviders[$key] = $value;
+            }
+
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'oAuthProviders' => $oAuthProviders,
+            ]));
+        }));
     }
 
     public function action(

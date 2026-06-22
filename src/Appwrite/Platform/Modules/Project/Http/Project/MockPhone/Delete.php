@@ -69,32 +69,33 @@ class Delete extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $auths = $project->getAttribute('auths', []);
+        $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $number) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        $mockNumbers = $auths['mockNumbers'] ?? [];
+            $auths = $current->getAttribute('auths', []);
+            $mockNumbers = $auths['mockNumbers'] ?? [];
 
-        $mockNumberIndex = null;
-        foreach ($mockNumbers as $index => $mock) {
-            if ($mock['phone'] === $number) {
-                $mockNumberIndex = $index;
-                break;
+            $mockNumberIndex = null;
+            foreach ($mockNumbers as $index => $mock) {
+                if ($mock['phone'] === $number) {
+                    $mockNumberIndex = $index;
+                    break;
+                }
             }
-        }
 
-        if (\is_null($mockNumberIndex)) {
-            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-        }
+            if (\is_null($mockNumberIndex)) {
+                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+            }
 
-        unset($mockNumbers[$mockNumberIndex]);
-        $mockNumbers = array_values($mockNumbers);
+            unset($mockNumbers[$mockNumberIndex]);
+            $mockNumbers = array_values($mockNumbers);
 
-        $auths['mockNumbers'] = $mockNumbers;
+            $auths['mockNumbers'] = $mockNumbers;
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
-
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents->setParam('number', $number);
 

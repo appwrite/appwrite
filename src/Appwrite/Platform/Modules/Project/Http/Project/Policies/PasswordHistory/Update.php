@@ -70,19 +70,21 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $auths = $project->getAttribute('auths', []);
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $total) {
+            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
 
-        if (\is_null($total)) {
-            $auths['passwordHistory'] = 0;
-        } else {
-            $auths['passwordHistory'] = $total;
-        }
+            $auths = $current->getAttribute('auths', []);
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
+            if (\is_null($total)) {
+                $auths['passwordHistory'] = 0;
+            } else {
+                $auths['passwordHistory'] = $total;
+            }
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
+                'auths' => $auths,
+            ]));
+        }));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
