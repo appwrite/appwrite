@@ -5,6 +5,7 @@ import {
   getCoverImageMimeType,
 } from '@/lib/cover-generator/cover-image-format'
 import { parseCoverRenderData } from '@/lib/cover-generator/parse-params'
+import { runWithCoverRenderContext } from '@/lib/cover-generator/render-context'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 
 function parseCoverRenderDataFromJson(body: unknown): CoverRenderData {
@@ -31,11 +32,15 @@ function resolveCoverDisposition(
 }
 
 async function renderCoverResponse(
+  request: Request,
   data: CoverRenderData,
   disposition: 'inline' | 'attachment',
 ): Promise<Response> {
+  const siteOrigin = new URL(request.url).origin
   const { renderCoverImage } = await import('@/lib/cover-generator/render-cover')
-  const image = await renderCoverImage(data)
+  const image = await runWithCoverRenderContext(siteOrigin, () =>
+    renderCoverImage(data),
+  )
   const body = image.buffer.slice(
     image.byteOffset,
     image.byteOffset + image.byteLength,
@@ -65,6 +70,7 @@ export const Route = createFileRoute('/_api/generator/cover')({
 
         try {
           return await renderCoverResponse(
+            request,
             data,
             resolveCoverDisposition(request, 'inline'),
           )
@@ -81,6 +87,7 @@ export const Route = createFileRoute('/_api/generator/cover')({
           const payload = await request.json()
           const data = parseCoverRenderDataFromJson(payload)
           return await renderCoverResponse(
+            request,
             data,
             resolveCoverDisposition(request, 'inline'),
           )

@@ -15,6 +15,7 @@ import {
 import { COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX } from '@/components/pages/generator/layout'
 import { COVER_TEMPLATE_DEFINITIONS } from '@/lib/cover-generator/template-config'
 import { CoverCardsAngledPreview } from '@/components/pages/generator/_components/CoverCardsAngledPreview'
+import { CoverScreenshotAngledPreview } from '@/components/pages/generator/_components/CoverScreenshotAngledPreview'
 import { CoverThemeSelect } from '@/components/pages/generator/_components/CoverThemeSelect'
 import { cn } from '@/lib/utils'
 
@@ -45,7 +46,8 @@ function CoverTemplateCard({
     () => createDefaultCoverData(template, theme),
     [template, theme],
   )
-  const usesDomPreview = template === 'cards-angled'
+  const usesDomPreview =
+    template === 'cards-angled' || template === 'screenshot-angled'
   const previewUrl = useMemo(() => {
     if (typeof window === 'undefined' || usesDomPreview) return ''
     return buildCoverApiUrl({ ...previewData, format: 'png' }, window.location.origin)
@@ -76,6 +78,23 @@ function CoverTemplateCard({
           >
             <CoverCardsAngledPreview
               data={previewData as Extract<typeof previewData, { template: 'cards-angled' }>}
+              width={COVER_WIDTH}
+              height={COVER_HEIGHT}
+            />
+          </div>
+        ) : template === 'screenshot-angled' ? (
+          <div
+            className="pointer-events-none absolute left-0 top-0 origin-top-left"
+            style={{
+              width: COVER_WIDTH,
+              height: COVER_HEIGHT,
+              transform: `scale(${thumbnailScale})`,
+            }}
+          >
+            <CoverScreenshotAngledPreview
+              data={
+                previewData as Extract<typeof previewData, { template: 'screenshot-angled' }>
+              }
               width={COVER_WIDTH}
               height={COVER_HEIGHT}
             />

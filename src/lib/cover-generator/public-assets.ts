@@ -1,13 +1,31 @@
 import { access, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { getCoverRenderSiteOrigin } from '@/lib/cover-generator/render-context'
 
 /**
  * Resolve bundled static assets for server-side cover rendering.
- * Dev reads from `public/`; production images ship in `dist/client/` (see Dockerfile).
+ * Dev reads from `public/`; Docker reads from `dist/client/` (see Dockerfile).
+ * On Appwrite Sites, fall back to fetching from the deployed site's static URLs.
  */
 function getCoverPublicAssetRoots(): string[] {
   const cwd = process.cwd()
   return [join(cwd, 'public'), join(cwd, 'dist/client')]
+}
+
+async function fetchCoverPublicAssetBuffer(
+  relativePath: string,
+): Promise<Buffer | null> {
+  const normalized = relativePath.replace(/^\/+/, '')
+  const url = resolveSiteAssetUrl(`/${normalized}`, getCoverRenderSiteOrigin())
+
+  try {
+    const response = await fetch(url)
+    if (!response.ok) return null
+    return Buffer.from(await response.arrayBuffer())
+  } catch {
+    return null
+  }
 }
 
 export async function readCoverPublicAssetBuffer(
@@ -23,7 +41,8 @@ export async function readCoverPublicAssetBuffer(
       // try next root
     }
   }
-  return null
+
+  return fetchCoverPublicAssetBuffer(relativePath)
 }
 
 export async function readCoverPublicAssetDataUri(
