@@ -416,6 +416,13 @@ $platformCollections = [
                 'orders' => [],
             ],
             [
+                '$id' => ID::custom('_key_accessedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
                 '$id' => ID::custom('_key_teamInternalId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['teamInternalId'],
