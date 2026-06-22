@@ -4,13 +4,15 @@ title: "Introducing Appwrite Explorer"
 description: Appwrite Explorer brings the Appwrite REST API into the Console. Browse every endpoint, build requests with guided forms, send live calls against your project, and inspect responses without leaving the browser.
 date: 2026-06-23
 cover: /images/blog-local/announcing-appwrite-explorer/cover.avif
-timeToRead: 7
+timeToRead: 8
 author: eldad-fux
 category: product, announcement
 featured: true
 faqs:
   - question: "What is Appwrite Explorer?"
     answer: "Appwrite Explorer is an interactive API workspace inside the Appwrite Console. It loads the official OpenAPI specification for your project, groups endpoints by product (Auth, Databases, Storage, Functions, and more), and lets you compose and send live REST requests from the browser."
+  - question: "Where do Explorer's API definitions come from?"
+    answer: "They come from the `@appwrite.io/specs` package, which is generated programmatically from the Appwrite server source on every release. The same OpenAPI files power official SDKs, API reference docs, and Explorer, so request schemas and metadata stay aligned with the live API."
   - question: "Does Appwrite Explorer call my real project?"
     answer: "Yes. When you click **Send request**, Explorer executes the call against your project's API endpoint and shows the real response status, headers, and body. Destructive or mutating requests (delete, update, and similar POST operations) require confirmation first."
   - question: "How does authentication work?"
@@ -39,7 +41,16 @@ The goal is the same as [Appwrite Terminal](/blog/post/announcing-console-termin
 
 # Built on the official OpenAPI spec
 
-Explorer loads the latest Appwrite OpenAPI definitions bundled with `@appwrite.io/specs`. Endpoints are grouped into product areas that mirror how you think about the platform:
+Explorer loads the latest Appwrite OpenAPI definitions bundled with `@appwrite.io/specs`. Those specs are not maintained by hand in a separate docs repo. They are **generated programmatically from the Appwrite server source code** on every release, using the same `specs` CLI task that publishes to [appwrite/specs](https://github.com/appwrite/specs). Route handlers, request models, response schemas, scopes, rate limits, and Appwrite-specific metadata (under `x-appwrite`) all flow from the codebase into the OpenAPI output.
+
+That single pipeline is why Explorer stays trustworthy:
+
+- **No documentation drift.** The forms, parameter types, and validation rules you see are derived from the same definitions that power the live API and every official SDK, not from reference pages that can fall behind.
+- **Release parity.** When a new endpoint ships, it appears in Explorer as soon as the Console bundles the matching spec version. You are not waiting for someone to rewrite docs by hand.
+- **One artifact, many surfaces.** API reference, [SDK generation](https://github.com/appwrite/sdk-generator), and Explorer all consume the same spec files, so what you test in the browser is what your SDK calls in production.
+- **Accurate metadata inline.** Required scopes, rate limits, Client vs Server availability, and deprecation notices come from server configuration, which is why Explorer can show them before you send a request.
+
+Endpoints are grouped into product areas that mirror how you think about the platform:
 
 - **Auth** (Account, Users, Teams, Presences)
 - **Databases** (TablesDB, DocumentsDB, VectorsDB when enabled)
