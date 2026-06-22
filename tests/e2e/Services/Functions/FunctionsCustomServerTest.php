@@ -200,7 +200,7 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testListSpecs(): void
     {
-        $specifications = $this->listSpecifications();
+        $specifications = $this->listSpecifications(['type' => 'runtimes']);
         $this->assertEquals(200, $specifications['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);

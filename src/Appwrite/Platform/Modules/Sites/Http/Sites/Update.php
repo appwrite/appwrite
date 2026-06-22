@@ -178,11 +178,6 @@ class Update extends Base
             $framework = $site->getAttribute('framework');
         }
 
-        $missingParam = new \stdClass();
-        if ($request->getPayload('buildSpecification', $missingParam) === $missingParam) {
-            $buildSpecification = $site->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
-        }
-
         $repositoryId = $site->getAttribute('repositoryId', '');
         $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
 
