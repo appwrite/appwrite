@@ -641,7 +641,7 @@ function RelationshipField({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2 text-[12px] text-muted-foreground hover:text-destructive"
+                    className="h-7 px-2 text-[12px] text-muted-foreground hover:text-foreground"
                     disabled={isSaving}
                     onClick={() =>
                       onChange(selectedValues.filter((item) => item !== value))
@@ -2160,7 +2160,7 @@ function RowEditDrawer({
                                             <button
                                               type="button"
                                               aria-label={`Remove item ${index + 1}`}
-                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-l border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-destructive"
+                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-l border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                               onClick={() =>
                                                 handleRemoveArrayItem(
                                                   key,

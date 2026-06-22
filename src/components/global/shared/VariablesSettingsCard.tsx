@@ -969,7 +969,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                           {w.secret ? 'Unmark secret' : 'Secret'}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                          className="text-destructive"
                                           onClick={() =>
                                             handleWizardRemove(index)
                                           }
@@ -1069,7 +1068,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                         </DropdownMenuItem>
                                       )}
                                       <DropdownMenuItem
-                                        className="text-destructive"
                                         onClick={() => {
                                           setSelectedVar(record)
                                           setShowDeleteModal(true)

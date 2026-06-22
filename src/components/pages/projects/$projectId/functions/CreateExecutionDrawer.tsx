@@ -342,7 +342,7 @@ function CreateExecutionDrawerForm({
                           variant="ghost"
                           size="sm"
                           disabled={fieldsDisabled}
-                          className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                          className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-foreground"
                           onClick={() => removeHeader(row.id)}
                           aria-label="Remove header"
                         >

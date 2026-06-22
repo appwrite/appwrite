@@ -2302,7 +2302,7 @@ function CreateUserMembershipDialog({
                         <button
                           type="button"
                           onClick={() => handleRemoveRole(role)}
-                          className="ml-0.5 hover:text-destructive rounded p-0.5"
+                          className="ml-0.5 hover:text-foreground rounded p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>

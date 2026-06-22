@@ -286,7 +286,7 @@ export function MembershipUpdateDrawer({
                             <button
                               type="button"
                               onClick={() => handleRemoveRole(role)}
-                              className="hover:text-destructive rounded p-0.5"
+                              className="hover:text-foreground rounded p-0.5"
                             >
                               <X className="h-3 w-3" />
                             </button>

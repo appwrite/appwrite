@@ -169,7 +169,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                 onClick={() => handleRemoveAlert(threshold)}
                 disabled={updateBudgetMutation.isPending}
               >

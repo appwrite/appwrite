@@ -224,7 +224,7 @@ export function SavedFilterPresetRow({
             void onDelete()
           }}
           disabled={deleteDisabled}
-          className="shrink-0 cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+          className="shrink-0 cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
           aria-label="Delete saved filter"
         >
           {deleteBusy ? (

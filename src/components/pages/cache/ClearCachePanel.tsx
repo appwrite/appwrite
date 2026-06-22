@@ -317,7 +317,6 @@ export function ClearCachePanel() {
         <Button
           type="button"
           size="sm"
-          variant="destructive"
           className="h-9 text-[13px]"
           disabled={!canSubmit}
           onClick={() => setConfirmOpen(true)}
