@@ -23,6 +23,14 @@ export function getBlogPostOgImageUrl(post: Pick<BlogPostMeta, 'title' | 'descri
   return `https://og.appwrite.global/image.png?${params.toString()}`
 }
 
+export function getBlogPostCoverImageUrl(post: Pick<BlogPostMeta, 'cover'>): string | undefined {
+  return post.cover ? getBlogCanonicalUrl(post.cover) : undefined
+}
+
+export function getBlogPostOgImage(post: BlogPostMeta): string {
+  return getBlogPostCoverImageUrl(post) ?? getBlogPostOgImageUrl(post)
+}
+
 export function getBlogIndexMetaTags() {
   const title = getBlogPageTitle('Blog')
   const description =
@@ -49,9 +57,7 @@ export function getBlogPostMetaTags(post: BlogPost) {
   const resolvedTitle = getBlogPostTitle(post)
   const title = getBlogPageTitle(resolvedTitle)
   const canonical = getBlogCanonicalUrl(post.href)
-  const ogImage = post.cover
-    ? getBlogCanonicalUrl(post.cover)
-    : getBlogPostOgImageUrl(post)
+  const ogImage = getBlogPostOgImage(post)
 
   return [
     { title },
@@ -110,6 +116,8 @@ export function getBlogAuthorMetaTags(author: BlogAuthor) {
 }
 
 export function getBlogPostSchema(post: BlogPost, authors: BlogAuthor[]) {
+  const coverImage = getBlogPostCoverImageUrl(post)
+
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -118,6 +126,7 @@ export function getBlogPostSchema(post: BlogPost, authors: BlogAuthor[]) {
     datePublished: post.date,
     dateModified: post.lastUpdated,
     url: getBlogCanonicalUrl(post.href),
+    ...(coverImage ? { image: coverImage } : {}),
     author: authors.map((author) => ({
       '@type': 'Person',
       name: author.name,
