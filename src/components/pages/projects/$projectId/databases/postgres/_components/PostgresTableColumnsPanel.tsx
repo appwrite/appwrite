@@ -8,21 +8,18 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
@@ -31,32 +28,28 @@ import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import {
   useExecutePostgresSql,
-  usePostgresTableColumns,
-} from '@/lib/react-query/hooks'
+  usePostgresTableColumns} from '@/lib/react-query/hooks'
 import {
   buildPostgresDropColumnSql,
-  formatPostgresColumnType,
-} from '@/lib/postgres-table-ddl'
+  formatPostgresColumnType} from '@/lib/postgres-table-ddl'
 import {
   formatPostgresColumnMetadataPreview,
   getPostgresColumnCheckDisplay,
-  getPostgresColumnForeignKeyDisplay,
-} from '@/lib/postgres-column-metadata'
+  getPostgresColumnForeignKeyDisplay} from '@/lib/postgres-column-metadata'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   isPostgresPrimaryKeyColumn,
-  type PostgresTableColumnRow,
-} from '@/lib/postgres-sql'
+  type PostgresTableColumnRow} from '@/lib/postgres-sql'
 import { CheckCircle2, Copy, Pencil, Trash2 } from 'lucide-react'
 import { PostgresTableColumnDrawer } from './PostgresTableColumnDrawer'
+import { PostgresColumnContextMenu } from './PostgresColumnContextMenu'
 import {
   getPostgresColumnTypeColor,
   matchesPostgresLocalSearch,
   POSTGRES_BODY_CELL_BORDER_CLASS,
   POSTGRES_HEADER_CELL_BORDER_CLASS,
   POSTGRES_LAST_CELL_BORDER_CLASS,
-  POSTGRES_STICKY_THEAD_CLASS,
-} from './postgres-spreadsheet-chrome'
+  POSTGRES_STICKY_THEAD_CLASS} from './postgres-spreadsheet-chrome'
 
 type PostgresTableColumnsPanelProps = {
   databaseId: string
@@ -71,8 +64,7 @@ export function PostgresTableColumnsPanel({
   tableId,
   search = '',
   createDialogOpen: createDialogOpenProp,
-  onCreateDialogOpenChange,
-}: PostgresTableColumnsPanelProps) {
+  onCreateDialogOpenChange}: PostgresTableColumnsPanelProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -308,8 +300,22 @@ export function PostgresTableColumnsPanel({
                 const commentDisplay = column.column_comment?.trim() ?? ''
 
                 return (
-                  <tr
+                  <PostgresColumnContextMenu
                     key={column.column_name}
+                    column={column}
+                    isPrimary={primary}
+                    canWrite={canWrite}
+                    onUpdate={handleEdit}
+                    onDelete={
+                      !primary
+                        ? (columnName) => {
+                            setColumnToDelete(columnName)
+                            setDeleteDialogOpen(true)
+                          }
+                        : undefined
+                    }
+                  >
+                  <tr
                     className="group transition-colors hover:bg-muted/50"
                   >
                     <td className={cn('px-3 py-2', POSTGRES_BODY_CELL_BORDER_CLASS)}>
@@ -433,9 +439,7 @@ export function PostgresTableColumnsPanel({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleEdit(column)}>
-                              <MenuItemContent icon={Pencil}>
-                                Update
-                              </MenuItemContent>
+                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => {
@@ -443,9 +447,7 @@ export function PostgresTableColumnsPanel({
                                 setDeleteDialogOpen(true)
                               }}
                             >
-                              <MenuItemContent icon={Trash2}>
-                                Delete
-                              </MenuItemContent>
+                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -456,15 +458,14 @@ export function PostgresTableColumnsPanel({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleEdit(column)}>
-                              <MenuItemContent icon={Pencil}>
-                                Update
-                              </MenuItemContent>
+                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : null}
                     </td>
                   </tr>
+                  </PostgresColumnContextMenu>
                 )
               })}
             </tbody>

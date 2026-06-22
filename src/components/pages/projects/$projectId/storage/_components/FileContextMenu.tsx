@@ -8,8 +8,7 @@ import {
   FileJson,
   LayoutList,
   Shield,
-  KeyRound,
-} from 'lucide-react'
+  KeyRound} from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -18,8 +17,7 @@ import {
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu'
+  ContextMenuTrigger} from '@/components/ui/context-menu'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,16 +26,14 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -49,11 +45,11 @@ import {
   copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
-  openInNewWindow,
-} from '@/lib/utils/context-menu'
+  openInNewWindow} from '@/lib/utils/context-menu'
 import {
   ContextMenuIcon,
   MenuItemContent,
+  MenuItemIcon,
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 
@@ -79,15 +75,13 @@ function useFileActions(
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['files', 'project', projectId, 'bucket', bucketId],
-      })
+        queryKey: ['files', 'project', projectId, 'bucket', bucketId]})
       toast.success('File deleted')
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to delete file')
-    },
-  })
+    }})
 
   const navigateToTab = (tab: 'overview' | 'permissions' | 'tokens') => {
     navigate({
@@ -101,8 +95,7 @@ function useFileActions(
           next.filePanel = tab
         }
         return next
-      },
-    })
+      }})
   }
 
   const fileHref = buildConsoleUrl(
@@ -116,15 +109,13 @@ function useFileActions(
     handleDeleteClick: () => setDeleteDialogOpen(true),
     deleteDialogOpen,
     setDeleteDialogOpen,
-    deleteMutation,
-  }
+    deleteMutation}
 }
 
 function FileDeleteDialog({
   open,
   onOpenChange,
-  deleteMutation,
-}: {
+  deleteMutation}: {
   open: boolean
   onOpenChange: (open: boolean) => void
   deleteMutation: ReturnType<typeof useFileActions>['deleteMutation']
@@ -171,8 +162,7 @@ export function FileContextMenu({
   projectId,
   bucketId,
   file,
-  children,
-}: FileContextMenuProps) {
+  children}: FileContextMenuProps) {
   const {
     hasName,
     fileHref,
@@ -180,8 +170,7 @@ export function FileContextMenu({
     handleDeleteClick,
     deleteDialogOpen,
     setDeleteDialogOpen,
-    deleteMutation,
-  } = useFileActions(projectId, bucketId, file)
+    deleteMutation} = useFileActions(projectId, bucketId, file)
 
   return (
     <>
@@ -273,8 +262,7 @@ type FileRowActionsMenuProps = {
 export function FileRowActionsMenu({
   projectId,
   bucketId,
-  file,
-}: FileRowActionsMenuProps) {
+  file}: FileRowActionsMenuProps) {
   const {
     hasName,
     fileHref,
@@ -282,8 +270,7 @@ export function FileRowActionsMenu({
     handleDeleteClick,
     deleteDialogOpen,
     setDeleteDialogOpen,
-    deleteMutation,
-  } = useFileActions(projectId, bucketId, file)
+    deleteMutation} = useFileActions(projectId, bucketId, file)
 
   if (file.pending) {
     return null
@@ -323,7 +310,8 @@ export function FileRowActionsMenu({
           <DropdownMenuSeparator />
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
-              <MenuItemContent icon={Copy}>Copy</MenuItemContent>
+              <MenuItemIcon icon={Copy} />
+              Copy
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem
@@ -371,9 +359,7 @@ export function FileRowActionsMenu({
               openInNewTab(fileHref)
             }}
           >
-            <MenuItemContent icon={ExternalLink}>
-              Open in new tab
-            </MenuItemContent>
+            <MenuItemContent icon={ExternalLink}>Open in new tab</MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {

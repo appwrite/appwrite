@@ -1,7 +1,7 @@
 import { useState, Fragment } from 'react'
 import { Key, Eye, Copy, Check, Pencil, Trash2 } from 'lucide-react'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,15 +9,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { ApiKeyContextMenu } from '../api-keys/_components/ApiKeyContextMenu'
@@ -67,8 +65,7 @@ export function ApiKeysList({
   onCopy,
   copiedField,
   showActions = true,
-  projectId,
-}: ApiKeysListProps) {
+  projectId}: ApiKeysListProps) {
   const [viewingKeyId, setViewingKeyId] = useState<string | null>(null)
 
   const maskKey = (key: string) => {
@@ -245,16 +242,12 @@ export function ApiKeysList({
                       <DropdownMenuContent align="end">
                         {onUpdate && (
                           <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
-                            <MenuItemContent icon={Pencil}>
-                              Update
-                            </MenuItemContent>
+                            <MenuItemContent icon={Pencil}>Update</MenuItemContent>
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
                           <DropdownMenuItem onClick={() => onDelete(apiKey.id)}>
-                            <MenuItemContent icon={Trash2}>
-                              Delete
-                            </MenuItemContent>
+                            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -273,8 +266,7 @@ export function ApiKeysList({
                     name: apiKey.name,
                     key: apiKey.key,
                     scopes: apiKey.scopes,
-                    expire: apiKey.expire,
-                  }}
+                    expire: apiKey.expire}}
                   onUpdate={onUpdate}
                 >
                   {row}

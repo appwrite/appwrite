@@ -5,14 +5,12 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useContext,
-} from 'react'
+  useContext} from 'react'
 import {
   useParams,
   Link,
   useNavigate,
-  useLocation,
-} from '@tanstack/react-router'
+  useLocation} from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   Clock,
@@ -33,29 +31,28 @@ import {
   ChevronDown,
   Globe,
   ExternalLink,
-  ScrollText,
-} from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  ScrollText} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import {
   getDeploymentStatusBadge,
   isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
-  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
-} from '@/lib/utils/deployment-status'
+  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS} from '@/lib/utils/deployment-status'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -70,8 +67,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,15 +76,13 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -102,8 +96,7 @@ import {
   deleteSiteDeployment,
   cancelSiteDeployment,
   Dependencies,
-  DEFAULT_PAGE_SIZE,
-} from '@/lib/react-query/hooks'
+  DEFAULT_PAGE_SIZE} from '@/lib/react-query/hooks'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
@@ -209,28 +202,24 @@ function getVcsProvider(
     if (url.includes('github.com')) {
       return {
         name: 'GitHub',
-        icon: <GitHubIcon className="h-4 w-4" />,
-      }
+        icon: <GitHubIcon className="h-4 w-4" />}
     }
     if (url.includes('gitlab.com')) {
       return {
         name: 'GitLab',
-        icon: <GitLabIcon className="h-4 w-4" />,
-      }
+        icon: <GitLabIcon className="h-4 w-4" />}
     }
     if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
       return {
         name: 'Bitbucket',
-        icon: <BitbucketIcon className="h-4 w-4" />,
-      }
+        icon: <BitbucketIcon className="h-4 w-4" />}
     }
   }
   if (deployment.type === 'git' || deployment.type === 'vcs') {
     if (deployment.providerRepositoryUrl || deployment.providerRepositoryId) {
       return {
         name: 'Git',
-        icon: <GitBranch className="h-4 w-4" />,
-      }
+        icon: <GitBranch className="h-4 w-4" />}
     }
   }
   return null
@@ -274,8 +263,7 @@ export function View() {
     )
     return {
       page: getPage(url, 1),
-      filterMap: queryParamToMap(queryParam),
-    }
+      filterMap: queryParamToMap(queryParam)}
   }, [isDeploymentsListPage, location.pathname, location.search])
 
   // Prefer parsed search (TanStack Router object) so page=2 in URL is read correctly after navigate()
@@ -353,8 +341,7 @@ export function View() {
   const {
     total,
     isLoading: deploymentsLoading,
-    isFetching: deploymentsFetching,
-  } = useSiteDeployments(
+    isFetching: deploymentsFetching} = useSiteDeployments(
     projectId,
     siteId,
     requestedPage,
@@ -450,16 +437,14 @@ export function View() {
       deployments?: Models.Deployment[]
     }>({
       queryKey: ['deployments', 'site', projectId, siteId],
-      exact: false,
-    })
+      exact: false})
     const hasInProgressInCache = queries.some(([, data]) =>
       data?.deployments?.some((d) => isDeploymentInProgress(d.status)),
     )
     if (!hasInProgressInCache) return
     void queryClient.refetchQueries({
       queryKey: ['deployments', 'site', projectId, siteId],
-      exact: false,
-    })
+      exact: false})
   }, [projectId, siteId, queryClient])
 
   // Screenshot theme: user override or current active app theme (resolvedTheme when available)
@@ -547,8 +532,7 @@ export function View() {
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
         deploymentId: activeDeploymentResolved.$id,
-        type: DeploymentDownloadType.Source,
-      })
+        type: DeploymentDownloadType.Source})
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
@@ -564,8 +548,7 @@ export function View() {
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
         deploymentId: activeDeploymentResolved.$id,
-        type: DeploymentDownloadType.Output,
-      })
+        type: DeploymentDownloadType.Output})
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
@@ -583,23 +566,19 @@ export function View() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createDuplicateDeployment({
         siteId,
-        deploymentId: activeDeploymentResolved.$id,
-      })
+        deploymentId: activeDeploymentResolved.$id})
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS],
-      })
+        queryKey: [...Dependencies.DEPLOYMENTS]})
       await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+        queryKey: ['site', 'project', projectId, siteId]})
       toast.success('Deployment rebuild started')
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to redeploy')
-    },
-  })
+    }})
 
   // Activate mutation (disabled for active deployment, but included for consistency)
   const activateMutation = useMutation({
@@ -610,23 +589,19 @@ export function View() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.updateSiteDeployment({
         siteId,
-        deploymentId: activeDeploymentResolved.$id,
-      })
+        deploymentId: activeDeploymentResolved.$id})
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS],
-      })
+        queryKey: [...Dependencies.DEPLOYMENTS]})
       await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+        queryKey: ['site', 'project', projectId, siteId]})
       toast.success('Deployment activated successfully')
       setActivateDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to activate deployment')
-    },
-  })
+    }})
 
   // Cancel build mutation (stop the build, deployment remains with status canceled)
   const cancelBuildMutation = useMutation({
@@ -640,17 +615,14 @@ export function View() {
       setCancelBuildDialogOpen(false)
       setCancelTargetDeploymentId(null)
       await queryClient.refetchQueries({
-        queryKey: Dependencies.DEPLOYMENTS,
-      })
+        queryKey: Dependencies.DEPLOYMENTS})
       await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+        queryKey: ['site', 'project', projectId, siteId]})
       toast.success('Build cancelled')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to cancel build')
-    },
-  })
+    }})
 
   // Delete mutation for active deployment
   const deleteActiveMutation = useMutation({
@@ -664,18 +636,15 @@ export function View() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS],
-      })
+        queryKey: [...Dependencies.DEPLOYMENTS]})
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+        queryKey: ['site', 'project', projectId, siteId]})
       toast.success('Deployment deleted successfully')
       setDeleteActiveDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete deployment')
-    },
-  })
+    }})
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
@@ -701,11 +670,9 @@ export function View() {
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: Dependencies.DEPLOYMENTS,
-      })
+        queryKey: Dependencies.DEPLOYMENTS})
       await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+        queryKey: ['site', 'project', projectId, siteId]})
       toast.success(
         `Successfully deleted ${selectedDeployments.size} deployment${selectedDeployments.size > 1 ? 's' : ''}`,
       )
@@ -714,8 +681,7 @@ export function View() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete deployments')
-    },
-  })
+    }})
 
   const handleBulkDelete = () => {
     if (selectedDeployments.size === 0) return
@@ -758,8 +724,7 @@ export function View() {
         ...prev,
         page: page === 1 ? undefined : page, // Remove page param if it's page 1
       }),
-      replace: true,
-    })
+      replace: true})
     setSelectedDeployments(new Set()) // Clear selection on page change
   }
 
@@ -772,8 +737,7 @@ export function View() {
         ...prev,
         page: undefined, // Remove page param to go to page 1
       }),
-      replace: true,
-    })
+      replace: true})
     setRequestedPage(0)
     setDisplayedPage(0)
     setSelectedDeployments(new Set()) // Clear selection on page size change
@@ -855,8 +819,7 @@ export function View() {
                                   height: SCREENSHOT_PREVIEW_HEIGHT,
                                   output: avifSupported
                                     ? ImageFormat.Avif
-                                    : undefined,
-                                })
+                                    : undefined})
 
                               return (
                                 <div className="absolute inset-0 group">
@@ -1188,8 +1151,7 @@ export function View() {
                                 to="/projects/$projectId/sites/$siteId/domains"
                                 params={{
                                   projectId: projectId!,
-                                  siteId: siteId!,
-                                }}
+                                  siteId: siteId!}}
                               >
                                 View all domains
                                 {hasMoreDomains && (
@@ -1213,8 +1175,7 @@ export function View() {
                                 to="/projects/$projectId/sites/$siteId/domains"
                                 params={{
                                   projectId: projectId!,
-                                  siteId: siteId!,
-                                }}
+                                  siteId: siteId!}}
                               >
                                 Add domain
                               </Link>
@@ -1240,7 +1201,7 @@ export function View() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="z-[200]">
                         <DropdownMenuItem onClick={handleDownloadSource}>
-                          <MenuItemContent icon={FileCode}>Source code</MenuItemContent>
+                          Source code
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={handleDownloadBuild}
@@ -1257,7 +1218,7 @@ export function View() {
                               : undefined
                           }
                         >
-                          <MenuItemContent icon={Package}>Build output</MenuItemContent>
+                          Build output
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -1282,8 +1243,7 @@ export function View() {
                         params={{
                           projectId: projectId!,
                           siteId: siteId!,
-                          deploymentId: activeDeploymentResolved.$id,
-                        }}
+                          deploymentId: activeDeploymentResolved.$id}}
                       >
                         <ScrollText className="mr-1.5 h-4 w-4" />
                         Build logs
@@ -1328,8 +1288,7 @@ export function View() {
                                     to="/projects/$projectId/sites/$siteId/domains"
                                     params={{
                                       projectId: projectId!,
-                                      siteId: siteId!,
-                                    }}
+                                      siteId: siteId!}}
                                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
                                   >
                                     <span>
@@ -1485,9 +1444,7 @@ export function View() {
                                 params: {
                                   projectId: projectId!,
                                   siteId: siteId!,
-                                  deploymentId: deploymentData.$id,
-                                },
-                              })
+                                  deploymentId: deploymentData.$id}})
                             }}
                           >
                           <TableCell
@@ -1789,22 +1746,19 @@ export function View() {
                                         await projectSdk.sites.updateSiteDeployment(
                                           {
                                             siteId: siteId!,
-                                            deploymentId: deploymentData.$id,
-                                          },
+                                            deploymentId: deploymentData.$id},
                                         )
                                         queryClient.invalidateQueries({
                                           queryKey: [
                                             ...Dependencies.DEPLOYMENTS,
-                                          ],
-                                        })
+                                          ]})
                                         queryClient.invalidateQueries({
                                           queryKey: [
                                             'site',
                                             'project',
                                             projectId,
                                             siteId,
-                                          ],
-                                        })
+                                          ]})
                                         toast.success(
                                           'Deployment activated successfully',
                                         )
@@ -1828,12 +1782,10 @@ export function View() {
                                       await projectSdk.sites.createDuplicateDeployment(
                                         {
                                           siteId: siteId!,
-                                          deploymentId: deploymentData.$id,
-                                        },
+                                          deploymentId: deploymentData.$id},
                                       )
                                       queryClient.invalidateQueries({
-                                        queryKey: [...Dependencies.DEPLOYMENTS],
-                                      })
+                                        queryKey: [...Dependencies.DEPLOYMENTS]})
                                       toast.success(
                                         'Deployment rebuild started',
                                       )
@@ -1842,14 +1794,17 @@ export function View() {
                                     }
                                   }}
                                 >
-                                  <MenuItemContent icon={RefreshCw}>Redeploy</MenuItemContent>
+                                  <MenuItemContent icon={RefreshCw}>
+                                    Redeploy
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuSub>
                                   <DropdownMenuSubTrigger
                                     onClick={(e) => e.stopPropagation()}
                                     onPointerDown={(e) => e.stopPropagation()}
                                   >
-                                    <MenuItemContent icon={Download}>Download</MenuItemContent>
+                                    <MenuItemIcon icon={Download} />
+                                    Download
                                   </DropdownMenuSubTrigger>
                                   <DropdownMenuSubContent className="z-[200]">
                                     <DropdownMenuItem
@@ -1865,8 +1820,7 @@ export function View() {
                                                 siteId,
                                                 deploymentId:
                                                   deploymentData.$id,
-                                                type: DeploymentDownloadType.Source,
-                                              },
+                                                type: DeploymentDownloadType.Source},
                                             )
                                           const urlWithMode =
                                             url +
@@ -1881,7 +1835,9 @@ export function View() {
                                         }
                                       }}
                                     >
-                                      <MenuItemContent icon={FileCode}>Source code</MenuItemContent>
+                                      <MenuItemContent icon={FileCode}>
+                                        Source code
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       disabled={
@@ -1914,8 +1870,7 @@ export function View() {
                                                 siteId,
                                                 deploymentId:
                                                   deploymentData.$id,
-                                                type: DeploymentDownloadType.Output,
-                                              },
+                                                type: DeploymentDownloadType.Output},
                                             )
                                           const urlWithMode =
                                             url +
@@ -1930,7 +1885,9 @@ export function View() {
                                         }
                                       }}
                                     >
-                                      <MenuItemContent icon={Package}>Build output</MenuItemContent>
+                                      <MenuItemContent icon={Package}>
+                                        Build output
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuSubContent>
                                 </DropdownMenuSub>
@@ -1958,16 +1915,14 @@ export function View() {
                                         deploymentData.$id,
                                       )
                                       queryClient.invalidateQueries({
-                                        queryKey: [...Dependencies.DEPLOYMENTS],
-                                      })
+                                        queryKey: [...Dependencies.DEPLOYMENTS]})
                                       queryClient.invalidateQueries({
                                         queryKey: [
                                           'site',
                                           'project',
                                           projectId,
                                           siteId,
-                                        ],
-                                      })
+                                        ]})
                                       toast.success(
                                         'Deployment deleted successfully',
                                       )

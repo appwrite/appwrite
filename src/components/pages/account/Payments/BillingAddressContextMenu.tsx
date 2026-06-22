@@ -1,0 +1,88 @@
+import type { Models } from '@appwrite.io/console'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
+import { fetchBillingAddress } from '@/lib/react-query/hooks'
+import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+
+interface BillingAddressContextMenuProps {
+  address: Models.BillingAddress
+  onUpdate: (address: Models.BillingAddress) => void
+  onDelete: (address: Models.BillingAddress) => void
+  children: React.ReactNode
+}
+
+function formatAddressLabel(address: Models.BillingAddress) {
+  const parts = [
+    address.streetAddress,
+    address.city,
+    address.country,
+  ].filter(Boolean)
+  return parts.join(', ') || address.$id
+}
+
+export function BillingAddressContextMenu({
+  address,
+  onUpdate,
+  onDelete,
+  children,
+}: BillingAddressContextMenuProps) {
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuItem onSelect={() => onUpdate(address)}>
+          <ContextMenuIcon icon={Pencil} />
+          Update
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <ContextMenuIcon icon={Copy} />
+            Copy
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            <ContextMenuItem
+              onSelect={() => copyToClipboard('ID', address.$id)}
+            >
+              <ContextMenuIcon icon={Copy} />
+              Copy ID
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() =>
+                copyToClipboard('Address', formatAddressLabel(address))
+              }
+            >
+              <ContextMenuIcon icon={Copy} />
+              Copy name
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() =>
+                void copyResourceAsJson(() =>
+                  fetchBillingAddress(address.$id),
+                )
+              }
+            >
+              <ContextMenuIcon icon={FileJson} />
+              Copy as JSON
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+        <ContextMenuSeparator />
+        <ContextMenuItem onSelect={() => onDelete(address)}>
+          <ContextMenuIcon icon={Trash2} />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+}

@@ -15,8 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PermissionsEditor } from '../../auth/PermissionsEditor'
@@ -25,15 +24,13 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Loader2,
   Plus,
@@ -42,13 +39,12 @@ import {
   Eye,
   Check,
   AlertCircle,
-  Link2,
-} from 'lucide-react'
+  Link2} from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProject } from '@/lib/react-query/hooks'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 
 // Helper function to mask secret (compact hint of prefix / suffix)
@@ -133,8 +129,7 @@ export function FileSecurity({
   bucketId: bucketIdProp,
   fileId: fileIdProp,
   variant = 'page',
-  panelSection = 'all',
-}: FileSecurityProps = {}) {
+  panelSection = 'all'}: FileSecurityProps = {}) {
   const params = useParams({ strict: false }) as {
     projectId?: string
     bucketId?: string
@@ -227,8 +222,7 @@ export function FileSecurity({
       return await projectSdk.storage.updateFile({
         bucketId,
         fileId,
-        permissions,
-      })
+        permissions})
     },
     onSuccess: () => {
       toast.success('File permissions have been updated')
@@ -236,8 +230,7 @@ export function FileSecurity({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
-    },
-  })
+    }})
 
   const handleFilePermissionsUpdate = () => {
     if (!arraysEqual(filePermissions, file?.$permissions || [])) {
@@ -255,8 +248,7 @@ export function FileSecurity({
       return await projectSdk.tokens.createFileToken({
         bucketId,
         fileId,
-        expire: expiration || undefined,
-      })
+        expire: expiration || undefined})
     },
     onSuccess: () => {
       toast.success('Token has been created')
@@ -267,8 +259,7 @@ export function FileSecurity({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
-    },
-  })
+    }})
 
   // Delete token mutation
   const deleteTokenMutation = useMutation({
@@ -285,8 +276,7 @@ export function FileSecurity({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
-    },
-  })
+    }})
 
   const handleCreateToken = () => {
     const expiration = getFileTokenCreateExpirationIso(
@@ -332,8 +322,7 @@ export function FileSecurity({
     const baseUrl = `${projectEndpoint}/storage/buckets/${bucketId}/files/${fileId}`
     const params = new URLSearchParams({
       project: projectId,
-      token: tokenSecret,
-    })
+      token: tokenSecret})
     const qs = params.toString()
 
     if (mode === 'preview') {
@@ -596,7 +585,11 @@ export function FileSecurity({
                     copyToClipboard(token.$id, `token-id-${token.$id}`)
                   }
                 >
-                  <MenuItemContent icon={copiedField === `token-id-${token.$id}` ? Check : Copy}>{copiedField === `token-id-${token.$id}` ? 'Copied' : 'Copy ID'}</MenuItemContent>
+                  <MenuItemContent
+                    icon={copiedField === `token-id-${token.$id}` ? Check : Copy}
+                  >
+                    {copiedField === `token-id-${token.$id}` ? 'Copied' : 'Copy ID'}
+                  </MenuItemContent>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -993,8 +986,7 @@ export function FileSecurity({
                     onSuccess: () => {
                       setDeleteTokenDialogOpen(false)
                       setTokenToDelete(null)
-                    },
-                  })
+                    }})
                 }
               }}
               disabled={deleteTokenMutation.isPending}

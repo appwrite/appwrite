@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import type { Models } from '@appwrite.io/console'
 import { MigrationDetailsDrawer } from './migrations/MigrationDetailsDrawer'
+import { MigrationContextMenu } from './migrations/MigrationContextMenu'
 import {
   getMigrationProgress,
   getMigrationCounts,
@@ -157,8 +158,14 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
                 const { succeeded, total } = getMigrationCounts(migration)
                 const hasCounts = total > 0
                 return (
-                  <TableRow
+                  <MigrationContextMenu
                     key={migration.$id}
+                    projectId={projectId}
+                    region={region}
+                    migration={migration}
+                    onViewDetails={handleViewDetails}
+                  >
+                  <TableRow
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleViewDetails(migration)}
                   >
@@ -204,6 +211,7 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
                       )}
                     </TableCell>
                   </TableRow>
+                  </MigrationContextMenu>
                 )
               })}
             </TableBody>

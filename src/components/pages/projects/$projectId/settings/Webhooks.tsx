@@ -2,8 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   fetchProjectWebhook,
   useDeleteWebhook,
-  useProjectWebhooks,
-} from '@/lib/react-query/hooks'
+  useProjectWebhooks} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -11,8 +10,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,15 +19,13 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   Copy,
@@ -40,24 +36,26 @@ import {
   Pencil,
   Square,
   Trash2,
-  Webhook as WebhookIcon,
-} from 'lucide-react'
+  Webhook as WebhookIcon} from 'lucide-react'
 import { toast } from 'sonner'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { WebhookDrawer } from './webhooks/WebhookDrawer'
+import { WebhookContextMenu } from './webhooks/WebhookContextMenu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
-  openInNewWindow,
-} from '@/lib/utils/context-menu'
+  openInNewWindow} from '@/lib/utils/context-menu'
 import type { Models } from '@appwrite.io/console'
 
 interface WebhooksProps {
@@ -67,8 +65,7 @@ interface WebhooksProps {
 
 export function Webhooks({
   projectId,
-  searchValue: searchValueProp = '',
-}: WebhooksProps) {
+  searchValue: searchValueProp = ''}: WebhooksProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -147,8 +144,7 @@ export function Webhooks({
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || 'Failed to delete webhook')
-      },
-    })
+      }})
   }
 
   const getWebhookHref = (webhook: Models.Webhook) =>
@@ -207,8 +203,14 @@ export function Webhooks({
               </TableHeader>
               <TableBody>
                 {paginatedWebhooks.map((webhook) => (
-                  <TableRow
+                  <WebhookContextMenu
                     key={webhook.$id}
+                    projectId={projectId}
+                    webhook={webhook}
+                    onUpdate={handleUpdate}
+                    onDelete={requestDelete}
+                  >
+                  <TableRow
                     className="cursor-pointer"
                     onClick={() => handleUpdate(webhook)}
                   >
@@ -271,7 +273,8 @@ export function Webhooks({
                             <DropdownMenuSeparator />
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger>
-                                <MenuItemContent icon={Copy}>Copy</MenuItemContent>
+                                <MenuItemIcon icon={Copy} />
+                                Copy
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent>
                                 <DropdownMenuItem
@@ -279,14 +282,18 @@ export function Webhooks({
                                     copyToClipboard('ID', webhook.$id)
                                   }
                                 >
-                                  <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
+                                  <MenuItemContent icon={Copy}>
+                                    Copy ID
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
                                     copyToClipboard('Name', webhook.name)
                                   }
                                 >
-                                  <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
+                                  <MenuItemContent icon={Copy}>
+                                    Copy name
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -296,7 +303,9 @@ export function Webhooks({
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
+                                  <MenuItemContent icon={Link2}>
+                                    Copy link
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -308,7 +317,9 @@ export function Webhooks({
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
+                                  <MenuItemContent icon={FileJson}>
+                                    Copy as JSON
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuSubContent>
                             </DropdownMenuSub>
@@ -318,14 +329,18 @@ export function Webhooks({
                                 openInNewTab(getWebhookHref(webhook))
                               }
                             >
-                              <MenuItemContent icon={ExternalLink}>Open in new tab</MenuItemContent>
+                              <MenuItemContent icon={ExternalLink}>
+                                Open in new tab
+                              </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
                                 openInNewWindow(getWebhookHref(webhook))
                               }
                             >
-                              <MenuItemContent icon={Square}>Open in new window</MenuItemContent>
+                              <MenuItemContent icon={Square}>
+                                Open in new window
+                              </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -338,6 +353,7 @@ export function Webhooks({
                       </div>
                     </TableCell>
                   </TableRow>
+                  </WebhookContextMenu>
                 ))}
               </TableBody>
             </Table>

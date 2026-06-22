@@ -13,9 +13,10 @@ import {
   XCircle,
   ArrowUp,
   ArrowDown,
-} from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  ToggleLeft,
+  ToggleRight} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -24,22 +25,19 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -47,8 +45,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -81,14 +78,12 @@ export function RulesTab({ searchValue }: RulesTabProps) {
       userAgent: '',
       path: '',
       method: '',
-      country: '',
-    },
+      country: ''},
     rateLimit: {
       enabled: false,
       requests: 100,
       window: 60, // seconds
-    },
-  })
+    }})
 
   useEffect(() => {
     // Simulate loading
@@ -112,14 +107,11 @@ export function RulesTab({ searchValue }: RulesTabProps) {
           userAgent: '',
           path: '',
           method: '',
-          country: '',
-        },
+          country: ''},
         rateLimit: {
           enabled: false,
           requests: 100,
-          window: 60,
-        },
-      })
+          window: 60}})
       setCreatingRule(true)
     }
 
@@ -159,9 +151,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         blocked: 0,
         allowed: 0,
         challenged: 0,
-        lastTriggered: null,
-      },
-    }
+        lastTriggered: null}}
 
     setRules([...rules, newRule].sort((a, b) => b.priority - a.priority))
     setCreatingRule(false)
@@ -176,14 +166,11 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         userAgent: '',
         path: '',
         method: '',
-        country: '',
-      },
+        country: ''},
       rateLimit: {
         enabled: false,
         requests: 100,
-        window: 60,
-      },
-    })
+        window: 60}})
   }
 
   const handleUpdateRule = () => {
@@ -202,8 +189,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
             rateLimit: formData.rateLimit.enabled
               ? formData.rateLimit
               : undefined,
-            updatedAt: new Date().toISOString(),
-          }
+            updatedAt: new Date().toISOString()}
         : rule,
     )
 
@@ -220,14 +206,11 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         userAgent: '',
         path: '',
         method: '',
-        country: '',
-      },
+        country: ''},
       rateLimit: {
         enabled: false,
         requests: 100,
-        window: 60,
-      },
-    })
+        window: 60}})
   }
 
   const handleDeleteRule = () => {
@@ -249,14 +232,11 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         userAgent: rule.conditions.userAgent || '',
         path: rule.conditions.path || '',
         method: rule.conditions.method || '',
-        country: rule.conditions.country || '',
-      },
+        country: rule.conditions.country || ''},
       rateLimit: rule.rateLimit || {
         enabled: false,
         requests: 100,
-        window: 60,
-      },
-    })
+        window: 60}})
   }
 
   const handleToggleEnabled = (rule: FirewallRule) => {
@@ -286,8 +266,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
             ? {
                 ...r,
                 priority: newPriority,
-                updatedAt: new Date().toISOString(),
-              }
+                updatedAt: new Date().toISOString()}
             : r,
         )
         .sort((a, b) => b.priority - a.priority),
@@ -549,10 +528,18 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                         <DropdownMenuItem
                           onClick={() => handleToggleEnabled(rule)}
                         >
-                          <MenuItemContent icon={rule.enabled ? XCircle : CheckCircle2}>{rule.enabled ? 'Disable' : 'Enable'}</MenuItemContent>
+                          <MenuItemContent
+                            icon={rule.enabled ? ToggleLeft : ToggleRight}
+                          >
+                            {rule.enabled ? 'Disable' : 'Enable'}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => copyRuleId(rule.$id)}>
-                          <MenuItemContent icon={copiedRuleId === rule.$id ? Check : Copy}>{copiedRuleId === rule.$id ? 'Copied' : 'Copy ID'}</MenuItemContent>
+                          <MenuItemContent
+                            icon={copiedRuleId === rule.$id ? Check : Copy}
+                          >
+                            {copiedRuleId === rule.$id ? 'Copied' : 'Copy ID'}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -636,8 +623,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      priority: parseInt(e.target.value) || 0,
-                    })
+                      priority: parseInt(e.target.value) || 0})
                   }
                   min={0}
                   max={1000}
@@ -660,9 +646,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       ...formData,
                       conditions: {
                         ...formData.conditions,
-                        ipAddress: e.target.value,
-                      },
-                    })
+                        ipAddress: e.target.value}})
                   }
                   placeholder="e.g., 192.168.1.1 or 192.168.1.0/24"
                 />
@@ -678,9 +662,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       ...formData,
                       conditions: {
                         ...formData.conditions,
-                        path: e.target.value,
-                      },
-                    })
+                        path: e.target.value}})
                   }
                   placeholder="e.g., /api/admin/*"
                 />
@@ -693,8 +675,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, method: value },
-                    })
+                      conditions: { ...formData.conditions, method: value }})
                   }
                 >
                   <SelectTrigger id="method">
@@ -721,9 +702,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       ...formData,
                       conditions: {
                         ...formData.conditions,
-                        country: e.target.value,
-                      },
-                    })
+                        country: e.target.value}})
                   }
                   placeholder="e.g., US, GB, CN (ISO 3166-1 alpha-2)"
                 />
@@ -745,8 +724,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   onCheckedChange={(checked) =>
                     setFormData({
                       ...formData,
-                      rateLimit: { ...formData.rateLimit, enabled: checked },
-                    })
+                      rateLimit: { ...formData.rateLimit, enabled: checked }})
                   }
                 />
               </div>
@@ -764,9 +742,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                           ...formData,
                           rateLimit: {
                             ...formData.rateLimit,
-                            requests: parseInt(e.target.value) || 0,
-                          },
-                        })
+                            requests: parseInt(e.target.value) || 0}})
                       }
                       min={1}
                     />
@@ -783,9 +759,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                           ...formData,
                           rateLimit: {
                             ...formData.rateLimit,
-                            window: parseInt(e.target.value) || 60,
-                          },
-                        })
+                            window: parseInt(e.target.value) || 60}})
                       }
                       min={1}
                     />
@@ -898,8 +872,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      priority: parseInt(e.target.value) || 0,
-                    })
+                      priority: parseInt(e.target.value) || 0})
                   }
                   min={0}
                   max={1000}
@@ -922,9 +895,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       ...formData,
                       conditions: {
                         ...formData.conditions,
-                        ipAddress: e.target.value,
-                      },
-                    })
+                        ipAddress: e.target.value}})
                   }
                   placeholder="e.g., 192.168.1.1 or 192.168.1.0/24"
                 />
@@ -940,9 +911,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       ...formData,
                       conditions: {
                         ...formData.conditions,
-                        path: e.target.value,
-                      },
-                    })
+                        path: e.target.value}})
                   }
                   placeholder="e.g., /api/admin/*"
                 />
@@ -955,8 +924,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, method: value },
-                    })
+                      conditions: { ...formData.conditions, method: value }})
                   }
                 >
                   <SelectTrigger id="edit-method">
@@ -983,9 +951,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       ...formData,
                       conditions: {
                         ...formData.conditions,
-                        country: e.target.value,
-                      },
-                    })
+                        country: e.target.value}})
                   }
                   placeholder="e.g., US, GB, CN (ISO 3166-1 alpha-2)"
                 />
@@ -1007,8 +973,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   onCheckedChange={(checked) =>
                     setFormData({
                       ...formData,
-                      rateLimit: { ...formData.rateLimit, enabled: checked },
-                    })
+                      rateLimit: { ...formData.rateLimit, enabled: checked }})
                   }
                 />
               </div>
@@ -1026,9 +991,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                           ...formData,
                           rateLimit: {
                             ...formData.rateLimit,
-                            requests: parseInt(e.target.value) || 0,
-                          },
-                        })
+                            requests: parseInt(e.target.value) || 0}})
                       }
                       min={1}
                     />
@@ -1047,9 +1010,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                           ...formData,
                           rateLimit: {
                             ...formData.rateLimit,
-                            window: parseInt(e.target.value) || 60,
-                          },
-                        })
+                            window: parseInt(e.target.value) || 60}})
                       }
                       min={1}
                     />

@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { MapPin, Pencil, Plus, Trash2, ArrowLeftRight } from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,17 +20,16 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   useOrganizationById,
   useBillingAddress,
   useBillingAddresses,
   useSetOrganizationBillingAddress,
-  useDeleteOrganizationBillingAddress,
-} from '@/lib/react-query/hooks'
+  useDeleteOrganizationBillingAddress} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { AddressModal } from '@/components/pages/account/Payments/Address'
+import { OrgBillingAddressContextMenu } from './OrgBillingAddressContextMenu'
 
 /**
  * BillingAddressSection Component
@@ -51,8 +52,7 @@ interface BillingAddressSectionProps {
 
 export function BillingAddressSection({
   onEditAddress,
-  orgId,
-}: BillingAddressSectionProps) {
+  orgId}: BillingAddressSectionProps) {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false)
@@ -73,8 +73,7 @@ export function BillingAddressSection({
     try {
       await setOrgAddressMutation.mutateAsync({
         organizationId: orgId,
-        billingAddressId: addressId,
-      })
+        billingAddressId: addressId})
       toast.success('Billing address updated')
     } catch (error) {
       toast.error(
@@ -245,6 +244,16 @@ export function BillingAddressSection({
           </h3>
         </div>
 
+        <OrgBillingAddressContextMenu
+          address={address}
+          availableAddresses={(allAddresses || []).filter(
+            (addr) => addr.$id !== organization?.billingAddressId,
+          )}
+          onUpdate={() => setEditModalOpen(true)}
+          onReplace={handleLinkAddress}
+          onAddNew={() => setCreateModalOpen(true)}
+          onRemove={() => setRemoveConfirmOpen(true)}
+        >
         <div className="border-t border-border px-6 py-4 flex items-center justify-between gap-4 hover:bg-accent/50 transition-colors">
           <div className="flex items-start gap-4 min-w-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted shrink-0">
@@ -279,7 +288,8 @@ export function BillingAddressSection({
               <DropdownMenuSeparator />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-[13px]">
-                  <MenuItemContent icon={ArrowLeftRight}>Replace</MenuItemContent>
+                  <MenuItemIcon icon={ArrowLeftRight} />
+                  Replace
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-52">
                   {(() => {
@@ -333,6 +343,7 @@ export function BillingAddressSection({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        </OrgBillingAddressContextMenu>
       </div>
 
       <AddressModal

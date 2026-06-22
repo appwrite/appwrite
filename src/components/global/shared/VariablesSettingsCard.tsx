@@ -19,6 +19,9 @@ import {
   Check,
   Key,
   AlertTriangle,
+  Lock,
+  Pencil,
+  Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -30,6 +33,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { VariableRowContextMenu } from '@/components/global/shared/VariableRowContextMenu'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
 import {
   Dialog,
@@ -887,8 +892,14 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                           if (isWizard) {
                             const w = variable as EnvVariable
                             return (
-                              <TableRow
+                              <VariableRowContextMenu
                                 key={`${w.key}-${index}`}
+                                variant="wizard"
+                                variable={w}
+                                onToggleSecret={() => handleWizardToggleSecret(w.key)}
+                                onDelete={() => handleWizardRemove(index)}
+                              >
+                              <TableRow
                                 className="border-b border-border/50"
                               >
                                 <TableCell className="px-4 py-3">
@@ -966,20 +977,27 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                             handleWizardToggleSecret(w.key)
                                           }
                                         >
-                                          {w.secret ? 'Unmark secret' : 'Secret'}
+                                          <MenuItemContent
+                                            icon={w.secret ? Eye : Lock}
+                                          >
+                                            {w.secret ? 'Unmark secret' : 'Secret'}
+                                          </MenuItemContent>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                           onClick={() =>
                                             handleWizardRemove(index)
                                           }
                                         >
-                                          Delete
+                                          <MenuItemContent icon={Trash2}>
+                                            Delete
+                                          </MenuItemContent>
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   )}
                                 </TableCell>
                               </TableRow>
+                              </VariableRowContextMenu>
                             )
                           }
 
@@ -990,7 +1008,28 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                             projectVariableKeysForWarning?.has(record.key) ??
                             false
                           return (
-                            <TableRow key={record.$id}>
+                            <VariableRowContextMenu
+                              key={record.$id}
+                              variant="settings"
+                              variable={record}
+                              onUpdate={() => {
+                                setSelectedVar(record)
+                                setShowUpdateModal(true)
+                              }}
+                              onMarkSecret={
+                                !record.secret
+                                  ? () => {
+                                      setSelectedVar(record)
+                                      setShowSecretModal(true)
+                                    }
+                                  : undefined
+                              }
+                              onDelete={() => {
+                                setSelectedVar(record)
+                                setShowDeleteModal(true)
+                              }}
+                            >
+                            <TableRow>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <CopyableText value={record.key} />
@@ -1055,7 +1094,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                           setShowUpdateModal(true)
                                         }}
                                       >
-                                        Update
+                                        <MenuItemContent icon={Pencil}>
+                                          Update
+                                        </MenuItemContent>
                                       </DropdownMenuItem>
                                       {!record.secret && (
                                         <DropdownMenuItem
@@ -1064,7 +1105,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                             setShowSecretModal(true)
                                           }}
                                         >
-                                          Secret
+                                          <MenuItemContent icon={Lock}>
+                                            Secret
+                                          </MenuItemContent>
                                         </DropdownMenuItem>
                                       )}
                                       <DropdownMenuItem
@@ -1073,13 +1116,16 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                           setShowDeleteModal(true)
                                         }}
                                       >
-                                        Delete
+                                        <MenuItemContent icon={Trash2}>
+                                          Delete
+                                        </MenuItemContent>
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 )}
                               </TableCell>
                             </TableRow>
+                            </VariableRowContextMenu>
                           )
                         })}
                       </TableBody>

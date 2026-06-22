@@ -11,25 +11,22 @@ import {
   Link as LinkIcon,
   Pencil,
   Trash2,
-  Plus,
-} from 'lucide-react'
+  Plus} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger} from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -37,8 +34,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { formatCardExpiry } from '../../organizations/$orgId/billing/utils'
 import { cn } from '@/lib/utils'
@@ -47,20 +43,19 @@ import {
   useUpdatePaymentMethod,
   useDeletePaymentMethod,
   organizationsFullQueryOptions,
-  paymentMethodsQueryOptions,
-} from '@/lib/react-query/hooks'
+  paymentMethodsQueryOptions} from '@/lib/react-query/hooks'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
+import { PaymentMethodContextMenu } from './PaymentMethodContextMenu'
 
 interface AccountPaymentMethodsProps {
   onAddPaymentMethod?: () => void
 }
 
 export function AccountPaymentMethods({
-  onAddPaymentMethod,
-}: AccountPaymentMethodsProps) {
+  onAddPaymentMethod}: AccountPaymentMethodsProps) {
   const queryClient = useQueryClient()
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
@@ -274,8 +269,13 @@ export function AccountPaymentMethods({
                   const isLinked = linkedMethodIds.has(method.$id)
 
                   return (
-                    <TableRow
+                    <PaymentMethodContextMenu
                       key={method.$id}
+                      paymentMethod={method}
+                      onUpdate={handleEdit}
+                      onDelete={handleDelete}
+                    >
+                    <TableRow
                       className={cn(
                         'transition-colors',
                         hasError && 'bg-red-50/50 dark:bg-red-950/10',
@@ -402,6 +402,7 @@ export function AccountPaymentMethods({
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
+                    </PaymentMethodContextMenu>
                   )
                 })}
               </TableBody>

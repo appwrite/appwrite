@@ -12,8 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  MenuItemContent,
+} from '@/components/global/shared/ContextMenuIcon'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import {
   isPostgresClientBackend,
@@ -105,7 +107,9 @@ export function PostgresConnectionRowActionsMenu({
                 onTerminateConnection()
               }}
             >
-              <MenuItemContent icon={Unplug}>Terminate connection</MenuItemContent>
+              <MenuItemContent icon={Unplug}>
+                Terminate connection
+              </MenuItemContent>
             </DropdownMenuItem>
           </>
         ) : null}

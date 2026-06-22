@@ -6,21 +6,18 @@ import {
   Phone,
   Bell,
   ScrollText,
-  Trash2,
-} from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  Trash2} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import {
   useTopic,
   useTopicSubscribers,
   useProject,
-  useOrganizationScopes,
-} from '@/lib/react-query/hooks'
+  useOrganizationScopes} from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   canShowTopicSettingsTab,
-  canWriteTopics,
-} from '@/lib/console-access-checks'
+  canWriteTopics} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { subscriberLogsQueryOptions } from '@/lib/react-query/hooks/messaging'
@@ -37,8 +34,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -53,21 +49,18 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+  AlertDialogTitle} from '@/components/ui/alert-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import { MessagingLogsTable } from '../../_components/MessagingLogsTable'
 
 export type TopicSubscribersInitialData = {
@@ -77,14 +70,12 @@ export type TopicSubscribersInitialData = {
 
 export function View({
   initialSubscribers,
-  initialTopic,
-}: {
+  initialTopic}: {
   initialSubscribers?: TopicSubscribersInitialData
   initialTopic?: Models.Topic
 } = {}) {
   const { projectId, topicId } = useParams({
-    strict: false,
-  })
+    strict: false})
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -139,8 +130,7 @@ export function View({
 
   const {
     isLoading: requestedLoading,
-    isFetching: requestedFetching,
-  } = useTopicSubscribers(
+    isFetching: requestedFetching} = useTopicSubscribers(
     projectId,
     topicId,
     pageIndexedRequested,
@@ -152,8 +142,7 @@ export function View({
     subscribers: displayedSubscribersRaw,
     total: displayedTotalRaw,
     isLoading: displayedLoading,
-    isFetched: displayedFetched,
-  } = useTopicSubscribers(
+    isFetched: displayedFetched} = useTopicSubscribers(
     projectId,
     topicId,
     pageIndexedDisplayed,
@@ -229,15 +218,13 @@ export function View({
           projectSdk.messaging.createSubscriber({
             topicId,
             subscriberId: ID.unique(),
-            targetId,
-          }),
+            targetId}),
         ),
       )
     },
     onSuccess: async (_, targetIds) => {
       await queryClient.refetchQueries({
-        queryKey: ['subscribers', 'project', projectId, 'topic', topicId],
-      })
+        queryKey: ['subscribers', 'project', projectId, 'topic', topicId]})
       toast.success(
         `${targetIds.length} subscriber${targetIds.length !== 1 ? 's' : ''} added`,
       )
@@ -245,8 +232,7 @@ export function View({
     },
     onError: (e: Error) => {
       toast.error(getErrorMessage(e) || 'Failed to add subscribers')
-    },
-  })
+    }})
 
   const deleteSubscriberMutation = useMutation({
     mutationFn: async (subscriber: Models.Subscriber) => {
@@ -256,36 +242,31 @@ export function View({
       const projectSdk = sdk.forProject(projectId)
       await projectSdk.messaging.deleteSubscriber({
         topicId,
-        subscriberId: subscriber.$id,
-      })
+        subscriberId: subscriber.$id})
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['subscribers', 'project', projectId, 'topic', topicId],
-      })
+        queryKey: ['subscribers', 'project', projectId, 'topic', topicId]})
       toast.success('Subscriber removed')
       setSubscriberPendingDelete(null)
     },
     onError: (e: Error) => {
       toast.error(getErrorMessage(e) || 'Failed to remove subscriber')
-    },
-  })
+    }})
 
   const subscriberLogPageReq = subscriberLogRequestedPage - 1
   const subscriberLogPageDisp = subscriberLogDisplayedPage - 1
 
   const {
     isFetching: subscriberLogReqFetching,
-    isLoading: subscriberLogReqLoading,
-  } = useQuery({
+    isLoading: subscriberLogReqLoading} = useQuery({
     ...subscriberLogsQueryOptions(
       projectId,
       subscriberLogFor?.$id ?? null,
       subscriberLogPageReq,
       DEFAULT_PAGE_SIZE,
     ),
-    enabled: !!projectId && !!subscriberLogFor,
-  })
+    enabled: !!projectId && !!subscriberLogFor})
 
   const { data: subscriberLogDataDisplayed } = useQuery({
     ...subscriberLogsQueryOptions(
@@ -294,8 +275,7 @@ export function View({
       subscriberLogPageDisp,
       DEFAULT_PAGE_SIZE,
     ),
-    enabled: !!projectId && !!subscriberLogFor,
-  })
+    enabled: !!projectId && !!subscriberLogFor})
 
   useEffect(() => {
     if (!subscriberLogFor) {
@@ -321,8 +301,7 @@ export function View({
   const handleBack = () => {
     navigate({
       to: '/projects/$projectId/messaging/topics',
-      params: { projectId: projectId! },
-    })
+      params: { projectId: projectId! }})
   }
 
   const activeTab = useMemo(() => {
@@ -349,9 +328,7 @@ export function View({
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: {
           projectId: projectId as string,
-          topicId: topicId as string,
-        },
-      },
+          topicId: topicId as string}},
       ...(showSettingsTab
         ? [
             {
@@ -360,9 +337,7 @@ export function View({
               to: '/projects/$projectId/messaging/topics/$topicId/settings',
               params: {
                 projectId: projectId as string,
-                topicId: topicId as string,
-              },
-            },
+                topicId: topicId as string}},
           ]
         : []),
     ],
@@ -375,8 +350,7 @@ export function View({
       navigate({
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: { projectId, topicId },
-        replace: true,
-      })
+        replace: true})
     }
   }, [showSettingsTab, activeTab, projectId, topicId, navigate])
 
@@ -431,8 +405,7 @@ export function View({
             projectId={projectId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to topics',
-            }}
+              'aria-label': 'Back to topics'}}
           />
         }
         tabs={tabs}
@@ -566,7 +539,9 @@ export function View({
                                       setSubscriberLogFor(subscriber)
                                     }
                                   >
-                                    <MenuItemContent icon={ScrollText}>Logs</MenuItemContent>
+                                    <MenuItemContent icon={ScrollText}>
+                                      Logs
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     disabled={!canManageSubscribers}
@@ -575,7 +550,9 @@ export function View({
                                       setSubscriberPendingDelete(subscriber)
                                     }
                                   >
-                                    <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
+                                    <MenuItemContent icon={Trash2}>
+                                      Remove
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

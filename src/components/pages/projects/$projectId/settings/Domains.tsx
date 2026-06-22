@@ -3,8 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   useProjectDomains,
   useProject,
-  useOrganizationDomains,
-} from '@/lib/react-query/hooks'
+  useOrganizationDomains} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -12,14 +11,12 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
@@ -28,10 +25,10 @@ import {
   FileText,
   RefreshCw,
   Trash2,
-} from 'lucide-react'
+  Globe} from 'lucide-react'
 import { toast } from 'sonner'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -50,8 +47,7 @@ interface DomainsProps {
 
 export function Domains({
   projectId,
-  searchValue: searchValueProp = '',
-}: DomainsProps) {
+  searchValue: searchValueProp = ''}: DomainsProps) {
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
@@ -269,9 +265,7 @@ export function Domains({
                                       to: '/organizations/$orgId/domains/$domainId',
                                       params: {
                                         orgId: project.teamId,
-                                        domainId: orgDomainId,
-                                      },
-                                    })
+                                        domainId: orgDomainId}})
                                   }
                                 }}
                                 disabled={
@@ -283,7 +277,7 @@ export function Domains({
                                   )
                                 }
                               >
-                                <MenuItemContent icon={FileText}>Records</MenuItemContent>
+                                <MenuItemContent icon={Globe}>Records</MenuItemContent>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(rule)}
@@ -335,8 +329,7 @@ export function Domains({
                 params: { projectId },
                 search: reconfigureDomain
                   ? { domain: reconfigureDomain }
-                  : undefined,
-              })
+                  : undefined})
             }}
             onVerifySuccess={() => {
               toast.success('Domain verified successfully')

@@ -3,18 +3,16 @@ import {
   useParams,
   useSearch,
   useNavigate,
-  useLocation,
-} from '@tanstack/react-router'
+  useLocation} from '@tanstack/react-router'
 import {
   Loader2,
   FileText,
   RefreshCw,
   Trash2,
   ExternalLink,
-  Globe,
-} from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  Globe} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -25,20 +23,17 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import {
   useFunctionDomains,
   useProject,
-  useOrganizationDomains,
-} from '@/lib/react-query/hooks'
+  useOrganizationDomains} from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
@@ -82,8 +77,7 @@ export function View() {
   const {
     data: domainsData,
     isLoading: domainsLoading,
-    isFetching: domainsFetching,
-  } = useFunctionDomains(
+    isFetching: domainsFetching} = useFunctionDomains(
     projectId,
     functionId,
     currentPage,
@@ -308,9 +302,7 @@ export function View() {
                                         to: '/organizations/$orgId/domains/$domainId',
                                         params: {
                                           orgId: project.teamId,
-                                          domainId: orgDomainId,
-                                        },
-                                      })
+                                          domainId: orgDomainId}})
                                     }
                                   }}
                                   disabled={
@@ -323,7 +315,7 @@ export function View() {
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={FileText}>Records</MenuItemContent>
+                                  <MenuItemContent icon={Globe}>Records</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(rule)}
@@ -377,8 +369,7 @@ export function View() {
               setSelectedRule(null)
               navigate({
                 to: '/projects/$projectId/functions/$functionId/domains/add',
-                params: { projectId: projectId!, functionId: functionId! },
-              })
+                params: { projectId: projectId!, functionId: functionId! }})
             }}
           />
           <DeleteDomainDialog

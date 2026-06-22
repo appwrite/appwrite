@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { Clock, Infinity as InfinityIcon, Trash2 } from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+import { Clock, Infinity as InfinityIcon, ShieldOff } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { formatDistanceToNowStrict } from 'date-fns'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
@@ -10,13 +10,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { getResourceTypeMeta } from './resource-type-meta'
 
@@ -43,8 +41,7 @@ function formatUntil(iso?: string | null) {
 export function BlockCard({
   block,
   onDelete,
-  deleting,
-}: {
+  deleting}: {
   block: Models.Block
   onDelete: () => void
   deleting?: boolean
@@ -133,7 +130,7 @@ export function BlockCard({
             onClick={onDelete}
             className="text-[13px]"
           >
-            <MenuItemContent icon={Trash2}>Revoke</MenuItemContent>
+            <MenuItemContent icon={ShieldOff}>Revoke</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

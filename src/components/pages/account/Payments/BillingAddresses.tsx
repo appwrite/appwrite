@@ -8,8 +8,8 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { MapPin, Link as LinkIcon, Plus, Pencil, Trash2 } from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,21 +17,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger} from '@/components/ui/popover'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
@@ -39,11 +36,11 @@ import {
   useCountries,
   useDeleteBillingAddress,
   organizationsFullQueryOptions,
-  billingAddressesQueryOptions,
-} from '@/lib/react-query/hooks'
+  billingAddressesQueryOptions} from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
+import { BillingAddressContextMenu } from './BillingAddressContextMenu'
 
 export function AccountBillingAddresses() {
   const queryClient = useQueryClient()
@@ -237,8 +234,13 @@ export function AccountBillingAddresses() {
                   const isLinked = linkedOrgs.length > 0
 
                   return (
-                    <TableRow
+                    <BillingAddressContextMenu
                       key={address.$id}
+                      address={address}
+                      onUpdate={handleEdit}
+                      onDelete={handleDelete}
+                    >
+                    <TableRow
                       className="hover:bg-muted/50 transition-colors"
                     >
                       <TableCell className="px-4 py-3">
@@ -312,6 +314,7 @@ export function AccountBillingAddresses() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
+                    </BillingAddressContextMenu>
                   )
                 })}
               </TableBody>

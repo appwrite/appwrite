@@ -2,6 +2,10 @@ import { Copy, FileJson, Link2, Settings } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -51,43 +55,38 @@ export function ProjectListCardActionsMenu({
       >
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Copy className="mr-2 h-4 w-4" />
+            <MenuItemIcon icon={Copy} />
             Copy
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuItem
               onSelect={() => copyToClipboard('ID', project.$id)}
             >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy ID
+              <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => copyToClipboard('Endpoint', endpoint)}
             >
-              <Link2 className="mr-2 h-4 w-4" />
-              Copy endpoint
+              <MenuItemContent icon={Copy}>Copy endpoint</MenuItemContent>
             </DropdownMenuItem>
             {hasName ? (
               <DropdownMenuItem
                 onSelect={() => copyToClipboard('Name', project.name)}
               >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy name
+                <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuItem
               onSelect={() => copyToClipboard('Link', projectHref)}
             >
-              <Link2 className="mr-2 h-4 w-4" />
-              Copy link
+              <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() =>
                 void copyResourceAsJson(() => fetchProject(project.$id))
               }
             >
-              <FileJson className="mr-2 h-4 w-4" />
-              Copy as JSON
+              <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
@@ -102,8 +101,7 @@ export function ProjectListCardActionsMenu({
                 })
               }
             >
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
+              <MenuItemContent icon={Settings}>Settings</MenuItemContent>
             </DropdownMenuItem>
           </>
         ) : null}

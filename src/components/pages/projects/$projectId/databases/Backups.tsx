@@ -15,23 +15,20 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  DialogTitle} from '@/components/ui/dialog'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -39,8 +36,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import {
   Plus,
   Archive,
@@ -51,8 +47,7 @@ import {
   CheckCircle2,
   AlertCircle,
   CircleDashed,
-  Lock,
-} from 'lucide-react'
+  Lock} from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -66,8 +61,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue} from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
@@ -83,30 +77,24 @@ function getBackupStatus(status: string) {
     completed: {
       label: 'Complete',
       icon: CheckCircle2,
-      badgeVariant: 'completed',
-    },
+      badgeVariant: 'completed'},
     uploading: {
       label: 'Processing',
       icon: CircleDashed,
-      badgeVariant: 'processing',
-    },
+      badgeVariant: 'processing'},
     downloading: {
       label: 'Processing',
       icon: CircleDashed,
-      badgeVariant: 'processing',
-    },
-    failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },
-  }
+      badgeVariant: 'processing'},
+    failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' }}
   const statusInfo = statusMap[status] || {
     label: 'Waiting',
     icon: Clock,
-    badgeVariant: 'pending' as BackupStatusVariant,
-  }
+    badgeVariant: 'pending' as BackupStatusVariant}
   return {
     label: statusInfo.label,
     badgeVariant: statusInfo.badgeVariant,
-    icon: statusInfo.icon,
-  }
+    icon: statusInfo.icon}
 }
 
 interface BackupsViewProps {
@@ -194,8 +182,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
             schedule: policy.schedule,
             name: policy.name,
             resourceId: policy.resourceId || databaseId,
-            enabled: policy.enabled ?? true,
-          }),
+            enabled: policy.enabled ?? true}),
         ),
       )
     },
@@ -217,14 +204,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ],
-      })
+        ]})
       setCreatePolicyDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create backup policy')
-    },
-  })
+    }})
 
   const deletePolicyMutation = useMutation({
     mutationFn: async (policyId: string) => {
@@ -241,15 +226,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ],
-      })
+        ]})
       setDeletePolicyDialogOpen(false)
       setSelectedPolicy(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete backup policy')
-    },
-  })
+    }})
 
   // Archive mutations
   const createArchiveMutation = useMutation({
@@ -257,8 +240,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       const projectSdk = sdk.forProject(projectId)
       return projectSdk.backups.createArchive({
         services: ['databases'],
-        resourceId: databaseId,
-      })
+        resourceId: databaseId})
     },
     onSuccess: () => {
       toast.success('Database backup has started')
@@ -270,14 +252,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ],
-      })
+        ]})
       setCreateManualBackupDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create backup')
-    },
-  })
+    }})
 
   const deleteArchiveMutation = useMutation({
     mutationFn: async (archiveId: string) => {
@@ -294,15 +274,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ],
-      })
+        ]})
       setDeleteBackupDialogOpen(false)
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete backup')
-    },
-  })
+    }})
 
   const bulkDeleteArchivesMutation = useMutation({
     mutationFn: async (archiveIds: string[]) => {
@@ -326,15 +304,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ],
-      })
+        ]})
       setSelectedBackups(new Set())
       setBulkDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete backups')
-    },
-  })
+    }})
 
   const createRestorationMutation = useMutation({
     mutationFn: async (params: {
@@ -356,15 +332,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ],
-      })
+        ]})
       setRestoreDialogOpen(false)
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to restore backup')
-    },
-  })
+    }})
 
   // Format backup size
   const formatSize = (bytes: number | undefined) => {
@@ -814,7 +788,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                           setRestoreDialogOpen(true)
                                         }}
                                       >
-                                        <MenuItemContent icon={RotateCcw}>Restore</MenuItemContent>
+                                        <MenuItemContent icon={RotateCcw}>
+                                          Restore
+                                        </MenuItemContent>
                                       </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem
@@ -827,7 +803,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                         )
                                       }}
                                     >
-                                      <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
+                                      <MenuItemContent icon={Copy}>
+                                        Copy ID
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() => {
@@ -835,7 +813,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                         setDeleteBackupDialogOpen(true)
                                       }}
                                     >
-                                      <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                      <MenuItemContent icon={Trash2}>
+                                        Delete
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -1034,8 +1014,7 @@ function CreatePolicyDialog({
   isLoading,
   databaseId,
   existingPoliciesCount,
-  backupPoliciesLimit,
-}: CreatePolicyDialogProps) {
+  backupPoliciesLimit}: CreatePolicyDialogProps) {
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
   const [customPolicies, setCustomPolicies] = useState<
     Array<{
@@ -1078,8 +1057,7 @@ function CreatePolicyDialog({
         schedule: '0 * * * *',
         name: 'Hourly backup',
         resourceId: databaseId,
-        enabled: true,
-      })
+        enabled: true})
     }
     if (selectedPresets.includes('daily')) {
       policies.push({
@@ -1089,8 +1067,7 @@ function CreatePolicyDialog({
         schedule: '0 2 * * *',
         name: 'Daily backup',
         resourceId: databaseId,
-        enabled: true,
-      })
+        enabled: true})
     }
 
     // Add custom policies
@@ -1137,8 +1114,7 @@ function CreatePolicyDialog({
         schedule,
         name: custom.name || `${custom.frequency} backup`,
         resourceId: databaseId,
-        enabled: true,
-      })
+        enabled: true})
     })
 
     if (policies.length === 0) return
@@ -1237,8 +1213,7 @@ function CreatePolicyDialog({
                         time: '02:00',
                         retention: 7,
                         retentionUnit: 'days',
-                        name: '',
-                      },
+                        name: ''},
                     ])
                   }}
                   disabled={!canCreateCustom}
@@ -1463,8 +1438,7 @@ function CreateManualBackupDialog({
   open,
   onOpenChange,
   onSubmit,
-  isLoading,
-}: CreateManualBackupDialogProps) {
+  isLoading}: CreateManualBackupDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
@@ -1524,8 +1498,7 @@ function RestoreBackupDialog({
   backup,
   databaseId,
   onSubmit,
-  isLoading,
-}: RestoreBackupDialogProps) {
+  isLoading}: RestoreBackupDialogProps) {
   const [restoreOption, setRestoreOption] = useState<'new' | 'same'>('new')
   const [newDatabaseName, setNewDatabaseName] = useState('')
   const [newDatabaseId, setNewDatabaseId] = useState('')
@@ -1547,15 +1520,13 @@ function RestoreBackupDialog({
         archiveId: backup.$id,
         services: ['databases'],
         newResourceId: newDatabaseId || undefined,
-        newResourceName: newDatabaseName,
-      })
+        newResourceName: newDatabaseName})
     } else {
       if (!confirmSameDbRestore) return
       onSubmit({
         archiveId: backup.$id,
         services: ['databases'],
-        newResourceId: databaseId,
-      })
+        newResourceId: databaseId})
     }
   }
 
@@ -1624,8 +1595,7 @@ function RestoreBackupDialog({
                 <span className="text-muted-foreground">Age</span>
                 <span className="text-foreground">
                   {formatDistanceToNow(new Date(backup.$createdAt), {
-                    addSuffix: true,
-                  })}
+                    addSuffix: true})}
                 </span>
               </div>
             </div>
@@ -1790,8 +1760,7 @@ function DeletePolicyDialog({
   onOpenChange,
   policy,
   onConfirm,
-  isLoading,
-}: DeletePolicyDialogProps) {
+  isLoading}: DeletePolicyDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
@@ -1853,8 +1822,7 @@ function DeleteBackupDialog({
   onOpenChange,
   backup,
   onConfirm,
-  isLoading,
-}: DeleteBackupDialogProps) {
+  isLoading}: DeleteBackupDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">

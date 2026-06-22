@@ -7,19 +7,19 @@ import {
   Globe,
   Zap,
   AlertTriangle,
-} from 'lucide-react'
+  Settings,
+  Unplug} from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useVcsInstallations,
-  useDeleteVcsInstallation,
-} from '@/lib/react-query/hooks/vcs'
+  useDeleteVcsInstallation} from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  MenuItemContent,
   menuItemRowClassName,
+  MenuItemContent,
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
@@ -29,25 +29,23 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
+import { GitInstallationContextMenu } from './GitInstallationContextMenu'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -80,8 +78,7 @@ export function GitConfigurationCard({
   onPageChange,
   getGitHubAuthUrl,
   isSelfHosted = false,
-  isVcsEnabled = true,
-}: GitConfigurationCardProps) {
+  isVcsEnabled = true}: GitConfigurationCardProps) {
   const { data: installationsData, isLoading } = useVcsInstallations(
     projectId,
     page,
@@ -118,11 +115,9 @@ export function GitConfigurationCard({
       const response = await projectSdk.functions.list({ queries })
       return {
         functions: response.functions || [],
-        total: response.total || 0,
-      }
+        total: response.total || 0}
     },
-    enabled: disconnectModalOpen && !!selectedInstallation?.$id,
-  })
+    enabled: disconnectModalOpen && !!selectedInstallation?.$id})
 
   const { data: affectedSites, isLoading: sitesLoading } = useQuery({
     queryKey: [
@@ -144,11 +139,9 @@ export function GitConfigurationCard({
       const response = await projectSdk.sites.list({ queries })
       return {
         sites: response.sites || [],
-        total: response.total || 0,
-      }
+        total: response.total || 0}
     },
-    enabled: disconnectModalOpen && !!selectedInstallation?.$id,
-  })
+    enabled: disconnectModalOpen && !!selectedInstallation?.$id})
 
   const handleDisconnect = async () => {
     if (!selectedInstallation) return
@@ -320,7 +313,13 @@ export function GitConfigurationCard({
                             installation.organization,
                           )
                           return (
-                            <TableRow key={installation.$id}>
+                            <GitInstallationContextMenu
+                              key={installation.$id}
+                              installation={installation}
+                              configureHref={getGitHubAuthUrl('update')}
+                              onDisconnect={handleOpenDisconnectModal}
+                            >
+                            <TableRow>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
@@ -361,7 +360,9 @@ export function GitConfigurationCard({
                                         rel="noreferrer"
                                         className={menuItemRowClassName}
                                       >
-                                        <MenuItemContent icon={ExternalLink}>Configure</MenuItemContent>
+                                        <MenuItemContent icon={Settings}>
+                                          Configure
+                                        </MenuItemContent>
                                       </a>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -369,12 +370,15 @@ export function GitConfigurationCard({
                                         handleOpenDisconnectModal(installation)
                                       }
                                     >
-                                      <MenuItemContent icon={XCircle}>Disconnect</MenuItemContent>
+                                      <MenuItemContent icon={Unplug}>
+                                        Disconnect
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
                             </TableRow>
+                            </GitInstallationContextMenu>
                           )
                         })}
                       </TableBody>

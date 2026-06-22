@@ -6,8 +6,7 @@ import {
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
   RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
   RESOURCE_CARD_PADDED_CLASSNAME,
-  RESOURCE_CARD_SHELL_CLASSNAME,
-} from '../shared/ResourceCard'
+  RESOURCE_CARD_SHELL_CLASSNAME} from '../shared/ResourceCard'
 import {
   Globe,
   TrendingUp,
@@ -25,14 +24,13 @@ import {
   Smartphone,
   Monitor,
   Tablet,
-  Bot,
-} from 'lucide-react'
+  Bot} from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -40,21 +38,18 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 
 // Mock data for tracked websites/apps
 const trackedWebsites = [
@@ -74,14 +69,12 @@ const trackedWebsites = [
       avgDuration: '2m 34s',
       durationChange: -3.2,
       bounceRate: 42.1,
-      bounceRateChange: -5.8,
-    },
+      bounceRateChange: -5.8},
     traffic: { human: 82, ai: 18 },
     topPages: ['/pricing', '/features', '/docs'],
     devices: { desktop: 62, mobile: 31, tablet: 7 },
     createdAt: '2024-01-15T10:30:00Z',
-    lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-  },
+    lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString()},
   {
     id: '507f1f77bcf86cd799439102',
     name: 'Documentation Portal',
@@ -98,14 +91,12 @@ const trackedWebsites = [
       avgDuration: '4m 12s',
       durationChange: 15.3,
       bounceRate: 28.5,
-      bounceRateChange: -12.4,
-    },
+      bounceRateChange: -12.4},
     traffic: { human: 61, ai: 39 },
     topPages: ['/getting-started', '/api-reference', '/tutorials'],
     devices: { desktop: 78, mobile: 18, tablet: 4 },
     createdAt: '2024-02-20T14:15:00Z',
-    lastActivity: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-  },
+    lastActivity: new Date(Date.now() - 12 * 60 * 1000).toISOString()},
   {
     id: '507f1f77bcf86cd799439104',
     name: 'Customer Dashboard',
@@ -122,14 +113,12 @@ const trackedWebsites = [
       avgDuration: '8m 45s',
       durationChange: 2.8,
       bounceRate: 15.2,
-      bounceRateChange: -1.5,
-    },
+      bounceRateChange: -1.5},
     traffic: { human: 96, ai: 4 },
     topPages: ['/dashboard', '/settings', '/billing'],
     devices: { desktop: 85, mobile: 12, tablet: 3 },
     createdAt: '2024-03-05T09:00:00Z',
-    lastActivity: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-  },
+    lastActivity: new Date(Date.now() - 2 * 60 * 1000).toISOString()},
   {
     id: '507f1f77bcf86cd799439106',
     name: 'Blog',
@@ -146,14 +135,12 @@ const trackedWebsites = [
       avgDuration: '0m 0s',
       durationChange: 0,
       bounceRate: 0,
-      bounceRateChange: 0,
-    },
+      bounceRateChange: 0},
     traffic: { human: 0, ai: 0 },
     topPages: [],
     devices: { desktop: 0, mobile: 0, tablet: 0 },
     createdAt: '2024-03-10T16:30:00Z',
-    lastActivity: null,
-  },
+    lastActivity: null},
 ]
 
 function formatNumber(num: number): string {
@@ -170,8 +157,7 @@ function StatHighlight({
   label,
   value,
   change,
-  icon: Icon,
-}: {
+  icon: Icon}: {
   label: string
   value: string | number
   change?: number
@@ -229,8 +215,7 @@ function AppwriteSitesBadge() {
 }
 
 function TrafficBreakdown({
-  traffic,
-}: {
+  traffic}: {
   traffic: { human: number; ai: number }
 }) {
   const total = traffic.human + traffic.ai
@@ -264,8 +249,7 @@ function TrafficBreakdown({
 }
 
 function DeviceBreakdown({
-  devices,
-}: {
+  devices}: {
   devices: { desktop: number; mobile: number; tablet: number }
 }) {
   const total = devices.desktop + devices.mobile + devices.tablet
@@ -400,9 +384,7 @@ export function View() {
                       to: '/projects/$projectId/analytics/$websiteId',
                       params: {
                         projectId: projectId as string,
-                        websiteId: site.id,
-                      },
-                    })
+                        websiteId: site.id}})
                   }
                 >
                   {/* Header */}
@@ -575,8 +557,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           <div className="flex items-center gap-3">
@@ -599,8 +580,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           <div className="flex items-center gap-1.5">
@@ -628,8 +608,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           <span className="text-[13px] text-muted-foreground">
@@ -642,8 +621,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           <span className="text-[13px] text-muted-foreground">
@@ -656,8 +634,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           <span className="text-[13px] text-muted-foreground">
@@ -670,8 +647,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           <TrafficBreakdown traffic={site.traffic} />
@@ -682,8 +658,7 @@ export function View() {
                           to="/projects/$projectId/analytics/$websiteId"
                           params={{
                             projectId: projectId as string,
-                            websiteId: site.id,
-                          }}
+                            websiteId: site.id}}
                           className="block"
                         >
                           {site.lastActivity ? (
@@ -708,7 +683,9 @@ export function View() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
-                              <MenuItemContent icon={BarChart3}>Analytics</MenuItemContent>
+                              <MenuItemContent icon={BarChart3}>
+                                Analytics
+                              </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <MenuItemContent icon={ExternalLink}>Visit</MenuItemContent>

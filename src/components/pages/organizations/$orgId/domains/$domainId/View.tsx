@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { createDomainTransferOut } from '@/lib/react-query/hooks/domains'
 import { cn } from '@/lib/utils'
@@ -19,25 +19,22 @@ import {
   MoreHorizontal,
   Eye,
   EyeOff,
-  ArrowLeftRight,
-} from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  ArrowLeftRight} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import {
   useDomain,
   useDomainRecords,
   useDomainZone,
   useDomainTransferStatus,
   DNS_RECORDS_DEFAULT_SORT_BY,
-  DNS_RECORDS_DEFAULT_SORT_ORDER,
-} from '@/lib/react-query/hooks'
+  DNS_RECORDS_DEFAULT_SORT_ORDER} from '@/lib/react-query/hooks'
 import {
   DOMAIN_TRANSFER_IN_PROGRESS_DESCRIPTION,
   getDomainTransferStatusBadgeConfig,
   isDomainTransferInProgress,
   isPendingDomainTransferStatus,
-  shouldShowDomainTransferStatus,
-} from '@/lib/domains/transfer-status'
+  shouldShowDomainTransferStatus} from '@/lib/domains/transfer-status'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -45,8 +42,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
@@ -57,8 +53,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   DropdownMenu,
@@ -67,23 +62,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuSubTrigger} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  DialogTrigger} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -92,8 +84,7 @@ import {
   useNavigate,
   useParams,
   useLocation,
-  useSearch,
-} from '@tanstack/react-router'
+  useSearch} from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -102,6 +93,7 @@ import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
 import { ImportZoneDialog } from './ImportZone'
 import { RetryVerification } from '../RetryVerification'
+import { DnsRecordContextMenu } from '../_components/DnsRecordContextMenu'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateDnsRecord,
@@ -114,8 +106,7 @@ import {
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
-  useUpdateDomainAutoRenewal,
-} from '@/lib/react-query/hooks'
+  useUpdateDomainAutoRenewal} from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import {
   getQueryParam,
@@ -126,8 +117,7 @@ import {
   mapToQueryParam,
   buildListSearchParams,
   urlFromRouterLocation,
-  dnsRecordsFilterColumns,
-} from '@/lib/table-filters'
+  dnsRecordsFilterColumns} from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
@@ -142,8 +132,7 @@ type ViewProps = {
 
 export function View({ initialData }: ViewProps = {}) {
   const { orgId, domainId } = useParams({
-    strict: false,
-  })
+    strict: false})
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -207,8 +196,7 @@ export function View({ initialData }: ViewProps = {}) {
     return (
       parsed ?? {
         sortBy: DNS_RECORDS_DEFAULT_SORT_BY,
-        sortOrder: DNS_RECORDS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
-      }
+        sortOrder: DNS_RECORDS_DEFAULT_SORT_ORDER as 'asc' | 'desc'}
     )
   }, [isRecordsIndex, search?.sort, location.pathname, location.search])
   const recordsSortBy = recordsSortParams?.sortBy ?? DNS_RECORDS_DEFAULT_SORT_BY
@@ -303,8 +291,7 @@ export function View({ initialData }: ViewProps = {}) {
       label: isVerified ? 'Verified' : 'Unverified',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
-        : 'text-yellow-600 dark:text-yellow-500',
-    }
+        : 'text-yellow-600 dark:text-yellow-500'}
   }, [domain])
   const canManageAutoRenewal =
     domain?.registrar?.toLowerCase() === 'appwrite' && !!domainId
@@ -342,14 +329,12 @@ export function View({ initialData }: ViewProps = {}) {
         id: 'records',
         label: 'DNS Records',
         to: '/organizations/$orgId/domains/$domainId',
-        params: { orgId: orgId as string, domainId: domainId as string },
-      },
+        params: { orgId: orgId as string, domainId: domainId as string }},
       {
         id: 'settings',
         label: 'Settings',
         to: '/organizations/$orgId/domains/$domainId/settings',
-        params: { orgId: orgId as string, domainId: domainId as string },
-      },
+        params: { orgId: orgId as string, domainId: domainId as string }},
     ],
     [orgId, domainId],
   )
@@ -380,9 +365,7 @@ export function View({ initialData }: ViewProps = {}) {
           priority: data.priority,
           weight: data.weight,
           port: data.port,
-          comment: data.comment,
-        },
-      },
+          comment: data.comment}},
       {
         onSuccess: () => {
           toast.success('DNS record created successfully')
@@ -390,8 +373,7 @@ export function View({ initialData }: ViewProps = {}) {
         },
         onError: (error) => {
           toast.error(getErrorMessage(error))
-        },
-      },
+        }},
     )
   }
 
@@ -422,9 +404,7 @@ export function View({ initialData }: ViewProps = {}) {
           priority: data.priority,
           weight: data.weight,
           port: data.port,
-          comment: data.comment,
-        },
-      },
+          comment: data.comment}},
       {
         onSuccess: () => {
           toast.success('DNS record updated successfully')
@@ -433,8 +413,7 @@ export function View({ initialData }: ViewProps = {}) {
         },
         onError: (error) => {
           toast.error(getErrorMessage(error))
-        },
-      },
+        }},
     )
   }
 
@@ -450,8 +429,7 @@ export function View({ initialData }: ViewProps = {}) {
       },
       onError: (error) => {
         toast.error(getErrorMessage(error))
-      },
-    })
+      }})
   }
 
   // Deletable records (non-locked) on current page for bulk actions
@@ -469,11 +447,9 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onSuccess: async (_, recordIds) => {
       await queryClient.refetchQueries({
-        queryKey: ['dns-records', 'domain', domainId],
-      })
+        queryKey: ['dns-records', 'domain', domainId]})
       await queryClient.refetchQueries({
-        queryKey: ['domain', domainId],
-      })
+        queryKey: ['domain', domainId]})
       toast.success(
         `Deleted ${recordIds.length} DNS record${recordIds.length > 1 ? 's' : ''}`,
       )
@@ -482,8 +458,7 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error))
-    },
-  })
+    }})
 
   const handleBulkDeleteRecords = () => {
     if (selectedRecords.size === 0) return
@@ -526,8 +501,7 @@ export function View({ initialData }: ViewProps = {}) {
       },
       onError: (error) => {
         toast.error(getErrorMessage(error))
-      },
-    })
+      }})
   }
 
   // Handle preset selection
@@ -572,8 +546,7 @@ export function View({ initialData }: ViewProps = {}) {
       mailgun: 'Mailgun',
       zoho: 'Zoho',
       protonmail: 'ProtonMail',
-      icloud: 'iCloud',
-    }
+      icloud: 'iCloud'}
 
     try {
       // Create all records from the preset
@@ -588,9 +561,7 @@ export function View({ initialData }: ViewProps = {}) {
               priority: record.priority,
               weight: record.weight,
               port: record.port,
-              comment: record.comment,
-            },
-          }),
+              comment: record.comment}}),
         ),
       )
 
@@ -598,8 +569,7 @@ export function View({ initialData }: ViewProps = {}) {
         `Successfully added ${records.length} DNS records from ${presetLabels[preset]}`,
       )
       queryClient.invalidateQueries({
-        queryKey: ['dns-records', 'domain', domainId],
-      })
+        queryKey: ['dns-records', 'domain', domainId]})
       setSelectedPreset(null)
     } catch (error) {
       toast.error(getErrorMessage(error))
@@ -647,8 +617,7 @@ export function View({ initialData }: ViewProps = {}) {
         if (isVerified) {
           // Invalidate domain data to refresh the page
           queryClient.invalidateQueries({
-            queryKey: ['domain', domainId],
-          })
+            queryKey: ['domain', domainId]})
           toast.success(`${domain.domain} has been verified`)
           setRetryDialogOpen(false)
         } else {
@@ -663,8 +632,7 @@ export function View({ initialData }: ViewProps = {}) {
           getErrorMessage(error) ||
             'Domain verification failed. Please check your domain settings or try again later.',
         )
-      },
-    })
+      }})
   }
 
   const handlePageChange = (page: number) => {
@@ -685,9 +653,7 @@ export function View({ initialData }: ViewProps = {}) {
       ...(typeof prev === 'object' && prev !== null ? prev : {}),
       ...buildListSearchParams({
         query: queryParam ?? undefined,
-        sort: sortParam ?? undefined,
-      }),
-    })
+        sort: sortParam ?? undefined})})
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())
@@ -705,8 +671,7 @@ export function View({ initialData }: ViewProps = {}) {
           : undefined,
         sortParam,
       ),
-      replace: true,
-    })
+      replace: true})
   }
   const applyFilter = (
     compactKey: CompactFilterKey,
@@ -730,8 +695,7 @@ export function View({ initialData }: ViewProps = {}) {
         mapToQueryParam(next) || undefined,
         sortParam,
       ),
-      replace: true,
-    })
+      replace: true})
   }
   const removeFilter = (compactKey: CompactFilterKey) => {
     const next = new Map(recordsFilterMap)
@@ -751,8 +715,7 @@ export function View({ initialData }: ViewProps = {}) {
         next.size > 0 ? mapToQueryParam(next) : undefined,
         sortParam,
       ),
-      replace: true,
-    })
+      replace: true})
   }
   const clearAllFilters = () => {
     setCurrentPage(1)
@@ -767,15 +730,13 @@ export function View({ initialData }: ViewProps = {}) {
       to: recordsRouteTo,
       params: { orgId: orgId!, domainId: domainId! },
       search: recordsSearchWithSort(undefined, sortParam),
-      replace: true,
-    })
+      replace: true})
   }
 
   const handleBack = () => {
     navigate({
       to: '/organizations/$orgId/domains',
-      params: { orgId: orgId! },
-    })
+      params: { orgId: orgId! }})
   }
 
   const handleCopy = (text: string, field: string) => {
@@ -795,8 +756,7 @@ export function View({ initialData }: ViewProps = {}) {
       .filter((org) => org.$id !== domain.teamId)
       .map((org) => ({
         value: org.$id,
-        label: org.name,
-      }))
+        label: org.name}))
   }, [allOrganizations, domain])
 
   // Transfer domain mutation
@@ -810,8 +770,7 @@ export function View({ initialData }: ViewProps = {}) {
       }
       return createDomainTransferOut({
         domainId,
-        organizationId: orgId,
-      })
+        organizationId: orgId})
     },
     onSuccess: (data) => {
       setRegistrarTransferAuthCode(data.authCode)
@@ -819,8 +778,7 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to start transfer out')
-    },
-  })
+    }})
 
   const handleTransferDomain = async () => {
     if (!domainId || !selectedOrgId) return
@@ -828,8 +786,7 @@ export function View({ initialData }: ViewProps = {}) {
     try {
       await transferDomainMutation.mutateAsync({
         domainId,
-        teamId: targetOrgId,
-      })
+        teamId: targetOrgId})
 
       const selectedOrg = organizations.find(
         (org) => org.value === targetOrgId,
@@ -843,8 +800,7 @@ export function View({ initialData }: ViewProps = {}) {
 
       navigate({
         to: '/organizations/$orgId/domains',
-        params: { orgId: targetOrgId },
-      })
+        params: { orgId: targetOrgId }})
     } catch (error) {
       toast.error(getErrorMessage(error) || 'Failed to transfer domain')
     }
@@ -867,13 +823,11 @@ export function View({ initialData }: ViewProps = {}) {
         // Navigate back to domains list
         navigate({
           to: '/organizations/$orgId/domains',
-          params: { orgId: orgId! },
-        })
+          params: { orgId: orgId! }})
       },
       onError: (error) => {
         toast.error(getErrorMessage(error) || 'Failed to delete domain')
-      },
-    })
+      }})
   }
 
   const handleUpdateAutoRenewal = () => {
@@ -891,8 +845,7 @@ export function View({ initialData }: ViewProps = {}) {
         },
         onError: (error) => {
           toast.error(getErrorMessage(error) || 'Failed to update auto renewal')
-        },
-      },
+        }},
     )
   }
 
@@ -910,8 +863,7 @@ export function View({ initialData }: ViewProps = {}) {
       HTTPS:
         'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
       ALIAS:
-        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-    }
+        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}
     return colors[type] || 'bg-muted text-muted-foreground border-border'
   }
 
@@ -928,8 +880,7 @@ export function View({ initialData }: ViewProps = {}) {
             onClick={() =>
               navigate({
                 to: '/organizations/$orgId/domains',
-                params: { orgId: orgId! },
-              })
+                params: { orgId: orgId! }})
             }
           >
             Back to domains
@@ -944,8 +895,7 @@ export function View({ initialData }: ViewProps = {}) {
       <ConsoleLayout
         header={{
           onCommandCenterOpen: () => {},
-          onCreateOrganization: () => {},
-        }}
+          onCreateOrganization: () => {}}}
         showFooter
         containerClassName="domain-detail-layout-container"
       >
@@ -958,8 +908,7 @@ export function View({ initialData }: ViewProps = {}) {
             organizationId={orgId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to domains',
-            }}
+              'aria-label': 'Back to domains'}}
           />
         }
           tabs={tabs}
@@ -1129,8 +1078,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 {
                                   year: 'numeric',
                                   month: 'short',
-                                  day: 'numeric',
-                                },
+                                  day: 'numeric'},
                               )
                             : '-'}
                         </code>
@@ -1161,8 +1109,7 @@ export function View({ initialData }: ViewProps = {}) {
                             onClick={() =>
                               navigate({
                                 to: '/organizations/$orgId/domains/$domainId/settings',
-                                params: { orgId: orgId!, domainId: domainId! },
-                              })
+                                params: { orgId: orgId!, domainId: domainId! }})
                             }
                           >
                             Update
@@ -1207,8 +1154,7 @@ export function View({ initialData }: ViewProps = {}) {
                         queryParam ?? undefined,
                         sortParam ?? undefined,
                       ),
-                      replace: true,
-                    })
+                      replace: true})
                   }}
                   sortBy={recordsSortBy}
                   sortOrder={recordsSortOrder}
@@ -1222,8 +1168,7 @@ export function View({ initialData }: ViewProps = {}) {
                       to: recordsRouteTo,
                       params: { orgId: orgId!, domainId: domainId! },
                       search: {},
-                      replace: true,
-                    })
+                      replace: true})
                   }}
                   teamId={orgId}
                 />
@@ -1314,14 +1259,14 @@ export function View({ initialData }: ViewProps = {}) {
                     <DropdownMenuItem
                       onClick={() => setImportZoneDialogOpen(true)}
                     >
-                      <MenuItemContent icon={Upload}>Import</MenuItemContent>
+                      Import
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleExportZone}>
-                      <MenuItemContent icon={Download}>Export</MenuItemContent>
+                      Export
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[13px]">
-                        <MenuItemContent icon={List}>Preset</MenuItemContent>
+                        Preset
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52">
                         <DropdownMenuItem
@@ -1435,8 +1380,8 @@ export function View({ initialData }: ViewProps = {}) {
                             record.type === 'MX' || record.type === 'SRV'
                           const showSRVFields = record.type === 'SRV'
 
-                          return (
-                            <TableRow key={record.$id}>
+                          const row = (
+                            <TableRow>
                               <TableCell className="w-[40px] px-4 py-3">
                                 {record.lock ? null : (
                                   <Checkbox
@@ -1620,7 +1565,9 @@ export function View({ initialData }: ViewProps = {}) {
                                             setUpdateRecordDialogOpen(true)
                                           }}
                                         >
-                                          <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                                          <MenuItemContent icon={Pencil}>
+                                            Update
+                                          </MenuItemContent>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                           onClick={() => {
@@ -1628,7 +1575,9 @@ export function View({ initialData }: ViewProps = {}) {
                                             setDeleteRecordDialogOpen(true)
                                           }}
                                         >
-                                          <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                          <MenuItemContent icon={Trash2}>
+                                            Delete
+                                          </MenuItemContent>
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
@@ -1636,6 +1585,32 @@ export function View({ initialData }: ViewProps = {}) {
                                 )}
                               </TableCell>
                             </TableRow>
+                          )
+
+                          if (!orgId || !domainId) {
+                            return <Fragment key={record.$id}>{row}</Fragment>
+                          }
+
+                          return (
+                            <DnsRecordContextMenu
+                              key={record.$id}
+                              orgId={orgId}
+                              domainId={domainId}
+                              record={record}
+                              nameValue={nameValue}
+                              value={value || ''}
+                              locked={!!record.lock}
+                              onUpdate={(r) => {
+                                setSelectedRecord(r)
+                                setUpdateRecordDialogOpen(true)
+                              }}
+                              onDelete={(r) => {
+                                setSelectedRecord(r)
+                                setDeleteRecordDialogOpen(true)
+                              }}
+                            >
+                              {row}
+                            </DnsRecordContextMenu>
                           )
                         })}
                       </TableBody>

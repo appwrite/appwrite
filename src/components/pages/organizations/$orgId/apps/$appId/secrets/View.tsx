@@ -10,8 +10,7 @@ import {
   Plus,
   Shield,
   Terminal,
-  Trash2,
-} from 'lucide-react'
+  Trash2} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,14 +20,12 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -38,8 +35,7 @@ import {
   useCreateOrganizationAppSecret,
   useDeleteOrganizationAppSecret,
   useOrganizationApp,
-  useOrganizationAppSecrets,
-} from '@/lib/react-query/hooks'
+  useOrganizationAppSecrets} from '@/lib/react-query/hooks'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'

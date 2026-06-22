@@ -8,21 +8,18 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DialogTitle} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -30,30 +27,27 @@ import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import {
   useExecutePostgresSql,
-  usePostgresTableIndexes,
-} from '@/lib/react-query/hooks'
+  usePostgresTableIndexes} from '@/lib/react-query/hooks'
 import { buildPostgresDropIndexSql } from '@/lib/postgres-table-ddl'
 import { parsePostgresTableId } from '@/lib/postgres-database-routes'
 import {
   formatPostgresIndexMetadataPreview,
   getPostgresIndexAlgorithmLabel,
-  parsePostgresIndexIncludeColumns,
-} from '@/lib/postgres-index-metadata'
+  parsePostgresIndexIncludeColumns} from '@/lib/postgres-index-metadata'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   isPostgresPrimaryIndex,
-  type PostgresTableIndexRow,
-} from '@/lib/postgres-sql'
+  type PostgresTableIndexRow} from '@/lib/postgres-sql'
 import { Key, Trash2 } from 'lucide-react'
 import { PostgresTableIndexDrawer } from './PostgresTableIndexDrawer'
+import { PostgresIndexContextMenu } from './PostgresIndexContextMenu'
 import {
   matchesPostgresLocalSearch,
   parsePostgresIndexColumnsFromDefinition,
   POSTGRES_BODY_CELL_BORDER_CLASS,
   POSTGRES_HEADER_CELL_BORDER_CLASS,
   POSTGRES_LAST_CELL_BORDER_CLASS,
-  POSTGRES_STICKY_THEAD_CLASS,
-} from './postgres-spreadsheet-chrome'
+  POSTGRES_STICKY_THEAD_CLASS} from './postgres-spreadsheet-chrome'
 
 type PostgresTableIndexesPanelProps = {
   databaseId: string
@@ -78,8 +72,7 @@ export function PostgresTableIndexesPanel({
   tableId,
   search = '',
   createDialogOpen: createDialogOpenProp,
-  onCreateDialogOpenChange,
-}: PostgresTableIndexesPanelProps) {
+  onCreateDialogOpenChange}: PostgresTableIndexesPanelProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { schema } = parsePostgresTableId(tableId)
   const { project } = useProject(projectId)
@@ -300,8 +293,16 @@ export function PostgresTableIndexesPanel({
                   isTruthyFlag(index.is_unique) || isPostgresPrimaryIndex(index)
 
                 return (
-                  <tr
+                  <PostgresIndexContextMenu
                     key={index.index_name}
+                    index={index}
+                    canWrite={canWrite && !isPrimary}
+                    onDelete={(indexName) => {
+                      setIndexToDelete(indexName)
+                      setDeleteDialogOpen(true)
+                    }}
+                  >
+                  <tr
                     className={cn(
                       'group transition-colors hover:bg-muted/50',
                       isPrimary && 'bg-muted/30',
@@ -420,15 +421,14 @@ export function PostgresTableIndexesPanel({
                                 setDeleteDialogOpen(true)
                               }}
                             >
-                              <MenuItemContent icon={Trash2}>
-                                Delete
-                              </MenuItemContent>
+                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : null}
                     </td>
                   </tr>
+                  </PostgresIndexContextMenu>
                 )
               })}
             </tbody>

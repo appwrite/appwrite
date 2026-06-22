@@ -5,9 +5,9 @@ import {
   RefreshCw,
   Trash2,
   ExternalLink,
-} from 'lucide-react'
-import { MenuItemContent, MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
+  Globe} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -18,14 +18,12 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  TableRow} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
@@ -33,10 +31,10 @@ import { Loader2 } from 'lucide-react'
 import {
   useSiteDomains,
   useProject,
-  useOrganizationDomains,
-} from '@/lib/react-query/hooks'
-import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+  useOrganizationDomains} from '@/lib/react-query/hooks'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
+import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
+import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
@@ -61,16 +59,13 @@ export function SiteDomainsView() {
 
   const searchValue = search?.search || ''
 
-  const { data: domainsData, isLoading: domainsLoading } = useSiteDomains(
+  const { rules, total, isLoading: domainsLoading } = useSiteDomains(
     projectId,
     siteId,
     currentPage,
     pageSize,
     searchValue,
   )
-
-  const rules = domainsData?.rules || []
-  const total = domainsData?.total || 0
 
   const { domains: orgDomains } = useOrganizationDomains(
     project?.teamId,
@@ -146,7 +141,17 @@ export function SiteDomainsView() {
                     )
 
                     return (
-                      <TableRow key={ruleData.$id}>
+                      <ProxyRuleContextMenu
+                        key={ruleData.$id}
+                        projectId={projectId!}
+                        rule={ruleData}
+                        projectTeamId={project?.teamId}
+                        apexToOrgDomainId={apexToOrgDomainId}
+                        onViewLogs={handleViewLogs}
+                        onRetry={handleRetry}
+                        onDelete={handleDelete}
+                      >
+                      <TableRow>
                         <TableCell className="px-4 py-3">
                           <a
                             href={`https://${ruleData.domain}`}
@@ -247,9 +252,7 @@ export function SiteDomainsView() {
                                         to: '/organizations/$orgId/domains/$domainId',
                                         params: {
                                           orgId: project.teamId,
-                                          domainId: orgDomainId,
-                                        },
-                                      })
+                                          domainId: orgDomainId}})
                                     }
                                   }}
                                   disabled={
@@ -262,7 +265,7 @@ export function SiteDomainsView() {
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={FileText}>Records</MenuItemContent>
+                                  <MenuItemContent icon={Globe}>Records</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(ruleData)}
@@ -274,6 +277,7 @@ export function SiteDomainsView() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      </ProxyRuleContextMenu>
                     )
                   })}
                 </TableBody>

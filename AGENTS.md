@@ -287,9 +287,9 @@ All tables must use consistent styling matching the users table pattern for visu
 
 See `src/components/pages/projects/$projectId/auth/View.tsx` for the canonical users table implementation.
 
-### Context Menu Actions
+### Context menu and row actions menus
 
-Context menus should follow a consistent action pattern and ordering across resources.
+Context menus (right-click) and list row actions menus (⋯ `RowActionsMenuTrigger` + `DropdownMenu`) share the same action set, ordering, icons, and destructive styling rules.
 
 **Standard ordering (top to bottom):**
 
@@ -297,7 +297,7 @@ Context menus should follow a consistent action pattern and ordering across reso
   Tabs must be first-level context-menu items (no nested "Tabs" submenu), followed by a separator.
 - **Copy** (submenu with `Copy ID`, `Copy value` (only for row columns), `Copy link`, `Copy as JSON`). Include `Duplicate` here only where it makes sense (single resources; never for container resources like tables, buckets, databases, etc).
 - **Links** (`Open in new tab`, `Open in new window`) for all context menus.
-- **Delete** last. No special styling (no red text or destructive styles).
+- **Delete** last. No special styling in the menu itself (see destructive styling below).
 
 **Copy submenu must include (when applicable):**
 
@@ -306,11 +306,62 @@ Context menus should follow a consistent action pattern and ordering across reso
 - `Copy link` (console route URL)
 - `Copy as JSON` (full resource JSON from the API via `copyResourceAsJson`; fetch when a get endpoint exists)
 
+**Menu item icons (required on all menus):**
+
+Every menu item must have a leading Lucide icon with consistent spacing. Use the shared helpers from `@/components/global/shared/ContextMenuIcon`:
+
+- **Context menus**: `<ContextMenuIcon icon={Pencil} />` before the label (or inline in the item).
+- **Row actions dropdowns**: wrap the label in `<MenuItemContent icon={Pencil}>Update</MenuItemContent>`.
+- **Submenu triggers**: `<MenuItemIcon icon={Copy} />` before the label (context menu or dropdown).
+
+When a resource has both a context menu and a row ⋯ menu, **use the same icons** in both (e.g. `ApiKeyContextMenu` and `ApiKeysList`, `ProxyRuleContextMenu` and domain list dropdowns, `DeploymentListRowContextMenu` and deployment list dropdowns).
+
+Common icon mapping:
+
+| Action | Icon |
+| ------ | ---- |
+| Update | `Pencil` |
+| Delete / Remove | `Trash2` |
+| Copy (submenu or item) | `Copy` |
+| Copy link | `Link2` |
+| Copy as JSON | `FileJson` |
+| Open in new tab | `ExternalLink` |
+| Open in new window | `Square` |
+| Settings | `Settings` |
+| Logs | `FileText` or `ScrollText` |
+| Retry / Redeploy | `RefreshCw` |
+| DNS Records | `Globe` |
+| Activate | `Play` |
+| Cancel build | `XCircle` |
+| Secret | `Lock` |
+| Unmark secret | `Eye` |
+
+**Destructive action styling:**
+
+Delete and remove actions must **not** use red text in menus, inline links, or icon buttons. Never use `variant="destructive"`, `className="text-destructive"`, `hover:text-destructive`, or `text-red-*` on menu items or row-level delete/remove controls.
+
+Red delete styling is allowed **only** in these three places:
+
+1. **Dedicated delete cards** (danger zone sections: `bg-destructive/5`, `border-destructive/20`, or equivalent delete-card chrome). The trigger button inside the card may use `variant="destructive"`.
+2. **Dialog confirm buttons** (`Button variant="destructive"` in the dialog footer after the user chose Delete from a menu).
+3. **Bulk delete action bars** (fixed bottom bar with selection count and a red `Delete` button).
+
+Do not put a red destructive button on a form footer or list row outside those contexts (e.g. use a default/outline button that opens a confirm dialog instead).
+
+Icon-only remove controls (dismiss preset, remove tag, remove role chip, etc.) use neutral styling (`text-muted-foreground`, `hover:text-foreground`), not red hover.
+
 **Other rules:**
 
 - Use `Update` label (not `Update user`, `Update team`, etc.)
 - Keep action sets aligned to actual capabilities (no “View activity” if the tab doesn’t exist)
 - Include a confirm dialog for destructive actions
+
+**Reference implementations:**
+
+- Context menu: `src/components/pages/projects/$projectId/api-keys/_components/ApiKeyContextMenu.tsx`
+- Row ⋯ menu with icons: `src/components/pages/projects/$projectId/settings/Webhooks.tsx`, `src/components/global/shared/VariablesSettingsCard.tsx`
+- Delete card + dialog confirm: `src/components/pages/projects/$projectId/sites/settings/DangerZoneCard.tsx`
+- Bulk delete bar: `src/components/pages/organizations/$orgId/domains/View.tsx`
 
 ### Long-running task progress
 
@@ -1033,6 +1084,8 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Actions column         | Never use "Actions" as title - use empty `TableHead`                                                                                                                                                                                                                                                                    |
 | Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                                                                                                    |
 | Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                                                                                                   |
+| Row actions menu (⋯)   | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                   |
+| Delete styling         | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                        |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
 
 ---

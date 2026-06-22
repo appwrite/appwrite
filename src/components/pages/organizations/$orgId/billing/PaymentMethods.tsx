@@ -3,11 +3,13 @@ import { CreditCard, Plus, Info } from '@/lib/icons'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import {
   warningAlertContainerClassName,
-  warningAlertTextClassName,
-} from '@/components/global/shared/WarningAlert'
+  warningAlertTextClassName} from '@/components/global/shared/WarningAlert'
 import { Trash2, Star, ArrowLeftRight } from 'lucide-react'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,14 +19,12 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  TooltipTrigger} from '@/components/ui/tooltip'
 import { formatCardExpiry, maskCardNumber } from './utils'
 import { cn } from '@/lib/utils'
 import {
@@ -33,11 +33,11 @@ import {
   useBillingPlans,
   useOrganizationPlan,
   usePaymentMethods,
-  useUpdateOrganizationPaymentMethod,
-} from '@/lib/react-query/hooks'
+  useUpdateOrganizationPaymentMethod} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { CannotRemovePrimaryPaymentMethodModal } from './CannotRemovePrimaryPaymentMethodModal'
+import { OrgPaymentMethodContextMenu } from './OrgPaymentMethodContextMenu'
 
 /**
  * PaymentMethods Component
@@ -65,8 +65,7 @@ interface PaymentMethodsProps {
 
 export function PaymentMethods({
   onAddPaymentMethod,
-  orgId,
-}: PaymentMethodsProps) {
+  orgId}: PaymentMethodsProps) {
   const { organization } = useOrganizationById(orgId)
   const { plan } = useOrganizationPlan(orgId)
   const { plans: billingPlans } = useBillingPlans()
@@ -144,8 +143,7 @@ export function PaymentMethods({
     try {
       await updatePaymentMethodMutation.mutateAsync({
         organizationId: orgId,
-        paymentMethodId,
-      })
+        paymentMethodId})
       toast.success('Primary payment method updated')
     } catch (error) {
       toast.error(
@@ -162,8 +160,7 @@ export function PaymentMethods({
     try {
       await updatePaymentMethodMutation.mutateAsync({
         organizationId: orgId,
-        backupPaymentMethodId: paymentMethodId,
-      })
+        backupPaymentMethodId: paymentMethodId})
       toast.success('Backup payment method updated')
     } catch (error) {
       toast.error(
@@ -194,20 +191,17 @@ export function PaymentMethods({
           await updatePaymentMethodMutation.mutateAsync({
             organizationId: orgId,
             paymentMethodId: backupId,
-            backupPaymentMethodId: null,
-          })
+            backupPaymentMethodId: null})
         } else {
           // Remove primary (allowed on free plan only; guarded above)
           await updatePaymentMethodMutation.mutateAsync({
             organizationId: orgId,
-            paymentMethodId: null,
-          })
+            paymentMethodId: null})
         }
       } else {
         await updatePaymentMethodMutation.mutateAsync({
           organizationId: orgId,
-          backupPaymentMethodId: null,
-        })
+          backupPaymentMethodId: null})
       }
       toast.success('Payment method removed')
     } catch (error) {
@@ -472,11 +466,9 @@ export function PaymentMethods({
                       className="text-[13px]"
                       onClick={() => handleSetBackup(availableMethod.$id)}
 >
-                      <MenuItemContent icon={CreditCard}>
-                        <span className="whitespace-nowrap">
+                      <span className="whitespace-nowrap">
                           {availableMethod.brand} ••••{availableMethod.last4}
                         </span>
-                      </MenuItemContent>
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
@@ -484,7 +476,7 @@ export function PaymentMethods({
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(true)}
 >
-                    <MenuItemContent icon={Plus}>Add</MenuItemContent>
+                    Add
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -536,8 +528,7 @@ function PaymentMethodCard({
   onReplaceBackup,
   onRemove,
   availableMethods,
-  onAddPaymentMethod,
-}: PaymentMethodCardProps) {
+  onAddPaymentMethod}: PaymentMethodCardProps) {
   const isExpiringSoon =
     method.expiryMonth && method.expiryYear
       ? isCardExpiringSoon(method.expiryMonth, method.expiryYear)
@@ -549,6 +540,16 @@ function PaymentMethodCard({
     (method.expired ? 'Card expired' : method.failed ? 'Payment failed' : null)
 
   return (
+    <OrgPaymentMethodContextMenu
+      method={method}
+      isPrimary={isPrimary}
+      availableMethods={availableMethods}
+      onSetPrimary={onSetPrimary}
+      onReplacePrimary={onReplacePrimary}
+      onReplaceBackup={onReplaceBackup}
+      onRemove={onRemove}
+      onAddPaymentMethod={onAddPaymentMethod}
+    >
     <div className="flex items-center justify-between px-6 py-4 hover:bg-accent/50 transition-colors">
       <div className="flex items-center gap-2">
         <PaymentMethodBrandAvatar brand={method.brand} />
@@ -605,7 +606,7 @@ function PaymentMethodCard({
             <DropdownMenuItem
               className="text-[13px]"
               onClick={() => onSetPrimary(method.$id)}
->
+            >
               <MenuItemContent icon={Star}>Primary</MenuItemContent>
             </DropdownMenuItem>
           )}
@@ -615,7 +616,8 @@ function PaymentMethodCard({
               {!isPrimary && onSetPrimary && <DropdownMenuSeparator />}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-[13px]">
-                  <MenuItemContent icon={ArrowLeftRight}>Replace</MenuItemContent>
+                  <MenuItemIcon icon={ArrowLeftRight} />
+                  Replace
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent
                   className="w-52"
@@ -638,7 +640,7 @@ function PaymentMethodCard({
                               onReplaceBackup(availableMethod.$id)
                             }
                           }}
->
+                        >
                           <MenuItemContent icon={CreditCard}>
                             <span className="whitespace-nowrap">
                               {availableMethod.brand} ••••{availableMethod.last4}
@@ -652,7 +654,7 @@ function PaymentMethodCard({
                   <DropdownMenuItem
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(!isPrimary)}
->
+                  >
                     <MenuItemContent icon={Plus}>Add</MenuItemContent>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
@@ -663,12 +665,13 @@ function PaymentMethodCard({
           <DropdownMenuItem
             className="text-[13px]"
             onClick={onRemove}
->
+          >
             <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+    </OrgPaymentMethodContextMenu>
   )
 }
 
