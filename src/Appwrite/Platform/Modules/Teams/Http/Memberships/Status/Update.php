@@ -125,7 +125,8 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        $user->setAttribute('emailVerification', true);
+        $authorization->skip(fn () => $dbForProject->updateDocument('users', $user->getId(), new Document(['emailVerification' => true])));
 
         // Create session for the user if not logged in
         if (!$hasSession) {
