@@ -10,19 +10,14 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { format } from 'date-fns'
-import { AlertTriangle, Info } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import {
   type UsageMetric,
   formatMetricValue,
   getUsagePercentage,
   getUsageStatus,
 } from './data'
-import {
-  Tooltip as UITooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { OVERVIEW_CHART_HEIGHT } from '../overview/chart-panel'
 import { Progress } from '@/components/ui/progress'
 
 interface UsageMetricChartProps {
@@ -72,26 +67,9 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[14px] font-medium text-foreground">
-              {metric.name}
-            </h3>
-            <TooltipProvider delayDuration={0}>
-              <UITooltip>
-                <TooltipTrigger asChild>
-                  <button className="text-muted-foreground hover:text-foreground transition-colors">
-                    <Info className="h-3.5 w-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="top"
-                  className="max-w-xs text-[12px] leading-relaxed"
-                >
-                  <p>{metric.description}</p>
-                </TooltipContent>
-              </UITooltip>
-            </TooltipProvider>
-          </div>
+          <h3 className="text-[14px] font-medium text-foreground">
+            {metric.name}
+          </h3>
 
           {/* Current value and quota */}
           <div className="mt-2 flex items-baseline gap-2">
@@ -143,7 +121,10 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
 
       {/* Chart */}
       <div className="p-4">
-        <div className="h-[180px] text-muted-foreground">
+        <div
+          className="text-muted-foreground"
+          style={{ height: OVERVIEW_CHART_HEIGHT }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}

@@ -8,7 +8,9 @@ import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
   computeChangePercent,
+  fillGaugeChartPointsGaps,
   resolveOverviewUsagePeriod,
+  type ProjectUsageChartOverview,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
 
@@ -139,6 +141,115 @@ export async function fetchUsageGaugeBreakdown(
   })
 
   return mapGaugeResourceBreakdownGroups(groups, breakdownLimit)
+}
+
+async function listUsageGaugeGroupsForMetrics(
+  projectId: string,
+  metrics: readonly string[],
+  params: Omit<ListUsageGaugeGroupsParams, 'metric'>,
+): Promise<Models.UsageDataPoint[]> {
+  const results = await Promise.all(
+    metrics.map((metric) =>
+      listUsageGaugeGroups(projectId, { ...params, metric }),
+    ),
+  )
+  return results.flat()
+}
+
+function mergeGaugeValuesByTime(
+  groups: Models.UsageDataPoint[],
+): Map<string, number> {
+  const merged = new Map<string, number>()
+  for (const group of groups) {
+    merged.set(group.time, (merged.get(group.time) ?? 0) + group.value)
+  }
+  return merged
+}
+
+/** Current and previous gauge chart series (merged per bucket). */
+export async function fetchProjectUsageGaugeChartSeries(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  metrics: readonly string[],
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<{
+  chartPoints: ProjectUsageChartOverview['chartPoints']
+  previousChartPoints: ProjectUsageChartOverview['chartPoints']
+}> {
+  if (!projectId || metrics.length === 0) {
+    return { chartPoints: [], previousChartPoints: [] }
+  }
+
+  const {
+    from,
+    to,
+    previousFrom,
+    previousTo,
+    interval: resolvedInterval,
+  } = resolveOverviewUsagePeriod(dateRange, interval)
+
+  const [currentGroups, previousGroups] = await Promise.all([
+    listUsageGaugeGroupsForMetrics(projectId, metrics, {
+      interval: resolvedInterval,
+      startAt: from.toISOString(),
+      endAt: to.toISOString(),
+    }),
+    listUsageGaugeGroupsForMetrics(projectId, metrics, {
+      interval: resolvedInterval,
+      startAt: previousFrom.toISOString(),
+      endAt: previousTo.toISOString(),
+    }),
+  ])
+
+  const currentMerged = mergeGaugeValuesByTime(currentGroups)
+  const previousMerged = mergeGaugeValuesByTime(previousGroups)
+
+  return {
+    chartPoints: fillGaugeChartPointsGaps(
+      currentMerged,
+      from,
+      to,
+      resolvedInterval,
+    ),
+    previousChartPoints: fillGaugeChartPointsGaps(
+      previousMerged,
+      previousFrom,
+      previousTo,
+      resolvedInterval,
+    ),
+  }
+}
+
+/** Time-series chart for one or more gauge metrics (merged per bucket). */
+export async function fetchProjectUsageGaugesChartOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  metrics: readonly string[],
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<ProjectUsageChartOverview> {
+  if (!projectId || metrics.length === 0) {
+    return { changePercent: 0, chartPoints: [] }
+  }
+
+  const { chartPoints, previousChartPoints } =
+    await fetchProjectUsageGaugeChartSeries(
+      projectId,
+      dateRange,
+      metrics,
+      interval,
+    )
+
+  const currentLatest =
+    chartPoints.length > 0 ? chartPoints[chartPoints.length - 1].total : 0
+  const previousLatest =
+    previousChartPoints.length > 0
+      ? previousChartPoints[previousChartPoints.length - 1].total
+      : 0
+
+  return {
+    changePercent: computeChangePercent(currentLatest, previousLatest),
+    chartPoints,
+  }
 }
 
 /** Latest file storage value + top buckets for the overview storage tab. */

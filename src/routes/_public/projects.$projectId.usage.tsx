@@ -1,7 +1,8 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { UsageView } from '@/components/pages/projects/$projectId/usage/View'
+import { createFileRoute, redirect, useLocation } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { countriesQueryOptions } from '@/lib/react-query/hooks'
+import { UsageLayout } from '@/components/pages/projects/$projectId/usage/Layout'
 
 export const Route = createFileRoute('/_public/projects/$projectId/usage')({
   head: () => ({ meta: [{ title: pageTitle('Usage') }] }),
@@ -14,10 +15,18 @@ export const Route = createFileRoute('/_public/projects/$projectId/usage')({
       })
     }
   },
-  component: UsagePage,
+  loader: async ({ context }) => {
+    if (typeof window === 'undefined') return
+
+    const { queryClient } = context
+    await queryClient.ensureQueryData(countriesQueryOptions()).catch(() => {
+      // Country names/flags are optional for the usage page
+    })
+  },
+  component: UsageLayoutPage,
 })
 
-function UsagePage() {
-  // In a real app, you'd get the plan from the organization context
-  return <UsageView plan="pro" />
+function UsageLayoutPage() {
+  const { projectId } = Route.useParams()
+  return <UsageLayout projectId={projectId} plan="pro" />
 }

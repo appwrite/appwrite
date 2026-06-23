@@ -117,17 +117,15 @@ function dateRangeMatchesPreset(
 
   const presetRange = preset.getRange()
 
-  if (preset.value === 'today') {
+  if (
+    preset.value === 'today' ||
+    preset.value === '7d' ||
+    preset.value === '14d' ||
+    preset.value === '30d'
+  ) {
     return (
-      startOfDay(range.from).getTime() === startOfDay(presetRange.from).getTime() &&
-      endOfDay(range.to).getTime() === endOfDay(presetRange.to).getTime()
-    )
-  }
-
-  if (preset.value === '7d' || preset.value === '14d' || preset.value === '30d') {
-    return (
-      startOfDay(range.from).getTime() === startOfDay(presetRange.from).getTime() &&
-      endOfDay(range.to).getTime() === endOfDay(presetRange.to).getTime()
+      range.from.getTime() === presetRange.from.getTime() &&
+      range.to.getTime() === presetRange.to.getTime()
     )
   }
 
@@ -185,10 +183,24 @@ export function DateRangePicker({
   popoverContentAlign = 'end',
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+  const [pendingDateRange, setPendingDateRange] = React.useState<
+    DateRange | undefined
+  >(dateRange)
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setPendingDateRange(dateRange)
+    }
+  }, [dateRange, isOpen])
 
   const matchingPreset = React.useMemo(
     () => findMatchingPreset(dateRange),
     [dateRange],
+  )
+
+  const pendingMatchingPreset = React.useMemo(
+    () => findMatchingPreset(pendingDateRange),
+    [pendingDateRange],
   )
 
   const [selectedPreset, setSelectedPreset] = React.useState<string | null>(
@@ -196,18 +208,41 @@ export function DateRangePicker({
   )
 
   React.useEffect(() => {
-    setSelectedPreset(matchingPreset?.value ?? null)
-  }, [matchingPreset?.value])
+    const matching = isOpen ? pendingMatchingPreset : matchingPreset
+    setSelectedPreset(matching?.value ?? null)
+  }, [isOpen, matchingPreset?.value, pendingMatchingPreset?.value])
+
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setPendingDateRange(dateRange)
+      setIsOpen(true)
+      return
+    }
+
+    if (isOpen) {
+      setPendingDateRange(dateRange)
+      setIsOpen(false)
+    }
+  }
 
   const handlePresetSelect = (preset: DateRangePreset) => {
-    const range = preset.getRange()
-    onDateRangeChange(range)
+    setPendingDateRange(preset.getRange())
     setSelectedPreset(preset.value)
   }
 
   const handleClear = () => {
-    onDateRangeChange(undefined)
+    setPendingDateRange(undefined)
     setSelectedPreset(null)
+  }
+
+  const handleApply = () => {
+    onDateRangeChange(pendingDateRange)
+    setIsOpen(false)
+  }
+
+  const handleCancel = () => {
+    setPendingDateRange(dateRange)
+    setIsOpen(false)
   }
 
   const formatDateRange = (range: DateRange | undefined): string => {
@@ -230,7 +265,7 @@ export function DateRangePicker({
   const triggerLabel = matchingPreset?.label ?? formatDateRange(dateRange)
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -312,10 +347,10 @@ export function DateRangePicker({
             <div className="p-3">
               <Calendar
                 mode="range"
-                selected={dateRange}
-                onSelect={onDateRangeChange}
+                selected={pendingDateRange}
+                onSelect={setPendingDateRange}
                 numberOfMonths={2}
-                defaultMonth={dateRange?.from || new Date()}
+                defaultMonth={pendingDateRange?.from || dateRange?.from || new Date()}
               />
             </div>
 
@@ -333,14 +368,14 @@ export function DateRangePicker({
                   variant="outline"
                   size="sm"
                   className="h-7 text-[11px]"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleCancel}
                 >
                   Cancel
                 </Button>
                 <Button
                   size="sm"
                   className="h-7 text-[11px]"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleApply}
                 >
                   Apply
                 </Button>

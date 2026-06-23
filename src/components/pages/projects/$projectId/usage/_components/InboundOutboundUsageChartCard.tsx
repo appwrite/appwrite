@@ -1,0 +1,339 @@
+'use client'
+
+import { useMemo, type ReactNode } from 'react'
+import { format } from 'date-fns'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { AlertCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { formatCompactBytesAxis } from '@/lib/usage/format-metric'
+import type { BandwidthDualChartPoint } from '@/lib/usage/bandwidth-events'
+import { OVERVIEW_CHART_HEIGHT } from '../../overview/chart-panel'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  UsageMetricCardFooter,
+  UsageMetricCardShell,
+} from './UsageMetricCard'
+
+const metricHeaderClass =
+  'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
+
+function ChartMetricHeaderSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-7 w-28 shrink-0 rounded-sm" />
+      <Skeleton className="h-4 w-[4.5rem] shrink-0 rounded-sm" />
+      <Skeleton className="h-3 w-44 max-w-full shrink-0 rounded-sm" />
+    </>
+  )
+}
+
+function ChartSkeleton() {
+  return (
+    <Skeleton
+      className="w-full shrink-0 rounded-md"
+      style={{ height: OVERVIEW_CHART_HEIGHT }}
+      aria-hidden
+    />
+  )
+}
+
+function ChartArea({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="relative w-full shrink-0 text-muted-foreground"
+      style={{ height: OVERVIEW_CHART_HEIGHT }}
+    >
+      {children}
+    </div>
+  )
+}
+
+type InboundOutboundUsageChartCardProps = {
+  title: string
+  description: string
+  docsHref?: string
+  total: number
+  changePercent: number
+  dualChartPoints: BandwidthDualChartPoint[]
+  isLoading: boolean
+  isError: boolean
+  errorTitle: string
+  errorMessage: string
+  inboundGradientId: string
+  outboundGradientId: string
+  formatTotal: (value: number) => string
+  formatValue: (value: number) => string
+  onRetry?: () => void
+}
+
+export function InboundOutboundUsageChartCard({
+  title,
+  description,
+  docsHref,
+  total,
+  changePercent,
+  dualChartPoints,
+  isLoading,
+  isError,
+  errorTitle,
+  errorMessage,
+  inboundGradientId,
+  outboundGradientId,
+  formatTotal,
+  formatValue,
+  onRetry,
+}: InboundOutboundUsageChartCardProps) {
+  const chartData = useMemo(
+    () =>
+      dualChartPoints.map((point) => ({
+        date: point.date,
+        fullDate: format(point.day, 'MMM d, yyyy HH:mm'),
+        inbound: point.inbound,
+        outbound: point.outbound,
+        total: point.total,
+      })),
+    [dualChartPoints],
+  )
+
+  const formattedTotal = formatTotal(total)
+  const changeLabel =
+    changePercent > 0
+      ? `+${changePercent}%`
+      : changePercent < 0
+        ? `${changePercent}%`
+        : '0%'
+  const showDualSeries = chartData.some(
+    (point) =>
+      typeof point.inbound === 'number' && typeof point.outbound === 'number',
+  )
+
+  return (
+    <UsageMetricCardShell>
+      <div className="shrink-0 flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
+
+          <div className={metricHeaderClass}>
+            {isLoading && !dualChartPoints.length ? (
+              <ChartMetricHeaderSkeleton />
+            ) : (
+              <>
+                <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                  {formattedTotal}
+                </span>
+                {!isError && dualChartPoints.length > 0 ? (
+                  <span
+                    className={cn(
+                      'text-[12px] font-medium tabular-nums',
+                      changePercent > 0 &&
+                        'text-emerald-600 dark:text-emerald-400',
+                      changePercent < 0 && 'text-amber-600 dark:text-amber-400',
+                      changePercent === 0 && 'text-muted-foreground',
+                    )}
+                  >
+                    {changeLabel} vs previous period
+                  </span>
+                ) : !isLoading ? (
+                  <span
+                    className="invisible text-[12px] font-medium tabular-nums"
+                    aria-hidden
+                  >
+                    0% vs previous period
+                  </span>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
+
+        {showDualSeries && !isLoading ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: 'var(--chart-2)' }}
+              />
+              <span className="text-[11px] text-muted-foreground">Inbound</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: 'var(--chart-brand)' }}
+              />
+              <span className="text-[11px] text-muted-foreground">Outbound</span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        {isError ? (
+          <ChartArea>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
+              <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
+              <div className="max-w-sm">
+                <p className="text-[13px] font-medium text-foreground">
+                  {errorTitle}
+                </p>
+                <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                  {errorMessage}
+                </p>
+              </div>
+              {onRetry ? (
+                <Button variant="outline" size="sm" onClick={onRetry}>
+                  Try again
+                </Button>
+              ) : null}
+            </div>
+          </ChartArea>
+        ) : isLoading && chartData.length === 0 ? (
+          <ChartSkeleton />
+        ) : chartData.length === 0 ? (
+          <ChartArea>
+            <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
+              No data for this date range
+            </div>
+          </ChartArea>
+        ) : (
+          <ChartArea>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient
+                    id={inboundGradientId}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient
+                    id={outboundGradientId}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0%"
+                      stopColor="var(--chart-brand)"
+                      stopOpacity={0.2}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="var(--chart-brand)"
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'currentColor', fontSize: 10 }}
+                  dy={10}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'currentColor', fontSize: 10 }}
+                  tickFormatter={formatCompactBytesAxis}
+                  dx={-5}
+                  width={48}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const data = payload[0].payload as {
+                      fullDate: string
+                      inbound: number
+                      outbound: number
+                    }
+                    return (
+                      <div className="rounded-md border border-border bg-popover px-3 py-2">
+                        <p className="mb-1 text-[11px] text-muted-foreground">
+                          {data.fullDate}
+                        </p>
+                        {showDualSeries ? (
+                          <div className="space-y-0.5">
+                            <p className="text-[13px] font-medium text-foreground">
+                              {formatValue(data.inbound)}{' '}
+                              <span className="font-normal text-muted-foreground">
+                                inbound
+                              </span>
+                            </p>
+                            <p className="text-[13px] font-medium text-foreground">
+                              {formatValue(data.outbound)}{' '}
+                              <span className="font-normal text-muted-foreground">
+                                outbound
+                              </span>
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-[13px] font-medium text-foreground">
+                            {formatValue(data.inbound + data.outbound)}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  }}
+                />
+                {showDualSeries ? (
+                  <>
+                    <Area
+                      type="monotone"
+                      dataKey="inbound"
+                      name="Inbound"
+                      stroke="var(--chart-2)"
+                      strokeWidth={2}
+                      fill={`url(#${inboundGradientId})`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="outbound"
+                      name="Outbound"
+                      stroke="var(--chart-brand)"
+                      strokeWidth={2}
+                      fill={`url(#${outboundGradientId})`}
+                    />
+                  </>
+                ) : (
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="var(--chart-brand)"
+                    strokeWidth={2}
+                    fill={`url(#${outboundGradientId})`}
+                    name="Bandwidth"
+                  />
+                )}
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartArea>
+        )}
+      </div>
+
+      <UsageMetricCardFooter description={description} docsHref={docsHref} />
+    </UsageMetricCardShell>
+  )
+}

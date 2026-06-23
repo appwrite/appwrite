@@ -1,6 +1,7 @@
 import {
   addDays,
   addHours,
+  addMinutes,
   differenceInCalendarDays,
   endOfDay,
   format,
@@ -8,6 +9,7 @@ import {
   parseISO,
   startOfDay,
   startOfHour,
+  startOfMinute,
   subDays,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
@@ -44,6 +46,129 @@ export interface UsageTopEndpoint {
   statusCode: number
   path: string
   count: number
+}
+
+/** Dimensions supported by usage.listEvents for event metrics. */
+export type UsageEventBreakdownDimension =
+  | 'path'
+  | 'method'
+  | 'status'
+  | 'service'
+  | 'country'
+  | 'region'
+  | 'hostname'
+  | 'osName'
+  | 'clientType'
+  | 'clientName'
+  | 'deviceName'
+  | 'teamId'
+  | 'resourceId'
+
+export interface UsageBreakdownItem {
+  id: string
+  label: string
+  count: number
+}
+
+function getUsageDataPointBreakdownLabel(
+  point: Models.UsageDataPoint,
+  dimension: UsageEventBreakdownDimension,
+): string {
+  switch (dimension) {
+    case 'path':
+      return point.path?.trim() || '/'
+    case 'method':
+      return point.method?.trim() || 'Unknown'
+    case 'status':
+      return point.status?.trim() || 'Unknown'
+    case 'service':
+      return point.service?.trim() || 'Unknown'
+    case 'country':
+      return point.country?.trim() || 'Unknown'
+    case 'region':
+      return point.region?.trim() || 'Unknown'
+    case 'hostname':
+      return point.hostname?.trim() || 'Unknown'
+    case 'osName':
+      return point.osName?.trim() || 'Unknown'
+    case 'clientType':
+      return point.clientType?.trim() || 'Unknown'
+    case 'clientName':
+      return point.clientName?.trim() || 'Unknown'
+    case 'deviceName':
+      return point.deviceName?.trim() || 'Unknown'
+    case 'teamId':
+      return point.teamId?.trim() || 'Unknown'
+    case 'resourceId':
+      return point.resourceId?.trim() || 'Unknown'
+    default:
+      return 'Unknown'
+  }
+}
+
+function mapBreakdownGroupsForDimension(
+  groups: Models.UsageDataPoint[],
+  dimension: UsageEventBreakdownDimension,
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): UsageBreakdownItem[] {
+  const items = groups.map((group, index) => {
+    const label = getUsageDataPointBreakdownLabel(group, dimension)
+    return {
+      id: `${dimension}-${label}-${index}`,
+      label,
+      count: group.value,
+    }
+  })
+
+  return items.sort((a, b) => b.count - a.count).slice(0, limit)
+}
+
+/** Merge breakdown rows from multiple metrics (e.g. inbound + outbound bandwidth). */
+export function mergeUsageBreakdownItems(
+  lists: UsageBreakdownItem[][],
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): UsageBreakdownItem[] {
+  const grouped = new Map<string, UsageBreakdownItem>()
+
+  for (const list of lists) {
+    for (const item of list) {
+      const key = item.label
+      const existing = grouped.get(key)
+      if (existing) {
+        existing.count += item.count
+        continue
+      }
+      grouped.set(key, { ...item })
+    }
+  }
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+}
+
+/** Flat top-N breakdown for a single listEvents dimension (no interval). */
+export async function fetchProjectUsageEventBreakdown(
+  projectId: string,
+  metric: string,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+  breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): Promise<UsageBreakdownItem[]> {
+  if (!projectId) {
+    return []
+  }
+
+  const { from, to } = resolveOverviewUsagePeriod(dateRange)
+
+  const groups = await listUsageEventGroups(projectId, {
+    metric,
+    dimensions: [dimension],
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+  })
+
+  return mapBreakdownGroupsForDimension(groups, dimension, breakdownLimit)
 }
 
 export interface ProjectUsageChartOverview {
@@ -97,11 +222,13 @@ export function resolveOverviewUsagePeriod(
 }
 
 function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return startOfMinute(date)
   if (interval === '1h') return startOfHour(date)
   return startOfDay(date)
 }
 
 function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
+  if (interval === '1m') return addMinutes(date, 1)
   if (interval === '1h') return addHours(date, 1)
   return addDays(date, 1)
 }
@@ -137,7 +264,7 @@ function formatChartPointLabel(
   rangeFrom: Date,
   rangeTo: Date,
 ): string {
-  if (interval === '1h') {
+  if (interval === '1m' || interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
     return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')
   }
@@ -277,16 +404,23 @@ async function fetchUsageMetricChartSeries(
     interval: resolvedInterval,
   } = resolveOverviewUsagePeriod(dateRange, interval)
 
-  const groups = await listUsageEventGroups(projectId, {
-    metric,
-    interval: resolvedInterval,
-    startAt: previousFrom.toISOString(),
-    endAt: to.toISOString(),
-  })
+  const [currentGroups, previousGroups] = await Promise.all([
+    listUsageEventGroups(projectId, {
+      metric,
+      interval: resolvedInterval,
+      startAt: from.toISOString(),
+      endAt: to.toISOString(),
+    }),
+    listUsageEventGroups(projectId, {
+      metric,
+      interval: resolvedInterval,
+      startAt: previousFrom.toISOString(),
+      endAt: previousTo.toISOString(),
+    }),
+  ])
 
-  const { current, previous } = splitGroupsByPeriod(groups, from)
-  const currentMerged = mergeValuesByTime(current)
-  const previousMerged = mergeValuesByTime(previous)
+  const currentMerged = mergeValuesByTime(currentGroups)
+  const previousMerged = mergeValuesByTime(previousGroups)
 
   return {
     chartPoints: fillChartPointsGaps(currentMerged, from, to, resolvedInterval),
@@ -425,27 +559,39 @@ export function fillChartPointsGaps(
   return points
 }
 
-function splitGroupsByPeriod(
-  groups: Models.UsageDataPoint[],
-  currentFrom: Date,
-): {
-  current: Models.UsageDataPoint[]
-  previous: Models.UsageDataPoint[]
-} {
-  const currentFromMs = currentFrom.getTime()
-  const current: Models.UsageDataPoint[] = []
-  const previous: Models.UsageDataPoint[] = []
+/**
+ * Fill gauge chart buckets by carrying the last known snapshot forward.
+ * Gauges report levels (MAU, storage), not per-interval deltas — missing buckets
+ * must not be treated as zero.
+ */
+export function fillGaugeChartPointsGaps(
+  merged: Map<string, number>,
+  from: Date,
+  to: Date,
+  interval: UsageChartInterval,
+): UsageChartPoint[] {
+  const lookup = buildBucketLookup(merged, interval)
+  const points: UsageChartPoint[] = []
+  let cursor = getIntervalStart(from, interval)
+  const endCursor = getIntervalStart(to, interval)
+  let lastKnown: number | undefined
 
-  for (const group of groups) {
-    const groupMs = parseISO(group.time).getTime()
-    if (groupMs >= currentFromMs) {
-      current.push(group)
-    } else {
-      previous.push(group)
+  while (cursor.getTime() <= endCursor.getTime()) {
+    const key = cursor.getTime()
+    const bucketValue = lookup.get(key)
+    if (bucketValue !== undefined) {
+      lastKnown = bucketValue
     }
+
+    points.push({
+      date: formatChartPointLabel(cursor, interval, from, to),
+      day: cursor,
+      total: lastKnown ?? 0,
+    })
+    cursor = advanceIntervalCursor(cursor, interval)
   }
 
-  return { current, previous }
+  return points
 }
 
 async function listUsageEventGroups(
@@ -531,15 +677,21 @@ export async function fetchProjectUsageChartOverview(
     interval: resolvedInterval,
   } = resolveOverviewUsagePeriod(dateRange, interval)
 
-  const groups = await listUsageEventGroupsForMetrics(projectId, metrics, {
-    interval: resolvedInterval,
-    startAt: previousFrom.toISOString(),
-    endAt: to.toISOString(),
-  })
+  const [currentGroups, previousGroups] = await Promise.all([
+    listUsageEventGroupsForMetrics(projectId, metrics, {
+      interval: resolvedInterval,
+      startAt: from.toISOString(),
+      endAt: to.toISOString(),
+    }),
+    listUsageEventGroupsForMetrics(projectId, metrics, {
+      interval: resolvedInterval,
+      startAt: previousFrom.toISOString(),
+      endAt: previousTo.toISOString(),
+    }),
+  ])
 
-  const { current, previous } = splitGroupsByPeriod(groups, from)
-  const currentMerged = mergeValuesByTime(current)
-  const previousMerged = mergeValuesByTime(previous)
+  const currentMerged = mergeValuesByTime(currentGroups)
+  const previousMerged = mergeValuesByTime(previousGroups)
   const chartPoints = fillChartPointsGaps(
     currentMerged,
     from,

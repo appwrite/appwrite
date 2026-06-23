@@ -1,0 +1,288 @@
+'use client'
+
+import { useCallback, useMemo } from 'react'
+import type { DateRange } from 'react-day-picker'
+import { Download, FileJson, FileText, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  useCountries,
+  useProjectRequestsBreakdownDrawer,
+  useProjectBandwidthBreakdownDrawer,
+  useProjectDatabaseReadsBreakdownDrawer,
+  useProjectDatabaseWritesBreakdownDrawer,
+} from '@/lib/react-query/hooks'
+import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
+import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
+import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
+import { buildCountryLookups } from '@/lib/locale/country-lookups'
+import {
+  OVERVIEW_BANDWIDTH_ERROR,
+  OVERVIEW_REQUESTS_ERROR,
+} from '../../overview/chart-panel'
+import { OverviewChartPanelError } from '../../overview/OverviewChartPanelError'
+import {
+  UsageBreakdownListSkeleton,
+  UsageBreakdownRowsList,
+} from './UsageBreakdownRows'
+import {
+  downloadUsageBreakdownCsv,
+  downloadUsageBreakdownJson,
+  type UsageBreakdownExportKind,
+} from './export-usage-breakdown'
+import { formatBandwidthValue } from '@/lib/usage/bandwidth-events'
+import { formatRequestsValue } from '@/lib/usage/requests-events'
+import { formatDatabaseOperationsValue } from '@/lib/usage/database-usage'
+
+const DATABASE_USAGE_ERROR = {
+  title: "Couldn't load database usage",
+  message:
+    "We couldn't fetch usage data from the server. Check your connection and try again.",
+} as const
+
+type UsageBreakdownDrawerProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  projectId: string
+  dateRange: DateRange | undefined
+  title: string
+  description?: string
+  dimension: UsageEventBreakdownDimension
+  labelVariant: 'mono' | 'default'
+  kind?: UsageBreakdownExportKind
+  databaseLookup?: DatabaseBreakdownResourceMap | null
+}
+
+export function UsageBreakdownDrawer({
+  open,
+  onOpenChange,
+  projectId,
+  dateRange,
+  title,
+  description,
+  dimension,
+  labelVariant,
+  kind = 'requests',
+  databaseLookup,
+}: UsageBreakdownDrawerProps) {
+  const { data: countriesData } = useCountries()
+  const countryLookups = useMemo(
+    () => buildCountryLookups(countriesData?.countries),
+    [countriesData?.countries],
+  )
+
+  const requestsQuery = useProjectRequestsBreakdownDrawer(
+    projectId,
+    dateRange,
+    dimension,
+    open && kind === 'requests',
+  )
+  const bandwidthQuery = useProjectBandwidthBreakdownDrawer(
+    projectId,
+    dateRange,
+    dimension,
+    open && kind === 'bandwidth',
+  )
+  const databaseReadsQuery = useProjectDatabaseReadsBreakdownDrawer(
+    projectId,
+    dateRange,
+    dimension,
+    open && kind === 'database-reads',
+  )
+  const databaseWritesQuery = useProjectDatabaseWritesBreakdownDrawer(
+    projectId,
+    dateRange,
+    dimension,
+    open && kind === 'database-writes',
+  )
+
+  const activeQuery =
+    kind === 'bandwidth'
+      ? bandwidthQuery
+      : kind === 'database-reads'
+        ? databaseReadsQuery
+        : kind === 'database-writes'
+          ? databaseWritesQuery
+          : requestsQuery
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = activeQuery
+
+  const formatValue =
+    kind === 'bandwidth'
+      ? formatBandwidthValue
+      : kind === 'database-reads' || kind === 'database-writes'
+        ? formatDatabaseOperationsValue
+        : formatRequestsValue
+  const errorMeta =
+    kind === 'bandwidth'
+      ? OVERVIEW_BANDWIDTH_ERROR
+      : kind === 'database-reads' || kind === 'database-writes'
+        ? DATABASE_USAGE_ERROR
+        : OVERVIEW_REQUESTS_ERROR
+
+  const showLeadingIcon =
+    (dimension === 'country' && !!countryLookups) ||
+    dimension === 'hostname' ||
+    dimension === 'service' ||
+    (dimension === 'resourceId' && !!databaseLookup)
+
+  const showLoading = isLoading && items.length === 0
+  const showEmpty = !showLoading && !isError && items.length === 0
+  const canExport = !showLoading && !isError && items.length > 0
+
+  const handleExportJson = useCallback(() => {
+    if (!canExport) return
+    downloadUsageBreakdownJson(
+      items,
+      title,
+      dimension,
+      labelVariant,
+      countryLookups,
+      kind,
+      databaseLookup,
+    )
+    toast.success('Exported as JSON')
+  }, [
+    canExport,
+    countryLookups,
+    databaseLookup,
+    dimension,
+    items,
+    labelVariant,
+    kind,
+    title,
+  ])
+
+  const handleExportCsv = useCallback(() => {
+    if (!canExport) return
+    downloadUsageBreakdownCsv(
+      items,
+      title,
+      dimension,
+      labelVariant,
+      countryLookups,
+      kind,
+      databaseLookup,
+    )
+    toast.success('Exported as CSV')
+  }, [
+    canExport,
+    countryLookups,
+    databaseLookup,
+    dimension,
+    items,
+    labelVariant,
+    kind,
+    title,
+  ])
+
+  return (
+    <BaseDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description ?? title}
+      maxWidth="sm:max-w-md"
+      headerActions={
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 cursor-pointer text-[12px]"
+              disabled={!canExport}
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={handleExportJson}
+            >
+              <FileJson className="mr-2 h-4 w-4" />
+              Export as JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={handleExportCsv}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Export as CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      }
+    >
+      <div className="flex min-h-0 flex-1 flex-col border-t border-border">
+        {description ? (
+          <p className="shrink-0 px-6 py-3 text-[12px] leading-relaxed text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
+
+        {isError ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-8 text-center">
+            <OverviewChartPanelError
+              title={errorMeta.title}
+              message={errorMeta.message}
+              onRetry={() => void refetch()}
+            />
+          </div>
+        ) : showLoading ? (
+          <div className="px-6 py-4">
+            <UsageBreakdownListSkeleton
+              rowCount={10}
+              showLeadingIcon={showLeadingIcon}
+            />
+          </div>
+        ) : showEmpty ? (
+          <div className="flex flex-1 items-center justify-center px-6 py-8 text-center text-[13px] text-muted-foreground">
+            No data for this date range
+          </div>
+        ) : (
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <UsageBreakdownRowsList
+              items={items}
+              dimension={dimension}
+              labelVariant={labelVariant}
+              countryLookups={countryLookups}
+              databaseLookup={databaseLookup}
+              projectId={projectId}
+              variant="drawer"
+              formatValue={formatValue}
+            />
+          </div>
+        )}
+
+        {!showLoading && !isError && items.length > 0 ? (
+          <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-3">
+            <p className="text-[11px] text-muted-foreground">
+              Showing up to {USAGE_BREAKDOWN_DRAWER_LIMIT} items
+              {isFetching ? (
+                <Loader2
+                  className="ml-1 inline h-3 w-3 animate-spin align-middle"
+                  aria-hidden
+                />
+              ) : null}
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </BaseDrawer>
+  )
+}

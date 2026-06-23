@@ -68,6 +68,8 @@ interface RequestsChartProps {
   showSession?: number
   /** When false, the chart stays unmounted until the panel is shown. */
   isPanelVisible?: boolean
+  /** Hide the link to the full usage page (e.g. when already on /usage). */
+  showViewAllLink?: boolean
 }
 
 const CHART_ANIMATION_DURATION = 800
@@ -117,6 +119,14 @@ function buildSkeletonChartData(
   }))
 }
 
+function coarsenUsageChartInterval(
+  interval: UsageChartInterval,
+): UsageChartInterval {
+  if (interval === '1m') return '1h'
+  if (interval === '1h') return '1d'
+  return '1d'
+}
+
 function buildFallbackSkeletonShell(
   from: Date,
   to: Date,
@@ -126,7 +136,7 @@ function buildFallbackSkeletonShell(
     new Map(),
     from,
     to,
-    interval === '1h' ? '1d' : interval,
+    coarsenUsageChartInterval(interval),
   )
   if (shell.length > 0) return shell
 
@@ -245,6 +255,7 @@ export function RequestsChart({
   formatValue,
   showSession = 0,
   isPanelVisible = true,
+  showViewAllLink = true,
 }: RequestsChartProps) {
   const [chartMountKey, setChartMountKey] = useState<string | null>(null)
   const { projectId } = useParams({ strict: false })
@@ -383,10 +394,14 @@ export function RequestsChart({
               </div>
             </>
           )}
-          {projectId && (
+          {showViewAllLink && projectId && (
             <Link
-              to="/projects/$projectId/usage"
-              params={{ projectId }}
+              to="/projects/$projectId/usage/$categoryId"
+              params={{
+                projectId,
+                categoryId:
+                  metric === 'bandwidth' ? 'bandwidth' : 'requests',
+              }}
             >
               <Button
                 variant="ghost"

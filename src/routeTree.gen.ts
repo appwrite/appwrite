@@ -108,6 +108,7 @@ import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_publ
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/generator/cover.encode'
+import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
 import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
 import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
 import { Route as PublicProjectsProjectIdSitesIndexRouteImport } from './routes/_public/projects.$projectId.sites.index'
@@ -122,6 +123,7 @@ import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './rout
 import { Route as PublicOrganizationsOrgIdAppsIndexRouteImport } from './routes/_public/organizations.$orgId.apps.index'
 import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/docs/references.$version.models.$model'
 import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
+import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
 import { Route as PublicProjectsProjectIdSitesUsageRouteImport } from './routes/_public/projects.$projectId.sites.usage'
 import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
@@ -173,6 +175,7 @@ import { Route as PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport } f
 import { Route as PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.$appId.index'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.index'
 import { Route as PublicOrganizationsOrgIdAppsAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.index'
+import { Route as PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId.$metricId'
 import { Route as PublicProjectsProjectIdStorageBucketIdSettingsRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.settings'
 import { Route as PublicProjectsProjectIdStorageBucketIdSecurityRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.security'
 import { Route as PublicProjectsProjectIdSitesCreateManualRouteImport } from './routes/_public/projects.$projectId.sites.create.manual'
@@ -837,6 +840,12 @@ const ApiGeneratorCoverEncodeRoute = ApiGeneratorCoverEncodeRouteImport.update({
   path: '/encode',
   getParentRoute: () => ApiGeneratorCoverRoute,
 } as any)
+const PublicProjectsProjectIdUsageIndexRoute =
+  PublicProjectsProjectIdUsageIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+  } as any)
 const PublicProjectsProjectIdStoresIndexRoute =
   PublicProjectsProjectIdStoresIndexRouteImport.update({
     id: '/',
@@ -920,6 +929,12 @@ const DocsReferencesVersionPlatformServiceRoute =
     id: '/references/$version/$platform/$service',
     path: '/references/$version/$platform/$service',
     getParentRoute: () => DocsRoute,
+  } as any)
+const PublicProjectsProjectIdUsageCategoryIdRoute =
+  PublicProjectsProjectIdUsageCategoryIdRouteImport.update({
+    id: '/$categoryId',
+    path: '/$categoryId',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
   } as any)
 const PublicProjectsProjectIdStorageBucketIdRoute =
   PublicProjectsProjectIdStorageBucketIdRouteImport.update({
@@ -1226,6 +1241,12 @@ const PublicOrganizationsOrgIdAppsAppIdIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdUsageCategoryIdMetricIdRoute =
+  PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport.update({
+    id: '/$metricId',
+    path: '/$metricId',
+    getParentRoute: () => PublicProjectsProjectIdUsageCategoryIdRoute,
   } as any)
 const PublicProjectsProjectIdStorageBucketIdSettingsRoute =
   PublicProjectsProjectIdStorageBucketIdSettingsRouteImport.update({
@@ -2303,7 +2324,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
-  '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
+  '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
   '/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
@@ -2343,6 +2364,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
+  '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/organizations/$orgId/apps/': typeof PublicOrganizationsOrgIdAppsIndexRoute
@@ -2357,6 +2379,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
+  '/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
   '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
   '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
@@ -2401,6 +2424,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create/manual': typeof PublicProjectsProjectIdSitesCreateManualRoute
   '/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
+  '/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
   '/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
@@ -2589,7 +2613,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
-  '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
@@ -2619,6 +2642,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
+  '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsIndexRoute
@@ -2633,6 +2657,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresIndexRoute
+  '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageIndexRoute
   '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
   '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
@@ -2668,6 +2693,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/create/manual': typeof PublicProjectsProjectIdSitesCreateManualRoute
   '/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
+  '/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
@@ -2872,7 +2898,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/_public/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
-  '/_public/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
+  '/_public/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
   '/_public/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/_public/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/_public/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
@@ -2912,6 +2938,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/_public/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
+  '/_public/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/_public/organizations/$orgId/apps/': typeof PublicOrganizationsOrgIdAppsIndexRoute
@@ -2926,6 +2953,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/_public/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/_public/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
+  '/_public/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
   '/_public/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
   '/_public/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/_public/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
@@ -2970,6 +2998,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create/manual': typeof PublicProjectsProjectIdSitesCreateManualRoute
   '/_public/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/_public/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
+  '/_public/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
   '/_public/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/_public/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/_public/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
@@ -3215,6 +3244,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create'
     | '/projects/$projectId/sites/usage'
     | '/projects/$projectId/storage/$bucketId'
+    | '/projects/$projectId/usage/$categoryId'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
     | '/organizations/$orgId/apps/'
@@ -3229,6 +3259,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites'
     | '/projects/$projectId/storage/'
     | '/projects/$projectId/stores/'
+    | '/projects/$projectId/usage/'
     | '/organizations/$orgId/apps/$appId/branding'
     | '/organizations/$orgId/apps/$appId/legal'
     | '/organizations/$orgId/apps/$appId/oauth'
@@ -3273,6 +3304,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/manual'
     | '/projects/$projectId/storage/$bucketId/security'
     | '/projects/$projectId/storage/$bucketId/settings'
+    | '/projects/$projectId/usage/$categoryId/$metricId'
     | '/organizations/$orgId/apps/$appId/'
     | '/organizations/$orgId/domains/$domainId/'
     | '/organizations/$orgId/marketplace/$appId'
@@ -3461,7 +3493,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
-    | '/projects/$projectId/usage'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/organizations/$orgId/domains/buy'
@@ -3491,6 +3522,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/sites/usage'
+    | '/projects/$projectId/usage/$categoryId'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
     | '/organizations/$orgId/apps'
@@ -3505,6 +3537,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites'
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
+    | '/projects/$projectId/usage'
     | '/organizations/$orgId/apps/$appId/branding'
     | '/organizations/$orgId/apps/$appId/legal'
     | '/organizations/$orgId/apps/$appId/oauth'
@@ -3540,6 +3573,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/manual'
     | '/projects/$projectId/storage/$bucketId/security'
     | '/projects/$projectId/storage/$bucketId/settings'
+    | '/projects/$projectId/usage/$categoryId/$metricId'
     | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/marketplace/$appId'
@@ -3783,6 +3817,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create'
     | '/_public/projects/$projectId/sites/usage'
     | '/_public/projects/$projectId/storage/$bucketId'
+    | '/_public/projects/$projectId/usage/$categoryId'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
     | '/_public/organizations/$orgId/apps/'
@@ -3797,6 +3832,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/'
     | '/_public/projects/$projectId/storage/'
     | '/_public/projects/$projectId/stores/'
+    | '/_public/projects/$projectId/usage/'
     | '/_public/organizations/$orgId/apps/$appId/branding'
     | '/_public/organizations/$orgId/apps/$appId/legal'
     | '/_public/organizations/$orgId/apps/$appId/oauth'
@@ -3841,6 +3877,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create/manual'
     | '/_public/projects/$projectId/storage/$bucketId/security'
     | '/_public/projects/$projectId/storage/$bucketId/settings'
+    | '/_public/projects/$projectId/usage/$categoryId/$metricId'
     | '/_public/organizations/$orgId/apps/$appId/'
     | '/_public/organizations/$orgId/domains/$domainId/'
     | '/_public/organizations/$orgId/marketplace/$appId/'
@@ -4687,6 +4724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGeneratorCoverEncodeRouteImport
       parentRoute: typeof ApiGeneratorCoverRoute
     }
+    '/_public/projects/$projectId/usage/': {
+      id: '/_public/projects/$projectId/usage/'
+      path: '/'
+      fullPath: '/projects/$projectId/usage/'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+    }
     '/_public/projects/$projectId/stores/': {
       id: '/_public/projects/$projectId/stores/'
       path: '/'
@@ -4784,6 +4828,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/references/$version/$platform/$service'
       preLoaderRoute: typeof DocsReferencesVersionPlatformServiceRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/_public/projects/$projectId/usage/$categoryId': {
+      id: '/_public/projects/$projectId/usage/$categoryId'
+      path: '/$categoryId'
+      fullPath: '/projects/$projectId/usage/$categoryId'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
     }
     '/_public/projects/$projectId/storage/$bucketId': {
       id: '/_public/projects/$projectId/storage/$bucketId'
@@ -5141,6 +5192,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/apps/$appId/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/projects/$projectId/usage/$categoryId/$metricId': {
+      id: '/_public/projects/$projectId/usage/$categoryId/$metricId'
+      path: '/$metricId'
+      fullPath: '/projects/$projectId/usage/$categoryId/$metricId'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageCategoryIdRoute
     }
     '/_public/projects/$projectId/storage/$bucketId/settings': {
       id: '/_public/projects/$projectId/storage/$bucketId/settings'
@@ -7177,6 +7235,39 @@ const PublicProjectsProjectIdStoresRouteWithChildren =
     PublicProjectsProjectIdStoresRouteChildren,
   )
 
+interface PublicProjectsProjectIdUsageCategoryIdRouteChildren {
+  PublicProjectsProjectIdUsageCategoryIdMetricIdRoute: typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
+}
+
+const PublicProjectsProjectIdUsageCategoryIdRouteChildren: PublicProjectsProjectIdUsageCategoryIdRouteChildren =
+  {
+    PublicProjectsProjectIdUsageCategoryIdMetricIdRoute:
+      PublicProjectsProjectIdUsageCategoryIdMetricIdRoute,
+  }
+
+const PublicProjectsProjectIdUsageCategoryIdRouteWithChildren =
+  PublicProjectsProjectIdUsageCategoryIdRoute._addFileChildren(
+    PublicProjectsProjectIdUsageCategoryIdRouteChildren,
+  )
+
+interface PublicProjectsProjectIdUsageRouteChildren {
+  PublicProjectsProjectIdUsageCategoryIdRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  PublicProjectsProjectIdUsageIndexRoute: typeof PublicProjectsProjectIdUsageIndexRoute
+}
+
+const PublicProjectsProjectIdUsageRouteChildren: PublicProjectsProjectIdUsageRouteChildren =
+  {
+    PublicProjectsProjectIdUsageCategoryIdRoute:
+      PublicProjectsProjectIdUsageCategoryIdRouteWithChildren,
+    PublicProjectsProjectIdUsageIndexRoute:
+      PublicProjectsProjectIdUsageIndexRoute,
+  }
+
+const PublicProjectsProjectIdUsageRouteWithChildren =
+  PublicProjectsProjectIdUsageRoute._addFileChildren(
+    PublicProjectsProjectIdUsageRouteChildren,
+  )
+
 interface PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteChildren {
   PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
 }
@@ -7339,7 +7430,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
   PublicProjectsProjectIdStoresRoute: typeof PublicProjectsProjectIdStoresRouteWithChildren
-  PublicProjectsProjectIdUsageRoute: typeof PublicProjectsProjectIdUsageRoute
+  PublicProjectsProjectIdUsageRoute: typeof PublicProjectsProjectIdUsageRouteWithChildren
   PublicProjectsProjectIdIndexRoute: typeof PublicProjectsProjectIdIndexRoute
   PublicProjectsProjectIdSitesSiteIdRoute: typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   PublicProjectsProjectIdSitesCreateRoute: typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
@@ -7377,7 +7468,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdStorageRouteWithChildren,
     PublicProjectsProjectIdStoresRoute:
       PublicProjectsProjectIdStoresRouteWithChildren,
-    PublicProjectsProjectIdUsageRoute: PublicProjectsProjectIdUsageRoute,
+    PublicProjectsProjectIdUsageRoute:
+      PublicProjectsProjectIdUsageRouteWithChildren,
     PublicProjectsProjectIdIndexRoute: PublicProjectsProjectIdIndexRoute,
     PublicProjectsProjectIdSitesSiteIdRoute:
       PublicProjectsProjectIdSitesSiteIdRouteWithChildren,

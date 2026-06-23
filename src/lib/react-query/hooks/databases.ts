@@ -34,6 +34,7 @@ import {
   serializeRowDataForApi,
   type PendingRowCellEdit,
 } from '@/lib/database-row-inline-edits'
+import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
@@ -495,6 +496,63 @@ export async function fetchProjectDatabases(
     databases: slice,
     total,
   }
+}
+
+/** Fetch up to 7 databases by ID in three list calls (Documents, Vectors, Tables). */
+export async function fetchProjectDatabasesByIds(
+  projectId: string,
+  databaseIds: string[],
+): Promise<{ databases: Models.Database[] }> {
+  if (!projectId || databaseIds.length === 0) {
+    return { databases: [] }
+  }
+
+  const validIds = [
+    ...new Set(
+      databaseIds.filter((id) => typeof id === 'string' && id.trim()),
+    ),
+  ].slice(0, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT)
+  if (validIds.length === 0) {
+    return { databases: [] }
+  }
+
+  const idQuery =
+    validIds.length === 1
+      ? Query.equal('$id', validIds[0])
+      : Query.or(validIds.map((id) => Query.equal('$id', id)))
+
+  const projectSdk = sdk.forProject(projectId)
+  const settled = await Promise.allSettled([
+    projectSdk.documentsDB.list({
+      queries: [idQuery, Query.limit(validIds.length)],
+    }),
+    projectSdk.vectorsDB.list({
+      queries: [idQuery, Query.limit(validIds.length)],
+    }),
+    projectSdk.tablesDB.list({
+      queries: [idQuery, Query.limit(validIds.length)],
+    }),
+  ])
+
+  const databases = mergeProjectDatabasesById([
+    {
+      databases:
+        settled[0].status === 'fulfilled' ? settled[0].value.databases : [],
+      defaultType: DatabaseType.Documentsdb,
+    },
+    {
+      databases:
+        settled[1].status === 'fulfilled' ? settled[1].value.databases : [],
+      defaultType: DatabaseType.Vectorsdb,
+    },
+    {
+      databases:
+        settled[2].status === 'fulfilled' ? settled[2].value.databases : [],
+      defaultType: DatabaseType.Tablesdb,
+    },
+  ])
+
+  return { databases }
 }
 
 /**

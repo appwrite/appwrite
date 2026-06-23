@@ -1,6 +1,4 @@
-import { useState, useMemo, useEffect, useLayoutEffect } from 'react'
-import { getDefaultUsageChartDateRange, parseUsageChartDateRange, type SerializedUsageChartDateRange } from '@/lib/usage/usage-date-range'
-import type { DateRange } from 'react-day-picker'
+import { useState, useMemo, useLayoutEffect, useEffect } from 'react'
 import {
   Plus,
   Plug2,
@@ -98,11 +96,7 @@ import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
-import {
-  DEFAULT_USAGE_CHART_INTERVAL,
-  resolveUsageChartIntervalForRange,
-  type UsageChartInterval,
-} from '@/lib/usage/chart-interval'
+import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
   OVERVIEW_REQUESTS_ERROR,
@@ -174,8 +168,6 @@ export interface OverviewInitialData {
   apiKeysRaw?: { keys?: unknown[] } | null
   /** Prefetched platforms from listPlatforms; avoids empty-state flash in Apps section */
   platforms?: ProjectPlatform[]
-  /** Shared with route loader so usage query keys match prefetch */
-  chartDateRange?: SerializedUsageChartDateRange
 }
 
 interface ViewProps {
@@ -184,25 +176,16 @@ interface ViewProps {
   initialData?: OverviewInitialData
 }
 
-function getInitialDashboardChartRange(
-  initialData?: OverviewInitialData,
-): DateRange {
-  if (initialData?.chartDateRange) {
-    return parseUsageChartDateRange(initialData.chartDateRange)
-  }
-  return getDefaultUsageChartDateRange()
-}
-
 export function View({ projectId, initialData }: ViewProps) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [chartShowSession, setChartShowSession] = useState(0)
-  const [dashboardChartDateRange, setDashboardChartDateRange] = useState<
-    DateRange | undefined
-  >(() => getInitialDashboardChartRange(initialData))
-  const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
-    DEFAULT_USAGE_CHART_INTERVAL,
-  )
+  const {
+    dateRange: dashboardChartDateRange,
+    chartInterval,
+    setDateRange: setDashboardChartDateRange,
+    setChartInterval,
+  } = useUsageChartFilters()
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -216,12 +199,6 @@ export function View({ projectId, initialData }: ViewProps) {
   useLayoutEffect(() => {
     setChartShowSession(1)
   }, [])
-
-  useEffect(() => {
-    setChartInterval((current) =>
-      resolveUsageChartIntervalForRange(current, dashboardChartDateRange),
-    )
-  }, [dashboardChartDateRange])
 
   const handleOverviewTabChange = (tabId: string) => {
     if (tabId !== activeTab) {

@@ -88,3 +88,13 @@ export function getComputeBreakdownResourceRoute(
     params: { projectId, siteId: resource.id },
   }
 }
+
+export function resolveComputeBreakdownResource(
+  resourceId: string,
+  lookup?: ComputeBreakdownResourceMap | null,
+): ComputeBreakdownResource | undefined {
+  if (!lookup) return undefined
+  const trimmed = resourceId.trim()
+  if (!trimmed) return undefined
+  return lookup[trimmed]
+}

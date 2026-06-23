@@ -204,7 +204,7 @@ export function generateMockUsageData(
     {
       id: 'compute',
       label: 'Compute',
-      icon: 'Zap',
+      icon: 'Cpu',
       description:
         'Function executions and compute resources consumed by your serverless functions.',
       metrics: [

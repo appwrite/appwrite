@@ -1,11 +1,11 @@
-import { DatabaseType } from '@appwrite.io/console'
-import { Braces, Database, Layers, Table as TableIcon } from 'lucide-react'
+import { Database } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getDatabaseServiceLucideIcon } from '@/lib/databases/database-service-icons'
 import { MySQLDolphinIcon, PostgresElephantIcon } from './database-mascot-icons'
 
 type DatabaseTypeIconProps = {
   /** Appwrite SDK `database.type` */
-  apiType?: DatabaseType | string | null
+  apiType?: string | null
   /** Dedicated database `engine` (e.g. postgres, mysql) */
   engine?: string | null
   className?: string
@@ -27,23 +27,10 @@ function resolveDatabaseTypeIcon({
   }
 
   const normalizedType = String(apiType ?? '').toLowerCase()
-  if (
-    normalizedType === String(DatabaseType.Documentsdb).toLowerCase() ||
-    normalizedType === 'documentsdb'
-  ) {
-    return <Braces className={iconClass} />
-  }
-  if (
-    normalizedType === String(DatabaseType.Vectorsdb).toLowerCase() ||
-    normalizedType === 'vectorsdb'
-  ) {
-    return <Layers className={iconClass} />
-  }
-  if (
-    normalizedType === String(DatabaseType.Tablesdb).toLowerCase() ||
-    normalizedType === 'tablesdb'
-  ) {
-    return <TableIcon className={iconClass} />
+  const databaseServiceIcon = getDatabaseServiceLucideIcon(normalizedType)
+  if (databaseServiceIcon) {
+    const Icon = databaseServiceIcon
+    return <Icon className={iconClass} />
   }
 
   return <Database className={iconClass} />

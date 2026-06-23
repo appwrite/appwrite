@@ -14,7 +14,9 @@ import {
 import { cn } from '@/lib/utils'
 
 const TOGGLE_ITEM_CLASS =
-  'h-9 min-w-[2.75rem] px-2 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
+  'h-full w-full min-w-[2.75rem] px-2 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
+
+const TOGGLE_CELL_CLASS = 'flex min-w-0 flex-1 h-full'
 
 type UsageChartIntervalToggleProps = {
   value: UsageChartInterval
@@ -29,6 +31,8 @@ export function UsageChartIntervalToggle({
   dateRange,
   className,
 }: UsageChartIntervalToggleProps) {
+  const optionCount = USAGE_CHART_INTERVAL_OPTIONS.length
+
   return (
     <TooltipProvider delayDuration={300}>
       <ToggleGroup
@@ -44,34 +48,55 @@ export function UsageChartIntervalToggle({
             onValueChange(next as UsageChartInterval)
           }
         }}
-        className={cn('shrink-0', className)}
+        className={cn('h-9 w-fit shrink-0 gap-0', className)}
         aria-label="Chart interval"
       >
-        {USAGE_CHART_INTERVAL_OPTIONS.map((option) => {
+        {USAGE_CHART_INTERVAL_OPTIONS.map((option, index) => {
+          const isFirst = index === 0
+          const isLast = index === optionCount - 1
           const disabledReason = getUsageChartIntervalDisabledReason(
             option.value,
             dateRange,
           )
+
           const item = (
             <ToggleGroupItem
-              key={option.value}
               value={option.value}
               disabled={!!disabledReason}
-              className={cn(TOGGLE_ITEM_CLASS, className)}
+              className={cn(
+                TOGGLE_ITEM_CLASS,
+                '!rounded-none shadow-none',
+                isFirst && '!rounded-l-md !border-l',
+                isLast && '!rounded-r-md',
+                !isFirst && '!border-l-0',
+              )}
             >
               {option.label}
             </ToggleGroupItem>
           )
 
+          const cell = (
+            <span
+              className={cn(
+                TOGGLE_CELL_CLASS,
+                disabledReason && 'cursor-not-allowed',
+              )}
+            >
+              {item}
+            </span>
+          )
+
           if (!disabledReason) {
-            return item
+            return (
+              <span key={option.value} className={TOGGLE_CELL_CLASS}>
+                {item}
+              </span>
+            )
           }
 
           return (
             <Tooltip key={option.value}>
-              <TooltipTrigger asChild>
-                <span className={cn('inline-flex', className)}>{item}</span>
-              </TooltipTrigger>
+              <TooltipTrigger asChild>{cell}</TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[220px]">
                 {disabledReason}
               </TooltipContent>

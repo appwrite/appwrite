@@ -2296,6 +2296,67 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Usage chart date range + interval (account prefs, shared overview + usage)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.usageChart.dateRange` - JSON `{ from, to }` ISO strings. */
+export const USER_PREFS_KEY_USAGE_CHART_DATE_RANGE =
+  'console.usageChart.dateRange'
+
+/** Full key: `console.usageChart.interval` - `"1m"`, `"1h"`, or `"1d"`. */
+export const USER_PREFS_KEY_USAGE_CHART_INTERVAL = 'console.usageChart.interval'
+
+const USAGE_CHART_INTERVAL_PREF_VALUES = ['1m', '1h', '1d'] as const
+
+export type UsageChartIntervalPref = (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
+
+export function isUsageChartIntervalPref(
+  value: string,
+): value is UsageChartIntervalPref {
+  return (USAGE_CHART_INTERVAL_PREF_VALUES as readonly string[]).includes(value)
+}
+
+export function parseUsageChartDateRangeFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): { from: string; to: string } | null {
+  const raw = prefs?.[USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  try {
+    const parsed = JSON.parse(raw) as { from?: string; to?: string }
+    if (typeof parsed?.from !== 'string' || typeof parsed?.to !== 'string') {
+      return null
+    }
+    const from = new Date(parsed.from)
+    const to = new Date(parsed.to)
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null
+    if (from.getTime() > to.getTime()) return null
+    return { from: parsed.from, to: parsed.to }
+  } catch {
+    return null
+  }
+}
+
+export function parseUsageChartIntervalFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): UsageChartIntervalPref | null {
+  const raw = prefs?.[USER_PREFS_KEY_USAGE_CHART_INTERVAL]
+  if (typeof raw === 'string' && isUsageChartIntervalPref(raw)) return raw
+  return null
+}
+
+export function mergeUsageChartFiltersIntoPrefs(
+  prefs: UserPrefs,
+  serializedDateRange: { from: string; to: string },
+  chartInterval: UsageChartIntervalPref,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]: JSON.stringify(serializedDateRange),
+    [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Service list view mode (account prefs, one key per page across all projects)
 // ---------------------------------------------------------------------------
 

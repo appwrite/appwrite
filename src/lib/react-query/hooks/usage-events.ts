@@ -2,7 +2,7 @@
  * React Query hooks for project usage events (overview dashboard).
  */
 
-import { queryOptions, useQuery, useQueries, keepPreviousData } from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueries, keepPreviousData, type QueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import {
@@ -24,6 +24,19 @@ import {
   type ProjectRequestsOverview,
 } from '@/lib/usage/requests-events'
 import {
+  fetchProjectRequestsBreakdown,
+  REQUESTS_BREAKDOWN_SECTIONS,
+  type RequestsBreakdownSection,
+  type UsageBreakdownItem,
+} from '@/lib/usage/requests-breakdowns'
+import {
+  fetchProjectBandwidthBreakdown,
+  BANDWIDTH_BREAKDOWN_SECTIONS,
+  type BandwidthBreakdownSection,
+} from '@/lib/usage/bandwidth-breakdowns'
+import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
+import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
   fetchProjectStorageOverview,
   type ProjectStorageOverview,
 } from '@/lib/usage/storage-gauges'
@@ -36,10 +49,40 @@ import {
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
 import {
-  getDefaultUsageChartDateRange,
+  getStableUsageChartDateRange,
   resolveUsageDateBounds,
 } from '@/lib/usage/usage-date-range'
 import { DEFAULT_STALE_TIME } from './constants'
+import {
+  fetchProjectDatabaseCollectionsOverview,
+  fetchProjectDatabaseDocumentsOverview,
+  fetchProjectDatabaseReadsOverview,
+  fetchProjectDatabaseWritesOverview,
+  type DatabaseUsageChartOverview,
+} from '@/lib/usage/database-usage'
+import {
+  DATABASE_OPERATIONS_BREAKDOWN_SECTIONS,
+  fetchProjectDatabaseReadsBreakdown,
+  fetchProjectDatabaseWritesBreakdown,
+  type DatabaseOperationsBreakdownSection,
+} from '@/lib/usage/database-operations-breakdowns'
+import {
+  fetchDatabaseBreakdownResources,
+  normalizeDatabaseBreakdownResourceIds,
+} from '@/lib/usage/resolve-database-breakdown-resources'
+import {
+  fetchProjectRealtimeBandwidthOverview,
+  fetchProjectRealtimeConnectionsOverview,
+  fetchProjectRealtimeMessagesOverview,
+  type RealtimeBandwidthOverview,
+  type RealtimeUsageChartOverview,
+} from '@/lib/usage/realtime-usage'
+import {
+  fetchProjectAuthMauOverview,
+  fetchProjectAuthOtpOverview,
+  fetchProjectAuthSignupsOverview,
+  type AuthUsageChartOverview,
+} from '@/lib/usage/auth-usage'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   from: string
@@ -420,13 +463,329 @@ export function useProjectBandwidthTopConsumers(
   return useProjectBandwidthOverview(projectId, dateRange, enabled, interval)
 }
 
-/** @deprecated Use useProjectRequestsOverview */
+/** Chart-only requests query (no dimension breakdown). */
+export function requestsChartOnlyQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return requestsChartOverviewQueryOptions(projectId, dateRange, interval)
+}
+
+export function requestsBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'requests',
+      'breakdown',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+    ],
+    queryFn: () =>
+      fetchProjectRequestsBreakdown(projectId!, dateRange, dimension),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function requestsBreakdownDrawerQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'requests',
+      'breakdown',
+      'drawer',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+      USAGE_BREAKDOWN_DRAWER_LIMIT,
+    ],
+    queryFn: () =>
+      fetchProjectRequestsBreakdown(
+        projectId!,
+        dateRange,
+        dimension,
+        USAGE_BREAKDOWN_DRAWER_LIMIT,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectRequestsBreakdownDrawer(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension | null | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    ...requestsBreakdownDrawerQueryOptions(
+      projectId,
+      dateRange,
+      dimension ?? 'path',
+    ),
+    enabled: enabled && !!projectId && !!dimension,
+  })
+}
+
+export function useProjectRequestsChartOnly(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...requestsChartOnlyQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export type RequestsBreakdownQueryEntry = {
+  section: RequestsBreakdownSection
+  isLoading: boolean
+  isError: boolean
+  items: UsageBreakdownItem[]
+}
+
+/** Fetches all request breakdown dimensions in parallel. */
+export function useProjectRequestsBreakdowns(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+): RequestsBreakdownQueryEntry[] {
+  const queries = useQueries({
+    queries: REQUESTS_BREAKDOWN_SECTIONS.map((section) => ({
+      ...requestsBreakdownQueryOptions(projectId, dateRange, section.dimension),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(
+    () =>
+      REQUESTS_BREAKDOWN_SECTIONS.map((section, index) => {
+        const query = queries[index]
+        return {
+          section,
+          isLoading: query.isPending && !query.data && !query.isError,
+          isError: query.isError,
+          items: query.data ?? [],
+        }
+      }),
+    [queries],
+  )
+}
+
+/** Refetch all requests usage queries for a project (chart + breakdowns). */
+export function refetchProjectRequestsUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey[0] === 'usage-events' &&
+      query.queryKey[1] === 'requests' &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId),
+  })
+}
+
+export function bandwidthChartOnlyQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'bandwidth',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectBandwidthOverview(
+        projectId!,
+        {
+          from: new Date(from),
+          to: new Date(to),
+        },
+        interval,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectBandwidthChartOnly(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...bandwidthChartOnlyQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function bandwidthBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'bandwidth',
+      'breakdown',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+    ],
+    queryFn: () =>
+      fetchProjectBandwidthBreakdown(projectId!, dateRange, dimension),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function bandwidthBreakdownDrawerQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'bandwidth',
+      'breakdown',
+      'drawer',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+      USAGE_BREAKDOWN_DRAWER_LIMIT,
+    ],
+    queryFn: () =>
+      fetchProjectBandwidthBreakdown(
+        projectId!,
+        dateRange,
+        dimension,
+        USAGE_BREAKDOWN_DRAWER_LIMIT,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectBandwidthBreakdownDrawer(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension | null | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    ...bandwidthBreakdownDrawerQueryOptions(
+      projectId,
+      dateRange,
+      dimension ?? 'path',
+    ),
+    enabled: enabled && !!projectId && !!dimension,
+  })
+}
+
+export type BandwidthBreakdownQueryEntry = {
+  section: BandwidthBreakdownSection
+  isLoading: boolean
+  isError: boolean
+  items: UsageBreakdownItem[]
+}
+
+/** Fetches all bandwidth breakdown dimensions in parallel. */
+export function useProjectBandwidthBreakdowns(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+): BandwidthBreakdownQueryEntry[] {
+  const queries = useQueries({
+    queries: BANDWIDTH_BREAKDOWN_SECTIONS.map((section) => ({
+      ...bandwidthBreakdownQueryOptions(projectId, dateRange, section.dimension),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(
+    () =>
+      BANDWIDTH_BREAKDOWN_SECTIONS.map((section, index) => {
+        const query = queries[index]
+        return {
+          section,
+          isLoading: query.isPending && !query.data && !query.isError,
+          isError: query.isError,
+          items: query.data ?? [],
+        }
+      }),
+    [queries],
+  )
+}
+
+/** Refetch all bandwidth usage queries for a project (chart + breakdowns). */
+export function refetchProjectBandwidthUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey[0] === 'usage-events' &&
+      query.queryKey[1] === 'bandwidth' &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId),
+  })
+}
+
+/** @deprecated Use useProjectRequestsChartOnly */
 export function useProjectRequestsChartOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  return useProjectRequestsOverview(projectId, dateRange, true, interval)
+  return useProjectRequestsChartOnly(projectId, dateRange, true, interval)
 }
 
 /** @deprecated Use useProjectRequestsOverview */
@@ -441,7 +800,7 @@ export function useProjectRequestsTopEndpoints(
 
 /** Last 24 hours — matches project overview usage charts. */
 export function getProjectListRequestsChartDateRange(): DateRange {
-  return getDefaultUsageChartDateRange()
+  return getStableUsageChartDateRange()
 }
 
 export type ProjectListRequestsUsageEntry = {
@@ -488,9 +847,745 @@ export function useProjectListRequestsUsage(
   }, [uniqueIds, queries])
 }
 
+function databaseReadsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'databases',
+      'reads',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseReadsOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function databaseWritesChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'databases',
+      'writes',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseWritesOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function databaseCollectionsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'databases',
+      'collections',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseCollectionsOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function databaseDocumentsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'databases',
+      'documents',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseDocumentsOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectDatabaseReadsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...databaseReadsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectDatabaseWritesChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...databaseWritesChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectDatabaseCollectionsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...databaseCollectionsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectDatabaseDocumentsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...databaseDocumentsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+function databaseReadsBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'databases',
+      'reads',
+      'breakdown',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseReadsBreakdown(projectId!, dateRange, dimension),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function databaseWritesBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'databases',
+      'writes',
+      'breakdown',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseWritesBreakdown(projectId!, dateRange, dimension),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function databaseReadsBreakdownDrawerQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'databases',
+      'reads',
+      'breakdown',
+      'drawer',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+      USAGE_BREAKDOWN_DRAWER_LIMIT,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseReadsBreakdown(
+        projectId!,
+        dateRange,
+        dimension,
+        USAGE_BREAKDOWN_DRAWER_LIMIT,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function databaseWritesBreakdownDrawerQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'databases',
+      'writes',
+      'breakdown',
+      'drawer',
+      'project',
+      projectId,
+      dimension,
+      from,
+      to,
+      USAGE_BREAKDOWN_DRAWER_LIMIT,
+    ],
+    queryFn: () =>
+      fetchProjectDatabaseWritesBreakdown(
+        projectId!,
+        dateRange,
+        dimension,
+        USAGE_BREAKDOWN_DRAWER_LIMIT,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectDatabaseReadsBreakdownDrawer(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension | null | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    ...databaseReadsBreakdownDrawerQueryOptions(
+      projectId,
+      dateRange,
+      dimension ?? 'resourceId',
+    ),
+    enabled: enabled && !!projectId && !!dimension,
+  })
+}
+
+export function useProjectDatabaseWritesBreakdownDrawer(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension | null | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    ...databaseWritesBreakdownDrawerQueryOptions(
+      projectId,
+      dateRange,
+      dimension ?? 'resourceId',
+    ),
+    enabled: enabled && !!projectId && !!dimension,
+  })
+}
+
+export type DatabaseReadsBreakdownQueryEntry = {
+  section: DatabaseOperationsBreakdownSection
+  isLoading: boolean
+  isError: boolean
+  items: UsageBreakdownItem[]
+}
+
+export function useProjectDatabaseReadsBreakdowns(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+): DatabaseReadsBreakdownQueryEntry[] {
+  const queries = useQueries({
+    queries: DATABASE_OPERATIONS_BREAKDOWN_SECTIONS.map((section) => ({
+      ...databaseReadsBreakdownQueryOptions(
+        projectId,
+        dateRange,
+        section.dimension,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(
+    () =>
+      DATABASE_OPERATIONS_BREAKDOWN_SECTIONS.map((section, index) => {
+        const query = queries[index]
+        return {
+          section,
+          isLoading: query.isPending && !query.data && !query.isError,
+          isError: query.isError,
+          items: query.data ?? [],
+        }
+      }),
+    [queries],
+  )
+}
+
+export type DatabaseWritesBreakdownQueryEntry = {
+  section: DatabaseOperationsBreakdownSection
+  isLoading: boolean
+  isError: boolean
+  items: UsageBreakdownItem[]
+}
+
+export function useProjectDatabaseWritesBreakdowns(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+): DatabaseWritesBreakdownQueryEntry[] {
+  const queries = useQueries({
+    queries: DATABASE_OPERATIONS_BREAKDOWN_SECTIONS.map((section) => ({
+      ...databaseWritesBreakdownQueryOptions(
+        projectId,
+        dateRange,
+        section.dimension,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(
+    () =>
+      DATABASE_OPERATIONS_BREAKDOWN_SECTIONS.map((section, index) => {
+        const query = queries[index]
+        return {
+          section,
+          isLoading: query.isPending && !query.data && !query.isError,
+          isError: query.isError,
+          items: query.data ?? [],
+        }
+      }),
+    [queries],
+  )
+}
+
+export function databaseBreakdownResourcesQueryOptions(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+) {
+  const normalizedIds = normalizeDatabaseBreakdownResourceIds(resourceIds)
+
+  return queryOptions({
+    queryKey: [
+      'usage-breakdown',
+      'database-resources',
+      'project',
+      projectId,
+      normalizedIds.join(','),
+    ],
+    queryFn: () =>
+      fetchDatabaseBreakdownResources(projectId!, normalizedIds),
+    enabled: !!projectId && normalizedIds.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
+  })
+}
+
+export function useDatabaseBreakdownResources(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+  enabled = true,
+) {
+  const normalizedIds = useMemo(
+    () => normalizeDatabaseBreakdownResourceIds(resourceIds),
+    [resourceIds],
+  )
+
+  return useQuery({
+    ...databaseBreakdownResourcesQueryOptions(projectId, normalizedIds),
+    enabled: enabled && !!projectId && normalizedIds.length > 0,
+  })
+}
+
+/** Refetch all database usage charts for a project (reads, writes, collections, documents). */
+export function refetchProjectDatabaseUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      ((query.queryKey[0] === 'usage-events' &&
+        query.queryKey[1] === 'databases') ||
+        (query.queryKey[0] === 'usage-gauges' &&
+          query.queryKey[1] === 'databases') ||
+        (query.queryKey[0] === 'usage-breakdown' &&
+          query.queryKey[1] === 'database-resources')),
+  })
+}
+
+function realtimeConnectionsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'realtime',
+      'connections',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectRealtimeConnectionsOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function realtimeMessagesChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'realtime',
+      'messages',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectRealtimeMessagesOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function realtimeBandwidthChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'realtime',
+      'bandwidth',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectRealtimeBandwidthOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectRealtimeConnectionsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...realtimeConnectionsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectRealtimeMessagesChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...realtimeMessagesChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectRealtimeBandwidthChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...realtimeBandwidthChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+/** Refetch all realtime usage charts for a project. */
+export function refetchProjectRealtimeUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      query.queryKey[0] === 'usage-events' &&
+      query.queryKey[1] === 'realtime',
+  })
+}
+
+function authMauChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'auth',
+      'mau',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectAuthMauOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function authOtpChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'auth',
+      'otp',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectAuthOtpOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function authSignupsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { from, to } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'auth',
+      'signups',
+      'chart',
+      'project',
+      projectId,
+      from,
+      to,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectAuthSignupsOverview(projectId!, dateRange, interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectAuthMauChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...authMauChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectAuthOtpChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...authOtpChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectAuthSignupsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...authSignupsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+/** Refetch all auth usage charts for a project. */
+export function refetchProjectAuthUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      ((query.queryKey[0] === 'usage-events' && query.queryKey[1] === 'auth') ||
+        (query.queryKey[0] === 'usage-gauges' && query.queryKey[1] === 'auth')),
+  })
+}
+
+/** Refetch compute usage charts (executions, GB-hours) for a project. */
+export function refetchProjectComputeUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      ((query.queryKey[0] === 'usage-events' &&
+        (query.queryKey[1] === 'executions' ||
+          query.queryKey[1] === 'gb-hours')) ||
+        (query.queryKey[0] === 'usage-breakdown' &&
+          query.queryKey[1] === 'compute-resources')),
+  })
+}
+
 export type {
   ComputeBreakdownResourceMap,
 } from '@/lib/usage/resolve-compute-breakdown-resources'
+
+export type {
+  DatabaseBreakdownResourceMap,
+} from '@/lib/usage/resolve-database-breakdown-resources'
 
 export type {
   ProjectBandwidthOverview,
@@ -502,6 +1597,10 @@ export type {
   ProjectBandwidthOverview as ProjectBandwidthChartOverview,
   ProjectBandwidthOverview as ProjectBandwidthTopConsumersOverview,
   ProjectRequestsOverview as ProjectRequestsTopEndpointsOverview,
+  DatabaseUsageChartOverview,
+  RealtimeBandwidthOverview,
+  RealtimeUsageChartOverview,
+  AuthUsageChartOverview,
 }
 
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'

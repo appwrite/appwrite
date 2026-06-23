@@ -17,13 +17,32 @@ export function getDefaultUsageChartDateRange(): DateRange {
   }
 }
 
+let stableDefaultUsageChartDateRange: DateRange | null = null
+
+/**
+ * Session-stable default when account prefs have no saved range.
+ * Avoids new React Query keys on every render (rolling `to: now` otherwise changes each ms).
+ */
+export function getStableUsageChartDateRange(): DateRange {
+  if (!stableDefaultUsageChartDateRange) {
+    stableDefaultUsageChartDateRange = getDefaultUsageChartDateRange()
+  }
+  const { from, to } = stableDefaultUsageChartDateRange
+  return { from: new Date(from), to: new Date(to) }
+}
+
+/** Reset after account switch (e.g. console impersonation) so the next user gets a fresh window. */
+export function resetStableUsageChartDateRange() {
+  stableDefaultUsageChartDateRange = null
+}
+
 /** Normalize picker range to API bounds; preserve times for rolling windows. */
 export function resolveUsageDateBounds(dateRange: DateRange | undefined): {
   from: Date
   to: Date
 } {
   if (!dateRange?.from) {
-    return getDefaultUsageChartDateRange() as { from: Date; to: Date }
+    return getStableUsageChartDateRange() as { from: Date; to: Date }
   }
 
   const from = dateRange.from

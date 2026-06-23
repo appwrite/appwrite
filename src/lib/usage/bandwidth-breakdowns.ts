@@ -1,0 +1,128 @@
+import type { DateRange } from 'react-day-picker'
+import {
+  fetchProjectUsageEventBreakdown,
+  mergeUsageBreakdownItems,
+  type UsageBreakdownItem,
+  type UsageEventBreakdownDimension,
+} from '@/lib/usage/usage-events-common'
+import { BANDWIDTH_EVENT_METRICS } from '@/lib/usage/bandwidth-events'
+import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+
+export type BandwidthBreakdownSection = {
+  dimension: UsageEventBreakdownDimension
+  title: string
+  description: string
+  metricId: string
+  labelVariant: 'mono' | 'default'
+}
+
+/** All listEvents dimensions supported for network inbound/outbound bandwidth. */
+export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] = [
+  {
+    dimension: 'path',
+    title: 'Paths',
+    description: 'Endpoint paths with the highest bandwidth consumption.',
+    metricId: 'breakdown-path',
+    labelVariant: 'mono',
+  },
+  {
+    dimension: 'method',
+    title: 'HTTP methods',
+    description: 'Bandwidth grouped by HTTP method.',
+    metricId: 'breakdown-method',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'status',
+    title: 'Status codes',
+    description: 'Bandwidth grouped by HTTP response status.',
+    metricId: 'breakdown-status',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'service',
+    title: 'Services',
+    description: 'Bandwidth grouped by Appwrite service segment.',
+    metricId: 'breakdown-service',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'country',
+    title: 'Countries',
+    description: 'Bandwidth grouped by caller country.',
+    metricId: 'breakdown-country',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'region',
+    title: 'Regions',
+    description: 'Bandwidth grouped by Appwrite region.',
+    metricId: 'breakdown-region',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'hostname',
+    title: 'Hostnames',
+    description: 'Bandwidth grouped by caller hostname.',
+    metricId: 'breakdown-hostname',
+    labelVariant: 'mono',
+  },
+  {
+    dimension: 'osName',
+    title: 'Operating systems',
+    description: 'Bandwidth grouped by client operating system.',
+    metricId: 'breakdown-os',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'clientType',
+    title: 'Client types',
+    description: 'Bandwidth grouped by client type.',
+    metricId: 'breakdown-client-type',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'clientName',
+    title: 'Clients',
+    description: 'Bandwidth grouped by client name.',
+    metricId: 'breakdown-client-name',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'deviceName',
+    title: 'Devices',
+    description: 'Bandwidth grouped by device classification.',
+    metricId: 'breakdown-device',
+    labelVariant: 'default',
+  },
+  {
+    dimension: 'resourceId',
+    title: 'Resources',
+    description: 'Bandwidth grouped by resource ID.',
+    metricId: 'breakdown-resource',
+    labelVariant: 'mono',
+  },
+] as const
+
+export async function fetchProjectBandwidthBreakdown(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  dimension: UsageEventBreakdownDimension,
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): Promise<UsageBreakdownItem[]> {
+  const breakdowns = await Promise.all(
+    BANDWIDTH_EVENT_METRICS.map((metric) =>
+      fetchProjectUsageEventBreakdown(
+        projectId,
+        metric,
+        dateRange,
+        dimension,
+        limit,
+      ),
+    ),
+  )
+
+  return mergeUsageBreakdownItems(breakdowns, limit)
+}
+
+export type { UsageBreakdownItem, UsageEventBreakdownDimension }
