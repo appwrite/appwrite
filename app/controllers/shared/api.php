@@ -368,6 +368,11 @@ Http::init()
             $authorization->addRole($authRole);
         }
 
+        if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
+            $dbForProject->setMetadata('user', $targetUser->getId());
+            $dbForPlatform->setMetadata('user', $targetUser->getId());
+        }
+
         /**
          * We disable authorization checks above to ensure other endpoints (list teams, members, etc.) will continue working.
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
@@ -593,7 +598,7 @@ Http::init()
         $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user);
+            ->setUser($targetUser);
 
         $auditContext->mode = $mode;
         $auditContext->userAgent = $request->getUserAgent('');
@@ -909,24 +914,25 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('targetUser')
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $params, $user, $project);
+            $resource = $parseLabel($pattern, $responsePayload, $params, $targetUser, $project);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
         }
 
-        if (! $user->isEmpty()) {
-            $userClone = clone $user;
+        if (! $targetUser->isEmpty()) {
+            $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
-            if (empty($user->getAttribute('type'))) {
+            if (empty($targetUser->getAttribute('type'))) {
                 $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;

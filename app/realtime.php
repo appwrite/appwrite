@@ -871,6 +871,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $targetUser = $connectionContainer->get('targetUser'); /** @var User $targetUser */
         if (!$impersonatorUser->isEmpty()) {
             $targetUser->setAttribute('impersonatorUserId', $impersonatorUser->getId());
+            getConsoleDB()->setMetadata('user', $targetUser->getId());
+            getProjectDB($project)->setMetadata('user', $targetUser->getId());
         }
         $logUser = $user;
 
