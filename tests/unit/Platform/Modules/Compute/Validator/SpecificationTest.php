@@ -114,7 +114,7 @@ final class SpecificationTest extends TestCase
         );
 
         $allowed = $validator->getAllowedSpecifications();
-        $this->assertSame('runtimeSpecifications', $validator->getPlanKey());
+        $this->assertEquals('runtimeSpecifications', $validator->getPlanKey());
         $this->assertCount(2, $allowed);
         $this->assertContains(SpecificationConstants::S_05VCPU_512MB, $allowed);
         $this->assertContains(SpecificationConstants::S_1VCPU_512MB, $allowed);
