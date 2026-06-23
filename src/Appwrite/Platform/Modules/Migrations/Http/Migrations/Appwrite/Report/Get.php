@@ -9,12 +9,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -56,8 +53,6 @@ class Get extends Action
             ->param('key', '', new Text(512), "Source's API Key")
             ->inject('response')
             ->inject('getDatabasesDB')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -67,9 +62,7 @@ class Get extends Action
         string $projectID,
         string $key,
         Response $response,
-        callable $getDatabasesDB,
-        Log $log,
-        ?Logger $logger
+        callable $getDatabasesDB
     ): void {
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
@@ -77,39 +70,17 @@ class Get extends Action
         } catch (\Throwable $e) {
             $code = (int) $e->getCode();
 
-            // Only 401/403 are expected user errors — surface, don't Sentry. Other 4xx may be bugs.
+            // 401/403 are expected user errors (bad key, missing scope): surface them as a 4xx so
+            // they are not published to Sentry.
             if ($code === 401 || $code === 403) {
                 throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $e->getMessage(), previous: $e);
             }
 
-            // Report to Sentry. The endpoint is stripped of any embedded credentials/tokens, and a
-            // logging outage must not mask the migration error thrown below.
-            if ($logger !== null) {
-                $url = \parse_url($endpoint) ?: [];
-                $safeEndpoint = \sprintf('%s://%s%s%s', $url['scheme'] ?? 'https', $url['host'] ?? '', isset($url['port']) ? ':' . $url['port'] : '', $url['path'] ?? '');
-
-                $log->setNamespace('http');
-                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-                $log->setType(Log::TYPE_ERROR);
-                $log->setAction('getAppwriteReport');
-                $log->setMessage($e->getMessage());
-                $log->addTag('code', (string) $e->getCode());
-                $log->addExtra('sourceEndpoint', $safeEndpoint);
-                $log->addExtra('sourceProjectId', $projectID);
-                $log->addExtra('file', $e->getFile());
-                $log->addExtra('line', (string) $e->getLine());
-                $log->addExtra('trace', $e->getTraceAsString());
-
-                try {
-                    $logger->addLog($log);
-                } catch (\Throwable) {
-                }
-            }
-
+            // Genuine source failure — throw as 5xx so the central error handler publishes it.
             throw new Exception(
                 Exception::MIGRATION_PROVIDER_ERROR,
                 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.',
+                code: 502,
                 previous: $e
             );
         }
