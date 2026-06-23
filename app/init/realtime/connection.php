@@ -371,6 +371,7 @@ return function (Container $container): void {
             '$sequence' => $user->getSequence(),
             'name' => $user->getAttribute('name', ''),
             'email' => $user->getAttribute('email', ''),
+            'type' => $user->getAttribute('type', ACTOR_TYPE_USER),
         ]);
     }, ['request', 'project', 'user', 'authorization']);
 

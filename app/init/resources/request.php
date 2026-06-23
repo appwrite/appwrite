@@ -145,6 +145,7 @@ return function (Container $context): void {
             '$sequence' => $user->getSequence(),
             'name' => $user->getAttribute('name', ''),
             'email' => $user->getAttribute('email', ''),
+            'type' => $user->getAttribute('type', ACTOR_TYPE_USER),
         ]);
     }, ['mode', 'project', 'user', 'request', 'dbForProject', 'dbForPlatform']);
 

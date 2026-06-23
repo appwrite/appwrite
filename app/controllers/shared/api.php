@@ -454,20 +454,21 @@ Http::init()
         }
 
         // Step 10: Check if user is blocked
-        if ($user->getAttribute('status') === false) { // Account is blocked
+        $currentAccount = $impersonatorUser->isEmpty() ? $user : $targetUser;
+        if ($currentAccount->getAttribute('status') === false) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
         // Step 11: Verify password status
-        if ($user->getAttribute('reset')) {
+        if ($currentAccount->getAttribute('reset')) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
         // Step 12: Validate MFA requirements
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+        $mfaEnabled = $currentAccount->getAttribute('mfa', false);
+        $hasVerifiedEmail = $currentAccount->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $currentAccount->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($currentAccount)?->getAttribute('verified') ?? false;
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 

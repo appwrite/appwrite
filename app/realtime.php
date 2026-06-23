@@ -963,6 +963,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
             $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $targetUser->getId());
             $realtime->connections[$connection]['authorization'] = $authorization;
+            $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             $server->send([$connection], $connectedPayloadJson);
             $outboundBytes += \strlen($connectedPayloadJson);
@@ -1006,6 +1007,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $realtime->connections[$connection]['authorization'] = $authorization;
+        $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
         $updateStats($project->getId(), $project->getAttribute('teamId'));
 
         $subscriptionCount = \count($subscriptions);
@@ -1130,8 +1132,13 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $authorization->addRole($role);
         }
 
+        $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
+
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
+        if ($impersonatedUserId !== null) {
+            $database->setMetadata('user', $impersonatedUserId);
+        }
 
         if (!empty($projectId) && $projectId !== 'console') {
             // Negative-cache race: if any prior code path queried projects:$projectId
@@ -1152,6 +1159,9 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
+            if ($impersonatedUserId !== null) {
+                $database->setMetadata('user', $impersonatedUserId);
+            }
         } else {
             $project = null;
         }
