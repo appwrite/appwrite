@@ -69,6 +69,7 @@ class Authentication extends Action
         $roles = $user->getRoles($database->getAuthorization());
 
         $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
+        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
         $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
         // Capture the pre-auth userId before unsubscribe() clears the connection entry,
         // so we can rebind any account channels that were stored under it.
@@ -102,6 +103,7 @@ class Authentication extends Action
 
         if ($authorization !== null) {
             $realtime->connections[$connectionId]['authorization'] = $authorization;
+            $realtime->connections[$connectionId]['impersonatedUserId'] = $impersonatedUserId;
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
