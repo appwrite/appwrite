@@ -50,17 +50,21 @@ class Base extends Action
         );
         $allowedSpecifications = $specificationValidator->getAllowedSpecifications();
 
+        if (empty($allowedSpecifications)) {
+            return $fallback;
+        }
+
         if ($preferFallback && !array_key_exists($planKey, $plan) && \in_array($fallback, $allowedSpecifications)) {
             return $fallback;
         }
 
         // If there is no plan use the highest specification
         if (empty($plan)) {
-            return end($allowedSpecifications) ?: '';
+            return end($allowedSpecifications);
         }
 
         // Otherwise, use the lowest specification available in the plan
-        return $allowedSpecifications[0] ?? '';
+        return $allowedSpecifications[0];
     }
 
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
