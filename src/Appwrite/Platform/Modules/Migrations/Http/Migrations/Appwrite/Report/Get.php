@@ -86,7 +86,7 @@ class Get extends Action
             // logging outage must not mask the migration error thrown below.
             if ($logger !== null) {
                 $url = \parse_url($endpoint) ?: [];
-                $safeEndpoint = \sprintf('%s://%s%s', $url['scheme'] ?? 'https', $url['host'] ?? '', $url['path'] ?? '');
+                $safeEndpoint = \sprintf('%s://%s%s%s', $url['scheme'] ?? 'https', $url['host'] ?? '', isset($url['port']) ? ':' . $url['port'] : '', $url['path'] ?? '');
 
                 $log->setNamespace('http');
                 $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
