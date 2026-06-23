@@ -76,13 +76,13 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       },
       {
         id: 'databases',
-        title: 'DocumentsDB & VectorsDB',
+        title: 'Postgres comes to Appwrite',
         statusLabel: 'Starting in 15m',
         status: 'upcoming',
       },
       {
         id: 'servers',
-        title: 'Dedicated DBs',
+        title: 'VectorsDB, DocumentsDB & MySQL',
         statusLabel: 'Starting in 1h',
         status: 'scheduled',
       },
