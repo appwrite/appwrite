@@ -135,7 +135,7 @@ class Create extends Action
             'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
-            'type' => $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual'
+            'type' => $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual'
         ]));
 
         // Preview deployments for sites

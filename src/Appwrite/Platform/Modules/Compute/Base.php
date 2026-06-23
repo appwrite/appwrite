@@ -2,8 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Compute;
 
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
@@ -58,7 +57,7 @@ class Base extends Action
         return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -69,7 +68,7 @@ class Base extends Action
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -139,19 +138,16 @@ class Base extends Action
             'activate' => $activate,
         ]));
 
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $function,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            template: $template,
-            platform: $platform,
-        ));
+        $queueForBuilds
+            ->setType(BUILD_TYPE_DEPLOYMENT)
+            ->setResource($function)
+            ->setDeployment($deployment)
+            ->setTemplate($template);
 
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -161,7 +157,7 @@ class Base extends Action
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -338,14 +334,11 @@ class Base extends Action
 
         $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $site,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            template: $template,
-            platform: $platform,
-        ));
+        $queueForBuilds
+            ->setType(BUILD_TYPE_DEPLOYMENT)
+            ->setResource($site)
+            ->setDeployment($deployment)
+            ->setTemplate($template);
 
         return $deployment;
     }
