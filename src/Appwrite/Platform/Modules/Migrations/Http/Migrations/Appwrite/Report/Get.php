@@ -82,8 +82,12 @@ class Get extends Action
                 throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $e->getMessage(), previous: $e);
             }
 
-            // Report to Sentry (key is never logged).
+            // Report to Sentry. The endpoint is stripped of any embedded credentials/tokens, and a
+            // logging outage must not mask the migration error thrown below.
             if ($logger !== null) {
+                $url = \parse_url($endpoint) ?: [];
+                $safeEndpoint = \sprintf('%s://%s%s', $url['scheme'] ?? 'https', $url['host'] ?? '', $url['path'] ?? '');
+
                 $log->setNamespace('http');
                 $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
                 $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
@@ -91,12 +95,16 @@ class Get extends Action
                 $log->setAction('getAppwriteReport');
                 $log->setMessage($e->getMessage());
                 $log->addTag('code', (string) $e->getCode());
-                $log->addExtra('sourceEndpoint', $endpoint);
+                $log->addExtra('sourceEndpoint', $safeEndpoint);
                 $log->addExtra('sourceProjectId', $projectID);
                 $log->addExtra('file', $e->getFile());
                 $log->addExtra('line', (string) $e->getLine());
                 $log->addExtra('trace', $e->getTraceAsString());
-                $logger->addLog($log);
+
+                try {
+                    $logger->addLog($log);
+                } catch (\Throwable) {
+                }
             }
 
             throw new Exception(
