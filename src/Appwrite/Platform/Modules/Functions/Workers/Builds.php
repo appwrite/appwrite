@@ -195,6 +195,7 @@ class Builds extends Action
 
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
+        $phaseStart = $durationStart;
 
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -296,6 +297,9 @@ class Builds extends Action
 
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         }
+
+        Span::add('timings.setup', \round(\microtime(true) - $phaseStart, 3));
+        $phaseStart = \microtime(true);
 
         try {
             if (! $isVcsEnabled) {
@@ -538,6 +542,9 @@ class Builds extends Action
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
+
+            Span::add('timings.source', \round(\microtime(true) - $phaseStart, 3));
+            $phaseStart = \microtime(true);
 
             /** Request the executor to build the code... */
             $updated = $dbForProject->updateDocuments('deployments', new Document([
@@ -849,6 +856,9 @@ class Builds extends Action
                 }),
             ]);
 
+            Span::add('timings.build', \round(\microtime(true) - $phaseStart, 3));
+            $phaseStart = \microtime(true);
+
             $latestDeployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($latestDeployment->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -1127,6 +1137,8 @@ class Builds extends Action
 
                 Span::add('build.screenshot_queued', true);
             }
+
+            Span::add('timings.finalize', \round(\microtime(true) - $phaseStart, 3));
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
