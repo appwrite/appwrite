@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Messaging\Adapter;
 
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use PHPUnit\Framework\TestCase;
 
-class WebhookTest extends TestCase
+final class WebhookTest extends TestCase
 {
     public function testPostsExpectedBodyShape(): void
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Projects;
 
 use Appwrite\Extend\Exception as AppwriteException;
@@ -19,7 +21,7 @@ use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../../../../../app/init.php';
 
-class CapturingSchedulesResponse extends Response
+final class CapturingSchedulesResponse extends Response
 {
     public Document $document;
     public string $model = '';

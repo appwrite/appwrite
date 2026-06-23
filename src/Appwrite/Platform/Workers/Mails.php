@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Template\Template;
 use Exception;
 use Swoole\Runtime;
-use Throwable;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
@@ -15,12 +14,36 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Mails extends Action
 {
     protected int $previewMaxLen = 150;
+
     protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+
+
+    public static function getName(): string
+    {
+        return 'mails';
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this
+            ->desc('Mails worker')
+            ->inject('message')
+            ->inject('project')
+            ->inject('register')
+            ->inject('log')
+            ->inject('telemetry')
+            ->callback($this->action(...));
+    }
 
     /**
      * @var array<string, string>
@@ -30,37 +53,25 @@ class Mails extends Action
         '/b' => '</strong>',
     ];
 
-    public static function getName(): string
+    /**
+     * @param Message $message
+     * @param Document $project
+     * @param Registry $register
+     * @param Log $log
+     * @param Telemetry $telemetry
+     * @return void
+     * @throws Exception
+     */
+    public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
-        return 'mails';
-    }
-
-    public function __construct()
-    {
-        $this
-            ->desc('Mails worker')
-            ->inject('message')
-            ->inject('project')
-            ->inject('register')
-            ->inject('log')
-            ->callback($this->action(...));
-    }
-
-    public function action(Message $message, Document $project, Registry $register, Log $log): void
-    {
-        if (\class_exists(Runtime::class)) {
-            Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-        }
-
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload();
+
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-        $smtp = $payload['smtp'] ?? [];
-        if (!\is_array($smtp)) {
-            $smtp = [];
-        }
+        $smtp = $payload['smtp'];
 
         if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
@@ -69,37 +80,36 @@ class Mails extends Action
         $type = empty($smtp) ? 'cloud' : 'smtp';
         $log->addTag('type', $type);
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
-        $recipient = (string) ($payload['recipient'] ?? '');
-        $subject = (string) ($payload['subject'] ?? '');
-        $variables = $payload['variables'] ?? [];
-        if (!\is_array($variables)) {
-            $variables = [];
-        }
+        $recipient = $payload['recipient'];
+        $subject = $payload['subject'];
+        $template = $payload['template'] ?? 'unknown';
+        $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
+
+        Span::add('mail.template', $template);
+        Span::add('mail.smtp_type', $type);
+        Span::add('mail.recipient_domain', $recipientDomain);
+        $variables = $payload['variables'];
         $variables['host'] = $protocol . '://' . $hostname;
-        $name = (string) ($payload['name'] ?? '');
-        $body = (string) ($payload['body'] ?? '');
-        $preview = (string) ($payload['preview'] ?? '');
+        $name = $payload['name'];
+        $body = $payload['body'];
+        $preview = $payload['preview'] ?? '';
 
         $variables['subject'] = $subject;
         $variables['heading'] = $variables['heading'] ?? $subject;
-        $variables['year'] = \date('Y');
+        $variables['year'] = date("Y");
 
         $attachment = $payload['attachment'] ?? [];
-        if (!\is_array($attachment)) {
-            $attachment = [];
-        }
-
-        $bodyTemplate = (string) ($payload['bodyTemplate'] ?? '');
+        $bodyTemplate = $payload['bodyTemplate'];
         if (empty($bodyTemplate)) {
             $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
         }
-
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
+            // TODO: hotfix for redirect param
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         foreach ($this->richTextParams as $key => $value) {
@@ -107,18 +117,21 @@ class Mails extends Action
         }
 
         $previewWhitespace = '';
+
         if (!empty($preview)) {
             $previewTemplate = Template::fromString($preview);
             foreach ($variables as $key => $value) {
                 $previewTemplate->setParam('{{' . $key . '}}', $value);
             }
+            // render() will return the subject in <p> tags, so use strip_tags() to remove them
             $preview = \strip_tags($previewTemplate->render());
 
-            $previewLen = \strlen($preview);
+            $previewLen = strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace = \str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
             }
         }
+
 
         $bodyTemplate->setParam('{{preview}}', $preview);
         $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
@@ -129,6 +142,7 @@ class Mails extends Action
         foreach ($variables as $key => $value) {
             $subjectTemplate->setParam('{{' . $key . '}}', $value);
         }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
         /** @var EmailAdapter $adapter */
@@ -146,7 +160,9 @@ class Mails extends Action
                 keepAlive: true,
                 timelimit: 30,
             );
+        $adapter->setTelemetry($telemetry);
 
+        // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
@@ -156,21 +172,19 @@ class Mails extends Action
         $replyToName = $defaultFromName;
 
         $customMailOptions = $payload['customMailOptions'] ?? [];
-        if (!\is_array($customMailOptions)) {
-            $customMailOptions = [];
-        }
 
         if (!empty($customMailOptions['senderEmail'])) {
-            $fromEmail = (string) $customMailOptions['senderEmail'];
+            $fromEmail = $customMailOptions['senderEmail'];
         }
         if (!empty($customMailOptions['senderName'])) {
-            $fromName = (string) $customMailOptions['senderName'];
+            $fromName = $customMailOptions['senderName'];
         }
 
         if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
-            $replyTo = (string) ($customMailOptions['replyToEmail'] ?? $replyTo);
-            $replyToName = (string) ($customMailOptions['replyToName'] ?? $replyToName);
+            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
+            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
         } elseif (!empty($smtp)) {
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
             $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
             $replyTo = !empty($smtpReplyToEmail) ? $smtpReplyToEmail : ($smtp['senderEmail'] ?? $replyTo);
             $replyToName = !empty($smtp['replyToName']) ? $smtp['replyToName'] : ($smtp['senderName'] ?? $replyToName);
@@ -199,14 +213,19 @@ class Mails extends Action
             attachments: $attachments,
             html: true,
         );
+        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
         try {
             $adapter->send($emailMessage);
-        } catch (Throwable $error) {
+        } catch (\Throwable $error) {
+            Span::add('mail.status', 'failure');
+
             if ($type === 'smtp') {
                 throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
             }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
+
+        Span::add('mail.status', 'success');
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -19,7 +21,7 @@ use Utopia\Queue\Queue;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
-class WebhooksTest extends TestCase
+final class WebhooksTest extends TestCase
 {
     public function testSendAlertPublishesNotificationMessage(): void
     {

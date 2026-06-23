@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Notifications;
 
 use Appwrite\Platform\Modules\Notifications\Http\Notifications\XList;
@@ -16,7 +18,7 @@ use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../../../../../app/init.php';
 
-class CapturingNotificationsResponse extends Response
+final class CapturingNotificationsResponse extends Response
 {
     public Document $document;
     public string $model = '';

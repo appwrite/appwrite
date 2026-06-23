@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Services\Workers;
@@ -7,7 +9,7 @@ use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Notifications;
 use PHPUnit\Framework\TestCase;
 
-class RegistrationTest extends TestCase
+final class RegistrationTest extends TestCase
 {
     public function testMailsAndNotificationsWorkersAreRegisteredSeparately(): void
     {

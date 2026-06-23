@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
@@ -15,7 +17,7 @@ use Utopia\Storage\Device;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
-class DeletesTest extends TestCase
+final class DeletesTest extends TestCase
 {
     public function testProjectDeleteScopesAlertsByProjectIdAndProjectInternalId(): void
     {

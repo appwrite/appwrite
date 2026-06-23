@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Messaging\Adapter;
 
 use Appwrite\Utopia\Messaging\Adapter\Console;
@@ -16,7 +18,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 
-class ConsoleTest extends TestCase
+final class ConsoleTest extends TestCase
 {
     private Database $database;
     private Authorization $authorization;

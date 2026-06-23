@@ -558,6 +558,7 @@ class ScriptedEmailAdapter extends EmailAdapter
      */
     public function __construct(private readonly array $script = [])
     {
+        parent::__construct();
     }
 
     public function getName(): string

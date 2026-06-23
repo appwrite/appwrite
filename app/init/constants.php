@@ -279,6 +279,17 @@ const NOTIFICATION_TYPE_PUSH = MESSAGE_TYPE_PUSH;
 const NOTIFICATION_TYPE_CONSOLE = 'console';
 const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
 const NOTIFICATION_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
+const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
+const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_INVITATION = 'invitation';
+const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
+const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
+const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_RECOVERY = 'recovery';
+const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
+const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';
+const MAIL_TEMPLATE_VERIFICATION = 'verification';
+const MAIL_TEMPLATE_WEBHOOK_FAILED = 'webhook-failed';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';

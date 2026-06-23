@@ -182,6 +182,10 @@ class Update extends Base
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         // Omitted providerRepositoryId (null) on a connected function — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');

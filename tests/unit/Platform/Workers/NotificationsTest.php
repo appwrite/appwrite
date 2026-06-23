@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Workers;
 
 use Ahc\Jwt\JWT;
@@ -27,7 +29,7 @@ require_once __DIR__ . '/../../../../app/init.php';
  * console alerts table, or external HTTP. Lets the worker tests assert
  * routing, error handling, and alert persistence in isolation.
  */
-class SpyNotifications extends Notifications
+final class SpyNotifications extends Notifications
 {
     /** @var array<int, array{channel: string, address: string, signatureKey: ?string, payload: array<string, mixed>}> */
     public array $dispatched = [];

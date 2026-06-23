@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Workers\Mails;
@@ -11,7 +13,7 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 
-class SpyMailAdapter extends EmailAdapter
+final class SpyMailAdapter extends EmailAdapter
 {
     public ?EmailMessage $captured = null;
     public int $sendCount = 0;

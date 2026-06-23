@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Event\Message;
 
 use Appwrite\Event\Message\Notification as NotificationMessage;
@@ -11,7 +13,7 @@ use Utopia\Queue\Queue;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
-class NotificationTest extends TestCase
+final class NotificationTest extends TestCase
 {
     public function testNotificationMessageSerializesPublisherPayload(): void
     {
