@@ -8,7 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
