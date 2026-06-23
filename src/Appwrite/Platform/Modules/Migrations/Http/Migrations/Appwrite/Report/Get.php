@@ -8,10 +8,14 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -53,6 +57,8 @@ class Get extends Action
             ->param('key', '', new Text(512), "Source's API Key")
             ->inject('response')
             ->inject('getDatabasesDB')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -62,16 +68,48 @@ class Get extends Action
         string $projectID,
         string $key,
         Response $response,
-        callable $getDatabasesDB
+        callable $getDatabasesDB,
+        Log $log,
+        ?Logger $logger
     ): void {
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
+            $code = (int) $e->getCode();
+
+            // Only 401/403 are expected user errors — surface, don't Sentry. Other 4xx may be bugs.
+            if ($code === 401 || $code === 403) {
+                throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $e->getMessage(), previous: $e);
+            }
+
+            // Report to Sentry (key is never logged).
+            if ($logger !== null) {
+                $log->setNamespace('http');
+                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                $log->setType(Log::TYPE_ERROR);
+                $log->setAction('getAppwriteReport');
+                $log->setMessage($e->getMessage());
+                $log->addTag('code', (string) $e->getCode());
+                $log->addExtra('sourceEndpoint', $endpoint);
+                $log->addExtra('sourceProjectId', $projectID);
+                $log->addExtra('file', $e->getFile());
+                $log->addExtra('line', (string) $e->getLine());
+                $log->addExtra('trace', $e->getTraceAsString());
+                $logger->addLog($log);
+            }
+
             throw new Exception(
                 Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.',
+                previous: $e
             );
+        }
+
+        // Log resource groups skipped during an otherwise successful report.
+        foreach ($appwrite->getErrors() as $error) {
+            Console::warning('Appwrite migration report skipped "' . $error->getResourceGroup() . '" for source "' . $endpoint . '": ' . $error->getMessage() . ' [' . $error->getCode() . ']');
         }
 
         $response
