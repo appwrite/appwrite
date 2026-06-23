@@ -1,0 +1,19 @@
+name: Check dependencies
+
+# Adapted from https://google.github.io/osv-scanner/github-action/#scan-on-pull-request
+
+on:
+  pull_request:
+    branches: [main, 1.*.x]
+  merge_group:
+    branches: [main, 1.*.x]
+
+permissions:
+  # Require writing security events to upload SARIF file to security tab
+  security-events: write
+  # Only need to read contents
+  contents: read
+
+jobs:
+  scan-pr:
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v1.7.1"

@@ -6,12 +6,12 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
+use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
-use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 
-Http::get('/v1/locale')
+App::get('/v1/locale')
     ->desc('Get user locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -70,7 +70,7 @@ Http::get('/v1/locale')
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 
-Http::get('/v1/locale/codes')
+App::get('/v1/locale/codes')
     ->desc('List locale codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -96,7 +96,7 @@ Http::get('/v1/locale/codes')
         ]), Response::MODEL_LOCALE_CODE_LIST);
     });
 
-Http::get('/v1/locale/countries')
+App::get('/v1/locale/countries')
     ->desc('List countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -133,7 +133,7 @@ Http::get('/v1/locale/countries')
         $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-Http::get('/v1/locale/countries/eu')
+App::get('/v1/locale/countries/eu')
     ->desc('List EU countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -172,7 +172,7 @@ Http::get('/v1/locale/countries/eu')
         $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-Http::get('/v1/locale/countries/phones')
+App::get('/v1/locale/countries/phones')
     ->desc('List countries phone codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -210,7 +210,7 @@ Http::get('/v1/locale/countries/phones')
         $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
     });
 
-Http::get('/v1/locale/continents')
+App::get('/v1/locale/continents')
     ->desc('List continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -231,7 +231,6 @@ Http::get('/v1/locale/continents')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
         $list = array_keys(Config::getParam('locale-continents'));
-        $output = [];
 
         foreach ($list as $value) {
             $output[] = new Document([
@@ -247,7 +246,7 @@ Http::get('/v1/locale/continents')
         $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });
 
-Http::get('/v1/locale/currencies')
+App::get('/v1/locale/currencies')
     ->desc('List currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -274,7 +273,7 @@ Http::get('/v1/locale/currencies')
     });
 
 
-Http::get('/v1/locale/languages')
+App::get('/v1/locale/languages')
     ->desc('List languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')

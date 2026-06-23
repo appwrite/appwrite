@@ -1,1 +1,0 @@
-Get the database activity logs list by its unique ID.

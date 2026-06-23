@@ -419,17 +419,6 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('impersonator'),
-                'type' => Database::VAR_BOOLEAN,
-                'signed' => true,
-                'size' => 0,
-                'format' => '',
-                'filters' => [],
-                'required' => false,
-                'default' => false,
-                'array' => false,
-            ],
         ],
         'indexes' => [
             [
@@ -499,13 +488,6 @@ return [
                 '$id' => '_key_accessedAt',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => ID::custom('impersonator'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => [ID::custom('impersonator')],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -602,13 +584,6 @@ return [
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_type_expire'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['type', 'expire'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
         ],
     ],
@@ -1313,17 +1288,6 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
-            [
-                '$id' => ID::custom('labels'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 128,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => true,
-                'filters' => [],
-            ],
         ],
         'indexes' => [
             [
@@ -1530,13 +1494,6 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-            [
-                '$id' => ID::custom('_key_team_confirm'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['teamInternalId', 'confirm'],
-                'lengths' => [],
-                'orders' => [],
-            ],
         ],
     ],
 
@@ -1649,6 +1606,13 @@ return [
             ],
         ],
         'indexes' => [
+            [
+                '$id' => ID::custom('_fulltext_name'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [],
+                'orders' => [],
+            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -1875,6 +1839,13 @@ return [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_name'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2145,8 +2116,14 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
-
         'indexes' => [
+            [
+                '$id' => ID::custom('_key_name'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [],
+                'orders' => [],
+            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -2759,148 +2736,6 @@ return [
                 'attributes' => ['transformedAt'],
                 'lengths' => [],
                 'orders' => [],
-            ]
-        ]
-    ],
-
-    // Naming it presenceLogs as later it might be only be used as a presence events table only and not for the actual presence
-    'presenceLogs' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('presenceLogs'),
-        'name' => 'Presence Logs',
-        'attributes' => [
-            [
-                '$id' => ID::custom('userInternalId'),
-                'type' => Database::VAR_ID,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('userId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('expiresAt'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => ID::custom('status'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('source'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('hostname'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('metadata'),
-                'type' => Database::VAR_TEXT,
-                'format' => '',
-                'size' => 65535,
-                'signed' => true,
-                'required' => false,
-                'default' => new \stdClass(),
-                'array' => false,
-                'filters' => ['json'],
-            ],
-            [
-                '$id' => ID::custom('permissionsHash'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 32,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-        ],
-        'indexes' => [
-            [
-                '$id' => ID::custom('_unique_userId'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['userId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC]
-            ],
-            [
-                '$id' => ID::custom('_key_userInternal'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['userInternalId'],
-                'orders' => [Database::ORDER_ASC]
-            ],
-            [
-                '$id' => ID::custom('_key_expiresAt'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['expiresAt'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC]
-            ],
-            [
-                '$id' => ID::custom('_key_status'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['status'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC]
-            ],
-            [
-                '$id' => ID::custom('_key_source'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['source'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC]
-            ],
-            [
-                '$id' => ID::custom('_key_source_status'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['source', 'status']
-            ],
-            [
-                '$id' => ID::custom('_key_permissionsHash'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['permissionsHash']
             ]
         ]
     ],

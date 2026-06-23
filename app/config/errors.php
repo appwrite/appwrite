@@ -27,7 +27,7 @@ return [
     Exception::GENERAL_RESOURCE_BLOCKED => [
         'name' => Exception::GENERAL_RESOURCE_BLOCKED,
         'description' => 'Access to this resource is blocked.',
-        'code' => 403,
+        'code' => 401,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -139,11 +139,6 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
-    Exception::GENERAL_FEATURE_UNSUPPORTED => [
-        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
-        'description' => 'This feature is not supported with your current configuration.',
-        'code' => 400,
-    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -168,8 +163,8 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked.',
-        'code' => 403,
+        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
+        'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
         'name' => Exception::USER_INVALID_TOKEN,
@@ -225,26 +220,6 @@ return [
         'name' => Exception::USER_EMAIL_ALREADY_EXISTS,
         'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
-    ],
-    Exception::USER_EMAIL_DISPOSABLE => [
-        'name' => Exception::USER_EMAIL_DISPOSABLE,
-        'description' => 'Disposable email addresses are not allowed. Please use a permanent email address.',
-        'code' => 400,
-    ],
-    Exception::USER_EMAIL_FREE => [
-        'name' => Exception::USER_EMAIL_FREE,
-        'description' => 'Free email addresses are not allowed. Please use a business or custom-domain email address.',
-        'code' => 400,
-    ],
-    Exception::USER_EMAIL_NOT_CANONICAL => [
-        'name' => Exception::USER_EMAIL_NOT_CANONICAL,
-        'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
-        'code' => 400,
-    ],
-    Exception::USER_EMAIL_NOT_CORPORATE => [
-        'name' => Exception::USER_EMAIL_NOT_CORPORATE,
-        'description' => 'Only corporate email addresses are allowed. Please use a work email address and try again.',
-        'code' => 400,
     ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
@@ -382,14 +357,9 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
-    Exception::USER_JWT_AND_COOKIE_SET => [
-        'name' => Exception::USER_JWT_AND_COOKIE_SET,
-        'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
-        'code' => 403,
-    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
-        'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
+        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
         'code' => 401,
     ],
 
@@ -628,11 +598,6 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
-    Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT => [
-        'name' => Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT,
-        'description' => 'Asynchronous function execution timed out. Ensure the execution duration doesn\'t exceed the configured function timeout.',
-        'code' => 408,
-    ],
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
@@ -654,11 +619,6 @@ return [
         'name' => Exception::SITE_NOT_FOUND,
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::SITE_ALREADY_EXISTS => [
-        'name' => Exception::SITE_ALREADY_EXISTS,
-        'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
     ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
@@ -697,11 +657,6 @@ return [
         'description' => 'Build with the requested ID failed. Please check the logs for more information.',
         'code' => 400,
     ],
-    Exception::BUILD_TIMEOUT => [
-        'name' => Exception::BUILD_TIMEOUT,
-        'description' => 'Build timed out. Increase the build timeout via the `_APP_COMPUTE_BUILD_TIMEOUT` environment variable, or simplify the build to complete within the limit.',
-        'code' => 408,
-    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -728,18 +683,6 @@ return [
         'name' => Exception::LOG_NOT_FOUND,
         'description' => 'Log with the requested ID could not be found.',
         'code' => 404,
-    ],
-
-    /** Presence */
-    Exception::PRESENCE_NOT_FOUND => [
-        'name' => Exception::PRESENCE_NOT_FOUND,
-        'description' => 'Presence with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::PRESENCE_ALREADY_EXISTS => [
-        'name' => Exception::PRESENCE_ALREADY_EXISTS,
-        'description' => 'Presence with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
     ],
 
     /** Databases */
@@ -1131,11 +1074,6 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
-    Exception::ACCOUNT_KEY_EXPIRED => [
-        'name' => Exception::ACCOUNT_KEY_EXPIRED,
-        'description' => 'The account API key has expired. Please generate a new key using the Appwrite console.',
-        'code' => 401,
-    ],
     Exception::ROUTER_HOST_NOT_FOUND => [
         'name' => Exception::ROUTER_HOST_NOT_FOUND,
         'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
@@ -1165,6 +1103,7 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 400,
+        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -1186,35 +1125,15 @@ return [
         'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::WEBHOOK_ALREADY_EXISTS => [
-        'name' => Exception::WEBHOOK_ALREADY_EXISTS,
-        'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
-        'code' => 409,
-    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::KEY_ALREADY_EXISTS => [
-        'name' => Exception::KEY_ALREADY_EXISTS,
-        'description' => 'Key with the same ID already exists. Try again with a different ID.',
-        'code' => 409,
-    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::PLATFORM_METHOD_UNSUPPORTED => [
-        'name' => Exception::PLATFORM_METHOD_UNSUPPORTED,
-        'description' => 'The requested platform has invalid type. Please use corresponding update method for the platform type.',
-        'code' => 400,
-    ],
-    Exception::PLATFORM_ALREADY_EXISTS => [
-        'name' => Exception::PLATFORM_ALREADY_EXISTS,
-        'description' => 'Platform with the same ID already exists in this project. Try again with a different ID.',
-        'code' => 409,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
@@ -1257,31 +1176,6 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
-    ],
-    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
-        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
-        'description' => 'The specified database type is not supported for CSV import or export operations.',
-        'code' => 400,
-    ],
-    Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED => [
-        'name' => Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED,
-        'description' => 'A source projectId is required for Appwrite migrations. Provide it in the migration credentials.',
-        'code' => 400,
-    ],
-    Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND => [
-        'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
-        'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
-        'code' => 404,
-    ],
-    Exception::MIGRATION_SOURCE_TYPE_INVALID => [
-        'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
-        'description' => 'The migration source type is invalid. Use one of the supported source types.',
-        'code' => 400,
-    ],
-    Exception::MIGRATION_DESTINATION_TYPE_INVALID => [
-        'name' => Exception::MIGRATION_DESTINATION_TYPE_INVALID,
-        'description' => 'The migration destination type is invalid. Use one of the supported destination types.',
-        'code' => 400,
     ],
 
     /** Realtime */
@@ -1378,11 +1272,6 @@ return [
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::MESSAGE_ALREADY_EXISTS => [
-        'name' => Exception::MESSAGE_ALREADY_EXISTS,
-        'description' => 'Message with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
-    ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
         'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
@@ -1439,59 +1328,5 @@ return [
         'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
-    ],
-    Exception::USER_ID_MISSING => [
-        'name' => Exception::USER_ID_MISSING,
-        'description' => 'When using account API key, make sure to pass x-appwrite-user header with your user ID.',
-        'code' => 403,
-    ],
-    Exception::ORGANIZATION_ID_MISSING => [
-        'name' => Exception::ORGANIZATION_ID_MISSING,
-        'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
-        'code' => 403,
-    ],
-    Exception::PROJECT_ID_MISSING => [
-        'name' => Exception::PROJECT_ID_MISSING,
-        'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
-        'code' => 403,
-    ],
-    Exception::MOCK_NUMBER_ALREADY_EXISTS => [
-        'name' => Exception::MOCK_NUMBER_ALREADY_EXISTS,
-        'description' => 'Mock number with the requested number already exists. Try again with a different number. or update OTP of existing mock number.',
-        'code' => 409,
-    ],
-    Exception::MOCK_NUMBER_NOT_FOUND => [
-        'name' => Exception::MOCK_NUMBER_NOT_FOUND,
-        'description' => 'Mock number with the requested number could not be found.',
-        'code' => 404,
-    ],
-    Exception::MOCK_NUMBER_LIMIT_EXCEEDED => [
-        'name' => Exception::MOCK_NUMBER_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of mock phones for this project has been reached.',
-        'code' => 400,
-    ],
-
-    /** Advisor */
-    Exception::INSIGHT_NOT_FOUND => [
-        'name' => Exception::INSIGHT_NOT_FOUND,
-        'description' => 'Insight with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::INSIGHT_ALREADY_EXISTS => [
-        'name' => Exception::INSIGHT_ALREADY_EXISTS,
-        'description' => 'Insight with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
-    ],
-
-    /** Reports */
-    Exception::REPORT_NOT_FOUND => [
-        'name' => Exception::REPORT_NOT_FOUND,
-        'description' => 'Report with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::REPORT_ALREADY_EXISTS => [
-        'name' => Exception::REPORT_ALREADY_EXISTS,
-        'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
     ],
 ];

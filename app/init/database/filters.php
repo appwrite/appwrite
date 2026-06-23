@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -73,7 +72,7 @@ Database::addFilter(
         $attributes = $database->getAuthorization()->skip(fn () => $database->find('attributes', [
             Query::equal('collectionInternalId', [$document->getSequence()]),
             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-            Query::limit($database->getLimitForAttributes() ?: APP_LIMIT_SUBQUERY),
+            Query::limit($database->getLimitForAttributes()),
         ]));
 
         foreach ($attributes as $attribute) {
@@ -89,10 +88,6 @@ Database::addFilter(
                     break;
 
                 case Database::VAR_STRING:
-                case Database::VAR_VARCHAR:
-                case Database::VAR_TEXT:
-                case Database::VAR_MEDIUMTEXT:
-                case Database::VAR_LONGTEXT:
                     $filters = $attribute->getAttribute('filters', []);
                     $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
                     break;
@@ -124,17 +119,11 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $platforms = $database->getAuthorization()->skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('platforms', [
                 Query::equal('projectInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
-
-        foreach ($platforms as $platform) {
-            $platform->setAttribute('type', Platform::mapDeprecatedType($platform->getAttribute('type')));
-        }
-
-        return $platforms;
     }
 );
 
@@ -146,8 +135,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database->getAuthorization()->skip(fn () => $database
             ->find('keys', [
-                Query::equal('resourceType', ['projects']),
-                Query::equal('resourceInternalId', [$document->getSequence()]),
+                Query::equal('projectInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -231,7 +219,6 @@ Database::addFilter(
         return $database->getAuthorization()->skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getSequence()]),
-                Query::orderDesc('$createdAt'),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
@@ -443,50 +430,5 @@ Database::addFilter(
     },
     function (mixed $value) {
         return $value;
-    }
-);
-
-
-Database::addFilter(
-    'subQueryOrganizationKeys',
-    function (mixed $value) {
-        return;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return $database->getAuthorization()->skip(fn () => $database
-            ->find('keys', [
-                Query::equal('resourceType', ['teams']),
-                Query::equal('resourceInternalId', [$document->getSequence()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]));
-    }
-);
-
-Database::addFilter(
-    'subQueryAccountKeys',
-    function (mixed $value) {
-        return;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return $database->getAuthorization()->skip(fn () => $database
-            ->find('keys', [
-                Query::equal('resourceType', ['users']),
-                Query::equal('resourceInternalId', [$document->getSequence()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]));
-    }
-);
-
-Database::addFilter(
-    'subQueryReportInsights',
-    function (mixed $value) {
-        return;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return $database->getAuthorization()->skip(fn () => $database->find('insights', [
-            Query::equal('projectInternalId', [$document->getAttribute('projectInternalId')]),
-            Query::equal('reportInternalId', [$document->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
     }
 );

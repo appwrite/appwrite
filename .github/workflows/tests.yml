@@ -1,0 +1,521 @@
+name: "Tests"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: appwrite-dev
+  CACHE_KEY: appwrite-dev-${{ github.event.pull_request.head.sha }}
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      response_format:
+        description: 'Response format version to test (e.g., 1.5.0, 1.4.0)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  check_database_changes:
+    name: Check if utopia-php/database changed
+    runs-on: ubuntu-latest
+    outputs:
+      database_changed: ${{ steps.check.outputs.database_changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.event.pull_request.base.ref }}
+
+      - name: Check for utopia-php/database changes
+        id: check
+        run: |
+          if git diff origin/${{ github.event.pull_request.base.ref }} HEAD -- composer.lock | grep -q '"name": "utopia-php/database"'; then
+            echo "Database version changed, going to run all mode tests."
+            echo "database_changed=true" >> "$GITHUB_ENV"
+            echo "database_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "database_changed=false" >> "$GITHUB_ENV"
+            echo "database_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  setup:
+    name: Setup & Build Appwrite Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Appwrite
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ env.IMAGE }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
+
+      - name: Cache Docker Image
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+
+  unit_test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+
+      - name: Logs
+        run: docker compose logs appwrite
+
+      - name: Doctor
+        run: docker compose exec -T appwrite doctor
+
+      - name: Environment Variables
+        run: docker compose exec -T appwrite vars
+
+      - name: Run Unit Tests
+        run: |
+          docker compose exec \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/unit
+
+  e2e_general_test:
+    name: E2E General Test
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+          
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run General Tests
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/General --debug
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
+  e2e_service_test:
+    name: E2E Service Test
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [
+          Account,
+          Avatars,
+          Console,
+          Databases/Legacy,
+          Databases/TablesDB,
+          Functions,
+          FunctionsSchedule,
+          GraphQL,
+          Health,
+          Locale,
+          Projects,
+          Realtime,
+          Sites,
+          Proxy,
+          Storage,
+          Tokens,
+          Teams,
+          Users,
+          Webhooks,
+          VCS,
+          Messaging,
+          Migrations
+        ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
+          docker compose up -d
+          sleep 30
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run ${{ matrix.service }} tests with Project table mode
+        run: |
+          echo "Using project tables"
+          export _APP_DATABASE_SHARED_TABLES=
+          export _APP_DATABASE_SHARED_TABLES_V1=
+
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group devKeys,screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
+  e2e_shared_mode_test:
+    name: E2E Shared Mode Service Test
+    runs-on: ubuntu-latest
+    needs: [ setup, check_database_changes ]
+    if: needs.check_database_changes.outputs.database_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          [
+            Account,
+            Avatars,
+            Console,
+            Databases/Legacy,
+            Databases/TablesDB,
+            Functions,
+            FunctionsSchedule,
+            GraphQL,
+            Health,
+            Locale,
+            Projects,
+            Realtime,
+            Sites,
+            Proxy,
+            Storage,
+            Teams,
+            Users,
+            Webhooks,
+            VCS,
+            Messaging,
+            Migrations,
+            Tokens
+          ]
+        tables-mode: [
+          'Shared V1',
+          'Shared V2',
+        ]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 30
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
+        run: |
+          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+            echo "Using shared tables V1"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+            echo "Using shared tables V2"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=
+          fi
+      
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group devKeys,screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
+  e2e_dev_keys:
+    name: E2E Service Test (Dev Keys)
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose up -d
+          sleep 30
+
+      - name: Run Projects tests with dev keys in dedicated table mode
+        run: |
+          echo "Using project tables"
+          export _APP_DATABASE_SHARED_TABLES=
+          export _APP_DATABASE_SHARED_TABLES_V1=
+
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=devKeys
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
+  e2e_dev_keys_shared_mode:
+    name: E2E Shared Mode Service Test (Dev Keys)
+    runs-on: ubuntu-latest
+    needs: [ setup, check_database_changes ]
+    if: needs.check_database_changes.outputs.database_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        tables-mode: [
+          'Shared V1',
+          'Shared V2',
+        ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose up -d
+          sleep 30
+
+      - name: Run Projects tests with dev keys in ${{ matrix.tables-mode }} table mode
+        run: |
+          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+            echo "Using shared tables V1"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+            echo "Using shared tables V2"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=
+          fi
+
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=devKeys
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
+  e2e_screenshots_keys:
+    name: E2E Service Test (Site Screenshots)
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose up -d
+          sleep 30
+
+      - name: Run Site tests with browser connected in dedicated table mode
+        run: |
+          echo "Keeping original value of _APP_BROWSER_HOST"
+          echo "Using project tables"
+          export _APP_DATABASE_SHARED_TABLES=
+          export _APP_DATABASE_SHARED_TABLES_V1=
+
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
+
+  e2e_screenshots_shared_mode:
+    name: E2E Shared Mode Service Test (Site Screenshots)
+    runs-on: ubuntu-latest
+    needs: [ setup, check_database_changes ]
+    if: needs.check_database_changes.outputs.database_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        tables-mode: [
+          'Shared V1',
+          'Shared V2',
+        ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose up -d
+          sleep 30
+
+      - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
+        run: |
+          echo "Keeping original value of _APP_BROWSER_HOST"
+          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+            echo "Using shared tables V1"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+            echo "Using shared tables V2"
+            export _APP_DATABASE_SHARED_TABLES=database_db_main
+            export _APP_DATABASE_SHARED_TABLES_V1=
+          fi
+
+          docker compose exec -T \
+            -e _APP_DATABASE_SHARED_TABLES \
+            -e _APP_DATABASE_SHARED_TABLES_V1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Worker Builds Logs ==="
+          docker compose logs appwrite-worker-builds
+          echo "=== OpenRuntimes Executor Logs ==="
+          docker compose logs openruntimes-executor
