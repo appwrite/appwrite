@@ -8,7 +8,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -105,11 +104,6 @@ class Get extends Action
                 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.',
                 previous: $e
             );
-        }
-
-        // Log resource groups skipped during an otherwise successful report.
-        foreach ($appwrite->getErrors() as $error) {
-            Console::warning('Appwrite migration report skipped "' . $error->getResourceGroup() . '" for source "' . $endpoint . '": ' . $error->getMessage() . ' [' . $error->getCode() . ']');
         }
 
         $response
