@@ -376,7 +376,7 @@ class Create extends Action
 
                 $metadata = null;
 
-                if ($chunksUploaded === $chunks) {
+                if ($chunksUploaded === $chunks && !$deployment->isEmpty()) {
                     $queueForEvents
                         ->setParam('functionId', $function->getId())
                         ->setParam('deploymentId', $deployment->getId());
