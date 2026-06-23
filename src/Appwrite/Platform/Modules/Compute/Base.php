@@ -49,6 +49,7 @@ class Base extends Action
             $planKey
         );
         $allowedSpecifications = $specificationValidator->getAllowedSpecifications();
+        $planKey = $specificationValidator->getPlanKey();
 
         if (empty($allowedSpecifications)) {
             return $fallback;

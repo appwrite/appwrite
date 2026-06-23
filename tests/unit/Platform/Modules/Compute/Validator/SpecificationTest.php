@@ -96,4 +96,27 @@ final class SpecificationTest extends TestCase
         $this->assertContains(SpecificationConstants::S_1VCPU_1GB, $allowed);
         $this->assertContains(SpecificationConstants::S_2VCPU_2GB, $allowed);
     }
+
+    public function testGetAllowedSpecificationsWithLegacyBuildPlanLimits(): void
+    {
+        $plan = [
+            'runtimeSpecifications' => [
+                SpecificationConstants::S_05VCPU_512MB,
+                SpecificationConstants::S_1VCPU_512MB,
+            ]
+        ];
+        $validator = new Specification(
+            plan: $plan,
+            specifications: $this->specifications,
+            maxCpus: 0,
+            maxMemory: 0,
+            planKey: 'buildSpecifications'
+        );
+
+        $allowed = $validator->getAllowedSpecifications();
+        $this->assertEquals('runtimeSpecifications', $validator->getPlanKey());
+        $this->assertCount(2, $allowed);
+        $this->assertContains(SpecificationConstants::S_05VCPU_512MB, $allowed);
+        $this->assertContains(SpecificationConstants::S_1VCPU_512MB, $allowed);
+    }
 }

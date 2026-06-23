@@ -25,6 +25,15 @@ class Specification extends Validator
         $this->planKey = $planKey;
     }
 
+    public function getPlanKey(): string
+    {
+        if ($this->planKey === 'buildSpecifications' && !array_key_exists('buildSpecifications', $this->plan) && array_key_exists('runtimeSpecifications', $this->plan)) {
+            return 'runtimeSpecifications';
+        }
+
+        return $this->planKey;
+    }
+
     /**
      * Get Allowed Specifications.
      *
@@ -35,11 +44,12 @@ class Specification extends Validator
     public function getAllowedSpecifications(): array
     {
         $allowedSpecifications = [];
+        $planKey = $this->getPlanKey();
 
         foreach ($this->specifications as $size => $values) {
             if ((empty($this->maxCpus) || $values['cpus'] <= $this->maxCpus) && (empty($this->maxMemory) || $values['memory'] <= $this->maxMemory)) {
-                if (!empty($this->plan) && array_key_exists($this->planKey, $this->plan)) {
-                    if (!\in_array($size, $this->plan[$this->planKey])) {
+                if (!empty($this->plan) && array_key_exists($planKey, $this->plan)) {
+                    if (!\in_array($size, $this->plan[$planKey])) {
                         continue;
                     }
                 }
