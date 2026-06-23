@@ -73,7 +73,7 @@ class Get extends Action
             // 401/403 are expected user errors (bad key, missing scope): surface them as a 4xx so
             // they are not published to Sentry.
             if ($code === 401 || $code === 403) {
-                throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $e->getMessage(), previous: $e);
+                throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $e->getMessage());
             }
 
             // Genuine source failure — throw as 5xx so the central error handler publishes it.
