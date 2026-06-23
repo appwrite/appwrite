@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Tests\E2E\Client;
@@ -11,14 +13,13 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class AuthTest extends Scope
+final class AuthTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
     use Base;
 
     private array $account1;
-    private array $account2;
 
     private string $token1;
     private string $token2;
@@ -140,7 +141,16 @@ class AuthTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        sleep(1);
+        $databaseId = $this->database['body']['data']['databasesCreate']['_id'];
+        $collectionId = $this->collection['body']['data']['databasesCreateCollection']['_id'];
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
     }
 
     public function testInvalidAuth()

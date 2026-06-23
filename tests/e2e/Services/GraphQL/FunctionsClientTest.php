@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
@@ -10,15 +12,24 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class FunctionsClientTest extends Scope
+final class FunctionsClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
     use Base;
     use Async;
 
-    public function testCreateFunction(): array
+    private static array $cachedFunction = [];
+    private static array $cachedDeployment = [];
+    private static array $cachedExecution = [];
+
+    protected function setupFunction(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedFunction[$key])) {
+            return self::$cachedFunction[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_FUNCTION);
         $gqlPayload = [
@@ -46,10 +57,10 @@ class FunctionsClientTest extends Scope
 
         $query = '
             mutation createVariables($functionId: String!) {
-                var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
+                var1: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "name", value: "John Doe") {
                     _id
                 }
-                var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
+                var2: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "age", value: "42") {
                     _id
                 }
             }
@@ -70,17 +81,19 @@ class FunctionsClientTest extends Scope
         $this->assertIsArray($variables['body']['data']);
         $this->assertArrayNotHasKey('errors', $variables['body']);
 
+        self::$cachedFunction[$key] = $function;
         return $function;
     }
 
-    /**
-     * @depends testCreateFunction
-     * @param $function
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateDeployment($function): array
+    protected function setupDeployment(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedDeployment[$key])) {
+            return self::$cachedDeployment[$key];
+        }
+
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DEPLOYMENT);
 
@@ -135,19 +148,20 @@ class FunctionsClientTest extends Scope
             $this->assertEquals('ready', $deployment['status']);
         }, 60000);
 
+        self::$cachedDeployment[$key] = $deployment;
         return $deployment;
     }
 
-    /**
-     * @depends testCreateFunction
-     * @depends testCreateDeployment
-     * @param $function
-     * @param $deployment
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateExecution($function, $deployment): array
+    protected function setupExecution(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedExecution[$key])) {
+            return self::$cachedExecution[$key];
+        }
+
+        $function = $this->setupFunction();
+        $this->setupDeployment(); // Ensure deployment exists
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_EXECUTION);
         $gqlPayload = [
@@ -164,17 +178,45 @@ class FunctionsClientTest extends Scope
 
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
-        return $execution['body']['data']['functionsCreateExecution'];
+
+        self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
+        return self::$cachedExecution[$key];
+    }
+
+    public function testCreateFunction(): void
+    {
+        $function = $this->setupFunction();
+        $this->assertNotEmpty($function);
     }
 
     /**
-     * @depends testCreateFunction
-     * @param $function
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateDeployment(): void
+    {
+        $deployment = $this->setupDeployment();
+        $this->assertNotEmpty($deployment);
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateExecution(): void
+    {
+        $execution = $this->setupExecution();
+        $this->assertNotEmpty($execution);
+    }
+
+    /**
      * @return array
      * @throws \Exception
      */
-    public function testGetExecutions($function): array
+    public function testGetExecutions(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_EXECUTIONS);
         $gqlPayload = [
@@ -198,15 +240,14 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @depends testCreateExecution
-     * @param $function
-     * @param $execution
      * @return array
      * @throws \Exception
      */
-    public function testGetExecution($function, $execution): array
+    public function testGetExecution(): array
     {
+        $function = $this->setupFunction();
+        $execution = $this->setupExecution();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_EXECUTION);
         $gqlPayload = [

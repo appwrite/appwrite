@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Usage;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -15,15 +16,54 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
-class Get extends Action
+class Get extends DatabasesAction
 {
     public static function getName(): string
     {
         return 'getDatabaseUsage';
+    }
+
+    protected $databaseType = DATABASE_TYPE_LEGACY;
+
+    public function setHttpPath(string $path): DatabasesAction
+    {
+        $this->databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => DATABASE_TYPE_LEGACY,
+        };
+
+        parent::setHttpPath($path);
+
+        return $this;
+    }
+
+    protected function getMetrics(): array
+    {
+        $metrics = [
+            METRIC_DATABASE_ID_COLLECTIONS,
+            METRIC_DATABASE_ID_DOCUMENTS,
+            METRIC_DATABASE_ID_STORAGE,
+            METRIC_DATABASE_ID_OPERATIONS_READS,
+            METRIC_DATABASE_ID_OPERATIONS_WRITES
+        ];
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return $metrics;
+        }
+
+        return array_map(
+            fn ($metric) => "{$this->databaseType}.{$metric}",
+            $metrics
+        );
+    }
+
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_DATABASE;
     }
 
     public function __construct()
@@ -55,8 +95,15 @@ class Get extends Action
                     )
                 )
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -67,20 +114,17 @@ class Get extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_DOCUMENTS),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_STORAGE),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES)
-        ];
+        $metrics = array_map(
+            fn ($metric) => str_replace('{databaseInternalId}', $database->getSequence(), $metric),
+            $this->getMetrics()
+        );
 
         $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
@@ -110,6 +154,7 @@ class Get extends Action
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unexpected period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {
@@ -142,6 +187,6 @@ class Get extends Action
             'storage' => $usage[$metrics[2]]['data'],
             'databaseReads' => $usage[$metrics[3]]['data'],
             'databaseWrites' => $usage[$metrics[4]]['data'],
-        ]), UtopiaResponse::MODEL_USAGE_DATABASE);
+        ]), $this->getResponseModel());
     }
 }

@@ -2,6 +2,17 @@
 
 use Utopia\System\System;
 
+// For now, take first domain as primary (for previews)
+// Later-on this can become platform-specific with new env var (appwrite=this,imagine=that)
+$sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+if (\str_contains($sitesDomain, ',')) {
+    $sitesDomain = explode(',', $sitesDomain)[0];
+}
+$functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+if (\str_contains($functionsDomain, ',')) {
+    $functionsDomain = explode(',', $functionsDomain)[0];
+}
+
 /**
  * Platform configuration
  */
@@ -11,7 +22,9 @@ return [
     'hostnames' => array_filter(array_unique([
         System::getEnv('_APP_DOMAIN', 'localhost'),
         System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'),
+        System::getEnv('_APP_MIGRATION_HOST'),
     ])),
+    'schemas' => \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_SCHEMA', ''))),
     'platformName' => APP_EMAIL_PLATFORM_NAME,
     'logoUrl' => APP_EMAIL_LOGO_URL,
     'accentColor' => APP_EMAIL_ACCENT_COLOR,
@@ -23,4 +36,6 @@ return [
     'privacyUrl' => APP_EMAIL_PRIVACY_URL,
     'websiteUrl' => 'https://' . APP_DOMAIN,
     'emailSenderName' => APP_EMAIL_PLATFORM_NAME,
+    'sitesDomain' => $sitesDomain,
+    'functionsDomain' => $functionsDomain,
 ];

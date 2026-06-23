@@ -1,1 +1,0 @@
-appwrite account get

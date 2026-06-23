@@ -1,0 +1,3 @@
+$id,embeddings,metadata
+vector-doc-1,"[0.15,0.25,0.35]","{""title"":""Vector Alpha"",""category"":""science""}"
+vector-doc-2,"[0.55,0.65,0.75]","{""title"":""Vector Beta"",""category"":""history""}"

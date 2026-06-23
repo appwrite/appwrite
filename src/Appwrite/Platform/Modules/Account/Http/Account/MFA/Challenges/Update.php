@@ -117,7 +117,7 @@ class Update extends Action
                     $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
                     $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                    $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
                     return true;
                 }
@@ -147,11 +147,13 @@ class Update extends Action
         $factors[] = $type;
         $factors = \array_values(\array_unique($factors));
 
+        $mfaUpdatedAt = DateTime::now();
+
         $session
             ->setAttribute('factors', $factors)
-            ->setAttribute('mfaUpdatedAt', DateTime::now());
+            ->setAttribute('mfaUpdatedAt', $mfaUpdatedAt);
 
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors, 'mfaUpdatedAt' => $mfaUpdatedAt]));
 
         $queueForEvents
             ->setParam('userId', $user->getId())

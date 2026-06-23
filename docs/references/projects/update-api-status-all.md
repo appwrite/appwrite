@@ -1,1 +1,0 @@
-Update the status of all API types. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime all at once.

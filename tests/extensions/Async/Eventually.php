@@ -11,7 +11,7 @@ final class Eventually extends Constraint
     {
     }
 
-    public function evaluate(mixed $probe, string $description = '', bool $returnResult = false): ?bool
+    public function evaluate(mixed $probe, string $description = '', bool $returnResult = false): bool
     {
         if (!is_callable($probe)) {
             throw new \Exception('Probe must be a callable');

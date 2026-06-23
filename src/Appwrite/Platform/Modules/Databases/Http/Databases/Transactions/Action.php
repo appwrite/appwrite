@@ -9,14 +9,49 @@ abstract class Action extends DatabasesAction
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = COLLECTIONS;
+    private string $context = COLLECTIONS;
+    private string $databaseType = LEGACY;
 
-    public function setHttpPath(string $path): DatabasesAction
+    public function getDatabaseType(): string
     {
-        if (\str_contains($path, '/tablesdb')) {
-            $this->context = TABLES;
+        return $this->databaseType;
+    }
+
+    protected function getDatabasesOperationWriteMetric(): string
+    {
+        if ($this->databaseType === LEGACY || $this->databaseType === TABLESDB) {
+            return METRIC_DATABASES_OPERATIONS_WRITES;
         }
-        return parent::setHttpPath($path);
+        return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
+
+    }
+    protected function getDatabasesIdOperationWriteMetric(): string
+    {
+        if ($this->databaseType === LEGACY || $this->databaseType === TABLESDB) {
+            return METRIC_DATABASE_ID_OPERATIONS_WRITES;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
+    }
+
+    public function setHttpPath(string $path): self
+    {
+        switch (true) {
+            case str_contains($path, '/tablesdb'):
+                $this->context = TABLES;
+                $this->databaseType = TABLESDB;
+                break;
+
+            case str_contains($path, '/documentsdb'):
+                $this->context = COLLECTIONS;
+                $this->databaseType = DOCUMENTSDB;
+                break;
+            case str_contains($path, '/vectorsdb'):
+                $this->context = COLLECTIONS;
+                $this->databaseType = VECTORSDB;
+                break;
+        }
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**

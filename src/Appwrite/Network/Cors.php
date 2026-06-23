@@ -48,7 +48,7 @@ final class Cors
     /**
      * Build CORS headers for a given request origin.
      *
-     * @return array<string,string>
+     * @return array<string, int|string>
      */
     public function headers(string $origin): array
     {

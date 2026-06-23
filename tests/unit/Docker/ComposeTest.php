@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Docker;
 
 use Appwrite\Docker\Compose;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
-class ComposeTest extends TestCase
+final class ComposeTest extends TestCase
 {
     protected ?Compose $object = null;
 
@@ -23,11 +25,11 @@ class ComposeTest extends TestCase
 
     public function testServices(): void
     {
-        $this->assertCount(15, $this->object->getServices());
-        $this->assertEquals('appwrite', $this->object->getService('appwrite')->getContainerName());
-        $this->assertEquals('', $this->object->getService('appwrite')->getImageVersion());
-        $this->assertEquals('2.2', $this->object->getService('traefik')->getImageVersion());
-        $this->assertEquals(['2080' => '80', '2443' => '443', '8080' => '8080'], $this->object->getService('traefik')->getPorts());
+        $this->assertCount(16, $this->object->getServices());
+        $this->assertSame('appwrite', $this->object->getService('appwrite')->getContainerName());
+        $this->assertSame('', $this->object->getService('appwrite')->getImageVersion());
+        $this->assertEquals('3.6', $this->object->getService('traefik')->getImageVersion());
+        $this->assertSame(['2080' => '80', '2443' => '443', '8080' => '8080'], $this->object->getService('traefik')->getPorts());
     }
 
     public function testNetworks(): void

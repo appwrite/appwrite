@@ -6,14 +6,8 @@ use DeviceDetector\DeviceDetector;
 
 class Detector
 {
-    /**
-     * @param string
-     */
     protected $userAgent = '';
 
-    /**
-     * @param DeviceDetector
-     */
     protected $detctor;
 
     /**

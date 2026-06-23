@@ -4,20 +4,48 @@ namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class Realtime extends MessagingAdapter
 {
+    public const SUPPORTED_ACTIONS = ['create', 'update', 'upsert', 'delete'];
+
+    // Resources whose channels receive an action-suffixed sibling at publish time.
+    // The suffix loop in fromPayload() treats any channel whose last OR second-to-last
+    // segment matches an entry here as a candidate for `.{action}` suffixing.
+    //
+    // `functions` is intentionally a parent-only entry: fromPayload publishes
+    // `functions.{functionId}` (suffixed to `functions.{functionId}.{action}`) but
+    // never emits a bare `functions` channel — so subscribing to bare
+    // `functions.{action}` is a silent no-op. Per-function filters
+    // (`functions.{functionId}.{action}`) are the supported form.
+    private const RESOURCE_LEAF_NAMES = [
+        'documents',
+        'rows',
+        'files',
+        'executions',
+        'functions',
+        'account',
+        'teams',
+        'memberships',
+        'presences'
+    ];
+
     /**
      * Connection Tree
      *
      * [CONNECTION_ID] ->
      *      'projectId' -> [PROJECT_ID]
      *      'roles' -> [ROLE_x, ROLE_Y]
+     *      'userId' -> [USER_ID]
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
+     *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
     public array $connections = [];
 
@@ -26,58 +54,227 @@ class Realtime extends MessagingAdapter
      *
      * [PROJECT_ID] ->
      *      [ROLE_X] ->
-     *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
-     *      [ROLE_Y] ->
-     *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
+     *          [CHANNEL_NAME_X] ->
+     *              [CONNECTION_ID] ->
+     *                  [SUB_ID] -> ['strings' => [...], 'compiled' => [...]]
+     *
+     * Each subscription ID maps to query strings (for metadata) and pre-compiled query filters.
+     * Within a subscription: AND logic (all queries must match)
+     * Across subscriptions: OR logic (any subscription matching = send event)
      */
     public array $subscriptions = [];
 
-    private PubSubPool $pubSubPool;
+    private ?PubSubPool $pubSubPool = null;
 
-    public function __construct()
+    /**
+     * Get the PubSubPool instance, initializing it lazily if needed.
+     * This allows unit tests to work without requiring the global $register.
+     */
+    private function getPubSubPool(): PubSubPool
     {
-        global $register;
-        $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+        if ($this->pubSubPool === null) {
+            global $register;
+            $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+        }
+
+        return $this->pubSubPool;
     }
 
     /**
-     * Adds a subscription.
+     * Adds a subscription with a specific subscription ID.
      *
      * @param string $projectId
-     * @param mixed $identifier
-     * @param array $roles
-     * @param array $channels
+     * @param mixed $identifier Connection ID
+     * @param string $subscriptionId Unique subscription ID
+     * @param array $roles User roles
+     * @param array $channels Channels to subscribe to (array of channel names)
+     * @param array $queryGroup Array of Query objects for this subscription (AND logic within subscription)
      * @return void
      */
-    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels): void
-    {
+    public function subscribe(
+        string $projectId,
+        mixed $identifier,
+        string $subscriptionId,
+        array $roles,
+        array $channels,
+        array $queryGroup = [],
+        ?string $userId = null
+    ): void {
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
         }
 
+        $strings = [];
+        $data = [];
+
+        if (!empty($channels)) {
+            if (empty($queryGroup)) {
+                $strings[] = Query::select(['*'])->toString();
+            } else {
+                foreach ($queryGroup as $query) {
+                    $strings[] = $query->toString();
+                }
+            }
+            $data = [
+                'strings' => $strings,
+                'compiled' => RuntimeQuery::compile($queryGroup),
+            ];
+        }
+
         foreach ($roles as $role) {
-            if (!isset($this->subscriptions[$projectId][$role])) { // Add user first connection
+            if (!isset($this->subscriptions[$projectId][$role])) {
                 $this->subscriptions[$projectId][$role] = [];
             }
 
-            foreach ($channels as $channel => $list) {
-                $this->subscriptions[$projectId][$role][$channel][$identifier] = true;
+            foreach ($channels as $channel) {
+                if (!isset($this->subscriptions[$projectId][$role][$channel])) {
+                    $this->subscriptions[$projectId][$role][$channel] = [];
+                }
+                if (!isset($this->subscriptions[$projectId][$role][$channel][$identifier])) {
+                    $this->subscriptions[$projectId][$role][$channel][$identifier] = [];
+                }
+                $this->subscriptions[$projectId][$role][$channel][$identifier][$subscriptionId] = $data;
             }
         }
 
-        $this->connections[$identifier] = [
+        // Union channels/roles across all subscriptions on the connection; overwriting would
+        // leave getSubscriptionMetadata and full unsubscribe operating on stale state.
+        $existing = $this->connections[$identifier] ?? [];
+        $existingChannels = $existing['channels'] ?? [];
+        $existingRoles = $existing['roles'] ?? [];
+
+        $entry = [
             'projectId' => $projectId,
-            'roles' => $roles,
-            'channels' => $channels
+            'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
+            'userId' => $userId ?? ($existing['userId'] ?? ''),
+            'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
+            'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
+
+        if (\array_key_exists('authorization', $existing)) {
+            $entry['authorization'] = $existing['authorization'];
+        }
+
+        $this->connections[$identifier] = $entry;
     }
 
     /**
-     * Removes Subscription.
+     * Get subscription metadata for a connection.
+     * Retrieves subscription data including channels and queries directly from the subscriptions tree.
+     *
+     * @param mixed $connection Connection ID
+     * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[]]]
+     */
+    public function getSubscriptionMetadata(mixed $connection): array
+    {
+        $projectId = $this->connections[$connection]['projectId'] ?? null;
+        $roles = $this->connections[$connection]['roles'] ?? [];
+        $channels = $this->connections[$connection]['channels'] ?? [];
+
+        if (! $projectId || empty($roles) || empty($channels)) {
+            return [];
+        }
+
+        $subscriptions = [];
+
+        // Extract subscription data from subscriptions tree
+        foreach ($roles as $role) {
+            if (!isset($this->subscriptions[$projectId][$role])) {
+                continue;
+            }
+
+            foreach ($channels as $channel) {
+                if (!isset($this->subscriptions[$projectId][$role][$channel][$connection])) {
+                    continue;
+                }
+
+                foreach ($this->subscriptions[$projectId][$role][$channel][$connection] as $subscriptionId => $data) {
+                    if (!isset($subscriptions[$subscriptionId])) {
+                        $subscriptions[$subscriptionId] = [
+                            'channels' => [],
+                            'queries' => $data['strings'] ?? [],
+                        ];
+                    }
+                    if (!\in_array($channel, $subscriptions[$subscriptionId]['channels'])) {
+                        $subscriptions[$subscriptionId]['channels'][] = $channel;
+                    }
+                }
+            }
+        }
+
+        return $subscriptions;
+    }
+
+    /**
+     * Dedup delete presence triggers.
+     * Scenario: when client is connected to realtime and a delete call is made throught rest.
+     * If not dedupe then two delete events will get triggered. So remove the presenceIds
+     *
+     * @param string $projectId
+     * @param string $presenceId
+     * @return int Number of connections whose presences map was updated.
+     */
+    public function removePresenceFromConnections(string $projectId, string $presenceId): int
+    {
+        if ($projectId === '' || $presenceId === '') {
+            return 0;
+        }
+
+        $removed = 0;
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) !== $projectId) {
+                continue;
+            }
+            if (!isset($connection['presences'][$presenceId])) {
+                continue;
+            }
+            unset($this->connections[$connectionId]['presences'][$presenceId]);
+            $removed++;
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Returns the presence ID carried by a `presences.{id}.delete` event payload,
+     * or null when the event is not a presence delete.
+     *
+     * @param array $event Decoded pubsub payload produced by self::send().
+     * @return string|null
+     */
+    public static function extractDeletedPresenceId(array $event): ?string
+    {
+        $events = $event['data']['events'] ?? [];
+        if (!\is_array($events)) {
+            return null;
+        }
+
+        $isPresenceDelete = false;
+        foreach ($events as $eventName) {
+            if (
+                \is_string($eventName)
+                && \str_starts_with($eventName, 'presences.')
+                && \str_ends_with($eventName, '.delete')
+            ) {
+                $isPresenceDelete = true;
+                break;
+            }
+        }
+
+        if (!$isPresenceDelete) {
+            return null;
+        }
+
+        $presenceId = $event['data']['payload']['$id'] ?? null;
+        if (!\is_string($presenceId) || $presenceId === '') {
+            return null;
+        }
+
+        return $presenceId;
+    }
+
+    /**
+     * Removes all subscriptions for a connection.
      *
      * @param mixed $connection
      * @return void
@@ -86,10 +283,11 @@ class Realtime extends MessagingAdapter
     {
         $projectId = $this->connections[$connection]['projectId'] ?? '';
         $roles = $this->connections[$connection]['roles'] ?? [];
+        $channels = $this->connections[$connection]['channels'] ?? [];
 
         foreach ($roles as $role) {
-            foreach ($this->subscriptions[$projectId][$role] as $channel => $list) {
-                unset($this->subscriptions[$projectId][$role][$channel][$connection]); // Remove connection
+            foreach ($channels as $channel) {
+                unset($this->subscriptions[$projectId][$role][$channel][$connection]); // dropping connection will drop all subscriptions
 
                 if (empty($this->subscriptions[$projectId][$role][$channel])) {
                     unset($this->subscriptions[$projectId][$role][$channel]);  // Remove channel when no connections
@@ -105,7 +303,90 @@ class Realtime extends MessagingAdapter
             unset($this->subscriptions[$projectId]);
         }
 
-        unset($this->connections[$connection]);
+        if (isset($this->connections[$connection])) {
+            unset($this->connections[$connection]);
+        }
+    }
+
+    /**
+     * Removes a single subscription from a connection, keeping the connection alive so
+     * the client can resubscribe. Idempotent — returns true only when something was removed.
+     *
+     * @param mixed $connection
+     * @param string $subscriptionId
+     * @return bool
+     */
+    public function unsubscribeSubscription(mixed $connection, string $subscriptionId): bool
+    {
+        $projectId = $this->connections[$connection]['projectId'] ?? '';
+        if ($projectId === '' || !isset($this->subscriptions[$projectId])) {
+            return false;
+        }
+
+        $removed = false;
+
+        foreach ($this->subscriptions[$projectId] as $role => $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                if (!isset($byConnection[$connection][$subscriptionId])) {
+                    continue;
+                }
+
+                unset($this->subscriptions[$projectId][$role][$channel][$connection][$subscriptionId]);
+                $removed = true;
+
+                if (empty($this->subscriptions[$projectId][$role][$channel][$connection])) {
+                    unset($this->subscriptions[$projectId][$role][$channel][$connection]);
+                }
+                if (empty($this->subscriptions[$projectId][$role][$channel])) {
+                    unset($this->subscriptions[$projectId][$role][$channel]);
+                }
+            }
+            if (empty($this->subscriptions[$projectId][$role])) {
+                unset($this->subscriptions[$projectId][$role]);
+            }
+        }
+
+        if (empty($this->subscriptions[$projectId])) {
+            unset($this->subscriptions[$projectId]);
+        }
+
+        if ($removed) {
+            $this->recomputeConnectionState($connection);
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Recomputes the cached channels on the connection entry from the subscriptions tree.
+     * Called after per-subscription removal so stale channel entries do not linger for later reads.
+     *
+     * Roles are deliberately NOT recomputed here. They represent the connection's authorization
+     * context (set at onOpen, replaced on `authentication` / permission-change) and must survive
+     * per-subscription removal — otherwise a client that unsubscribes every subscription and then
+     * resubscribes would subscribe with an empty roles array and silently receive nothing.
+     *
+     * @param mixed $connection
+     * @return void
+     */
+    private function recomputeConnectionState(mixed $connection): void
+    {
+        if (!isset($this->connections[$connection])) {
+            return;
+        }
+
+        $projectId = $this->connections[$connection]['projectId'] ?? '';
+        $channels = [];
+
+        foreach ($this->subscriptions[$projectId] ?? [] as $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                if (isset($byConnection[$connection])) {
+                    $channels[$channel] = true;
+                }
+            }
+        }
+
+        $this->connections[$connection]['channels'] = \array_keys($channels);
     }
 
     /**
@@ -117,7 +398,7 @@ class Realtime extends MessagingAdapter
      */
     public function hasSubscriber(string $projectId, string $role, string $channel = ''): bool
     {
-        //TODO: look into moving it to an abstract class in the parent class
+        // TODO: look into moving it to an abstract class in the parent class
         if (empty($channel)) {
             return array_key_exists($projectId, $this->subscriptions)
                 && array_key_exists($role, $this->subscriptions[$projectId]);
@@ -125,7 +406,8 @@ class Realtime extends MessagingAdapter
 
         return array_key_exists($projectId, $this->subscriptions)
             && array_key_exists($role, $this->subscriptions[$projectId])
-            && array_key_exists($channel, $this->subscriptions[$projectId][$role]);
+            && array_key_exists($channel, $this->subscriptions[$projectId][$role])
+            && !empty($this->subscriptions[$projectId][$role][$channel]);
     }
 
     /**
@@ -137,6 +419,7 @@ class Realtime extends MessagingAdapter
      * @param array $roles
      * @param array $options
      * @return void
+     *
      * @throws \Exception
      */
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
@@ -148,7 +431,7 @@ class Realtime extends MessagingAdapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $this->pubSubPool->publish('realtime', json_encode([
+        $this->getPubSubPool()->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
@@ -157,8 +440,8 @@ class Realtime extends MessagingAdapter
                 'events' => $events,
                 'channels' => $channels,
                 'timestamp' => DateTime::formatTz(DateTime::now()),
-                'payload' => $payload
-            ]
+                'payload' => $payload,
+            ],
         ]));
     }
 
@@ -166,59 +449,65 @@ class Realtime extends MessagingAdapter
      * Identifies the receivers of all subscriptions, based on the permissions and event.
      *
      * Example of performance with an event with user:XXX permissions and with X users spread across 10 different channels:
-     *  - 0.014 ms (±6.88%) | 10 Connections / 100 Subscriptions
-     *  - 0.070 ms (±3.71%) | 100 Connections / 1,000 Subscriptions
-     *  - 0.846 ms (±2.74%) | 1,000 Connections / 10,000 Subscriptions
-     *  - 10.866 ms (±1.01%) | 10,000 Connections / 100,000 Subscriptions
-     *  - 110.201 ms (±2.32%) | 100,000 Connections / 1,000,000 Subscriptions
-     *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions
+     *  - 0.013 ms | 10 Connections / 100 Subscriptions
+     *  - 0.14 ms  | 100 Connections / 1,000 Subscriptions
+     *  - 1.5 ms   | 1,000 Connections / 10,000 Subscriptions
+     *  - 15 ms    | 10,000 Connections / 100,000 Subscriptions
      *
-     * @param array $event
-     * @return int[]|string[]
+     * @return array<int|string, array> Map of connection IDs to matched query groups
      */
     public function getSubscribers(array $event): array
     {
-
         $receivers = [];
-        /**
-         * Check if project has subscriber.
-         */
-        if (isset($this->subscriptions[$event['project']])) {
-            /**
-             * Iterate through each role.
-             */
-            foreach ($this->subscriptions[$event['project']] as $role => $subscription) {
-                /**
-                 * Iterate through each channel.
-                 */
-                foreach ($event['data']['channels'] as $channel) {
-                    /**
-                     * Check if channel has subscriber. Also taking care of the role in the event and the wildcard role.
-                     */
-                    if (
-                        \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
-                        && (\in_array($role, $event['roles']) || \in_array(Role::any()->toString(), $event['roles']))
-                    ) {
-                        /**
-                         * Saving all connections that are allowed to receive this event.
-                         */
-                        foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $id) {
-                            /**
-                             * To prevent duplicates, we save the connections as array keys.
-                             */
-                            $receivers[$id] = 0;
+
+        if (!isset($this->subscriptions[$event['project']])) {
+            return $receivers;
+        }
+
+        $payload = $event['data']['payload'] ?? [];
+
+        foreach ($this->subscriptions[$event['project']] as $role => $subscriptionsByChannel) {
+            foreach ($event['data']['channels'] as $channel) {
+                if (
+                    ! \array_key_exists($channel, $subscriptionsByChannel)
+                    || (!\in_array($role, $event['roles']) && !\in_array(Role::any()->toString(), $event['roles']))
+                ) {
+                    continue;
+                }
+
+                foreach ($subscriptionsByChannel[$channel] as $id => $subscriptions) {
+                    $matched = [];
+
+                    foreach ($subscriptions as $subscriptionId => $data) {
+                        $compiled = $data['compiled'] ?? ['type' => 'selectAll'];
+                        $strings = $data['strings'] ?? [];
+
+                        if (RuntimeQuery::filter($compiled, $payload) !== null) {
+                            $matched[$subscriptionId] = $strings;
                         }
-                        break;
+                    }
+
+                    if (!empty($matched)) {
+                        if (!isset($receivers[$id])) {
+                            $receivers[$id] = [];
+                        }
+                        $receivers[$id] += $matched;
                     }
                 }
             }
         }
 
-        return array_keys($receivers);
+        return $receivers;
     }
 
     /**
      * Converts the channels from the Query Params into an array.
+     * Also renames the account channel to account.USER_ID, rewrites action-suffixed
+     * account variants (`account.create`, `account.update`, `account.upsert`,
+     * `account.delete`) to `account.USER_ID.{action}` so they match the channels
+     * fromPayload() publishes for top-level user events, and removes all other
+     * illegal account channel variations (e.g. another user's `account.{otherId}`).
+     *
      * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
      * @param array $channels
      * @param string $userId
@@ -230,19 +519,194 @@ class Realtime extends MessagingAdapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case str_starts_with($key, 'account.'):
-                    unset($channels[$key]);
-                    break;
-
                 case $key === 'account':
                     if (!empty($userId)) {
-                        $channels['account.' . $userId] = $value;
+                        $channels['account.'.$userId] = $value;
                     }
+                    break;
+
+                case \in_array(\substr($key, \strlen('account.')), self::SUPPORTED_ACTIONS, true) && str_starts_with($key, 'account.'):
+                    // Authenticated: rewrite `account.{action}` → `account.{userId}.{action}`
+                    // so the subscriber only receives their own account events.
+                    // Guest: keep the literal `account.{action}` so the action filter
+                    // applies to the broadcast `account.{action}` channel that fromPayload
+                    // emits for top-level user events. On in-band auth, rebindAccountChannels
+                    // rewrites the literal to the user-scoped form.
+                    if (!empty($userId)) {
+                        unset($channels[$key]);
+                        $action = \substr($key, \strlen('account.'));
+                        $channels['account.'.$userId.'.'.$action] = $value;
+                    }
+                    break;
+
+                case str_starts_with($key, 'account.'):
+                    unset($channels[$key]);
                     break;
             }
         }
 
         return $channels;
+    }
+
+    /**
+     * Rewrites stored account channels to match a new userId. Used when in-band
+     * authentication changes the connection's user identity:
+     *
+     *   - guest → authenticated: rewrites the literal `account.{action}` form
+     *     that convertChannels preserves for guests into `account.{userId}.{action}`.
+     *   - reauth as a different user: rewrites `account.{oldUserId}` and
+     *     `account.{oldUserId}.{action}` to the new userId.
+     *
+     * Returns channels unchanged when there's nothing to do — same user, or an
+     * empty target (defensive: avoids producing malformed `account.` strings if
+     * a caller ever passes `$newUserId = ''`, e.g. an in-band logout flow).
+     */
+    public static function rebindAccountChannels(array $channels, string $oldUserId, string $newUserId): array
+    {
+        if ($newUserId === '' || $oldUserId === $newUserId) {
+            return $channels;
+        }
+
+        return \array_map(function (string $channel) use ($oldUserId, $newUserId) {
+            if (!\str_starts_with($channel, 'account.')) {
+                return $channel;
+            }
+
+            // Guest origin: literal `account.{action}` (preserved by convertChannels
+            // for unauthenticated connections) becomes `account.{newUserId}.{action}`.
+            if ($oldUserId === '') {
+                $suffix = \substr($channel, \strlen('account.'));
+                if (\in_array($suffix, self::SUPPORTED_ACTIONS, true)) {
+                    return 'account.'.$newUserId.'.'.$suffix;
+                }
+
+                return $channel;
+            }
+
+            // Authenticated → different user.
+            if ($channel === 'account.'.$oldUserId) {
+                return 'account.'.$newUserId;
+            }
+
+            $oldPrefix = 'account.'.$oldUserId.'.';
+            if (\str_starts_with($channel, $oldPrefix)) {
+                $action = \substr($channel, \strlen($oldPrefix));
+                if (\in_array($action, self::SUPPORTED_ACTIONS, true)) {
+                    return 'account.'.$newUserId.'.'.$action;
+                }
+            }
+
+            return $channel;
+        }, $channels);
+    }
+
+    /**
+     * Constructs subscriptions from query parameters.
+     *
+     * @param array $channelNames
+     * @param callable $getQueryParam
+     * @return array [index => ['channels' => string[], 'queries' => Query[]]]
+     *
+     * @throws QueryException
+     */
+    public static function constructSubscriptions(array $channelNames, callable $getQueryParam): array
+    {
+        $subscriptions = [];
+
+        /**
+         * Reserved channel params with expected type
+         * If matched the expected type then skip the query parsing like in project
+         */
+        /** @var array<string, 'array'|'string'> $reservedParamExpectedTypes */
+        $reservedParamExpectedTypes = [
+            'project' => 'string',
+        ];
+
+        foreach ($channelNames as $channel) {
+            $paramKey = \str_replace('.', '_', $channel);
+            $params = $getQueryParam($paramKey);
+
+            if (\array_key_exists($paramKey, $reservedParamExpectedTypes) && $params !== null) {
+                $expectedType = $reservedParamExpectedTypes[$paramKey];
+                $isExpectedType = match ($expectedType) {
+                    'array' => \is_array($params),
+                    'string' => \is_string($params),
+                };
+
+                // If the value matches the expected type dont use it the queries
+                if ($isExpectedType) {
+                    $params = null;
+                }
+            }
+
+            if ($params === null) {
+                if (!isset($subscriptions[0])) {
+                    $subscriptions[0] = ['channels' => [], 'queries' => []];
+                }
+                $subscriptions[0]['channels'][] = $channel;
+                if (empty($subscriptions[0]['queries'])) {
+                    $subscriptions[0]['queries'] = [Query::select(['*'])];
+                }
+
+                continue;
+            }
+
+            if (! \is_array($params)) {
+                $params = [$params];
+            }
+
+            foreach ($params as $index => $slot) {
+                if (!isset($subscriptions[$index])) {
+                    $subscriptions[$index] = ['channels' => [], 'queries' => []];
+                }
+
+                if (!\in_array($channel, $subscriptions[$index]['channels'], true)) {
+                    $subscriptions[$index]['channels'][] = $channel;
+                }
+
+                if (empty($subscriptions[$index]['queries'])) {
+                    $raw = \is_array($slot) ? $slot : [$slot];
+                    $subscriptions[$index]['queries'] = self::convertQueries($raw);
+                }
+            }
+        }
+
+        return $subscriptions;
+    }
+
+    /**
+     * Converts the queries from the Query Params into an array.
+     * @param array|string $queries
+     * @return array
+     *
+     * @throws QueryException
+     */
+    public static function convertQueries(mixed $queries): array
+    {
+        $queries = Query::parseQueries($queries);
+        $stack = $queries;
+        $allowed = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+
+        while (!empty($stack)) {
+            $query = array_pop($stack);
+            $method = $query->getMethod();
+
+            if (! in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
+                throw new QueryException(
+                    "Query method '{$method}' is not supported in Realtime queries. Allowed: {$allowed}"
+                );
+            }
+
+            if ($method === Query::TYPE_SELECT) {
+                RuntimeQuery::validateSelectQuery($query);
+            }
+
+            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                \array_push($stack, ...$query->getValues());
+            }
+        }
+
+        return $queries;
     }
 
     /**
@@ -257,7 +721,7 @@ class Realtime extends MessagingAdapter
      * @return array
      * @throws \Exception
      */
-    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
+    public static function fromPayload(string $event, Document $payload, ?Document $project = null, ?Document $database = null, ?Document $collection = null, ?Document $bucket = null): array
     {
         $channels = [];
         $roles = [];
@@ -298,6 +762,9 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
+            case 'tablesdb':
+            case 'documentsdb':
+            case 'vectorsdb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -315,14 +782,22 @@ class Realtime extends MessagingAdapter
                     $tableId = $payload->getAttribute('$tableId', '');
                     $collectionId = $payload->getAttribute('$collectionId', '');
                     $resourceId = $tableId ?: $collectionId;
+                    $channels = [];
 
-                    $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $resourceId . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $resourceId . '.rows.' . $payload->getId();
-
-                    $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $resourceId . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $resourceId . '.documents.' . $payload->getId();
+                    switch ($parts[0]) {
+                        case 'databases':
+                        case 'tablesdb':
+                            // sending legacy + tablesdb events to both legacy and tablesdb
+                            $channels = array_values(array_unique(array_merge(
+                                self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                                self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                                self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
+                            )));
+                            break;
+                        default:
+                            // only prefixed events
+                            $channels = array_values(self::getDatabaseChannels($parts[0], $database->getId(), $resourceId, $payload->getId()));
+                    }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -370,13 +845,136 @@ class Realtime extends MessagingAdapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
                 break;
+            case 'reports':
+                // Plain report event: `reports.{reportId}.{action}`
+                $channels[] = 'reports';
+                if (isset($parts[1])) {
+                    $channels[] = 'reports.' . $parts[1];
+                }
+                // Nested insight event: `reports.{reportId}.insights.{insightId}.{action}`
+                if (isset($parts[2]) && $parts[2] === 'insights') {
+                    $channels[] = 'reports.' . $parts[1] . '.insights';
+                    if (isset($parts[3])) {
+                        $channels[] = 'reports.' . $parts[1] . '.insights.' . $parts[3];
+                    }
+                }
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'presences':
+                $channels[] = 'presences';
+                $channels[] = 'presences.' . $parts[1];
+                $roles = $payload->getRead();
+                break;
+        }
+
+        // Action is the last segment for plain CRUD events (e.g. `documents.X.create`),
+        // and the second-to-last segment for attribute-trailing events
+        // (e.g. `users.U.update.email`, `teams.T.update.prefs`,
+        // `teams.T.memberships.M.update.status`). Without the second-to-last fallback
+        $count = \count($parts);
+        $action = null;
+        if (\in_array($parts[$count - 1], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 1];
+        } elseif ($count >= 2 && \in_array($parts[$count - 2], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 2];
+        }
+
+        // The `users` branch emits only user-level account channels
+        // (`account`, `account.{userId}`) regardless of event depth, so nested events
+        // like `users.U.sessions.S.create` or `users.U.challenges.C.create` would
+        // otherwise be suffixed as `account.create` — making a subscription to
+        // `account.create` receive unrelated session/challenge/recovery/verification
+        // events. Restrict suffixing to top-level user events where the action sits
+        // at parts[2] (`users.U.create`, `users.U.update.email`, etc.).
+        if (
+            $action !== null
+            && $parts[0] === 'users'
+            && ($parts[2] ?? null) !== $action
+        ) {
+            $action = null;
+        }
+
+        if ($action !== null && !empty($channels)) {
+            $augmented = $channels;
+            foreach ($channels as $channel) {
+                $segments = \explode('.', $channel);
+                $segCount = \count($segments);
+                $leafIsResource = \in_array($segments[$segCount - 1], self::RESOURCE_LEAF_NAMES, true);
+                $parentIsResource = $segCount >= 2 && \in_array($segments[$segCount - 2], self::RESOURCE_LEAF_NAMES, true);
+
+                if ($leafIsResource || $parentIsResource) {
+                    $augmented[] = $channel. '.' .$action;
+                }
+            }
+            $channels = \array_values(\array_unique($augmented));
         }
 
         return [
             'channels' => $channels,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
-            'projectId' => $projectId
+            'projectId' => $projectId,
         ];
+    }
+
+    /**
+     * Generate realtime channels for database events
+     *
+     * @param string $type The database API type
+     * @param string $databaseId The database ID
+     * @param string $resourceId The collection/table ID
+     * @param string $payloadId The document/row ID
+     * @param string $prefixOverride Override the channel prefix when different API types share the same terminology but need different prefixes
+     * (e.g., 'databases' and 'documentsdb' use same terminology but need different prefixes)
+     * @return array Array of channel names
+     */
+    private static function getDatabaseChannels(
+        string $type = 'databases',
+        string $databaseId = '',
+        string $resourceId = '',
+        string $payloadId = '',
+        string $prefixOverride = '',
+    ): array {
+        $basePrefix = $prefixOverride ?: $type;
+
+        if (!$databaseId || !$resourceId || !$payloadId) {
+            return [];
+        }
+
+        $channels = [];
+
+        switch ($type) {
+            case 'legacy':
+                if (empty($prefixOverride)) {
+                    $basePrefix = 'databases';
+                }
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+            case 'tablesdb':
+                $channels[] = 'rows';
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows";
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows.{$payloadId}";
+                break;
+
+            case 'documentsdb':
+            case 'vectorsdb':
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+            default:
+                $basePrefix = 'databases';
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+        }
+
+        return $channels;
     }
 }

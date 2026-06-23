@@ -31,7 +31,7 @@ class Get extends Base
             ->setHttpPath('/v1/functions/:functionId/executions/:executionId')
             ->desc('Get execution')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.read')
+            ->label('scope', ['executions.read', 'execution.read'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -48,11 +48,12 @@ class Get extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('executionId', '', new UID(), 'Execution ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -61,12 +62,13 @@ class Get extends Base
         string $executionId,
         Response $response,
         Database $dbForProject,
-        Authorization $authorization
+        Authorization $authorization,
+        User $user
     ) {
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -80,6 +82,16 @@ class Get extends Base
 
         if ($execution->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
+        // Override status in response if the execution is stuck in waiting/processing beyond the function timeout.
+        $status = $execution->getAttribute('status', '');
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $function->getAttribute('timeout', 900);
+            $elapsed = \time() - \strtotime($execution->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $execution->setAttribute('status', 'failed');
+            }
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);

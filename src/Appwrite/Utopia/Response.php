@@ -6,151 +6,12 @@ use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
-use Appwrite\Utopia\Response\Model\Account;
-use Appwrite\Utopia\Response\Model\AlgoArgon2;
-use Appwrite\Utopia\Response\Model\AlgoBcrypt;
-use Appwrite\Utopia\Response\Model\AlgoMd5;
-use Appwrite\Utopia\Response\Model\AlgoPhpass;
-use Appwrite\Utopia\Response\Model\AlgoScrypt;
-use Appwrite\Utopia\Response\Model\AlgoScryptModified;
-use Appwrite\Utopia\Response\Model\AlgoSha;
-use Appwrite\Utopia\Response\Model\Any;
-use Appwrite\Utopia\Response\Model\Attribute;
-use Appwrite\Utopia\Response\Model\AttributeBoolean;
-use Appwrite\Utopia\Response\Model\AttributeDatetime;
-use Appwrite\Utopia\Response\Model\AttributeEmail;
-use Appwrite\Utopia\Response\Model\AttributeEnum;
-use Appwrite\Utopia\Response\Model\AttributeFloat;
-use Appwrite\Utopia\Response\Model\AttributeInteger;
-use Appwrite\Utopia\Response\Model\AttributeIP;
-use Appwrite\Utopia\Response\Model\AttributeLine;
-use Appwrite\Utopia\Response\Model\AttributeList;
-use Appwrite\Utopia\Response\Model\AttributePoint;
-use Appwrite\Utopia\Response\Model\AttributePolygon;
-use Appwrite\Utopia\Response\Model\AttributeRelationship;
-use Appwrite\Utopia\Response\Model\AttributeString;
-use Appwrite\Utopia\Response\Model\AttributeURL;
-use Appwrite\Utopia\Response\Model\AuthProvider;
-use Appwrite\Utopia\Response\Model\BaseList;
-use Appwrite\Utopia\Response\Model\Branch;
-use Appwrite\Utopia\Response\Model\Bucket;
-use Appwrite\Utopia\Response\Model\Collection;
-use Appwrite\Utopia\Response\Model\Column;
-use Appwrite\Utopia\Response\Model\ColumnBoolean;
-use Appwrite\Utopia\Response\Model\ColumnDatetime;
-use Appwrite\Utopia\Response\Model\ColumnEmail;
-use Appwrite\Utopia\Response\Model\ColumnEnum;
-use Appwrite\Utopia\Response\Model\ColumnFloat;
-use Appwrite\Utopia\Response\Model\ColumnIndex;
-use Appwrite\Utopia\Response\Model\ColumnInteger;
-use Appwrite\Utopia\Response\Model\ColumnIP;
-use Appwrite\Utopia\Response\Model\ColumnLine;
-use Appwrite\Utopia\Response\Model\ColumnList;
-use Appwrite\Utopia\Response\Model\ColumnPoint;
-use Appwrite\Utopia\Response\Model\ColumnPolygon;
-use Appwrite\Utopia\Response\Model\ColumnRelationship;
-use Appwrite\Utopia\Response\Model\ColumnString;
-use Appwrite\Utopia\Response\Model\ColumnURL;
-use Appwrite\Utopia\Response\Model\ConsoleVariables;
-use Appwrite\Utopia\Response\Model\Continent;
-use Appwrite\Utopia\Response\Model\Country;
-use Appwrite\Utopia\Response\Model\Currency;
-use Appwrite\Utopia\Response\Model\Database;
-use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\DetectionFramework;
-use Appwrite\Utopia\Response\Model\DetectionRuntime;
-use Appwrite\Utopia\Response\Model\DetectionVariable;
-use Appwrite\Utopia\Response\Model\DevKey;
-use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\Error;
-use Appwrite\Utopia\Response\Model\ErrorDev;
-use Appwrite\Utopia\Response\Model\Execution;
-use Appwrite\Utopia\Response\Model\File;
-use Appwrite\Utopia\Response\Model\Framework;
-use Appwrite\Utopia\Response\Model\FrameworkAdapter;
-use Appwrite\Utopia\Response\Model\Func;
-use Appwrite\Utopia\Response\Model\Headers;
-use Appwrite\Utopia\Response\Model\HealthAntivirus;
-use Appwrite\Utopia\Response\Model\HealthCertificate;
-use Appwrite\Utopia\Response\Model\HealthQueue;
-use Appwrite\Utopia\Response\Model\HealthStatus;
-use Appwrite\Utopia\Response\Model\HealthTime;
-use Appwrite\Utopia\Response\Model\HealthVersion;
-use Appwrite\Utopia\Response\Model\Identity;
-use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\Installation;
-use Appwrite\Utopia\Response\Model\JWT;
-use Appwrite\Utopia\Response\Model\Key;
-use Appwrite\Utopia\Response\Model\Language;
-use Appwrite\Utopia\Response\Model\Locale;
-use Appwrite\Utopia\Response\Model\LocaleCode;
-use Appwrite\Utopia\Response\Model\Log;
-use Appwrite\Utopia\Response\Model\Membership;
-use Appwrite\Utopia\Response\Model\Message;
-use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\MetricBreakdown;
-use Appwrite\Utopia\Response\Model\MFAChallenge;
-use Appwrite\Utopia\Response\Model\MFAFactors;
-use Appwrite\Utopia\Response\Model\MFARecoveryCodes;
-use Appwrite\Utopia\Response\Model\MFAType;
-use Appwrite\Utopia\Response\Model\Migration;
-use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
-use Appwrite\Utopia\Response\Model\MigrationReport;
-use Appwrite\Utopia\Response\Model\Mock;
-use Appwrite\Utopia\Response\Model\MockNumber;
-use Appwrite\Utopia\Response\Model\None;
-use Appwrite\Utopia\Response\Model\Phone;
-use Appwrite\Utopia\Response\Model\Platform;
-use Appwrite\Utopia\Response\Model\Preferences;
-use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Provider;
-use Appwrite\Utopia\Response\Model\ProviderRepository;
-use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
-use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
-use Appwrite\Utopia\Response\Model\ResourceToken;
-use Appwrite\Utopia\Response\Model\Row;
-use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Utopia\Response\Model\Runtime;
-use Appwrite\Utopia\Response\Model\Session;
-use Appwrite\Utopia\Response\Model\Site;
-use Appwrite\Utopia\Response\Model\Specification;
-use Appwrite\Utopia\Response\Model\Subscriber;
-use Appwrite\Utopia\Response\Model\Table;
-use Appwrite\Utopia\Response\Model\Target;
-use Appwrite\Utopia\Response\Model\Team;
-use Appwrite\Utopia\Response\Model\TemplateEmail;
-use Appwrite\Utopia\Response\Model\TemplateFramework;
-use Appwrite\Utopia\Response\Model\TemplateFunction;
-use Appwrite\Utopia\Response\Model\TemplateRuntime;
-use Appwrite\Utopia\Response\Model\TemplateSite;
-use Appwrite\Utopia\Response\Model\TemplateSMS;
-use Appwrite\Utopia\Response\Model\TemplateVariable;
-use Appwrite\Utopia\Response\Model\Token;
-use Appwrite\Utopia\Response\Model\Topic;
-use Appwrite\Utopia\Response\Model\Transaction;
-use Appwrite\Utopia\Response\Model\UsageBuckets;
-use Appwrite\Utopia\Response\Model\UsageCollection;
-use Appwrite\Utopia\Response\Model\UsageDatabase;
-use Appwrite\Utopia\Response\Model\UsageDatabases;
-use Appwrite\Utopia\Response\Model\UsageFunction;
-use Appwrite\Utopia\Response\Model\UsageFunctions;
-use Appwrite\Utopia\Response\Model\UsageProject;
-use Appwrite\Utopia\Response\Model\UsageSite;
-use Appwrite\Utopia\Response\Model\UsageSites;
-use Appwrite\Utopia\Response\Model\UsageStorage;
-use Appwrite\Utopia\Response\Model\UsageTable;
-use Appwrite\Utopia\Response\Model\UsageUsers;
-use Appwrite\Utopia\Response\Model\User;
-use Appwrite\Utopia\Response\Model\Variable;
-use Appwrite\Utopia\Response\Model\VcsContent;
-use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
-// Keep last
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -171,9 +32,14 @@ class Response extends SwooleResponse
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
+    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
+    public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
+    public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
+    public const MODEL_USAGE_PRESENCE = 'usagePresence';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
@@ -187,6 +53,10 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_VECTORSDB_COLLECTION = 'vectorsdbCollection';
+    public const MODEL_VECTORSDB_COLLECTION_LIST = 'vectorsdbCollectionList';
+    public const MODEL_EMBEDDING = 'embedding';
+    public const MODEL_EMBEDDING_LIST = 'embeddingList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
@@ -195,6 +65,8 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
@@ -203,6 +75,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
     public const MODEL_ATTRIBUTE_STRING = 'attributeString';
     public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_BIGINT = 'attributeBigint';
     public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
     public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
     public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
@@ -214,12 +87,19 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
     public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
     public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+    public const MODEL_ATTRIBUTE_VARCHAR = 'attributeVarchar';
+    public const MODEL_ATTRIBUTE_TEXT = 'attributeText';
+    public const MODEL_ATTRIBUTE_MEDIUMTEXT = 'attributeMediumtext';
+    public const MODEL_ATTRIBUTE_LONGTEXT = 'attributeLongtext';
+    public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
+    public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';
     public const MODEL_COLUMN_LIST = 'columnList';
     public const MODEL_COLUMN_STRING = 'columnString';
     public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_BIGINT = 'columnBigint';
     public const MODEL_COLUMN_FLOAT = 'columnFloat';
     public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
     public const MODEL_COLUMN_EMAIL = 'columnEmail';
@@ -231,6 +111,10 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_POINT = 'columnPoint';
     public const MODEL_COLUMN_LINE = 'columnLine';
     public const MODEL_COLUMN_POLYGON = 'columnPolygon';
+    public const MODEL_COLUMN_VARCHAR = 'columnVarchar';
+    public const MODEL_COLUMN_TEXT = 'columnText';
+    public const MODEL_COLUMN_MEDIUMTEXT = 'columnMediumtext';
+    public const MODEL_COLUMN_LONGTEXT = 'columnLongtext';
 
     // Transactions
     public const MODEL_TRANSACTION = 'transaction';
@@ -354,6 +238,10 @@ class Response extends SwooleResponse
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
 
+    // Schedules
+    public const MODEL_SCHEDULE = 'schedule';
+    public const MODEL_SCHEDULE_LIST = 'scheduleList';
+
     // Migrations
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
@@ -364,22 +252,83 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
+    public const MODEL_PROJECT_SERVICE = 'projectService';
+    public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
     public const MODEL_DEV_KEY = 'devKey';
     public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
+    public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
+    public const MODEL_POLICY_LIST = 'policyList';
+    public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
+    public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
+    public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
+    public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
+    public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
+    public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
+    public const MODEL_POLICY_SESSION_LIMIT = 'policySessionLimit';
+    public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
+    public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
-    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_PLATFORM_APPLE = 'platformApple';
+    public const MODEL_PLATFORM_ANDROID = 'platformAndroid';
+    public const MODEL_PLATFORM_WINDOWS = 'platformWindows';
+    public const MODEL_PLATFORM_LINUX = 'platformLinux';
+    public const MODEL_PLATFORM_WEB = 'platformWeb';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
     public const MODEL_VCS = 'vcs';
-    public const MODEL_SMS_TEMPLATE = 'smsTemplate';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
+    public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
+    public const MODEL_OAUTH2_GITHUB = 'oAuth2Github';
+    public const MODEL_OAUTH2_DISCORD = 'oAuth2Discord';
+    public const MODEL_OAUTH2_FIGMA = 'oAuth2Figma';
+    public const MODEL_OAUTH2_DROPBOX = 'oAuth2Dropbox';
+    public const MODEL_OAUTH2_DAILYMOTION = 'oAuth2Dailymotion';
+    public const MODEL_OAUTH2_BITBUCKET = 'oAuth2Bitbucket';
+    public const MODEL_OAUTH2_BITLY = 'oAuth2Bitly';
+    public const MODEL_OAUTH2_BOX = 'oAuth2Box';
+    public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
+    public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
+    public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
+    public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
+    public const MODEL_OAUTH2_X = 'oAuth2X';
+    public const MODEL_OAUTH2_WORDPRESS = 'oAuth2WordPress';
+    public const MODEL_OAUTH2_TWITCH = 'oAuth2Twitch';
+    public const MODEL_OAUTH2_STRIPE = 'oAuth2Stripe';
+    public const MODEL_OAUTH2_SPOTIFY = 'oAuth2Spotify';
+    public const MODEL_OAUTH2_SLACK = 'oAuth2Slack';
+    public const MODEL_OAUTH2_PODIO = 'oAuth2Podio';
+    public const MODEL_OAUTH2_NOTION = 'oAuth2Notion';
+    public const MODEL_OAUTH2_SALESFORCE = 'oAuth2Salesforce';
+    public const MODEL_OAUTH2_YAHOO = 'oAuth2Yahoo';
+    public const MODEL_OAUTH2_LINKEDIN = 'oAuth2Linkedin';
+    public const MODEL_OAUTH2_DISQUS = 'oAuth2Disqus';
+    public const MODEL_OAUTH2_AMAZON = 'oAuth2Amazon';
+    public const MODEL_OAUTH2_ETSY = 'oAuth2Etsy';
+    public const MODEL_OAUTH2_FACEBOOK = 'oAuth2Facebook';
+    public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
+    public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
+    public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
+    public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
+    public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';
+    public const MODEL_OAUTH2_KEYCLOAK = 'oAuth2Keycloak';
+    public const MODEL_OAUTH2_OIDC = 'oAuth2Oidc';
+    public const MODEL_OAUTH2_APPLE = 'oAuth2Apple';
+    public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
+    public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
+    public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
+    public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -390,8 +339,20 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
+    // Advisor
+    public const MODEL_INSIGHT = 'insight';
+    public const MODEL_INSIGHT_LIST = 'insightList';
+    public const MODEL_INSIGHT_CTA = 'insightCTA';
+    public const MODEL_REPORT = 'report';
+    public const MODEL_REPORT_LIST = 'reportList';
+
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_PARAMETER = 'consoleOAuth2ProviderParameter';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER = 'consoleOAuth2Provider';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_LIST = 'consoleOAuth2ProviderList';
+    public const MODEL_CONSOLE_KEY_SCOPE = 'consoleKeyScope';
+    public const MODEL_CONSOLE_KEY_SCOPE_LIST = 'consoleKeyScopeList';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -416,9 +377,12 @@ class Response extends SwooleResponse
     /**
      * @var bool
      */
-    protected static bool $showSensitive = false;
+    protected bool $showSensitive = false;
 
-    protected SwooleHTTPResponse $swoole;
+    /**
+     * @var array<string, Model>
+     */
+    protected static array $models = [];
 
     /**
      * Response constructor.
@@ -427,207 +391,6 @@ class Response extends SwooleResponse
      */
     public function __construct(SwooleHTTPResponse $response)
     {
-        $this->swoole = $response;
-
-        $this
-            // General
-            ->setModel(new None())
-            ->setModel(new Any())
-            ->setModel(new Error())
-            ->setModel(new ErrorDev())
-            // Lists
-            ->setModel(new BaseList('Rows List', self::MODEL_ROW_LIST, 'rows', self::MODEL_ROW))
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
-            ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
-            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
-            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
-            ->setModel(new BaseList('Column Indexes List', self::MODEL_COLUMN_INDEX_LIST, 'indexes', self::MODEL_COLUMN_INDEX))
-            ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
-            ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
-            ->setModel(new BaseList('Identities List', self::MODEL_IDENTITY_LIST, 'identities', self::MODEL_IDENTITY))
-            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
-            ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
-            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
-            ->setModel(new BaseList('Resource Tokens List', self::MODEL_RESOURCE_TOKEN_LIST, 'tokens', self::MODEL_RESOURCE_TOKEN))
-            ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
-            ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
-            ->setModel(new BaseList('Sites List', self::MODEL_SITE_LIST, 'sites', self::MODEL_SITE))
-            ->setModel(new BaseList('Site Templates List', self::MODEL_TEMPLATE_SITE_LIST, 'templates', self::MODEL_TEMPLATE_SITE))
-            ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
-            ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
-            ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
-            ->setModel(new BaseList('Framework Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST, 'frameworkProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_FRAMEWORK))
-            ->setModel(new BaseList('Runtime Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST, 'runtimeProviderRepositories', self::MODEL_PROVIDER_REPOSITORY_RUNTIME))
-            ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
-            ->setModel(new BaseList('Frameworks List', self::MODEL_FRAMEWORK_LIST, 'frameworks', self::MODEL_FRAMEWORK))
-            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
-            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
-            ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
-            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
-            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Dev Keys List', self::MODEL_DEV_KEY_LIST, 'devKeys', self::MODEL_DEV_KEY, true, false))
-            ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
-            ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
-            ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
-            ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
-            ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
-            ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
-            ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
-            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
-            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
-            ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
-            ->setModel(new BaseList('Rule List', self::MODEL_PROXY_RULE_LIST, 'rules', self::MODEL_PROXY_RULE))
-            ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
-            ->setModel(new BaseList('Provider list', self::MODEL_PROVIDER_LIST, 'providers', self::MODEL_PROVIDER))
-            ->setModel(new BaseList('Message list', self::MODEL_MESSAGE_LIST, 'messages', self::MODEL_MESSAGE))
-            ->setModel(new BaseList('Topic list', self::MODEL_TOPIC_LIST, 'topics', self::MODEL_TOPIC))
-            ->setModel(new BaseList('Subscriber list', self::MODEL_SUBSCRIBER_LIST, 'subscribers', self::MODEL_SUBSCRIBER))
-            ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
-            ->setModel(new BaseList('Transaction List', self::MODEL_TRANSACTION_LIST, 'transactions', self::MODEL_TRANSACTION))
-            ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
-            ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
-            ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
-            ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
-            // Entities
-            ->setModel(new Database())
-            // Collection API Models
-            ->setModel(new Collection())
-            ->setModel(new Attribute())
-            ->setModel(new AttributeList())
-            ->setModel(new AttributeString())
-            ->setModel(new AttributeInteger())
-            ->setModel(new AttributeFloat())
-            ->setModel(new AttributeBoolean())
-            ->setModel(new AttributeEmail())
-            ->setModel(new AttributeEnum())
-            ->setModel(new AttributeIP())
-            ->setModel(new AttributeURL())
-            ->setModel(new AttributeDatetime())
-            ->setModel(new AttributeRelationship())
-            ->setModel(new AttributePoint())
-            ->setModel(new AttributeLine())
-            ->setModel(new AttributePolygon())
-            // Table API Models
-            ->setModel(new Table())
-            ->setModel(new Column())
-            ->setModel(new ColumnList())
-            ->setModel(new ColumnString())
-            ->setModel(new ColumnInteger())
-            ->setModel(new ColumnFloat())
-            ->setModel(new ColumnBoolean())
-            ->setModel(new ColumnEmail())
-            ->setModel(new ColumnEnum())
-            ->setModel(new ColumnIP())
-            ->setModel(new ColumnURL())
-            ->setModel(new ColumnDatetime())
-            ->setModel(new ColumnRelationship())
-            ->setModel(new ColumnPoint())
-            ->setModel(new ColumnLine())
-            ->setModel(new ColumnPolygon())
-            ->setModel(new Index())
-            ->setModel(new ColumnIndex())
-            ->setModel(new Row())
-            ->setModel(new ModelDocument())
-            ->setModel(new Log())
-            ->setModel(new User())
-            ->setModel(new AlgoMd5())
-            ->setModel(new AlgoSha())
-            ->setModel(new AlgoPhpass())
-            ->setModel(new AlgoBcrypt())
-            ->setModel(new AlgoScrypt())
-            ->setModel(new AlgoScryptModified())
-            ->setModel(new AlgoArgon2())
-            ->setModel(new Account())
-            ->setModel(new Preferences())
-            ->setModel(new Session())
-            ->setModel(new Identity())
-            ->setModel(new Token())
-            ->setModel(new JWT())
-            ->setModel(new Locale())
-            ->setModel(new LocaleCode())
-            ->setModel(new File())
-            ->setModel(new Bucket())
-            ->setModel(new ResourceToken())
-            ->setModel(new Team())
-            ->setModel(new Membership())
-            ->setModel(new Site())
-            ->setModel(new TemplateSite())
-            ->setModel(new TemplateFramework())
-            ->setModel(new Func())
-            ->setModel(new TemplateFunction())
-            ->setModel(new TemplateRuntime())
-            ->setModel(new TemplateVariable())
-            ->setModel(new Installation())
-            ->setModel(new ProviderRepository())
-            ->setModel(new ProviderRepositoryFramework())
-            ->setModel(new ProviderRepositoryRuntime())
-            ->setModel(new DetectionFramework())
-            ->setModel(new DetectionRuntime())
-            ->setModel(new DetectionVariable())
-            ->setModel(new VcsContent())
-            ->setModel(new Branch())
-            ->setModel(new Runtime())
-            ->setModel(new Framework())
-            ->setModel(new FrameworkAdapter())
-            ->setModel(new Deployment())
-            ->setModel(new Execution())
-            ->setModel(new Project())
-            ->setModel(new Webhook())
-            ->setModel(new Key())
-            ->setModel(new DevKey())
-            ->setModel(new MockNumber())
-            ->setModel(new AuthProvider())
-            ->setModel(new Platform())
-            ->setModel(new Variable())
-            ->setModel(new Country())
-            ->setModel(new Continent())
-            ->setModel(new Language())
-            ->setModel(new Currency())
-            ->setModel(new Phone())
-            ->setModel(new HealthAntivirus())
-            ->setModel(new HealthQueue())
-            ->setModel(new HealthStatus())
-            ->setModel(new HealthCertificate())
-            ->setModel(new HealthTime())
-            ->setModel(new HealthVersion())
-            ->setModel(new Metric())
-            ->setModel(new MetricBreakdown())
-            ->setModel(new UsageDatabases())
-            ->setModel(new UsageDatabase())
-            ->setModel(new UsageTable())
-            ->setModel(new UsageCollection())
-            ->setModel(new UsageUsers())
-            ->setModel(new UsageStorage())
-            ->setModel(new UsageBuckets())
-            ->setModel(new UsageFunctions())
-            ->setModel(new UsageFunction())
-            ->setModel(new UsageSites())
-            ->setModel(new UsageSite())
-            ->setModel(new UsageProject())
-            ->setModel(new Headers())
-            ->setModel(new Specification())
-            ->setModel(new Rule())
-            ->setModel(new TemplateSMS())
-            ->setModel(new TemplateEmail())
-            ->setModel(new ConsoleVariables())
-            ->setModel(new MFAChallenge())
-            ->setModel(new MFARecoveryCodes())
-            ->setModel(new MFAType())
-            ->setModel(new MFAFactors())
-            ->setModel(new Provider())
-            ->setModel(new Message())
-            ->setModel(new Topic())
-            ->setModel(new Transaction())
-            ->setModel(new Subscriber())
-            ->setModel(new Target())
-            ->setModel(new Migration())
-            ->setModel(new MigrationReport())
-            ->setModel(new MigrationFirebaseProject())
-            // Tests (keep last)
-            ->setModel(new Mock());
-
         parent::__construct($response);
     }
 
@@ -639,20 +402,14 @@ class Response extends SwooleResponse
     public const CONTENT_TYPE_MULTIPART = 'multipart/form-data';
 
     /**
-     * List of defined output objects
-     */
-    protected $models = [];
-
-    /**
-     * Set Model Object
+     * Register a model
      *
-     * @return self
+     * @param Model $model
+     * @return void
      */
-    public function setModel(Model $instance): Response
+    public static function setModel(Model $model): void
     {
-        $this->models[$instance->getType()] = $instance;
-
-        return $this;
+        self::$models[$model->getType()] = $model;
     }
 
     /**
@@ -664,11 +421,11 @@ class Response extends SwooleResponse
      */
     public function getModel(string $key): Model
     {
-        if (!isset($this->models[$key])) {
+        if (!isset(self::$models[$key])) {
             throw new Exception('Undefined model: ' . $key);
         }
 
-        return $this->models[$key];
+        return self::$models[$key];
     }
 
     /**
@@ -678,12 +435,24 @@ class Response extends SwooleResponse
      */
     public function getModels(): array
     {
-        return $this->models;
+        return self::$models;
     }
 
-    public function applyFilters(array $data, string $model): array
+    /**
+     * Check if a model exists
+     *
+     * @param string $key
+     * @return bool
+     */
+    public static function hasModel(string $key): bool
+    {
+        return isset(self::$models[$key]);
+    }
+
+    public function applyFilters(array $data, string $model, Document $raw): array
     {
         foreach ($this->filters as $filter) {
+            $filter->setRawContent($raw);
             $data = $filter->parse($data, $model);
         }
 
@@ -703,7 +472,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model);
+        $output = $this->applyFilters($output, $model, raw: clone $document);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -774,17 +543,25 @@ class Response extends SwooleResponse
             }
 
             if ($rule['array']) {
-                if (!is_array($data[$key])) {
+                if (!\is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
+                        $ruleType = null;
+
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $condition = $item->getAttribute($attribute) === $val;
+
+                                    if (\is_array($val)) {
+                                        $condition = \in_array($item->getAttribute($attribute), $val);
+                                    } else {
+                                        $condition = $item->getAttribute($attribute) === $val;
+                                    }
+
                                     if (!$condition) {
                                         break;
                                     }
@@ -798,8 +575,8 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!array_key_exists($ruleType, $this->models)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        if ($ruleType === null || !self::hasModel($ruleType)) {
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);
@@ -813,10 +590,11 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = $this->authorization->getRoles();
-                $isPrivilegedUser = DBUser::isPrivileged($roles);
-                $isAppUser = DBUser::isApp($roles);
+                $user = $this->user ?? new DBUser();
+                $isPrivilegedUser = $user->isPrivileged($roles);
+                $isAppUser = $user->isKey($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
@@ -910,6 +688,8 @@ class Response extends SwooleResponse
             throw new \Exception('Response body is not a valid JSON object.');
         }
 
+        $this->payload = \is_array($data) ? $data : (array) $data;
+
         $this
             ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
             ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -921,6 +701,16 @@ class Response extends SwooleResponse
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    /**
+     * Set the sent flag on the response. Pass false to allow reuse
+     * (e.g. batched GraphQL queries), true to prevent further writes.
+     */
+    public function setSent(bool $sent): static
+    {
+        $this->sent = $sent;
+        return $this;
     }
 
     /**
@@ -936,9 +726,9 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Return the currently set filter
+     * Return the currently set filters
      *
-     * @return Filter
+     * @return array<Filter>
      */
     public function getFilters(): array
     {
@@ -966,25 +756,33 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Static wrapper to show sensitive data in response
+     * Wrapper to show sensitive data in response
      *
-     * @param callable The callback to show sensitive information for
+     * @param callable(): array $callback The callback to show sensitive information for
      * @return array
      */
-    public static function showSensitive(callable $callback): array
+    public function showSensitive(callable $callback): array
     {
+        $previous = $this->showSensitive;
+
         try {
-            self::$showSensitive = true;
+            $this->showSensitive = true;
             return $callback();
         } finally {
-            self::$showSensitive = false;
+            $this->showSensitive = $previous;
         }
     }
 
     private ?Authorization $authorization = null;
+    private ?DBUser $user = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
+    }
+
+    public function setUser(DBUser $user): void
+    {
+        $this->user = $user;
     }
 }

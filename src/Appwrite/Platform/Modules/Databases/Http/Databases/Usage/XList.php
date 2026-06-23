@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Usage;
 
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -13,8 +14,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
 class XList extends Action
@@ -22,6 +23,45 @@ class XList extends Action
     public static function getName(): string
     {
         return 'listDatabaseUsage';
+    }
+
+    protected $databaseType = DATABASE_TYPE_LEGACY;
+
+    public function setHttpPath(string $path): Action
+    {
+        $this->databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => DATABASE_TYPE_LEGACY,
+        };
+
+        parent::setHttpPath($path);
+
+        return $this;
+    }
+
+    protected function getMetrics(): array
+    {
+        $metrics = [
+            METRIC_DATABASES,
+            METRIC_COLLECTIONS,
+            METRIC_DOCUMENTS,
+            METRIC_DATABASES_STORAGE,
+            METRIC_DATABASES_OPERATIONS_READS,
+            METRIC_DATABASES_OPERATIONS_WRITES,
+        ];
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return $metrics;
+        }
+        return array_map(
+            fn ($metric) => "{$this->databaseType}.{$metric}",
+            $metrics
+        );
+    }
+
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_DATABASES;
     }
 
     public function __construct()
@@ -53,7 +93,14 @@ class XList extends Action
                     )
                 ),
             ])
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -66,14 +113,7 @@ class XList extends Action
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
-            METRIC_DATABASES,
-            METRIC_COLLECTIONS,
-            METRIC_DOCUMENTS,
-            METRIC_DATABASES_STORAGE,
-            METRIC_DATABASES_OPERATIONS_READS,
-            METRIC_DATABASES_OPERATIONS_WRITES,
-        ];
+        $metrics = $this->getMetrics();
 
         $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
@@ -103,6 +143,7 @@ class XList extends Action
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unexpected period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {
@@ -136,6 +177,6 @@ class XList extends Action
             'storage' => $usage[$metrics[3]]['data'],
             'databasesReads' => $usage[$metrics[4]]['data'],
             'databasesWrites' => $usage[$metrics[5]]['data'],
-        ]), UtopiaResponse::MODEL_USAGE_DATABASES);
+        ]), $this->getResponseModel());
     }
 }

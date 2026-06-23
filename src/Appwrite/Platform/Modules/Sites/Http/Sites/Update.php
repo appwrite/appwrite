@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
@@ -16,15 +16,16 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -65,38 +66,49 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
-            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
+            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
+            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
-            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
-            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
+            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true, enum: new Enum(name: 'BuildRuntime'))
+            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Framework specification for the site and builds.', true, ['plan'])
+            ), 'Build specification for the site deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the SSR executions.', true, ['plan'])
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -109,6 +121,7 @@ class Update extends Base
         int $timeout,
         string $installCommand,
         string $buildCommand,
+        string $startCommand,
         string $outputDirectory,
         string $buildRuntime,
         string $adapter,
@@ -118,16 +131,21 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        ?array $providerBranches,
+        ?array $providerPaths,
+        string $buildSpecification,
+        string $runtimeSpecification,
+        int $deploymentRetention,
         Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
         GitHub $github,
-        Executor $executor
+        Executor $executor,
+        array $platform
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -155,20 +173,29 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
-        }
-
         if (empty($framework)) {
             $framework = $site->getAttribute('framework');
         }
-
-        $enabled ??= $site->getAttribute('enabled', true);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
         $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
+
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
+        if ($isConnected && $providerRepositoryId === null) {
+            $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
+            $installationId = $site->getAttribute('installationId', '');
+            $providerBranch = $providerBranch ?: $site->getAttribute('providerBranch', '');
+            $providerRootDirectory = $providerRootDirectory ?: $site->getAttribute('providerRootDirectory', '');
+            $repositoryId = $site->getAttribute('repositoryId', '');
+            $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+        }
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
@@ -192,19 +219,11 @@ class Update extends Base
             $repositoryInternalId = '';
         }
 
-        // Git connect logic
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
-
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
+            $repository = new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
@@ -214,8 +233,8 @@ class Update extends Base
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
-            ]));
-
+            ]);
+            $repository = $dbForPlatform->createDocument('repositories', $repository);
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
         }
@@ -226,6 +245,7 @@ class Update extends Base
             $site->getAttribute('name') !== $name ||
             $site->getAttribute('buildCommand') !== $buildCommand ||
             $site->getAttribute('installCommand') !== $installCommand ||
+            $site->getAttribute('startCommand') !== $startCommand ||
             $site->getAttribute('outputDirectory') !== $outputDirectory ||
             $site->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
             $site->getAttribute('framework') !== $framework
@@ -233,14 +253,22 @@ class Update extends Base
             $live = false;
         }
 
-        // Enforce Cold Start if spec limits change.
-        if ($site->getAttribute('specification') !== $specification && !empty($site->getAttribute('deploymentId'))) {
-            try {
-                $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
-            } catch (\Throwable $th) {
-                // Don't throw if the deployment doesn't exist
-                if ($th->getCode() !== 404) {
-                    throw $th;
+        if (!empty($site->getAttribute('deploymentId'))) {
+            $specsChanged = false;
+            if ($site->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
+                $specsChanged = true;
+            } elseif ($site->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            }
+
+            if ($specsChanged) {
+                try {
+                    $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
+                } catch (\Throwable $th) {
+                    // Don't throw if the deployment doesn't exist
+                    if ($th->getCode() !== 404) {
+                        throw $th;
+                    }
                 }
             }
         }
@@ -252,8 +280,10 @@ class Update extends Base
             'logging' => $logging,
             'live' => $live,
             'timeout' => $timeout,
+            'deploymentRetention' => $deploymentRetention,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'startCommand' => $startCommand,
             'outputDirectory' => $outputDirectory,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
@@ -263,7 +293,10 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'providerBranches' => $providerBranches ?? $site->getAttribute('providerBranches', []),
+            'providerPaths' => $providerPaths ?? $site->getAttribute('providerPaths', []),
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
@@ -272,7 +305,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github, true);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

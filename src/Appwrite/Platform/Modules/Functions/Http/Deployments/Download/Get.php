@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Download;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -11,10 +12,10 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Swoole\Request;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -31,7 +32,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/download')
-            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', ['type' => 'output'])
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download')
             ->groups(['api', 'functions'])
             ->desc('Get deployment download')
             ->label('scope', 'functions.read')
@@ -51,11 +52,12 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::ANY,
-                type: MethodType::LOCATION
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
-            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
@@ -88,16 +90,11 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        switch ($type) {
-            case 'output':
-                $path = $deployment->getAttribute('buildPath', '');
-                $device = $deviceForBuilds;
-                break;
-            case 'source':
-                $path = $deployment->getAttribute('sourcePath', '');
-                $device = $deviceForFunctions;
-                break;
-        }
+        [$path, $device] = match ($type) {
+            'output' => [$deployment->getAttribute('buildPath', ''), $deviceForBuilds],
+            'source' => [$deployment->getAttribute('sourcePath', ''), $deviceForFunctions],
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
+        };
 
         if (!$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
@@ -110,7 +107,7 @@ class Get extends Action
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();

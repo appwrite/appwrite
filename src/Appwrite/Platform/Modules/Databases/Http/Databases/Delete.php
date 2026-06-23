@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -13,8 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
@@ -55,20 +55,19 @@ class Delete extends Action
                     )
                 ),
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -79,13 +78,17 @@ class Delete extends Action
         $dbForProject->purgeCachedDocument('databases', $database->getId());
         $dbForProject->purgeCachedCollection('databases_' . $database->getSequence());
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_DELETE_DATABASE)
-            ->setDatabase($database);
-
         $queueForEvents
             ->setParam('databaseId', $database->getId())
             ->setPayload($response->output($database, UtopiaResponse::MODEL_DATABASE));
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_DELETE_DATABASE,
+            database: $database,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response->noContent();
     }
