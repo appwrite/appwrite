@@ -17,6 +17,7 @@ use Utopia\Validator\Boolean;
 class Update extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -67,16 +68,14 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $enabled) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $enabled) {
             $auths = $current->getAttribute('auths', []);
             $auths['passwordDictionary'] = $enabled;
 
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'auths' => $auths,
             ]));
-        }));
+        });
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

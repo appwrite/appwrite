@@ -24,6 +24,7 @@ use Utopia\Validator\WhiteList;
 class Update extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -92,9 +93,7 @@ class Update extends Action
 
         $template = [];
 
-        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $templateId, $locale, $subject, $message, $senderName, $senderEmail, $replyToEmail, $replyToName, &$template) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $templateId, $locale, $subject, $message, $senderName, $senderEmail, $replyToEmail, $replyToName, &$template) {
             // Prevent template update if custom SMTP is not configured
             $smtp = $current->getAttribute('smtp', []);
             if (($smtp['enabled'] ?? false) !== true) {
@@ -133,7 +132,7 @@ class Update extends Action
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'templates' => $templates,
             ]));
-        }));
+        });
 
         $queueForEvents->setParam('templateId', $templateId);
 

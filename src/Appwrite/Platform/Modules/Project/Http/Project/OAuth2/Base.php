@@ -21,6 +21,7 @@ use Utopia\Validator\Text;
 abstract class Base extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     /**
      * Provider ID used in paths, database keys and event labels.
@@ -430,9 +431,7 @@ abstract class Base extends Action
         // Re-read fresh under a row lock and apply only the changed keys so a
         // concurrent provider update can't be clobbered. The credentials check
         // above intentionally stays outside the lock.
-        return $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $changes) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        return $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $changes) {
             $oAuthProviders = $current->getAttribute('oAuthProviders', []);
             foreach ($changes as $key => $value) {
                 $oAuthProviders[$key] = $value;
@@ -441,7 +440,7 @@ abstract class Base extends Action
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'oAuthProviders' => $oAuthProviders,
             ]));
-        }));
+        });
     }
 
     public function action(

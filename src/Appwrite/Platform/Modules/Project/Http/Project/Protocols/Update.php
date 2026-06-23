@@ -20,6 +20,7 @@ use Utopia\Validator\WhiteList;
 class Update extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -73,16 +74,14 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $protocolId, $enabled) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $protocolId, $enabled) {
             $protocols = $current->getAttribute('apis', []);
             $protocols[$protocolId] = $enabled;
 
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'apis' => $protocols,
             ]));
-        }));
+        });
 
         $queueForEvents->setParam('protocolId', $protocolId);
 

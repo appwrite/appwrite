@@ -27,6 +27,7 @@ use Utopia\Validator\WhiteList;
 class Update extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -174,15 +175,13 @@ class Update extends Action
         // Save configuration. Re-read fresh under a row lock and apply only the
         // changed keys so a concurrent SMTP update can't be clobbered. The
         // expensive connection test above intentionally stays outside the lock.
-        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $changes) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $changes) {
             $smtp = \array_merge($current->getAttribute('smtp', []), $changes);
 
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'smtp' => $smtp,
             ]));
-        }));
+        });
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

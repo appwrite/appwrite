@@ -18,6 +18,7 @@ use Utopia\Validator\Range;
 class Update extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -77,9 +78,7 @@ class Update extends Action
     ): void {
         $passwordStrength = [];
 
-        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $min, $uppercase, $lowercase, $number, $symbols, &$passwordStrength) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $min, $uppercase, $lowercase, $number, $symbols, &$passwordStrength) {
             $auths = $current->getAttribute('auths', []);
             $auths['passwordStrength'] = \array_merge([
                 'min' => 8,
@@ -110,7 +109,7 @@ class Update extends Action
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'auths' => $auths,
             ]));
-        }));
+        });
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

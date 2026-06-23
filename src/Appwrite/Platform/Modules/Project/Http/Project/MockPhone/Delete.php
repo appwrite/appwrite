@@ -19,6 +19,7 @@ use Utopia\Platform\Scope\HTTP;
 class Delete extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -69,9 +70,7 @@ class Delete extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $number) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $number) {
             $auths = $current->getAttribute('auths', []);
             $mockNumbers = $auths['mockNumbers'] ?? [];
 
@@ -95,7 +94,7 @@ class Delete extends Action
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'auths' => $auths,
             ]));
-        }));
+        });
 
         $queueForEvents->setParam('number', $number);
 

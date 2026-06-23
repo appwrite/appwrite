@@ -20,6 +20,7 @@ use Utopia\Validator\Text;
 class Update extends Action
 {
     use HTTP;
+    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -73,9 +74,7 @@ class Update extends Action
     ) {
         $updatedNumber = [];
 
-        $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $number, $otp, &$updatedNumber) {
-            $current = $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true);
-
+        $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $number, $otp, &$updatedNumber) {
             $auths = $current->getAttribute('auths', []);
             $mockNumbers = $auths['mockNumbers'] ?? [];
 
@@ -100,7 +99,7 @@ class Update extends Action
             return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
                 'auths' => $auths,
             ]));
-        }));
+        });
 
         $queueForEvents->setParam('number', $number);
 
