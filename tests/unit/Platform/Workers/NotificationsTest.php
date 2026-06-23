@@ -151,7 +151,7 @@ class SpyEmailAdapter extends EmailAdapter
     }
 }
 
-class NotificationsTest extends TestCase
+final class NotificationsTest extends TestCase
 {
     private Database $database;
     private Authorization $authorization;
@@ -414,7 +414,7 @@ class NotificationsTest extends TestCase
         }
 
         $this->assertSame(1, $spy->sendCount);
-        $this->assertNotNull($spy->captured);
+        $this->assertInstanceOf(\Utopia\Messaging\Messages\Email::class, $spy->captured);
 
         $message = $spy->captured;
         $this->assertSame('legacy@example.test', $message->getTo()[0]['email'] ?? '');
@@ -724,7 +724,7 @@ class NotificationsTest extends TestCase
             \putenv($previousConsoleDomain === false ? '_APP_CONSOLE_DOMAIN' : '_APP_CONSOLE_DOMAIN=' . $previousConsoleDomain);
         }
 
-        $this->assertNotNull($spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
+        $this->assertInstanceOf(\Utopia\Messaging\Messages\Email::class, $spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
 
         $body = $spy->captured->getContent();
         $this->assertStringContainsString('<img src=', $body, 'tracking logo <img> must be present');
@@ -795,7 +795,7 @@ class NotificationsTest extends TestCase
             \putenv($previousOpenSslKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousOpenSslKey);
         }
 
-        $this->assertNotNull($spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
+        $this->assertInstanceOf(\Utopia\Messaging\Messages\Email::class, $spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
         $this->assertStringNotContainsString('/v1/notifications/logos/appwrite?jwt=', $spy->captured->getContent());
     }
 
@@ -1103,7 +1103,7 @@ class NotificationsTest extends TestCase
         }
 
         $this->assertSame(1, $spy->sendCount, 'SMTP send must be invoked exactly once');
-        $this->assertNotNull($spy->captured);
+        $this->assertInstanceOf(\Utopia\Messaging\Messages\Email::class, $spy->captured);
 
         $message = $spy->captured;
         $this->assertSame('happy@example.test', $message->getTo()[0]['email'] ?? '');

@@ -12,6 +12,7 @@ use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Telemetry\Adapter\None;
 
 final class SpyMailAdapter extends EmailAdapter
 {
@@ -41,7 +42,7 @@ final class SpyMailAdapter extends EmailAdapter
     }
 }
 
-class MailsTest extends TestCase
+final class MailsTest extends TestCase
 {
     public function testLegacyMailPayloadIsSentByMailsWorker(): void
     {
@@ -76,13 +77,14 @@ class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new Log(),
+                new None(),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
 
         $this->assertSame(1, $adapter->sendCount);
-        $this->assertNotNull($adapter->captured);
+        $this->assertInstanceOf(\Utopia\Messaging\Messages\Email::class, $adapter->captured);
 
         $message = $adapter->captured;
         $this->assertSame('legacy@example.test', $message->getTo()[0]['email'] ?? '');

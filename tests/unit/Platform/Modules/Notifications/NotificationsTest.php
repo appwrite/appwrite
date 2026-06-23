@@ -34,7 +34,7 @@ final class CapturingNotificationsResponse extends Response
     }
 }
 
-class NotificationsTest extends TestCase
+final class NotificationsTest extends TestCase
 {
     private Authorization $authorization;
     private Database $database;

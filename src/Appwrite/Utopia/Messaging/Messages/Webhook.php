@@ -6,6 +6,8 @@ use Utopia\Messaging\Message;
 
 class Webhook implements Message
 {
+    private ?string $origin = null;
+
     /**
      * @param array<int, string> $urls
      * @param array<string, mixed> $payload
@@ -62,5 +64,17 @@ class Webhook implements Message
     public function getTimeout(): int
     {
         return $this->timeout;
+    }
+
+    public function setOrigin(?string $origin): self
+    {
+        $this->origin = $origin;
+
+        return $this;
+    }
+
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
     }
 }

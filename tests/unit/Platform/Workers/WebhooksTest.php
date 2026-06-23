@@ -67,10 +67,10 @@ final class WebhooksTest extends TestCase
             \realpath(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl'),
             \realpath($payload['bodyTemplate'])
         );
-        $this->assertStringContainsString('Payments', $payload['body']);
-        $this->assertStringContainsString('Ada Lovelace', $payload['body']);
-        $this->assertStringContainsString('/console/project-fra-project-1/settings/webhooks/webhook-1', $payload['body']);
-        $this->assertStringNotContainsString('{{', $payload['body']);
+        $this->assertStringContainsString('Payments', (string) $payload['body']);
+        $this->assertStringContainsString('Ada Lovelace', (string) $payload['body']);
+        $this->assertStringContainsString('/console/project-fra-project-1/settings/webhooks/webhook-1', (string) $payload['body']);
+        $this->assertStringNotContainsString('{{', (string) $payload['body']);
         $this->assertSame(APP_NAME, $payload['variables']['platform']);
         $this->assertSame(APP_EMAIL_LOGO_URL, $payload['variables']['logoUrl']);
         $this->assertCount(2, $payload['recipients']);
@@ -153,10 +153,10 @@ final class WebhooksTest extends TestCase
 
         $this->assertArrayHasKey('owner@example.test', $bodies);
         $this->assertArrayHasKey('grace@example.test', $bodies);
-        $this->assertStringContainsString('Ada Lovelace', $bodies['owner@example.test']);
-        $this->assertStringNotContainsString('Grace Hopper', $bodies['owner@example.test']);
-        $this->assertStringContainsString('Grace Hopper', $bodies['grace@example.test']);
-        $this->assertStringNotContainsString('Ada Lovelace', $bodies['grace@example.test']);
+        $this->assertStringContainsString('Ada Lovelace', (string) $bodies['owner@example.test']);
+        $this->assertStringNotContainsString('Grace Hopper', (string) $bodies['owner@example.test']);
+        $this->assertStringContainsString('Grace Hopper', (string) $bodies['grace@example.test']);
+        $this->assertStringNotContainsString('Ada Lovelace', (string) $bodies['grace@example.test']);
     }
 
     public function testSendAlertDeduplicationKeyChangesPerPauseCycle(): void
@@ -210,19 +210,17 @@ final class WebhooksTest extends TestCase
         $this->assertSame($expected, $method->invoke(null, $membership));
     }
 
-    public static function ownerRoleProvider(): array
+    public static function ownerRoleProvider(): \Iterator
     {
-        return [
-            'array owner' => [['owner'], true],
-            'array mixed case owner' => [['Owner'], true],
-            'comma string owner' => ['developer, owner', true],
-            'project-scoped owner string not recognized' => [['project-project-1-owner'], false],
-            'mixed case project-scoped owner string not recognized' => [['Project-Project-1-Owner'], false],
-            'comma string project-scoped owner not recognized' => ['developer, project-project-1-owner', false],
-            'other project owner' => [['project-project-2-owner'], false],
-            'non owner' => [['developer'], false],
-            'invalid roles' => [null, false],
-        ];
+        yield 'array owner' => [['owner'], true];
+        yield 'array mixed case owner' => [['Owner'], true];
+        yield 'comma string owner' => ['developer, owner', true];
+        yield 'project-scoped owner string not recognized' => [['project-project-1-owner'], false];
+        yield 'mixed case project-scoped owner string not recognized' => [['Project-Project-1-Owner'], false];
+        yield 'comma string project-scoped owner not recognized' => ['developer, project-project-1-owner', false];
+        yield 'other project owner' => [['project-project-2-owner'], false];
+        yield 'non owner' => [['developer'], false];
+        yield 'invalid roles' => [null, false];
     }
 
     private function createPlatformDatabase(): Database

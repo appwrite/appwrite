@@ -6,6 +6,8 @@ use Utopia\Messaging\Message;
 
 class Console implements Message
 {
+    private ?string $origin = null;
+
     /**
      * @param array<int, array{address?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string, alertId?: string, recipientHash?: string}> $recipients
      */
@@ -64,5 +66,17 @@ class Console implements Message
     public function getProjectInternalId(): ?string
     {
         return $this->projectInternalId;
+    }
+
+    public function setOrigin(?string $origin): self
+    {
+        $this->origin = $origin;
+
+        return $this;
+    }
+
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
     }
 }
