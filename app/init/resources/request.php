@@ -162,9 +162,9 @@ return function (Container $context): void {
         if (!empty($impersonateUserId)) {
             return $userDb->getAuthorization()->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
         } elseif (!empty($impersonateEmail)) {
-            return $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+            return $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]) ?? new Document());
         } elseif (!empty($impersonatePhone)) {
-            return $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+            return $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]) ?? new Document());
         }
 
         return $user;
