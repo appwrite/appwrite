@@ -473,7 +473,9 @@ class Response extends SwooleResponse
     {
         if (
             $this->impersonatorUser !== null
-            && ($model === self::MODEL_ACCOUNT || $model === self::MODEL_USER)
+            && $model === self::MODEL_ACCOUNT
+            && $this->user !== null
+            && $document->getId() === $this->user->getId()
         ) {
             $document = clone $document;
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());

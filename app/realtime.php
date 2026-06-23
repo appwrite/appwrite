@@ -675,6 +675,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         foreach (\array_keys($connections) as $connection) {
                             $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
                             $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                            $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
                             $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
                             $meta = $realtime->getSubscriptionMetadata($connection);
@@ -709,6 +710,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             }
                             if ($authorization !== null && isset($realtime->connections[$connection])) {
                                 $realtime->connections[$connection]['authorization'] = $authorization;
+                                $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -870,7 +872,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
         $targetUser = $connectionContainer->get('targetUser'); /** @var User $targetUser */
         if (!$impersonatorUser->isEmpty()) {
-            $targetUser->setAttribute('impersonatorUserId', $impersonatorUser->getId());
             getConsoleDB()->setMetadata('user', $targetUser->getId());
             getProjectDB($project)->setMetadata('user', $targetUser->getId());
         }

@@ -81,7 +81,7 @@ class Audits extends Action
         $actorUserInternalId = $isImpersonated ? $impersonatorUser->getSequence() : $user->getSequence();
         $actorUserName = $isImpersonated ? $impersonatorUser->getAttribute('name', '') : $user->getAttribute('name', '');
         $actorUserEmail = $isImpersonated ? $impersonatorUser->getAttribute('email', '') : $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
+        $userType = $isImpersonated ? $impersonatorUser->getAttribute('type', ACTOR_TYPE_USER) : $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
         $eventData = [
