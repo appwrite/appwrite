@@ -44,26 +44,16 @@ const TRAFFIC_STATS = [
     id: 'blocked',
     label: 'Blocked',
     value: '34.2k',
-    idleClass: productBentoIdle.text,
-    hoverClass:
-      'group-hover:text-red-600 dark:group-hover:text-red-400 motion-reduce:group-hover:text-muted-foreground',
-    popOnHover: true,
   },
   {
     id: 'allowed',
     label: 'Allowed',
     value: '198k',
-    idleClass: productBentoIdle.text,
-    hoverClass:
-      'group-hover:text-emerald-600 dark:group-hover:text-emerald-400 motion-reduce:group-hover:text-muted-foreground',
   },
   {
     id: 'challenged',
     label: 'Challenged',
     value: '13k',
-    idleClass: productBentoIdle.text,
-    hoverClass:
-      'group-hover:text-amber-600 dark:group-hover:text-amber-400 motion-reduce:group-hover:text-muted-foreground',
   },
 ] as const
 
@@ -247,26 +237,17 @@ export function FirewallProductVisual() {
 
         <div className="space-y-2 overflow-hidden p-3">
           <div className="grid grid-cols-3 gap-1.5">
-              {TRAFFIC_STATS.map((stat, index) => (
+              {TRAFFIC_STATS.map((stat) => (
                 <div
                   key={stat.id}
-                  className={cn(
-                    'rounded-md border border-border/70 bg-muted/8 px-2 py-1.5 text-center transition-[border-color,background-color,transform] duration-300 group-hover:border-border group-hover:bg-background/80',
-                    stat.popOnHover &&
-                      'group-hover:animate-[product-bento-oauth-highlight_0.45s_ease-out_both] motion-reduce:group-hover:animate-none',
-                  )}
-                  style={{ animationDelay: `${index * 60}ms`, transitionDelay: `${index * 40}ms` }}
+                  className="rounded-md border border-border bg-background px-2 py-1.5 text-center shadow-sm transition-[border-color,box-shadow] duration-300 group-hover:border-border group-hover:shadow-md"
                 >
-                  <p
-                    className={cn(
-                      'text-[11px] font-semibold tabular-nums transition-colors duration-300 sm:text-[12px]',
-                      stat.idleClass,
-                      stat.hoverClass,
-                    )}
-                  >
+                  <p className="text-[11px] font-semibold tabular-nums text-foreground sm:text-[12px]">
                     {stat.value}
                   </p>
-                  <p className="text-[9px] text-muted-foreground sm:text-[10px]">{stat.label}</p>
+                  <p className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">
+                    {stat.label}
+                  </p>
                 </div>
               ))}
             </div>

@@ -17,11 +17,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       'Meet Appwrite 2.0 - a refreshed platform experience, stronger foundations, and the start of everything we are shipping during Init week.',
     icon: Megaphone,
     visual: {
-      imageSrcLight: '/images/init/appwrite-2-visual-light.jpg',
-      imageSrcDark: '/images/init/appwrite-2-visual-dark.jpg',
-      imageAlt: 'Appwrite 2.0 announcement visual with 3D 2.0 typography',
-      aspectWidth: 1024,
-      aspectHeight: 682,
+      mockVisualId: 'appwrite-2',
+      imageAlt: 'Appwrite 2.0 mock with Appwrite icon mark and 2.0 wordmark',
     },
     isLive: true,
     sessionCount: 2,
@@ -78,11 +75,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       'Run Postgres on Appwrite with full SQL control, familiar extensions, and the tooling you already use - without leaving the platform.',
     icon: Database,
     visual: {
-      imageSrcLight: '/images/init/dedicated-dbs-visual-light.jpg',
-      imageSrcDark: '/images/init/dedicated-dbs-visual-dark.jpg',
-      imageAlt: 'Postgres comes to Appwrite visual with database server infrastructure',
-      aspectWidth: 1024,
-      aspectHeight: 682,
+      mockVisualId: 'postgres',
+      imageAlt: 'Postgres SQL editor mock with query and results',
     },
     sessionCount: 2,
     headerNavCta: {
@@ -117,11 +111,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       'VectorsDB, DocumentsDB, and MySQL expand what you can build on Appwrite - from vector search and flexible documents to familiar SQL workloads.',
     icon: Database,
     visual: {
-      imageSrcLight: '/images/init/databases-visual-light.jpg',
-      imageSrcDark: '/images/init/databases-visual-dark.jpg',
-      imageAlt: 'VectorsDB, DocumentsDB, and MySQL visual showing multiple database workloads',
-      aspectWidth: 1024,
-      aspectHeight: 682,
+      mockVisualId: 'databases',
+      imageAlt: 'Database types mock with TablesDB, DocumentsDB, VectorsDB, and native Postgres and MySQL',
     },
     sessionCount: 2,
     headerNavCta: {
@@ -172,16 +163,13 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
     dateLabel: 'JULY 9',
     weekdayLabel: 'THURSDAY, JULY 9',
     title: 'S3 support for Storage',
-    description: 'Connect Appwrite Storage to your S3 buckets.',
+    description: 'Access Appwrite Storage with S3-compatible APIs.',
     longDescription:
-      'Appwrite Storage now supports S3 - use your own buckets, keep familiar workflows, and integrate object storage without rebuilding file pipelines.',
+      'Appwrite Storage now exposes a project-scoped S3 endpoint with SigV4 signing. Use rclone, Terraform, AWS CLI, and other S3 tooling against your buckets without rebuilding upload flows.',
     icon: Cloud,
     visual: {
-      imageSrcLight: '/images/init/s3-visual-light.jpg',
-      imageSrcDark: '/images/init/s3-visual-dark.jpg',
-      imageAlt: 'S3 support for Appwrite Storage visual with 3D S3 typography',
-      aspectWidth: 1024,
-      aspectHeight: 682,
+      mockVisualId: 's3-storage',
+      imageAlt: 'Appwrite Storage S3 proxy mock with project endpoint, credentials, and compatible tools',
     },
     sessionCount: 2,
     headerNavCta: {
@@ -216,11 +204,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
       'Appwrite Firewall helps control what reaches your project - filter traffic, reduce abuse, and tighten what can access your APIs and services.',
     icon: Shield,
     visual: {
-      imageSrcLight: '/images/init/firewall-visual-light.jpg',
-      imageSrcDark: '/images/init/firewall-visual-dark.jpg',
-      imageAlt: 'Appwrite Firewall visual showing filtered network traffic',
-      aspectWidth: 1024,
-      aspectHeight: 682,
+      mockVisualId: 'firewall',
+      imageAlt: 'Appwrite Firewall mock with traffic stats, flow strip, and rule list',
     },
     sessionCount: 3,
     headerNavCta: {

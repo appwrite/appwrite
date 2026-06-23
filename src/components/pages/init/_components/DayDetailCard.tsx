@@ -7,10 +7,7 @@ import type {
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
-import {
-  useInitThemeImageSrc,
-  useInitThemeUsesDarkImage,
-} from '@/lib/init/use-init-theme-image'
+import { InitDayMockVisual } from './InitDayMockVisual'
 import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
@@ -70,32 +67,13 @@ function VideoThumbnail({
 
 function DayVisual({ day }: { day: LaunchEventDay }) {
   const Icon = day.icon
-  const usesDarkImage = useInitThemeUsesDarkImage()
-  const visualSrc = useInitThemeImageSrc(
-    day.visual?.imageSrcLight ?? '',
-    day.visual?.imageSrcDark ?? '',
-  )
 
   if (day.visual) {
-    const { aspectWidth, aspectHeight } = day.visual
     return (
-      <div
-        className={cn(
-          'relative w-full overflow-hidden rounded-lg border border-border',
-          usesDarkImage ? 'bg-[#0a0a0a]' : 'bg-muted/30',
-        )}
-        style={{ aspectRatio: `${aspectWidth} / ${aspectHeight}` }}
-      >
-        <img
-          src={visualSrc}
-          alt={day.visual.imageAlt}
-          className="size-full object-contain object-center"
-          width={aspectWidth}
-          height={aspectHeight}
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
+      <InitDayMockVisual
+        mockVisualId={day.visual.mockVisualId}
+        label={day.visual.imageAlt}
+      />
     )
   }
 

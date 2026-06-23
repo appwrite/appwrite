@@ -21,13 +21,17 @@ export interface LaunchEventDayVideo {
   href?: string
 }
 
+export type InitDayMockVisualId =
+  | 'appwrite-2'
+  | 'postgres'
+  | 'databases'
+  | 's3-storage'
+  | 'firewall'
+
 export interface LaunchEventDayVisual {
+  mockVisualId: InitDayMockVisualId
+  /** Accessible label for the mock UI frame. */
   imageAlt: string
-  imageSrcLight: string
-  imageSrcDark: string
-  /** Intrinsic pixel dimensions — used to preserve artwork aspect ratio in the card. */
-  aspectWidth: number
-  aspectHeight: number
 }
 
 export interface LaunchEventDay {
