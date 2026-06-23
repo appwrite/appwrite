@@ -76,7 +76,7 @@
         "utopia-php/locale": "0.8.*",
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
-        "utopia-php/messaging": "^1.1",
+        "utopia-php/messaging": "^1.2",
         "utopia-php/migration": "1.14.*",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
