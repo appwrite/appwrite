@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,10 +13,11 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
@@ -63,22 +65,22 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteIndex',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('key', '', new Key(), 'Index Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
@@ -96,24 +98,11 @@ class Delete extends Action
 
         // Only update status if removing available index
         if ($index->getAttribute('status') === 'available') {
-            $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+            $index->setAttribute('status', 'deleting');
+            $index = $dbForProject->updateDocument('indexes', $index->getId(), new Document(['status' => 'deleting']));
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
-
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_DELETE_INDEX)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setCollection($collection)
-                ->setDocument($index);
-        } else {
-            $queueForDatabase
-                ->setTable($collection)
-                ->setRow($index);
-        }
 
         $queueForEvents
             ->setContext('database', $db)
@@ -123,6 +112,18 @@ class Delete extends Action
             ->setParam('collectionId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->output($index, $this->getResponseModel()));
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_DELETE_INDEX,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            document: $this->isCollectionsAPI() ? $index : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            row: $this->isCollectionsAPI() ? null : $index,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response->noContent();
     }

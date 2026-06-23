@@ -7,11 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class AuthProvider extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
@@ -35,9 +30,9 @@ class AuthProvider extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
-                'description' => 'OAuth 2.0 application secret. Might be JSON string if provider requires extra configuration.',
+                'description' => 'OAuth 2.0 application secret. Might be JSON string if provider requires extra configuration. This property is write-only and always returned empty.',
                 'default' => '',
-                'example' => 'Bpw_g9c2TGXxfgLshDbSaL8tsCcqgczQ',
+                'example' => '',
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,

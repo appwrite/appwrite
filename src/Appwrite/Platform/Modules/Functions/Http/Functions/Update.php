@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -19,15 +19,14 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -72,9 +71,9 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
+            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true, enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -83,28 +82,38 @@ class Update extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function executions.', true, ['plan'])
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -126,17 +135,22 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        ?array $providerBranches,
+        ?array $providerPaths,
+        string $buildSpecification,
+        string $runtimeSpecification,
+        int $deploymentRetention,
         Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
         GitHub $github,
         Executor $executor,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -155,15 +169,9 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
         if (empty($runtime)) {
             $runtime = $function->getAttribute('runtime');
         }
-
-        $enabled ??= $function->getAttribute('enabled', true);
 
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
@@ -173,6 +181,21 @@ class Update extends Base
         }
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
+
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        // Omitted providerRepositoryId (null) on a connected function — preserve existing VCS values
+        if ($isConnected && $providerRepositoryId === null) {
+            $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
+            $installationId = $function->getAttribute('installationId', '');
+            $providerBranch = $providerBranch ?: $function->getAttribute('providerBranch', '');
+            $providerRootDirectory = $providerRootDirectory ?: $function->getAttribute('providerRootDirectory', '');
+            $repositoryId = $function->getAttribute('repositoryId', '');
+            $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+        }
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
@@ -202,13 +225,7 @@ class Update extends Base
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
@@ -217,7 +234,7 @@ class Update extends Base
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
-                'providerPullRequestIds' => []
+                'providerPullRequestIds' => [],
             ]));
 
             $repositoryId = $repository->getId();
@@ -237,13 +254,22 @@ class Update extends Base
         }
 
         // Enforce Cold Start if spec limits change.
-        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deploymentId'))) {
-            try {
-                $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
-            } catch (\Throwable $th) {
-                // Don't throw if the deployment doesn't exist
-                if ($th->getCode() !== 404) {
-                    throw $th;
+        if (!empty($function->getAttribute('deploymentId'))) {
+            $specsChanged = false;
+            if ($function->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
+                $specsChanged = true;
+            } elseif ($function->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            }
+
+            if ($specsChanged) {
+                try {
+                    $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
+                } catch (\Throwable $th) {
+                    // Don't throw if the deployment doesn't exist
+                    if ($th->getCode() !== 404) {
+                        throw $th;
+                    }
                 }
             }
         }
@@ -261,6 +287,7 @@ class Update extends Base
             'entrypoint' => $entrypoint,
             'commands' => $commands,
             'scopes' => $scopes,
+            'deploymentRetention' => $deploymentRetention,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -269,17 +296,42 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'providerBranches' => $providerBranches ?? $function->getAttribute('providerBranches', []),
+            'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github, true);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform);
         }
 
         // Inform scheduler if function is still active
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $authorization->skip(fn () => $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId')));
+
+        // Re-create schedule if missing
+        if ($schedule->isEmpty()) {
+            $schedule = $authorization->skip(
+                fn () => $dbForPlatform->createDocument('schedules', new Document([
+                    'region' => $project->getAttribute('region'),
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getSequence(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $function->getAttribute('schedule'),
+                    'active' => false,
+                ]))
+            );
+
+            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                'scheduleId' => $schedule->getId(),
+                'scheduleInternalId' => $schedule->getSequence(),
+            ]));
+        }
+
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))

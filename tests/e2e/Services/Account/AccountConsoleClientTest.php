@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
@@ -8,13 +10,18 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
-class AccountConsoleClientTest extends Scope
+final class AccountConsoleClientTest extends Scope
 {
     use AccountBase;
     use ProjectConsole;
     use SideClient;
 
-    public function testDeleteAccount(): void
+    /**
+     * Test that account deletion succeeds even with active team memberships.
+     * When the user is the sole owner and only member of a team, the team
+     * should be cleaned up automatically.
+     */
+    public function testDeleteAccountWithMembership(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -31,7 +38,7 @@ class AccountConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -42,11 +49,11 @@ class AccountConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
-        // create team
+        // Create team — user becomes sole owner and only member
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -56,9 +63,53 @@ class AccountConsoleClientTest extends Scope
             'teamId' => 'unique()',
             'name' => 'myteam'
         ]);
-        $this->assertEquals($team['headers']['status-code'], 201);
+        $this->assertEquals(201, $team['headers']['status-code']);
 
-        $teamId = $team['body']['$id'];
+        // Account deletion should succeed even with active membership
+        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    /**
+     * Test that account deletion works when the user has no team memberships.
+     */
+    public function testDeleteAccountWithoutMembership(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -67,26 +118,7 @@ class AccountConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        // DELETE TEAM
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-        $this->assertEquals($response['headers']['status-code'], 204);
-        sleep(2);
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-
-        $this->assertEquals($response['headers']['status-code'], 204);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testSessionAlert(): void
@@ -136,13 +168,13 @@ class AccountConsoleClientTest extends Scope
 
 
         // Check the alert email
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
 
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
-        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
-        $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
-        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringContainsString('Security alert: new session', (string) $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['ip'], (string) $lastEmail['text']); // IP Address
+        $this->assertStringContainsString('Unknown', (string) $lastEmail['text']); // Country
+        $this->assertStringContainsString($response['body']['clientName'], (string) $lastEmail['text']); // Client name
         $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
@@ -155,7 +187,7 @@ class AccountConsoleClientTest extends Scope
             'email' => 'otpuser2@appwrite.io'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -166,14 +198,14 @@ class AccountConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
 
-        $this->assertEquals('otpuser2@appwrite.io', $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser2@appwrite.io');
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // Find 6 concurrent digits in email text - OTP
         preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
-        $code = ($matches[0] ?? [])[0] ?? '';
+        $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
 
@@ -193,7 +225,58 @@ class AccountConsoleClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
 
         $lastEmailId = $lastEmail['id'];
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
         $this->assertEquals($lastEmailId, $lastEmail['id']);
+    }
+
+    public function testGetAccountLogs(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Test for SUCCESS - Create account and session for console project
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        /**
+         * Test for SUCCESS - Get account logs
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['logs']);
+        $this->assertNotEmpty($response['body']['logs']);
+        $this->assertIsNumeric($response['body']['total']);
     }
 }

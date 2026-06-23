@@ -12,6 +12,7 @@ use Executor\Executor;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -50,8 +51,8 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -89,24 +90,36 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
-            'buildEndedAt' => DateTime::now(),
-            'buildDuration' => $duration,
-            'status' => 'canceled'
-        ]));
+        try {
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildEndedAt' => DateTime::now(),
+                'buildDuration' => $duration,
+                'status' => 'canceled'
+            ]));
+        } catch (TransactionException) {
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
-        if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
-            $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            $dbForProject->updateDocument('sites', $site->getId(), $site);
+            if ($deployment->isEmpty()) {
+                throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+            }
+
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+            }
+
+            if ($deployment->getAttribute('status') !== 'canceled') {
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildEndedAt' => DateTime::now(),
+                    'buildDuration' => $duration,
+                    'status' => 'canceled'
+                ]));
+            }
         }
 
         try {
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
-        } catch (\Throwable $th) {
-            // Don't throw if the deployment doesn't exist
-            if ($th->getCode() !== 404) {
-                throw $th;
-            }
+        } catch (\Throwable) {
+            // Best-effort cleanup — deployment status is already 'canceled'
         }
 
         $queueForEvents

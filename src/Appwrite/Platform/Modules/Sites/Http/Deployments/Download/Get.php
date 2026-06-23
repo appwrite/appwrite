@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Download;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -11,10 +12,10 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Swoole\Request;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -50,11 +51,12 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::ANY,
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
-            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
@@ -87,23 +89,18 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        switch ($type) {
-            case 'output':
-                $path = $deployment->getAttribute('buildPath', '');
-                $device = $deviceForBuilds;
-                break;
-            case 'source':
-                $path = $deployment->getAttribute('sourcePath', '');
-                $device = $deviceForSites;
-                break;
-        }
+        [$path, $device] = match ($type) {
+            'output' => [$deployment->getAttribute('buildPath', ''), $deviceForBuilds],
+            'source' => [$deployment->getAttribute('sourcePath', ''), $deviceForSites],
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
+        };
 
         if (!$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         $response
             ->setContentType('application/gzip')

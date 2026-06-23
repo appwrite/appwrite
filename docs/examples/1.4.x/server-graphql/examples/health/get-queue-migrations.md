@@ -1,5 +1,0 @@
-query {
-    healthGetQueueMigrations {
-        size
-    }
-}

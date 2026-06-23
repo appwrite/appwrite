@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Event\Webhook;
@@ -29,9 +31,10 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
+use Utopia\Http\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Request;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -76,9 +79,9 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
+            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -87,35 +90,45 @@ class Create extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
+            ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function executions.', true, ['plan'])
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true, deprecated: true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -137,24 +150,29 @@ class Create extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        array $providerBranches,
+        array $providerPaths,
+        string $buildSpecification,
+        string $runtimeSpecification,
         string $templateRepository,
         string $templateOwner,
         string $templateRootDirectory,
         string $templateVersion,
+        int $deploymentRetention,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
 
         // Temporary abuse check
@@ -200,6 +218,10 @@ class Create extends Base
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
@@ -213,6 +235,7 @@ class Create extends Base
                 'logging' => $logging,
                 'name' => $name,
                 'runtime' => $runtime,
+                'deploymentRetention' => $deploymentRetention,
                 'deploymentInternalId' => '',
                 'deploymentId' => '',
                 'events' => $events,
@@ -223,6 +246,7 @@ class Create extends Base
                 'entrypoint' => $entrypoint,
                 'commands' => $commands,
                 'scopes' => $scopes,
+                'startCommand' => '',
                 'search' => implode(' ', [$functionId, $name, $runtime]),
                 'version' => 'v5',
                 'installationId' => $installation->getId(),
@@ -233,7 +257,10 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
-                'specification' => $specification
+                'providerBranches' => $providerBranches,
+                'providerPaths' => $providerPaths,
+                'buildSpecification' => $buildSpecification,
+                'runtimeSpecification' => $runtimeSpecification,
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
@@ -261,13 +288,7 @@ class Create extends Base
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
@@ -283,10 +304,15 @@ class Create extends Base
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
-        $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'scheduleId' => $function->getAttribute('scheduleId'),
+            'scheduleInternalId' => $function->getAttribute('scheduleInternalId'),
+            'repositoryId' => $function->getAttribute('repositoryId'),
+            'repositoryInternalId' => $function->getAttribute('repositoryInternalId'),
+        ]));
 
         // Backwards compatibility with 1.6 behaviour
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
             // build from template
             $template = new Document([]);
@@ -313,21 +339,15 @@ class Create extends Base
                     project: $project,
                     installation: $installation,
                     dbForProject: $dbForProject,
-                    queueForBuilds: $queueForBuilds,
+                    publisherForBuilds: $publisherForBuilds,
                     template: $template,
                     github: $github,
                     activate: true,
-                    authorization: $authorization,
+                    platform: $platform,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
             } elseif (!$template->isEmpty()) {
                 // Deploy non-VCS from template
                 $deploymentId = ID::unique();
@@ -343,26 +363,23 @@ class Create extends Base
                     'resourceType' => 'functions',
                     'entrypoint' => $function->getAttribute('entrypoint', ''),
                     'buildCommands' => $function->getAttribute('commands', ''),
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'type' => 'manual',
                     'activate' => true,
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
-
-                $queueForBuilds
-                    ->setType(BUILD_TYPE_DEPLOYMENT)
-                    ->setResource($function)
-                    ->setDeployment($deployment)
-                    ->setTemplate($template);
+                $publisherForBuilds->enqueue(new BuildMessage(
+                    project: $project,
+                    resource: $function,
+                    deployment: $deployment,
+                    type: BUILD_TYPE_DEPLOYMENT,
+                    template: $template,
+                    platform: $platform,
+                ));
             }
 
-            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-            if (!empty($functionsDomain)) {
+            $functionsDomain = $platform['functionsDomain'];
+            if (!empty($functionsDomain) && isset($deployment) && !$deployment->isEmpty()) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
                 // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -378,8 +395,8 @@ class Create extends Base
                         'status' => 'verified',
                         'type' => 'deployment',
                         'trigger' => 'manual',
-                        'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
                         'deploymentResourceType' => 'function',
                         'deploymentResourceId' => $function->getId(),
                         'deploymentResourceInternalId' => $function->getSequence(),
@@ -405,14 +422,20 @@ class Create extends Base
                     ->trigger();
 
                 /** Trigger Functions */
-                $queueForFunctions
-                    ->from($ruleCreate)
-                    ->trigger();
+                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                    event: $ruleCreate->getEvent(),
+                    params: $ruleCreate->getParams(),
+                    project: $ruleCreate->getProject(),
+                    user: $ruleCreate->getUser(),
+                    userId: $ruleCreate->getUserId(),
+                    payload: $ruleCreate->getPayload(),
+                    platform: $ruleCreate->getPlatform(),
+                ));
 
                 /** Trigger Realtime Events */
                 $queueForRealtime
-                    ->from($ruleCreate)
                     ->setSubscribers(['console', $project->getId()])
+                    ->from($ruleCreate)
                     ->trigger();
             }
         }

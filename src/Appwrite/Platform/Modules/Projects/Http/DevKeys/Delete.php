@@ -45,8 +45,8 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('keyId', '', new UID(), 'Key unique ID.')
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+            ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -63,7 +63,7 @@ class Delete extends Action
 
         $key = $dbForPlatform->getDocument('devKeys', $keyId);
 
-        if ($key === false || $key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getSequence()) {
+        if ($key->isEmpty() || $key->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 

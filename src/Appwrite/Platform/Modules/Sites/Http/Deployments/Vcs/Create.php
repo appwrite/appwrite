@@ -2,9 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -14,9 +15,9 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -60,9 +61,9 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             // TODO: Support tag in future
-            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type of reference passed. Allowed values are: branch, commit')
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type of reference passed. Allowed values are: branch, commit', enum: new Enum(name: 'VCSReferenceType'))
             ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name, commit hash')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
@@ -71,9 +72,10 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -88,9 +90,10 @@ class Create extends Base
         Database $dbForPlatform,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -109,13 +112,14 @@ class Create extends Base
             installation: $installation,
             dbForProject: $dbForProject,
             dbForPlatform: $dbForPlatform,
-            queueForBuilds: $queueForBuilds,
+            publisherForBuilds: $publisherForBuilds,
             template: $template,
             github: $github,
             activate: $activate,
             authorization: $authorization,
             reference: $reference,
-            referenceType: $type
+            referenceType: $type,
+            platform: $platform
         );
 
         $queueForEvents

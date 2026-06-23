@@ -9,7 +9,7 @@ class MockPublisher implements Publisher
 {
     private array $events = [];
 
-    public function enqueue(Queue $queue, array $payload): bool
+    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
     {
         if (!isset($this->events[$queue->name])) {
             $this->events[$queue->name] = [];
@@ -23,7 +23,7 @@ class MockPublisher implements Publisher
         return $this->events[$queue] ?? null;
     }
 
-    public function retry(Queue $queue, int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null): void
     {
         // TODO: Implement retry() method.
     }

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -11,13 +11,13 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -65,9 +65,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createStringColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('key', '', new Key(), 'Attribute Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -75,7 +75,7 @@ class Create extends Action
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
             ->inject('authorization')
@@ -93,12 +93,12 @@ class Create extends Action
         bool           $encrypt,
         UtopiaResponse $response,
         Database       $dbForProject,
-        EventDatabase  $queueForDatabase,
+        DatabasePublisher  $publisherForDatabase,
         Event          $queueForEvents,
         array $plan,
         Authorization $authorization
     ): void {
-        if (!App::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
+        if (!Http::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSDKGroup() . '.');
         }
 
@@ -134,7 +134,7 @@ class Create extends Action
             ]),
             $response,
             $dbForProject,
-            $queueForDatabase,
+            $publisherForDatabase,
             $queueForEvents,
             $authorization
         );

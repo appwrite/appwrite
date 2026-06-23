@@ -1,5 +1,0 @@
-mutation {
-    accountCreateJWT {
-        jwt
-    }
-}

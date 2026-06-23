@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Float;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -16,7 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
@@ -63,9 +63,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createFloatColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('key', '', new Key(), 'Attribute Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('min', null, new Nullable(new FloatValidator()), 'Minimum value.', true)
             ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value.', true)
@@ -73,13 +73,13 @@ class Create extends Action
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $min ??= -PHP_FLOAT_MAX;
         $max ??= PHP_FLOAT_MAX;
@@ -102,7 +102,7 @@ class Create extends Action
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             'formatOptions' => ['min' => $min, 'max' => $max],
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         if (!empty($formatOptions)) {

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Enum;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -16,7 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -63,22 +63,22 @@ class Create extends Action
                     replaceWith: 'tablesDB.createEnumColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('key', '', new Key(), 'Attribute Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('elements', [], new ArrayList(new Text(Database::LENGTH_KEY), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of enum values.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!is_null($default) && !\in_array($default, $elements, true)) {
             throw new Exception($this->getInvalidValueException(), 'Default value not found in elements');
@@ -99,7 +99,7 @@ class Create extends Action
             ]),
             $response,
             $dbForProject,
-            $queueForDatabase,
+            $publisherForDatabase,
             $queueForEvents,
             $authorization
         );

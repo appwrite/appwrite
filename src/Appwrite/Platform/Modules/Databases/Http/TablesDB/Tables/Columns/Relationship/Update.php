@@ -11,7 +11,8 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
@@ -34,7 +35,7 @@ class Update extends RelationshipUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key/relationship')
             ->desc('Update relationship column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
@@ -53,15 +54,15 @@ class Update extends RelationshipUpdate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID.')
-            ->param('key', '', new Key(), 'Column Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('onDelete', null, new Nullable(new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true)), 'Constraints option', true)
-            ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
+            ], true)), 'Constraints option', true, enum: new Enum(name: 'RelationMutate'))
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

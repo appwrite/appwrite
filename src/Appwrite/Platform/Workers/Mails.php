@@ -4,13 +4,19 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Template\Template;
 use Exception;
-use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
+use Utopia\Database\Document;
 use Utopia\Logger\Log;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Mails extends Action
 {
@@ -32,8 +38,10 @@ class Mails extends Action
         $this
             ->desc('Mails worker')
             ->inject('message')
+            ->inject('project')
             ->inject('register')
             ->inject('log')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -47,16 +55,17 @@ class Mails extends Action
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Registry $register
      * @param Log $log
-     * @throws \PHPMailer\PHPMailer\Exception
+     * @param Telemetry $telemetry
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Registry $register, Log $log): void
+    public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -68,13 +77,20 @@ class Mails extends Action
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
-        $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
+        $type = empty($smtp) ? 'cloud' : 'smtp';
+        $log->addTag('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
+        $template = $payload['template'] ?? 'unknown';
+        $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
+
+        Span::add('mail.template', $template);
+        Span::add('mail.smtp_type', $type);
+        Span::add('mail.recipient_domain', $recipientDomain);
         $variables = $payload['variables'];
         $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
@@ -129,91 +145,87 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var PHPMailer $mail */
-        $mail = empty($smtp)
+        /** @var EmailAdapter $adapter */
+        $adapter = empty($smtp)
             ? $register->get('smtp')
-            : $this->getMailer($smtp);
+            : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: true,
+                timelimit: 30,
+            );
+        $adapter->setTelemetry($telemetry);
 
-        $mail->clearAddresses();
-        $mail->clearAllRecipients();
-        $mail->clearReplyTos();
-        $mail->clearAttachments();
-        $mail->clearBCCs();
-        $mail->clearCCs();
-        $mail->addAddress($recipient, $name);
-        $mail->Subject = $subject;
-        $mail->Body = $body;
+        // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
+        $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        $mail->AltBody = $body;
-        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
-        $mail->AltBody = \strip_tags($mail->AltBody);
-        $mail->AltBody = \trim($mail->AltBody);
-
-        $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+        $fromEmail = !empty($smtp) ? ($smtp['senderEmail'] ?? $defaultFromEmail) : $defaultFromEmail;
+        $fromName = !empty($smtp) ? ($smtp['senderName'] ?? $defaultFromName) : $defaultFromName;
+        $replyTo = $defaultFromEmail;
+        $replyToName = $defaultFromName;
 
         $customMailOptions = $payload['customMailOptions'] ?? [];
 
-        // fallback hierarchy: Custom options > SMTP config > Defaults.
-        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
-            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
-            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
-            $mail->setFrom($fromEmail, $fromName);
+        if (!empty($customMailOptions['senderEmail'])) {
+            $fromEmail = $customMailOptions['senderEmail'];
+        }
+        if (!empty($customMailOptions['senderName'])) {
+            $fromName = $customMailOptions['senderName'];
         }
 
         if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
             $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
             $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
         } elseif (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
-            $replyToName = $smtp['senderName'] ?? $replyToName;
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            $replyTo = !empty($smtpReplyToEmail) ? $smtpReplyToEmail : ($smtp['senderEmail'] ?? $replyTo);
+            $replyToName = !empty($smtp['replyToName']) ? $smtp['replyToName'] : ($smtp['senderName'] ?? $replyToName);
         }
 
-        $mail->addReplyTo($replyTo, $replyToName);
+        $attachments = null;
         if (!empty($attachment['content'] ?? '')) {
-            $mail->AddStringAttachment(
-                base64_decode($attachment['content']),
-                $attachment['filename'] ?? 'unknown.file',
-                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
-                $attachment['type'] ?? 'plain/text'
-            );
+            $attachments = [
+                new Attachment(
+                    name: $attachment['filename'] ?? 'unknown.file',
+                    path: '',
+                    type: $attachment['type'] ?? 'plain/text',
+                    content: \base64_decode($attachment['content']),
+                ),
+            ];
         }
+
+        $emailMessage = new EmailMessage(
+            to: [['email' => $recipient, 'name' => $name]],
+            subject: $subject,
+            content: $body,
+            fromName: $fromName,
+            fromEmail: $fromEmail,
+            replyToName: $replyToName,
+            replyToEmail: $replyTo,
+            attachments: $attachments,
+            html: true,
+        );
+        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
         try {
-            $mail->send();
+            $adapter->send($emailMessage);
         } catch (\Throwable $error) {
+            Span::add('mail.status', 'failure');
+
+            if ($type === 'smtp') {
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+            }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
-    }
 
-    /**
-     * @param array $smtp
-     * @return PHPMailer
-     * @throws \PHPMailer\PHPMailer\Exception
-     */
-    protected function getMailer(array $smtp): PHPMailer
-    {
-        $mail = new PHPMailer(true);
-
-        $mail->isSMTP();
-
-        $username = $smtp['username'];
-        $password = $smtp['password'];
-
-        $mail->XMailer = 'Appwrite Mailer';
-        $mail->Host = $smtp['host'];
-        $mail->Port = $smtp['port'];
-        $mail->SMTPAuth = (!empty($username) && !empty($password));
-        $mail->Username = $username;
-        $mail->Password = $password;
-        $mail->SMTPSecure = $smtp['secure'];
-        $mail->SMTPAutoTLS = false;
-        $mail->CharSet = 'UTF-8';
-
-        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
-
-        $mail->isHTML();
-
-        return $mail;
+        Span::add('mail.status', 'success');
     }
 }

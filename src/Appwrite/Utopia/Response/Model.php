@@ -17,6 +17,7 @@ abstract class Model
     public const TYPE_PAYLOAD = 'payload';
     public const TYPE_ARRAY = 'array';
     public const TYPE_ENUM = 'enum';
+    public const TYPE_ID = 'id';
 
     /**
      * @var bool
@@ -97,22 +98,6 @@ abstract class Model
             'sensitive' => false,
             'readOnly' => false
         ], $options);
-
-        return $this;
-    }
-
-    /**
-     * Delete an existing Rule
-     * If rule exists, it will be removed
-     *
-     * @param string $key
-     * @return Model
-     */
-    public function removeRule(string $key): self
-    {
-        if (isset($this->rules[$key])) {
-            unset($this->rules[$key]);
-        }
 
         return $this;
     }

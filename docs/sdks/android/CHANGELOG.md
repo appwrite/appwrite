@@ -1,5 +1,23 @@
 # Change Log
 
+## 12.2.0
+
+* Added Channel<_Document>.upsert() and Channel<_Row>.upsert() API methods to upsert documents and rows in channels.
+* Added new query filters: containsAny(attribute, List<Any>) and containsAll(attribute, List<Any>) for advanced matching on array/relationship attributes.
+* Realtime improvements: improved WebSocket lifecycle and connection handling. Introduced generation-based checks to avoid processing messages from stale sockets and ensure sequential socket recreation on reconnects.
+
+## 12.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Add `subscriptions` field to `RealtimeCallback` and `RealtimeResponseEvent` types
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `List<String>`
+
+## 12.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
 ## 11.4.0
 
 * Add `getScreenshot` method to `Avatars` service

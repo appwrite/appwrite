@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V16;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V16Test extends TestCase
+final class V16Test extends TestCase
 {
     /**
      * @var Filter
@@ -22,29 +25,25 @@ class V16Test extends TestCase
     {
     }
 
-    public function createExecutionProvider(): array
+    public static function createExecutionProvider(): \Iterator
     {
-        return [
-            'data' => [
-                [
-                    'data' => 'Lorem ipsum'
-                ],
-                [
-                    'body' => 'Lorem ipsum'
-                ],
+        yield 'data' => [
+            [
+                'data' => 'Lorem ipsum'
             ],
-            'no data' => [
-                [],
-                [
-                    'body' => ''
-                ],
+            [
+                'body' => 'Lorem ipsum'
+            ],
+        ];
+        yield 'no data' => [
+            [],
+            [
+                'body' => ''
             ],
         ];
     }
 
-    /**
-     * @dataProvider createExecutionProvider
-     */
+    #[DataProvider('createExecutionProvider')]
     public function testCreateExecution(array $content, array $expected): void
     {
         $model = 'functions.createExecution';

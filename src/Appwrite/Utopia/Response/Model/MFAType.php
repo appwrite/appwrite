@@ -14,13 +14,13 @@ class MFAType extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Secret token used for TOTP factor.',
                 'default' => '',
-                'example' => true
+                'example' => '[SHARED_SECRET]'
             ])
             ->addRule('uri', [
                 'type' => self::TYPE_STRING,
                 'description' => 'URI for authenticator apps.',
                 'default' => '',
-                'example' => true
+                'example' => 'otpauth://totp/appwrite:user@example.com?secret=[SHARED_SECRET]&issuer=appwrite'
             ])
         ;
     }

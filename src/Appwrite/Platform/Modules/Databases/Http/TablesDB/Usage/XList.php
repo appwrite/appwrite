@@ -8,7 +8,8 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
 class XList extends DatabaseUsageXList
@@ -43,7 +44,14 @@ class XList extends DatabaseUsageXList
                     contentType: ContentType::JSON
                 ),
             ])
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')

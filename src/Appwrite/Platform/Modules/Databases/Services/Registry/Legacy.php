@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Services\Registry;
 
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\BigInt\Create as CreateBigIntAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\BigInt\Update as UpdateBigIntAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Create as CreateBooleanAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Update as UpdateBooleanAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Datetime\Create as CreateDatetimeAttribute;
@@ -20,6 +22,10 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\IP
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\IP\Update as UpdateIPAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line\Create as CreateLineAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line\Update as UpdateLineAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Longtext\Create as CreateLongtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Longtext\Update as UpdateLongtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Mediumtext\Create as CreateMediumtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Mediumtext\Update as UpdateMediumtextAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point\Create as CreatePointAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point\Update as UpdatePointAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Polygon\Create as CreatePolygonAttribute;
@@ -28,8 +34,12 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Re
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship\Update as UpdateRelationshipAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Create as CreateStringAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Update as UpdateStringAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Text\Create as CreateTextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Text\Update as UpdateTextAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\URL\Create as CreateURLAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\URL\Update as UpdateURLAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Create as CreateVarcharAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Update as UpdateVarcharAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\XList as ListAttributes;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CreateCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Delete as DeleteCollection;
@@ -163,6 +173,10 @@ class Legacy extends Base
         $service->addAction(CreateIntegerAttribute::getName(), new CreateIntegerAttribute());
         $service->addAction(UpdateIntegerAttribute::getName(), new UpdateIntegerAttribute());
 
+        // Attribute: BigInt
+        $service->addAction(CreateBigIntAttribute::getName(), new CreateBigIntAttribute());
+        $service->addAction(UpdateBigIntAttribute::getName(), new UpdateBigIntAttribute());
+
         // Attribute: IP
         $service->addAction(CreateIPAttribute::getName(), new CreateIPAttribute());
         $service->addAction(UpdateIPAttribute::getName(), new UpdateIPAttribute());
@@ -190,6 +204,22 @@ class Legacy extends Base
         // Attribute: URL
         $service->addAction(CreateURLAttribute::getName(), new CreateURLAttribute());
         $service->addAction(UpdateURLAttribute::getName(), new UpdateURLAttribute());
+
+        // Attribute: Varchar
+        $service->addAction(CreateVarcharAttribute::getName(), new CreateVarcharAttribute());
+        $service->addAction(UpdateVarcharAttribute::getName(), new UpdateVarcharAttribute());
+
+        // Attribute: Text
+        $service->addAction(CreateTextAttribute::getName(), new CreateTextAttribute());
+        $service->addAction(UpdateTextAttribute::getName(), new UpdateTextAttribute());
+
+        // Attribute: Mediumtext
+        $service->addAction(CreateMediumtextAttribute::getName(), new CreateMediumtextAttribute());
+        $service->addAction(UpdateMediumtextAttribute::getName(), new UpdateMediumtextAttribute());
+
+        // Attribute: Longtext
+        $service->addAction(CreateLongtextAttribute::getName(), new CreateLongtextAttribute());
+        $service->addAction(UpdateLongtextAttribute::getName(), new UpdateLongtextAttribute());
     }
 
     private function registerIndexActions(Service $service): void

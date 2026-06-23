@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -13,7 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -49,7 +50,11 @@ class Create extends Action
                         model: UtopiaResponse::MODEL_TRANSACTION,
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tablesDB.createTransaction',
+                )
             ))
             ->param('ttl', APP_DATABASE_TXN_TTL_DEFAULT, new Range(min: APP_DATABASE_TXN_TTL_MIN, max: APP_DATABASE_TXN_TTL_MAX), 'Seconds before the transaction expires.', true)
             ->inject('response')

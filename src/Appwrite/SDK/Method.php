@@ -32,6 +32,7 @@ class Method
      * @param array $additionalParameters
      * @param string $desc
      * @param bool $public Whether this method should be rendered on the website/documentation
+     * @param array<string> $locationAuth Security scheme keys injected for location-type methods (includes project auth)
      */
     public function __construct(
         protected string $namespace,
@@ -49,7 +50,8 @@ class Method
         protected array $parameters = [],
         protected array $additionalParameters = [],
         protected string $desc = '',
-        protected bool $public = true
+        protected bool $public = true,
+        protected array $locationAuth = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -197,7 +199,7 @@ class Method
 
     public function isHidden(): bool|array
     {
-        return $this->hide ?? false;
+        return $this->hide;
     }
 
     public function isPackaging(): bool
@@ -221,6 +223,11 @@ class Method
     public function getAdditionalParameters(): array
     {
         return $this->additionalParameters;
+    }
+
+    public function getLocationAuth(): array
+    {
+        return $this->locationAuth;
     }
 
     public function setNamespace(string $namespace): self
