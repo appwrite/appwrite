@@ -1455,7 +1455,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             $eventTailRegistry->removeConnection($connection);
         } catch (\Throwable $th) {
             Console::error('Realtime onClose tail cleanup error: ' . $th->getMessage());
-            Span::error($th);
+            Span::current()?->setError($th);
         }
 
         Span::add('realtime.success', $success);
