@@ -1141,6 +1141,13 @@ class Builds extends Action
                 ? $th->getMessage()
                 : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
 
+            // Record user-facing failures on the span here, since they're not
+            // re-raised to the harness (which records internal errors via setError).
+            if ($isUserFacing) {
+                Span::add('build.exception.type', $th->getType());
+                Span::add('build.exception.message', $th->getMessage());
+            }
+
             // Color message red
             if (! \str_contains($message, '')) {
                 $message = '[31m' . $message;
