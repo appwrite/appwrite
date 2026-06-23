@@ -71,6 +71,10 @@ class Authentication extends Action
         $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
         $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
         $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
+
+        if ($impersonatedUserId !== null) {
+            throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
+        }
         // Capture the pre-auth userId before unsubscribe() clears the connection entry,
         // so we can rebind any account channels that were stored under it.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
