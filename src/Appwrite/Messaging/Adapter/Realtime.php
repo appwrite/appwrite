@@ -501,6 +501,83 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     *
+     * @param array<string,mixed> $event decoded event published to the `realtime` channel
+     * @return array<string,mixed>
+     */
+    public static function toTailMetadata(array $event): array
+    {
+        $events = $event['data']['events'] ?? [];
+        $name = \is_array($events) ? ($events[0] ?? '') : '';
+        $parts = $name === '' ? [] : \explode('.', $name);
+        $count = \count($parts);
+        $type = $parts[0] ?? null;
+
+        $action = null;
+        if ($count >= 1 && \in_array($parts[$count - 1], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 1];
+        } elseif ($count >= 2 && \in_array($parts[$count - 2], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 2];
+        }
+
+        $payload = $event['data']['payload'] ?? [];
+        if (!\is_array($payload)) {
+            $payload = [];
+        }
+
+        $metadata = [
+            'event'      => $name,
+            'type'       => $type,
+            'action'     => $action,
+            'userId'     => $event['userId'] ?? null,
+            'timestamp'  => $event['data']['timestamp'] ?? null,
+            'resourceId' => $payload['$id'] ?? null,
+        ];
+
+        // Attach only the scope ids that belong to this resource type. Derived from the
+        // (concrete) event name rather than the payload: for a top-level resource event
+        // (e.g. `teams.T.create`) the payload's id lives at $id, not at a teamId field,
+        // so a payload lookup would drop the scope and silently break filters. The event
+        // name encodes the id at every level ΓÇö parts[1] is the top-level resource id and
+        // parts[3] the collection/table id.
+        $scope = [];
+        switch ($type) {
+            case 'databases':
+                if (isset($parts[1])) {
+                    $scope['databaseId'] = $parts[1];
+                }
+                if (isset($parts[2], $parts[3]) && \in_array($parts[2], ['collections', 'tables'], true)) {
+                    $scope['collectionId'] = $parts[3];
+                }
+                break;
+            case 'buckets':
+                if (isset($parts[1])) {
+                    $scope['bucketId'] = $parts[1];
+                }
+                break;
+            case 'functions':
+                if (isset($parts[1])) {
+                    $scope['functionId'] = $parts[1];
+                }
+                break;
+            case 'teams':
+                if (isset($parts[1])) {
+                    $scope['teamId'] = $parts[1];
+                }
+                break;
+        }
+
+        foreach ($scope as $key => $value) {
+            // Skip wildcard/empty segments (defensive: events[0] is concrete, but guard anyway).
+            if ($value !== '' && $value !== '*') {
+                $metadata[$key] = $value;
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
      * Converts the channels from the Query Params into an array.
      * Also renames the account channel to account.USER_ID, rewrites action-suffixed
      * account variants (`account.create`, `account.update`, `account.upsert`,

@@ -4,8 +4,11 @@ namespace Appwrite\Realtime\Message\Handlers;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadValidator;
+use Appwrite\Utopia\Database\RuntimeQuery;
+use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -26,6 +29,8 @@ class Subscribe extends Action
             ->inject('realtime')
             ->inject('register')
             ->inject('projectId')
+            ->inject('eventTailRegistry')
+            ->inject('dbForConsole')
             ->callback($this->action(...));
     }
 
@@ -39,6 +44,8 @@ class Subscribe extends Action
         Realtime $realtime,
         Registry $register,
         ?string $projectId,
+        EventTailRegistry $eventTailRegistry,
+        Database $dbForConsole,
     ): array {
         $roles = $realtime->connections[$connectionId]['roles'] ?? [Role::guests()->toString()];
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
@@ -69,6 +76,39 @@ class Subscribe extends Action
             ];
         }
 
+        // Console live event tail: authorize every `console.tail.<projectId>` channel
+        // FIRST ΓÇö before any subscription state is mutated ΓÇö so a batch mixing authorized
+        // and unauthorized tails can't leave partial state behind. Each tail is authorized
+        // by team membership of the target project's owning team, with ownership resolved
+        // fresh (projects can be transferred between teams, so a cached teamId could
+        // authorize the wrong team).
+        $now = \microtime(true);
+        $pendingTails = [];
+        foreach ($parsedPayloads as $parsedPayload) {
+            $compiled = null;
+            foreach ($parsedPayload['convertedChannels'] as $channel) {
+                $targetProjectId = EventTailRegistry::projectFromChannel($channel);
+                if ($targetProjectId === null) {
+                    continue;
+                }
+
+                $project = $dbForConsole->getAuthorization()->skip(
+                    fn () => $dbForConsole->getDocument('projects', $targetProjectId)
+                );
+                $teamId = (string) $project->getAttribute('teamId', '');
+
+                if ($teamId === '' || !\in_array(Role::team($teamId)->toString(), $roles, true)) {
+                    throw new Exception(
+                        Exception::REALTIME_POLICY_VIOLATION,
+                        'Not authorized to tail project "' . $targetProjectId . '".'
+                    );
+                }
+
+                $compiled ??= RuntimeQuery::compile($parsedPayload['queries']);
+                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled];
+            }
+        }
+
         foreach ($parsedPayloads as $parsedPayload) {
             $realtime->subscribe(
                 $projectId,
@@ -78,6 +118,14 @@ class Subscribe extends Action
                 $parsedPayload['convertedChannels'],
                 $parsedPayload['queries'],
             );
+        }
+
+        // All tail channels passed authorization above ΓÇö register them additively. The
+        // registry is keyed by (connId, subId, projectId): re-subscribing the same channel
+        // overwrites its filter in place, while a reused subscription id that names a new
+        // tail channel keeps the ones already registered (mirrors the tree).
+        foreach ($pendingTails as [$subId, $targetProjectId, $compiled]) {
+            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

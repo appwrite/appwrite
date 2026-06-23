@@ -287,6 +287,10 @@ const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+
+// Realtime
+const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
+
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
