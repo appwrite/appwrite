@@ -448,7 +448,7 @@ Http::get('/v1/account')
     ))
     ->inject('response')
     ->inject('targetUser')
-    ->action(function (Response $response, Document $targetUser) {
+    ->action(function (Response $response, User $targetUser) {
         if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
