@@ -241,6 +241,11 @@ return [
         'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
         'code' => 400,
     ],
+    Exception::USER_EMAIL_NOT_CORPORATE => [
+        'name' => Exception::USER_EMAIL_NOT_CORPORATE,
+        'description' => 'Only corporate email addresses are allowed. Please use a work email address and try again.',
+        'code' => 400,
+    ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
         'description' => 'Passwords do not match. Please check the password and confirm password.',

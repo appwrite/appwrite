@@ -111,9 +111,10 @@ class Project extends Model
             ])
             ->addRule('smtpPassword', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'SMTP server password. This property is write-only and always returned empty.',
                 'default' => '',
-                'example' => '',
+                'example' => 'smtp-password',
             ])
             ->addRule('smtpSecure', [
                 'type' => self::TYPE_STRING,

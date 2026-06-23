@@ -40,8 +40,9 @@ class Resolvers
             );
         }
 
+        // Response headers follow PSR-7: keys are lowercased and values are lists.
         $headers = $from->getHeaders();
-        $fallbackCookies = $headers['X-Fallback-Cookies'] ?? null;
+        $fallbackCookies = $headers['x-fallback-cookies'] ?? null;
         if ($fallbackCookies === null) {
             return;
         }
@@ -347,7 +348,7 @@ class Resolvers
             $request->addHeader('x-appwrite-source', 'graphql');
 
             // Drop json content type so post args are used directly.
-            if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
+            if (\str_starts_with($request->getHeaderLine('content-type'), 'application/json')) {
                 $request->removeHeader('content-type');
             }
 

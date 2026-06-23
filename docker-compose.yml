@@ -387,7 +387,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1246,11 +1246,11 @@ services:
       - appwrite
 
   openruntimes-executor:
-    container_name: openruntimes-executor
+    container_name: exc1
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.4
+    image: openruntimes/executor:0.25.1
     restart: unless-stopped
     networks:
       - appwrite
@@ -1264,6 +1264,8 @@ services:
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
+      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
       - OPR_EXECUTOR_IMAGE_PULL=enabled
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
@@ -1526,3 +1528,4 @@ volumes:
   appwrite-builds:
   appwrite-config:
   appwrite-models:
+  openruntimes-node-modules-cache:

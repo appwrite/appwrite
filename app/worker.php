@@ -118,7 +118,7 @@ $worker
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        Span::error($error);
+        Span::current()?->setError($error);
 
         if ($logger) {
             $log->setNamespace('appwrite-worker');

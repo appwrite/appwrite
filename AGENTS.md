@@ -15,6 +15,8 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 | `composer lint <file>` | Check formatting of a file |
 | `composer analyze` | Static analysis (PHPStan level 3) |
 | `composer check` | Same as `analyze` |
+| `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
+| `composer refactor` | Apply Rector fixes |
 
 ## Stack
 
@@ -117,7 +119,7 @@ Common injections: `$response`, `$request`, `$dbForProject`, `$dbForPlatform`, `
 
 ## Tracing with Utopia Span
 
-In handlers, only call `Span::add($key, $value)`. **Never** call `Span::init`, `Span::error`, or `Span::finish` -- lifecycle is owned by the entry-point harness (`app/http.php`, `app/worker.php`, `app/realtime.php`, `Bus::dispatch`). For selective export, filter in the sampler in `app/init/span.php`.
+In handlers, only call `Span::add($key, $value)`. **Never** call `Span::init`, `setError`, or `Span::finish` -- lifecycle is owned by the entry-point harness (`app/http.php`, `app/worker.php`, `app/realtime.php`, `Bus::dispatch`). For selective export, filter in the sampler in `app/init/span.php`.
 
 Keys are `snake_case` with dots only for child relationships: `project.id` (id of project), `storage.bucket.id`. No dot otherwise: `inbound_bytes`, not `inbound.bytes`. No camelCase, no bare top-level keys (`function.id`, not `functionId`).
 

@@ -12,6 +12,7 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
+$executorImages = $this->getParam('executorImages', '');
 $dbService = $this->getParam('database', 'mongodb');
 $allowedDbServices = ['mariadb', 'mongodb'];
 if (!\in_array($dbService, $allowedDbServices, true)) {
@@ -983,15 +984,14 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
 
   openruntimes-executor:
-    container_name: openruntimes-executor
+    container_name: exc1
     hostname: exc1
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.4
+    image: openruntimes/executor:0.25.1
     networks:
       - appwrite
-      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -1001,6 +1001,9 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
+      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
+      - OPR_EXECUTOR_IMAGES=<?php echo $executorImages; ?>
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
@@ -1209,3 +1212,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  openruntimes-node-modules-cache:

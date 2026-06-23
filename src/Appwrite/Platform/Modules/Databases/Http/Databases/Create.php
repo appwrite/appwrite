@@ -199,6 +199,24 @@ class Create extends Action
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
+        $this->createMetadataCollection($dbForProject, $database);
+
+        $queueForEvents->setParam('databaseId', $database->getId());
+
+        $response
+            ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+            ->dynamic($database, UtopiaResponse::MODEL_DATABASE);
+    }
+
+    /**
+     * Create the per-database metadata collection (`database_{internalId}`) that holds
+     * the database's collection definitions. Extracted so product overrides that
+     * provision a backend asynchronously (e.g. documentsdb, vectorsdb) can initialise
+     * the metadata exactly like a standard database create instead of leaving it
+     * uninitialised, which makes the first collection create fail.
+     */
+    protected function createMetadataCollection(Database $dbForProject, Document $database): void
+    {
         $collections = $this->getDatabaseCollection();
         if (empty($collections)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
@@ -217,19 +235,11 @@ class Create extends Action
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
         } catch (DuplicateException) {
-            throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);
+            throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$database->getId()]);
         } catch (IndexException $e) {
             throw new Exception(Exception::INDEX_INVALID);
         } catch (LimitException) {
-            // TODO: @Jake, how do we handle this collection/table?
-            // there's no context awareness at this level on what the api is.
-            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED, params: [$databaseId]);
+            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED, params: [$database->getId()]);
         }
-
-        $queueForEvents->setParam('databaseId', $database->getId());
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
-            ->dynamic($database, UtopiaResponse::MODEL_DATABASE);
     }
 }

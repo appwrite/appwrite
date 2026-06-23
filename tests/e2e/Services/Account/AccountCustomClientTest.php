@@ -131,6 +131,22 @@ final class AccountCustomClientTest extends Scope
         ];
     }
 
+    protected function getNextTOTP(\OTPHP\TOTP $totp, string $previousOtp): string
+    {
+        $deadline = time() + 35;
+
+        do {
+            sleep(1);
+            $otp = $totp->now();
+
+            if ($otp !== $previousOtp) {
+                return $otp;
+            }
+        } while (time() < $deadline);
+
+        $this->fail('TOTP did not rotate within the expected time window.');
+    }
+
     /**
      * Helper to set up a basic account
      */
@@ -4142,6 +4158,278 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $verification3['headers']['status-code']);
+    }
+
+    public function testRegenerateMFARecoveryCodesRequiresRecentChallenge(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+        $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
+
+        $regenerateWithoutChallenge = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(401, $regenerateWithoutChallenge['headers']['status-code']);
+        $this->assertEquals('user_challenge_required', $regenerateWithoutChallenge['body']['type']);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
+            'factor' => 'recoveryCode',
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertNotEmpty($challenge['body']['$id']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $recoveryCodes['body']['recoveryCodes'][0],
+        ]);
+
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+        $this->assertNotEmpty($challengeVerification['body']['mfaUpdatedAt']);
+
+        $regeneratedCodes = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(200, $regeneratedCodes['headers']['status-code']);
+        $this->assertNotEmpty($regeneratedCodes['body']['recoveryCodes']);
+        $this->assertNotEquals($recoveryCodes['body']['recoveryCodes'], $regeneratedCodes['body']['recoveryCodes']);
+    }
+
+    public function testDeleteMFAAuthenticatorRequiresRecentChallenge(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+        $this->assertNotEmpty($authenticator['body']['secret']);
+
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+        $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        $enrollmentOtp = $totp->now();
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $enrollmentOtp,
+        ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $deleteWithoutChallenge = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(401, $deleteWithoutChallenge['headers']['status-code']);
+        $this->assertEquals('user_challenge_required', $deleteWithoutChallenge['body']['type']);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
+            'factor' => 'recoveryCode',
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertNotEmpty($challenge['body']['$id']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $recoveryCodes['body']['recoveryCodes'][0],
+        ]);
+
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+        $this->assertArrayHasKey('mfaUpdatedAt', $challengeVerification['body']);
+        $this->assertNotEmpty($challengeVerification['body']['mfaUpdatedAt']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+    }
+
+    public function testMFAAuthenticatorLifecycle(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $factors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $headers);
+
+        $this->assertEquals(200, $factors['headers']['status-code']);
+        $this->assertFalse($factors['body']['totp']);
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+        $this->assertNotEmpty($authenticator['body']['secret']);
+        $this->assertNotEmpty($authenticator['body']['uri']);
+
+        $factors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $headers);
+
+        $this->assertEquals(200, $factors['headers']['status-code']);
+        $this->assertFalse($factors['body']['totp']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        $invalidOtp = $totp->now() === '000000' ? '111111' : '000000';
+
+        $invalidVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $invalidOtp,
+        ]);
+
+        $this->assertEquals(401, $invalidVerification['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $invalidVerification['body']['type']);
+
+        $enrollmentOtp = $totp->now();
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $enrollmentOtp,
+        ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $factors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $headers);
+
+        $this->assertEquals(200, $factors['headers']['status-code']);
+        $this->assertTrue($factors['body']['totp']);
+
+        $duplicateAuthenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(409, $duplicateAuthenticator['headers']['status-code']);
+        $this->assertEquals('user_authenticator_already_verified', $duplicateAuthenticator['body']['type']);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
+            'factor' => 'totp',
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertNotEmpty($challenge['body']['$id']);
+
+        $invalidChallengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $invalidOtp,
+        ]);
+
+        $this->assertEquals(401, $invalidChallengeVerification['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $invalidChallengeVerification['body']['type']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $this->getNextTOTP($totp, $enrollmentOtp),
+        ]);
+
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+        $this->assertContains('totp', $challengeVerification['body']['factors']);
+        $this->assertNotEmpty($challengeVerification['body']['mfaUpdatedAt']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $deleteAgain = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(404, $deleteAgain['headers']['status-code']);
+        $this->assertEquals('user_authenticator_not_found', $deleteAgain['body']['type']);
+    }
+
+    public function testMFAAuthenticatorCompletesEmailPasswordSession(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+        $this->assertNotEmpty($authenticator['body']['secret']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        $enrollmentOtp = $totp->now();
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $enrollmentOtp,
+        ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+        $this->assertTrue($mfa['body']['mfa']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertEquals(['password'], $session['body']['factors']);
+        $this->assertNotEmpty($session['cookies']['a_session_' . $projectId]);
+
+        $newSessionHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $newSessionHeaders);
+
+        $this->assertEquals(401, $account['headers']['status-code']);
+        $this->assertEquals('user_more_factors_required', $account['body']['type']);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $newSessionHeaders, [
+            'factor' => 'totp',
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertNotEmpty($challenge['body']['$id']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $newSessionHeaders, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $this->getNextTOTP($totp, $enrollmentOtp),
+        ]);
+
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+        $this->assertContains('password', $challengeVerification['body']['factors']);
+        $this->assertContains('totp', $challengeVerification['body']['factors']);
+        $this->assertNotEmpty($challengeVerification['body']['mfaUpdatedAt']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $newSessionHeaders);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($data['id'], $account['body']['$id']);
     }
 
     public function testRefreshEmailPasswordSession(): void

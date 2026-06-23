@@ -1,17 +1,19 @@
 name: CI
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   COMPOSE_FILE: docker-compose.yml
   IMAGE: appwrite-dev
-  REGISTRY_IMAGE: ghcr.io/${{ github.repository }}/appwrite-dev
   K6_VERSION: '0.53.0'
 
 on:
   pull_request:
+  push:
+    branches:
+      - 1.9.x
   workflow_dispatch:
     inputs:
       response_format:
@@ -89,109 +91,11 @@ jobs:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
 
-  composer:
-    name: Checks / Composer
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Validate
-        run: composer validate
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Audit
-        env:
-          COMPOSER_NO_AUDIT: 0
-        run: composer audit
-
-  format:
-    name: Checks / Format
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 2
-
-      - run: git checkout HEAD^2
-        if: github.event_name == 'pull_request'
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Run Linter
-        run: composer lint
-
-  refactor:
-    name: Checks / Refactor
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Run Rector
-        run: composer refactor:check
-
-  analyze:
-    name: Checks / Analyze
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Cache PHPStan result cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: .phpstan-cache
-          key: phpstan-${{ github.sha }}
-          restore-keys: |
-            phpstan-
-
-      - name: Run PHPStan
-        run: composer analyze -- --no-progress
-
-  specs:
-    name: Checks / Specs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup PHP
@@ -202,10 +106,42 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Validate composer.json
+        run: composer validate
+
       - name: Install dependencies
+        id: install
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
+      - name: Cache PHPStan result cache
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .phpstan-cache
+          key: phpstan-${{ github.sha }}
+          restore-keys: |
+            phpstan-
+
+      - name: Audit dependencies
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          COMPOSER_NO_AUDIT: 0
+        run: composer audit
+
+      - name: Run Linter
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: composer lint
+
+      - name: Run Rector
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: composer refactor:check
+
+      - name: Run PHPStan
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: composer analyze -- --no-progress
+
       - name: Generate specs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
@@ -229,48 +165,78 @@ jobs:
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
+      services: ${{ steps.generate.outputs.services }}
     steps:
       - name: Generate matrix
         id: generate
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
-            const allModes = ['dedicated', 'shared'];
+            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
+            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
 
-            const defaultDatabases = ['MongoDB'];
-            const defaultModes = ['dedicated'];
+            const services = [
+              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 15 },
+              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 15 },
+              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 15 },
+              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 15 },
+              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 15 },
+              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 15 },
+              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 15 },
+              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+            ];
+            core.setOutput('services', JSON.stringify(services));
 
             const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
+
+            const isDatabaseVersionChanged = async () => {
+              const getContent = (ref) => github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: 'composer.lock',
+                ref,
+              });
+
+              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+              const [{ data: base }, { data: head }] = await Promise.all([
+                getContent(pr.base.sha),
+                getContent(pr.head.sha),
+              ]);
+
+              const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
+              return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+            };
+
+            if (!pr || await isDatabaseVersionChanged()) {
+              core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
+              core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
               return;
             }
 
-            const getContent = (ref) => github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: 'composer.lock',
-              ref,
-            });
-
-            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-
-            const [{ data: base }, { data: head }] = await Promise.all([
-              getContent(pr.base.sha),
-              getContent(pr.head.sha),
-            ]);
-
-            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
-
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('modes', JSON.stringify(['dedicated']));
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+s3-cache+ecr-cache
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -283,13 +249,6 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -298,9 +257,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          cache-from: type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ env.RUNS_ON_AWS_REGION }},bucket=${{ env.RUNS_ON_S3_BUCKET_CACHE }}
+          cache-to: type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ env.RUNS_ON_AWS_REGION }},bucket=${{ env.RUNS_ON_S3_BUCKET_CACHE }},mode=max
           target: development
           build-args: |
             DEBUG=false
@@ -309,7 +268,7 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
     needs: build
     permissions:
       contents: read
@@ -325,17 +284,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Pull Docker Image
         run: |
-          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -347,9 +299,10 @@ jobs:
         run: docker compose exec -T appwrite vars
 
       - name: Run Unit Tests
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        timeout-minutes: 15
+        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
         with:
-          max_attempts: 2
+          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
@@ -362,7 +315,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
     needs: build
     permissions:
       contents: read
@@ -378,17 +331,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Pull Docker Image
         run: |
-          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -399,15 +345,16 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
 
       - name: Run General Tests
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        timeout-minutes: 15
+        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
         with:
-          max_attempts: 2
+          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
@@ -425,8 +372,8 @@ jobs:
           docker compose logs
 
   e2e_service:
-    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel', github.run_id) }}
+    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
+    runs-on: ${{ matrix.service.runner }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -437,45 +384,7 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: [
-          Account,
-          Avatars,
-          Console,
-          Databases,
-          TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Health,
-          Advisor,
-          Locale,
-          Projects,
-          Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project,
-          Presences
-        ]
-        include:
-          - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
-            paratest_processes: 3
-            timeout_minutes: 30
-          - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
-            paratest_processes: 3
-            timeout_minutes: 30
-          - service: Migrations
-            paratest_processes: 1
+        service: ${{ fromJSON(needs.matrix.outputs.services) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -507,17 +416,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Pull Docker Image
         run: |
-          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -533,30 +435,30 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
 
       - name: Run tests
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        timeout-minutes: 15
+        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
         with:
-          max_attempts: 2
+          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
-          timeout_minutes: ${{ matrix.timeout_minutes || 20 }}
+          timeout_minutes: ${{ matrix.service.timeout }}
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service }}
+          test_dir: tests/e2e/Services/${{ matrix.service.name }}
           command: |
-            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 
-            # Services that rely on sequential test method execution (shared static state)
-            FUNCTIONAL_FLAG="--functional"
-            case "${{ matrix.service }}" in
-              Databases|TablesDB|Functions|Realtime|GraphQL|ProjectWebhooks) FUNCTIONAL_FLAG="" ;;
-            esac
+            FUNCTIONAL_FLAG=""
+            if [ "${{ matrix.service.functional }}" = "true" ]; then
+              FUNCTIONAL_FLAG="--functional"
+            fi
 
-            PARATEST_PROCESSES="${{ matrix.paratest_processes }}"
+            PARATEST_PROCESSES="${{ matrix.service.processes }}"
             if [ -z "$PARATEST_PROCESSES" ]; then
               PARATEST_PROCESSES="$(nproc)"
             fi
@@ -565,7 +467,7 @@ jobs:
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -575,7 +477,7 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
     needs: [build, matrix]
     permissions:
       contents: read
@@ -597,17 +499,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Pull Docker Image
         run: |
-          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -621,9 +516,10 @@ jobs:
           docker compose up -d --quiet-pull --wait
 
       - name: Run tests
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        timeout-minutes: 15
+        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
         with:
-          max_attempts: 2
+          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
@@ -642,7 +538,7 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
     needs: [build, matrix]
     permissions:
       contents: read
@@ -662,17 +558,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Pull Docker Image
         run: |
-          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -687,15 +576,16 @@ jobs:
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+          while ! docker logs exc1 | grep -q "Executor is ready."; do
             echo "Waiting for Executor to come online"
             sleep 1
           done
 
       - name: Run tests
-        uses: itznotabug/php-retry@d6bef45a8bff490babfb613e33b00d133e4062f0 # v3
+        timeout-minutes: 15
+        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
         with:
-          max_attempts: 2
+          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
@@ -714,8 +604,8 @@ jobs:
 
   benchmark:
     name: Benchmark
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
     needs: build
     permissions:
       actions: read
@@ -735,18 +625,11 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Pull Appwrite image
         run: |
-          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
-          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:after
+          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}:after
 
       - name: Setup k6
         uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
@@ -756,9 +639,11 @@ jobs:
       - name: Prepare benchmark before
         id: benchmark_before_prepare
         continue-on-error: true
+        env:
+          BENCHMARK_BEFORE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
-          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
-          git worktree add --detach /tmp/appwrite-benchmark-before ${{ github.event.pull_request.base.sha }}
+          git fetch --depth=1 origin "${BENCHMARK_BEFORE_SHA}"
+          git worktree add --detach /tmp/appwrite-benchmark-before "${BENCHMARK_BEFORE_SHA}"
           docker build \
             --cache-from ${{ env.IMAGE }}:after \
             --target development \
@@ -880,8 +765,8 @@ jobs:
         if: always()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          BENCHMARK_BASE_REF: ${{ github.event.pull_request.base.ref }}
-          BENCHMARK_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BENCHMARK_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.before }}
+          BENCHMARK_HEAD_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.sha }}
         with:
           script: |
             const comment = require('./.github/workflows/benchmark-comment.js');

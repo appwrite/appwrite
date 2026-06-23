@@ -3311,4 +3311,5 @@ final class FunctionsCustomServerTest extends Scope
             $this->cleanupFunction($functionId);
         }
     }
+
 }
