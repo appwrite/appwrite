@@ -569,11 +569,12 @@ Http::init()
     ->inject('authorization')
     ->inject('cacheControlForStorage')
     ->inject('impersonatorUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser) {
+    ->inject('targetUser')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
 
-        $response->setUser($user);
+        $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
-        $request->setUser($user);
+        $request->setUser($targetUser);
 
         $path = $route->getPath();
         $databaseType = match (true) {
@@ -602,11 +603,11 @@ Http::init()
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
 
-        /* If a session exists, use the user associated with the session */
-        if (! $user->isEmpty()) {
-            $userClone = clone $user;
+        /* If a session exists, use the target user (impersonated target or actor) for audit */
+        if (! $targetUser->isEmpty()) {
+            $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
-            if (empty($user->getAttribute('type'))) {
+            if (empty($targetUser->getAttribute('type'))) {
                 $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
