@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Specifications;
 
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -57,7 +56,7 @@ class XList extends Base
     public function action(string $type, Response $response, array $plan)
     {
         $allSpecs = Config::getParam('specifications', []);
-        $planKey = (new Specification($plan, [], 0, 0, $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications'))->getPlanKey();
+        $planKey = $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications';
 
         $specs = [];
         foreach ($allSpecs as $spec) {
