@@ -373,4 +373,29 @@ return function (Container $container): void {
             'email' => $user->getAttribute('email', ''),
         ]);
     }, ['request', 'project', 'user', 'authorization']);
+
+    $container->set('targetUser', function (Request $request, Document $project, Document $user, Document $impersonatorUser, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
+        if ($impersonatorUser->isEmpty()) {
+            return $user;
+        }
+
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+
+        $mode = $getMode($request, $project);
+        $dbForPlatform = $getDbForPlatform($authorization);
+        $dbForProject = $getDbForProject($project, $authorization);
+        $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+
+        if (!empty($impersonateUserId)) {
+            return $authorization->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
+        } elseif (!empty($impersonateEmail)) {
+            return $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+        } elseif (!empty($impersonatePhone)) {
+            return $authorization->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+        }
+
+        return $user;
+    }, ['request', 'project', 'user', 'impersonatorUser', 'authorization']);
 };

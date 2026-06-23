@@ -868,8 +868,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $timelimit = $connectionContainer->get('timelimit');
         $user = $connectionContainer->get('user'); /** @var User $user */
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
+        $targetUser = $connectionContainer->get('targetUser'); /** @var Document $targetUser */
         if (!$impersonatorUser->isEmpty()) {
-            $user->setAttribute('impersonatorUserId', $impersonatorUser->getId());
+            $targetUser->setAttribute('impersonatorUserId', $impersonatorUser->getId());
         }
         $logUser = $user;
 
@@ -921,9 +922,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = $user->getRoles($authorization);
+        $roles = $targetUser->getRoles($authorization);
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
+        $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -948,7 +949,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         if (empty($channels)) {
             // in case of message based 'subscribe' channels will be empty at first and only projectId and roles will be available
-            $sanitizedUser = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
+            $sanitizedUser = empty($targetUser->getId()) ? null : $response->output($targetUser, Response::MODEL_ACCOUNT);
             $connectedPayloadJson = json_encode([
                 'type' => 'connected',
                 'data' => [
@@ -958,7 +959,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 ]
             ]);
 
-            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $user->getId());
+            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $targetUser->getId());
             $realtime->connections[$connection]['authorization'] = $authorization;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             $server->send([$connection], $connectedPayloadJson);
@@ -983,7 +984,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
         }
 
-        $sanitizedUser = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
+        $sanitizedUser = empty($targetUser->getId()) ? null : $response->output($targetUser, Response::MODEL_ACCOUNT);
 
         $mapping = [];
         foreach ($subscriptions as $index => $subscription) {
@@ -996,7 +997,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 $roles,
                 $subscription['channels'],
                 $subscription['queries'],
-                $user->getId()
+                $targetUser->getId()
             );
 
             $mapping[$index] = $subscriptionId;

@@ -447,13 +447,13 @@ Http::get('/v1/account')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
-        if ($user->isEmpty()) {
+    ->inject('targetUser')
+    ->action(function (Response $response, Document $targetUser) {
+        if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
+        $response->dynamic($targetUser, Response::MODEL_ACCOUNT);
     });
 
 Http::delete('/v1/account')
