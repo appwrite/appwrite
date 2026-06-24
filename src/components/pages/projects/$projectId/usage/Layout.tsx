@@ -323,6 +323,7 @@ function UsageLayoutContent({
     chartInterval,
     setDateRange: setUsageDateRange,
     setChartInterval,
+    refreshRollingDateRange,
   } = useUsageChartFilters()
 
   const [state, setState] = useState<UsageState>('success')
@@ -350,6 +351,8 @@ function UsageLayoutContent({
   }, [categoryId])
 
   const handleRefresh = () => {
+    refreshRollingDateRange()
+
     if (hasRefreshHandler) {
       void triggerRefresh()
       return

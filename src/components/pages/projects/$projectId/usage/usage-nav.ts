@@ -32,18 +32,12 @@ export const USAGE_NAV_GROUPS: readonly UsageNavGroupConfig[] = [
   {
     id: 'resources',
     label: 'Resources',
-    categoryIds: ['requests', 'bandwidth', 'compute'],
+    categoryIds: ['requests', 'bandwidth', 'compute', 'realtime'],
   },
   {
     id: 'products',
     label: 'Products',
-    categoryIds: [
-      'auth',
-      'databases',
-      'storage',
-      'realtime',
-      'messaging',
-    ],
+    categoryIds: ['auth', 'databases', 'storage', 'messaging'],
   },
 ]
 

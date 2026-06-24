@@ -1,14 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import {
-  format,
-  subDays,
-  subHours,
-  startOfDay,
-  endOfDay,
-  isSameDay,
-} from 'date-fns'
+import { format, isSameDay } from 'date-fns'
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 
@@ -20,152 +13,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  findMatchingUsageDateRangePreset,
+  USAGE_DATE_RANGE_PRESET_GROUPS,
+  type UsageDateRangePreset,
+} from '@/lib/usage/usage-date-range-presets'
+import { isFullCalendarDayRange } from '@/lib/usage/usage-date-range'
 
-export type DateRangePreset = {
-  label: string
-  value: string
-  getRange: () => { from: Date; to: Date }
-}
+export type DateRangePreset = UsageDateRangePreset
 
-type PresetGroup = {
-  title: string
-  presets: DateRangePreset[]
-}
-
-const PRESET_GROUPS: PresetGroup[] = [
-  {
-    title: 'Recent',
-    presets: [
-      {
-        label: 'Last hour',
-        value: '1h',
-        getRange: () => {
-          const now = new Date()
-          return { from: subHours(now, 1), to: now }
-        },
-      },
-      {
-        label: 'Last 6 hours',
-        value: '6h',
-        getRange: () => {
-          const now = new Date()
-          return { from: subHours(now, 6), to: now }
-        },
-      },
-      {
-        label: 'Last 24 hours',
-        value: '24h',
-        getRange: () => {
-          const now = new Date()
-          return { from: subHours(now, 24), to: now }
-        },
-      },
-    ],
-  },
-  {
-    title: 'Days',
-    presets: [
-      {
-        label: 'Today',
-        value: 'today',
-        getRange: () => {
-          const n = new Date()
-          return { from: startOfDay(n), to: endOfDay(n) }
-        },
-      },
-      {
-        label: 'Last 7 days',
-        value: '7d',
-        getRange: () => ({
-          from: startOfDay(subDays(new Date(), 6)),
-          to: endOfDay(new Date()),
-        }),
-      },
-      {
-        label: 'Last 14 days',
-        value: '14d',
-        getRange: () => ({
-          from: startOfDay(subDays(new Date(), 13)),
-          to: endOfDay(new Date()),
-        }),
-      },
-      {
-        label: 'Last 30 days',
-        value: '30d',
-        getRange: () => ({
-          from: startOfDay(subDays(new Date(), 29)),
-          to: endOfDay(new Date()),
-        }),
-      },
-    ],
-  },
-]
-
-const ALL_PRESETS = PRESET_GROUPS.flatMap((group) => group.presets)
-
-const MATCH_TOLERANCE_MS = 60_000
-
-function datesMatch(a: Date, b: Date, toleranceMs = MATCH_TOLERANCE_MS) {
-  return Math.abs(a.getTime() - b.getTime()) <= toleranceMs
-}
-
-function dateRangeMatchesPreset(
-  range: DateRange | undefined,
-  preset: DateRangePreset,
-): boolean {
-  if (!range?.from || !range?.to) return false
-
-  const presetRange = preset.getRange()
-
-  if (
-    preset.value === 'today' ||
-    preset.value === '7d' ||
-    preset.value === '14d' ||
-    preset.value === '30d'
-  ) {
-    return (
-      range.from.getTime() === presetRange.from.getTime() &&
-      range.to.getTime() === presetRange.to.getTime()
-    )
-  }
-
-  if (preset.value === '1h' || preset.value === '6h' || preset.value === '24h') {
-    const hours = preset.value === '1h' ? 1 : preset.value === '6h' ? 6 : 24
-    const expectedDuration = hours * 60 * 60 * 1000
-    const actualDuration = range.to.getTime() - range.from.getTime()
-    const toIsRecent = datesMatch(range.to, new Date())
-
-    return (
-      Math.abs(actualDuration - expectedDuration) <= MATCH_TOLERANCE_MS &&
-      toIsRecent
-    )
-  }
-
-  return (
-    datesMatch(range.from, presetRange.from) &&
-    datesMatch(range.to, presetRange.to)
-  )
-}
+const PRESET_GROUPS = USAGE_DATE_RANGE_PRESET_GROUPS
 
 function findMatchingPreset(
   range: DateRange | undefined,
-): DateRangePreset | null {
-  if (!range?.from || !range?.to) return null
-
-  for (const preset of ALL_PRESETS) {
-    if (dateRangeMatchesPreset(range, preset)) {
-      return preset
-    }
-  }
-
-  return null
-}
-
-function isFullCalendarDay(from: Date, to: Date) {
-  return (
-    from.getTime() === startOfDay(from).getTime() &&
-    to.getTime() === endOfDay(to).getTime()
-  )
+): UsageDateRangePreset | null {
+  return findMatchingUsageDateRangePreset(range)
 }
 
 interface DateRangePickerProps {
@@ -251,12 +113,12 @@ export function DateRangePicker({
       return format(range.from, 'MMM d, yyyy')
     }
     if (isSameDay(range.from, range.to)) {
-      if (isFullCalendarDay(range.from, range.to)) {
+      if (isFullCalendarDayRange(range.from, range.to)) {
         return format(range.from, 'MMM d, yyyy')
       }
       return `${format(range.from, 'MMM d · h:mm a')} – ${format(range.to, 'h:mm a')}`
     }
-    if (isFullCalendarDay(range.from, range.to)) {
+    if (isFullCalendarDayRange(range.from, range.to)) {
       return `${format(range.from, 'MMM d')} - ${format(range.to, 'MMM d, yyyy')}`
     }
     return `${format(range.from, 'MMM d, h:mm a')} - ${format(range.to, 'MMM d, h:mm a')}`

@@ -50,7 +50,9 @@ import {
 } from '@/lib/usage/chart-interval'
 import {
   getStableUsageChartDateRange,
-  resolveUsageDateBounds,
+  getUsageChartQueryRangeKeyPart,
+  resolveUsageChartFetchBounds,
+  shouldRefetchUsageChartOnMount,
 } from '@/lib/usage/usage-date-range'
 import { DEFAULT_STALE_TIME } from './constants'
 import {
@@ -85,11 +87,16 @@ import {
 } from '@/lib/usage/auth-usage'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
-  from: string
-  to: string
+  rangeKeyPart: string
+  getBounds: () => { from: Date; to: Date }
+  refetchOnMountRolling: boolean
 } {
-  const { from, to } = resolveUsageDateBounds(dateRange)
-  return { from: from.toISOString(), to: to.toISOString() }
+  const rangeKeyPart = getUsageChartQueryRangeKeyPart(dateRange)
+  return {
+    rangeKeyPart,
+    getBounds: () => resolveUsageChartFetchBounds(dateRange),
+    refetchOnMountRolling: shouldRefetchUsageChartOnMount(rangeKeyPart),
+  }
 }
 
 const usageEventsQueryOptionsBase = {
@@ -109,7 +116,7 @@ export function bandwidthOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -118,21 +125,20 @@ export function bandwidthOverviewQueryOptions(
       'overview',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectBandwidthOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -142,7 +148,7 @@ export function requestsOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -151,21 +157,20 @@ export function requestsOverviewQueryOptions(
       'overview',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectRequestsOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -175,7 +180,7 @@ export function executionsOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -184,21 +189,20 @@ export function executionsOverviewQueryOptions(
       'overview',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectExecutionsOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -208,7 +212,7 @@ export function gbHoursOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -217,21 +221,20 @@ export function gbHoursOverviewQueryOptions(
       'overview',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectGbHoursOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -241,7 +244,7 @@ export function storageOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -250,21 +253,20 @@ export function storageOverviewQueryOptions(
       'overview',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectStorageOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -275,7 +277,7 @@ export function requestsChartOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -284,21 +286,20 @@ export function requestsChartOverviewQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectRequestsChartOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -477,7 +478,7 @@ export function requestsBreakdownQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -487,13 +488,15 @@ export function requestsBreakdownQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
     ],
     queryFn: () =>
-      fetchProjectRequestsBreakdown(projectId!, dateRange, dimension),
+      fetchProjectRequestsBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -503,7 +506,7 @@ export function requestsBreakdownDrawerQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -514,19 +517,21 @@ export function requestsBreakdownDrawerQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
     ],
     queryFn: () =>
       fetchProjectRequestsBreakdown(
         projectId!,
-        dateRange,
+        getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -614,7 +619,7 @@ export function bandwidthChartOnlyQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -623,21 +628,20 @@ export function bandwidthChartOnlyQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
       fetchProjectBandwidthOverview(
         projectId!,
-        {
-          from: new Date(from),
-          to: new Date(to),
-        },
+        getBounds(),
         interval,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -659,7 +663,7 @@ export function bandwidthBreakdownQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -669,13 +673,15 @@ export function bandwidthBreakdownQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
     ],
     queryFn: () =>
-      fetchProjectBandwidthBreakdown(projectId!, dateRange, dimension),
+      fetchProjectBandwidthBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -685,7 +691,7 @@ export function bandwidthBreakdownDrawerQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -696,19 +702,21 @@ export function bandwidthBreakdownDrawerQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
     ],
     queryFn: () =>
       fetchProjectBandwidthBreakdown(
         projectId!,
-        dateRange,
+        getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -852,7 +860,7 @@ function databaseReadsChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -862,14 +870,16 @@ function databaseReadsChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectDatabaseReadsOverview(projectId!, dateRange, interval),
+      fetchProjectDatabaseReadsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -879,7 +889,7 @@ function databaseWritesChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -889,14 +899,16 @@ function databaseWritesChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectDatabaseWritesOverview(projectId!, dateRange, interval),
+      fetchProjectDatabaseWritesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -906,7 +918,7 @@ function databaseCollectionsChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -916,14 +928,16 @@ function databaseCollectionsChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectDatabaseCollectionsOverview(projectId!, dateRange, interval),
+      fetchProjectDatabaseCollectionsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -933,7 +947,7 @@ function databaseDocumentsChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -943,14 +957,16 @@ function databaseDocumentsChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectDatabaseDocumentsOverview(projectId!, dateRange, interval),
+      fetchProjectDatabaseDocumentsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1008,7 +1024,7 @@ function databaseReadsBreakdownQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1019,13 +1035,15 @@ function databaseReadsBreakdownQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
     ],
     queryFn: () =>
-      fetchProjectDatabaseReadsBreakdown(projectId!, dateRange, dimension),
+      fetchProjectDatabaseReadsBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1035,7 +1053,7 @@ function databaseWritesBreakdownQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1046,13 +1064,15 @@ function databaseWritesBreakdownQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
     ],
     queryFn: () =>
-      fetchProjectDatabaseWritesBreakdown(projectId!, dateRange, dimension),
+      fetchProjectDatabaseWritesBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1062,7 +1082,7 @@ function databaseReadsBreakdownDrawerQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1074,19 +1094,21 @@ function databaseReadsBreakdownDrawerQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
     ],
     queryFn: () =>
       fetchProjectDatabaseReadsBreakdown(
         projectId!,
-        dateRange,
+        getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1096,7 +1118,7 @@ function databaseWritesBreakdownDrawerQueryOptions(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1108,19 +1130,21 @@ function databaseWritesBreakdownDrawerQueryOptions(
       'project',
       projectId,
       dimension,
-      from,
-      to,
+      rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
     ],
     queryFn: () =>
       fetchProjectDatabaseWritesBreakdown(
         projectId!,
-        dateRange,
+        getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1302,7 +1326,7 @@ function realtimeConnectionsChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1312,14 +1336,16 @@ function realtimeConnectionsChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectRealtimeConnectionsOverview(projectId!, dateRange, interval),
+      fetchProjectRealtimeConnectionsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1329,7 +1355,7 @@ function realtimeMessagesChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1339,14 +1365,16 @@ function realtimeMessagesChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectRealtimeMessagesOverview(projectId!, dateRange, interval),
+      fetchProjectRealtimeMessagesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1356,7 +1384,7 @@ function realtimeBandwidthChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1366,14 +1394,16 @@ function realtimeBandwidthChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectRealtimeBandwidthOverview(projectId!, dateRange, interval),
+      fetchProjectRealtimeBandwidthOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1434,7 +1464,7 @@ function authMauChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1444,14 +1474,16 @@ function authMauChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectAuthMauOverview(projectId!, dateRange, interval),
+      fetchProjectAuthMauOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1461,7 +1493,7 @@ function authOtpChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1471,14 +1503,16 @@ function authOtpChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectAuthOtpOverview(projectId!, dateRange, interval),
+      fetchProjectAuthOtpOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1488,7 +1522,7 @@ function authSignupsChartQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { from, to } = normalizeDateRangeKey(dateRange)
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
     queryKey: [
@@ -1498,14 +1532,16 @@ function authSignupsChartQueryOptions(
       'chart',
       'project',
       projectId,
-      from,
-      to,
+      rangeKeyPart,
       interval,
     ],
     queryFn: () =>
-      fetchProjectAuthSignupsOverview(projectId!, dateRange, interval),
+      fetchProjectAuthSignupsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }

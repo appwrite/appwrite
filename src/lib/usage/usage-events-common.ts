@@ -221,14 +221,20 @@ export function resolveOverviewUsagePeriod(
   return { from, to, previousFrom, previousTo, interval }
 }
 
+function get15MinuteIntervalStart(date: Date): Date {
+  const start = startOfMinute(date)
+  start.setMinutes(start.getMinutes() - (start.getMinutes() % 15), 0, 0)
+  return start
+}
+
 function getIntervalStart(date: Date, interval: UsageChartInterval): Date {
-  if (interval === '1m') return startOfMinute(date)
+  if (interval === '15m') return get15MinuteIntervalStart(date)
   if (interval === '1h') return startOfHour(date)
   return startOfDay(date)
 }
 
 function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
-  if (interval === '1m') return addMinutes(date, 1)
+  if (interval === '15m') return addMinutes(date, 15)
   if (interval === '1h') return addHours(date, 1)
   return addDays(date, 1)
 }
@@ -264,7 +270,7 @@ function formatChartPointLabel(
   rangeFrom: Date,
   rangeTo: Date,
 ): string {
-  if (interval === '1m' || interval === '1h') {
+  if (interval === '15m' || interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
     return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')
   }

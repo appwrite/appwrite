@@ -24,6 +24,13 @@ import {
   CLI_SHELL_MAX_HEIGHT_RATIO,
   CLI_SHELL_MIN_HEIGHT_PX,
 } from '@/lib/cli-shell/constants'
+import type { SerializedUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { normalizeUsageChartIntervalPref } from '@/lib/usage/chart-interval'
+import {
+  getUsageDateRangePresetByValue,
+  inferUsageDateRangePresetFromStoredRange,
+} from '@/lib/usage/usage-date-range-presets'
+import type { DateRange } from 'react-day-picker'
 
 export type UserPrefs = Record<string, unknown>
 
@@ -2299,14 +2306,14 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
 // Usage chart date range + interval (account prefs, shared overview + usage)
 // ---------------------------------------------------------------------------
 
-/** Full key: `console.usageChart.dateRange` - JSON `{ from, to }` ISO strings. */
+/** Full key: `console.usageChart.dateRange` - JSON `{ preset }` or `{ from, to }` ISO strings. */
 export const USER_PREFS_KEY_USAGE_CHART_DATE_RANGE =
   'console.usageChart.dateRange'
 
-/** Full key: `console.usageChart.interval` - `"1m"`, `"1h"`, or `"1d"`. */
+/** Full key: `console.usageChart.interval` - `"15m"`, `"1h"`, or `"1d"`. */
 export const USER_PREFS_KEY_USAGE_CHART_INTERVAL = 'console.usageChart.interval'
 
-const USAGE_CHART_INTERVAL_PREF_VALUES = ['1m', '1h', '1d'] as const
+const USAGE_CHART_INTERVAL_PREF_VALUES = ['15m', '1h', '1d'] as const
 
 export type UsageChartIntervalPref = (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
 
@@ -2318,11 +2325,21 @@ export function isUsageChartIntervalPref(
 
 export function parseUsageChartDateRangeFromPrefs(
   prefs: UserPrefs | null | undefined,
-): { from: string; to: string } | null {
+): SerializedUsageChartDateRange | null {
   const raw = prefs?.[USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]
   if (typeof raw !== 'string' || !raw.trim()) return null
   try {
-    const parsed = JSON.parse(raw) as { from?: string; to?: string }
+    const parsed = JSON.parse(raw) as {
+      preset?: string
+      from?: string
+      to?: string
+    }
+    if (typeof parsed?.preset === 'string' && parsed.preset.trim()) {
+      const preset = getUsageDateRangePresetByValue(parsed.preset.trim())
+      if (preset) {
+        return { preset: preset.value }
+      }
+    }
     if (typeof parsed?.from !== 'string' || typeof parsed?.to !== 'string') {
       return null
     }
@@ -2330,6 +2347,13 @@ export function parseUsageChartDateRangeFromPrefs(
     const to = new Date(parsed.to)
     if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null
     if (from.getTime() > to.getTime()) return null
+
+    const storedRange: DateRange = { from, to }
+    const inferred = inferUsageDateRangePresetFromStoredRange(storedRange)
+    if (inferred) {
+      return { preset: inferred.value }
+    }
+
     return { from: parsed.from, to: parsed.to }
   } catch {
     return null
@@ -2340,13 +2364,15 @@ export function parseUsageChartIntervalFromPrefs(
   prefs: UserPrefs | null | undefined,
 ): UsageChartIntervalPref | null {
   const raw = prefs?.[USER_PREFS_KEY_USAGE_CHART_INTERVAL]
-  if (typeof raw === 'string' && isUsageChartIntervalPref(raw)) return raw
+  if (typeof raw !== 'string') return null
+  const normalized = normalizeUsageChartIntervalPref(raw)
+  if (normalized && isUsageChartIntervalPref(normalized)) return normalized
   return null
 }
 
 export function mergeUsageChartFiltersIntoPrefs(
   prefs: UserPrefs,
-  serializedDateRange: { from: string; to: string },
+  serializedDateRange: SerializedUsageChartDateRange,
   chartInterval: UsageChartIntervalPref,
 ): UserPrefs {
   return {

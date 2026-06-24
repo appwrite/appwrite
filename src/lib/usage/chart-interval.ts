@@ -1,8 +1,8 @@
-import { differenceInCalendarDays, differenceInHours } from 'date-fns'
+import { differenceInCalendarDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
 
-export type UsageChartInterval = '1m' | '1h' | '1d'
+export type UsageChartInterval = '15m' | '1h' | '1d'
 
 export const DEFAULT_USAGE_CHART_INTERVAL: UsageChartInterval = '1h'
 
@@ -10,14 +10,14 @@ export const USAGE_CHART_INTERVAL_OPTIONS: {
   value: UsageChartInterval
   label: string
 }[] = [
-  { value: '1m', label: '1m' },
+  { value: '15m', label: '15m' },
   { value: '1h', label: '1h' },
   { value: '1d', label: '1d' },
 ]
 
 /** Finest to coarsest — used when coarsening interval for wider date ranges. */
 export const USAGE_CHART_INTERVAL_COARSEN_ORDER: UsageChartInterval[] = [
-  '1m',
+  '15m',
   '1h',
   '1d',
 ]
@@ -31,14 +31,14 @@ function resolveChartIntervalDateBounds(dateRange: DateRange | undefined): {
 
 /** Max inclusive calendar days allowed for each interval (null = unlimited). */
 const INTERVAL_MAX_RANGE_DAYS: Record<UsageChartInterval, number | null> = {
-  '1m': null,
+  '15m': null,
   '1h': 31,
   '1d': null,
 }
 
 /** Max duration in hours (checked when calendar-day limit is null). */
 const INTERVAL_MAX_RANGE_HOURS: Partial<Record<UsageChartInterval, number>> = {
-  '1m': 24,
+  '15m': 24,
 }
 
 export function getUsageChartIntervalMaxRangeDays(
@@ -61,7 +61,10 @@ export function isUsageChartIntervalValidForRange(
 
   const maxHours = getUsageChartIntervalMaxRangeHours(interval)
   if (maxHours !== null) {
-    return differenceInHours(to, from) <= maxHours
+    const durationMs = to.getTime() - from.getTime()
+    const maxDurationMs = maxHours * 60 * 60 * 1000
+    const toleranceMs = 60_000
+    return durationMs <= maxDurationMs + toleranceMs
   }
 
   const maxDays = getUsageChartIntervalMaxRangeDays(interval)
@@ -113,4 +116,21 @@ export function resolveUsageChartIntervalForRange(
   }
 
   return '1d'
+}
+
+/** Map legacy saved interval prefs to the current value. */
+export function normalizeUsageChartIntervalPref(
+  value: string,
+): UsageChartInterval | null {
+  if (value === '1m') return '15m'
+  if (isUsageChartInterval(value)) return value
+  return null
+}
+
+export function isUsageChartInterval(
+  value: string,
+): value is UsageChartInterval {
+  return (USAGE_CHART_INTERVAL_OPTIONS as { value: string }[]).some(
+    (option) => option.value === value,
+  )
 }
