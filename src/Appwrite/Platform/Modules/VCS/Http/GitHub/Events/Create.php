@@ -104,67 +104,76 @@ class Create extends Action
 
         $providerInstallationId = $parsedPayload["installationId"];
 
-        $installations = $dbForPlatform->find('installations', [
-            Query::equal('providerInstallationId', [$providerInstallationId]),
-            Query::limit(1000)
-        ]);
+        $installationCursor = null;
+        do {
+            $installationQueries = [
+                Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::limit(1000),
+            ];
+            if ($installationCursor !== null) {
+                $installationQueries[] = Query::cursorAfter($installationCursor);
+            }
+            $installations = $dbForPlatform->find('installations', $installationQueries);
 
-        foreach ($installations as $installation) {
-            $projectId = $installation->getAttribute('projectId', '');
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            foreach ($installations as $installation) {
+                $projectId = $installation->getAttribute('projectId', '');
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
-            if (!$project->isEmpty()) {
-                $dbForProject = $getProjectDB($project);
+                if (!$project->isEmpty()) {
+                    $dbForProject = $getProjectDB($project);
 
-                foreach (['functions', 'sites'] as $collection) {
-                    $cursor = null;
-                    do {
-                        $queries = [
-                            Query::equal('installationInternalId', [$installation->getSequence()]),
-                            Query::limit(1000),
-                        ];
-                        if ($cursor !== null) {
-                            $queries[] = Query::cursorAfter($cursor);
-                        }
-                        $resources = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
+                    foreach (['functions', 'sites'] as $collection) {
+                        $cursor = null;
+                        do {
+                            $queries = [
+                                Query::equal('installationInternalId', [$installation->getSequence()]),
+                                Query::limit(1000),
+                            ];
+                            if ($cursor !== null) {
+                                $queries[] = Query::cursorAfter($cursor);
+                            }
+                            $resources = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
 
-                        foreach ($resources as $resource) {
-                            $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $resource
-                                ->setAttribute('installationId', '')
-                                ->setAttribute('installationInternalId', '')
-                                ->setAttribute('providerRepositoryId', '')
-                                ->setAttribute('providerBranch', '')
-                                ->setAttribute('providerSilentMode', false)
-                                ->setAttribute('providerRootDirectory', '')
-                                ->setAttribute('repositoryId', '')
-                                ->setAttribute('repositoryInternalId', '')));
-                        }
+                            foreach ($resources as $resource) {
+                                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $resource
+                                    ->setAttribute('installationId', '')
+                                    ->setAttribute('installationInternalId', '')
+                                    ->setAttribute('providerRepositoryId', '')
+                                    ->setAttribute('providerBranch', '')
+                                    ->setAttribute('providerSilentMode', false)
+                                    ->setAttribute('providerRootDirectory', '')
+                                    ->setAttribute('repositoryId', '')
+                                    ->setAttribute('repositoryInternalId', '')));
+                            }
 
-                        $cursor = count($resources) === 1000 ? $resources[array_key_last($resources)] : null;
-                    } while ($cursor !== null);
+                            $cursor = count($resources) === 1000 ? $resources[array_key_last($resources)] : null;
+                        } while ($cursor !== null);
+                    }
                 }
+
+                $cursor = null;
+                do {
+                    $queries = [
+                        Query::equal('installationInternalId', [$installation->getSequence()]),
+                        Query::limit(1000),
+                    ];
+                    if ($cursor !== null) {
+                        $queries[] = Query::cursorAfter($cursor);
+                    }
+                    $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', $queries));
+
+                    foreach ($repositories as $repository) {
+                        $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
+                    }
+
+                    $cursor = count($repositories) === 1000 ? $repositories[array_key_last($repositories)] : null;
+                } while ($cursor !== null);
+
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
             }
 
-            $cursor = null;
-            do {
-                $queries = [
-                    Query::equal('installationInternalId', [$installation->getSequence()]),
-                    Query::limit(1000),
-                ];
-                if ($cursor !== null) {
-                    $queries[] = Query::cursorAfter($cursor);
-                }
-                $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', $queries));
-
-                foreach ($repositories as $repository) {
-                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
-                }
-
-                $cursor = count($repositories) === 1000 ? $repositories[array_key_last($repositories)] : null;
-            } while ($cursor !== null);
-
-            $authorization->skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
-        }
+            $installationCursor = count($installations) === 1000 ? $installations[array_key_last($installations)] : null;
+        } while ($installationCursor !== null);
     }
 
     private function handlePushEvent(
