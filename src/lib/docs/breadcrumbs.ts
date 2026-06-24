@@ -3,7 +3,7 @@ import {
   canShowDocsPreviewMenu,
   type DocsPreviewView,
 } from './docs-preview-menu'
-import { DOCS_GLOBAL_NAV } from './navigation/global'
+import { getDocsAudienceFromSlug, getDocsGlobalNav } from './navigation/audience'
 import { isDocsNavGroup } from './navigation/index'
 import type { DocsSectionNavConfig } from './navigation/sections'
 import { getAllDocsSectionNavs } from './navigation/section-navs'
@@ -55,7 +55,7 @@ function getTitleForSlug(slug: string, pageMap: DocsPageLookup): string {
 
 function getGlobalNavRootLabel(slug: string): string | null {
   const href = slugToHref(slug)
-  for (const group of DOCS_GLOBAL_NAV) {
+  for (const group of getDocsGlobalNav(getDocsAudienceFromSlug(slug))) {
     if (!('items' in group)) continue
     for (const item of group.items) {
       if (item.href === href) return item.label

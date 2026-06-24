@@ -6,6 +6,106 @@ import type { DocsSectionNavConfig } from './sections'
  */
 export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
   {
+    prefix: 'partners/oauth-connect',
+    parent: {
+      href: '/docs/partners',
+      label: 'OAuth connect',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/partners/oauth-connect',
+          },
+          {
+            label: 'Setup',
+            href: '/docs/partners/oauth-connect/setup',
+          },
+          {
+            label: 'Scopes',
+            href: '/docs/partners/oauth-connect/scopes',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'partners/org-api-keys',
+    parent: {
+      href: '/docs/partners',
+      label: 'Org API keys',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/partners/org-api-keys',
+          },
+          {
+            label: 'Scopes',
+            href: '/docs/partners/org-api-keys/scopes',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'partners/organizations',
+    parent: {
+      href: '/docs/partners',
+      label: 'Organizations',
+    },
+    navigation: [
+      {
+        label: 'Partners API',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/partners/organizations',
+          },
+          {
+            label: 'Manage organizations',
+            href: '/docs/partners/organizations/manage',
+          },
+          {
+            label: 'Members and roles',
+            href: '/docs/partners/organizations/members',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'partners/projects',
+    parent: {
+      href: '/docs/partners',
+      label: 'Projects',
+    },
+    navigation: [
+      {
+        label: 'Partners API',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/partners/projects',
+          },
+          {
+            label: 'Create projects',
+            href: '/docs/partners/projects/create',
+          },
+          {
+            label: 'Manage resources',
+            href: '/docs/partners/projects/resources',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'products/domains',
     parent: {
       href: '/docs',

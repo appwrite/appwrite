@@ -1,0 +1,39 @@
+---
+layout: article
+title: Domains API
+description: Manage organization domains and DNS from your partner platform using the Console Domains API.
+---
+
+The Domains API lets partner platforms register, transfer, and manage organization domains programmatically. Use it when your product offers custom hostnames or domain management to customers.
+
+# Console SDK access {% #console-sdk-access %}
+
+Domains are organization-level resources. Authenticate with an organization API key that includes domain scopes:
+
+{% multicode %}
+```server-nodejs
+import { Client, Domains } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('console')
+    .setKey(process.env.APPWRITE_ORG_API_KEY);
+
+const domains = new Domains(client);
+```
+{% /multicode %}
+
+# Common operations {% #common-operations %}
+
+| Operation | Use case |
+| --------- | -------- |
+| List domains | Show domains attached to an organization |
+| Register / transfer | Sell or provision domains through your platform |
+| Manage DNS | Create records for customer subdomains |
+| Connect to products | Point hostnames to Sites, Functions, or custom APIs |
+
+# Product hostnames {% #product-hostnames %}
+
+Organization domains prove control of a zone. Product hostnames (for Sites, Functions, or custom domains) are configured inside each project after DNS is verified.
+
+See [Domains product docs](/docs/products/domains) for registration, DNS, and product connection flows.

@@ -1,0 +1,99 @@
+---
+layout: article
+title: Proxy
+description: Proxy Appwrite Console and project APIs from your partner platform using organization and project credentials.
+---
+
+Many partner platforms expose a simplified API or UI while Appwrite remains the backend. Your server proxies requests to Appwrite using [organization API keys](/docs/partners/org-api-keys) and per-customer project credentials.
+
+# Architecture {% #architecture %}
+
+```
+Customer app  →  Your platform API  →  Appwrite SDK  →  Appwrite Cloud
+```
+
+Your platform API:
+
+- Authenticates the customer with your auth system
+- Resolves the customer to an Appwrite `projectId` and credentials
+- Forwards or composes Appwrite operations
+- Returns responses shaped for your product
+
+# Two-layer proxy {% #two-layer-proxy %}
+
+1. **Console layer**: Org API key + Console SDK for organizations, projects, and domains
+2. **Project layer**: Project API key + project SDK for databases, storage, functions, and auth
+
+Map each customer in your database to an Appwrite `projectId` (and optionally `teamId`).
+
+# Example: create customer workspace {% #example-create-customer-workspace %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Projects } from 'node-appwrite';
+
+const consoleClient = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('console')
+    .setKey(process.env.APPWRITE_ORG_API_KEY);
+
+const projects = new Projects(consoleClient);
+
+export async function provisionCustomer(customerId: string, orgId: string) {
+    const project = await projects.create({
+        projectId: 'unique()',
+        name: `Customer ${customerId}`,
+        teamId: orgId,
+        region: 'fra',
+    });
+
+    // Store project.$id mapped to customerId in your database
+    return project;
+}
+```
+{% /multicode %}
+
+# Example: proxy resource operation {% #example-proxy-resource-operation %}
+
+After provisioning, use a project-scoped key to perform resource operations:
+
+{% multicode %}
+```server-nodejs
+import { Client, TablesDB } from 'node-appwrite';
+
+function projectClient(projectId: string, projectApiKey: string) {
+    return new Client()
+        .setEndpoint('https://fra.cloud.appwrite.io/v1')
+        .setProject(projectId)
+        .setKey(projectApiKey);
+}
+
+// Your platform API handler
+export async function listTables(customerId: string) {
+    const { projectId, apiKey } = await getCustomerCredentials(customerId);
+    const tablesDB = new TablesDB(projectClient(projectId, apiKey));
+    return tablesDB.list();
+}
+```
+{% /multicode %}
+
+# Credential storage {% #credential-storage %}
+
+Store per-customer project API keys or use short-lived tokens your backend mints after authorization. Never send org or project API keys to browsers.
+
+# Rate limits and errors {% #rate-limits-and-errors %}
+
+Your proxy should:
+
+- Forward Appwrite error codes to your API consumers with safe messages
+- Implement retries for transient failures
+- Respect [rate limits](/docs/advanced/platform/rate-limits) using API keys on server calls
+- Log requests with your customer ID and Appwrite project ID for support
+
+Translate Appwrite [response codes](/docs/advanced/platform/response-codes) into your platform's error format. Log Appwrite request IDs internally for support.
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/partners/org-api-keys" %}
+Org API keys
+{% /arrow_link %}

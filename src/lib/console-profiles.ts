@@ -27,6 +27,8 @@ export type ConsoleProfileFeatures = {
   init: boolean
   /** Marketing home page and related public marketing routes */
   marketing: boolean
+  /** Partner documentation hub and /docs/partners routes */
+  partnersDocs: boolean
   /** Multiple organizations and organization switching */
   multiTenancy: boolean
   /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
@@ -87,6 +89,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   activity: 'Activity',
   init: 'Init',
   marketing: 'Marketing',
+  partnersDocs: 'Partners docs',
   multiTenancy: 'Multi-tenancy',
   orgRoles: 'Org roles',
   systemStatus: 'System status',
@@ -130,6 +133,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       activity: true,
       init: true,
       marketing: true,
+      partnersDocs: false,
       multiTenancy: true,
       orgRoles: true,
       systemStatus: true,
@@ -165,6 +169,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       activity: false,
       init: false,
       marketing: false,
+      partnersDocs: false,
       multiTenancy: false,
       orgRoles: false,
       systemStatus: false,

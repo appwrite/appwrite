@@ -94,6 +94,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'notion.svg',
   'npm.svg',
   'nuxt.svg',
+  'oauth.svg',
   'oidc.svg',
   'okta.svg',
   'open-source.svg',

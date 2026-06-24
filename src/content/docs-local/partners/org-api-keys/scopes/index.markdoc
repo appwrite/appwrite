@@ -1,0 +1,35 @@
+---
+layout: article
+title: Org API key scopes
+description: Configure organization API key scopes for Console operations like managing projects, domains, and organization settings.
+---
+
+Organization API keys use **Console scopes** that control access to organization-level APIs. Assign the minimum scopes your platform needs.
+
+# Scope categories {% #scope-categories %}
+
+| Area | Read scopes | Write scopes |
+| ---- | ----------- | ------------ |
+| Projects | List and inspect projects | Create, update, and delete projects |
+| Domains | List domains and DNS | Register domains and manage records |
+| Organization | Read org settings and members | Update settings and manage members |
+| Billing | Read plan and usage (where available) | Update billing settings (where available) |
+
+# Best practices {% #best-practices %}
+
+- Create separate keys per environment (development, staging, production)
+- Use different keys for provisioning vs read-only monitoring
+- Rotate keys on a schedule and update credentials before deleting old keys
+- Never grant write scopes to services that only need to read status
+
+# Sensitive operations {% #sensitive-operations %}
+
+Keys with project write scopes can create new projects and API keys inside those projects. Treat org API keys like root credentials for your Appwrite organization.
+
+Store keys in a secrets manager and restrict access to production deployment pipelines and authorized backend services.
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/partners/proxy" %}
+Proxy
+{% /arrow_link %}

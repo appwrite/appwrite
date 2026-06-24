@@ -1,0 +1,44 @@
+---
+layout: article
+title: Manage resources
+description: Manage Appwrite project resources from your partner platform using the project SDK and project API keys.
+---
+
+After you create a project, use the **project SDK** (`sdk.forProject(projectId)`) to manage resources inside that project.
+
+# Switch from Console to project SDK {% #switch-from-console-to-project-sdk %}
+
+Console APIs manage the project shell. Project APIs manage services inside the project:
+
+{% multicode %}
+```server-nodejs
+import { Client, TablesDB, Storage, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://fra.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey(process.env.PROJECT_API_KEY);
+
+const tablesDB = new TablesDB(client);
+const storage = new Storage(client);
+const functions = new Functions(client);
+```
+{% /multicode %}
+
+# Common partner operations {% #common-partner-operations %}
+
+| Service | Example operations |
+| ------- | ------------------ |
+| TablesDB | Create databases, tables, and rows for customer data |
+| Storage | Create buckets and manage files |
+| Functions | Deploy functions on behalf of customers |
+| Users | Create admin users or sync identities |
+| Messaging | Configure providers and send messages |
+
+# API keys per customer {% #api-keys-per-customer %}
+
+Create scoped project API keys per customer or per environment. Use the [Keys API](/docs/advanced/platform/api-keys) to rotate keys without manual Console steps.
+
+# Proxy pattern {% #proxy-pattern %}
+
+Expose your platform's API endpoints and forward to Appwrite with the customer's project credentials. See [Proxy](/docs/partners/proxy).

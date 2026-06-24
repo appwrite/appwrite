@@ -1,4 +1,5 @@
 import { DOCS_SEARCH_INDEX } from './generated/search-index'
+import { isPartnersDocsEnabled, isPartnersDocsSlug } from './partners-docs-feature'
 
 export type DocsSearchEntry = {
   slug: string
@@ -57,6 +58,11 @@ function scoreEntry(entry: DocsSearchEntry, query: string): number {
   return score
 }
 
+function getVisibleSearchIndex(index: DocsSearchEntry[] = DOCS_SEARCH_INDEX): DocsSearchEntry[] {
+  if (isPartnersDocsEnabled()) return index
+  return index.filter((entry) => !isPartnersDocsSlug(entry.slug))
+}
+
 export function searchDocs(
   query: string,
   limit = 12,
@@ -65,7 +71,7 @@ export function searchDocs(
   const normalizedQuery = normalizeQuery(query)
   if (!normalizedQuery) return []
 
-  return index
+  return getVisibleSearchIndex(index)
     .map((entry) => ({
       ...entry,
       score: scoreEntry(entry, normalizedQuery),
@@ -99,7 +105,7 @@ const DOCS_SEARCH_POPULAR_SLUGS = [
 export function getDocsSearchPopularPages(
   index: DocsSearchEntry[] = DOCS_SEARCH_INDEX,
 ): DocsSearchEntry[] {
-  const bySlug = new Map(index.map((entry) => [entry.slug, entry]))
+  const bySlug = new Map(getVisibleSearchIndex(index).map((entry) => [entry.slug, entry]))
   return DOCS_SEARCH_POPULAR_SLUGS.flatMap((slug) => {
     const entry = bySlug.get(slug)
     return entry ? [entry] : []

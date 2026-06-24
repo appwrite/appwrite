@@ -9,10 +9,10 @@ export type DocsSectionNavConfig = {
 /** Generated from ../website layout files. Run: bun run scripts/generate-docs-section-nav.ts */
 export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
-      prefix: "advanced/integration",
+      prefix: "advanced/billing",
       parent: {
         href: "/docs",
-        label: "Integration",
+        label: "Billing",
       },
       navigation: [
         {
@@ -20,7 +20,83 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Overview",
-              href: "/docs/advanced/integration",
+              href: "/docs/advanced/billing",
+            },
+            {
+              label: "Manage billing",
+              href: "/docs/advanced/billing/payments",
+            },
+          ],
+        },
+        {
+          label: "Plans",
+          items: [
+            {
+              label: "Free",
+              href: "/docs/advanced/billing/free",
+            },
+            {
+              label: "Pro",
+              href: "/docs/advanced/billing/pro",
+            },
+            {
+              label: "Enterprise",
+              href: "/docs/advanced/billing/enterprise",
+            },
+            {
+              label: "Open source",
+              href: "/docs/advanced/billing/oss",
+            },
+          ],
+        },
+        {
+          label: "Add ons",
+          items: [
+            {
+              label: "Compute",
+              href: "/docs/advanced/billing/compute",
+            },
+            {
+              label: "Phone OTP",
+              href: "/docs/advanced/billing/phone-otp",
+            },
+            {
+              label: "Image Transformations",
+              href: "/docs/advanced/billing/image-transformations",
+            },
+            {
+              label: "Database Reads and Writes",
+              href: "/docs/advanced/billing/database-reads-and-writes",
+            },
+          ],
+        },
+        {
+          label: "SLAs",
+          items: [
+            {
+              label: "Support SLA",
+              href: "/docs/advanced/billing/support-sla",
+            },
+            {
+              label: "Uptime SLA",
+              href: "/docs/advanced/billing/uptime-sla",
+            },
+          ],
+        },
+        {
+          label: "Policies",
+          items: [
+            {
+              label: "Fair use",
+              href: "/docs/advanced/billing/fair-use-policy",
+            },
+            {
+              label: "Abuse",
+              href: "/docs/advanced/billing/abuse",
+            },
+            {
+              label: "Refund",
+              href: "/docs/advanced/billing/refund-policy",
             },
           ],
         },
@@ -64,166 +140,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "From self-hosted",
               href: "/docs/advanced/migrations/self-hosted",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      prefix: "advanced/platform",
-      parent: {
-        href: "/docs",
-        label: "Platform",
-      },
-      navigation: [
-        {
-          label: "Platform",
-          items: [
-            {
-              label: "Overview",
-              href: "/docs/advanced/platform",
-            },
-            {
-              label: "Shortcuts",
-              href: "/docs/advanced/platform/shortcuts",
-            },
-            {
-              label: "Roles",
-              href: "/docs/advanced/platform/roles",
-            },
-          ],
-        },
-        {
-          label: "Integration",
-          items: [
-            {
-              label: "Events",
-              href: "/docs/advanced/platform/events",
-            },
-            {
-              label: "Webhooks",
-              href: "/docs/advanced/platform/webhooks",
-            },
-            {
-              label: "Response codes",
-              href: "/docs/advanced/platform/response-codes",
-            },
-            {
-              label: "Error handling",
-              href: "/docs/advanced/platform/error-handling",
-            },
-          ],
-        },
-        {
-          label: "Access control",
-          items: [
-            {
-              label: "Permissions",
-              href: "/docs/advanced/platform/permissions",
-            },
-            {
-              label: "Rate limits",
-              href: "/docs/advanced/platform/rate-limits",
-            },
-            {
-              label: "API keys",
-              href: "/docs/advanced/platform/api-keys",
-            },
-            {
-              label: "Dev keys",
-              href: "/docs/advanced/platform/dev-keys",
-            },
-          ],
-        },
-        {
-          label: "Plans",
-          items: [
-            {
-              label: "Billing",
-              href: "/docs/advanced/platform/billing",
-            },
-            {
-              label: "Free",
-              href: "/docs/advanced/platform/free",
-            },
-            {
-              label: "Pro",
-              href: "/docs/advanced/platform/pro",
-            },
-            {
-              label: "Enterprise",
-              href: "/docs/advanced/platform/enterprise",
-            },
-            {
-              label: "Open source",
-              href: "/docs/advanced/platform/oss",
-            },
-          ],
-        },
-        {
-          label: "Add ons",
-          items: [
-            {
-              label: "Compute",
-              href: "/docs/advanced/platform/compute",
-            },
-            {
-              label: "Phone OTP",
-              href: "/docs/advanced/platform/phone-otp",
-            },
-            {
-              label: "Image Transformations",
-              href: "/docs/advanced/platform/image-transformations",
-            },
-            {
-              label: "Database Reads and Writes",
-              href: "/docs/advanced/platform/database-reads-and-writes",
-            },
-          ],
-        },
-        {
-          label: "Configuration",
-          items: [
-            {
-              label: "Custom domains",
-              href: "/docs/advanced/platform/custom-domains",
-            },
-            {
-              label: "Environment variables",
-              href: "/docs/advanced/platform/environment-variables",
-            },
-            {
-              label: "Message templates",
-              href: "/docs/advanced/platform/message-templates",
-            },
-          ],
-        },
-        {
-          label: "Policies",
-          items: [
-            {
-              label: "Release",
-              href: "/docs/advanced/platform/release-policy",
-            },
-            {
-              label: "Fair use",
-              href: "/docs/advanced/platform/fair-use-policy",
-            },
-            {
-              label: "Abuse",
-              href: "/docs/advanced/platform/abuse",
-            },
-            {
-              label: "Support SLA",
-              href: "/docs/advanced/platform/support-sla",
-            },
-            {
-              label: "Uptime SLA",
-              href: "/docs/advanced/platform/uptime-sla",
-            },
-            {
-              label: "Refund",
-              href: "/docs/advanced/platform/refund-policy",
             },
           ],
         },
@@ -308,6 +224,27 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Abuse protection",
               href: "/docs/advanced/security/abuse-protection",
+            },
+          ],
+        },
+        {
+          label: "Access control",
+          items: [
+            {
+              label: "Permissions",
+              href: "/docs/advanced/security/permissions",
+            },
+            {
+              label: "Roles",
+              href: "/docs/advanced/security/roles",
+            },
+            {
+              label: "Rate limits",
+              href: "/docs/advanced/security/rate-limits",
+            },
+            {
+              label: "Dev keys",
+              href: "/docs/advanced/security/dev-keys",
             },
           ],
         },
@@ -445,7 +382,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
       prefix: "apis/realtime",
       parent: {
-        href: "/docs",
+        href: "/docs/apis",
         label: "Realtime",
       },
       navigation: [
@@ -493,6 +430,102 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Custom endpoint",
               href: "/docs/apis/realtime/custom-endpoint",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "platforms/project",
+      parent: {
+        href: "/docs",
+        label: "Project",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/platforms/project",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Auth methods",
+              href: "/docs/platforms/project/auth-methods",
+            },
+            {
+              label: "OAuth providers",
+              href: "/docs/platforms/project/oauth",
+            },
+            {
+              label: "API keys",
+              href: "/docs/platforms/project/api-keys",
+            },
+            {
+              label: "Platforms",
+              href: "/docs/platforms/project/platforms",
+            },
+            {
+              label: "Protocols",
+              href: "/docs/platforms/project/protocols",
+            },
+            {
+              label: "Services",
+              href: "/docs/platforms/project/services",
+            },
+            {
+              label: "Policies",
+              href: "/docs/platforms/project/policies",
+            },
+            {
+              label: "Mock phones",
+              href: "/docs/platforms/project/mock-phones",
+            },
+            {
+              label: "Environment variables",
+              href: "/docs/platforms/project/environment-variables",
+            },
+            {
+              label: "SMTP",
+              href: "/docs/platforms/project/smtp",
+            },
+            {
+              label: "Email templates",
+              href: "/docs/platforms/project/email-templates",
+            },
+            {
+              label: "Labels",
+              href: "/docs/platforms/project/labels",
+            },
+          ],
+        },
+        {
+          label: "Journeys",
+          items: [
+            {
+              label: "Provisioning",
+              href: "/docs/platforms/project/provisioning",
+            },
+            {
+              label: "Key rotation",
+              href: "/docs/platforms/project/key-rotation",
+            },
+            {
+              label: "Branded emails",
+              href: "/docs/platforms/project/branded-emails",
+            },
+            {
+              label: "Plan tiers",
+              href: "/docs/platforms/project/plan-tiers",
+            },
+            {
+              label: "Offboarding",
+              href: "/docs/platforms/project/offboarding",
             },
           ],
         },
@@ -675,6 +708,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Email policies",
               href: "/docs/products/auth/email-policies",
+            },
+            {
+              label: "Message templates",
+              href: "/docs/products/auth/message-templates",
             },
             {
               label: "Tokens",
@@ -1093,7 +1130,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           label: "Providers",
           items: [
             {
-              label: "Push with APNS",
+              label: "Push with APNs",
               href: "/docs/products/messaging/apns",
             },
             {
@@ -1202,6 +1239,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
         {
           label: "Features",
           items: [
+            {
+              label: "Custom domains",
+              href: "/docs/products/network/custom-domains",
+            },
             {
               label: "DNS",
               href: "/docs/products/network/dns",
@@ -1637,6 +1678,28 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Persistent agents with Realtime",
               href: "/docs/tooling/ai/persistent-agents-with-realtime",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "tooling/command-center",
+      parent: {
+        href: "/docs",
+        label: "Command Center",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/tooling/command-center",
+            },
+            {
+              label: "Shortcuts",
+              href: "/docs/tooling/command-center/shortcuts",
             },
           ],
         },

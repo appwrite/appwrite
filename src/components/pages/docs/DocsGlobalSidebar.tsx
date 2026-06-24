@@ -1,9 +1,13 @@
-import { useState, type ComponentType } from 'react'
-import { useLocation } from '@tanstack/react-router'
+import { useState, type ComponentType, useEffect } from 'react'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import {
   ArrowUpDown,
   ArrowUpRight,
+  ArrowLeftRight,
+  BarChart2,
   BookOpen,
+  Boxes,
+  Building2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -16,7 +20,9 @@ import {
   Folder,
   Globe,
   Home,
+  Key,
   Layers,
+  LayoutGrid,
   Link2,
   Play,
   Puzzle,
@@ -47,15 +53,21 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
+import { OAuthIcon } from '@/components/global/shared/OAuthIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
-import { DOCS_GLOBAL_NAV } from '@/lib/docs/navigation'
-import { isDocsNavGroup } from '@/lib/docs/navigation'
+import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
+import {
+  getDocsAudienceFromPathname,
+  getDocsGlobalNav,
+  isDocsNavGroup,
+} from '@/lib/docs/navigation'
 import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
 import { getBlogPageUrl, getDocsPageUrl, getMarketingPageUrl, isBlogPageExternal, isDocsPageExternal, isMarketingPageExternal, parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DocsRouteLink } from './DocsRouteLink'
+import { DocsAudienceSwitcher } from './DocsAudienceSwitcher'
 
 const DOCS_MENU_ICON_STROKE = 1.25
 
@@ -69,12 +81,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
   puzzle: Puzzle,
   code: Code,
   'user-group': Users,
+  building: Building2,
+  boxes: Boxes,
+  'layout-grid': LayoutGrid,
   database: Database,
   folder: Folder,
   zap: Zap,
   send: Send,
   globe: Globe,
   link: Link2,
+  key: Key,
   'user-circle': UserCircle,
   sparkles: Sparkles,
   terminal: Terminal,
@@ -82,6 +98,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   shield: Shield,
   server: Server,
   rest: ArrowUpDown,
+  'arrow-left-right': ArrowLeftRight,
+  'bar-chart-2': BarChart2,
   command: Command,
   text: Type,
   platform: Layers,
@@ -112,16 +130,33 @@ function DocsGraphqlNavIcon({ className, isActive }: DocsCustomNavIconProps) {
   )
 }
 
+function DocsOAuthNavIcon({ className, isActive }: DocsCustomNavIconProps) {
+  return (
+    <OAuthIcon
+      variant="nav"
+      className={cn(isActive && 'opacity-100', className)}
+    />
+  )
+}
+
 const CUSTOM_ICON_MAP: Record<string, ComponentType<DocsCustomNavIconProps>> = {
   terraform: DocsTerraformNavIcon,
   graphql: DocsGraphqlNavIcon,
+  oauth: DocsOAuthNavIcon,
 }
 
-function isDocsNavActive(href: string, pathname: string): boolean {
+function isDocsNavActive(
+  href: string,
+  pathname: string,
+  isParent = false,
+): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/'
   if (href === '/docs') return normalized === '/docs'
   if (href.startsWith('http')) return false
-  return normalized === href || normalized.startsWith(`${href}/`)
+  if (isParent) {
+    return normalized === href || normalized.startsWith(`${href}/`)
+  }
+  return normalized === href
 }
 
 function DocsGlobalNavItem({
@@ -150,7 +185,7 @@ function DocsGlobalNavItem({
       : isChangelogPath
         ? getMarketingPageUrl('/changelog', marketingEnabled)
         : item.href
-  const isActive = isDocsNavActive(resolvedHref, pathname)
+  const isActive = isDocsNavActive(resolvedHref, pathname, item.isParent)
   const CustomIcon = item.icon ? CUSTOM_ICON_MAP[item.icon] : null
   const Icon = item.icon && !CustomIcon ? ICON_MAP[item.icon] : null
   const external =
@@ -379,10 +414,19 @@ export function DocsGlobalSidebar({
   onMobileClose,
 }: DocsGlobalSidebarProps) {
   const location = useLocation()
+  const navigate = useNavigate()
   const pathname = location.pathname
   const [collapsed, setCollapsed] = useState(false)
   const { features } = useConsoleProfile()
   const marketingEnabled = features.marketing
+  const audience = getDocsAudienceFromPathname(pathname)
+  const globalNav = getDocsGlobalNav(audience)
+
+  useEffect(() => {
+    if (!features.partnersDocs && isPartnersDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+    }
+  }, [features.partnersDocs, navigate, pathname])
 
   return (
     <TooltipProvider>
@@ -404,8 +448,9 @@ export function DocsGlobalSidebar({
             role="navigation"
             aria-label="Docs navigation"
           >
+            <DocsAudienceSwitcher pathname={pathname} collapsed={collapsed} />
             <DocsGlobalNavTree
-              navigation={DOCS_GLOBAL_NAV}
+              navigation={globalNav}
               pathname={pathname}
               collapsed={collapsed}
               marketingEnabled={marketingEnabled}
@@ -458,8 +503,13 @@ export function DocsGlobalSidebar({
           role="navigation"
           aria-label="Mobile docs navigation"
         >
+          <DocsAudienceSwitcher
+            pathname={pathname}
+            isMobile
+            onNavigate={onMobileClose}
+          />
           <DocsGlobalNavTree
-            navigation={DOCS_GLOBAL_NAV}
+            navigation={globalNav}
             pathname={pathname}
             collapsed={false}
             isMobile

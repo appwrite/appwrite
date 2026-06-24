@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { DocsMarkdown } from '@/components/pages/docs/DocsMarkdown'
 import { DocsHome } from '@/components/pages/docs/DocsHome'
+import { DocsPartnersHome } from '@/components/pages/docs/DocsPartnersHome'
 import { DocsPreviewArticleHeader } from '@/components/pages/docs/DocsPreviewArticleHeader'
 import { DocsPreviewMenu } from '@/components/pages/docs/DocsPreviewMenu'
 import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
@@ -40,6 +41,10 @@ import {
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
+import {
+  isPartnersDocsEnabled,
+  isPartnersDocsSlug,
+} from '@/lib/docs/partners-docs-feature'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import {
@@ -48,6 +53,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleRightPane } from './ConsoleRightPaneContext'
 
 const AUTH_ROUTE_PATHNAMES = new Set([
@@ -114,6 +120,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
   const openDocsPreview = useCallback(
     (nextSlug: string, options?: DocsPreviewOpenOptions) => {
       if (!isPreviewAllowed) return
+      if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))
@@ -161,13 +168,16 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
 export function DocsPreviewContent() {
   const { isOpen, slug, view, openDocsPreview, closeDocsPreview } =
     useDocsPreview()
+  const { features } = useConsoleProfile()
   const contentRef = useRef<HTMLDivElement>(null)
+  const partnersDocsEnabled = features.partnersDocs
 
   const showMenu =
     slug !== null &&
     slug !== '' &&
     view === 'menu' &&
-    canShowDocsPreviewMenu(slug)
+    canShowDocsPreviewMenu(slug) &&
+    (!isPartnersDocsSlug(slug) || partnersDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -177,6 +187,7 @@ export function DocsPreviewContent() {
       slug !== null &&
       slug !== '' &&
       !showMenu &&
+      (!isPartnersDocsSlug(slug!) || partnersDocsEnabled) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -185,6 +196,26 @@ export function DocsPreviewContent() {
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: 'auto' })
   }, [slug, view])
+
+  const navigatePreviewSlug = useCallback(
+    (nextSlug: string, nextView: DocsPreviewView = 'article') => {
+      if (isPartnersDocsSlug(nextSlug) && !partnersDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
+      const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
+      if (nextSlug === slug && resolvedView === view) return
+      openDocsPreview(nextSlug, { view: nextView })
+    },
+    [openDocsPreview, partnersDocsEnabled, slug, view],
+  )
+
+  useEffect(() => {
+    if (!isOpen || slug === null || partnersDocsEnabled) return
+    if (isPartnersDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
+    }
+  }, [isOpen, openDocsPreview, partnersDocsEnabled, slug])
 
   const handleOpenInNewWindow = useCallback(() => {
     if (slug === null) return
@@ -204,15 +235,6 @@ export function DocsPreviewContent() {
             previewView: showMenu ? 'menu' : 'article',
           }),
     [slug, showMenu],
-  )
-
-  const navigatePreviewSlug = useCallback(
-    (nextSlug: string, nextView: DocsPreviewView = 'article') => {
-      const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
-      if (nextSlug === slug && resolvedView === view) return
-      openDocsPreview(nextSlug, { view: nextView })
-    },
-    [openDocsPreview, slug, view],
   )
 
   const handleBreadcrumbSelect = useCallback(
@@ -245,7 +267,13 @@ export function DocsPreviewContent() {
 
   if (!isOpen || slug === null) return null
 
+  if (!partnersDocsEnabled && isPartnersDocsSlug(slug)) {
+    return null
+  }
+
   const isDocsHome = slug === ''
+  const isPartnersHome = slug === 'partners' && partnersDocsEnabled
+  const isHubHome = isDocsHome || isPartnersHome
 
   return (
     <DocsPreviewNavigationProvider navigateToSlug={navigatePreviewSlug}>
@@ -285,7 +313,7 @@ export function DocsPreviewContent() {
           </div>
         </div>
 
-        {!isDocsHome && breadcrumbItems.length > 0 ? (
+        {!isHubHome && breadcrumbItems.length > 0 ? (
           <div
             className={cn(
               'shrink-0 border-b border-border py-2.5',
@@ -342,12 +370,14 @@ export function DocsPreviewContent() {
           onClick={handleContentClick}
           className={cn(
             'min-h-0 w-full min-w-0 flex-1 overflow-y-auto',
-            isDocsHome ? 'py-0' : 'py-6',
+            isHubHome ? 'py-0' : 'py-6',
             docsContentPaddingX,
           )}
         >
           {isDocsHome ? (
             <DocsHome variant="preview" />
+          ) : isPartnersHome ? (
+            <DocsPartnersHome variant="preview" />
           ) : showMenu ? (
             <DocsPreviewMenu slug={slug} scrollContainerRef={contentRef} />
           ) : isLoading ? (

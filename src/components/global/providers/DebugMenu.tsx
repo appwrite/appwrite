@@ -1441,6 +1441,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
+                'Partners docs',
+                'Partner documentation hub, audience switcher, and /docs/partners routes.',
+                'partnersDocs',
+                profileId,
+                features.partnersDocs,
+                { category: 'Docs' },
+              ),
+              createProfileFeatureFlagItem(
                 'Organization marketplace',
                 profileId === 'cloud'
                   ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'

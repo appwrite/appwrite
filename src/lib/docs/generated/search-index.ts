@@ -8,9 +8,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
     "excerpt": "Integration",
     "breadcrumbs": [
-      "Integration",
-      "Getting started",
-      "Overview"
+      "advanced",
+      "Integration"
     ]
   },
   {
@@ -86,8 +85,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite is a development platform designed to adapt your unique use cases. Appwrite provides features that help you maintain, scale, and integrate Appwrite with other platforms. Integration Appwrite is designed to integrate with both frontend and backend apps. Learn about advanced integrations and API response codes. Appwrite allows you to react to events that occur on the platform. Use webhooks to update backend integrations about Appwrite events. Learn about response codes and errors returned by Appwrite APIs. Access control Appwrite…",
     "breadcrumbs": [
       "Platform",
-      "Platform",
-      "Overview"
+      "advanced",
+      "Platform"
     ]
   },
   {
@@ -97,8 +96,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite is committed to providing a fair, secure, and high-quality experience for all users. This Abuse Policy, as part of our overall Fair Use Policy, outlines unacceptable behaviors and the steps you can take to report any suspected abuse. Our goal is to maintain a safe environment where everyone can build, innovate, and collaborate without fear of harmful or illegal activity. Reporting Abuse If you observe or suspect any prohibited activity, please report it as soon as possible to abuse@appwrite.io.…",
     "breadcrumbs": [
       "Platform",
-      "Policies",
-      "Abuse"
+      "advanced",
+      "Platform",
+      "Abuse policy"
     ]
   },
   {
@@ -108,7 +108,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…",
     "breadcrumbs": [
       "Platform",
-      "Access control",
+      "advanced",
+      "Platform",
       "API keys"
     ]
   },
@@ -119,7 +120,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite allows you to configure billing per organization. You can access your organizations billing information under the **Billing** tab of your organization. Plans You can view or change your organization's plan under the **Billing** section. You'll also find the expected cost, as well as the start and end date of the current billing period. Billing period Billing periods begin the day you change your plan, and lasts 30 days. Your resource limits are reset at the beginning of each billing…",
     "breadcrumbs": [
       "Platform",
-      "Plans",
+      "advanced",
+      "Platform",
       "Billing"
     ]
   },
@@ -130,7 +132,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "On Appwrite Cloud, paid plans let you choose how much **CPU** and **memory** apply to **build** work and to **runtime** work. Functions and Sites each expose two settings: a **build specification** (install, compile, bundle, package) and a **runtime specification** (executions for functions; serving traffic and SSR for sites). You can pick different tiers for each phase so heavy builds do not force you to oversize steady execution, and vice versa. These options help you tune performance and cost: for example,…",
     "breadcrumbs": [
       "Platform",
-      "Add ons",
+      "advanced",
+      "Platform",
       "Compute"
     ]
   },
@@ -141,7 +144,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite custom domains allows you to use your own domain as your Appwrite API endpoint. Third-party cookies A recent change made in modern browsers will not allow your web app to use 3rd-party cookies. This change is done to protect your users' privacy from malicious web tracking services. When accessing Appwrite from a 3rd party domain, like or , some browsers will treat our secure cookies as 3rd-party cookies and block them, as a fallback Appwrite will store your users'…",
     "breadcrumbs": [
       "Platform",
-      "Configuration",
+      "advanced",
+      "Platform",
       "Custom domains"
     ]
   },
@@ -152,7 +156,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Updated pricing will take effect on April 10th, 2025. Check out this blog post for more information. Appwrite provides powerful database capabilities through its Database API, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or…",
     "breadcrumbs": [
       "Platform",
-      "Add ons",
+      "advanced",
+      "Platform",
       "Database Reads and Writes"
     ]
   },
@@ -163,7 +168,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits: - Appwrite rate limits and CORS errors are bypassed - Configurable expiration date with 1 day, 7 days, and 30 day options This is highly beneficial in scenarios where you are repeatedly sending the same requests to Appwrite in a short period of time, such as manual or…",
     "breadcrumbs": [
       "Platform",
-      "Access control",
+      "advanced",
+      "Platform",
       "Dev keys"
     ]
   },
@@ -174,7 +180,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Enterprise development teams face unique challenges and have unique needs. Appwrite can provide tailored solutions for enterprise customers with custom hosting, training, and support needs. If you're interested to learn about what Appwrite can do for your enterprise development teams, contact us for more details.",
     "breadcrumbs": [
       "Platform",
-      "Plans",
+      "advanced",
+      "Platform",
       "Enterprise"
     ]
   },
@@ -185,7 +192,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Environment variables let you pass constants and secrets such as API keys, connection strings, and feature flags into your Appwrite Functions and Appwrite Sites at build and runtime. Storing values outside your source keeps secrets out of version control and lets you change configuration without code changes. Appwrite supports three scopes of environment variables: - **Project variables** are shared across every function and site in the project. Use them for values consumed by more than one resource, such as a…",
     "breadcrumbs": [
       "Platform",
-      "Configuration",
+      "advanced",
+      "Platform",
       "Environment variables"
     ]
   },
@@ -196,7 +204,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "When integrating Appwrite into your applications, proper error handling is important for delivering a good user experience while still being able to troubleshoot issues effectively. Consider user-friendly error messages **It's generally best to avoid returning Appwrite's raw error messages directly to your users.** These messages are designed for developers and may contain technical details that: - Could confuse non-technical users - Might expose implementation details - Often create an inconsistent user experience Instead, consider this approach: 1. Catch errors from…",
     "breadcrumbs": [
       "Platform",
-      "Integration",
+      "advanced",
+      "Platform",
       "Error handling"
     ]
   },
@@ -207,7 +216,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite provides a variety of events that allows your application to react to changes as they happen. An event will fire when a change occurs in your Appwrite project, like when a new user registers or a new file is uploaded to Appwrite. You can subscribe to these events with Appwrite Functions, Realtime, or Webhooks. You can subscribe to events for specific resources using their ID or subscribe to changes of all resources of the same type by using a…",
     "breadcrumbs": [
       "Platform",
-      "Integration",
+      "advanced",
+      "Platform",
       "Events"
     ]
   },
@@ -218,8 +228,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "At Appwrite, we are committed to providing high-quality, reliable, and scalable backend services for all users. Our Fair Use Policy ensures that resources are used responsibly and that every user receives a consistent experience. This policy applies to all users and outlines acceptable usage patterns and limitations. Definitions and scope - **Normal usage:** Resource usage that falls within expected thresholds for a user's selected plan. - **Excessive usage:** Usage that exceeds defined thresholds and may affect the platform's performance for…",
     "breadcrumbs": [
       "Platform",
-      "Policies",
-      "Fair use"
+      "advanced",
+      "Platform",
+      "Fair use policy"
     ]
   },
   {
@@ -229,7 +240,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project. When you create your Appwrite Cloud…",
     "breadcrumbs": [
       "Platform",
-      "Plans",
+      "advanced",
+      "Platform",
       "Free"
     ]
   },
@@ -240,7 +252,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Changes will take effect on April 1st, 2025. Check out this blog post for more information. Appwrite enables the transformation of images before retrieval using the getFilePreview endpoint. This functionality supports resizing images by width and height, adjusting quality, and applying filters such as opacity, border colour, border radius, and more. Origin Image An \"origin image\" represents the original, unmodified image file in Appwrite Storage. Each origin image serves as the base for unlimited transformations, allowing the creation of multiple…",
     "breadcrumbs": [
       "Platform",
-      "Add ons",
+      "advanced",
+      "Platform",
       "Image Transformations"
     ]
   },
@@ -251,7 +264,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite uses emails to communicate with users to perform authentication and verification actions. Emails can be customized to fit your app's design and voice. Each Appwrite project can have its own set of unique templates. Templates also support localization, so every template can be written in multiple languages and served depending on the configured locale. Custom SMTP server Appwrite Cloud has a default SMTP server to get you started. This SMTP server sends generic emails and doesn't allow customizing SMTP…",
     "breadcrumbs": [
       "Platform",
-      "Configuration",
+      "advanced",
+      "Platform",
       "Message templates"
     ]
   },
@@ -262,7 +276,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite remains open source and continues to support open-source maintainers that build fundamental software that modern developers depend upon with the OSS Program. The OSS Program supports open-projects and their maintainers by alleviating financial burdens and promoting growth. You will receive a free Appwrite Pro subscription and benefit from all its resources and support. The program has no fixed end date but will be reviewed annually to ensure optimal mutual support. Criteria To apply for this program, you must adhere…",
     "breadcrumbs": [
       "Platform",
-      "Plans",
+      "advanced",
+      "Platform",
       "Open source"
     ]
   },
@@ -273,7 +288,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite's permission mechanism offers a simple, yet flexible way to manage which users, teams, or roles can access a specific resource in your project, such as rows and files. Using permissions, you can decide that only **user A** and **user B** will have read and update access to a specific database row, while **user C** and **team X** will be the only ones with delete access. As the name suggests, read permission allows a user to read a resource, create…",
     "breadcrumbs": [
       "Platform",
-      "Access control",
+      "advanced",
+      "Platform",
       "Permissions"
     ]
   },
@@ -284,7 +300,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Changes will take effect on February 10th, 2025. Check out this blog post for more information. Appwrite supports SMS-based OTP (One-Time Password) authentication to provide secure and reliable user verification. This feature enhances your app's security by adding an extra layer of authentication. Free testing You can use the Mock phone numbers feature to test your integrations without incurring any costs. SMS messages You'll be charged per SMS sent. The cost for additional messages is calculated based on two factors:…",
     "breadcrumbs": [
       "Platform",
-      "Add ons",
+      "advanced",
+      "Platform",
       "Phone OTP"
     ]
   },
@@ -295,7 +312,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Cloud's Pro plan is designed for professional developers or development teams that need to build applications at scale. When applications outgrow Appwrite's Free plan, organizations can switch to a Pro plan to continue growing their apps. You can learn more about the Pro plan on the pricing page. Create a Pro plan organization Appwrite's plans are applied to an entire organization, but resources are allocated per project. Get started with a Pro plan organization by visiting the pricing page…",
     "breadcrumbs": [
       "Platform",
-      "Plans",
+      "advanced",
+      "Platform",
       "Pro"
     ]
   },
@@ -306,8 +324,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Some of Appwrite's API endpoints have a rate limit to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits only apply to Client SDKs. Rate limits do not apply when accessing Appwrite with a Server SDK authenticated using an API key. Headers You can check the returned HTTP headers of any API request to see your current rate limit status: The headers tell…",
     "breadcrumbs": [
       "Platform",
-      "Access control",
-      "Rate limits"
+      "advanced",
+      "Platform",
+      "Rate-limits"
     ]
   },
   {
@@ -317,8 +336,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "At Appwrite, we strive to provide exceptional backend services that meet your development needs. This policy outlines our approach to refunds for Appwrite services and ensures a fair and consistent process for all customers. General policy Appwrite services are **non-refundable by default**. All purchases, including self-hosted support plans, Appwrite Cloud subscriptions, and professional services (e.g., onboarding, solution engineering, consulting) are considered final transactions. However, we recognize that exceptional circumstances may arise. In rare and specific situations where service performance, billing,…",
     "breadcrumbs": [
       "Platform",
-      "Policies",
-      "Refund"
+      "advanced",
+      "Platform",
+      "Refund policy"
     ]
   },
   {
@@ -328,8 +348,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "We value the trust of developers in Appwrite as the backbone of their applications. Our release policy is designed to provide developers with a reliable and consistent experience when using Appwrite. We are committed to providing support for our API, SDKs, and product versions for a reasonable length of time, and we follow industry-standard versioning protocols. Appwrite will prioritize security updates and will release new versions as soon as possible to fix any security vulnerabilities. Schedule We work to release…",
     "breadcrumbs": [
       "Platform",
-      "Policies",
-      "Release"
+      "advanced",
+      "Platform",
+      "Release policy"
     ]
   },
   {
@@ -339,7 +360,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request. - Codes in the range indicate success. - Codes in the range indicate an error caused by invalid request, usually caused by user error. - Codes in the range indicate an error with Appwrite, please check Docker container logs. Response codes | Code | Text | Description | |------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| | 200 | OK | Success! | | 201 | Created | The requested resource…",
     "breadcrumbs": [
       "Platform",
-      "Integration",
+      "advanced",
+      "Platform",
       "Response codes"
     ]
   },
@@ -350,6 +372,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite Console supports granular permissions to improve team collaboration and security. Each member of your Console team can be assigned a specific role that grants them access to certain areas of your organization's projects. Below is a breakdown of the new roles available, detailing their permissions and intended use cases. This page covers organization member roles for the Appwrite Console. Visit the Auth roles documentation if you want to learn more about roles for the Teams service. Owner The…",
     "breadcrumbs": [
       "Platform",
+      "advanced",
       "Platform",
       "Roles"
     ]
@@ -361,6 +384,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite's Scale plan is designed for growing development teams and agencies with many organizational members and large projects. The plan offers unlimited seats across your organization and dedicated resources per project. Scale plan organizations will receive additional compliance measures, organization roles, and dedicated support.",
     "breadcrumbs": [
       "Platform",
+      "advanced",
+      "Platform",
       "Scale"
     ]
   },
@@ -371,8 +396,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
     "breadcrumbs": [
       "Platform",
+      "advanced",
       "Platform",
-      "Shortcuts"
+      "Keyboard shortcuts"
     ]
   },
   {
@@ -382,7 +408,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "This Support Service Level Agreement (\"SLA\") describes the support services provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Scope This SLA outlines our commitments for providing support services via email, including response and resolution processes based on issue severity. The specific response times depend on the support tier associated with your support plan: **Silver**, **Gold**, or **Platinum**. Severity levels…",
     "breadcrumbs": [
       "Platform",
-      "Policies",
+      "advanced",
+      "Platform",
       "Support SLA"
     ]
   },
@@ -393,7 +420,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "This Uptime Service Level Agreement (\"SLA\") describes the uptime commitments and related service credit terms provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Uptime commitments We commit to maintaining the following monthly uptime percentages based on your subscription plan: | Plan | Monthly Uptime Commitment | | --- | --- | | **Free** | N/A | | **Pro** |…",
     "breadcrumbs": [
       "Platform",
-      "Policies",
+      "advanced",
+      "Platform",
       "Uptime SLA"
     ]
   },
@@ -404,7 +432,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Webhooks allow you to build or set up integrations which subscribe to certain events on Appwrite. When one of those events is triggered, we'll send an HTTP POST payload to the webhook's configured URL. Webhooks can be used to purge cache from CDN, calculate data or send a Slack notification. You're only limited by your imagination. Getting started To add a webhook from the Appwrite Console: 1. Navigate to your project's **Settings** page. 2. Select the **Webhooks** tab. 3. Click…",
     "breadcrumbs": [
       "Platform",
-      "Integration",
+      "advanced",
+      "Platform",
       "Webhooks"
     ]
   },
@@ -956,6 +985,239 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "REST",
       "apis",
       "REST"
+    ]
+  },
+  {
+    "slug": "partners",
+    "title": "Partners",
+    "description": "Integrate Appwrite into your platform. Provision organizations, projects, and domains with OAuth connect, organization API keys, and Console SDK APIs.",
+    "excerpt": "Partner documentation is for teams building **platforms on top of Appwrite**. If your product provisions Appwrite backends for users, connects AI agents to their accounts, or orchestrates organizations and projects from a control plane, you are in the right place. Developer documentation covers building apps **inside** a single Appwrite project. Partner documentation covers orchestrating Appwrite **across** organizations and projects from your own platform. Use cases for platform builders Partner docs are designed for platform builders: - **Vibe coding and agentic…",
+    "breadcrumbs": [
+      "Overview",
+      "Partners"
+    ]
+  },
+  {
+    "slug": "partners/apps",
+    "title": "Apps",
+    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
+    "excerpt": "The Apps API () lets partner platforms register **OAuth apps** that connect to Appwrite organizations. Use it when you publish integrations, run a marketplace, or need programmatic control over OAuth client settings. Apps pair with the OAuth2 service () to start authorization and receive tokens after user consent. Console SDK access Authenticate with an organization API key that includes apps scopes: Common operations | Operation | Use case | | --------- | -------- | | | Show OAuth apps owned…",
+    "breadcrumbs": [
+      "Apps",
+      "Partners",
+      "Apps"
+    ]
+  },
+  {
+    "slug": "partners/architecture",
+    "title": "Architecture",
+    "description": "Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.",
+    "excerpt": "Partner platforms sit **above** Appwrite organizations and projects. Your backend orchestrates Console-level resources, then uses project-scoped credentials to manage each customer's Appwrite backend. High-level flow 1. **Your platform** authenticates with Appwrite using OAuth tokens (user-linked) or an organization API key (platform-owned). 2. **Console APIs** manage organizations, projects, domains, billing context, and org-level settings. 3. **Project APIs** manage databases, storage, functions, auth users, and other resources inside each project. 4. **Your product UI** exposes a subset of these capabilities to your…",
+    "breadcrumbs": [
+      "Architecture",
+      "Partners",
+      "Architecture"
+    ]
+  },
+  {
+    "slug": "partners/domains",
+    "title": "Domains API",
+    "description": "Manage organization domains and DNS from your partner platform using the Console Domains API.",
+    "excerpt": "The Domains API lets partner platforms register, transfer, and manage organization domains programmatically. Use it when your product offers custom hostnames or domain management to customers. Console SDK access Domains are organization-level resources. Authenticate with an organization API key that includes domain scopes: Common operations | Operation | Use case | | --------- | -------- | | List domains | Show domains attached to an organization | | Register / transfer | Sell or provision domains through your platform |…",
+    "breadcrumbs": [
+      "Domains",
+      "Partners",
+      "Domains API"
+    ]
+  },
+  {
+    "slug": "partners/guides/marketplace",
+    "title": "App marketplaces",
+    "description": "Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.",
+    "excerpt": "Use this guide when you run a **marketplace** where Appwrite organizations discover, install, and manage third-party integrations. Your platform lists OAuth apps, starts authorization on install, and tracks which apps are connected to each customer organization. Marketplace roles | Role | Responsibility | | ---- | -------------- | | **Marketplace operator** (you) | Curates the catalog, registers or approves OAuth apps, runs install and uninstall flows | | **Integration developer** | Builds the app that requests Console scopes after install…",
+    "breadcrumbs": [
+      "Marketplaces",
+      "Partners",
+      "guides",
+      "App marketplaces"
+    ]
+  },
+  {
+    "slug": "partners/guides/multi-tenant",
+    "title": "Multi-tenant platforms",
+    "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.",
+    "excerpt": "Multi-tenant platforms give each customer an isolated Appwrite backend while sharing operational tooling on your side. Tenant isolation model The recommended pattern is **one Appwrite project per tenant**: - Data and permissions stay isolated by project boundary - Project API keys can be scoped per tenant - Blast radius of a leaked key is limited to one customer - You can place tenants in different regions Mapping tenants Maintain a table in your platform: | Your tenant ID | Appwrite…",
+    "breadcrumbs": [
+      "Multi-tenancy",
+      "Partners",
+      "guides",
+      "Multi-tenant platforms"
+    ]
+  },
+  {
+    "slug": "partners/guides/provision-projects",
+    "title": "Provision projects",
+    "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
+    "excerpt": "This guide walks through provisioning a dedicated Appwrite project when a customer signs up for your platform. Flow overview 1. Customer completes signup in your product 2. Your backend creates or selects an Appwrite organization 3. Console API creates a new project in the target region 4. Your backend creates a scoped project API key 5. Your platform stores the mapping and initializes default resources Step 1: Create the project Step 2: Create a project API key Create a key…",
+    "breadcrumbs": [
+      "Provisioning",
+      "Partners",
+      "guides",
+      "Provision projects"
+    ]
+  },
+  {
+    "slug": "partners/oauth-connect",
+    "title": "OAuth connect",
+    "description": "Connect your platform to users' Appwrite accounts with OAuth 2.0. Request consent to manage organizations and projects on their behalf.",
+    "excerpt": "OAuth connect lets your platform access a user's Appwrite organizations after they sign in and grant consent. Use it when customers already have Appwrite accounts and want to link them to your product without sharing passwords or API keys. How it works 1. Register an **OAuth app** in your Appwrite organization settings 2. Redirect users to Appwrite's authorization endpoint with your client ID and requested scopes 3. After consent, exchange the authorization code for access and refresh tokens on your…",
+    "breadcrumbs": [
+      "OAuth connect",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "partners/oauth-connect/scopes",
+    "title": "OAuth connect scopes",
+    "description": "Request the right Console OAuth scopes when connecting to user Appwrite accounts from your partner platform.",
+    "excerpt": "OAuth scopes define what your platform can do after a user grants consent. Request only the scopes required for your integration. Scope principles - Start with read-only scopes if your product only displays Appwrite data - Add write scopes when your platform creates or updates resources - Separate scopes for organizations, projects, and domains where possible - Document which features require which scopes in your product UI Common scope categories | Category | Typical use | | -------- | -----------…",
+    "breadcrumbs": [
+      "OAuth connect",
+      "Getting started",
+      "Scopes"
+    ]
+  },
+  {
+    "slug": "partners/oauth-connect/setup",
+    "title": "OAuth connect setup",
+    "description": "Register an OAuth app and implement the authorization code flow to connect your platform to user Appwrite accounts.",
+    "excerpt": "Register an OAuth app 1. Open your organization in the Appwrite Console 2. Go to **Settings** > **OAuth apps** 3. Create an app with your platform name and redirect URIs 4. Copy the **client ID** and **client secret** to your server environment Redirect URIs must match exactly what your backend uses to receive the authorization code. Authorization flow 1. Send the user to Appwrite's authorize URL with , , , and 2. User signs in and approves the requested scopes…",
+    "breadcrumbs": [
+      "OAuth connect",
+      "Getting started",
+      "Setup"
+    ]
+  },
+  {
+    "slug": "partners/org-api-keys",
+    "title": "Org API keys",
+    "description": "Use organization API keys to proxy Appwrite and programmatically manage projects, domains, and resources from your partner platform.",
+    "excerpt": "Organization API keys authenticate **server-to-server** calls to Appwrite Console APIs from your platform's backend. Use them when your product provisions and manages Appwrite resources inside an organization you operate. How it works 1. Create an **organization API key** in **Organization** > **Settings** > **API keys** 2. Assign Console scopes for the operations your platform performs 3. Initialize the Console SDK with the key on your server 4. Create projects, manage domains, and orchestrate resources for your customers 5. Use project…",
+    "breadcrumbs": [
+      "Org API keys",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "partners/org-api-keys/scopes",
+    "title": "Org API key scopes",
+    "description": "Configure organization API key scopes for Console operations like managing projects, domains, and organization settings.",
+    "excerpt": "Organization API keys use **Console scopes** that control access to organization-level APIs. Assign the minimum scopes your platform needs. Scope categories | Area | Read scopes | Write scopes | | ---- | ----------- | ------------ | | Projects | List and inspect projects | Create, update, and delete projects | | Domains | List domains and DNS | Register domains and manage records | | Organization | Read org settings and members | Update settings and manage members |…",
+    "breadcrumbs": [
+      "Org API keys",
+      "Getting started",
+      "Scopes"
+    ]
+  },
+  {
+    "slug": "partners/organizations",
+    "title": "Organizations API",
+    "description": "Use the Appwrite Console Organizations API to manage organizations, members, and org-level settings from your partner platform.",
+    "excerpt": "The Organizations API is part of the Console SDK (). Use it to list organizations, read plan information, and manage organization settings when operating a partner platform. Console SDK access Authenticate with an organization API key or a user's OAuth access token: Common operations | Operation | Use case | | --------- | -------- | | | Show organizations available to a linked user or your platform account | | | Read organization details and preferences | | | Provision…",
+    "breadcrumbs": [
+      "Organizations",
+      "Partners API",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "partners/organizations/manage",
+    "title": "Manage organizations",
+    "description": "Create and update Appwrite organizations from your partner platform using the Console Organizations API.",
+    "excerpt": "Use the Organizations API to provision and configure organizations as part of your onboarding flow. Create an organization Store the returned organization ID in your platform database and associate it with the customer record. Update organization settings Update name, billing email, and preferences when customers change settings in your product: Map organizations to customers Maintain a stable mapping between your customer ID and Appwrite . Use this mapping for all Console API calls and audit logs. Related Create projects",
+    "breadcrumbs": [
+      "Organizations",
+      "Partners API",
+      "Manage organizations"
+    ]
+  },
+  {
+    "slug": "partners/organizations/members",
+    "title": "Members and roles",
+    "description": "Manage organization members and roles from your partner platform using the Console Organizations and Teams APIs.",
+    "excerpt": "Partner platforms often invite customer admins to an Appwrite organization or sync membership from an existing identity provider. Organization roles Appwrite organizations use roles such as owner, developer, and analyst to control Console access. Your platform should assign the minimum role required for each member. When you proxy Console access, enforce the same role boundaries in your product UI. Invite members Use organization membership APIs to invite users by email. Invited users receive Appwrite Console access according to the role…",
+    "breadcrumbs": [
+      "Organizations",
+      "Partners API",
+      "Members and roles"
+    ]
+  },
+  {
+    "slug": "partners/projects",
+    "title": "Projects API",
+    "description": "Use the Appwrite Console Projects API to create and manage projects for your customers from a partner platform.",
+    "excerpt": "The Projects API () creates and configures Appwrite projects inside an organization. Each customer workspace in your platform typically maps to one project. Initialize the Projects service Project lifecycle | Stage | Console API | Next step | | ----- | ----------- | --------- | | Create | | Store and region | | Configure | , platforms, webhooks | Set URLs and integration settings | | Operate | Project SDK + project API key | Manage databases, storage, functions…",
+    "breadcrumbs": [
+      "Projects",
+      "Partners API",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "partners/projects/create",
+    "title": "Create projects",
+    "description": "Provision Appwrite projects for customers using the Console Projects API and organization API keys.",
+    "excerpt": "Create a project After creation 1. Store and in your platform database 2. Create a project API key with scopes for the services you manage 3. Register platforms if the customer uses client SDKs 4. Initialize the project SDK with the regional endpoint for resource APIs Idempotency Use a deterministic custom project ID or store provisioning state so retries do not create duplicate projects for the same customer. Related Provision projects guide",
+    "breadcrumbs": [
+      "Projects",
+      "Partners API",
+      "Create projects"
+    ]
+  },
+  {
+    "slug": "partners/projects/resources",
+    "title": "Manage resources",
+    "description": "Manage Appwrite project resources from your partner platform using the project SDK and project API keys.",
+    "excerpt": "After you create a project, use the **project SDK** () to manage resources inside that project. Switch from Console to project SDK Console APIs manage the project shell. Project APIs manage services inside the project: Common partner operations | Service | Example operations | | ------- | ------------------ | | TablesDB | Create databases, tables, and rows for customer data | | Storage | Create buckets and manage files | | Functions | Deploy functions on behalf of customers |…",
+    "breadcrumbs": [
+      "Projects",
+      "Partners API",
+      "Manage resources"
+    ]
+  },
+  {
+    "slug": "partners/proxy",
+    "title": "Proxy",
+    "description": "Proxy Appwrite Console and project APIs from your partner platform using organization and project credentials.",
+    "excerpt": "Many partner platforms expose a simplified API or UI while Appwrite remains the backend. Your server proxies requests to Appwrite using organization API keys and per-customer project credentials. Architecture Your platform API: - Authenticates the customer with your auth system - Resolves the customer to an Appwrite and credentials - Forwards or composes Appwrite operations - Returns responses shaped for your product Two-layer proxy 1. **Console layer**: Org API key + Console SDK for organizations, projects, and domains 2. **Project…",
+    "breadcrumbs": [
+      "Proxy",
+      "Partners",
+      "Proxy"
+    ]
+  },
+  {
+    "slug": "partners/quick-start",
+    "title": "Quick start",
+    "description": "Choose an Appwrite partner integration model and take your first steps with OAuth connect or organization API keys.",
+    "excerpt": "This quick start helps you pick the right integration path and wire up your first Console API call. Choose your integration model | Model | Best for | Auth | | ----- | -------- | ---- | | OAuth connect | Users link existing Appwrite accounts | User consent via OAuth 2.0 | | Org API keys | Your platform provisions resources in your org | Organization API key | Use **OAuth connect** when your customers already use Appwrite and…",
+    "breadcrumbs": [
+      "Quick start",
+      "Partners",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "partners/usage",
+    "title": "Usage",
+    "description": "Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.",
+    "excerpt": "The Usage API lets partner platforms read **organization-level consumption** and plan context. Use it to show usage dashboards, enforce limits, or align your billing with Appwrite Cloud usage. Access usage through with an organization API key or OAuth-delegated access that includes billing scopes. Console SDK access Common operations | Operation | Use case | | --------- | -------- | | | Read plan limits, features, and billing cycle for an organization | | | Fetch current usage metrics for the…",
+    "breadcrumbs": [
+      "Usage",
+      "Partners",
+      "Usage"
     ]
   },
   {
@@ -2328,7 +2590,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "breadcrumbs": [
       "Messaging",
       "Providers",
-      "Push with APNS"
+      "Push with APNs"
     ]
   },
   {
@@ -3970,8 +4232,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
     "breadcrumbs": [
       "Command Center",
-      "tooling",
-      "Command Center"
+      "Getting started",
+      "Overview"
     ]
   },
   {

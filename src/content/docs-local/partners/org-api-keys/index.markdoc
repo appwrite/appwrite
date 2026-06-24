@@ -1,0 +1,39 @@
+---
+layout: article
+title: Org API keys
+description: Use organization API keys to proxy Appwrite and programmatically manage projects, domains, and resources from your partner platform.
+---
+
+Organization API keys authenticate **server-to-server** calls to Appwrite Console APIs from your platform's backend. Use them when your product provisions and manages Appwrite resources inside an organization you operate.
+
+# How it works {% #how-it-works %}
+
+1. Create an **organization API key** in **Organization** > **Settings** > **API keys**
+2. Assign Console scopes for the operations your platform performs
+3. Initialize the Console SDK with the key on your server
+4. Create projects, manage domains, and orchestrate resources for your customers
+5. Use project API keys or dynamic keys inside each customer project for resource-level APIs
+
+Organization API keys never belong in client applications, mobile apps, or public repositories.
+
+# When to use org API keys {% #when-to-use-org-api-keys %}
+
+Choose org API keys when:
+
+- Your platform creates a dedicated Appwrite project per customer
+- You manage domains and DNS at the organization level
+- Your backend proxies Appwrite for a custom control plane or UI
+- You do not need per-user OAuth consent because resources live in your org
+
+Combine with [OAuth connect](/docs/partners/oauth-connect) when some customers link their own Appwrite organizations.
+
+# Getting started {% #getting-started %}
+
+{% cards %}
+{% cards_item href="/docs/partners/org-api-keys/scopes" title="Scopes" %}
+Configure organization key scopes for Console operations.
+{% /cards_item %}
+{% cards_item href="/docs/partners/proxy" title="Proxy" %}
+Patterns for wrapping Console and project APIs in your platform.
+{% /cards_item %}
+{% /cards %}

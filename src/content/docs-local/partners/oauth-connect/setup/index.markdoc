@@ -1,0 +1,50 @@
+---
+layout: article
+title: OAuth connect setup
+description: Register an OAuth app and implement the authorization code flow to connect your platform to user Appwrite accounts.
+---
+
+# Register an OAuth app {% #register-an-oauth-app %}
+
+1. Open your organization in the Appwrite Console
+2. Go to **Settings** > **OAuth apps**
+3. Create an app with your platform name and redirect URIs
+4. Copy the **client ID** and **client secret** to your server environment
+
+Redirect URIs must match exactly what your backend uses to receive the authorization code.
+
+# Authorization flow {% #authorization-flow %}
+
+1. Send the user to Appwrite's authorize URL with `client_id`, `redirect_uri`, `response_type=code`, and `scope`
+2. User signs in and approves the requested scopes
+3. Appwrite redirects back with an authorization `code`
+4. Your server exchanges the code for tokens using the token endpoint and your client secret
+5. Store refresh tokens securely and use access tokens for Console API calls
+
+# Initialize Console SDK with user tokens {% #initialize-console-sdk-with-user-tokens %}
+
+After token exchange, set the access token on the Console client for delegated API calls:
+
+{% multicode %}
+```server-nodejs
+import { Client, Organizations } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('console')
+    .setJWT(userAccessToken);
+
+const organizations = new Organizations(client);
+const orgs = await organizations.list();
+```
+{% /multicode %}
+
+Refresh access tokens before they expire using the refresh token Appwrite returned during exchange.
+
+# Production checklist {% #production-checklist %}
+
+- Use HTTPS redirect URIs only
+- Validate `state` to prevent CSRF
+- Store client secret and refresh tokens in a secrets manager
+- Request the minimum scopes from [OAuth scopes](/docs/partners/oauth-connect/scopes)
+- Handle revocation when users disconnect your integration

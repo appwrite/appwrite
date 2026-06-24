@@ -1,4 +1,5 @@
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -36,7 +37,7 @@ export function DocsHeroSection() {
             asChild
           >
             <DocsRouteLink href="/docs/tooling/mcp">
-              <Sparkles className="size-3.5" />
+              <McpIcon className="size-3.5 text-muted-foreground" />
               <span className="text-[var(--brand-cta)]">New</span>
               MCP servers for AI agents
               <ArrowRight className="size-3.5" />
@@ -44,7 +45,7 @@ export function DocsHeroSection() {
           </Button>
         </div>
 
-        <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-[600px] text-balance text-[32px] font-normal leading-[1.08] tracking-tight @[480px]:mt-8 @[480px]:text-[40px] @[900px]:text-[48px]">
+        <h1 className="font-aeonik-pro mt-6 max-w-[600px] text-balance text-[32px] font-normal leading-[1.08] tracking-tight text-foreground @[480px]:mt-8 @[480px]:text-[40px] @[900px]:text-[48px]">
           Ship faster with Appwrite
         </h1>
 

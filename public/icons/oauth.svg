@@ -1,0 +1,10 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <mask id="oauth-mark-mask">
+    <circle cx="12" cy="12" r="10" fill="white" />
+    <path
+      fill="black"
+      d="M9.9 14.75 9.3 16.7H6.8l2.88-9.34c.17-.57.7-.96 1.3-.96h2.04c.6 0 1.13.39 1.3.96l2.88 9.34h-2.5l-.6-1.95H9.9zm.65-2.15h2.9L12 7.9l-1.45 4.7Z"
+    />
+  </mask>
+  <circle cx="12" cy="12" r="10" fill="#C4C6D7" mask="url(#oauth-mark-mask)" />
+</svg>

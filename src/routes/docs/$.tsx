@@ -2,6 +2,7 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
+import { isPartnersDocsEnabled, isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { getDocsMetaTags } from '@/lib/docs/route-meta'
 import {
@@ -21,6 +22,10 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
+        if (isPartnersDocsSlug(slug) && !isPartnersDocsEnabled()) {
+          return new Response('Not found', { status: 404 })
+        }
+
         const markdown = await getDocsMarkdownExport(slug)
         if (!markdown) {
           return new Response('Not found', { status: 404 })
@@ -34,6 +39,14 @@ export const Route = createFileRoute('/docs/$')({
         })
       },
     },
+  },
+  beforeLoad: ({ params }) => {
+    const splat = params._splat ?? ''
+    if (splat.endsWith('.md')) return
+
+    if (isPartnersDocsSlug(splat) && !isPartnersDocsEnabled()) {
+      throw redirect({ to: '/docs', replace: true })
+    }
   },
   loader: async ({ params }) => {
     const splat = params._splat ?? ''

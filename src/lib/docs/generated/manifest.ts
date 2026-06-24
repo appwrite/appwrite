@@ -612,6 +612,153 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 8
   },
   {
+    "slug": "partners",
+    "title": "Partners",
+    "description": "Integrate Appwrite into your platform. Provision organizations, projects, and domains with OAuth connect, organization API keys, and Console SDK APIs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/apps",
+    "title": "Apps",
+    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/architecture",
+    "title": "Architecture",
+    "description": "Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/domains",
+    "title": "Domains API",
+    "description": "Manage organization domains and DNS from your partner platform using the Console Domains API.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/guides/marketplace",
+    "title": "App marketplaces",
+    "description": "Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "partners/guides/multi-tenant",
+    "title": "Multi-tenant platforms",
+    "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/guides/provision-projects",
+    "title": "Provision projects",
+    "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/oauth-connect",
+    "title": "OAuth connect",
+    "description": "Connect your platform to users' Appwrite accounts with OAuth 2.0. Request consent to manage organizations and projects on their behalf.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/oauth-connect/scopes",
+    "title": "OAuth connect scopes",
+    "description": "Request the right Console OAuth scopes when connecting to user Appwrite accounts from your partner platform.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/oauth-connect/setup",
+    "title": "OAuth connect setup",
+    "description": "Register an OAuth app and implement the authorization code flow to connect your platform to user Appwrite accounts.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/org-api-keys",
+    "title": "Org API keys",
+    "description": "Use organization API keys to proxy Appwrite and programmatically manage projects, domains, and resources from your partner platform.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/org-api-keys/scopes",
+    "title": "Org API key scopes",
+    "description": "Configure organization API key scopes for Console operations like managing projects, domains, and organization settings.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/organizations",
+    "title": "Organizations API",
+    "description": "Use the Appwrite Console Organizations API to manage organizations, members, and org-level settings from your partner platform.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/organizations/manage",
+    "title": "Manage organizations",
+    "description": "Create and update Appwrite organizations from your partner platform using the Console Organizations API.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/organizations/members",
+    "title": "Members and roles",
+    "description": "Manage organization members and roles from your partner platform using the Console Organizations and Teams APIs.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/projects",
+    "title": "Projects API",
+    "description": "Use the Appwrite Console Projects API to create and manage projects for your customers from a partner platform.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/projects/create",
+    "title": "Create projects",
+    "description": "Provision Appwrite projects for customers using the Console Projects API and organization API keys.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/projects/resources",
+    "title": "Manage resources",
+    "description": "Manage Appwrite project resources from your partner platform using the project SDK and project API keys.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/proxy",
+    "title": "Proxy",
+    "description": "Proxy Appwrite Console and project APIs from your partner platform using organization and project credentials.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/quick-start",
+    "title": "Quick start",
+    "description": "Choose an Appwrite partner integration model and take your first steps with OAuth connect or organization API keys.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/usage",
+    "title": "Usage",
+    "description": "Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/ai",
     "title": "Artificial intelligence",
     "description": "Learn how to implement machine learning models in your applications.",

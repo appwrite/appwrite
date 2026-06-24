@@ -60,6 +60,7 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
+import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as ThreadsAuthorsAuthorIdRouteImport } from './routes/threads.authors.$authorId'
 import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
@@ -568,6 +569,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   id: '/_api/hello',
   path: '/hello',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
+  id: '/partners/',
+  path: '/partners/',
+  getParentRoute: () => DocsRoute,
 } as any)
 const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
   id: '/',
@@ -2304,6 +2310,7 @@ export interface FileRoutesByFullPath {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account/': typeof PublicAccountIndexRoute
+  '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2605,6 +2612,7 @@ export interface FileRoutesByTo {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account': typeof PublicAccountIndexRoute
+  '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2880,6 +2888,7 @@ export interface FileRoutesById {
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/_public/account/': typeof PublicAccountIndexRoute
+  '/docs/partners/': typeof DocsPartnersIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -3187,6 +3196,7 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/account/'
+    | '/docs/partners'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
@@ -3488,6 +3498,7 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/account'
+    | '/docs/partners'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
@@ -3762,6 +3773,7 @@ export interface FileRouteTypes {
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
     | '/_public/account/'
+    | '/docs/partners/'
     | '/_api/generator/cover/encode'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
@@ -4400,6 +4412,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/hello'
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/docs/partners/': {
+      id: '/docs/partners/'
+      path: '/partners'
+      fullPath: '/docs/partners'
+      preLoaderRoute: typeof DocsPartnersIndexRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/_public/account/': {
       id: '/_public/account/'
@@ -7547,6 +7566,7 @@ interface DocsRouteChildren {
   DocsQuickStartsRoute: typeof DocsQuickStartsRoute
   DocsTutorialsRoute: typeof DocsTutorialsRoute
   DocsIndexRoute: typeof DocsIndexRoute
+  DocsPartnersIndexRoute: typeof DocsPartnersIndexRoute
   DocsReferencesVersionPlatformServiceRoute: typeof DocsReferencesVersionPlatformServiceRoute
   DocsReferencesVersionModelsModelRoute: typeof DocsReferencesVersionModelsModelRoute
 }
@@ -7556,6 +7576,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsQuickStartsRoute: DocsQuickStartsRoute,
   DocsTutorialsRoute: DocsTutorialsRoute,
   DocsIndexRoute: DocsIndexRoute,
+  DocsPartnersIndexRoute: DocsPartnersIndexRoute,
   DocsReferencesVersionPlatformServiceRoute:
     DocsReferencesVersionPlatformServiceRoute,
   DocsReferencesVersionModelsModelRoute: DocsReferencesVersionModelsModelRoute,
