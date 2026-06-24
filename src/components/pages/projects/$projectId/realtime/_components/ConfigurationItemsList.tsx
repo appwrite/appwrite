@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { Filter, Plus, Radio, X } from 'lucide-react'
+import { Filter, Radio, X } from 'lucide-react'
 import type { RealtimeConfiguredSubscription } from '@/lib/realtime/debugger-prefs'
 import type { SubscriptionQueryEntry } from '@/lib/realtime/subscription-queries'
 import { Button } from '@/components/ui/button'
@@ -47,22 +47,19 @@ function ConfigurationSubscriptionRow({
 
   return (
     <li className="rounded-lg border border-border/60 bg-background/40 transition-colors hover:border-border hover:bg-muted/20">
-      <div className="group flex items-start gap-2.5 px-2.5 py-2">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30 text-muted-foreground">
+      <div className="group flex min-h-9 items-center gap-2 px-2.5 py-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30 text-muted-foreground">
           <Radio className="h-3.5 w-3.5" aria-hidden />
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <code
-              className="min-w-0 flex-1 truncate font-mono text-[12px] font-medium text-foreground"
-              title={entry.channel}
-            >
-              {entry.channel}
-            </code>
-            {live ? <LiveIndicator /> : null}
-          </div>
-        </div>
+        <code
+          className="min-w-0 flex-1 truncate font-mono text-[12px] font-medium leading-none text-foreground"
+          title={entry.channel}
+        >
+          {entry.channel}
+        </code>
+
+        {live ? <LiveIndicator /> : null}
 
         <div className="flex shrink-0 items-center gap-0.5">
           <Popover open={queryPopoverOpen} onOpenChange={setQueryPopoverOpen}>
@@ -112,17 +109,17 @@ function ConfigurationSubscriptionRow({
       </div>
 
       {entry.queries.length > 0 ? (
-        <ul className="space-y-1 border-t border-border/60 px-2.5 py-2">
+        <ul className="space-y-1 border-t border-border/60 py-2 pl-9 pr-2.5">
           {entry.queries.map((query) => {
             const parts = getQueryDisplayPartsFromEntry(query)
 
             return (
               <li
                 key={query.id}
-                className="group/query flex items-center gap-2 rounded-md bg-muted/20 px-2 py-1.5"
+                className="group/query flex min-h-7 items-center gap-1.5 rounded-md bg-muted/20 px-2 py-1"
               >
                 <Filter className="h-3 w-3 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <QueryExpression parts={parts} size="compact" />
                 </div>
                 <button

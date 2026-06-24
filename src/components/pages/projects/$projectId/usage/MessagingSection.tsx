@@ -9,7 +9,6 @@ import {
   MESSAGING_MESSAGES_DESCRIPTION,
   MESSAGING_SMS_DESCRIPTION,
   MESSAGING_TOPICS_DESCRIPTION,
-  formatMessagingCountAxisValue,
   formatMessagingCountTotal,
   formatMessagingCountValue,
   getMessagingTopicsDisplayTotal,
@@ -108,7 +107,6 @@ export function MessagingSection({
         errorMessage={MESSAGING_USAGE_ERROR.message}
         formatTotal={formatMessagingCountTotal}
         formatValue={formatMessagingCountValue}
-        formatAxisValue={formatMessagingCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={MESSAGING_DOCS_HREF}
       />
@@ -129,7 +127,6 @@ export function MessagingSection({
         errorMessage={MESSAGING_USAGE_ERROR.message}
         formatTotal={formatMessagingCountTotal}
         formatValue={formatMessagingCountValue}
-        formatAxisValue={formatMessagingCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={MESSAGING_DOCS_HREF}
       />
@@ -150,7 +147,6 @@ export function MessagingSection({
         errorMessage={MESSAGING_USAGE_ERROR.message}
         formatTotal={formatMessagingCountTotal}
         formatValue={formatMessagingCountValue}
-        formatAxisValue={formatMessagingCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={MESSAGING_DOCS_HREF}
       />

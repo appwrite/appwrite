@@ -9,7 +9,6 @@ import {
   AUTH_MAU_DESCRIPTION,
   AUTH_OTP_DESCRIPTION,
   AUTH_SIGNUPS_DESCRIPTION,
-  formatAuthCountAxisValue,
   formatAuthMauTotal,
   formatAuthMauValue,
   formatAuthOtpTotal,
@@ -109,7 +108,6 @@ export function AuthSection({
         errorMessage={AUTH_USAGE_ERROR.message}
         formatTotal={formatAuthMauTotal}
         formatValue={formatAuthMauValue}
-        formatAxisValue={formatAuthCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={AUTH_DOCS_HREF}
       />
@@ -130,7 +128,6 @@ export function AuthSection({
         errorMessage={AUTH_USAGE_ERROR.message}
         formatTotal={formatAuthOtpTotal}
         formatValue={formatAuthOtpValue}
-        formatAxisValue={formatAuthCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={AUTH_DOCS_HREF}
       />
@@ -151,7 +148,6 @@ export function AuthSection({
         errorMessage={AUTH_USAGE_ERROR.message}
         formatTotal={formatAuthSignupsTotal}
         formatValue={formatAuthSignupsValue}
-        formatAxisValue={formatAuthCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={AUTH_DOCS_HREF}
       />

@@ -1,19 +1,29 @@
 'use client'
 
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
   createSubscriptionQueryEntry,
+  REALTIME_QUERY_VALUE_TYPES,
   subscriptionQueryNeedsValue,
-  subscriptionQueryOperators,
+  subscriptionQueryOperatorsForType,
+  type RealtimeQueryValueType,
   type SubscriptionQueryEntry,
 } from '@/lib/realtime/subscription-queries'
 import { cn } from '@/lib/utils'
 
 const LABEL_CLASS = 'mb-1 block text-[12px] font-medium text-muted-foreground'
 const INPUT_CLASS = 'h-9 w-full text-[13px]'
+
+function toDatetimeLocal(iso: string): string {
+  if (!iso.trim()) return ''
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
 
 type QueryFilterFormProps = {
   disabled?: boolean
@@ -29,54 +39,263 @@ export function QueryFilterForm({
   onCancel,
 }: QueryFilterFormProps) {
   const [attribute, setAttribute] = useState('')
+  const [valueType, setValueType] = useState<RealtimeQueryValueType>('string')
   const [operatorKey, setOperatorKey] = useState('equal')
   const [valueInput, setValueInput] = useState('')
+  const [valueEndInput, setValueEndInput] = useState('')
 
-  const operators = useMemo(() => subscriptionQueryOperators(), [])
+  const operators = useMemo(
+    () => subscriptionQueryOperatorsForType(valueType),
+    [valueType],
+  )
+
+  useEffect(() => {
+    if (operators.some((operator) => operator.key === operatorKey)) return
+    setOperatorKey(operators[0]?.key ?? 'equal')
+    setValueInput('')
+    setValueEndInput('')
+  }, [operatorKey, operators])
+
   const needsValue = subscriptionQueryNeedsValue(operatorKey)
   const isBetween = operatorKey === 'between' || operatorKey === 'notBetween'
+  const isNumericType = valueType === 'integer' || valueType === 'double'
+
+  const handleValueTypeChange = useCallback((nextType: RealtimeQueryValueType) => {
+    setValueType(nextType)
+    setValueInput('')
+    setValueEndInput('')
+    const nextOperators = subscriptionQueryOperatorsForType(nextType)
+    setOperatorKey(nextOperators[0]?.key ?? 'equal')
+  }, [])
 
   const resetForm = useCallback(() => {
     setAttribute('')
+    setValueType('string')
     setOperatorKey('equal')
     setValueInput('')
+    setValueEndInput('')
   }, [])
+
+  const canSubmit = useMemo(() => {
+    if (!attribute.trim()) return false
+    if (!needsValue) return true
+    if (isBetween) return !!valueInput.trim() && !!valueEndInput.trim()
+    return !!valueInput.trim()
+  }, [attribute, isBetween, needsValue, valueEndInput, valueInput])
 
   const handleSubmit = useCallback(
     (event: FormEvent) => {
       event.preventDefault()
+      if (!canSubmit) return
 
       const trimmedAttribute = attribute.trim()
-      if (!trimmedAttribute) return
-      if (needsValue && !valueInput.trim()) return
+      const value = isBetween
+        ? `${valueInput.trim()},${valueEndInput.trim()}`
+        : valueInput
 
       onSubmit(
         createSubscriptionQueryEntry({
           attribute: trimmedAttribute,
           operatorKey,
-          value: valueInput,
+          value: needsValue ? value : '',
+          valueType,
         }),
       )
       resetForm()
     },
-    [attribute, needsValue, onSubmit, operatorKey, resetForm, valueInput],
+    [
+      attribute,
+      canSubmit,
+      isBetween,
+      needsValue,
+      onSubmit,
+      operatorKey,
+      resetForm,
+      valueEndInput,
+      valueInput,
+      valueType,
+    ],
   )
+
+  const valueInputNode = (() => {
+    if (!needsValue) return null
+
+    if (isBetween) {
+      if (valueType === 'datetime') {
+        return (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className={LABEL_CLASS} htmlFor="query-value-start">
+                From
+              </label>
+              <Input
+                id="query-value-start"
+                type="datetime-local"
+                value={toDatetimeLocal(valueInput)}
+                onChange={(event) => {
+                  const next = event.target.value
+                  setValueInput(next ? new Date(next).toISOString() : '')
+                }}
+                className={INPUT_CLASS}
+                disabled={disabled}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className={LABEL_CLASS} htmlFor="query-value-end">
+                To
+              </label>
+              <Input
+                id="query-value-end"
+                type="datetime-local"
+                value={toDatetimeLocal(valueEndInput)}
+                onChange={(event) => {
+                  const next = event.target.value
+                  setValueEndInput(next ? new Date(next).toISOString() : '')
+                }}
+                className={INPUT_CLASS}
+                disabled={disabled}
+              />
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className={LABEL_CLASS} htmlFor="query-value-start">
+              Min
+            </label>
+            <Input
+              id="query-value-start"
+              type={isNumericType ? 'number' : 'text'}
+              value={valueInput}
+              onChange={(event) => setValueInput(event.target.value)}
+              placeholder="Min"
+              className={cn(INPUT_CLASS, isNumericType ? '' : 'font-mono')}
+              disabled={disabled}
+              spellCheck={false}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={LABEL_CLASS} htmlFor="query-value-end">
+              Max
+            </label>
+            <Input
+              id="query-value-end"
+              type={isNumericType ? 'number' : 'text'}
+              value={valueEndInput}
+              onChange={(event) => setValueEndInput(event.target.value)}
+              placeholder="Max"
+              className={cn(INPUT_CLASS, isNumericType ? '' : 'font-mono')}
+              disabled={disabled}
+              spellCheck={false}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    if (valueType === 'boolean') {
+      return (
+        <div className="space-y-1">
+          <label className={LABEL_CLASS} htmlFor="query-value">
+            Value
+          </label>
+          <SearchableSelect
+            value={valueInput}
+            onValueChange={setValueInput}
+            items={[
+              { value: 'true', label: 'True' },
+              { value: 'false', label: 'False' },
+            ]}
+            placeholder="Select value"
+            searchPlaceholder="Search…"
+            emptyMessage="No results"
+            disabled={disabled}
+            triggerClassName={INPUT_CLASS}
+          />
+        </div>
+      )
+    }
+
+    if (valueType === 'datetime') {
+      return (
+        <div className="space-y-1">
+          <label className={LABEL_CLASS} htmlFor="query-value">
+            Value
+          </label>
+          <Input
+            id="query-value"
+            type="datetime-local"
+            value={toDatetimeLocal(valueInput)}
+            onChange={(event) => {
+              const next = event.target.value
+              setValueInput(next ? new Date(next).toISOString() : '')
+            }}
+            className={INPUT_CLASS}
+            disabled={disabled}
+          />
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-1">
+        <label className={LABEL_CLASS} htmlFor="query-value">
+          Value
+        </label>
+        <Input
+          id="query-value"
+          type={isNumericType ? 'number' : 'text'}
+          value={valueInput}
+          onChange={(event) => setValueInput(event.target.value)}
+          placeholder={isNumericType ? '0' : 'Enter value'}
+          className={cn(INPUT_CLASS, isNumericType ? '' : 'font-mono')}
+          disabled={disabled}
+          spellCheck={false}
+          step={valueType === 'integer' ? 1 : valueType === 'double' ? 'any' : undefined}
+        />
+      </div>
+    )
+  })()
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="space-y-1">
+        <label className={LABEL_CLASS} htmlFor="query-attribute">
+          Attribute
+        </label>
+        <Input
+          id="query-attribute"
+          value={attribute}
+          onChange={(event) => setAttribute(event.target.value)}
+          placeholder="e.g. status"
+          className={cn(INPUT_CLASS, 'font-mono')}
+          disabled={disabled}
+          spellCheck={false}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <label className={LABEL_CLASS} htmlFor="query-attribute">
-            Attribute
+          <label className={LABEL_CLASS} htmlFor="query-value-type">
+            Value type
           </label>
-          <Input
-            id="query-attribute"
-            value={attribute}
-            onChange={(event) => setAttribute(event.target.value)}
-            placeholder="e.g. status"
-            className={cn(INPUT_CLASS, 'font-mono')}
+          <SearchableSelect
+            value={valueType}
+            onValueChange={(value) =>
+              handleValueTypeChange(value as RealtimeQueryValueType)
+            }
+            items={REALTIME_QUERY_VALUE_TYPES.map((item) => ({
+              value: item.value,
+              label: item.label,
+            }))}
+            placeholder="Type"
+            searchPlaceholder="Search types…"
+            emptyMessage="No types found"
             disabled={disabled}
-            spellCheck={false}
+            triggerClassName={INPUT_CLASS}
           />
         </div>
         <div className="space-y-1">
@@ -88,6 +307,7 @@ export function QueryFilterForm({
             onValueChange={(value) => {
               setOperatorKey(value)
               setValueInput('')
+              setValueEndInput('')
             }}
             items={operators.map((operator) => ({
               value: operator.key,
@@ -102,31 +322,14 @@ export function QueryFilterForm({
         </div>
       </div>
 
-      {needsValue ? (
-        <div className="space-y-1">
-          <label className={LABEL_CLASS} htmlFor="query-value">
-            Value
-          </label>
-          <Input
-            id="query-value"
-            value={valueInput}
-            onChange={(event) => setValueInput(event.target.value)}
-            placeholder={isBetween ? 'min, max' : 'Enter value'}
-            className={cn(INPUT_CLASS, 'font-mono')}
-            disabled={disabled}
-            spellCheck={false}
-          />
-        </div>
-      ) : null}
+      {valueInputNode}
 
       <div className="flex gap-2 pt-1">
         <Button
           type="submit"
           size="sm"
           className="h-9 min-w-0 flex-1 text-[13px]"
-          disabled={
-            disabled || !attribute.trim() || (needsValue && !valueInput.trim())
-          }
+          disabled={disabled || !canSubmit}
         >
           {submitLabel}
         </Button>
@@ -149,13 +352,18 @@ export function QueryFilterForm({
 
 export function getQueryDisplayPartsFromEntry(entry: SubscriptionQueryEntry) {
   const operator =
-    subscriptionQueryOperators().find((item) => item.key === entry.operatorKey)
-      ?.label ?? entry.operatorKey
+    subscriptionQueryOperatorsForType(entry.valueType).find(
+      (item) => item.key === entry.operatorKey,
+    )?.label ?? entry.operatorKey
   const needsValue = subscriptionQueryNeedsValue(entry.operatorKey)
+  const valueTypeLabel =
+    REALTIME_QUERY_VALUE_TYPES.find((item) => item.value === entry.valueType)
+      ?.label ?? 'String'
 
   return {
     attribute: entry.attribute,
     operator,
     value: needsValue ? entry.value : null,
+    valueType: valueTypeLabel,
   }
 }

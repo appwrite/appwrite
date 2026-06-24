@@ -13,7 +13,6 @@ import {
   DATABASE_ROWS_DOCS_HREF,
   DATABASE_TABLES_DOCS_HREF,
   DATABASE_WRITES_DESCRIPTION,
-  formatDatabaseCountAxisValue,
   formatDatabaseCountTotal,
   formatDatabaseCountValue,
   getUsageChartLatestValue,
@@ -219,7 +218,6 @@ export function DatabasesSection({
         errorMessage={DATABASE_USAGE_ERROR.message}
         formatTotal={formatDatabaseCountTotal}
         formatValue={formatDatabaseCountValue}
-        formatAxisValue={formatDatabaseCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={DATABASE_TABLES_DOCS_HREF}
       />
@@ -242,7 +240,6 @@ export function DatabasesSection({
         errorMessage={DATABASE_USAGE_ERROR.message}
         formatTotal={formatDatabaseCountTotal}
         formatValue={formatDatabaseCountValue}
-        formatAxisValue={formatDatabaseCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={DATABASE_ROWS_DOCS_HREF}
       />

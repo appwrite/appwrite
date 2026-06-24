@@ -3,7 +3,6 @@
 import { cn } from '@/lib/utils'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import {
-  formatDatabaseOperationsAxisValue,
   formatDatabaseOperationsTotal,
   formatDatabaseOperationsValue,
 } from '@/lib/usage/database-usage'
@@ -105,7 +104,6 @@ export function DatabaseOperationBentoCard({
         errorMessage={DATABASE_USAGE_ERROR.message}
         formatTotal={formatDatabaseOperationsTotal}
         formatValue={formatDatabaseOperationsValue}
-        formatAxisValue={formatDatabaseOperationsAxisValue}
         onRetry={onRetry}
       />
 

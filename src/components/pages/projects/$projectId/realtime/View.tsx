@@ -75,7 +75,6 @@ import {
   subscriptionsMatch,
   type SubscriptionQueryEntry,
 } from '@/lib/realtime/subscription-queries'
-import { countConfiguredItems } from '@/lib/realtime/debugger-prefs'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -485,7 +484,7 @@ export function View() {
   const canConnect = !!actAsValue && !isConnecting && !isConnected
   const canDisconnectAll =
     isConnected || isConnecting || activeSubscriptions.length > 0
-  const configurationItemCount = countConfiguredItems(debuggerConfig)
+  const subscriptionCount = configuredSubscriptions.length
   const authControlsDisabled = isConnected || isConnecting
 
   const isSubscriptionLive = useCallback(
@@ -1077,7 +1076,7 @@ export function View() {
             className="order-1 lg:col-start-1 lg:row-start-1 lg:border-r lg:border-border"
             actions={
               <span className="rounded-md border border-border bg-muted/30 px-2 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
-                {configurationItemCount}
+                {subscriptionCount}
               </span>
             }
           />

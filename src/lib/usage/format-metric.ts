@@ -60,14 +60,57 @@ export function formatCompactBytes(
   return `${amount}${separator}${unit}`
 }
 
+const BYTE_AXIS_SHORT_UNITS: Record<ByteUnit, string> = {
+  B: 'B',
+  KB: 'K',
+  MB: 'M',
+  GB: 'G',
+  TB: 'T',
+}
+
+function shortenByteUnitLabel(label: string): string {
+  return label
+    .replace(/TB$/, 'T')
+    .replace(/GB$/, 'G')
+    .replace(/MB$/, 'M')
+    .replace(/KB$/, 'K')
+}
+
+/**
+ * Y-axis tick formatter that keeps every tick in the same unit (based on chart max)
+ * so labels stay ordered and readable, e.g. `0M`, `500K` → `0.5M`, `1M`, `2.8M`.
+ */
+export function createCompactBytesAxisTickFormatter(referenceBytes: number) {
+  const unitIndex =
+    !Number.isFinite(referenceBytes) || referenceBytes <= 0
+      ? 2
+      : getByteUnitIndex(referenceBytes)
+  const shortUnit = BYTE_AXIS_SHORT_UNITS[BYTE_UNITS[unitIndex]]
+  const divisor = BYTE_BASE ** unitIndex
+
+  return (bytes: number): string => {
+    if (!Number.isFinite(bytes) || bytes <= 0) {
+      return `0${shortUnit}`
+    }
+
+    const scaled = bytes / divisor
+
+    if (unitIndex === 0) {
+      return `${Math.round(scaled)}${shortUnit}`
+    }
+
+    if (scaled >= 100) {
+      return `${Math.round(scaled)}${shortUnit}`
+    }
+
+    return `${trimTrailingZeros(scaled.toFixed(1))}${shortUnit}`
+  }
+}
+
 /** Short Y-axis labels: `12.5M`, `1.2G`, `800K`. */
 export function formatCompactBytesAxis(bytes: number): string {
   const label = formatCompactBytes(bytes, { compact: true })
-  return label
-    .replace(/MB$/, 'M')
-    .replace(/GB$/, 'G')
-    .replace(/KB$/, 'K')
-    .replace(/TB$/, 'T')
+  return shortenByteUnitLabel(label).replace(/(\d)\.0(?=[KMGTPB]$)/, '$1')
 }
 
 export interface FormatCompactCountOptions {
@@ -124,6 +167,97 @@ export function formatCompactCount(
 /** Axis-friendly count labels. */
 export function formatCompactCountAxis(num: number): string {
   return formatCompactCount(num, { compact: true })
+}
+
+type CountAxisUnit = 'plain' | 'K' | 'M' | 'B'
+
+function getCountAxisUnit(max: number): CountAxisUnit {
+  if (!Number.isFinite(max) || max <= 0) return 'plain'
+  if (max >= 1_000_000_000) return 'B'
+  if (max >= 1_000_000) return 'M'
+  if (max >= 1_000) return 'K'
+  return 'plain'
+}
+
+/**
+ * Y-axis tick formatter that keeps every tick in the same unit (based on chart max).
+ */
+export function createCompactCountAxisTickFormatter(referenceCount: number) {
+  const unit = getCountAxisUnit(referenceCount)
+  const divisor =
+    unit === 'B'
+      ? 1_000_000_000
+      : unit === 'M'
+        ? 1_000_000
+        : unit === 'K'
+          ? 1_000
+          : 1
+  const suffix = unit === 'plain' ? '' : unit
+
+  return (num: number): string => {
+    if (!Number.isFinite(num) || num <= 0) {
+      return unit === 'plain' ? '0' : `0${suffix}`
+    }
+
+    if (unit === 'plain') {
+      return Math.round(num).toLocaleString()
+    }
+
+    const scaled = num / divisor
+
+    if (scaled >= 100) {
+      return `${Math.round(scaled)}${suffix}`
+    }
+
+    return `${trimTrailingZeros(scaled.toFixed(1))}${suffix}`
+  }
+}
+
+/** Short Y-axis labels for GB-hours. */
+export function createGbHoursAxisTickFormatter(referenceGbHours: number) {
+  const useK = Number.isFinite(referenceGbHours) && referenceGbHours >= 1_000
+
+  return (gbHours: number): string => {
+    if (!Number.isFinite(gbHours) || gbHours <= 0) {
+      return '0'
+    }
+
+    if (useK) {
+      const scaled = gbHours / 1_000
+      if (scaled >= 100) {
+        return `${Math.round(scaled)}k`
+      }
+      return trimGbHoursValue(scaled) + 'k'
+    }
+
+    return trimGbHoursValue(gbHours)
+  }
+}
+
+export type UsageChartAxisFormat = 'count' | 'bytes' | 'gbhours'
+
+export function createUsageChartAxisTickFormatter(
+  format: UsageChartAxisFormat,
+  referenceMax: number,
+) {
+  switch (format) {
+    case 'bytes':
+      return createCompactBytesAxisTickFormatter(referenceMax)
+    case 'gbhours':
+      return createGbHoursAxisTickFormatter(referenceMax)
+    case 'count':
+    default:
+      return createCompactCountAxisTickFormatter(referenceMax)
+  }
+}
+
+export function getChartSeriesMax(
+  points: readonly { total?: number; value?: number }[],
+): number {
+  return points.reduce((max, point) => {
+    const value = point.total ?? point.value ?? 0
+    return Math.max(max, value)
+  }, 0)
 }
 
 /** MB-seconds to GB-hours (same divisor as cloud billing aggregation). */

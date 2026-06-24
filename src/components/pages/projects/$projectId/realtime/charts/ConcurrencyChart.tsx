@@ -14,11 +14,9 @@ import { Info } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
-  Tooltip as UITooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  createCompactCountAxisTickFormatter,
+} from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 
 interface ConcurrencyDataPoint {
   timestamp: string
@@ -70,6 +68,15 @@ export function RealtimeConcurrencyChart({
       fullDate: format(new Date(point.timestamp), 'MMM d, yyyy'),
     }))
   }, [data])
+
+  const chartAxisMax = useMemo(
+    () => chartData.reduce((max, point) => Math.max(max, point.connections), 0),
+    [chartData],
+  )
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
 
   const currentValue = data.length > 0 ? data[data.length - 1].connections : 0
 
@@ -265,14 +272,9 @@ export function RealtimeConcurrencyChart({
                   fill: 'currentColor',
                   fontSize: 10,
                 }}
-                tickFormatter={(value) => {
-                  if (value >= 1_000_000)
-                    return `${(value / 1_000_000).toFixed(0)}M`
-                  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
-                  return value.toString()
-                }}
+                tickFormatter={yAxisTickFormatter}
                 dx={-5}
-                width={45}
+                width={USAGE_CHART_Y_AXIS_WIDTH}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area

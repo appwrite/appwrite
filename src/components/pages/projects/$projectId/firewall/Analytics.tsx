@@ -11,6 +11,8 @@ import {
   Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
 import {
   Area,
   AreaChart,
@@ -217,6 +219,23 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
     return buildFirewallChartData(dateRange.from, to)
   }, [analytics, dateRange])
 
+  const chartAxisMax = useMemo(
+    () =>
+      chartData.reduce(
+        (max, point) =>
+          Math.max(
+            max,
+            point.blocked + point.challenged + point.allowed,
+          ),
+        0,
+      ),
+    [chartData],
+  )
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
+
   const topBlockedIPs = useMemo(() => {
     if (!analytics) return []
     return analytics.topBlockedIPs.slice(0, 5)
@@ -348,6 +367,9 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
               axisLine={false}
               tickLine={false}
+              tickFormatter={yAxisTickFormatter}
+              dx={-5}
+              width={USAGE_CHART_Y_AXIS_WIDTH}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend

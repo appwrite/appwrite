@@ -13,16 +13,17 @@ import {
 } from 'recharts'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCompactCountAxis } from '@/lib/usage/format-metric'
+import {
+  createCompactCountAxisTickFormatter,
+  getChartSeriesMax,
+} from '@/lib/usage/format-metric'
 import {
   formatRequestsTotal,
   formatRequestsValue,
 } from '@/lib/usage/requests-events'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
-import {
-  REQUESTS_BREAKDOWN_SECTIONS,
-} from '@/lib/usage/requests-breakdowns'
+import { REQUESTS_BREAKDOWN_SECTIONS } from '@/lib/usage/requests-breakdowns'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectRequestsBreakdowns,
@@ -31,13 +32,12 @@ import {
   refetchProjectRequestsUsageQueries,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import {
-  buildCountryLookups,
-} from '@/lib/locale/country-lookups'
+import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_HEIGHT,
   OVERVIEW_REQUESTS_ERROR,
+  USAGE_CHART_Y_AXIS_WIDTH,
 } from '../overview/chart-panel'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import {
@@ -147,6 +147,11 @@ function RequestsChartCard({
       : changePercent < 0
         ? `${changePercent}%`
         : '0%'
+  const chartAxisMax = useMemo(() => getChartSeriesMax(chartData), [chartData])
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
 
   return (
     <UsageMetricCardShell>
@@ -253,9 +258,9 @@ function RequestsChartCard({
                     fill: 'currentColor',
                     fontSize: 10,
                   }}
-                  tickFormatter={formatCompactCountAxis}
+                  tickFormatter={yAxisTickFormatter}
                   dx={-5}
-                  width={45}
+                  width={USAGE_CHART_Y_AXIS_WIDTH}
                 />
                 <Tooltip
                   content={({ active, payload }) => {

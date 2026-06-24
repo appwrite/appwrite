@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import type { UsageChartAxisFormat } from '@/lib/usage/format-metric'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
@@ -29,7 +30,7 @@ type ComputeMetricBentoCardProps = {
   isError: boolean
   formatTotal: (value: number) => string
   formatValue: (value: number) => string
-  formatAxisValue: (value: number) => string
+  axisFormat?: UsageChartAxisFormat
   showBreakdown: boolean
   breakdownTitle: string
   breakdownItems: UsageBreakdownItem[]
@@ -52,7 +53,7 @@ export function ComputeMetricBentoCard({
   isError,
   formatTotal,
   formatValue,
-  formatAxisValue,
+  axisFormat = 'count',
   showBreakdown,
   breakdownTitle,
   breakdownItems,
@@ -84,7 +85,7 @@ export function ComputeMetricBentoCard({
             errorMessage={COMPUTE_USAGE_ERROR.message}
             formatTotal={formatTotal}
             formatValue={formatValue}
-            formatAxisValue={formatAxisValue}
+            axisFormat={axisFormat}
             onRetry={onRetry}
           />
         </div>

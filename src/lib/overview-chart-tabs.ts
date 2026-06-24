@@ -47,3 +47,18 @@ export function getEnabledOverviewChartTabs(
     isOverviewChartTabEnabled(tabId, overrides),
   )
 }
+
+/** Usage sidebar category for each overview chart tab. */
+const OVERVIEW_CHART_TAB_USAGE_CATEGORY: Record<OverviewChartTabId, string> = {
+  bandwidth: 'bandwidth',
+  requests: 'requests',
+  storage: 'storage',
+  executions: 'compute',
+  gbhours: 'compute',
+}
+
+export function getUsageCategoryIdForOverviewChartTab(
+  tabId: OverviewChartTabId,
+): string {
+  return OVERVIEW_CHART_TAB_USAGE_CATEGORY[tabId]
+}

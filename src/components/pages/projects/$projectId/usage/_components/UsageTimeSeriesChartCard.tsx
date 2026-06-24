@@ -17,8 +17,14 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   OVERVIEW_CHART_HEIGHT,
+  USAGE_CHART_Y_AXIS_WIDTH,
   overviewChartPanelErrorClass,
 } from '../../overview/chart-panel'
+import {
+  createUsageChartAxisTickFormatter,
+  getChartSeriesMax,
+  type UsageChartAxisFormat,
+} from '@/lib/usage/format-metric'
 import {
   UsageMetricCardFooter,
   UsageMetricCardShell,
@@ -73,7 +79,7 @@ type UsageTimeSeriesChartCardProps = {
   errorMessage: string
   formatTotal: (value: number) => string
   formatValue: (value: number) => string
-  formatAxisValue: (value: number) => string
+  axisFormat?: UsageChartAxisFormat
   onRetry?: () => void
   /** Renders chart header + body only (no card shell or footer). */
   embedded?: boolean
@@ -95,7 +101,7 @@ export function UsageTimeSeriesChartCard({
   errorMessage,
   formatTotal,
   formatValue,
-  formatAxisValue,
+  axisFormat = 'count',
   onRetry,
   embedded = false,
   className,
@@ -119,6 +125,11 @@ export function UsageTimeSeriesChartCard({
       : changePercent < 0
         ? `${changePercent}%`
         : '0%'
+  const chartAxisMax = useMemo(() => getChartSeriesMax(chartData), [chartData])
+  const yAxisTickFormatter = useMemo(
+    () => createUsageChartAxisTickFormatter(axisFormat, chartAxisMax),
+    [axisFormat, chartAxisMax],
+  )
 
   const chartContent = (
     <>
@@ -246,9 +257,9 @@ export function UsageTimeSeriesChartCard({
                     fill: 'currentColor',
                     fontSize: 10,
                   }}
-                  tickFormatter={formatAxisValue}
+                  tickFormatter={yAxisTickFormatter}
                   dx={-5}
-                  width={45}
+                  width={USAGE_CHART_Y_AXIS_WIDTH}
                 />
                 <Tooltip
                   content={({ active, payload }) => {

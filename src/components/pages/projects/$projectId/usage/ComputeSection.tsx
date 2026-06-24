@@ -5,13 +5,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
-  formatExecutionsAxisValue,
   formatExecutionsTotal,
   formatExecutionsValue,
   sumUsageChartPoints,
 } from '@/lib/usage/executions-events'
 import {
-  formatGbHoursAxisValue,
   formatGbHoursTotal,
   formatGbHoursValue,
 } from '@/lib/usage/gb-hours-events'
@@ -133,7 +131,6 @@ export function ComputeSection({
         isError={executionsQuery.isError}
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
-        formatAxisValue={formatExecutionsAxisValue}
         showBreakdown={showBreakdown}
         breakdownTitle={COMPUTE_EXECUTIONS_BREAKDOWN_TITLE}
         breakdownItems={executionsBreakdownItems}
@@ -159,7 +156,7 @@ export function ComputeSection({
         isError={gbHoursQuery.isError}
         formatTotal={formatGbHoursTotal}
         formatValue={formatGbHoursValue}
-        formatAxisValue={formatGbHoursAxisValue}
+        axisFormat="gbhours"
         showBreakdown={showBreakdown}
         breakdownTitle={COMPUTE_GB_HOURS_BREAKDOWN_TITLE}
         breakdownItems={gbHoursBreakdownItems}

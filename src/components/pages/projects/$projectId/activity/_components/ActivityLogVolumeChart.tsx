@@ -23,6 +23,10 @@ import {
   YAxis,
 } from 'recharts'
 import { cn } from '@/lib/utils'
+import {
+  createCompactCountAxisTickFormatter,
+} from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -552,6 +556,21 @@ export function ActivityLogVolumeChart({
     () => buildMockVolumeByResource(rangeFrom, rangeTo),
     [rangeFrom, rangeTo],
   )
+  const chartAxisMax = useMemo(
+    () =>
+      chartData.reduce((max, row) => {
+        const total = RESOURCE_SERIES.reduce(
+          (sum, { key }) => sum + (Number(row[key]) || 0),
+          0,
+        )
+        return Math.max(max, total)
+      }, 0),
+    [chartData],
+  )
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
 
   /** `colorSlots[i]` = shade index for `RESOURCE_SERIES[i]` (randomized order, stable for this range). */
   const colorSlots = useMemo(() => {
@@ -711,12 +730,9 @@ export function ActivityLogVolumeChart({
                       fill: 'currentColor',
                       fontSize: 10,
                     }}
-                    tickFormatter={(value) => {
-                      if (value >= 1000) return `${(value / 1000).toFixed(0)}k`
-                      return value.toString()
-                    }}
+                    tickFormatter={yAxisTickFormatter}
                     dx={-5}
-                    width={40}
+                    width={USAGE_CHART_Y_AXIS_WIDTH}
                   />
                   <Tooltip
                     content={

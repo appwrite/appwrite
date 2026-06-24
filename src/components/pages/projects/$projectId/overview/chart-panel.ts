@@ -1,6 +1,9 @@
 /** Shared layout tokens for overview chart + side breakdown panels. */
 export const OVERVIEW_CHART_HEIGHT = 240
 
+/** Y-axis width for usage/overview time-series charts — wide enough to avoid label clipping. */
+export const USAGE_CHART_Y_AXIS_WIDTH = 56
+
 /** Header block above chart/breakdown body — fixed so tabs do not shift vertically. */
 export const OVERVIEW_CHART_PANEL_HEADER_MIN_HEIGHT = 56
 

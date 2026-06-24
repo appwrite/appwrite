@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
+  createCompactCountAxisTickFormatter,
+  getChartSeriesMax,
+} from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
+import {
   Area,
   AreaChart,
   ResponsiveContainer,
@@ -34,6 +39,12 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
       value: point.value,
     }))
   }, [metric.timeSeries])
+
+  const chartAxisMax = useMemo(() => getChartSeriesMax(chartData), [chartData])
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
 
   // Calculate usage percentage and status
   const usagePercentage = getUsagePercentage(metric.currentValue, metric.quota)
@@ -165,14 +176,9 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
                   fill: 'currentColor',
                   fontSize: 10,
                 }}
-                tickFormatter={(value) => {
-                  if (value >= 1_000_000)
-                    return `${(value / 1_000_000).toFixed(0)}M`
-                  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
-                  return value.toString()
-                }}
+                tickFormatter={yAxisTickFormatter}
                 dx={-5}
-                width={45}
+                width={USAGE_CHART_Y_AXIS_WIDTH}
               />
               <Tooltip
                 content={({ active, payload }) => {

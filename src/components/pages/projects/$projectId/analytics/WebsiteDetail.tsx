@@ -21,6 +21,11 @@ import {
   type Tab,
 } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import {
+  createCompactCountAxisTickFormatter,
+  getChartSeriesMax,
+} from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
 import { Button } from '@/components/ui/button'
 import { DateRangePicker } from './DateRangePicker'
 import { ComparisonSelector, type ComparisonType } from './ComparisonSelector'
@@ -169,6 +174,11 @@ const generateChartData = () => {
 }
 
 const chartData = generateChartData()
+const visitorChartAxisMax = getChartSeriesMax(
+  chartData.map((point) => ({ value: point.visitors })),
+)
+const visitorYAxisTickFormatter =
+  createCompactCountAxisTickFormatter(visitorChartAxisMax)
 
 const locationData: LocationData[] = [
   {
@@ -444,6 +454,12 @@ const peakHours: HourData[] = [
   { hour: 22, visitors: 1600, label: '10 PM' },
   { hour: 23, visitors: 1400, label: '11 PM' },
 ]
+const peakHoursChartAxisMax = getChartSeriesMax(
+  peakHours.map((point) => ({ value: point.visitors })),
+)
+const peakHoursYAxisTickFormatter = createCompactCountAxisTickFormatter(
+  peakHoursChartAxisMax,
+)
 
 const visitorTypes = {
   new: 89200,
@@ -1046,13 +1062,9 @@ export function WebsiteAnalyticsDetail({
                               fill: 'currentColor',
                               fontSize: 12,
                             }}
-                            tickFormatter={(value) => {
-                              if (value >= 1000)
-                                return `${(value / 1000).toFixed(0)}k`
-                              return value.toString()
-                            }}
+                            tickFormatter={visitorYAxisTickFormatter}
                             dx={-5}
-                            width={40}
+                            width={USAGE_CHART_Y_AXIS_WIDTH}
                           />
                           <Tooltip content={<CustomTooltip />} cursor={false} />
                           <Area
@@ -2152,12 +2164,8 @@ export function WebsiteAnalyticsDetail({
                                 fill: 'currentColor',
                                 fontSize: 9,
                               }}
-                              width={28}
-                              tickFormatter={(value) => {
-                                if (value >= 1000)
-                                  return `${(value / 1000).toFixed(0)}k`
-                                return value.toString()
-                              }}
+                              width={USAGE_CHART_Y_AXIS_WIDTH}
+                              tickFormatter={peakHoursYAxisTickFormatter}
                             />
                             <ChartTooltip
                               cursor={{

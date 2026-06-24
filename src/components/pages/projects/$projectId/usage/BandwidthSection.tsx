@@ -16,8 +16,13 @@ import {
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  formatCompactBytesAxis,
+  createCompactBytesAxisTickFormatter,
 } from '@/lib/usage/format-metric'
+import {
+  OVERVIEW_BANDWIDTH_ERROR,
+  OVERVIEW_CHART_HEIGHT,
+  USAGE_CHART_Y_AXIS_WIDTH,
+} from '../overview/chart-panel'
 import {
   formatBandwidthTotal,
   formatBandwidthValue,
@@ -25,7 +30,6 @@ import {
 } from '@/lib/usage/bandwidth-events'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
-import { BANDWIDTH_BREAKDOWN_SECTIONS } from '@/lib/usage/bandwidth-breakdowns'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectBandwidthBreakdowns,
@@ -36,10 +40,6 @@ import {
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import {
-  OVERVIEW_BANDWIDTH_ERROR,
-  OVERVIEW_CHART_HEIGHT,
-} from '../overview/chart-panel'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
@@ -154,6 +154,20 @@ function BandwidthChartCard({
   const showDualSeries = chartData.some(
     (point) =>
       typeof point.inbound === 'number' && typeof point.outbound === 'number',
+  )
+  const bandwidthAxisMax = useMemo(() => {
+    if (chartData.length === 0) return 0
+    if (showDualSeries) {
+      return chartData.reduce(
+        (max, point) => Math.max(max, point.inbound + point.outbound),
+        0,
+      )
+    }
+    return chartData.reduce((max, point) => Math.max(max, point.total), 0)
+  }, [chartData, showDualSeries])
+  const yAxisTickFormatter = useMemo(
+    () => createCompactBytesAxisTickFormatter(bandwidthAxisMax),
+    [bandwidthAxisMax],
   )
 
   return (
@@ -281,9 +295,9 @@ function BandwidthChartCard({
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'currentColor', fontSize: 10 }}
-                  tickFormatter={formatCompactBytesAxis}
+                  tickFormatter={yAxisTickFormatter}
                   dx={-5}
-                  width={48}
+                  width={USAGE_CHART_Y_AXIS_WIDTH}
                 />
                 <Tooltip
                   content={({ active, payload }) => {
@@ -328,6 +342,7 @@ function BandwidthChartCard({
                       type="monotone"
                       dataKey="inbound"
                       name="Inbound"
+                      stackId="bandwidth"
                       stroke="var(--chart-2)"
                       strokeWidth={2}
                       fill="url(#usage-bandwidth-inbound-gradient)"
@@ -336,6 +351,7 @@ function BandwidthChartCard({
                       type="monotone"
                       dataKey="outbound"
                       name="Outbound"
+                      stackId="bandwidth"
                       stroke="var(--chart-brand)"
                       strokeWidth={2}
                       fill="url(#usage-bandwidth-outbound-gradient)"

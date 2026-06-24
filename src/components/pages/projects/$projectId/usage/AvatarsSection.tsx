@@ -7,7 +7,6 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   AVATARS_DOCS_HREF,
   AVATARS_SCREENSHOTS_DESCRIPTION,
-  formatAvatarsScreenshotsAxisValue,
   formatAvatarsScreenshotsTotal,
   formatAvatarsScreenshotsValue,
   sumUsageChartPoints,
@@ -87,7 +86,6 @@ export function AvatarsSection({
         errorMessage={AVATARS_USAGE_ERROR.message}
         formatTotal={formatAvatarsScreenshotsTotal}
         formatValue={formatAvatarsScreenshotsValue}
-        formatAxisValue={formatAvatarsScreenshotsAxisValue}
         onRetry={handleRetryAll}
         docsHref={AVATARS_DOCS_HREF}
       />

@@ -1,5 +1,7 @@
 import {
+  parseQueryEntryValue,
   subscriptionQueryNeedsValue,
+  type RealtimeQueryValueType,
   type SubscriptionQueryEntry,
 } from '@/lib/realtime/subscription-queries'
 
@@ -28,20 +30,41 @@ function escapeDoubleQuoted(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-function jsLiteral(value: string): string {
-  if (value === 'true' || value === 'false') return value
-  if (/^-?\d+(\.\d+)?$/.test(value)) return value
+function jsLiteralFromCoerced(value: string | number | boolean): string {
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') return String(value)
   return `'${escapeSingleQuoted(value)}'`
 }
 
-function swiftLiteral(value: string): string {
-  if (value === 'true' || value === 'false') return value
-  if (/^-?\d+(\.\d+)?$/.test(value)) return value
+function swiftLiteralFromCoerced(value: string | number | boolean): string {
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') return String(value)
   return `"${escapeDoubleQuoted(value)}"`
 }
 
-function javaLiteral(value: string): string {
+function javaLiteralFromCoerced(value: string | number | boolean): string {
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') return String(value)
   return `"${escapeDoubleQuoted(value)}"`
+}
+
+function coercePart(
+  value: string,
+  valueType: RealtimeQueryValueType,
+): string | number | boolean {
+  const parsed = parseQueryEntryValue({
+    id: '',
+    attribute: 'x',
+    operatorKey: 'equal',
+    value,
+    valueType,
+  })
+  return parsed === null || parsed === '' ? value : parsed
+}
+
+function entryScalarValue(entry: SubscriptionQueryEntry): string | number | boolean {
+  const parsed = parseQueryEntryValue(entry)
+  return parsed === null || parsed === '' ? entry.value.trim() : parsed
 }
 
 function indentLines(lines: string[], indent: string): string {
@@ -52,23 +75,23 @@ type QueryDialect = {
   jsAttr: (attribute: string) => string
   swiftAttr: (attribute: string) => string
   javaAttr: (attribute: string) => string
-  jsValue: (value: string) => string
-  swiftValue: (value: string) => string
-  javaValue: (value: string) => string
+  jsValue: (value: string | number | boolean) => string
+  swiftValue: (value: string | number | boolean) => string
+  javaValue: (value: string | number | boolean) => string
 }
 
 const DIALECT: QueryDialect = {
   jsAttr: (attribute) => `'${escapeSingleQuoted(attribute)}'`,
   swiftAttr: (attribute) => `"${escapeDoubleQuoted(attribute)}"`,
   javaAttr: (attribute) => `"${escapeDoubleQuoted(attribute)}"`,
-  jsValue: jsLiteral,
-  swiftValue: swiftLiteral,
-  javaValue: javaLiteral,
+  jsValue: jsLiteralFromCoerced,
+  swiftValue: swiftLiteralFromCoerced,
+  javaValue: javaLiteralFromCoerced,
 }
 
 function buildJsQuery(entry: SubscriptionQueryEntry): string {
   const attribute = entry.attribute.trim()
-  const { operatorKey } = entry
+  const { operatorKey, valueType } = entry
   const attr = DIALECT.jsAttr(attribute)
 
   if (!subscriptionQueryNeedsValue(operatorKey)) {
@@ -79,7 +102,7 @@ function buildJsQuery(entry: SubscriptionQueryEntry): string {
     const pair = parseBetweenValue(entry.value)
     if (pair) {
       const method = operatorKey === 'between' ? 'between' : 'notBetween'
-      return `Query.${method}(${attr}, ${DIALECT.jsValue(pair[0])}, ${DIALECT.jsValue(pair[1])})`
+      return `Query.${method}(${attr}, ${DIALECT.jsValue(coercePart(pair[0], valueType))}, ${DIALECT.jsValue(coercePart(pair[1], valueType))})`
     }
   }
 
@@ -91,12 +114,12 @@ function buildJsQuery(entry: SubscriptionQueryEntry): string {
     return `Query.notExists([${attr}])`
   }
 
-  return `Query.${operatorKey}(${attr}, ${DIALECT.jsValue(entry.value.trim())})`
+  return `Query.${operatorKey}(${attr}, ${DIALECT.jsValue(entryScalarValue(entry))})`
 }
 
 function buildSwiftQuery(entry: SubscriptionQueryEntry): string {
   const attribute = entry.attribute.trim()
-  const { operatorKey } = entry
+  const { operatorKey, valueType } = entry
   const attr = DIALECT.swiftAttr(attribute)
 
   if (!subscriptionQueryNeedsValue(operatorKey)) {
@@ -107,7 +130,7 @@ function buildSwiftQuery(entry: SubscriptionQueryEntry): string {
     const pair = parseBetweenValue(entry.value)
     if (pair) {
       const method = operatorKey === 'between' ? 'between' : 'notBetween'
-      return `Query.${method}(${attr}, value: ${DIALECT.swiftValue(pair[0])}, value: ${DIALECT.swiftValue(pair[1])})`
+      return `Query.${method}(${attr}, value: ${DIALECT.swiftValue(coercePart(pair[0], valueType))}, value: ${DIALECT.swiftValue(coercePart(pair[1], valueType))})`
     }
   }
 
@@ -119,12 +142,12 @@ function buildSwiftQuery(entry: SubscriptionQueryEntry): string {
     return `Query.notExists([${attr}])`
   }
 
-  return `Query.${operatorKey}(${attr}, value: ${DIALECT.swiftValue(entry.value.trim())})`
+  return `Query.${operatorKey}(${attr}, value: ${DIALECT.swiftValue(entryScalarValue(entry))})`
 }
 
 function buildJavaQuery(entry: SubscriptionQueryEntry): string {
   const attribute = entry.attribute.trim()
-  const { operatorKey } = entry
+  const { operatorKey, valueType } = entry
   const attr = DIALECT.javaAttr(attribute)
 
   if (!subscriptionQueryNeedsValue(operatorKey)) {
@@ -135,7 +158,7 @@ function buildJavaQuery(entry: SubscriptionQueryEntry): string {
     const pair = parseBetweenValue(entry.value)
     if (pair) {
       const method = operatorKey === 'between' ? 'between' : 'notBetween'
-      return `Query.${method}(${attr}, ${DIALECT.javaValue(pair[0])}, ${DIALECT.javaValue(pair[1])})`
+      return `Query.${method}(${attr}, ${DIALECT.javaValue(coercePart(pair[0], valueType))}, ${DIALECT.javaValue(coercePart(pair[1], valueType))})`
     }
   }
 
@@ -147,7 +170,7 @@ function buildJavaQuery(entry: SubscriptionQueryEntry): string {
     return `Query.notExists(Arrays.asList(${attr}))`
   }
 
-  return `Query.${operatorKey}(${attr}, ${DIALECT.javaValue(entry.value.trim())})`
+  return `Query.${operatorKey}(${attr}, ${DIALECT.javaValue(entryScalarValue(entry))})`
 }
 
 const QUERY_BUILDERS: Record<SnippetSdkId, (entry: SubscriptionQueryEntry) => string> =

@@ -20,11 +20,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  createUsageChartAxisTickFormatter,
   formatCompactBytes,
-  formatCompactBytesAxis,
   formatCompactCount,
-  formatCompactCountAxis,
+  getChartSeriesMax,
+  type UsageChartAxisFormat,
 } from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '@/components/pages/projects/$projectId/overview/chart-panel'
 import { cn } from '@/lib/utils'
 
 type MetricId = 'requests' | 'bandwidth' | 'builds' | 'compute'
@@ -35,7 +37,7 @@ type MetricConfig = {
   /** Aggregate for the 30-day chart window (sum of daily points). */
   periodTotal: number
   formatTotal: (value: number) => string
-  formatAxis: (value: number) => string
+  axisFormat: UsageChartAxisFormat | 'plain'
   bars: readonly number[]
   breakdownTitle: string
   breakdown: readonly { label: string; value: string }[]
@@ -47,7 +49,7 @@ const METRICS: MetricConfig[] = [
     label: 'Requests',
     periodTotal: 124_000,
     formatTotal: (value) => formatCompactCount(value, { compact: true }),
-    formatAxis: formatCompactCountAxis,
+    axisFormat: 'count',
     bars: [42, 58, 51, 64, 59, 72, 68],
     breakdownTitle: 'Top paths',
     breakdown: [
@@ -61,7 +63,7 @@ const METRICS: MetricConfig[] = [
     label: 'Bandwidth',
     periodTotal: 18 * 1_000_000_000,
     formatTotal: (value) => formatCompactBytes(value, { compact: true }),
-    formatAxis: formatCompactBytesAxis,
+    axisFormat: 'bytes',
     bars: [36, 44, 40, 52, 48, 55, 50],
     breakdownTitle: 'By asset type',
     breakdown: [
@@ -75,7 +77,7 @@ const METRICS: MetricConfig[] = [
     label: 'Builds',
     periodTotal: 42,
     formatTotal: (value) => Math.round(value).toString(),
-    formatAxis: (value) => Math.round(value).toString(),
+    axisFormat: 'plain',
     bars: [28, 34, 31, 38, 35, 40, 36],
     breakdownTitle: 'By trigger',
     breakdown: [
@@ -89,7 +91,7 @@ const METRICS: MetricConfig[] = [
     label: 'Compute',
     periodTotal: 6.2,
     formatTotal: (value) => `${value.toFixed(1)} GB-h`,
-    formatAxis: (value) => value.toFixed(1),
+    axisFormat: 'gbhours',
     bars: [32, 38, 35, 41, 39, 44, 42],
     breakdownTitle: 'By region',
     breakdown: [
@@ -140,18 +142,25 @@ function buildChartSeries(bars: readonly number[], periodTotal: number) {
 function TrafficUsageChart({
   bars,
   periodTotal,
-  formatAxis,
+  axisFormat,
   gradientId,
 }: {
   bars: readonly number[]
   periodTotal: number
-  formatAxis: (value: number) => string
+  axisFormat: UsageChartAxisFormat | 'plain'
   gradientId: string
 }) {
   const chartData = useMemo(
     () => buildChartSeries(bars, periodTotal),
     [bars, periodTotal],
   )
+  const chartAxisMax = useMemo(() => getChartSeriesMax(chartData), [chartData])
+  const yAxisTickFormatter = useMemo(() => {
+    if (axisFormat === 'plain') {
+      return (value: number) => Math.round(value).toString()
+    }
+    return createUsageChartAxisTickFormatter(axisFormat, chartAxisMax)
+  }, [axisFormat, chartAxisMax])
 
   return (
     <div className="h-[210px] w-full min-w-0 text-muted-foreground">
@@ -181,9 +190,9 @@ function TrafficUsageChart({
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'currentColor', fontSize: 10 }}
-            tickFormatter={formatAxis}
+            tickFormatter={yAxisTickFormatter}
             dx={-5}
-            width={40}
+            width={USAGE_CHART_Y_AXIS_WIDTH}
           />
           <Area
             type="monotone"
@@ -304,7 +313,7 @@ function UsagePanel() {
         <TrafficUsageChart
           bars={metric.bars}
           periodTotal={metric.periodTotal}
-          formatAxis={metric.formatAxis}
+          axisFormat={metric.axisFormat}
           gradientId={`sites-traffic-${metric.id}`}
         />
 

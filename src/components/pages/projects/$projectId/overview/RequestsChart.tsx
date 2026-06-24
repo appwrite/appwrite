@@ -1,12 +1,13 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Link, useParams } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { ArrowRight } from 'lucide-react'
+import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import type { OverviewChartTabId } from '@/lib/overview-chart-tabs'
+import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_CHART_HEIGHT,
+  USAGE_CHART_Y_AXIS_WIDTH,
   overviewChartPanelBodyClass,
   overviewChartPanelChartAreaClass,
   overviewChartPanelChartFillClass,
@@ -20,10 +21,9 @@ import { MetricValueWithUnit } from './MetricValueWithUnit'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type { DateRange } from 'react-day-picker'
 import {
+  createUsageChartAxisTickFormatter,
   formatCompactBytes,
-  formatCompactBytesAxis,
-  formatCompactCountAxis,
-  formatGbHoursAxisValue,
+  type UsageChartAxisFormat,
 } from '@/lib/usage/format-metric'
 import {
   fillChartPointsGaps,
@@ -36,12 +36,7 @@ import {
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
 
-type MetricType =
-  | 'bandwidth'
-  | 'requests'
-  | 'storage'
-  | 'executions'
-  | 'gbhours'
+type MetricType = OverviewChartTabId
 
 type ChartPoint = {
   date: string
@@ -73,6 +68,12 @@ interface RequestsChartProps {
 }
 
 const CHART_ANIMATION_DURATION = 800
+
+function getOverviewChartAxisFormat(metric: MetricType): UsageChartAxisFormat {
+  if (metric === 'bandwidth') return 'bytes'
+  if (metric === 'gbhours') return 'gbhours'
+  return 'count'
+}
 
 /** Soft greyscale placeholder — visible on the real chart canvas. */
 const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
@@ -295,16 +296,28 @@ export function RequestsChart({
       : metric === 'gbhours'
         ? (value: number) => String(value)
         : (value: number) => formatCompactBytes(value, { compact: true }))
-  const yAxisTickFormatter =
-    metric === 'requests' || metric === 'executions'
-      ? (value: number) => formatCompactCountAxis(value)
-      : metric === 'gbhours'
-        ? (value: number) => formatGbHoursAxisValue(value)
-        : (value: number) => formatCompactBytesAxis(value)
+  const activeChartData = showChartSkeleton ? skeletonChartData : chartData
+  const bandwidthAxisMax = useMemo(() => {
+    if (activeChartData.length === 0) return 0
+    if (metric === 'bandwidth' && showBandwidthDualSeries) {
+      return activeChartData.reduce(
+        (max, point) =>
+          Math.max(max, (point.inbound ?? 0) + (point.outbound ?? 0)),
+        0,
+      )
+    }
+    return activeChartData.reduce(
+      (max, point) => Math.max(max, point.total),
+      0,
+    )
+  }, [activeChartData, metric, showBandwidthDualSeries])
+  const yAxisTickFormatter = useMemo(() => {
+    const axisFormat = getOverviewChartAxisFormat(metric)
+    return createUsageChartAxisTickFormatter(axisFormat, bandwidthAxisMax)
+  }, [bandwidthAxisMax, metric])
   const tooltipContent = (
     <CustomTooltip formatValue={valueFormatter} metric={metric} />
   )
-  const activeChartData = showChartSkeleton ? skeletonChartData : chartData
   const isSkeleton = showChartSkeleton
   const renderChart =
     isPanelVisible &&
@@ -394,25 +407,9 @@ export function RequestsChart({
               </div>
             </>
           )}
-          {showViewAllLink && projectId && (
-            <Link
-              to="/projects/$projectId/usage/$categoryId"
-              params={{
-                projectId,
-                categoryId:
-                  metric === 'bandwidth' ? 'bandwidth' : 'requests',
-              }}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                View all usage
-                <ArrowRight className="h-3 w-3" />
-              </Button>
-            </Link>
-          )}
+          {showViewAllLink && projectId ? (
+            <OverviewViewAllUsageLink projectId={projectId} tabId={metric} />
+          ) : null}
         </div>
       </div>
 
@@ -554,7 +551,7 @@ export function RequestsChart({
                     }}
                     tickFormatter={yAxisTickFormatter}
                     dx={-5}
-                    width={48}
+                    width={USAGE_CHART_Y_AXIS_WIDTH}
                   />
                   {!isSkeleton ? (
                     <Tooltip content={tooltipContent} cursor={false} />
@@ -576,6 +573,7 @@ export function RequestsChart({
                         type="monotone"
                         dataKey="inbound"
                         name="Inbound"
+                        stackId="bandwidth"
                         stroke="var(--chart-2)"
                         strokeWidth={2}
                         fill={`url(#${inboundGradientId})`}
@@ -592,6 +590,7 @@ export function RequestsChart({
                         type="monotone"
                         dataKey="outbound"
                         name="Outbound"
+                        stackId="bandwidth"
                         stroke="var(--chart-brand)"
                         strokeWidth={2}
                         fill={`url(#${outboundGradientId})`}

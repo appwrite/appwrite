@@ -19,9 +19,6 @@ import {
   sumUsageChartPoints,
 } from '@/lib/usage/realtime-usage'
 import {
-  formatCompactCountAxis,
-} from '@/lib/usage/format-metric'
-import {
   refetchProjectRealtimeUsageQueries,
   useProjectRealtimeBandwidthChart,
   useProjectRealtimeConnectionsChart,
@@ -117,7 +114,6 @@ export function RealtimeSection({
         errorMessage={REALTIME_USAGE_ERROR.message}
         formatTotal={formatRealtimeConnectionsTotal}
         formatValue={formatRealtimeConnectionsValue}
-        formatAxisValue={formatCompactCountAxis}
         onRetry={handleRetryAll}
         docsHref={REALTIME_DOCS_HREF}
       />
@@ -140,7 +136,6 @@ export function RealtimeSection({
         errorMessage={REALTIME_USAGE_ERROR.message}
         formatTotal={formatRealtimeMessagesTotal}
         formatValue={formatRealtimeMessagesValue}
-        formatAxisValue={formatCompactCountAxis}
         onRetry={handleRetryAll}
         docsHref={REALTIME_DOCS_HREF}
       />

@@ -2,6 +2,7 @@ import type { UserPrefs } from '@/lib/user-prefs-keys'
 import {
   createSubscriptionQueryEntry,
   createSubscriptionQueryEntryId,
+  normalizeRealtimeQueryValueType,
   type SubscriptionQueryEntry,
 } from '@/lib/realtime/subscription-queries'
 
@@ -42,6 +43,7 @@ function normalizeQueryEntry(entry: SubscriptionQueryEntry): SubscriptionQueryEn
     attribute: entry.attribute.trim(),
     operatorKey: entry.operatorKey.trim(),
     value: entry.value,
+    valueType: normalizeRealtimeQueryValueType(entry.valueType),
   }
 }
 
@@ -82,7 +84,7 @@ function parseStoredConfig(raw: unknown): RealtimeDebuggerConfig {
           const recordEntry = entry as Record<string, unknown>
           const nestedQueries = Array.isArray(recordEntry.queries)
             ? recordEntry.queries.filter(isQueryEntry).map(normalizeQueryEntry)
-            : legacyQueries
+            : legacyQueries.map(normalizeQueryEntry)
 
           return {
             id: entry.id.trim(),
@@ -137,11 +139,4 @@ export function createConfiguredQueryEntry(
   partial?: Partial<Omit<SubscriptionQueryEntry, 'id'>>,
 ): SubscriptionQueryEntry {
   return createSubscriptionQueryEntry(partial)
-}
-
-export function countConfiguredItems(config: RealtimeDebuggerConfig): number {
-  return config.subscriptions.reduce(
-    (total, subscription) => total + 1 + subscription.queries.length,
-    0,
-  )
 }

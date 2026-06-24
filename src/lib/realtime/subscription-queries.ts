@@ -3,17 +3,49 @@ import {
   buildFilterTag,
   FILTER_OPERATORS,
   getOperatorsForType,
+  type FilterColumnType,
 } from '@/lib/table-filters'
+
+export type RealtimeQueryValueType =
+  | 'string'
+  | 'integer'
+  | 'double'
+  | 'boolean'
+  | 'datetime'
+
+export const REALTIME_QUERY_VALUE_TYPES: ReadonlyArray<{
+  value: RealtimeQueryValueType
+  label: string
+}> = [
+  { value: 'string', label: 'String' },
+  { value: 'integer', label: 'Integer' },
+  { value: 'double', label: 'Float' },
+  { value: 'boolean', label: 'Boolean' },
+  { value: 'datetime', label: 'Datetime' },
+]
 
 export type SubscriptionQueryEntry = {
   id: string
   attribute: string
   operatorKey: string
   value: string
+  valueType: RealtimeQueryValueType
 }
 
 export function createSubscriptionQueryEntryId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+export function normalizeRealtimeQueryValueType(
+  value: unknown,
+): RealtimeQueryValueType {
+  if (
+    typeof value === 'string' &&
+    REALTIME_QUERY_VALUE_TYPES.some((item) => item.value === value)
+  ) {
+    return value as RealtimeQueryValueType
+  }
+  return 'string'
 }
 
 export function createSubscriptionQueryEntry(
@@ -24,15 +56,57 @@ export function createSubscriptionQueryEntry(
     attribute: partial?.attribute ?? '',
     operatorKey: partial?.operatorKey ?? 'equal',
     value: partial?.value ?? '',
+    valueType: normalizeRealtimeQueryValueType(partial?.valueType),
   }
 }
 
+export function subscriptionQueryOperatorsForType(
+  valueType: RealtimeQueryValueType = 'string',
+) {
+  return getOperatorsForType(valueType as FilterColumnType, {
+    fulltextSearchable: valueType === 'string',
+  })
+}
+
+/** @deprecated Use subscriptionQueryOperatorsForType */
 export function subscriptionQueryOperators() {
-  return getOperatorsForType('string', { fulltextSearchable: true })
+  return subscriptionQueryOperatorsForType('string')
 }
 
 export function subscriptionQueryNeedsValue(operatorKey: string): boolean {
   return !['isNull', 'isNotNull', 'exists', 'notExists'].includes(operatorKey)
+}
+
+export function parseQueryEntryValue(
+  entry: SubscriptionQueryEntry,
+): string | number | boolean | null {
+  if (!subscriptionQueryNeedsValue(entry.operatorKey)) return null
+
+  const raw = entry.value.trim()
+  if (!raw) return ''
+
+  const valueType = entry.valueType ?? 'string'
+
+  if (entry.operatorKey === 'between' || entry.operatorKey === 'notBetween') {
+    return raw
+  }
+
+  switch (valueType) {
+    case 'boolean':
+      if (raw === 'true') return true
+      if (raw === 'false') return false
+      return raw
+    case 'integer': {
+      const parsed = Number.parseInt(raw, 10)
+      return Number.isFinite(parsed) ? parsed : raw
+    }
+    case 'double': {
+      const parsed = Number.parseFloat(raw)
+      return Number.isFinite(parsed) ? parsed : raw
+    }
+    default:
+      return raw
+  }
 }
 
 export function entryToQueryString(entry: SubscriptionQueryEntry): string | null {
@@ -45,7 +119,7 @@ export function entryToQueryString(entry: SubscriptionQueryEntry): string | null
   return buildFilterQueryString(
     entry.operatorKey,
     attribute,
-    needsValue ? entry.value : null,
+    needsValue ? parseQueryEntryValue(entry) : null,
   )
 }
 
@@ -86,6 +160,7 @@ type QueryDisplayParts = {
   attribute: string
   operator: string
   value: string | null
+  valueType?: string
 }
 
 export function getQueryDisplayParts(query: string): QueryDisplayParts | null {
@@ -122,7 +197,7 @@ export function formatQueryEntryLabel(entry: SubscriptionQueryEntry): string {
   const tag = buildFilterTag(
     entry.attribute,
     operator,
-    needsValue ? entry.value : null,
+    needsValue ? parseQueryEntryValue(entry) : null,
   )
   return tag.tag.replace(/\*\*/g, '')
 }
@@ -151,15 +226,31 @@ export function entryFromQueryString(query: string): SubscriptionQueryEntry | nu
     if (!attribute) return null
 
     const values = parsed.values
-    const value =
-      values == null || values.length === 0
-        ? ''
-        : values.map((item) => String(item)).join(', ')
+    let valueType: RealtimeQueryValueType = 'string'
+    let value = ''
+
+    if (values == null || values.length === 0) {
+      value = ''
+    } else if (values.length === 1) {
+      const item = values[0]
+      if (typeof item === 'boolean') {
+        valueType = 'boolean'
+        value = String(item)
+      } else if (typeof item === 'number') {
+        valueType = Number.isInteger(item) ? 'integer' : 'double'
+        value = String(item)
+      } else {
+        value = String(item)
+      }
+    } else {
+      value = values.map((item) => String(item)).join(', ')
+    }
 
     return createSubscriptionQueryEntry({
       attribute,
       operatorKey,
       value,
+      valueType,
     })
   } catch {
     return null

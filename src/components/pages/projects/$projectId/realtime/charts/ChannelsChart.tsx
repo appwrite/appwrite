@@ -19,6 +19,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  createCompactCountAxisTickFormatter,
+} from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 
 interface ChannelsDataPoint {
   timestamp: string
@@ -70,6 +74,16 @@ export function RealtimeChannelsChart({
       fullDate: format(new Date(point.timestamp), 'MMM d, yyyy'),
     }))
   }, [data])
+
+  const chartAxisMax = useMemo(
+    () =>
+      chartData.reduce((max, point) => Math.max(max, point.activeChannels), 0),
+    [chartData],
+  )
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
 
   const currentValue =
     data.length > 0 ? data[data.length - 1].activeChannels : 0
@@ -256,14 +270,9 @@ export function RealtimeChannelsChart({
                   fill: 'currentColor',
                   fontSize: 10,
                 }}
-                tickFormatter={(value) => {
-                  if (value >= 1_000_000)
-                    return `${(value / 1_000_000).toFixed(0)}M`
-                  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
-                  return value.toString()
-                }}
+                tickFormatter={yAxisTickFormatter}
                 dx={-5}
-                width={45}
+                width={USAGE_CHART_Y_AXIS_WIDTH}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area

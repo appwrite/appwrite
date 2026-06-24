@@ -24,7 +24,7 @@ export function SubscriptionQueryList({
         return (
           <li
             key={`${index}-${query}`}
-            className="rounded-md border border-border/60 bg-muted/20 px-2 py-1.5"
+            className="min-h-7 overflow-hidden rounded-md border border-border/60 bg-muted/20 px-2 py-1"
             title={formatQueryStringLabel(query)}
           >
             {parts ? (

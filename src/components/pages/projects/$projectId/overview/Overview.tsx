@@ -111,11 +111,13 @@ import {
   overviewChartPanelBodyClass,
   overviewChartPanelChartAreaClass,
   overviewChartPanelHeaderClass,
+  overviewChartPanelHeaderActionsClass,
   OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT,
 } from './chart-panel'
 import { OverviewChartPanelError } from './OverviewChartPanelError'
 import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
 import { OverviewTabMetricContent } from './OverviewTabMetricContent'
+import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
 
 interface OverviewTab {
   id: string
@@ -968,6 +970,12 @@ export function View({ projectId, initialData }: ViewProps) {
                       <h3 className="text-[13px] font-medium text-foreground">
                         File storage
                       </h3>
+                      <div className={overviewChartPanelHeaderActionsClass}>
+                        <OverviewViewAllUsageLink
+                          projectId={projectId}
+                          tabId="storage"
+                        />
+                      </div>
                     </div>
                     <div className={overviewChartPanelBodyClass}>
                       {isStorageError ? (

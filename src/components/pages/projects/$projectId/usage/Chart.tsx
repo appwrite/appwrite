@@ -1,4 +1,10 @@
+import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import {
+  createCompactCountAxisTickFormatter,
+  getChartSeriesMax,
+} from '@/lib/usage/format-metric'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
 import {
   Area,
   AreaChart,
@@ -14,6 +20,20 @@ interface UsageChartProps {
 }
 
 export function UsageChart({ className }: UsageChartProps) {
+  const chartAxisMax = useMemo(
+    () =>
+      getChartSeriesMax(
+        usageData.map((point) => ({
+          total: Math.max(point.requests, point.bandwidth),
+        })),
+      ),
+    [],
+  )
+  const yAxisTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(chartAxisMax),
+    [chartAxisMax],
+  )
+
   return (
     <div className={cn('rounded-lg border border-border bg-card', className)}>
       <div className="flex flex-col gap-2 border-b border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
@@ -95,9 +115,9 @@ export function UsageChart({ className }: UsageChartProps) {
                   fill: 'currentColor',
                   fontSize: 10,
                 }}
-                tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                tickFormatter={yAxisTickFormatter}
                 dx={-5}
-                width={40}
+                width={USAGE_CHART_Y_AXIS_WIDTH}
               />
               <Tooltip
                 contentStyle={{

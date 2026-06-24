@@ -9,7 +9,6 @@ import {
   WEBHOOKS_DOCS_HREF,
   WEBHOOKS_EVENTS_FAILED_DESCRIPTION,
   WEBHOOKS_EVENTS_SENT_DESCRIPTION,
-  formatWebhooksCountAxisValue,
   formatWebhooksCountTotal,
   formatWebhooksCountValue,
   getWebhooksCountDisplayTotal,
@@ -110,7 +109,6 @@ export function WebhooksSection({
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
         formatTotal={formatWebhooksCountTotal}
         formatValue={formatWebhooksCountValue}
-        formatAxisValue={formatWebhooksCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={WEBHOOKS_DOCS_HREF}
       />
@@ -133,7 +131,6 @@ export function WebhooksSection({
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
         formatTotal={formatWebhooksCountTotal}
         formatValue={formatWebhooksCountValue}
-        formatAxisValue={formatWebhooksCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={WEBHOOKS_DOCS_HREF}
       />
@@ -154,7 +151,6 @@ export function WebhooksSection({
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
         formatTotal={formatWebhooksCountTotal}
         formatValue={formatWebhooksCountValue}
-        formatAxisValue={formatWebhooksCountAxisValue}
         onRetry={handleRetryAll}
         docsHref={WEBHOOKS_DOCS_HREF}
       />
