@@ -51,6 +51,7 @@ class Update extends Base
             ->label('event', 'sites.[siteId].update')
             ->label('audits.event', 'sites.update')
             ->label('audits.resource', 'site/{response.$id}')
+            ->label('usage.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',

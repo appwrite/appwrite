@@ -36,6 +36,7 @@ class Update extends Action
         ->label('event', 'tokens.[tokenId].update')
         ->label('audits.event', 'tokens.update')
         ->label('audits.resource', 'tokens/{response.$id}')
+        ->label('usage.resource', 'tokens/{response.$id}')
         ->label('usage.metric', 'tokens.{scope}.requests.update')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
