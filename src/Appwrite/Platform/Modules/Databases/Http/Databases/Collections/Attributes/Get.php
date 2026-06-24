@@ -75,7 +75,7 @@ class Get extends Action
     public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

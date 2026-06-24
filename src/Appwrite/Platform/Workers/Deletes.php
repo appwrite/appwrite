@@ -1106,7 +1106,7 @@ class Deletes extends Action
             // fast path, no need to list anything!
             $delete($dbForProject, $resourceInternalId, $resourceType);
         } else {
-            $processResource = function (string $type) use ($dbForProject, $delete) {
+            foreach ([RESOURCE_TYPE_SITES, RESOURCE_TYPE_FUNCTIONS] as $type) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [Query::select(['$id', '$sequence'])],
@@ -1115,13 +1115,7 @@ class Deletes extends Action
                         $delete($dbForProject, $resource->getSequence(), $type);
                     }
                 );
-            };
-
-            /* perform processing in parallel */
-            batch([
-                fn () => $processResource(RESOURCE_TYPE_SITES),
-                fn () => $processResource(RESOURCE_TYPE_FUNCTIONS),
-            ]);
+            }
         }
     }
 
