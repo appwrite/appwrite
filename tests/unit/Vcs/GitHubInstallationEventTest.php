@@ -66,7 +66,7 @@ final class GitHubInstallationEventTest extends TestCase
 
         $dbForPlatform->expects($this->exactly(2))
             ->method('find')
-            ->willReturnCallback(fn ($collection) => match ($collection) {
+            ->willReturnCallback(fn (string $collection): array => match ($collection) {
                 'installations' => [$installation],
                 'repositories' => [],
                 default => [],
@@ -79,24 +79,27 @@ final class GitHubInstallationEventTest extends TestCase
 
         $dbForProject->expects($this->exactly(2))
             ->method('find')
-            ->willReturnCallback(fn ($collection) => $collection === 'functions' ? [$function] : []);
+            ->willReturnCallback(fn (string $collection): array => $collection === 'functions' ? [$function] : []);
 
         $dbForProject->expects($this->once())
             ->method('updateDocument')
             ->with('functions', 'func1', $this->callback(function (Document $doc) {
-                return $doc->getAttribute('installationId') === ''
-                    && $doc->getAttribute('installationInternalId') === ''
-                    && $doc->getAttribute('providerRepositoryId') === ''
-                    && $doc->getAttribute('providerBranch') === ''
-                    && $doc->getAttribute('providerRootDirectory') === ''
-                    && $doc->getAttribute('providerSilentMode') === false
-                    && $doc->getAttribute('repositoryId') === ''
-                    && $doc->getAttribute('repositoryInternalId') === '';
+                $this->assertSame('', $doc->getAttribute('installationId'));
+                $this->assertSame('', $doc->getAttribute('installationInternalId'));
+                $this->assertSame('', $doc->getAttribute('providerRepositoryId'));
+                $this->assertSame('', $doc->getAttribute('providerBranch'));
+                $this->assertSame('', $doc->getAttribute('providerRootDirectory'));
+                $this->assertFalse($doc->getAttribute('providerSilentMode'));
+                $this->assertSame('', $doc->getAttribute('repositoryId'));
+                $this->assertSame('', $doc->getAttribute('repositoryInternalId'));
+                return true;
             }));
 
-        $authorization->expects($this->exactly(2))
+        // 1: getDocument(projects), 2: find(functions), 3: updateDocument(func1),
+        // 4: find(sites), 5: find(repositories), 6: deleteDocument(installations)
+        $authorization->expects($this->exactly(6))
             ->method('skip')
-            ->willReturnCallback(fn ($fn) => $fn());
+            ->willReturnCallback(fn (callable $fn): mixed => $fn());
 
         $dbForPlatform->expects($this->once())
             ->method('deleteDocument')
@@ -124,7 +127,7 @@ final class GitHubInstallationEventTest extends TestCase
 
         $dbForPlatform->expects($this->exactly(2))
             ->method('find')
-            ->willReturnCallback(fn ($collection) => match ($collection) {
+            ->willReturnCallback(fn (string $collection): array => match ($collection) {
                 'installations' => [$installation],
                 'repositories' => [],
                 default => [],
@@ -135,9 +138,10 @@ final class GitHubInstallationEventTest extends TestCase
             ->with('projects', 'project1')
             ->willReturn(new Document());
 
-        $authorization->expects($this->exactly(2))
+        // 1: getDocument(projects), 2: find(repositories), 3: deleteDocument(installations)
+        $authorization->expects($this->exactly(3))
             ->method('skip')
-            ->willReturnCallback(fn ($fn) => $fn());
+            ->willReturnCallback(fn (callable $fn): mixed => $fn());
 
         $dbForPlatform->expects($this->once())
             ->method('deleteDocument')

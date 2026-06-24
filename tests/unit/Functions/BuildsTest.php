@@ -113,14 +113,15 @@ final class BuildsTest extends TestCase
         $dbForProject->expects($this->once())
             ->method('updateDocument')
             ->with('functions', 'func123', $this->callback(function (Document $doc) {
-                return $doc->getAttribute('installationId') === ''
-                    && $doc->getAttribute('installationInternalId') === ''
-                    && $doc->getAttribute('providerRepositoryId') === ''
-                    && $doc->getAttribute('providerBranch') === ''
-                    && $doc->getAttribute('providerRootDirectory') === ''
-                    && $doc->getAttribute('providerSilentMode') === false
-                    && $doc->getAttribute('repositoryId') === ''
-                    && $doc->getAttribute('repositoryInternalId') === '';
+                $this->assertSame('', $doc->getAttribute('installationId'));
+                $this->assertSame('', $doc->getAttribute('installationInternalId'));
+                $this->assertSame('', $doc->getAttribute('providerRepositoryId'));
+                $this->assertSame('', $doc->getAttribute('providerBranch'));
+                $this->assertSame('', $doc->getAttribute('providerRootDirectory'));
+                $this->assertFalse($doc->getAttribute('providerSilentMode'));
+                $this->assertSame('', $doc->getAttribute('repositoryId'));
+                $this->assertSame('', $doc->getAttribute('repositoryInternalId'));
+                return true;
             }));
 
         $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
