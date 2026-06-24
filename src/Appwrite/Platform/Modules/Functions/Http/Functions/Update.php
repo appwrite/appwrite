@@ -56,6 +56,7 @@ class Update extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.update')
             ->label('audits.resource', 'function/{response.$id}')
+            ->label('usage.resource', 'function/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'functions',

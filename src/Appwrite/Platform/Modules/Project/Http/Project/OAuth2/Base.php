@@ -242,6 +242,7 @@ abstract class Base extends Action
             ->label('event', 'oauth2.[providerId].update')
             ->label('audits.event', 'project.oauth2.[providerId].update')
             ->label('audits.resource', 'project.oauth2/{response.$id}')
+            ->label('usage.resource', 'project.oauth2/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',

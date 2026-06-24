@@ -42,6 +42,7 @@ class Update extends Action
             ->label('event', 'templates.[templateId].update')
             ->label('audits.event', 'project.template.update')
             ->label('audits.resource', 'project.template/{response.templateId}')
+            ->label('usage.resource', 'project.template/{response.templateId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'templates',

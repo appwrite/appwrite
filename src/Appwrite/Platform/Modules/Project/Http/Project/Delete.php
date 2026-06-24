@@ -36,6 +36,7 @@ class Delete extends Action
             ->label('scope', 'project.write')
             ->label('audits.event', 'project.delete')
             ->label('audits.resource', 'project/{project.$id}')
+            ->label('usage.resource', 'project/{project.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,

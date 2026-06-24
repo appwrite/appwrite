@@ -39,6 +39,7 @@ class Update extends Action
             ->label('event', 'platforms.[platformId].update')
             ->label('audits.event', 'project.platform.update')
             ->label('audits.resource', 'project.platform/{response.$id}')
+            ->label('usage.resource', 'project.platform/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',
