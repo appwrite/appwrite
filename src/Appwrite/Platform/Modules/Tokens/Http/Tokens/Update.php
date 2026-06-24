@@ -76,9 +76,12 @@ class Update extends Action
 
         $token->setAttribute('expire', $expire);
 
-        $token = $dbForProject->updateDocument('resourceTokens', $tokenId, new Document([
-            'expire' => $expire,
-        ]));
+        $updates = new Document();
+        if ($expire !== null) {
+            $updates->setAttribute('expire', $expire);
+        }
+
+        $token = $dbForProject->updateDocument('resourceTokens', $tokenId, $updates);
 
         $queueForEvents->setParam('tokenId', $token->getId());
 
