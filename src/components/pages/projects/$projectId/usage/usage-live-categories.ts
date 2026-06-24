@@ -222,3 +222,32 @@ export function buildComputeUsageCategoryMetrics(): UsageCategory['metrics'] {
     timeSeries: [],
   }))
 }
+
+export type AvatarsUsageCategory = {
+  id: 'avatars'
+  label: 'Avatars'
+  icon: 'UserCircle'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const AVATARS_USAGE_CATEGORY: AvatarsUsageCategory = {
+  id: 'avatars',
+  label: 'Avatars',
+  icon: 'UserCircle',
+  description:
+    'Avatars API usage for webpage screenshots and other generated assets.',
+  metrics: [{ id: 'screenshots', name: 'Screenshots generated' }],
+}
+
+export function buildAvatarsUsageCategoryMetrics(): UsageCategory['metrics'] {
+  return AVATARS_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit: 'screenshots',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}

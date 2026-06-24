@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries } from '@/lib/react-query/hooks'
+import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import {
   Zap,
@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Activity,
   Cpu,
+  UserCircle,
   RefreshCw,
   AlertTriangle,
   ChevronRight,
@@ -71,6 +72,7 @@ const iconMap: Record<string, LucideIcon> = {
   MessageSquare,
   Activity,
   Cpu,
+  UserCircle,
 }
 
 interface UsageLayoutProps {
@@ -344,6 +346,7 @@ function UsageLayoutContent({
   const isDatabasesCategory = categoryId === 'databases'
   const isRealtimeCategory = categoryId === 'realtime'
   const isAuthCategory = categoryId === 'auth'
+  const isAvatarsCategory = categoryId === 'avatars'
   const showChartIntervalToggle = categorySupportsChartInterval(categoryId)
 
   useEffect(() => {
@@ -385,6 +388,11 @@ function UsageLayoutContent({
 
     if (isAuthCategory) {
       void refetchProjectAuthUsageQueries(queryClient, projectId)
+      return
+    }
+
+    if (isAvatarsCategory) {
+      void refetchProjectAvatarsUsageQueries(queryClient, projectId)
     }
   }
 

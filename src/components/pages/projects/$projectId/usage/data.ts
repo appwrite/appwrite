@@ -154,6 +154,7 @@ export const planQuotas = {
     bandwidth: { egress: 10 * 1000 * 1000 * 1000, ingress: null }, // 10 GB
     realtime: { connections: 250 },
     messaging: { messages: 10_000, topics: 100, sms: 0 },
+    avatars: { screenshots: 50 },
   },
   pro: {
     compute: { executions: 3_500_000, gbHours: 500 },
@@ -168,6 +169,7 @@ export const planQuotas = {
     bandwidth: { egress: 300 * 1000 * 1000 * 1000, ingress: null }, // 300 GB
     realtime: { connections: 500 },
     messaging: { messages: 100_000, topics: 500, sms: 100 },
+    avatars: { screenshots: 5_000 },
   },
   custom: {
     compute: { executions: null, gbHours: null },
@@ -182,6 +184,7 @@ export const planQuotas = {
     bandwidth: { egress: null, ingress: null },
     realtime: { connections: null },
     messaging: { messages: null, topics: null, sms: null },
+    avatars: { screenshots: null },
   },
 }
 
@@ -449,6 +452,26 @@ export function generateMockUsageData(
           currentValue: 45,
           quota: quotas.messaging.sms,
           timeSeries: generateTimeSeries(30, 1.5, 0.6, 'stable'),
+          thresholds: { warning: 75, critical: 90 },
+        },
+      ],
+    },
+    {
+      id: 'avatars',
+      label: 'Avatars',
+      icon: 'UserCircle',
+      description:
+        'Avatars API usage for webpage screenshots and other generated assets.',
+      metrics: [
+        {
+          id: 'screenshots',
+          name: 'Screenshots Generated',
+          description:
+            'Webpage screenshots captured through the Avatars Screenshots API. Each successful request counts toward your monthly plan limit. Additional screenshots are billed per capture on paid plans.',
+          unit: 'screenshots',
+          currentValue: 1_240,
+          quota: quotas.avatars.screenshots,
+          timeSeries: generateTimeSeries(30, 41, 0.35, 'up'),
           thresholds: { warning: 75, critical: 90 },
         },
       ],

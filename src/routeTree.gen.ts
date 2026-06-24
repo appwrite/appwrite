@@ -134,6 +134,7 @@ import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './route
 import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
 import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
+import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
 import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
 import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
 import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
@@ -994,6 +995,12 @@ const PublicProjectsProjectIdRealtimeMessagesRoute =
   PublicProjectsProjectIdRealtimeMessagesRouteImport.update({
     id: '/messages',
     path: '/messages',
+    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
+  } as any)
+const PublicProjectsProjectIdRealtimeDebuggerRoute =
+  PublicProjectsProjectIdRealtimeDebuggerRouteImport.update({
+    id: '/debugger',
+    path: '/debugger',
     getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
   } as any)
 const PublicProjectsProjectIdRealtimeChannelsRoute =
@@ -2354,6 +2361,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
+  '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
@@ -2637,6 +2645,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
+  '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -2928,6 +2937,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/_public/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   '/_public/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
+  '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
@@ -3234,6 +3244,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/templates'
     | '/projects/$projectId/messaging/$messageId'
     | '/projects/$projectId/realtime/channels'
+    | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/migrations'
@@ -3517,6 +3528,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
     | '/projects/$projectId/realtime/channels'
+    | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
@@ -3807,6 +3819,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/templates'
     | '/_public/projects/$projectId/messaging/$messageId'
     | '/_public/projects/$projectId/realtime/channels'
+    | '/_public/projects/$projectId/realtime/debugger'
     | '/_public/projects/$projectId/realtime/messages'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/migrations'
@@ -4904,6 +4917,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/projects/$projectId/realtime/messages'
       preLoaderRoute: typeof PublicProjectsProjectIdRealtimeMessagesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
+    }
+    '/_public/projects/$projectId/realtime/debugger': {
+      id: '/_public/projects/$projectId/realtime/debugger'
+      path: '/debugger'
+      fullPath: '/projects/$projectId/realtime/debugger'
+      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeDebuggerRouteImport
       parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
     }
     '/_public/projects/$projectId/realtime/channels': {
@@ -7093,6 +7113,7 @@ const PublicProjectsProjectIdMessagingRouteWithChildren =
 
 interface PublicProjectsProjectIdRealtimeRouteChildren {
   PublicProjectsProjectIdRealtimeChannelsRoute: typeof PublicProjectsProjectIdRealtimeChannelsRoute
+  PublicProjectsProjectIdRealtimeDebuggerRoute: typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   PublicProjectsProjectIdRealtimeMessagesRoute: typeof PublicProjectsProjectIdRealtimeMessagesRoute
   PublicProjectsProjectIdRealtimeIndexRoute: typeof PublicProjectsProjectIdRealtimeIndexRoute
 }
@@ -7101,6 +7122,8 @@ const PublicProjectsProjectIdRealtimeRouteChildren: PublicProjectsProjectIdRealt
   {
     PublicProjectsProjectIdRealtimeChannelsRoute:
       PublicProjectsProjectIdRealtimeChannelsRoute,
+    PublicProjectsProjectIdRealtimeDebuggerRoute:
+      PublicProjectsProjectIdRealtimeDebuggerRoute,
     PublicProjectsProjectIdRealtimeMessagesRoute:
       PublicProjectsProjectIdRealtimeMessagesRoute,
     PublicProjectsProjectIdRealtimeIndexRoute:

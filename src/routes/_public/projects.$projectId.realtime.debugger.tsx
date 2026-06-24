@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/realtime/channels',
+  '/_public/projects/$projectId/realtime/debugger',
 )({
   beforeLoad: ({ params }) => {
     throw redirect({

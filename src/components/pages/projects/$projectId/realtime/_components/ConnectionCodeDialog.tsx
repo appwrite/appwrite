@@ -1,0 +1,122 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
+import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
+import {
+  buildRealtimeConnectionSnippets,
+  type RealtimeSnippetSdkId,
+} from '@/lib/realtime/connection-snippets'
+
+type ConnectionCodeDialogProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  projectId: string
+  channels: string[]
+}
+
+export function ConnectionCodeDialog({
+  open,
+  onOpenChange,
+  projectId,
+  channels,
+}: ConnectionCodeDialogProps) {
+  const snippets = useMemo(
+    () =>
+      buildRealtimeConnectionSnippets({
+        endpoint: getProjectApiEndpoint(projectId),
+        projectId,
+        channels,
+      }),
+    [channels, projectId],
+  )
+
+  const [activeSdkId, setActiveSdkId] = useState<RealtimeSnippetSdkId>('client-web')
+
+  const activeSnippet =
+    snippets.find((snippet) => snippet.id === activeSdkId) ?? snippets[0]
+
+  const channelSummary =
+    channels.length === 1
+      ? channels[0]
+      : channels.length > 1
+        ? `${channels.length} subscriptions`
+        : null
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[min(90dvh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>Realtime connection code</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {channelSummary ? (
+              <>
+                One subscribe call per active subscription
+                {channels.length === 1 ? (
+                  <>
+                    {' '}
+                    for{' '}
+                    <code className="font-mono text-[12px]">{channelSummary}</code>
+                  </>
+                ) : (
+                  <>
+                    :{' '}
+                    {channels.map((channel) => (
+                      <code
+                        key={channel}
+                        className="mr-1.5 inline-block font-mono text-[12px]"
+                      >
+                        {channel}
+                      </code>
+                    ))}
+                  </>
+                )}
+                . Authenticated channels require an active session or JWT on the
+                client.
+              </>
+            ) : (
+              <>
+                Add a subscription in the debugger to generate channel-specific
+                subscribe calls. Client setup uses your project endpoint and ID.
+              </>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="border-t border-border" />
+
+        <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
+          {activeSnippet ? (
+            <ConnectCodeExample
+              code={activeSnippet.code}
+              language={activeSnippet.language}
+              tabs={snippets.map((snippet) => ({
+                id: snippet.id,
+                label: snippet.label,
+              }))}
+              activeTabId={activeSdkId}
+              onTabChange={(id) => setActiveSdkId(id as RealtimeSnippetSdkId)}
+              selectorVariant="dropdown"
+              fixedHeight="min(420px, 50dvh)"
+              className="min-h-0 flex-1"
+            />
+          ) : null}
+        </div>
+
+        <div className="border-t border-border bg-muted/30 px-6 py-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}

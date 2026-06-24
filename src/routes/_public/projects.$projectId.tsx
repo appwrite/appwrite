@@ -259,6 +259,7 @@ function ProjectLayout() {
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     activeSection === 'activity' ||
+    activeSection === 'realtime' ||
     activeSection === 'storage' ||
     activeSection === 'explorer' ||
     isFunctionsEditorView ||
@@ -273,6 +274,7 @@ function ProjectLayout() {
     isFunctionExecutionsTab ||
     isSiteLogsTab ||
     activeSection === 'activity' ||
+    activeSection === 'realtime' ||
     activeSection === 'storage' ||
     activeSection === 'explorer' ||
     isFunctionsEditorView

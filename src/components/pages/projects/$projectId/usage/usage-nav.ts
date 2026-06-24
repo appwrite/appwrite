@@ -13,6 +13,8 @@ import {
   buildAuthUsageCategoryMetrics,
   COMPUTE_USAGE_CATEGORY,
   buildComputeUsageCategoryMetrics,
+  AVATARS_USAGE_CATEGORY,
+  buildAvatarsUsageCategoryMetrics,
   REQUESTS_USAGE_CATEGORY,
   buildRequestsUsageCategoryMetrics,
 } from './usage-live-categories'
@@ -37,7 +39,7 @@ export const USAGE_NAV_GROUPS: readonly UsageNavGroupConfig[] = [
   {
     id: 'products',
     label: 'Products',
-    categoryIds: ['auth', 'databases', 'storage', 'messaging'],
+    categoryIds: ['auth', 'databases', 'storage', 'messaging', 'avatars'],
   },
 ]
 
@@ -144,15 +146,30 @@ export function insertAuthCategory(categories: UsageCategory[]): UsageCategory[]
   )
 }
 
+export function insertAvatarsCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const avatarsCategory: UsageCategory = {
+    ...AVATARS_USAGE_CATEGORY,
+    metrics: buildAvatarsUsageCategoryMetrics(),
+  }
+
+  return categories.map((category) =>
+    category.id === 'avatars' ? avatarsCategory : category,
+  )
+}
+
 export function getUsageCategories(
   plan: 'free' | 'pro' | 'custom' = 'pro',
 ): UsageCategory[] {
   const usageData = generateMockUsageData(plan)
-  return insertAuthCategory(
-    insertComputeCategory(
-      insertRealtimeCategory(
-        insertDatabasesCategory(
-          insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+  return insertAvatarsCategory(
+    insertAuthCategory(
+      insertComputeCategory(
+        insertRealtimeCategory(
+          insertDatabasesCategory(
+            insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+          ),
         ),
       ),
     ),

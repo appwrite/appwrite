@@ -85,6 +85,10 @@ import {
   fetchProjectAuthSignupsOverview,
   type AuthUsageChartOverview,
 } from '@/lib/usage/auth-usage'
+import {
+  fetchProjectAvatarsScreenshotsOverview,
+  type AvatarsUsageChartOverview,
+} from '@/lib/usage/avatars-usage'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   rangeKeyPart: string
@@ -1597,6 +1601,62 @@ export function refetchProjectAuthUsageQueries(
   })
 }
 
+function avatarsScreenshotsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'avatars',
+      'screenshots',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectAvatarsScreenshotsOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectAvatarsScreenshotsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...avatarsScreenshotsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+/** Refetch avatars usage charts for a project. */
+export function refetchProjectAvatarsUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      query.queryKey[0] === 'usage-events' &&
+      query.queryKey[1] === 'avatars',
+  })
+}
+
 /** Refetch compute usage charts (executions, GB-hours) for a project. */
 export function refetchProjectComputeUsageQueries(
   queryClient: QueryClient,
@@ -1637,6 +1697,7 @@ export type {
   RealtimeBandwidthOverview,
   RealtimeUsageChartOverview,
   AuthUsageChartOverview,
+  AvatarsUsageChartOverview,
 }
 
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'
