@@ -38,6 +38,7 @@ class Update extends Action
             ->label('event', 'authMethod.[methodId].update')
             ->label('audits.event', 'project.authMethods.[methodId].update')
             ->label('audits.resource', 'project.authMethods/{response.$id}')
+            ->label('usage.resource', 'project.authMethods/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,

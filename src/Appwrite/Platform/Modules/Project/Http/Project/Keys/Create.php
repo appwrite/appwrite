@@ -46,6 +46,7 @@ class Create extends Base
             ->label('event', 'keys.[keyId].create')
             ->label('audits.event', 'project.key.create')
             ->label('audits.resource', 'project.key/{response.$id}')
+            ->label('usage.resource', 'project.key/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',

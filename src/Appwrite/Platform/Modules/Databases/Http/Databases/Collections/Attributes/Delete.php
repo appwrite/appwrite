@@ -44,6 +44,7 @@ class Delete extends Action
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
             ->label('audits.event', 'attribute.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),

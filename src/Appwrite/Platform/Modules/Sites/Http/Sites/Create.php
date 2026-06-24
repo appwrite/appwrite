@@ -47,6 +47,7 @@ class Create extends Base
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
+            ->label('usage.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',

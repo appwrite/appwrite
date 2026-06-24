@@ -45,6 +45,7 @@ class Update extends PlatformAction
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')
+            ->label('usage.resource', 'presence/{response.$id}')
             ->label('sdk', [
                 // Client-side SDK: `userId` is not accepted (session callers can only update their own presence).
                 new Method(
