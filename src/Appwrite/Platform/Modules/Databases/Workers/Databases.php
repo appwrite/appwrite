@@ -198,9 +198,7 @@ class Databases extends Action
 
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
-                        $relatedAttribute->setAttribute('status', 'available');
-                        $relatedAttribute->setAttribute('error', '');
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document([
+                        $relatedAttribute = $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document([
                             'status' => 'available',
                             'error' => ''
                         ]));
@@ -212,9 +210,7 @@ class Databases extends Action
                     }
             }
 
-            $attribute->setAttribute('status', 'available');
-            $attribute->setAttribute('error', '');
-            $dbForProject->updateDocument('attributes', $attribute->getId(), new Document([
+            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), new Document([
                 'status' => 'available',
                 'error' => ''
             ]));
@@ -469,9 +465,7 @@ class Databases extends Action
             if (!$dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new DatabaseException('Failed to create Index');
             }
-            $index->setAttribute('status', 'available');
-            $index->setAttribute('error', '');
-            $dbForProject->updateDocument('indexes', $index->getId(), new Document([
+            $index = $dbForProject->updateDocument('indexes', $index->getId(), new Document([
                 'status' => 'available',
                 'error' => ''
             ]));
