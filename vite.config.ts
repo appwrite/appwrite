@@ -25,8 +25,11 @@ const almostnodeEntry = ensureAlmostnodePatchCache(
   almostnodeDist,
   almostnodeCacheDir,
 ).indexEntry
-const justBashBrowserEntry = fileURLToPath(
-  import.meta.resolve('just-bash/browser'),
+// Avoid import.meta.resolve here: Vite bundles vite.config.ts before loading it,
+// and Bun cannot resolve the injected import-meta-resolve shim in that bundle.
+const justBashBrowserEntry = path.resolve(
+  projectRoot,
+  'node_modules/just-bash/dist/bundle/browser.js',
 )
 const sprintfJsShim = path.resolve(
   projectRoot,
