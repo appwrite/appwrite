@@ -15,7 +15,10 @@ import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createCompactBytesAxisTickFormatter } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
-import type { BandwidthDualChartPoint } from '@/lib/usage/bandwidth-events'
+import {
+  resolveBandwidthDualChartDisplay,
+  type BandwidthDualChartPoint,
+} from '@/lib/usage/bandwidth-events'
 import {
   OVERVIEW_CHART_HEIGHT,
   USAGE_CHART_Y_AXIS_WIDTH,
@@ -115,20 +118,10 @@ export function InboundOutboundUsageChartCard({
       : changePercent < 0
         ? `${changePercent}%`
         : '0%'
-  const showDualSeries = chartData.some(
-    (point) =>
-      typeof point.inbound === 'number' && typeof point.outbound === 'number',
+  const { showDualSeries, axisMax: bandwidthAxisMax } = useMemo(
+    () => resolveBandwidthDualChartDisplay(chartData),
+    [chartData],
   )
-  const bandwidthAxisMax = useMemo(() => {
-    if (chartData.length === 0) return 0
-    if (showDualSeries) {
-      return chartData.reduce(
-        (max, point) => Math.max(max, point.inbound + point.outbound),
-        0,
-      )
-    }
-    return chartData.reduce((max, point) => Math.max(max, point.total), 0)
-  }, [chartData, showDualSeries])
   const yAxisTickFormatter = useMemo(
     () => createCompactBytesAxisTickFormatter(bandwidthAxisMax),
     [bandwidthAxisMax],

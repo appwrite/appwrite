@@ -66,6 +66,35 @@ export { formatCompactBytesAxis as formatBandwidthAxisValue }
 
 export { computeChangePercent, sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 
+type BandwidthDualChartDisplayPoint = {
+  inbound?: number
+  outbound?: number
+  total?: number
+}
+
+/** Dual inbound/outbound series only when there is non-zero usage (flat zero line uses total). */
+export function resolveBandwidthDualChartDisplay(
+  points: readonly BandwidthDualChartDisplayPoint[],
+): { showDualSeries: boolean; axisMax: number } {
+  const hasDualFields = points.some(
+    (point) =>
+      typeof point.inbound === 'number' && typeof point.outbound === 'number',
+  )
+  const dualMax = hasDualFields
+    ? points.reduce(
+        (max, point) =>
+          Math.max(max, (point.inbound ?? 0) + (point.outbound ?? 0)),
+        0,
+      )
+    : 0
+  const showDualSeries = hasDualFields && dualMax > 0
+  const axisMax = showDualSeries
+    ? dualMax
+    : points.reduce((max, point) => Math.max(max, point.total ?? 0), 0)
+
+  return { showDualSeries, axisMax }
+}
+
 export function mergeBandwidthDualChartPoints(
   inbound: BandwidthChartPoint[],
   outbound: BandwidthChartPoint[],

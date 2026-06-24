@@ -26,6 +26,7 @@ import {
   formatCompactBytes,
   type UsageChartAxisFormat,
 } from '@/lib/usage/format-metric'
+import { resolveBandwidthDualChartDisplay } from '@/lib/usage/bandwidth-events'
 import {
   fillChartPointsGaps,
   type UsageChartPoint,
@@ -263,10 +264,7 @@ export const RequestsChart = memo(function RequestsChart({
   const showBandwidthDualSeries =
     !isLoading &&
     metric === 'bandwidth' &&
-    chartData.some(
-      (point) =>
-        typeof point.inbound === 'number' && typeof point.outbound === 'number',
-    )
+    resolveBandwidthDualChartDisplay(chartData).showDualSeries
 
   const showChartSkeleton = isLoading
   const showEmptyState = !isLoading && chartData.length === 0
@@ -286,18 +284,14 @@ export const RequestsChart = memo(function RequestsChart({
   const activeChartData = showChartSkeleton ? skeletonChartData : chartData
   const bandwidthAxisMax = useMemo(() => {
     if (activeChartData.length === 0) return 0
-    if (metric === 'bandwidth' && showBandwidthDualSeries) {
-      return activeChartData.reduce(
-        (max, point) =>
-          Math.max(max, (point.inbound ?? 0) + (point.outbound ?? 0)),
-        0,
-      )
+    if (metric === 'bandwidth') {
+      return resolveBandwidthDualChartDisplay(activeChartData).axisMax
     }
     return activeChartData.reduce(
       (max, point) => Math.max(max, point.total),
       0,
     )
-  }, [activeChartData, metric, showBandwidthDualSeries])
+  }, [activeChartData, metric])
   const yAxisTickFormatter = useMemo(() => {
     const axisFormat = getOverviewChartAxisFormat(metric)
     return createUsageChartAxisTickFormatter(axisFormat, bandwidthAxisMax)

@@ -27,6 +27,7 @@ import {
 import {
   formatBandwidthTotal,
   formatBandwidthValue,
+  resolveBandwidthDualChartDisplay,
   type BandwidthDualChartPoint,
 } from '@/lib/usage/bandwidth-events'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -155,20 +156,10 @@ function BandwidthChartCard({
       : changePercent < 0
         ? `${changePercent}%`
         : '0%'
-  const showDualSeries = chartData.some(
-    (point) =>
-      typeof point.inbound === 'number' && typeof point.outbound === 'number',
+  const { showDualSeries, axisMax: bandwidthAxisMax } = useMemo(
+    () => resolveBandwidthDualChartDisplay(chartData),
+    [chartData],
   )
-  const bandwidthAxisMax = useMemo(() => {
-    if (chartData.length === 0) return 0
-    if (showDualSeries) {
-      return chartData.reduce(
-        (max, point) => Math.max(max, point.inbound + point.outbound),
-        0,
-      )
-    }
-    return chartData.reduce((max, point) => Math.max(max, point.total), 0)
-  }, [chartData, showDualSeries])
   const yAxisTickFormatter = useMemo(
     () => createCompactBytesAxisTickFormatter(bandwidthAxisMax),
     [bandwidthAxisMax],
