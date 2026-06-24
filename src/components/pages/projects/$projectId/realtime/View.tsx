@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
@@ -25,9 +24,7 @@ import {
   MessagesSquare,
   Pause,
   Play,
-  Plus,
   Radio,
-  Route,
   Trash2,
   Unplug,
   X,
@@ -36,7 +33,6 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Tooltip,
   TooltipContent,
@@ -49,6 +45,10 @@ import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectionCodeDialog } from './_components/ConnectionCodeDialog'
 import { CollapsibleJsonView } from './_components/CollapsibleJsonView'
+import { MessagesFilterBar } from './_components/MessagesFilterBar'
+import { ReconnectBanner } from './_components/ReconnectBanner'
+import { ConfigurationPanel } from './_components/ConfigurationPanel'
+import { useRealtimeDebuggerConfig } from '@/hooks/use-realtime-debugger-config'
 import { useProjectUsers } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -56,9 +56,26 @@ import {
   createUserJwtForRealtime,
   getProjectRealtimeWebSocketUrl,
   type RealtimeMessageLog,
+  type RealtimeReconnectState,
   type RealtimeSession,
   type RealtimeSessionError,
 } from '@/lib/realtime/session-client'
+import {
+  formatSummaryList,
+  getEventFrameSummary,
+} from '@/lib/realtime/event-frame-summary'
+import {
+  createDefaultMessageLogFilters,
+  matchesMessageLogFilters,
+  type MessageLogFilters,
+} from '@/lib/realtime/message-filters'
+import {
+  entriesToQueryStrings,
+  normalizeSubscriptionQueries,
+  subscriptionsMatch,
+  type SubscriptionQueryEntry,
+} from '@/lib/realtime/subscription-queries'
+import { countConfiguredItems } from '@/lib/realtime/debugger-prefs'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -69,13 +86,6 @@ const REALTIME_LAYOUT_GRID = 'lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]'
 /** Sentinel value for guest mode in the act-as dropdown. */
 const GUEST_ACTOR_ID = '__guest__'
 
-const SUGGESTED_CHANNELS = [
-  'account',
-  'files',
-  'teams',
-  'databases.*.tables.*.rows.*',
-] as const
-
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 
 type LogEntry = RealtimeMessageLog & { id: string }
@@ -83,6 +93,7 @@ type LogEntry = RealtimeMessageLog & { id: string }
 type ActiveSubscription = {
   id: string
   channel: string
+  queries: string[]
 }
 
 type ProjectUserOption = {
@@ -405,8 +416,15 @@ export function View() {
     useState<ConnectionStatus>('disconnected')
   const [socketOpen, setSocketOpen] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
-  const [channelInput, setChannelInput] = useState('')
   const [channelBuilderOpen, setChannelBuilderOpen] = useState(false)
+  const [messageFilters, setMessageFilters] = useState<MessageLogFilters>(
+    createDefaultMessageLogFilters,
+  )
+  const [reconnectState, setReconnectState] = useState<RealtimeReconnectState>({
+    status: 'idle',
+    attempt: 0,
+    maxAttempts: 8,
+  })
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [expandedMessageIds, setExpandedMessageIds] = useState<Set<string>>(
     () => new Set(),
@@ -420,6 +438,14 @@ export function View() {
   const sessionRef = useRef<RealtimeSession | null>(null)
   const subscriptionsRef = useRef<Map<string, ActiveSubscription>>(new Map())
   const isPausedRef = useRef(isPaused)
+
+  const {
+    config: debuggerConfig,
+    addSubscription,
+    removeSubscription,
+    addSubscriptionQuery,
+    removeSubscriptionQuery,
+  } = useRealtimeDebuggerConfig(projectId)
 
   const { users, isLoading: usersLoading } = useProjectUsers(
     projectId ?? null,
@@ -448,22 +474,39 @@ export function View() {
 
   const isGuestActAs = actAsValue === GUEST_ACTOR_ID
 
-  const subscribedChannels = useMemo(
-    () => new Set(activeSubscriptions.map((entry) => entry.channel)),
-    [activeSubscriptions],
-  )
+  const configuredSubscriptions = debuggerConfig.subscriptions
 
-  const snippetChannels = useMemo(
-    () => activeSubscriptions.map((entry) => entry.channel),
-    [activeSubscriptions],
+  const filteredLogs = useMemo(
+    () => logs.filter((entry) => matchesMessageLogFilters(entry, messageFilters)),
+    [logs, messageFilters],
   )
 
   const isConnected = connectionStatus === 'connected'
   const canConnect = !!actAsValue && !isConnecting && !isConnected
   const canDisconnectAll =
     isConnected || isConnecting || activeSubscriptions.length > 0
-  const canSubscribe = isConnected && !!channelInput.trim()
+  const configurationItemCount = countConfiguredItems(debuggerConfig)
   const authControlsDisabled = isConnected || isConnecting
+
+  const isSubscriptionLive = useCallback(
+    (subscriptionId: string) => {
+      const configured = configuredSubscriptions.find(
+        (entry) => entry.id === subscriptionId,
+      )
+      if (!configured) return false
+
+      const queryStrings = entriesToQueryStrings(configured.queries)
+      return activeSubscriptions.some((entry) =>
+        subscriptionsMatch(
+          entry.channel,
+          entry.queries,
+          configured.channel,
+          queryStrings,
+        ),
+      )
+    },
+    [activeSubscriptions, configuredSubscriptions],
+  )
 
   useEffect(() => {
     isPausedRef.current = isPaused
@@ -524,6 +567,7 @@ export function View() {
   const handleDisconnect = useCallback(async () => {
     setIsConnecting(false)
     setSocketOpen(false)
+    setReconnectState({ status: 'idle', attempt: 0, maxAttempts: 8 })
     await teardownSession()
     setConnectionStatus('disconnected')
     appendLog({
@@ -536,6 +580,7 @@ export function View() {
   const handleDisconnectAll = useCallback(async () => {
     setIsConnecting(false)
     setSocketOpen(false)
+    setReconnectState({ status: 'idle', attempt: 0, maxAttempts: 8 })
     await teardownSession({ disconnectAll: true })
     setConnectionStatus('disconnected')
     appendLog({
@@ -585,6 +630,7 @@ export function View() {
           setSocketOpen(false)
         },
         onError: handleSessionError,
+        onReconnectStateChange: setReconnectState,
       })
 
       sessionRef.current = session
@@ -606,6 +652,46 @@ export function View() {
           },
         },
       })
+
+      for (const subscription of debuggerConfig.subscriptions) {
+        const queryStrings = entriesToQueryStrings(subscription.queries)
+        const alreadyActive = Array.from(subscriptionsRef.current.values()).some(
+          (entry) =>
+            subscriptionsMatch(
+              entry.channel,
+              entry.queries,
+              subscription.channel,
+              queryStrings,
+            ),
+        )
+        if (alreadyActive) continue
+
+        try {
+          const subscriptionId = await session.subscribe(
+            subscription.channel,
+            queryStrings,
+          )
+          const entry: ActiveSubscription = {
+            id: subscriptionId,
+            channel: subscription.channel,
+            queries: queryStrings,
+          }
+          subscriptionsRef.current.set(subscriptionId, entry)
+        } catch (error) {
+          const message = getErrorMessage(error)
+          appendLog({
+            direction: 'in',
+            timestamp: new Date().toISOString(),
+            message: {
+              type: 'error',
+              data: {
+                message: `Subscribe failed (${subscription.channel}): ${message}`,
+              },
+            },
+          })
+        }
+      }
+      setActiveSubscriptions(Array.from(subscriptionsRef.current.values()))
     } catch (error) {
       setConnectionStatus('error')
       const message = getErrorMessage(error)
@@ -621,6 +707,7 @@ export function View() {
   }, [
     actAsValue,
     appendLog,
+    debuggerConfig.subscriptions,
     handleSessionError,
     handleSessionMessage,
     isGuestActAs,
@@ -629,28 +716,28 @@ export function View() {
     websocketUrl,
   ])
 
-  const subscribeToChannel = useCallback(
-    async (rawChannel: string) => {
+  const subscribeWebSocket = useCallback(
+    async (rawChannel: string, rawQueries: string[] = []) => {
       const channel = rawChannel.trim()
       if (!channel) return
 
+      const queries = normalizeSubscriptionQueries(rawQueries)
+
       const session = sessionRef.current
       if (!session || connectionStatus !== 'connected') {
-        toast.error('Connect before subscribing to channels.')
         return
       }
 
       const existing = Array.from(subscriptionsRef.current.values()).some(
-        (entry) => entry.channel === channel,
+        (entry) => subscriptionsMatch(entry.channel, entry.queries, channel, queries),
       )
       if (existing) {
-        toast.error('Already subscribed to this channel.')
         return
       }
 
       try {
-        const subscriptionId = await session.subscribe(channel)
-        const entry: ActiveSubscription = { id: subscriptionId, channel }
+        const subscriptionId = await session.subscribe(channel, queries)
+        const entry: ActiveSubscription = { id: subscriptionId, channel, queries }
         subscriptionsRef.current.set(subscriptionId, entry)
         setActiveSubscriptions(Array.from(subscriptionsRef.current.values()))
       } catch (error) {
@@ -668,33 +755,20 @@ export function View() {
     [appendLog, connectionStatus],
   )
 
-  const handleSubscribeSubmit = useCallback(
-    async (event: FormEvent) => {
-      event.preventDefault()
-      const channel = channelInput.trim()
-      if (!channel) return
-      await subscribeToChannel(channel)
-      setChannelInput('')
-    },
-    [channelInput, subscribeToChannel],
-  )
-
-  const handleChannelBuilt = useCallback(
+  const addConfiguredSubscription = useCallback(
     async (channel: string) => {
       const trimmed = channel.trim()
       if (!trimmed) return
-      await subscribeToChannel(trimmed)
-      setChannelInput('')
-    },
-    [subscribeToChannel],
-  )
 
-  const handleOpenChannelBuilder = useCallback(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur()
-    }
-    window.setTimeout(() => setChannelBuilderOpen(true), 0)
-  }, [])
+      const entry = addSubscription(trimmed)
+      if (!entry) return
+
+      if (connectionStatus === 'connected') {
+        await subscribeWebSocket(trimmed, [])
+      }
+    },
+    [addSubscription, connectionStatus, subscribeWebSocket],
+  )
 
   const handleUnsubscribe = useCallback(
     async (subscriptionId: string) => {
@@ -713,6 +787,153 @@ export function View() {
     [],
   )
 
+  const removeConfiguredSubscription = useCallback(
+    async (entryId: string) => {
+      const configured = configuredSubscriptions.find(
+        (subscription) => subscription.id === entryId,
+      )
+      if (!configured) return
+
+      const queryStrings = entriesToQueryStrings(configured.queries)
+      removeSubscription(entryId)
+
+      if (connectionStatus === 'connected') {
+        const active = activeSubscriptions.find((subscription) =>
+          subscriptionsMatch(
+            subscription.channel,
+            subscription.queries,
+            configured.channel,
+            queryStrings,
+          ),
+        )
+        if (active) {
+          await handleUnsubscribe(active.id)
+        }
+      }
+    },
+    [
+      activeSubscriptions,
+      configuredSubscriptions,
+      connectionStatus,
+      handleUnsubscribe,
+      removeSubscription,
+    ],
+  )
+
+  const addConfiguredSubscriptionQuery = useCallback(
+    async (
+      subscriptionId: string,
+      query: SubscriptionQueryEntry,
+    ) => {
+      const configured = configuredSubscriptions.find(
+        (subscription) => subscription.id === subscriptionId,
+      )
+      if (!configured) return
+
+      const previousQueryStrings = entriesToQueryStrings(configured.queries)
+      const wasLive = activeSubscriptions.some((subscription) =>
+        subscriptionsMatch(
+          subscription.channel,
+          subscription.queries,
+          configured.channel,
+          previousQueryStrings,
+        ),
+      )
+
+      addSubscriptionQuery(subscriptionId, query)
+
+      if (!wasLive || connectionStatus !== 'connected') return
+
+      const nextQueryStrings = entriesToQueryStrings([
+        ...configured.queries,
+        query,
+      ])
+      const active = activeSubscriptions.find((subscription) =>
+        subscriptionsMatch(
+          subscription.channel,
+          subscription.queries,
+          configured.channel,
+          previousQueryStrings,
+        ),
+      )
+      if (active) {
+        await handleUnsubscribe(active.id)
+      }
+      await subscribeWebSocket(configured.channel, nextQueryStrings)
+    },
+    [
+      activeSubscriptions,
+      addSubscriptionQuery,
+      configuredSubscriptions,
+      connectionStatus,
+      handleUnsubscribe,
+      subscribeWebSocket,
+    ],
+  )
+
+  const removeConfiguredSubscriptionQuery = useCallback(
+    async (subscriptionId: string, queryId: string) => {
+      const configured = configuredSubscriptions.find(
+        (subscription) => subscription.id === subscriptionId,
+      )
+      if (!configured) return
+
+      const previousQueryStrings = entriesToQueryStrings(configured.queries)
+      const wasLive = activeSubscriptions.some((subscription) =>
+        subscriptionsMatch(
+          subscription.channel,
+          subscription.queries,
+          configured.channel,
+          previousQueryStrings,
+        ),
+      )
+
+      removeSubscriptionQuery(subscriptionId, queryId)
+
+      if (!wasLive || connectionStatus !== 'connected') return
+
+      const nextQueryStrings = entriesToQueryStrings(
+        configured.queries.filter((query) => query.id !== queryId),
+      )
+      const active = activeSubscriptions.find((subscription) =>
+        subscriptionsMatch(
+          subscription.channel,
+          subscription.queries,
+          configured.channel,
+          previousQueryStrings,
+        ),
+      )
+      if (active) {
+        await handleUnsubscribe(active.id)
+      }
+      await subscribeWebSocket(configured.channel, nextQueryStrings)
+    },
+    [
+      activeSubscriptions,
+      configuredSubscriptions,
+      connectionStatus,
+      handleUnsubscribe,
+      removeSubscriptionQuery,
+      subscribeWebSocket,
+    ],
+  )
+
+  const handleChannelBuilt = useCallback(
+    async (channel: string) => {
+      const trimmed = channel.trim()
+      if (!trimmed) return
+      await addConfiguredSubscription(trimmed)
+    },
+    [addConfiguredSubscription],
+  )
+
+  const handleOpenChannelBuilder = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    window.setTimeout(() => setChannelBuilderOpen(true), 0)
+  }, [])
+
   const handleClearLogs = useCallback(() => {
     setLogs([])
     setExpandedMessageIds(new Set())
@@ -720,9 +941,9 @@ export function View() {
 
   const allMessagesExpanded = useMemo(
     () =>
-      logs.length > 0 &&
-      logs.every((entry) => expandedMessageIds.has(entry.id)),
-    [logs, expandedMessageIds],
+      filteredLogs.length > 0 &&
+      filteredLogs.every((entry) => expandedMessageIds.has(entry.id)),
+    [filteredLogs, expandedMessageIds],
   )
 
   const handleToggleAllMessages = useCallback(() => {
@@ -731,8 +952,8 @@ export function View() {
       return
     }
 
-    setExpandedMessageIds(new Set(logs.map((entry) => entry.id)))
-  }, [allMessagesExpanded, logs])
+    setExpandedMessageIds(new Set(filteredLogs.map((entry) => entry.id)))
+  }, [allMessagesExpanded, filteredLogs])
 
   const handleToggleMessageExpanded = useCallback((messageId: string) => {
     setExpandedMessageIds((current) => {
@@ -842,6 +1063,8 @@ export function View() {
           </div>
         </TooltipProvider>
 
+        <ReconnectBanner state={reconnectState} />
+
         <div
           className={cn(
             'flex min-h-0 flex-1 flex-col overflow-hidden lg:grid',
@@ -854,114 +1077,22 @@ export function View() {
             className="order-1 lg:col-start-1 lg:row-start-1 lg:border-r lg:border-border"
             actions={
               <span className="rounded-md border border-border bg-muted/30 px-2 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
-                {activeSubscriptions.length}
+                {configurationItemCount}
               </span>
             }
           />
 
-          <div className="order-2 flex min-h-0 flex-col overflow-hidden border-b border-border lg:col-start-1 lg:row-start-2 lg:min-h-0 lg:border-b-0 lg:border-r">
-            <div className="space-y-4 p-4">
-              <form onSubmit={(event) => void handleSubscribeSubmit(event)}>
-                <div className="flex gap-2">
-                  <Input
-                    value={channelInput}
-                    onChange={(event) => setChannelInput(event.target.value)}
-                    placeholder="e.g. account"
-                    className="h-9 min-w-0 flex-1 font-mono text-[13px]"
-                    disabled={!isConnected}
-                    spellCheck={false}
-                  />
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-9 shrink-0 px-3"
-                          disabled={!isConnected}
-                          onClick={handleOpenChannelBuilder}
-                        >
-                          <Route className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>Build channel</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="h-9 shrink-0 px-3"
-                    disabled={!canSubscribe}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
-
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Suggested
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {SUGGESTED_CHANNELS.map((channel) => {
-                    const isAlreadySubscribed = subscribedChannels.has(channel)
-
-                    return (
-                      <Button
-                        key={channel}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 font-mono text-[11px]"
-                        disabled={!isConnected || isAlreadySubscribed}
-                        onClick={() => void subscribeToChannel(channel)}
-                      >
-                        {channel}
-                      </Button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-hidden border-t border-border">
-              {activeSubscriptions.length === 0 ? (
-                <div className="flex h-full min-h-[160px] items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
-                  {isConnected
-                    ? 'No active subscriptions.'
-                    : 'Connect to start subscribing.'}
-                </div>
-              ) : (
-                <div className="h-full overflow-y-auto overscroll-contain">
-                  <ul className="divide-y divide-border">
-                    {activeSubscriptions.map((entry) => (
-                      <li
-                        key={entry.id}
-                        className="flex items-center gap-2 px-4 py-3"
-                      >
-                        <Radio className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground">
-                          {entry.channel}
-                        </code>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
-                          aria-label={`Unsubscribe from ${entry.channel}`}
-                          onClick={() => void handleUnsubscribe(entry.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+          <div className="order-2 flex max-h-[min(50dvh,28rem)] min-h-0 flex-col overflow-hidden border-b border-border lg:col-start-1 lg:row-start-2 lg:max-h-none lg:min-h-0 lg:border-b-0 lg:border-r">
+            <ConfigurationPanel
+              isConnected={isConnected}
+              configuredSubscriptions={configuredSubscriptions}
+              isSubscriptionLive={isSubscriptionLive}
+              onAddSubscription={addConfiguredSubscription}
+              onRemoveSubscription={removeConfiguredSubscription}
+              onAddSubscriptionQuery={addConfiguredSubscriptionQuery}
+              onRemoveSubscriptionQuery={removeConfiguredSubscriptionQuery}
+              onOpenChannelBuilder={handleOpenChannelBuilder}
+            />
 
             <div className="shrink-0 border-t border-border bg-muted/30 px-4 py-3">
               <Button
@@ -1042,23 +1173,31 @@ export function View() {
           />
 
           <div className="order-4 flex min-h-[280px] flex-col overflow-hidden lg:col-start-2 lg:row-start-2 lg:min-h-0">
+            <MessagesFilterBar
+              filters={messageFilters}
+              onChange={setMessageFilters}
+            />
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {logs.length === 0 ? (
                 <div className="flex min-h-[200px] flex-1 items-center justify-center px-4 py-12">
                   <div className="w-full max-w-sm">
                     <MessagesEmptyState
                       isConnected={isConnected}
-                      hasSubscriptions={activeSubscriptions.length > 0}
+                      hasSubscriptions={configuredSubscriptions.length > 0}
                     />
                   </div>
                 </div>
+              ) : filteredLogs.length === 0 ? (
+                <div className="flex min-h-[160px] items-center justify-center px-4 py-12 text-center text-[13px] text-muted-foreground">
+                  No messages match your filters.
+                </div>
               ) : (
                 <div>
-                  {logs.map((entry, index) => (
+                  {filteredLogs.map((entry, index) => (
                     <MessageRow
                       key={entry.id}
                       entry={entry}
-                      sequence={logs.length - index}
+                      sequence={filteredLogs.length - index}
                       expanded={expandedMessageIds.has(entry.id)}
                       onToggle={() => handleToggleMessageExpanded(entry.id)}
                     />
@@ -1074,7 +1213,7 @@ export function View() {
         open={connectionCodeOpen}
         onOpenChange={setConnectionCodeOpen}
         projectId={projectId}
-        channels={snippetChannels}
+        subscriptions={configuredSubscriptions}
       />
 
       <EventEditorModal
@@ -1083,7 +1222,7 @@ export function View() {
         onCreated={handleChannelBuilt}
         projectId={projectId}
         channelMode
-        initialValue={channelInput.trim() || undefined}
+        initialValue={undefined}
       />
     </div>
   )
@@ -1134,6 +1273,10 @@ function MessageRow({
     () => formatMessagePayload(entry.message),
     [entry.message],
   )
+  const eventSummary = useMemo(() => {
+    if (type !== 'event') return null
+    return getEventFrameSummary(entry.message.data)
+  }, [entry.message.data, type])
 
   const handleToggle = useCallback(() => {
     onToggle()
@@ -1157,35 +1300,40 @@ function MessageRow({
         aria-expanded={expanded}
         onClick={handleToggle}
         onKeyDown={handleRowKeyDown}
-        className="grid cursor-pointer grid-cols-[auto_1.75rem_0.875rem_minmax(0,1fr)] items-center gap-x-1.5 px-4 py-2.5 transition-colors hover:bg-muted/30"
+        className="grid cursor-pointer grid-cols-[auto_1.75rem_0.875rem_minmax(0,1fr)] items-start gap-x-1.5 px-4 py-2.5 transition-colors hover:bg-muted/30"
       >
         <MessageDirectionIcon entry={entry} />
 
-        <span className="text-right font-mono text-[11px] tabular-nums leading-none text-muted-foreground">
+        <span className="pt-0.5 text-right font-mono text-[11px] tabular-nums leading-none text-muted-foreground">
           {sequence}
         </span>
 
         <ChevronRight
           className={cn(
-            'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200',
+            'mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200',
             expanded && 'rotate-90',
           )}
           aria-hidden
         />
 
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <Badge
-            variant={messageTypeVariant(type, entry.direction)}
-            className="h-5 shrink-0 font-mono text-[10px] uppercase"
-          >
-            {type}
-          </Badge>
-          <span
-            className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground"
-            title={entry.timestamp}
-          >
-            {formatLogTimestamp(entry.timestamp)}
-          </span>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <Badge
+              variant={messageTypeVariant(type, entry.direction)}
+              className="h-5 shrink-0 font-mono text-[10px] uppercase"
+            >
+              {type}
+            </Badge>
+            <span
+              className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground"
+              title={entry.timestamp}
+            >
+              {formatLogTimestamp(entry.timestamp)}
+            </span>
+          </div>
+          {!expanded && eventSummary ? (
+            <EventFrameSummaryLine summary={eventSummary} />
+          ) : null}
         </div>
       </div>
 
@@ -1200,5 +1348,31 @@ function MessageRow({
         </div>
       ) : null}
     </div>
+  )
+}
+
+function EventFrameSummaryLine({
+  summary,
+}: {
+  summary: NonNullable<ReturnType<typeof getEventFrameSummary>>
+}) {
+  const parts: string[] = []
+
+  if (summary.events.length > 0) {
+    parts.push(`events: ${formatSummaryList(summary.events)}`)
+  }
+  if (summary.channels.length > 0) {
+    parts.push(`channels: ${formatSummaryList(summary.channels)}`)
+  }
+  if (summary.subscriptionIds.length > 0) {
+    parts.push(`subs: ${formatSummaryList(summary.subscriptionIds)}`)
+  }
+
+  if (parts.length === 0) return null
+
+  return (
+    <p className="truncate font-mono text-[11px] text-muted-foreground">
+      {parts.join(' · ')}
+    </p>
   )
 }

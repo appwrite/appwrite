@@ -1,5 +1,10 @@
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import { resolveFenceCodeLabel, resolveFenceCodeLanguage } from '@/lib/code-language'
+import {
+  buildSdkQueryCalls,
+  formatSdkQueryArray,
+} from '@/lib/realtime/query-snippet-source'
+import type { SubscriptionQueryEntry } from '@/lib/realtime/subscription-queries'
 
 export type RealtimeSnippetSdkId =
   | 'client-web'
@@ -8,6 +13,11 @@ export type RealtimeSnippetSdkId =
   | 'client-android-kotlin'
   | 'client-android-java'
   | 'client-react-native'
+
+export type RealtimeSnippetSubscription = {
+  channel: string
+  queries: SubscriptionQueryEntry[]
+}
 
 export type RealtimeConnectionSnippet = {
   id: RealtimeSnippetSdkId
@@ -33,8 +43,15 @@ function escapeDoubleQuoted(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-function normalizeChannels(channels: string[]): string[] {
-  return channels.map((channel) => channel.trim()).filter(Boolean)
+function normalizeSubscriptions(
+  subscriptions: RealtimeSnippetSubscription[],
+): RealtimeSnippetSubscription[] {
+  return subscriptions
+    .map((entry) => ({
+      channel: entry.channel.trim(),
+      queries: entry.queries,
+    }))
+    .filter((entry) => entry.channel)
 }
 
 function subscriptionVariableName(index: number, total: number): string {
@@ -42,8 +59,152 @@ function subscriptionVariableName(index: number, total: number): string {
   return `subscription${index + 1}`
 }
 
-function buildWebSnippet(endpoint: string, projectId: string, channels: string[]): string {
-  const setup = `import { Client, Realtime } from "appwrite";
+function subscriptionsUseQueries(subscriptions: RealtimeSnippetSubscription[]): boolean {
+  return subscriptions.some((entry) => entry.queries.length > 0)
+}
+
+function buildWebSubscribeCall(
+  channel: string,
+  queries: SubscriptionQueryEntry[],
+  variable: string,
+): string {
+  const channelLiteral = `'${escapeSingleQuoted(channel)}'`
+  const queryCalls = buildSdkQueryCalls(queries, 'client-web')
+  const hasQueries = queryCalls.length > 0
+
+  if (!hasQueries) {
+    return `const ${variable} = await realtime.subscribe(${channelLiteral}, response => {
+    console.log(response);
+});`
+  }
+
+  const queryArray = formatSdkQueryArray(queryCalls, 'client-web')
+  return `const ${variable} = await realtime.subscribe(
+    ${channelLiteral},
+    response => {
+        console.log(response);
+    },
+    ${queryArray}
+);`
+}
+
+function buildFlutterSubscribeCall(
+  channel: string,
+  queries: SubscriptionQueryEntry[],
+  variable: string,
+): string {
+  const channelLiteral = `['${escapeSingleQuoted(channel)}']`
+  const queryCalls = buildSdkQueryCalls(queries, 'client-flutter')
+  const hasQueries = queryCalls.length > 0
+
+  if (!hasQueries) {
+    return `final ${variable} = realtime.subscribe(${channelLiteral});
+
+${variable}.stream.listen((response) {
+    print(response);
+});`
+  }
+
+  const queryArray = formatSdkQueryArray(queryCalls, 'client-flutter')
+  return `final ${variable} = realtime.subscribe(
+    ${channelLiteral},
+    queries: ${queryArray},
+);
+
+${variable}.stream.listen((response) {
+    print(response);
+});`
+}
+
+function buildAppleSubscribeCall(
+  channel: string,
+  queries: SubscriptionQueryEntry[],
+  variable: string,
+): string {
+  const channelLiteral = `["${escapeDoubleQuoted(channel)}"]`
+  const queryCalls = buildSdkQueryCalls(queries, 'client-apple')
+  const hasQueries = queryCalls.length > 0
+
+  if (!hasQueries) {
+    return `let ${variable} = realtime.subscribe(channels: ${channelLiteral}) { response in
+    print(String(describing: response))
+}`
+  }
+
+  const queryArray = formatSdkQueryArray(queryCalls, 'client-apple')
+  return `let ${variable} = realtime.subscribe(
+    channels: ${channelLiteral},
+    callback: { response in
+        print(String(describing: response))
+    },
+    queries: ${queryArray}
+)`
+}
+
+function buildKotlinSubscribeCall(
+  channel: string,
+  queries: SubscriptionQueryEntry[],
+  variable: string,
+): string {
+  const channelLiteral = `"${escapeDoubleQuoted(channel)}"`
+  const queryCalls = buildSdkQueryCalls(queries, 'client-android-kotlin')
+  const hasQueries = queryCalls.length > 0
+
+  if (!hasQueries) {
+    return `val ${variable} = realtime.subscribe(${channelLiteral}) {
+    print(it.payload.toString())
+}`
+  }
+
+  const queryArray = formatSdkQueryArray(queryCalls, 'client-android-kotlin')
+  return `val ${variable} = realtime.subscribe(
+    ${channelLiteral},
+    payloadType = Any::class.java,
+    queries = ${queryArray}
+) {
+    print(it.payload.toString())
+}`
+}
+
+function buildJavaSubscribeCall(
+  channel: string,
+  queries: SubscriptionQueryEntry[],
+  variable: string,
+): string {
+  const channelArray = `new String[] { "${escapeDoubleQuoted(channel)}" }`
+  const queryCalls = buildSdkQueryCalls(queries, 'client-android-java')
+  const hasQueries = queryCalls.length > 0
+
+  if (!hasQueries) {
+    return `RealtimeSubscription ${variable} = realtime.subscribe(
+    ${channelArray},
+    (RealtimeResponseEvent<Object> response) -> {
+        System.out.println(response);
+        return Unit.INSTANCE;
+    }
+);`
+  }
+
+  const queryArray = formatSdkQueryArray(queryCalls, 'client-android-java')
+  return `RealtimeSubscription ${variable} = realtime.subscribe(
+    ${channelArray},
+    Object.class,
+    ${queryArray},
+    (RealtimeResponseEvent<Object> response) -> {
+        System.out.println(response);
+        return Unit.INSTANCE;
+    }
+);`
+}
+
+function buildWebSnippet(
+  endpoint: string,
+  projectId: string,
+  subscriptions: RealtimeSnippetSubscription[],
+): string {
+  const hasQueries = subscriptionsUseQueries(subscriptions)
+
+  const setup = `import { Client, Realtime${hasQueries ? ', Query' : ''} } from "appwrite";
 
 const client = new Client()
     .setEndpoint('${escapeSingleQuoted(endpoint)}')
@@ -51,7 +212,7 @@ const client = new Client()
 
 const realtime = new Realtime(client);`
 
-  if (channels.length === 0) {
+  if (subscriptions.length === 0) {
     return `${setup}
 
 // Add subscriptions in the debugger, then copy updated code here:
@@ -60,18 +221,19 @@ const realtime = new Realtime(client);`
 // });`
   }
 
-  const subscriptions = channels
-    .map((channel, index) => {
-      const variable = subscriptionVariableName(index, channels.length)
-      return `const ${variable} = await realtime.subscribe('${escapeSingleQuoted(channel)}', response => {
-    console.log(response);
-});`
-    })
+  const subscribeCalls = subscriptions
+    .map((entry, index) =>
+      buildWebSubscribeCall(
+        entry.channel,
+        entry.queries,
+        subscriptionVariableName(index, subscriptions.length),
+      ),
+    )
     .join('\n\n')
 
   return `${setup}
 
-${subscriptions}
+${subscribeCalls}
 
 // Stop one listener:
 // await subscription.unsubscribe();
@@ -80,7 +242,11 @@ ${subscriptions}
 // await realtime.disconnect();`
 }
 
-function buildFlutterSnippet(endpoint: string, projectId: string, channels: string[]): string {
+function buildFlutterSnippet(
+  endpoint: string,
+  projectId: string,
+  subscriptions: RealtimeSnippetSubscription[],
+): string {
   const setup = `import 'package:appwrite/appwrite.dart';
 
 final client = Client()
@@ -89,7 +255,7 @@ final client = Client()
 
 final realtime = Realtime(client);`
 
-  if (channels.length === 0) {
+  if (subscriptions.length === 0) {
     return `${setup}
 
 // final subscription = realtime.subscribe(['account']);
@@ -98,23 +264,26 @@ final realtime = Realtime(client);`
 // });`
   }
 
-  const subscriptions = channels
-    .map((channel, index) => {
-      const variable = subscriptionVariableName(index, channels.length)
-      return `final ${variable} = realtime.subscribe(['${escapeSingleQuoted(channel)}']);
-
-${variable}.stream.listen((response) {
-    print(response);
-});`
-    })
+  const subscribeCalls = subscriptions
+    .map((entry, index) =>
+      buildFlutterSubscribeCall(
+        entry.channel,
+        entry.queries,
+        subscriptionVariableName(index, subscriptions.length),
+      ),
+    )
     .join('\n\n')
 
   return `${setup}
 
-${subscriptions}`
+${subscribeCalls}`
 }
 
-function buildAppleSnippet(endpoint: string, projectId: string, channels: string[]): string {
+function buildAppleSnippet(
+  endpoint: string,
+  projectId: string,
+  subscriptions: RealtimeSnippetSubscription[],
+): string {
   const setup = `import Appwrite
 
 let client = Client()
@@ -123,7 +292,7 @@ let client = Client()
 
 let realtime = Realtime(client)`
 
-  if (channels.length === 0) {
+  if (subscriptions.length === 0) {
     return `${setup}
 
 // let subscription = realtime.subscribe(channels: ["account"]) { response in
@@ -131,22 +300,29 @@ let realtime = Realtime(client)`
 // }`
   }
 
-  const subscriptions = channels
-    .map((channel, index) => {
-      const variable = subscriptionVariableName(index, channels.length)
-      return `let ${variable} = realtime.subscribe(channels: ["${escapeDoubleQuoted(channel)}"]) { response in
-    print(String(describing: response))
-}`
-    })
+  const subscribeCalls = subscriptions
+    .map((entry, index) =>
+      buildAppleSubscribeCall(
+        entry.channel,
+        entry.queries,
+        subscriptionVariableName(index, subscriptions.length),
+      ),
+    )
     .join('\n\n')
 
   return `${setup}
 
-${subscriptions}`
+${subscribeCalls}`
 }
 
-function buildKotlinSnippet(endpoint: string, projectId: string, channels: string[]): string {
-  const setup = `import io.appwrite.Client
+function buildKotlinSnippet(
+  endpoint: string,
+  projectId: string,
+  subscriptions: RealtimeSnippetSubscription[],
+): string {
+  const hasQueries = subscriptionsUseQueries(subscriptions)
+
+  const setup = `import io.appwrite.Client${hasQueries ? '\nimport io.appwrite.Query' : ''}
 import io.appwrite.services.Realtime
 
 val client = Client(context)
@@ -155,7 +331,7 @@ val client = Client(context)
 
 val realtime = Realtime(client)`
 
-  if (channels.length === 0) {
+  if (subscriptions.length === 0) {
     return `${setup}
 
 // val subscription = realtime.subscribe("account") {
@@ -163,25 +339,33 @@ val realtime = Realtime(client)`
 // }`
   }
 
-  const subscriptions = channels
-    .map((channel, index) => {
-      const variable = subscriptionVariableName(index, channels.length)
-      return `val ${variable} = realtime.subscribe("${escapeDoubleQuoted(channel)}") {
-    print(it.payload.toString())
-}`
-    })
+  const subscribeCalls = subscriptions
+    .map((entry, index) =>
+      buildKotlinSubscribeCall(
+        entry.channel,
+        entry.queries,
+        subscriptionVariableName(index, subscriptions.length),
+      ),
+    )
     .join('\n\n')
 
   return `${setup}
 
-${subscriptions}`
+${subscribeCalls}`
 }
 
-function buildJavaSnippet(endpoint: string, projectId: string, channels: string[]): string {
+function buildJavaSnippet(
+  endpoint: string,
+  projectId: string,
+  subscriptions: RealtimeSnippetSubscription[],
+): string {
+  const hasQueries = subscriptionsUseQueries(subscriptions)
+
   const setup = `import io.appwrite.Client;
+import io.appwrite.Query;
 import io.appwrite.models.RealtimeResponseEvent;
 import io.appwrite.models.RealtimeSubscription;
-import io.appwrite.services.Realtime;
+import io.appwrite.services.Realtime;${hasQueries ? '\nimport java.util.Arrays;\nimport java.util.HashSet;' : ''}
 import kotlin.Unit;
 
 Client client = new Client(context)
@@ -190,7 +374,7 @@ Client client = new Client(context)
 
 Realtime realtime = new Realtime(client);`
 
-  if (channels.length === 0) {
+  if (subscriptions.length === 0) {
     return `${setup}
 
 // RealtimeSubscription subscription = realtime.subscribe(
@@ -202,46 +386,47 @@ Realtime realtime = new Realtime(client);`
 // );`
   }
 
-  const subscriptions = channels
-    .map((channel, index) => {
-      const variable = subscriptionVariableName(index, channels.length)
-      return `RealtimeSubscription ${variable} = realtime.subscribe(
-    new String[] { "${escapeDoubleQuoted(channel)}" },
-    (RealtimeResponseEvent<Object> response) -> {
-        System.out.println(response);
-        return Unit.INSTANCE;
-    }
-);`
-    })
+  const subscribeCalls = subscriptions
+    .map((entry, index) =>
+      buildJavaSubscribeCall(
+        entry.channel,
+        entry.queries,
+        subscriptionVariableName(index, subscriptions.length),
+      ),
+    )
     .join('\n\n')
 
   return `${setup}
 
-${subscriptions}`
+${subscribeCalls}`
 }
 
 function buildReactNativeSnippet(
   endpoint: string,
   projectId: string,
-  channels: string[],
+  subscriptions: RealtimeSnippetSubscription[],
 ): string {
-  return buildWebSnippet(endpoint, projectId, channels)
+  return buildWebSnippet(endpoint, projectId, subscriptions)
 }
 
 export function buildRealtimeConnectionSnippets({
   endpoint,
   projectId,
-  channels,
+  subscriptions,
 }: {
   endpoint: string
   projectId: string
-  channels: string[]
+  subscriptions: RealtimeSnippetSubscription[]
 }): RealtimeConnectionSnippet[] {
-  const normalizedChannels = normalizeChannels(channels)
+  const normalizedSubscriptions = normalizeSubscriptions(subscriptions)
 
   const builders: Record<
     RealtimeSnippetSdkId,
-    (endpoint: string, projectId: string, channels: string[]) => string
+    (
+      endpoint: string,
+      projectId: string,
+      subscriptions: RealtimeSnippetSubscription[],
+    ) => string
   > = {
     'client-web': buildWebSnippet,
     'client-flutter': buildFlutterSnippet,
@@ -254,7 +439,7 @@ export function buildRealtimeConnectionSnippets({
   return REALTIME_SNIPPET_SDK_IDS.map((id) => ({
     id,
     label: resolveFenceCodeLabel(id),
-    code: builders[id](endpoint, projectId, normalizedChannels),
+    code: builders[id](endpoint, projectId, normalizedSubscriptions),
     language: resolveFenceCodeLanguage(id),
   }))
 }

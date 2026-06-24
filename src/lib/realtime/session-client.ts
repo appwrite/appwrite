@@ -40,11 +40,19 @@ export type RealtimeSessionError = {
   code?: number
 }
 
+export type RealtimeReconnectState = {
+  status: 'idle' | 'scheduled' | 'connecting'
+  attempt: number
+  maxAttempts: number
+  delayMs?: number
+}
+
 export type RealtimeSessionCallbacks = {
   onMessage: (log: RealtimeMessageLog) => void
   onOpen?: () => void
   onClose?: (event: CloseEvent) => void
   onError?: (error: RealtimeSessionError) => void
+  onReconnectStateChange?: (state: RealtimeReconnectState) => void
 }
 
 export type RealtimeSession = {
@@ -168,6 +176,10 @@ export function createRealtimeSession(
   const subscriptions = new Map<string, SubscriptionRecord>()
   const pendingSubscribes = new Map<string, SubscriptionRecord>()
 
+  const emitReconnectState = (state: RealtimeReconnectState) => {
+    callbacks.onReconnectStateChange?.(state)
+  }
+
   const clearHeartbeat = () => {
     if (heartbeatTimer) {
       clearInterval(heartbeatTimer)
@@ -232,6 +244,11 @@ export function createRealtimeSession(
       case 'connected': {
         appConnected = true
         reconnectAttempts = 0
+        emitReconnectState({
+          status: 'idle',
+          attempt: 0,
+          maxAttempts: MAX_RECONNECT_ATTEMPTS,
+        })
 
         for (const subscriptionId of subscriptions.keys()) {
           enqueuePendingSubscribe(subscriptionId)
@@ -275,6 +292,11 @@ export function createRealtimeSession(
 
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       shouldReconnect = false
+      emitReconnectState({
+        status: 'idle',
+        attempt: reconnectAttempts,
+        maxAttempts: MAX_RECONNECT_ATTEMPTS,
+      })
       callbacks.onMessage({
         direction: 'in',
         timestamp: new Date().toISOString(),
@@ -292,10 +314,21 @@ export function createRealtimeSession(
     }
 
     const delay = reconnectDelayMs(reconnectAttempts)
+    emitReconnectState({
+      status: 'scheduled',
+      attempt: reconnectAttempts + 1,
+      maxAttempts: MAX_RECONNECT_ATTEMPTS,
+      delayMs: delay,
+    })
     reconnectTimer = setTimeout(() => {
       reconnectTimer = undefined
       if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError) return
       reconnectAttempts += 1
+      emitReconnectState({
+        status: 'connecting',
+        attempt: reconnectAttempts,
+        maxAttempts: MAX_RECONNECT_ATTEMPTS,
+      })
       openSocket()
     }, delay)
   }
@@ -326,6 +359,13 @@ export function createRealtimeSession(
 
     shouldReconnect = true
     const activeId = ++connectionId
+    if (reconnectAttempts > 0) {
+      emitReconnectState({
+        status: 'connecting',
+        attempt: reconnectAttempts,
+        maxAttempts: MAX_RECONNECT_ATTEMPTS,
+      })
+    }
     const ws = new WebSocket(realtimeUrl)
     socket = ws
 
@@ -381,10 +421,22 @@ export function createRealtimeSession(
 
       if (event.code === POLICY_VIOLATION_CODE) {
         shouldReconnect = false
+        emitReconnectState({
+          status: 'idle',
+          attempt: 0,
+          maxAttempts: MAX_RECONNECT_ATTEMPTS,
+        })
         return
       }
 
-      if (closedByUser || !shouldReconnect) return
+      if (closedByUser || !shouldReconnect) {
+        emitReconnectState({
+          status: 'idle',
+          attempt: 0,
+          maxAttempts: MAX_RECONNECT_ATTEMPTS,
+        })
+        return
+      }
       scheduleReconnect()
     })
 
@@ -421,6 +473,11 @@ export function createRealtimeSession(
     closeActiveSocket()
     connectionId += 1
     reconnectAttempts = 0
+    emitReconnectState({
+      status: 'idle',
+      attempt: 0,
+      maxAttempts: MAX_RECONNECT_ATTEMPTS,
+    })
     closedByUser = false
   }
 

@@ -15,28 +15,32 @@ import {
   buildRealtimeConnectionSnippets,
   type RealtimeSnippetSdkId,
 } from '@/lib/realtime/connection-snippets'
+import type { RealtimeConfiguredSubscription } from '@/lib/realtime/debugger-prefs'
 
 type ConnectionCodeDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  channels: string[]
+  subscriptions: RealtimeConfiguredSubscription[]
 }
 
 export function ConnectionCodeDialog({
   open,
   onOpenChange,
   projectId,
-  channels,
+  subscriptions,
 }: ConnectionCodeDialogProps) {
   const snippets = useMemo(
     () =>
       buildRealtimeConnectionSnippets({
         endpoint: getProjectApiEndpoint(projectId),
         projectId,
-        channels,
+        subscriptions: subscriptions.map((entry) => ({
+          channel: entry.channel,
+          queries: entry.queries,
+        })),
       }),
-    [channels, projectId],
+    [projectId, subscriptions],
   )
 
   const [activeSdkId, setActiveSdkId] = useState<RealtimeSnippetSdkId>('client-web')
@@ -44,12 +48,11 @@ export function ConnectionCodeDialog({
   const activeSnippet =
     snippets.find((snippet) => snippet.id === activeSdkId) ?? snippets[0]
 
-  const channelSummary =
-    channels.length === 1
-      ? channels[0]
-      : channels.length > 1
-        ? `${channels.length} subscriptions`
-        : null
+  const subscriptionCount = subscriptions.length
+  const queryCount = subscriptions.reduce(
+    (total, entry) => total + entry.queries.length,
+    0,
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -57,35 +60,34 @@ export function ConnectionCodeDialog({
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Realtime connection code</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {channelSummary ? (
+            {subscriptionCount > 0 ? (
               <>
-                One subscribe call per active subscription
-                {channels.length === 1 ? (
+                One subscribe call per configured subscription
+                {subscriptionCount === 1 ? (
                   <>
                     {' '}
                     for{' '}
-                    <code className="font-mono text-[12px]">{channelSummary}</code>
+                    <code className="font-mono text-[12px]">
+                      {subscriptions[0]?.channel}
+                    </code>
                   </>
                 ) : (
-                  <>
-                    :{' '}
-                    {channels.map((channel) => (
-                      <code
-                        key={channel}
-                        className="mr-1.5 inline-block font-mono text-[12px]"
-                      >
-                        {channel}
-                      </code>
-                    ))}
-                  </>
+                  <> ({subscriptionCount} total)</>
                 )}
-                . Authenticated channels require an active session or JWT on the
+                {queryCount > 0 ? (
+                  <>
+                    . Query filters are included per subscription where configured.
+                  </>
+                ) : (
+                  <>.</>
+                )}{' '}
+                Authenticated channels require an active session or JWT on the
                 client.
               </>
             ) : (
               <>
                 Add a subscription in the debugger to generate channel-specific
-                subscribe calls. Client setup uses your project endpoint and ID.
+                subscribe calls. Add query filters on each subscription as needed.
               </>
             )}
           </DialogDescription>
