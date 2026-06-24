@@ -102,6 +102,8 @@ class Install extends Action
         $envFileExists = file_exists($this->path . '/' . $this->getEnvFileName());
         $existingInstallation = $data !== '' || $envFileExists;
 
+        $existingDatabase = null;
+
         if ($existingInstallation) {
             $time = \time();
             $composeFileName = $this->getComposeFileName();
@@ -171,7 +173,6 @@ class Install extends Action
             // Detect database type from existing installation.
             // 1.9.0+ installs have _APP_DB_ADAPTER; pre-1.9.0 installs
             // can be detected by the DB service name or _APP_DB_HOST.
-            $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
                 $svcEnv = $service->getEnvironment()->list();
                 if (isset($svcEnv['_APP_DB_ADAPTER'])) {
@@ -199,8 +200,9 @@ class Install extends Action
         }
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb', 'postgresql'];
-        if (!in_array($database, $enabledDatabases, true)) {
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
+        if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
@@ -331,7 +333,10 @@ class Install extends Action
         $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb', 'postgresql'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
+            $enabledDatabases[] = $lockedDatabase;
+        }
 
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
