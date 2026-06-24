@@ -112,8 +112,8 @@ class Action extends PlatformAction
                         ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
                     $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), new Document([
-                        'providerAccessToken' => $accessToken,
-                        'providerRefreshToken' => $refreshToken,
+                        'providerAccessToken' => $gitHubSession->getAttribute('providerAccessToken'),
+                        'providerRefreshToken' => $gitHubSession->getAttribute('providerRefreshToken'),
                         'providerAccessTokenExpiry' => $gitHubSession->getAttribute('providerAccessTokenExpiry'),
                     ])));
 
