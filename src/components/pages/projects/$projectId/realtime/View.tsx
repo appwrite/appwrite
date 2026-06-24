@@ -48,6 +48,7 @@ import { CollapsibleJsonView } from './_components/CollapsibleJsonView'
 import { MessagesFilterBar } from './_components/MessagesFilterBar'
 import { ReconnectBanner } from './_components/ReconnectBanner'
 import { ConfigurationPanel } from './_components/ConfigurationPanel'
+import { InsertSampleMessageMenu } from './_components/InsertSampleMessageMenu'
 import { useRealtimeDebuggerConfig } from '@/hooks/use-realtime-debugger-config'
 import { useProjectUsers } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -70,6 +71,10 @@ import {
   type MessageLogFilters,
 } from '@/lib/realtime/message-filters'
 import {
+  createMockMessageLog,
+  type MockMessageSampleId,
+} from '@/lib/realtime/mock-message-samples'
+import {
   entriesToQueryStrings,
   normalizeSubscriptionQueries,
   subscriptionsMatch,
@@ -87,7 +92,7 @@ const GUEST_ACTOR_ID = '__guest__'
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 
-type LogEntry = RealtimeMessageLog & { id: string }
+type LogEntry = RealtimeMessageLog & { id: string; isSample?: boolean }
 
 type ActiveSubscription = {
   id: string
@@ -367,7 +372,7 @@ function MessagesEmptyState({
         icon={MessagesSquare}
         iconSize="md"
         title="No messages yet"
-        description="Connect as guest or a project user, then subscribe to channels to inspect WebSocket traffic."
+        description="Connect as guest or a project user, then subscribe to channels to inspect WebSocket traffic. You can also insert sample frames to preview payload structure."
         isEmpty
         className="w-full"
       />
@@ -520,6 +525,14 @@ export function View() {
 
     setLogs((current) => {
       const next = [{ ...entry, id: createLogId() }, ...current]
+      return next.slice(0, MAX_LOG_ENTRIES)
+    })
+  }, [])
+
+  const appendSampleLog = useCallback((sampleId: MockMessageSampleId) => {
+    const entry = createMockMessageLog(sampleId)
+    setLogs((current) => {
+      const next = [{ ...entry, id: createLogId(), isSample: true }, ...current]
       return next.slice(0, MAX_LOG_ENTRIES)
     })
   }, [])
@@ -1113,6 +1126,7 @@ export function View() {
             className="order-3 lg:col-start-2 lg:row-start-1"
             actions={
               <>
+                <InsertSampleMessageMenu onInsert={appendSampleLog} />
                 <Button
                   type="button"
                   variant="outline"
@@ -1317,12 +1331,22 @@ function MessageRow({
 
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex min-w-0 items-center justify-between gap-3">
-            <Badge
-              variant={messageTypeVariant(type, entry.direction)}
-              className="h-5 shrink-0 font-mono text-[10px] uppercase"
-            >
-              {type}
-            </Badge>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Badge
+                variant={messageTypeVariant(type, entry.direction)}
+                className="h-5 shrink-0 font-mono text-[10px] uppercase"
+              >
+                {type}
+              </Badge>
+              {entry.isSample ? (
+                <Badge
+                  variant="warning"
+                  className="h-5 shrink-0 text-[10px] uppercase"
+                >
+                  Sample
+                </Badge>
+              ) : null}
+            </div>
             <span
               className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground"
               title={entry.timestamp}
@@ -1342,6 +1366,12 @@ function MessageRow({
           <div aria-hidden />
           <div aria-hidden />
           <div className="min-w-0 pt-2">
+            {entry.isSample ? (
+              <p className="mb-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[12px] leading-snug text-muted-foreground">
+                Sample frame for reference only. Nothing was sent over the
+                network and no project data was changed.
+              </p>
+            ) : null}
             <MessagePayloadBlock payload={payload} message={entry.message} />
           </div>
         </div>
