@@ -295,7 +295,23 @@ class Builds extends Action
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            try {
+                $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            } catch (\Exception $e) {
+                if (\str_contains($e->getMessage(), 'Status: 404')) {
+                    $collection = $resource->getCollection();
+                    $dbForProject->updateDocument($collection, $resource->getId(), new Document([
+                        'providerRepositoryId' => '',
+                        'installationId' => '',
+                        'repositoryId' => '',
+                        'repositoryInternalId' => '',
+                        'providerBranch' => '',
+                        'providerRootDirectory' => '',
+                        'providerSilentMode' => true,
+                    ]));
+                }
+                throw $e;
+            }
         }
 
         Span::add('timings.setup', \round(\microtime(true) - $phaseStart, 3));
