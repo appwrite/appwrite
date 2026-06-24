@@ -1126,7 +1126,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
         exec mongod --replSet rs0 --bind_ip_all --auth --keyFile "$$KEYFILE_PATH"
     healthcheck:
       test: |
-        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "rs.status().ok" | grep -q 1
+        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "const hello = db.adminCommand({hello: 1}); if (!hello.isWritablePrimary) { quit(1); }"
       interval: 10s
       timeout: 10s
       retries: 10
