@@ -22,7 +22,7 @@ final class ConfigTest extends TestCase
         $this->assertFalse($config->isLocal());
         $this->assertNull($config->getHostPath());
         $this->assertNull($config->getLockedDatabase());
-        $this->assertSame(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'mariadb'], $config->getEnabledDatabases());
         $this->assertEmpty($config->getVars());
     }
 
@@ -439,7 +439,7 @@ final class ConfigTest extends TestCase
         $this->assertFalse($array['isLocal']);
         $this->assertNull($array['hostPath']);
         $this->assertNull($array['lockedDatabase']);
-        $this->assertEquals(['mongodb', 'mariadb', 'postgresql'], $array['enabledDatabases']);
+        $this->assertEquals(['mongodb', 'mariadb'], $array['enabledDatabases']);
     }
 
     public function testMultipleApplyCallsAccumulate(): void
@@ -494,10 +494,10 @@ final class ConfigTest extends TestCase
     public function testDefaultEnabledDatabases(): void
     {
         $config = new Config();
-        $this->assertSame(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'mariadb'], $config->getEnabledDatabases());
         $this->assertTrue($config->isDatabaseEnabled('mongodb'));
         $this->assertTrue($config->isDatabaseEnabled('mariadb'));
-        $this->assertTrue($config->isDatabaseEnabled('postgresql'));
+        $this->assertFalse($config->isDatabaseEnabled('postgresql'));
     }
 
     public function testSetEnabledDatabases(): void
@@ -535,7 +535,7 @@ final class ConfigTest extends TestCase
     {
         $config = new Config();
         $config->apply(['enabledDatabases' => 'mongodb']);
-        $this->assertSame(['mongodb', 'mariadb', 'postgresql'], $config->getEnabledDatabases());
+        $this->assertSame(['mongodb', 'mariadb'], $config->getEnabledDatabases());
     }
 
     public function testEnabledDatabasesInToArray(): void

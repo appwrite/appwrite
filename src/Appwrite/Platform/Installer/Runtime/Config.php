@@ -27,7 +27,7 @@ final class Config
     private bool $isLocal = false;
     private ?string $hostPath = null;
     private ?string $lockedDatabase = null;
-    private array $enabledDatabases = ['mongodb', 'mariadb', 'postgresql'];
+    private array $enabledDatabases = ['mongodb', 'mariadb'];
     private array $vars = [];
 
     public function __construct(array $values = [])
