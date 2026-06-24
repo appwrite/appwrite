@@ -13,6 +13,7 @@ use Utopia\WebSocket\Server;
 class EventTailRegistry
 {
     /** @var array<int, array<string, array<string, array{
+     *   role:string,
      *   filters:array<string,mixed>,
      *   tokens:float,
      *   lastRefill:float,
@@ -25,12 +26,18 @@ class EventTailRegistry
     /** @var array<string, array<int, array<string,true>>> projectId => connId => set of subIds */
     private array $projectIndex = [];
 
+    private int $rate;
+
+    private int $batchMax;
+
     /**
      * @param int $rate     tokens per second per subscription
      * @param int $batchMax max frames per flushed websocket frame (kept under setPackageMaxLength)
      */
-    public function __construct(private int $rate = 50, private int $batchMax = 200)
+    public function __construct(int $rate = 50, int $batchMax = 200)
     {
+        $this->rate = \max(1, $rate);
+        $this->batchMax = \max(1, $batchMax);
     }
 
     /**
@@ -64,10 +71,12 @@ class EventTailRegistry
      * remove()/removeConnection() (i.e. unsubscribe or disconnect), matching the tree.
      *
      * @param array<string,mixed> $filters result of RuntimeQuery::compile()
+     * @param string $role the team role this tail was authorized with
      */
-    public function add(int $connId, string $subId, string $projectId, array $filters, float $now): void
+    public function add(int $connId, string $subId, string $projectId, array $filters, float $now, string $role = ''): void
     {
         $this->entries[$connId][$subId][$projectId] = [
+            'role'       => $role,
             'filters'    => $filters,
             'tokens'     => (float) $this->rate,
             'lastRefill' => $now,
@@ -85,12 +94,7 @@ class EventTailRegistry
     public function remove(int $connId, string $subId): void
     {
         foreach (\array_keys($this->entries[$connId][$subId] ?? []) as $projectId) {
-            $this->detachFromProjectIndex((string) $projectId, $connId, $subId);
-        }
-
-        unset($this->entries[$connId][$subId]);
-        if (empty($this->entries[$connId])) {
-            unset($this->entries[$connId]);
+            $this->detachEntry($connId, $subId, (string) $projectId);
         }
     }
 
@@ -101,7 +105,27 @@ class EventTailRegistry
         }
     }
 
-    private function detachFromProjectIndex(string $projectId, int $connId, string $subId): void
+    /**
+     * Drop any tail whose authorizing team role the connection no longer holds. Called
+     * from the permissions-changed path (which already recomputes a connection's roles
+     * and rebuilds its tree) so a membership revocation or project transfer stops the
+     * tail mid-connection instead of streaming until disconnect.
+     *
+     * @param array<int,string> $roles the connection's current roles
+     */
+    public function revalidateConnection(int $connId, array $roles): void
+    {
+        foreach (($this->entries[$connId] ?? []) as $subId => $byProject) {
+            foreach ($byProject as $projectId => $entry) {
+                $role = $entry['role'];
+                if ($role !== '' && !\in_array($role, $roles, true)) {
+                    $this->detachEntry($connId, (string) $subId, (string) $projectId);
+                }
+            }
+        }
+    }
+
+    private function detachEntry(int $connId, string $subId, string $projectId): void
     {
         unset($this->projectIndex[$projectId][$connId][$subId]);
         if (empty($this->projectIndex[$projectId][$connId])) {
@@ -109,6 +133,14 @@ class EventTailRegistry
         }
         if (empty($this->projectIndex[$projectId])) {
             unset($this->projectIndex[$projectId]);
+        }
+
+        unset($this->entries[$connId][$subId][$projectId]);
+        if (empty($this->entries[$connId][$subId])) {
+            unset($this->entries[$connId][$subId]);
+        }
+        if (empty($this->entries[$connId])) {
+            unset($this->entries[$connId]);
         }
     }
 

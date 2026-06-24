@@ -535,4 +535,47 @@ final class EventTailRegistryTest extends TestCase
         $this->assertContains('console.tail.projA', $channels, 'projA stopped delivering after projB was added');
         $this->assertContains('console.tail.projB', $channels);
     }
+
+    public function testRateClampedToAtLeastOne(): void
+    {
+        // A misconfigured non-positive rate must not disable the tail entirely.
+        foreach ([0, -5] as $badRate) {
+            $registry = new EventTailRegistry(rate: $badRate);
+            $registry->add(1, 'x', 'projA', $this->compile([]), 0.0);
+            $registry->ingest('projA', ['type' => 'databases'], 0.0);
+
+            $sent = [];
+            $registry->flush($this->server($sent));
+
+            $eventFrames = array_values(array_filter($sent, fn ($f) => $f['data']['events'] === ['console.tail']));
+            $this->assertCount(1, $eventFrames, "rate {$badRate} must clamp to >=1 so events still flow");
+            $this->assertCount(1, $eventFrames[0]['data']['payload']);
+        }
+    }
+
+    public function testRevalidateConnectionDropsTailsWithRevokedRole(): void
+    {
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, 'team:teamA');
+        $registry->add(1, 'y', 'projB', $this->compile([]), 0.0, 'team:teamB');
+        $this->assertTrue($registry->isTailed('projA'));
+        $this->assertTrue($registry->isTailed('projB'));
+
+        // The connection keeps teamB membership but loses teamA.
+        $registry->revalidateConnection(1, ['user:u1', 'team:teamB']);
+
+        $this->assertFalse($registry->isTailed('projA'), 'tail for the revoked team must be dropped');
+        $this->assertTrue($registry->isTailed('projB'), 'tail for the still-held team must remain');
+    }
+
+    public function testRevalidateConnectionKeepsEntriesWithoutRole(): void
+    {
+        // Entries registered without an authorizing role are never pruned (defensive).
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0);
+
+        $registry->revalidateConnection(1, ['user:u1']);
+
+        $this->assertTrue($registry->isTailed('projA'));
+    }
 }

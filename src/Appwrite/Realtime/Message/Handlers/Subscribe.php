@@ -118,8 +118,9 @@ class Subscribe extends Action
                     );
                 }
                 $teamId = (string) $project->getAttribute('teamId', '');
+                $requiredRole = Role::team($teamId)->toString();
 
-                if ($teamId === '' || !\in_array(Role::team($teamId)->toString(), $roles, true)) {
+                if ($teamId === '' || !\in_array($requiredRole, $roles, true)) {
                     throw new Exception(
                         Exception::REALTIME_POLICY_VIOLATION,
                         'Not authorized to tail project "' . $targetProjectId . '".'
@@ -127,7 +128,9 @@ class Subscribe extends Action
                 }
 
                 $compiled ??= RuntimeQuery::compile($parsedPayload['queries']);
-                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled];
+                // Carry the authorizing role so the tail can be revoked if the viewer
+                // later loses team membership (or the project is transferred).
+                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $requiredRole];
             }
         }
 
@@ -146,8 +149,8 @@ class Subscribe extends Action
         // registry is keyed by (connId, subId, projectId): re-subscribing the same channel
         // overwrites its filter in place, while a reused subscription id that names a new
         // tail channel keeps the ones already registered (mirrors the tree).
-        foreach ($pendingTails as [$subId, $targetProjectId, $compiled]) {
-            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now);
+        foreach ($pendingTails as [$subId, $targetProjectId, $compiled, $role]) {
+            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $role);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

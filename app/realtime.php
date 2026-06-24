@@ -727,6 +727,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             if ($subscriptionDelta !== 0) {
                                 $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
                             }
+
+                            // Tail entries live outside the subscription tree, so the rebuild
+                            // above doesn't touch them. Drop any whose authorizing team role
+                            // the connection no longer holds (membership revoked / project moved).
+                            $eventTailRegistry->revalidateConnection($connection, $roles);
                         }
                     }
                 }
@@ -815,9 +820,24 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 // whether it had regular subscribers ($total). The firehose is published
                 // unconditionally, so a project tailed from the console with no other
                 // realtime clients must still be observed here.
-                $src = $event['project'] ?? '';
-                if ($src !== '' && $src !== 'console' && $eventTailRegistry->isTailed($src)) {
-                    $eventTailRegistry->ingest($src, Realtime::toTailMetadata($event), \microtime(true));
+                //
+                // Most events carry the owning project in $event['project']. But some
+                // project-owned events (schema changes, deployments, rules, migrations,
+                // project settings) are rerouted by fromPayload() to project='console';
+                // for those the real project id lives in the `projects.<id>` channel.
+                // Resolve that so the tail still receives them.
+                $tailProjectId = $event['project'] ?? '';
+                if ($tailProjectId === 'console') {
+                    $tailProjectId = '';
+                    foreach (($event['data']['channels'] ?? []) as $channel) {
+                        if (\str_starts_with($channel, 'projects.')) {
+                            $tailProjectId = \substr($channel, \strlen('projects.'));
+                            break;
+                        }
+                    }
+                }
+                if ($tailProjectId !== '' && $eventTailRegistry->isTailed($tailProjectId)) {
+                    $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
                 }
             });
         } catch (Throwable $th) {
