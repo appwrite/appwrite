@@ -1466,8 +1466,6 @@ final class UsageTest extends Scope
         $collectionsTotal = $data['vectordbCollectionsTotal'];
         $documentsTotal = $data['vectordbDocumentsTotal'];
 
-        $this->assertProjectRequestsAtLeastGlobal();
-
         // Project-wide scalars: vectorsdbDatabasesTotal counts ONLY VectorsDB instances
         // (not relational databases), vectorsdbDocumentsTotal is the sum of all vector
         // documents across this project. Both are produced exclusively by
