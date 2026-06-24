@@ -272,6 +272,7 @@ class Webhooks extends Action
                 recipient: $user->getAttribute('email'),
                 name: $user->getAttribute('name', ''),
                 subject: $subject,
+                template: MAIL_TEMPLATE_WEBHOOK_FAILED,
                 body: $body->render(),
                 preview: $preview,
                 variables: ['user' => $user->getAttribute('name', '')],
