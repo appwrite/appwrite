@@ -65,7 +65,25 @@ export function toWebSocketEndpoint(httpEndpoint: string): string {
     .replace(/^http:\/\//, 'ws://')
 }
 
-/** Full WebSocket URL used to connect (includes project query param). */
+/** Full WebSocket URL used to connect (includes project and optional JWT query params). */
+function buildRealtimeUrl(client: Client): string {
+  const endpoint =
+    client.config.endpointRealtime !== ''
+      ? client.config.endpointRealtime
+      : client.config.endpoint || ''
+  const realtimeEndpoint = toWebSocketEndpoint(endpoint)
+  const params = new URLSearchParams()
+  params.set('project', client.config.project)
+
+  const jwt = client.config.jwt.trim()
+  if (jwt) {
+    params.set('jwt', jwt)
+  }
+
+  return `${realtimeEndpoint}/realtime?${params.toString()}`
+}
+
+/** WebSocket URL shown in the Realtime UI (project only; never includes JWT). */
 export function getProjectRealtimeWebSocketUrl(projectId: string): string {
   const base = `${toWebSocketEndpoint(getProjectApiEndpoint(projectId))}/realtime`
   return `${base}?project=${encodeURIComponent(projectId)}`
@@ -74,28 +92,22 @@ export function getProjectRealtimeWebSocketUrl(projectId: string): string {
 /**
  * Isolated Appwrite client for the Realtime debugger.
  * Omits credentials so the SDK never falls back to console session cookies.
+ * When `jwt` is provided (user mode), it is set on the client for Realtime auth.
  */
-export function createIsolatedRealtimeClient(projectId: string): Client {
+export function createIsolatedRealtimeClient(
+  projectId: string,
+  options?: { jwt?: string },
+): Client {
   const client = new Client()
   client
     .setEndpoint(getProjectApiEndpoint(projectId))
     .setProject(projectId)
     .setCredentials('omit')
   client.setSession('')
-  client.setJWT('')
+  client.setJWT(options?.jwt?.trim() ?? '')
   client.setCookie('')
   client.setKey('')
   return client
-}
-
-function buildRealtimeUrl(client: Client): string {
-  const endpoint =
-    client.config.endpointRealtime !== ''
-      ? client.config.endpointRealtime
-      : client.config.endpoint || ''
-  const realtimeEndpoint = toWebSocketEndpoint(endpoint)
-  const projectId = client.config.project
-  return `${realtimeEndpoint}/realtime?project=${encodeURIComponent(projectId)}`
 }
 
 function sendMessage(
@@ -105,25 +117,10 @@ function sendMessage(
 ) {
   socket.send(JSON.stringify(message))
 
-  let loggedMessage = message
-  if (
-    message.type === 'authentication' &&
-    message.data &&
-    typeof message.data === 'object'
-  ) {
-    loggedMessage = {
-      ...message,
-      data: {
-        ...(message.data as Record<string, unknown>),
-        jwt: '[redacted]',
-      },
-    }
-  }
-
   onMessage({
     direction: 'out',
     timestamp: new Date().toISOString(),
-    message: loggedMessage,
+    message,
   })
 }
 
@@ -148,7 +145,11 @@ export function createRealtimeSession(
   auth: RealtimeSessionAuth,
   callbacks: RealtimeSessionCallbacks,
 ): RealtimeSession {
-  const client = createIsolatedRealtimeClient(projectId)
+  const jwt = auth.mode === 'user' ? auth.jwt.trim() : ''
+  const client = createIsolatedRealtimeClient(
+    projectId,
+    jwt ? { jwt } : undefined,
+  )
   const realtimeUrl = buildRealtimeUrl(client)
 
   let socket: WebSocket | null = null
@@ -158,7 +159,6 @@ export function createRealtimeSession(
   let shouldReconnect = false
   let closedByUser = false
   let connectionRequested = false
-  let authenticated = false
   let appConnected = false
   let reconnectAttempts = 0
   let fatalError: RealtimeSessionError | null = null
@@ -233,24 +233,6 @@ export function createRealtimeSession(
         appConnected = true
         reconnectAttempts = 0
 
-        const data = raw.data as { user?: unknown } | undefined
-        const jwt = auth.mode === 'user' ? auth.jwt.trim() : ''
-        if (!authenticated && jwt && !data?.user) {
-          authenticated = true
-          if (socket && socket.readyState === WebSocket.OPEN) {
-            sendMessage(
-              socket,
-              {
-                type: 'authentication',
-                data: { jwt },
-              },
-              callbacks.onMessage,
-            )
-          }
-        } else if (!authenticated) {
-          authenticated = true
-        }
-
         for (const subscriptionId of subscriptions.keys()) {
           enqueuePendingSubscribe(subscriptionId)
         }
@@ -281,7 +263,6 @@ export function createRealtimeSession(
     const active = socket
     socket = null
     appConnected = false
-    authenticated = false
 
     if (active && active.readyState < WebSocket.CLOSING) {
       active.close(1000)
@@ -383,7 +364,6 @@ export function createRealtimeSession(
 
       clearHeartbeat()
       appConnected = false
-      authenticated = false
 
       callbacks.onMessage({
         direction: 'in',
