@@ -92,7 +92,7 @@ class Create extends Action
         return;
     }
 
-    private function handleInstallationEvent(
+    protected function handleInstallationEvent(
         array $parsedPayload,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -111,39 +111,57 @@ class Create extends Action
 
         foreach ($installations as $installation) {
             $projectId = $installation->getAttribute('projectId', '');
-            $project = $dbForPlatform->getDocument('projects', $projectId);
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
             if (!$project->isEmpty()) {
                 $dbForProject = $getProjectDB($project);
 
                 foreach (['functions', 'sites'] as $collection) {
-                    $resources = $dbForProject->find($collection, [
-                        Query::equal('installationInternalId', [$installation->getSequence()]),
-                        Query::limit(1000),
-                    ]);
+                    $cursor = null;
+                    do {
+                        $queries = [
+                            Query::equal('installationInternalId', [$installation->getSequence()]),
+                            Query::limit(1000),
+                        ];
+                        if ($cursor !== null) {
+                            $queries[] = Query::cursorAfter($cursor);
+                        }
+                        $resources = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
 
-                    foreach ($resources as $resource) {
-                        $dbForProject->updateDocument($collection, $resource->getId(), $resource
-                            ->setAttribute('installationId', '')
-                            ->setAttribute('installationInternalId', '')
-                            ->setAttribute('providerRepositoryId', '')
-                            ->setAttribute('providerBranch', '')
-                            ->setAttribute('providerSilentMode', false)
-                            ->setAttribute('providerRootDirectory', '')
-                            ->setAttribute('repositoryId', '')
-                            ->setAttribute('repositoryInternalId', ''));
-                    }
+                        foreach ($resources as $resource) {
+                            $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $resource
+                                ->setAttribute('installationId', '')
+                                ->setAttribute('installationInternalId', '')
+                                ->setAttribute('providerRepositoryId', '')
+                                ->setAttribute('providerBranch', '')
+                                ->setAttribute('providerSilentMode', false)
+                                ->setAttribute('providerRootDirectory', '')
+                                ->setAttribute('repositoryId', '')
+                                ->setAttribute('repositoryInternalId', '')));
+                        }
+
+                        $cursor = count($resources) === 1000 ? $resources[array_key_last($resources)] : null;
+                    } while ($cursor !== null);
                 }
             }
 
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                Query::equal('installationInternalId', [$installation->getSequence()]),
-                Query::limit(1000)
-            ]));
+            $cursor = null;
+            do {
+                $queries = [
+                    Query::equal('installationInternalId', [$installation->getSequence()]),
+                    Query::limit(1000),
+                ];
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
+                }
+                $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', $queries));
 
-            foreach ($repositories as $repository) {
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
-            }
+                foreach ($repositories as $repository) {
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
+                }
+
+                $cursor = count($repositories) === 1000 ? $repositories[array_key_last($repositories)] : null;
+            } while ($cursor !== null);
 
             $authorization->skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
         }
