@@ -120,7 +120,7 @@ export function BlogArticleHeader({
     <>
       {showStickyHeader && stickyBounds ? (
         <header
-          className="pointer-events-none fixed z-30"
+          className="pointer-events-none fixed z-30 h-14"
           style={{
             top: stickyBounds.top,
             left: stickyBounds.shellLeft,
@@ -129,9 +129,13 @@ export function BlogArticleHeader({
           aria-label="Article toolbar"
         >
           <div
+            aria-hidden
+            className="absolute inset-0 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80"
+          />
+          <div
             className={cn(
               DOCS_SECTION_HEADER_CLASS,
-              'pointer-events-auto border-b-0 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80',
+              'relative pointer-events-auto border-b-0 bg-transparent',
             )}
             style={{
               marginLeft: stickyBounds.contentInsetLeft,
