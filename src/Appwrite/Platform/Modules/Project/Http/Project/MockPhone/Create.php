@@ -37,6 +37,7 @@ class Create extends Action
             ->label('event', 'mock-phones.[number].create')
             ->label('audits.event', 'project.mock-phone.create')
             ->label('audits.resource', 'project.mock-phone/{response.number}')
+            ->label('usage.resource', 'project.mock-phone/{response.number}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'mocks',

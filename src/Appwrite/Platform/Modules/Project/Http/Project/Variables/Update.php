@@ -37,6 +37,7 @@ class Update extends Action
             ->label('event', 'variables.[variableId].update')
             ->label('audits.event', 'project.variable.update')
             ->label('audits.resource', 'project.variable/{response.$id}')
+            ->label('usage.resource', 'project.variable/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'variables',

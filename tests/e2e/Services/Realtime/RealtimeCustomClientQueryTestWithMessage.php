@@ -13,6 +13,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
 final class RealtimeCustomClientQueryTestWithMessage extends Scope
@@ -655,6 +656,90 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             \str_contains($response['data']['message'], 'contains') ||
             \str_contains($response['data']['message'], 'endsWith')
         );
+    }
+
+    public function testConnectionJWT(): void
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Mint a JWT for the authenticated user.
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt = $response['body']['jwt'];
+
+        /**
+         * Test for SUCCESS - JWT via x-appwrite-jwt header.
+         * Connection authenticates at handshake time; the `connected` payload carries the user.
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+        ], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt,
+        ]);
+        $connected = \json_decode($client->receive(), true);
+
+        $this->assertEquals('connected', $connected['type'] ?? null);
+        $this->assertNotEmpty($connected['data']['user']);
+        $this->assertEquals($userId, $connected['data']['user']['$id']);
+
+        // The authenticated user can subscribe to their account channel.
+        $subscribe = $this->sendSubscribeMessage($client, [[
+            'channels' => ['account'],
+        ]]);
+        $this->assertContains('account', $subscribe['data']['subscriptions'][0]['channels']);
+
+        $client->close();
+
+        /**
+         * Test for SUCCESS - JWT via ?jwt= query string.
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'jwt' => $jwt,
+        ], [
+            'origin' => 'http://localhost',
+        ]);
+        $connected = \json_decode($client->receive(), true);
+
+        $this->assertEquals('connected', $connected['type'] ?? null);
+        $this->assertNotEmpty($connected['data']['user']);
+        $this->assertEquals($userId, $connected['data']['user']['$id']);
+
+        $subscribe = $this->sendSubscribeMessage($client, [[
+            'channels' => ['account'],
+        ]]);
+        $this->assertContains('account', $subscribe['data']['subscriptions'][0]['channels']);
+
+        $client->close();
+
+        /**
+         * Test for FAILURE - invalid JWT via query string is rejected at handshake.
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'jwt' => 'invalid-token',
+        ], [
+            'origin' => 'http://localhost',
+        ]);
+        $error = \json_decode($client->receive(), true);
+
+        $this->assertEquals('error', $error['type'] ?? null);
+        $this->assertEquals(401, $error['data']['code']); // USER_JWT_INVALID
+
+        \usleep(250000); // 250ms
+        $this->expectException(ConnectionException::class); // server should disconnect
+        $client->close();
     }
 
     public function testProjectChannelWithHeaderOnly(): void

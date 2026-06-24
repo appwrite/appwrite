@@ -49,6 +49,7 @@ class Create extends Action
             ->label('event', 'buckets.[bucketId].create')
             ->label('audits.event', 'bucket.create')
             ->label('audits.resource', 'bucket/{response.$id}')
+            ->label('usage.resource', 'bucket/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'buckets',

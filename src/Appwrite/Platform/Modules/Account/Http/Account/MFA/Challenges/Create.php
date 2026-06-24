@@ -57,6 +57,7 @@ class Create extends Action
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')
+            ->label('usage.resource', 'user/{response.userId}')
             ->label('audits.userId', '{response.userId}')
             ->label('sdk', [
                 new Method(

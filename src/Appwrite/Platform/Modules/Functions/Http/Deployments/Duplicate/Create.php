@@ -41,6 +41,7 @@ class Create extends Action
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',

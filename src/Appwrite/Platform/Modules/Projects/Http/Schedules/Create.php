@@ -72,6 +72,7 @@ class Create extends Action
             ->label('event', 'schedules.[scheduleId].create')
             ->label('audits.event', 'schedule.create')
             ->label('audits.resource', 'schedule/{response.$id}')
+            ->label('usage.resource', 'schedule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'schedules',

@@ -36,6 +36,7 @@ class Delete extends Action
             ->label('event', 'mock-phones.[number].delete')
             ->label('audits.event', 'project.mock-phone.delete')
             ->label('audits.resource', 'project.mock-phone/{request.number}')
+            ->label('usage.resource', 'project.mock-phone/{request.number}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'mocks',
