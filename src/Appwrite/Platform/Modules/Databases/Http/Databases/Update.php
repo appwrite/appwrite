@@ -74,7 +74,7 @@ class Update extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $searchName = $name ?? $database->getAttribute('name');
+        $searchName = $name ?: $database->getAttribute('name');
 
         // Persist only the attributes this endpoint changes so concurrent
         // updates to the database aren't clobbered by writing the full document.
