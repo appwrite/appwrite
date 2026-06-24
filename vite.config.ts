@@ -49,12 +49,6 @@ const decimalJsShim = path.resolve(
 )
 const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
-// Appwrite Sites reads vite.config.ts via utopia-php/detector TanStackStart::getAdapter:
-// any `prerender` key without a matching `prerender: false` is classified as static.
-// Marketing prerender below is partial SSR; this hint keeps adapter detection as ssr.
-const appwriteAdapterHint = { prerender: false } as const
-void appwriteAdapterHint
-
 export default defineConfig(async () => {
   const isSitesBuild = process.env.FOR_SITES === 'true'
   // Source-map upload is a build-time concern, gated only on the auth token.
