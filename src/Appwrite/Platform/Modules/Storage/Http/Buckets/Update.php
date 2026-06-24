@@ -108,8 +108,6 @@ class Update extends Action
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
 
-        // Persist only the attributes this endpoint changes so concurrent
-        // updates to the bucket aren't clobbered by writing the full document.
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), new Document([
             'name' => $name,
             '$permissions' => $permissions,

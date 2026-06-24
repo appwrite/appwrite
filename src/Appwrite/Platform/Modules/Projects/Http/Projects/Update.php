@@ -62,9 +62,6 @@ class Update extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        // Persist only the attributes this endpoint changes so concurrent
-        // updates to other project attributes (services, auths, apis, ...)
-        // aren't clobbered by writing the full document.
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'name' => $name,
             'description' => $description,
