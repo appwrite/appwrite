@@ -161,8 +161,7 @@ export async function fetchProjectUsageEventBreakdown(
 
   const { from, to } = resolveOverviewUsagePeriod(dateRange)
 
-  const groups = await listUsageEventGroups(projectId, {
-    metric,
+  const groups = await listUsageEventGroupsForMetric(projectId, metric, {
     dimensions: [dimension],
     startAt: from.toISOString(),
     endAt: to.toISOString(),
@@ -239,8 +238,12 @@ function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
   return addDays(date, 1)
 }
 
+export interface FetchUsageOverviewOptions {
+  includeBreakdown?: boolean
+}
+
 interface ListUsageEventGroupsParams {
-  metric: string
+  metrics: readonly string[]
   interval?: UsageChartInterval
   startAt: string
   endAt: string
@@ -396,12 +399,18 @@ function mapBreakdownGroupsToEndpoints(
   return items.sort((a, b) => b.count - a.count).slice(0, limit)
 }
 
-async function fetchUsageMetricChartSeries(
+export async function fetchUsageMetricsChartSeriesByMetric(
   projectId: string,
-  metric: string,
+  metrics: readonly string[],
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-): Promise<Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>> {
+): Promise<
+  Map<string, Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>>
+> {
+  if (metrics.length === 0) {
+    return new Map()
+  }
+
   const {
     from,
     to,
@@ -410,33 +419,101 @@ async function fetchUsageMetricChartSeries(
     interval: resolvedInterval,
   } = resolveOverviewUsagePeriod(dateRange, interval)
 
-  const [currentGroups, previousGroups] = await Promise.all([
-    listUsageEventGroups(projectId, {
-      metric,
+  const [currentByMetric, previousByMetric] = await Promise.all([
+    listUsageEventGroupsByMetric(projectId, {
+      metrics,
       interval: resolvedInterval,
       startAt: from.toISOString(),
       endAt: to.toISOString(),
     }),
-    listUsageEventGroups(projectId, {
-      metric,
+    listUsageEventGroupsByMetric(projectId, {
+      metrics,
       interval: resolvedInterval,
       startAt: previousFrom.toISOString(),
       endAt: previousTo.toISOString(),
     }),
   ])
 
-  const currentMerged = mergeValuesByTime(currentGroups)
-  const previousMerged = mergeValuesByTime(previousGroups)
+  const result = new Map<
+    string,
+    Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>
+  >()
 
-  return {
-    chartPoints: fillChartPointsGaps(currentMerged, from, to, resolvedInterval),
-    previousChartPoints: fillChartPointsGaps(
-      previousMerged,
-      previousFrom,
-      previousTo,
-      resolvedInterval,
-    ),
+  for (const metric of metrics) {
+    const currentMerged = mergeValuesByTime(currentByMetric.get(metric) ?? [])
+    const previousMerged = mergeValuesByTime(previousByMetric.get(metric) ?? [])
+    result.set(metric, {
+      chartPoints: fillChartPointsGaps(
+        currentMerged,
+        from,
+        to,
+        resolvedInterval,
+      ),
+      previousChartPoints: fillChartPointsGaps(
+        previousMerged,
+        previousFrom,
+        previousTo,
+        resolvedInterval,
+      ),
+    })
   }
+
+  return result
+}
+
+async function fetchUsageMetricChartSeries(
+  projectId: string,
+  metric: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): Promise<Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>> {
+  const chartSeriesByMetric = await fetchUsageMetricsChartSeriesByMetric(
+    projectId,
+    [metric],
+    dateRange,
+    interval,
+  )
+
+  return (
+    chartSeriesByMetric.get(metric) ?? {
+      chartPoints: [],
+      previousChartPoints: [],
+    }
+  )
+}
+
+export async function fetchUsageMetricsBreakdownByMetric(
+  projectId: string,
+  metrics: readonly string[],
+  dateRange: DateRange | undefined,
+  dimensions: readonly string[],
+  breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): Promise<Map<string, UsageTopEndpoint[]>> {
+  if (metrics.length === 0) {
+    return new Map()
+  }
+
+  const { from, to } = resolveOverviewUsagePeriod(dateRange)
+  const groupsByMetric = await listUsageEventGroupsByMetric(projectId, {
+    metrics,
+    dimensions: [...dimensions],
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+  })
+
+  const result = new Map<string, UsageTopEndpoint[]>()
+  for (const metric of metrics) {
+    result.set(
+      metric,
+      mapBreakdownGroupsToEndpoints(
+        groupsByMetric.get(metric) ?? [],
+        dimensions,
+        breakdownLimit,
+      ),
+    )
+  }
+
+  return result
 }
 
 async function fetchUsageMetricBreakdown(
@@ -446,16 +523,15 @@ async function fetchUsageMetricBreakdown(
   dimensions: readonly string[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): Promise<UsageTopEndpoint[]> {
-  const { from, to } = resolveOverviewUsagePeriod(dateRange)
+  const breakdownByMetric = await fetchUsageMetricsBreakdownByMetric(
+    projectId,
+    [metric],
+    dateRange,
+    dimensions,
+    breakdownLimit,
+  )
 
-  const groups = await listUsageEventGroups(projectId, {
-    metric,
-    dimensions: [...dimensions],
-    startAt: from.toISOString(),
-    endAt: to.toISOString(),
-  })
-
-  return mapBreakdownGroupsToEndpoints(groups, dimensions, breakdownLimit)
+  return breakdownByMetric.get(metric) ?? []
 }
 
 async function fetchUsageMetricSeries(
@@ -465,11 +541,13 @@ async function fetchUsageMetricSeries(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   dimensions: readonly string[] = TOP_ENDPOINTS_DIMENSIONS,
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  options?: FetchUsageOverviewOptions,
 ): Promise<UsageMetricSeriesResult> {
-  const breakdownEnabled = areUsageBreakdownQueriesEnabled()
+  const includeBreakdown =
+    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
   const [chartSeries, topEndpoints] = await Promise.all([
     fetchUsageMetricChartSeries(projectId, metric, dateRange, interval),
-    dimensions.length > 0 && breakdownEnabled
+    dimensions.length > 0 && includeBreakdown
       ? fetchUsageMetricBreakdown(
           projectId,
           metric,
@@ -496,23 +574,34 @@ export async function fetchProjectUsageMetricsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   dimensions: readonly string[] = TOP_ENDPOINTS_DIMENSIONS,
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  options?: FetchUsageOverviewOptions,
 ): Promise<ProjectUsageMetricOverview> {
   if (!projectId) {
     return { changePercent: 0, chartPoints: [], topEndpoints: [] }
   }
 
-  const results = await Promise.all(
-    metrics.map((metric) =>
-      fetchUsageMetricSeries(
-        projectId,
-        metric,
-        dateRange,
-        interval,
-        dimensions,
-        breakdownLimit,
-      ),
-    ),
-  )
+  const includeBreakdown =
+    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+
+  const [chartSeriesByMetric, breakdownByMetric] = await Promise.all([
+    fetchUsageMetricsChartSeriesByMetric(projectId, metrics, dateRange, interval),
+    includeBreakdown && dimensions.length > 0
+      ? fetchUsageMetricsBreakdownByMetric(
+          projectId,
+          metrics,
+          dateRange,
+          dimensions,
+          breakdownLimit,
+        )
+      : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
+  ])
+
+  const results = metrics.map((metric) => ({
+    chartPoints: chartSeriesByMetric.get(metric)?.chartPoints ?? [],
+    previousChartPoints:
+      chartSeriesByMetric.get(metric)?.previousChartPoints ?? [],
+    topEndpoints: breakdownByMetric.get(metric) ?? [],
+  }))
 
   return mergeUsageMetricSeries(results)
 }
@@ -525,6 +614,7 @@ export async function fetchProjectUsageMetricSeriesOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   dimensions: readonly string[] = TOP_ENDPOINTS_DIMENSIONS,
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  options?: FetchUsageOverviewOptions,
 ): Promise<UsageMetricSeriesResult> {
   if (!projectId) {
     return { chartPoints: [], previousChartPoints: [], topEndpoints: [] }
@@ -537,6 +627,7 @@ export async function fetchProjectUsageMetricSeriesOverview(
     interval,
     dimensions,
     breakdownLimit,
+    options,
   )
 }
 
@@ -600,10 +691,14 @@ export function fillGaugeChartPointsGaps(
   return points
 }
 
-async function listUsageEventGroups(
+async function listUsageEventGroupsByMetric(
   projectId: string,
   params: ListUsageEventGroupsParams,
-): Promise<Models.UsageDataPoint[]> {
+): Promise<Map<string, Models.UsageDataPoint[]>> {
+  if (params.metrics.length === 0) {
+    return new Map()
+  }
+
   const projectSdk = sdk.forProject(projectId)
   const request: {
     metrics: string[]
@@ -614,7 +709,7 @@ async function listUsageEventGroups(
     resource?: string
     resourceId?: string
   } = {
-    metrics: [params.metric],
+    metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
   }
@@ -633,20 +728,42 @@ async function listUsageEventGroups(
   }
 
   const response = await projectSdk.usage.listEvents(request)
-  return response.metrics?.find((m) => m.metric === params.metric)?.points ?? []
+  const result = new Map<string, Models.UsageDataPoint[]>()
+
+  for (const metric of params.metrics) {
+    result.set(
+      metric,
+      response.metrics?.find((entry) => entry.metric === metric)?.points ?? [],
+    )
+  }
+
+  return result
+}
+
+async function listUsageEventGroupsForMetric(
+  projectId: string,
+  metric: string,
+  params: Omit<ListUsageEventGroupsParams, 'metrics'>,
+): Promise<Models.UsageDataPoint[]> {
+  const groupsByMetric = await listUsageEventGroupsByMetric(projectId, {
+    ...params,
+    metrics: [metric],
+  })
+
+  return groupsByMetric.get(metric) ?? []
 }
 
 async function listUsageEventGroupsForMetrics(
   projectId: string,
   metrics: readonly string[],
-  params: Omit<ListUsageEventGroupsParams, 'metric'>,
+  params: Omit<ListUsageEventGroupsParams, 'metrics'>,
 ): Promise<Models.UsageDataPoint[]> {
-  const results = await Promise.all(
-    metrics.map((metric) =>
-      listUsageEventGroups(projectId, { ...params, metric }),
-    ),
-  )
-  return results.flat()
+  const groupsByMetric = await listUsageEventGroupsByMetric(projectId, {
+    ...params,
+    metrics,
+  })
+
+  return Array.from(groupsByMetric.values()).flat()
 }
 
 export function computeChangePercent(

@@ -7,6 +7,7 @@ import {
   type UsageChartInterval,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-gauges-common'
+import type { FetchUsageOverviewOptions } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 
 /** File storage gauge for the overview snapshot and bucket breakdown. */
@@ -35,6 +36,7 @@ export async function fetchProjectStorageOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<ProjectStorageOverview> {
   const overview = await fetchProjectUsageGaugeSnapshotOverview(
     projectId,
@@ -44,6 +46,7 @@ export async function fetchProjectStorageOverview(
     {
       dimensions: ['resourceId'],
     },
+    options,
   )
 
   return {

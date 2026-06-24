@@ -1,10 +1,7 @@
 import type { DateRange } from 'react-day-picker'
 import {
-  computeChangePercent,
-  fetchProjectUsageMetricSeriesOverview,
-  mergeChartPointsSeries,
-  mergeTopEndpoints,
-  sumUsageChartPoints,
+  fetchProjectUsageMetricsOverview,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
   type UsageTopEndpoint,
@@ -66,37 +63,21 @@ export async function fetchProjectGbHoursOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<ProjectGbHoursOverview> {
-  const results = await Promise.all(
-    GB_HOURS_MB_SECONDS_METRICS.map((metric) =>
-      fetchProjectUsageMetricSeriesOverview(
-        projectId,
-        metric,
-        dateRange,
-        interval,
-        GB_HOURS_BREAKDOWN_DIMENSIONS,
-        COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
-      ),
-    ),
-  )
-
-  const chartPoints = mergeChartPointsSeries(
-    results.map((result) => result.chartPoints),
-  )
-  const previousChartPoints = mergeChartPointsSeries(
-    results.map((result) => result.previousChartPoints),
-  )
-  const topConsumers = mergeTopEndpoints(
-    results.map((result) => result.topEndpoints),
+  const overview = await fetchProjectUsageMetricsOverview(
+    projectId,
+    dateRange,
+    GB_HOURS_MB_SECONDS_METRICS,
+    interval,
+    GB_HOURS_BREAKDOWN_DIMENSIONS,
     COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
+    options,
   )
 
   return {
-    chartPoints: convertChartPointsToGbHours(chartPoints),
-    topConsumers: convertTopConsumersToGbHours(topConsumers),
-    changePercent: computeChangePercent(
-      sumUsageChartPoints(chartPoints),
-      sumUsageChartPoints(previousChartPoints),
-    ),
+    chartPoints: convertChartPointsToGbHours(overview.chartPoints),
+    topConsumers: convertTopConsumersToGbHours(overview.topEndpoints),
+    changePercent: overview.changePercent,
   }
 }

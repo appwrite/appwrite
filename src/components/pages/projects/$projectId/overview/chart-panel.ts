@@ -101,7 +101,7 @@ export const OVERVIEW_REQUESTS_ERROR = {
 } as const
 
 export const OVERVIEW_EXECUTIONS_ERROR = {
-  title: "Couldn't load executions",
+  title: "Couldn't load function executions",
   message:
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const

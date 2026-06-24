@@ -30,18 +30,44 @@ const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
     projectId: string,
     parsedRange: { from: Date; to: Date },
     chartInterval: UsageChartInterval,
+    includeBreakdown: boolean,
   ) => ReturnType<typeof bandwidthOverviewQueryOptions>
 > = {
-  bandwidth: (projectId, parsedRange, chartInterval) =>
-    bandwidthOverviewQueryOptions(projectId, parsedRange, chartInterval),
-  requests: (projectId, parsedRange, chartInterval) =>
-    requestsOverviewQueryOptions(projectId, parsedRange, chartInterval),
-  executions: (projectId, parsedRange, chartInterval) =>
-    executionsOverviewQueryOptions(projectId, parsedRange, chartInterval),
-  gbhours: (projectId, parsedRange, chartInterval) =>
-    gbHoursOverviewQueryOptions(projectId, parsedRange, chartInterval),
-  storage: (projectId, parsedRange, chartInterval) =>
-    storageOverviewQueryOptions(projectId, parsedRange, chartInterval),
+  bandwidth: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+    bandwidthOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      chartInterval,
+      includeBreakdown,
+    ),
+  requests: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+    requestsOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      chartInterval,
+      includeBreakdown,
+    ),
+  executions: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+    executionsOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      chartInterval,
+      includeBreakdown,
+    ),
+  gbhours: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+    gbHoursOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      chartInterval,
+      includeBreakdown,
+    ),
+  storage: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+    storageOverviewQueryOptions(
+      projectId,
+      parsedRange,
+      chartInterval,
+      includeBreakdown,
+    ),
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
@@ -91,6 +117,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
               projectId,
               parsedRange,
               chartInterval,
+              tabId === 'bandwidth',
             ),
           ),
         )

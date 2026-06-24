@@ -6,3 +6,12 @@ export function shouldShowUsageChartSkeleton(
 ): boolean {
   return !isError && (isLoading || isPlaceholderData)
 }
+
+/** Tab totals only skeleton on the initial fetch when there is no data yet. */
+export function shouldShowUsageTabMetricSkeleton(
+  isError: boolean,
+  data: unknown,
+  isFetching: boolean,
+): boolean {
+  return !isError && data == null && isFetching
+}

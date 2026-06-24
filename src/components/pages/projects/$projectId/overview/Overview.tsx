@@ -19,10 +19,14 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_TAB_ORDER,
+  OVERVIEW_CHART_TAB_LABELS,
   type OverviewChartTabId,
   isOverviewChartTabEnabled,
 } from '@/lib/overview-chart-tabs'
-import type { AddAppKind } from '@/lib/add-app-wizard/types'
+import {
+  COMPUTE_EXECUTIONS_BREAKDOWN_TITLE,
+  COMPUTE_EXECUTIONS_CHART_TITLE,
+} from '@/lib/usage/compute-usage'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
 import { MetricValueWithUnit } from './MetricValueWithUnit'
@@ -97,7 +101,10 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
-import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import {
+  shouldShowUsageChartSkeleton,
+  shouldShowUsageTabMetricSkeleton,
+} from '@/lib/usage/usage-chart-loading'
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
   OVERVIEW_REQUESTS_ERROR,
@@ -236,6 +243,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     data: bandwidthUsage,
     isLoading: isBandwidthLoading,
+    isFetching: isBandwidthFetching,
     isPlaceholderData: isBandwidthPlaceholderData,
     isError: isBandwidthError,
     refetch: refetchBandwidth,
@@ -244,11 +252,13 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     isOverviewChartTabVisible('bandwidth'),
     chartInterval,
+    activeTab === 'bandwidth',
   )
 
   const {
     data: requestsUsage,
     isLoading: isRequestsLoading,
+    isFetching: isRequestsFetching,
     isPlaceholderData: isRequestsPlaceholderData,
     isError: isRequestsError,
     refetch: refetchRequests,
@@ -257,11 +267,13 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     isOverviewChartTabVisible('requests'),
     chartInterval,
+    activeTab === 'requests',
   )
 
   const {
     data: executionsUsage,
     isLoading: isExecutionsLoading,
+    isFetching: isExecutionsFetching,
     isPlaceholderData: isExecutionsPlaceholderData,
     isError: isExecutionsError,
     refetch: refetchExecutions,
@@ -270,11 +282,13 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     isOverviewChartTabVisible('executions'),
     chartInterval,
+    activeTab === 'executions',
   )
 
   const {
     data: gbHoursUsage,
     isLoading: isGbHoursLoading,
+    isFetching: isGbHoursFetching,
     isPlaceholderData: isGbHoursPlaceholderData,
     isError: isGbHoursError,
     refetch: refetchGbHours,
@@ -283,11 +297,13 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     isOverviewChartTabVisible('gbhours'),
     chartInterval,
+    activeTab === 'gbhours',
   )
 
   const {
     data: storageUsage,
     isLoading: isStorageLoading,
+    isFetching: isStorageFetching,
     isPlaceholderData: isStoragePlaceholderData,
     isError: isStorageError,
     refetch: refetchStorage,
@@ -296,6 +312,7 @@ export function View({ projectId, initialData }: ViewProps) {
     dashboardChartDateRange,
     isOverviewChartTabVisible('storage'),
     chartInterval,
+    activeTab === 'storage',
   )
 
   const showBandwidthChartLoading = shouldShowUsageChartSkeleton(
@@ -326,6 +343,36 @@ export function View({ projectId, initialData }: ViewProps) {
     isStorageError,
     isStorageLoading,
     isStoragePlaceholderData,
+  )
+
+  const showBandwidthTabMetricLoading = shouldShowUsageTabMetricSkeleton(
+    isBandwidthError,
+    bandwidthUsage,
+    isBandwidthFetching,
+  )
+
+  const showRequestsTabMetricLoading = shouldShowUsageTabMetricSkeleton(
+    isRequestsError,
+    requestsUsage,
+    isRequestsFetching,
+  )
+
+  const showExecutionsTabMetricLoading = shouldShowUsageTabMetricSkeleton(
+    isExecutionsError,
+    executionsUsage,
+    isExecutionsFetching,
+  )
+
+  const showGbHoursTabMetricLoading = shouldShowUsageTabMetricSkeleton(
+    isGbHoursError,
+    gbHoursUsage,
+    isGbHoursFetching,
+  )
+
+  const showStorageTabMetricLoading = shouldShowUsageTabMetricSkeleton(
+    isStorageError,
+    storageUsage,
+    isStorageFetching,
   )
 
   const executionBreakdownIds = useMemo(
@@ -362,7 +409,7 @@ export function View({ projectId, initialData }: ViewProps) {
           label: 'Bandwidth',
           change: null,
         }
-      : showBandwidthChartLoading
+      : showBandwidthTabMetricLoading
         ? {
             id: 'bandwidth',
             value: '',
@@ -386,7 +433,7 @@ export function View({ projectId, initialData }: ViewProps) {
           label: 'Requests',
           change: null,
         }
-      : showRequestsChartLoading
+      : showRequestsTabMetricLoading
         ? {
             id: 'requests',
             value: '',
@@ -410,7 +457,7 @@ export function View({ projectId, initialData }: ViewProps) {
           label: 'Storage',
           change: null,
         }
-      : showStorageChartLoading
+      : showStorageTabMetricLoading
         ? {
             id: 'storage',
             value: '',
@@ -429,14 +476,14 @@ export function View({ projectId, initialData }: ViewProps) {
       ? {
           id: 'executions',
           value: OVERVIEW_METRIC_NOT_AVAILABLE,
-          label: 'Executions',
+          label: OVERVIEW_CHART_TAB_LABELS.executions,
           change: null,
         }
-      : showExecutionsChartLoading
+      : showExecutionsTabMetricLoading
         ? {
             id: 'executions',
             value: '',
-            label: 'Executions',
+            label: OVERVIEW_CHART_TAB_LABELS.executions,
             change: null,
             isLoading: true,
           }
@@ -445,7 +492,7 @@ export function View({ projectId, initialData }: ViewProps) {
             value: formatExecutionsTotal(
               sumUsageChartPoints(executionsUsage?.chartPoints ?? []),
             ),
-            label: 'Executions',
+            label: OVERVIEW_CHART_TAB_LABELS.executions,
             change: executionsUsage?.changePercent ?? 0,
           }
 
@@ -456,7 +503,7 @@ export function View({ projectId, initialData }: ViewProps) {
           label: 'Compute',
           change: null,
         }
-      : showGbHoursChartLoading
+      : showGbHoursTabMetricLoading
         ? {
             id: 'gbhours',
             value: '',
@@ -493,11 +540,11 @@ export function View({ projectId, initialData }: ViewProps) {
     isExecutionsError,
     gbHoursUsage,
     isGbHoursError,
-    showBandwidthChartLoading,
-    showRequestsChartLoading,
-    showStorageChartLoading,
-    showExecutionsChartLoading,
-    showGbHoursChartLoading,
+    showBandwidthTabMetricLoading,
+    showRequestsTabMetricLoading,
+    showStorageTabMetricLoading,
+    showExecutionsTabMetricLoading,
+    showGbHoursTabMetricLoading,
     visibleOverviewChartTabs,
   ])
 
@@ -1051,7 +1098,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
                     isPanelVisible={activeTab === 'executions'}
-                    title="Executions over time"
+                    title={COMPUTE_EXECUTIONS_CHART_TITLE}
                     metric="executions"
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
@@ -1070,7 +1117,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="min-h-0 flex-1"
-                      title="Top executed functions"
+                      title={COMPUTE_EXECUTIONS_BREAKDOWN_TITLE}
                       metric="executions"
                       breakdownVariant="resource"
                       projectId={projectId}

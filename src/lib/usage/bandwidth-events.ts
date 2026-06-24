@@ -3,12 +3,15 @@ import {
   formatCompactBytes,
   formatCompactBytesAxis,
 } from '@/lib/usage/format-metric'
+import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
   computeChangePercent,
-  fetchProjectUsageMetricSeriesOverview,
+  fetchUsageMetricsChartSeriesByMetric,
+  fetchUsageMetricsBreakdownByMetric,
   mergeChartPointsSeries,
   mergeTopEndpoints,
   sumUsageChartPoints,
+  type FetchUsageOverviewOptions,
   type ProjectUsageChartOverview,
   type ProjectUsageTopEndpointsOverview,
   type UsageChartInterval,
@@ -92,21 +95,36 @@ export async function fetchProjectBandwidthOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<ProjectBandwidthOverview> {
-  const [inbound, outbound] = await Promise.all([
-    fetchProjectUsageMetricSeriesOverview(
+  const includeBreakdown =
+    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+
+  const [chartSeriesByMetric, breakdownByMetric] = await Promise.all([
+    fetchUsageMetricsChartSeriesByMetric(
       projectId,
-      'network.inbound',
+      BANDWIDTH_EVENT_METRICS,
       dateRange,
       interval,
     ),
-    fetchProjectUsageMetricSeriesOverview(
-      projectId,
-      'network.outbound',
-      dateRange,
-      interval,
-    ),
+    includeBreakdown
+      ? fetchUsageMetricsBreakdownByMetric(
+          projectId,
+          BANDWIDTH_EVENT_METRICS,
+          dateRange,
+          ['path'],
+        )
+      : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])
+
+  const inbound = chartSeriesByMetric.get('network.inbound') ?? {
+    chartPoints: [],
+    previousChartPoints: [],
+  }
+  const outbound = chartSeriesByMetric.get('network.outbound') ?? {
+    chartPoints: [],
+    previousChartPoints: [],
+  }
 
   const inboundChartPoints = inbound.chartPoints
   const outboundChartPoints = outbound.chartPoints
@@ -132,8 +150,8 @@ export async function fetchProjectBandwidthOverview(
       sumUsageChartPoints(previousChartPoints),
     ),
     topConsumers: mergeTopEndpoints([
-      inbound.topEndpoints,
-      outbound.topEndpoints,
+      breakdownByMetric.get('network.inbound') ?? [],
+      breakdownByMetric.get('network.outbound') ?? [],
     ]),
   }
 }

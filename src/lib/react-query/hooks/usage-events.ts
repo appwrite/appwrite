@@ -6,6 +6,7 @@ import {
   queryOptions,
   useQuery,
   useQueries,
+  useQueryClient,
   type Query,
   type QueryClient,
 } from '@tanstack/react-query'
@@ -164,10 +165,41 @@ const usageEventsQueryOptionsBase = {
   },
 }
 
+function usageOverviewQueryScope(includeBreakdown: boolean): 'overview' | 'chart' {
+  return includeBreakdown ? 'overview' : 'chart'
+}
+
+/** Reuse chart-only or overview cache when toggling breakdown on tab switch. */
+function usageOverviewPlaceholderData<T>(
+  queryClient: QueryClient,
+  projectId: string | null | undefined,
+  siblingQueryKey: readonly unknown[],
+) {
+  return (
+    previousData: T | undefined,
+    previousQuery: Query<T> | undefined,
+  ): T | undefined => {
+    const kept = keepPreviousUsageChartDataForProject<T>(projectId)(
+      previousData,
+      previousQuery,
+    )
+    if (kept !== undefined) {
+      return kept
+    }
+
+    if (!projectId) {
+      return undefined
+    }
+
+    return queryClient.getQueryData<T>(siblingQueryKey)
+  }
+}
+
 export function bandwidthOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
@@ -175,7 +207,7 @@ export function bandwidthOverviewQueryOptions(
     queryKey: [
       'usage-events',
       'bandwidth',
-      'overview',
+      usageOverviewQueryScope(includeBreakdown),
       'project',
       projectId,
       rangeKeyPart,
@@ -186,6 +218,7 @@ export function bandwidthOverviewQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        { includeBreakdown },
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -201,6 +234,7 @@ export function requestsOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
@@ -208,7 +242,7 @@ export function requestsOverviewQueryOptions(
     queryKey: [
       'usage-events',
       'requests',
-      'overview',
+      usageOverviewQueryScope(includeBreakdown),
       'project',
       projectId,
       rangeKeyPart,
@@ -219,6 +253,7 @@ export function requestsOverviewQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        { includeBreakdown },
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -234,6 +269,7 @@ export function executionsOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
@@ -241,7 +277,7 @@ export function executionsOverviewQueryOptions(
     queryKey: [
       'usage-events',
       'executions',
-      'overview',
+      usageOverviewQueryScope(includeBreakdown),
       'project',
       projectId,
       rangeKeyPart,
@@ -252,6 +288,7 @@ export function executionsOverviewQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        { includeBreakdown },
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -267,6 +304,7 @@ export function gbHoursOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
@@ -274,7 +312,7 @@ export function gbHoursOverviewQueryOptions(
     queryKey: [
       'usage-events',
       'gb-hours',
-      'overview',
+      usageOverviewQueryScope(includeBreakdown),
       'project',
       projectId,
       rangeKeyPart,
@@ -285,6 +323,7 @@ export function gbHoursOverviewQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        { includeBreakdown },
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -300,6 +339,7 @@ export function storageOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
@@ -307,7 +347,7 @@ export function storageOverviewQueryOptions(
     queryKey: [
       'usage-gauges',
       'storage',
-      'overview',
+      usageOverviewQueryScope(includeBreakdown),
       'project',
       projectId,
       rangeKeyPart,
@@ -318,6 +358,7 @@ export function storageOverviewQueryOptions(
         projectId!,
         getBounds(),
         interval,
+        { includeBreakdown },
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -403,10 +444,28 @@ export function useProjectBandwidthOverview(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
+  const queryClient = useQueryClient()
+
   return useQuery({
-    ...bandwidthOverviewQueryOptions(projectId, dateRange, interval),
+    ...bandwidthOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
     enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectBandwidthOverview>(
+      queryClient,
+      projectId,
+      bandwidthOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
   })
 }
 
@@ -415,10 +474,28 @@ export function useProjectRequestsOverview(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
+  const queryClient = useQueryClient()
+
   return useQuery({
-    ...requestsOverviewQueryOptions(projectId, dateRange, interval),
+    ...requestsOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
     enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectRequestsOverview>(
+      queryClient,
+      projectId,
+      requestsOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
   })
 }
 
@@ -427,10 +504,28 @@ export function useProjectExecutionsOverview(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
+  const queryClient = useQueryClient()
+
   return useQuery({
-    ...executionsOverviewQueryOptions(projectId, dateRange, interval),
+    ...executionsOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
     enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectExecutionsOverview>(
+      queryClient,
+      projectId,
+      executionsOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
   })
 }
 
@@ -439,10 +534,28 @@ export function useProjectGbHoursOverview(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
+  const queryClient = useQueryClient()
+
   return useQuery({
-    ...gbHoursOverviewQueryOptions(projectId, dateRange, interval),
+    ...gbHoursOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
     enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
+      queryClient,
+      projectId,
+      gbHoursOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
   })
 }
 
@@ -451,10 +564,28 @@ export function useProjectStorageOverview(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
 ) {
+  const queryClient = useQueryClient()
+
   return useQuery({
-    ...storageOverviewQueryOptions(projectId, dateRange, interval),
+    ...storageOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
     enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectStorageOverview>(
+      queryClient,
+      projectId,
+      storageOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
   })
 }
 
@@ -680,32 +811,7 @@ export function bandwidthChartOnlyQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
-  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: [
-      'usage-events',
-      'bandwidth',
-      'chart',
-      'project',
-      projectId,
-      rangeKeyPart,
-      interval,
-    ],
-    queryFn: () =>
-      fetchProjectBandwidthOverview(
-        projectId!,
-        getBounds(),
-        interval,
-      ),
-    enabled: !!projectId,
-    ...usageEventsQueryOptionsBase,
-    placeholderData: keepPreviousUsageChartDataForProject(projectId),
-    refetchOnMount: refetchOnMountRolling
-      ? 'always'
-      : usageEventsQueryOptionsBase.refetchOnMount,
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
+  return bandwidthOverviewQueryOptions(projectId, dateRange, interval, false)
 }
 
 export function useProjectBandwidthChartOnly(

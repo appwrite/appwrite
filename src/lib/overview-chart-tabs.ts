@@ -17,7 +17,7 @@ export const OVERVIEW_CHART_TAB_LABELS: Record<OverviewChartTabId, string> = {
   bandwidth: 'Bandwidth',
   requests: 'Requests',
   storage: 'Storage',
-  executions: 'Executions',
+  executions: 'Function executions',
   gbhours: 'Compute',
 }
 

@@ -10,6 +10,7 @@ export const COMPUTE_GB_HOURS_DESCRIPTION =
 export const COMPUTE_DOCS_HREF = '/docs/products/functions'
 
 export const COMPUTE_EXECUTIONS_BREAKDOWN_TITLE = 'Top executed functions'
+export const COMPUTE_EXECUTIONS_CHART_TITLE = 'Function executions over time'
 export const COMPUTE_GB_HOURS_BREAKDOWN_TITLE = 'Top compute consumers'
 
 export function topConsumersToBreakdownItems(

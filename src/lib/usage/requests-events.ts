@@ -6,6 +6,7 @@ import {
 import {
   fetchProjectUsageChartOverview,
   fetchProjectUsageMetricsOverview,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
   type UsageTopEndpoint,
@@ -51,12 +52,16 @@ export async function fetchProjectRequestsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<ProjectRequestsOverview> {
   const overview = await fetchProjectUsageMetricsOverview(
     projectId,
     dateRange,
     REQUESTS_EVENT_METRICS,
     interval,
+    undefined,
+    undefined,
+    options,
   )
 
   return {
