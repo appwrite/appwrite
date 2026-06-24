@@ -57,7 +57,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb']), 'Database to use (mongodb|mariadb)', true)
             ->callback($this->action(...));
     }
 
@@ -101,6 +101,8 @@ class Install extends Action
         $data = $this->readExistingCompose();
         $envFileExists = file_exists($this->path . '/' . $this->getEnvFileName());
         $existingInstallation = $data !== '' || $envFileExists;
+
+        $existingDatabase = null;
 
         if ($existingInstallation) {
             $time = \time();
@@ -171,7 +173,6 @@ class Install extends Action
             // Detect database type from existing installation.
             // 1.9.0+ installs have _APP_DB_ADAPTER; pre-1.9.0 installs
             // can be detected by the DB service name or _APP_DB_HOST.
-            $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
                 $svcEnv = $service->getEnvironment()->list();
                 if (isset($svcEnv['_APP_DB_ADAPTER'])) {
@@ -200,7 +201,8 @@ class Install extends Action
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
-        if (!in_array($database, $enabledDatabases, true)) {
+        $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
+        if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
@@ -332,6 +334,9 @@ class Install extends Action
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
+            $enabledDatabases[] = $lockedDatabase;
+        }
 
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
