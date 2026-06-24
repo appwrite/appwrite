@@ -135,15 +135,16 @@ class Create extends Action
                             $resources = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
 
                             foreach ($resources as $resource) {
-                                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $resource
-                                    ->setAttribute('installationId', '')
-                                    ->setAttribute('installationInternalId', '')
-                                    ->setAttribute('providerRepositoryId', '')
-                                    ->setAttribute('providerBranch', '')
-                                    ->setAttribute('providerSilentMode', false)
-                                    ->setAttribute('providerRootDirectory', '')
-                                    ->setAttribute('repositoryId', '')
-                                    ->setAttribute('repositoryInternalId', '')));
+                                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), new Document([
+                                    'installationId' => '',
+                                    'installationInternalId' => '',
+                                    'providerRepositoryId' => '',
+                                    'providerBranch' => '',
+                                    'providerSilentMode' => false,
+                                    'providerRootDirectory' => '',
+                                    'repositoryId' => '',
+                                    'repositoryInternalId' => '',
+                                ])));
                             }
 
                             $cursor = count($resources) === 1000 ? $resources[array_key_last($resources)] : null;

@@ -298,7 +298,7 @@ class Builds extends Action
             try {
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             } catch (\Exception $e) {
-                if (\str_contains($e->getMessage(), 'Status: 404')
+                if ($e->getCode() === 404
                     && $resource->getAttribute('installationId', '') === $installationId) {
                     $this->disconnectVcs($resource, $dbForProject, $dbForPlatform);
                 }
@@ -1569,15 +1569,16 @@ class Builds extends Action
         if (!empty($repositoryId)) {
             $dbForPlatform->deleteDocument('repositories', $repositoryId);
         }
-        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource
-            ->setAttribute('installationId', '')
-            ->setAttribute('installationInternalId', '')
-            ->setAttribute('providerRepositoryId', '')
-            ->setAttribute('providerBranch', '')
-            ->setAttribute('providerSilentMode', false)
-            ->setAttribute('providerRootDirectory', '')
-            ->setAttribute('repositoryId', '')
-            ->setAttribute('repositoryInternalId', ''));
+        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+            'installationId' => '',
+            'installationInternalId' => '',
+            'providerRepositoryId' => '',
+            'providerBranch' => '',
+            'providerSilentMode' => false,
+            'providerRootDirectory' => '',
+            'repositoryId' => '',
+            'repositoryInternalId' => '',
+        ]));
     }
 
     private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
