@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
@@ -72,15 +73,20 @@ class Update extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        if ($name) {
-            $database = $database->setAttribute('name', $name);
-        }
-
         $searchName = $name ?? $database->getAttribute('name');
 
-        $database = $dbForProject->updateDocument('databases', $databaseId, $database
-            ->setAttribute('enabled', $enabled)
-            ->setAttribute('search', implode(' ', [$databaseId, $searchName])));
+        // Persist only the attributes this endpoint changes so concurrent
+        // updates to the database aren't clobbered by writing the full document.
+        $updates = new Document([
+            'enabled' => $enabled,
+            'search' => implode(' ', [$databaseId, $searchName]),
+        ]);
+
+        if ($name) {
+            $updates->setAttribute('name', $name);
+        }
+
+        $database = $dbForProject->updateDocument('databases', $databaseId, $updates);
 
         $queueForEvents->setParam('databaseId', $database->getId());
 

@@ -198,7 +198,8 @@ class Databases extends Action
 
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                        $relatedAttribute->setAttribute('status', 'available');
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'available']));
                     }
                     break;
                 default:
@@ -207,7 +208,8 @@ class Databases extends Action
                     }
             }
 
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+            $attribute->setAttribute('status', 'available');
+            $dbForProject->updateDocument('attributes', $attribute->getId(), new Document(['status' => 'available']));
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
                 $attribute->setAttribute('error', $e->getMessage());
@@ -296,7 +298,8 @@ class Databases extends Action
                     }
 
                     if (!$dbForProject->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                        $relatedAttribute->setAttribute('status', 'stuck');
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'stuck']));
                         throw new DatabaseException('Failed to delete Relationship');
                     }
                 } elseif (!$dbForProject->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
@@ -453,7 +456,8 @@ class Databases extends Action
             if (!$dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new DatabaseException('Failed to create Index');
             }
-            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
+            $index->setAttribute('status', 'available');
+            $dbForProject->updateDocument('indexes', $index->getId(), new Document(['status' => 'available']));
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());

@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -74,7 +75,9 @@ class Update extends Action
 
         $token->setAttribute('expire', $expire);
 
-        $token = $dbForProject->updateDocument('resourceTokens', $tokenId, $token);
+        $token = $dbForProject->updateDocument('resourceTokens', $tokenId, new Document([
+            'expire' => $expire,
+        ]));
 
         $queueForEvents->setParam('tokenId', $token->getId());
 
