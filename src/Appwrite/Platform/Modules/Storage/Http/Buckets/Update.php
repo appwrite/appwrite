@@ -141,7 +141,11 @@ class Update extends Action
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $updates);
 
-        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $effectivePermissions, $effectiveFileSecurity);
+        // Only re-sync the underlying collection when permissions or file
+        // security actually changed; a name-only update leaves them untouched.
+        if ($permissions !== null || $fileSecurity !== null) {
+            $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $effectivePermissions, $effectiveFileSecurity);
+        }
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId());
