@@ -199,7 +199,7 @@ class Install extends Action
         }
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb', 'postgresql'];
         if (!in_array($database, $enabledDatabases, true)) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
@@ -331,7 +331,7 @@ class Install extends Action
         $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb', 'postgresql'];
 
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
