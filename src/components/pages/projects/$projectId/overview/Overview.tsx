@@ -1,4 +1,4 @@
-import { useState, useMemo, useLayoutEffect, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Plus,
   Plug2,
@@ -97,6 +97,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
   OVERVIEW_REQUESTS_ERROR,
@@ -181,7 +182,6 @@ interface ViewProps {
 export function View({ projectId, initialData }: ViewProps) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('bandwidth')
-  const [chartShowSession, setChartShowSession] = useState(0)
   const {
     dateRange: dashboardChartDateRange,
     chartInterval,
@@ -198,14 +198,7 @@ export function View({ projectId, initialData }: ViewProps) {
     useState<ProjectPlatform | null>(null)
   const { features, isCloud } = useConsoleProfile()
 
-  useLayoutEffect(() => {
-    setChartShowSession(1)
-  }, [])
-
   const handleOverviewTabChange = (tabId: string) => {
-    if (tabId !== activeTab) {
-      setChartShowSession((session) => session + 1)
-    }
     setActiveTab(tabId)
   }
 
@@ -243,6 +236,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     data: bandwidthUsage,
     isLoading: isBandwidthLoading,
+    isPlaceholderData: isBandwidthPlaceholderData,
     isError: isBandwidthError,
     refetch: refetchBandwidth,
   } = useProjectBandwidthOverview(
@@ -255,6 +249,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     data: requestsUsage,
     isLoading: isRequestsLoading,
+    isPlaceholderData: isRequestsPlaceholderData,
     isError: isRequestsError,
     refetch: refetchRequests,
   } = useProjectRequestsOverview(
@@ -267,6 +262,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     data: executionsUsage,
     isLoading: isExecutionsLoading,
+    isPlaceholderData: isExecutionsPlaceholderData,
     isError: isExecutionsError,
     refetch: refetchExecutions,
   } = useProjectExecutionsOverview(
@@ -279,6 +275,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     data: gbHoursUsage,
     isLoading: isGbHoursLoading,
+    isPlaceholderData: isGbHoursPlaceholderData,
     isError: isGbHoursError,
     refetch: refetchGbHours,
   } = useProjectGbHoursOverview(
@@ -291,6 +288,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     data: storageUsage,
     isLoading: isStorageLoading,
+    isPlaceholderData: isStoragePlaceholderData,
     isError: isStorageError,
     refetch: refetchStorage,
   } = useProjectStorageOverview(
@@ -300,20 +298,35 @@ export function View({ projectId, initialData }: ViewProps) {
     chartInterval,
   )
 
-  const showBandwidthChartLoading =
-    isBandwidthLoading && !isBandwidthError && !bandwidthUsage
+  const showBandwidthChartLoading = shouldShowUsageChartSkeleton(
+    isBandwidthError,
+    isBandwidthLoading,
+    isBandwidthPlaceholderData,
+  )
 
-  const showRequestsChartLoading =
-    isRequestsLoading && !isRequestsError && !requestsUsage
+  const showRequestsChartLoading = shouldShowUsageChartSkeleton(
+    isRequestsError,
+    isRequestsLoading,
+    isRequestsPlaceholderData,
+  )
 
-  const showExecutionsChartLoading =
-    isExecutionsLoading && !isExecutionsError && !executionsUsage
+  const showExecutionsChartLoading = shouldShowUsageChartSkeleton(
+    isExecutionsError,
+    isExecutionsLoading,
+    isExecutionsPlaceholderData,
+  )
 
-  const showGbHoursChartLoading =
-    isGbHoursLoading && !isGbHoursError && !gbHoursUsage
+  const showGbHoursChartLoading = shouldShowUsageChartSkeleton(
+    isGbHoursError,
+    isGbHoursLoading,
+    isGbHoursPlaceholderData,
+  )
 
-  const showStorageChartLoading =
-    isStorageLoading && !isStorageError && !storageUsage
+  const showStorageChartLoading = shouldShowUsageChartSkeleton(
+    isStorageError,
+    isStorageLoading,
+    isStoragePlaceholderData,
+  )
 
   const executionBreakdownIds = useMemo(
     () => executionsUsage?.topConsumers.map((item) => item.id) ?? [],
@@ -873,7 +886,6 @@ export function View({ projectId, initialData }: ViewProps) {
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
-                    showSession={chartShowSession}
                     isPanelVisible={activeTab === 'bandwidth'}
                     title="Bandwidth over time"
                     metric="bandwidth"
@@ -918,7 +930,6 @@ export function View({ projectId, initialData }: ViewProps) {
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
-                    showSession={chartShowSession}
                     isPanelVisible={activeTab === 'requests'}
                     title="Requests over time"
                     metric="requests"
@@ -1039,7 +1050,6 @@ export function View({ projectId, initialData }: ViewProps) {
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
-                    showSession={chartShowSession}
                     isPanelVisible={activeTab === 'executions'}
                     title="Executions over time"
                     metric="executions"
@@ -1092,7 +1102,6 @@ export function View({ projectId, initialData }: ViewProps) {
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
                     className="@[700px]:min-h-0 @[700px]:flex-1"
-                    showSession={chartShowSession}
                     isPanelVisible={activeTab === 'gbhours'}
                     title="Compute over time"
                     metric="gbhours"

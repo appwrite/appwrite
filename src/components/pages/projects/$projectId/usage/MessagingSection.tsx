@@ -22,6 +22,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
 const MESSAGING_USAGE_ERROR = {
   title: "Couldn't load messaging usage",
@@ -97,11 +98,11 @@ export function MessagingSection({
         total={sumUsageChartPoints(messagesPoints)}
         changePercent={messagesQuery.data?.changePercent ?? 0}
         chartPoints={messagesPoints}
-        isLoading={
-          messagesQuery.isLoading &&
-          !messagesQuery.isError &&
-          !messagesQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          messagesQuery.isError,
+          messagesQuery.isLoading,
+          messagesQuery.isPlaceholderData,
+        )}
         isError={messagesQuery.isError}
         errorTitle={MESSAGING_USAGE_ERROR.title}
         errorMessage={MESSAGING_USAGE_ERROR.message}
@@ -119,9 +120,11 @@ export function MessagingSection({
         total={getMessagingTopicsDisplayTotal(topicsPoints)}
         changePercent={topicsQuery.data?.changePercent ?? 0}
         chartPoints={topicsPoints}
-        isLoading={
-          topicsQuery.isLoading && !topicsQuery.isError && !topicsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          topicsQuery.isError,
+          topicsQuery.isLoading,
+          topicsQuery.isPlaceholderData,
+        )}
         isError={topicsQuery.isError}
         errorTitle={MESSAGING_USAGE_ERROR.title}
         errorMessage={MESSAGING_USAGE_ERROR.message}
@@ -139,9 +142,11 @@ export function MessagingSection({
         total={sumUsageChartPoints(smsPoints)}
         changePercent={smsQuery.data?.changePercent ?? 0}
         chartPoints={smsPoints}
-        isLoading={
-          smsQuery.isLoading && !smsQuery.isError && !smsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          smsQuery.isError,
+          smsQuery.isLoading,
+          smsQuery.isPlaceholderData,
+        )}
         isError={smsQuery.isError}
         errorTitle={MESSAGING_USAGE_ERROR.title}
         errorMessage={MESSAGING_USAGE_ERROR.message}

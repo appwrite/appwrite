@@ -8,6 +8,7 @@ import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usag
 import { RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import type { UsageChartPoint } from '@/lib/usage/usage-events-common'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   formatRequestsTotal,
   formatRequestsValue,
@@ -337,9 +338,7 @@ function RequestsChartArea({
             strokeWidth={strokeWidth}
             fill={`url(#${gradientId})`}
             dot={false}
-            isAnimationActive={!isSkeleton}
-            animationDuration={500}
-            animationEasing="ease-out"
+            {...CHART_ANIMATION_DISABLED}
           />
         </AreaChart>
       </ResponsiveContainer>

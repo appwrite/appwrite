@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import {
   createCompactBytesAxisTickFormatter,
 } from '@/lib/usage/format-metric'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_CHART_HEIGHT,
@@ -28,8 +29,11 @@ import {
   formatBandwidthValue,
   type BandwidthDualChartPoint,
 } from '@/lib/usage/bandwidth-events'
-import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
-import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import {
+  sumUsageChartPoints,
+  type UsageEventBreakdownDimension,
+} from '@/lib/usage/usage-events-common'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectBandwidthBreakdowns,
@@ -179,7 +183,7 @@ function BandwidthChartCard({
           </h3>
 
           <div className={usageBandwidthMetricHeaderClass}>
-            {isLoading && !dualChartPoints.length ? (
+            {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
               <>
@@ -233,7 +237,7 @@ function BandwidthChartCard({
       <div className="flex flex-1 flex-col p-4">
         {isError ? (
           <UsageBandwidthChartError onRetry={onRetry} />
-        ) : isLoading && chartData.length === 0 ? (
+        ) : isLoading ? (
           <ChartSkeleton />
         ) : chartData.length === 0 ? (
           <UsageBandwidthChartArea>
@@ -346,6 +350,7 @@ function BandwidthChartCard({
                       stroke="var(--chart-2)"
                       strokeWidth={2}
                       fill="url(#usage-bandwidth-inbound-gradient)"
+                      {...CHART_ANIMATION_DISABLED}
                     />
                     <Area
                       type="monotone"
@@ -355,6 +360,7 @@ function BandwidthChartCard({
                       stroke="var(--chart-brand)"
                       strokeWidth={2}
                       fill="url(#usage-bandwidth-outbound-gradient)"
+                      {...CHART_ANIMATION_DISABLED}
                     />
                   </>
                 ) : (
@@ -365,6 +371,7 @@ function BandwidthChartCard({
                     strokeWidth={2}
                     fill="url(#usage-bandwidth-outbound-gradient)"
                     name="Bandwidth"
+                    {...CHART_ANIMATION_DISABLED}
                   />
                 )}
               </AreaChart>
@@ -405,6 +412,7 @@ export function BandwidthSection({
   const {
     data: chartOverview,
     isLoading: isChartLoading,
+    isPlaceholderData: isChartPlaceholderData,
     isError: isChartError,
     refetch: refetchChart,
   } = useProjectBandwidthChartOnly(
@@ -436,7 +444,11 @@ export function BandwidthSection({
   const dualChartPoints = isChartError
     ? []
     : (chartOverview?.dualChartPoints ?? [])
-  const showChartLoading = isChartLoading && !isChartError && !chartOverview
+  const showChartLoading = shouldShowUsageChartSkeleton(
+    isChartError,
+    isChartLoading,
+    isChartPlaceholderData,
+  )
   const total = sumUsageChartPoints(chartOverview?.chartPoints ?? [])
   const changePercent = chartOverview?.changePercent ?? 0
 

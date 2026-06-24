@@ -33,6 +33,7 @@ import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { parseDatabaseIdFromUsageResourceLabel } from '@/lib/usage/resolve-database-breakdown-resources'
 import { DatabaseOperationBentoCard } from './_components/DatabaseOperationBentoCard'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 
 const DATABASE_USAGE_ERROR = {
@@ -166,9 +167,11 @@ export function DatabasesSection({
         chartPoints={readsPoints}
         total={sumUsageChartPoints(readsPoints)}
         changePercent={readsQuery.data?.changePercent ?? 0}
-        isLoading={
-          readsQuery.isLoading && !readsQuery.isError && !readsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          readsQuery.isError,
+          readsQuery.isLoading,
+          readsQuery.isPlaceholderData,
+        )}
         isError={readsQuery.isError}
         showBreakdown={showBreakdown}
         breakdowns={readsBreakdowns}
@@ -188,9 +191,11 @@ export function DatabasesSection({
         chartPoints={writesPoints}
         total={sumUsageChartPoints(writesPoints)}
         changePercent={writesQuery.data?.changePercent ?? 0}
-        isLoading={
-          writesQuery.isLoading && !writesQuery.isError && !writesQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          writesQuery.isError,
+          writesQuery.isLoading,
+          writesQuery.isPlaceholderData,
+        )}
         isError={writesQuery.isError}
         showBreakdown={showBreakdown}
         breakdowns={writesBreakdowns}
@@ -208,11 +213,11 @@ export function DatabasesSection({
         total={getUsageChartLatestValue(collectionsPoints)}
         changePercent={collectionsQuery.data?.changePercent ?? 0}
         chartPoints={collectionsPoints}
-        isLoading={
-          collectionsQuery.isLoading &&
-          !collectionsQuery.isError &&
-          !collectionsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          collectionsQuery.isError,
+          collectionsQuery.isLoading,
+          collectionsQuery.isPlaceholderData,
+        )}
         isError={collectionsQuery.isError}
         errorTitle={DATABASE_USAGE_ERROR.title}
         errorMessage={DATABASE_USAGE_ERROR.message}
@@ -230,11 +235,11 @@ export function DatabasesSection({
         total={getUsageChartLatestValue(documentsPoints)}
         changePercent={documentsQuery.data?.changePercent ?? 0}
         chartPoints={documentsPoints}
-        isLoading={
-          documentsQuery.isLoading &&
-          !documentsQuery.isError &&
-          !documentsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          documentsQuery.isError,
+          documentsQuery.isLoading,
+          documentsQuery.isPlaceholderData,
+        )}
         isError={documentsQuery.isError}
         errorTitle={DATABASE_USAGE_ERROR.title}
         errorMessage={DATABASE_USAGE_ERROR.message}

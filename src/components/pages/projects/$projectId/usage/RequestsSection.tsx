@@ -17,10 +17,12 @@ import {
   createCompactCountAxisTickFormatter,
   getChartSeriesMax,
 } from '@/lib/usage/format-metric'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   formatRequestsTotal,
   formatRequestsValue,
 } from '@/lib/usage/requests-events'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import { REQUESTS_BREAKDOWN_SECTIONS } from '@/lib/usage/requests-breakdowns'
@@ -162,7 +164,7 @@ function RequestsChartCard({
           </h3>
 
           <div className={usageRequestsMetricHeaderClass}>
-            {isLoading && !chartPoints.length ? (
+            {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
               <>
@@ -200,7 +202,7 @@ function RequestsChartCard({
       <div className="flex flex-1 flex-col p-4">
         {isError ? (
           <UsageRequestsChartError onRetry={onRetry} />
-        ) : isLoading && chartData.length === 0 ? (
+        ) : isLoading ? (
           <ChartSkeleton />
         ) : chartData.length === 0 ? (
           <UsageRequestsChartArea>
@@ -291,6 +293,7 @@ function RequestsChartCard({
                   strokeWidth={2}
                   fill="url(#usage-requests-gradient)"
                   name="Requests over time"
+                  {...CHART_ANIMATION_DISABLED}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -330,6 +333,7 @@ export function RequestsSection({
   const {
     data: chartOverview,
     isLoading: isChartLoading,
+    isPlaceholderData: isChartPlaceholderData,
     isError: isChartError,
     refetch: refetchChart,
   } = useProjectRequestsChartOnly(
@@ -359,7 +363,11 @@ export function RequestsSection({
   ])
 
   const chartPoints = isChartError ? [] : (chartOverview?.chartPoints ?? [])
-  const showChartLoading = isChartLoading && !isChartError && !chartOverview
+  const showChartLoading = shouldShowUsageChartSkeleton(
+    isChartError,
+    isChartLoading,
+    isChartPlaceholderData,
+  )
   const total = sumUsageChartPoints(chartPoints)
   const changePercent = chartOverview?.changePercent ?? 0
 

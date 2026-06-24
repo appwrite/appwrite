@@ -26,6 +26,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { InboundOutboundUsageChartCard } from './_components/InboundOutboundUsageChartCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
 
 const REALTIME_USAGE_ERROR = {
@@ -104,11 +105,11 @@ export function RealtimeSection({
         total={getUsageChartPeakValue(connectionsPoints)}
         changePercent={connectionsQuery.data?.changePercent ?? 0}
         chartPoints={connectionsPoints}
-        isLoading={
-          connectionsQuery.isLoading &&
-          !connectionsQuery.isError &&
-          !connectionsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          connectionsQuery.isError,
+          connectionsQuery.isLoading,
+          connectionsQuery.isPlaceholderData,
+        )}
         isError={connectionsQuery.isError}
         errorTitle={REALTIME_USAGE_ERROR.title}
         errorMessage={REALTIME_USAGE_ERROR.message}
@@ -126,11 +127,11 @@ export function RealtimeSection({
         total={sumUsageChartPoints(messagesPoints)}
         changePercent={messagesQuery.data?.changePercent ?? 0}
         chartPoints={messagesPoints}
-        isLoading={
-          messagesQuery.isLoading &&
-          !messagesQuery.isError &&
-          !messagesQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          messagesQuery.isError,
+          messagesQuery.isLoading,
+          messagesQuery.isPlaceholderData,
+        )}
         isError={messagesQuery.isError}
         errorTitle={REALTIME_USAGE_ERROR.title}
         errorMessage={REALTIME_USAGE_ERROR.message}
@@ -147,11 +148,11 @@ export function RealtimeSection({
         total={sumUsageChartPoints(bandwidthQuery.data?.chartPoints ?? [])}
         changePercent={bandwidthQuery.data?.changePercent ?? 0}
         dualChartPoints={dualBandwidthPoints}
-        isLoading={
-          bandwidthQuery.isLoading &&
-          !bandwidthQuery.isError &&
-          !bandwidthQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          bandwidthQuery.isError,
+          bandwidthQuery.isLoading,
+          bandwidthQuery.isPlaceholderData,
+        )}
         isError={bandwidthQuery.isError}
         errorTitle={REALTIME_USAGE_ERROR.title}
         errorMessage={REALTIME_USAGE_ERROR.message}

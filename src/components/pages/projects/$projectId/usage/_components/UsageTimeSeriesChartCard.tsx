@@ -25,6 +25,7 @@ import {
   getChartSeriesMax,
   type UsageChartAxisFormat,
 } from '@/lib/usage/format-metric'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   UsageMetricCardFooter,
   UsageMetricCardShell,
@@ -143,7 +144,7 @@ export function UsageTimeSeriesChartCard({
           <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
 
           <div className={usageMetricHeaderClass}>
-            {isLoading && !chartPoints.length ? (
+            {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
               <>
@@ -199,7 +200,7 @@ export function UsageTimeSeriesChartCard({
               ) : null}
             </div>
           </UsageChartArea>
-        ) : isLoading && chartData.length === 0 ? (
+        ) : isLoading ? (
           <ChartSkeleton />
         ) : chartData.length === 0 ? (
           <UsageChartArea>
@@ -209,7 +210,7 @@ export function UsageTimeSeriesChartCard({
           </UsageChartArea>
         ) : (
           <UsageChartArea>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={150}>
               <AreaChart
                 data={chartData}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -290,6 +291,7 @@ export function UsageTimeSeriesChartCard({
                   strokeWidth={2}
                   fill={`url(#${chartGradientId})`}
                   name={title}
+                  {...CHART_ANIMATION_DISABLED}
                 />
               </AreaChart>
             </ResponsiveContainer>

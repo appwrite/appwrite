@@ -22,6 +22,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
 const WEBHOOKS_USAGE_ERROR = {
   title: "Couldn't load webhooks usage",
@@ -99,11 +100,11 @@ export function WebhooksSection({
         total={sumUsageChartPoints(eventsSentPoints)}
         changePercent={eventsSentQuery.data?.changePercent ?? 0}
         chartPoints={eventsSentPoints}
-        isLoading={
-          eventsSentQuery.isLoading &&
-          !eventsSentQuery.isError &&
-          !eventsSentQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          eventsSentQuery.isError,
+          eventsSentQuery.isLoading,
+          eventsSentQuery.isPlaceholderData,
+        )}
         isError={eventsSentQuery.isError}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
@@ -121,11 +122,11 @@ export function WebhooksSection({
         total={sumUsageChartPoints(eventsFailedPoints)}
         changePercent={eventsFailedQuery.data?.changePercent ?? 0}
         chartPoints={eventsFailedPoints}
-        isLoading={
-          eventsFailedQuery.isLoading &&
-          !eventsFailedQuery.isError &&
-          !eventsFailedQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          eventsFailedQuery.isError,
+          eventsFailedQuery.isLoading,
+          eventsFailedQuery.isPlaceholderData,
+        )}
         isError={eventsFailedQuery.isError}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
@@ -143,9 +144,11 @@ export function WebhooksSection({
         total={getWebhooksCountDisplayTotal(countPoints)}
         changePercent={countQuery.data?.changePercent ?? 0}
         chartPoints={countPoints}
-        isLoading={
-          countQuery.isLoading && !countQuery.isError && !countQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          countQuery.isError,
+          countQuery.isLoading,
+          countQuery.isPlaceholderData,
+        )}
         isError={countQuery.isError}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
         errorMessage={WEBHOOKS_USAGE_ERROR.message}

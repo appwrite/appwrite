@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useMemo } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
@@ -20,6 +20,7 @@ import { GbHoursUnitInfo } from './GbHoursUnitInfo'
 import { MetricValueWithUnit } from './MetricValueWithUnit'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type { DateRange } from 'react-day-picker'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   createUsageChartAxisTickFormatter,
   formatCompactBytes,
@@ -59,15 +60,11 @@ interface RequestsChartProps {
   errorTitle?: string
   errorMessage?: string
   formatValue?: (value: number) => string
-  /** Bumps when the parent tab becomes visible so enter animation runs on first show. */
-  showSession?: number
-  /** When false, the chart stays unmounted until the panel is shown. */
+  /** When false, the chart body is not rendered (inactive overview tab). */
   isPanelVisible?: boolean
   /** Hide the link to the full usage page (e.g. when already on /usage). */
   showViewAllLink?: boolean
 }
-
-const CHART_ANIMATION_DURATION = 800
 
 function getOverviewChartAxisFormat(metric: MetricType): UsageChartAxisFormat {
   if (metric === 'bandwidth') return 'bytes'
@@ -148,15 +145,14 @@ function buildFallbackSkeletonShell(
   }))
 }
 
-/** Remount key for chart enter animation — tied to visibility context, not fetched data. */
-function buildChartShowKey(
-  metric: MetricType,
-  dateRange: DateRange | undefined,
-  showSession?: number,
-) {
-  const from = dateRange?.from?.toISOString() ?? 'default-from'
-  const to = dateRange?.to?.toISOString() ?? 'default-to'
-  return `${metric}-line-${from}-${to}-${showSession ?? 0}`
+/** Stable gradient ids per metric (avoid remounting on parent re-render). */
+function getOverviewChartGradientIds(metric: MetricType) {
+  return {
+    areaGradientId: `overview-chart-gradient-${metric}`,
+    skeletonGradientId: `overview-chart-gradient-skeleton-${metric}`,
+    inboundGradientId: 'overview-chart-gradient-inbound',
+    outboundGradientId: 'overview-chart-gradient-outbound',
+  }
 }
 
 interface CustomTooltipProps {
@@ -241,7 +237,7 @@ const CustomTooltip = ({
   return null
 }
 
-export function RequestsChart({
+export const RequestsChart = memo(function RequestsChart({
   className,
   title,
   metric = 'requests',
@@ -254,11 +250,9 @@ export function RequestsChart({
   errorTitle = OVERVIEW_BANDWIDTH_ERROR.title,
   errorMessage = OVERVIEW_BANDWIDTH_ERROR.message,
   formatValue,
-  showSession = 0,
   isPanelVisible = true,
   showViewAllLink = true,
 }: RequestsChartProps) {
-  const [chartMountKey, setChartMountKey] = useState<string | null>(null)
   const { projectId } = useParams({ strict: false })
 
   const chartData = chartDataProp
@@ -274,21 +268,14 @@ export function RequestsChart({
         typeof point.inbound === 'number' && typeof point.outbound === 'number',
     )
 
-  const chartShowKey = useMemo(
-    () => buildChartShowKey(metric, dateRange, showSession),
-    [metric, dateRange?.from, dateRange?.to, showSession],
-  )
-  const showChartSkeleton = isLoading && chartData.length === 0
+  const showChartSkeleton = isLoading
   const showEmptyState = !isLoading && chartData.length === 0
-  const showChart = chartMountKey === chartShowKey
-  const showChartSkeletonRef = useRef(showChartSkeleton)
-  showChartSkeletonRef.current = showChartSkeleton
-  const chartDataLengthRef = useRef(chartData.length)
-  chartDataLengthRef.current = chartData.length
-  const areaGradientId = `overview-chart-gradient-${metric}`
-  const skeletonGradientId = `overview-chart-gradient-skeleton-${metric}`
-  const inboundGradientId = 'overview-chart-gradient-inbound'
-  const outboundGradientId = 'overview-chart-gradient-outbound'
+  const {
+    areaGradientId,
+    skeletonGradientId,
+    inboundGradientId,
+    outboundGradientId,
+  } = getOverviewChartGradientIds(metric)
   const valueFormatter =
     formatValue ??
     (metric === 'requests' || metric === 'executions'
@@ -320,54 +307,7 @@ export function RequestsChart({
   )
   const isSkeleton = showChartSkeleton
   const renderChart =
-    isPanelVisible &&
-    activeChartData.length > 0 &&
-    (showChartSkeleton || showChart)
-
-  useLayoutEffect(() => {
-    if (
-      isError ||
-      !isPanelVisible ||
-      showChartSkeleton ||
-      chartData.length === 0
-    ) {
-      setChartMountKey(null)
-      return
-    }
-
-    let cancelled = false
-    let mountTimerId = 0
-    let mountRafId = 0
-
-    mountTimerId = window.setTimeout(() => {
-      mountRafId = requestAnimationFrame(() => {
-        if (
-          cancelled ||
-          showChartSkeletonRef.current ||
-          chartDataLengthRef.current === 0
-        ) {
-          return
-        }
-
-        setChartMountKey(chartShowKey)
-      })
-    }, 0)
-
-    return () => {
-      cancelled = true
-      clearTimeout(mountTimerId)
-      cancelAnimationFrame(mountRafId)
-    }
-  }, [chartShowKey, isError, isPanelVisible, showChartSkeleton, chartData.length])
-
-  const areaAnimationProps = isSkeleton
-    ? { isAnimationActive: false }
-    : {
-        isAnimationActive: true,
-        animationDuration: CHART_ANIMATION_DURATION,
-        animationEasing: 'ease-out' as const,
-        animationBegin: 0,
-      }
+    isPanelVisible && activeChartData.length > 0
 
   return (
     <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
@@ -438,10 +378,10 @@ export function RequestsChart({
             {renderChart ? (
               <div className={overviewChartPanelChartFillClass}>
                 <ResponsiveContainer
-                  key={isSkeleton ? 'skeleton' : chartMountKey}
                   width="100%"
                   height="100%"
                   minHeight={OVERVIEW_CHART_HEIGHT}
+                  debounce={150}
                 >
                 <AreaChart
                   data={activeChartData}
@@ -565,7 +505,7 @@ export function RequestsChart({
                       fill={`url(#${skeletonGradientId})`}
                       dot={false}
                       activeDot={false}
-                      {...areaAnimationProps}
+                      {...CHART_ANIMATION_DISABLED}
                     />
                   ) : showBandwidthDualSeries ? (
                     <>
@@ -584,7 +524,7 @@ export function RequestsChart({
                           stroke: '#fff',
                           strokeWidth: 2,
                         }}
-                        {...areaAnimationProps}
+                        {...CHART_ANIMATION_DISABLED}
                       />
                       <Area
                         type="monotone"
@@ -601,7 +541,7 @@ export function RequestsChart({
                           stroke: '#fff',
                           strokeWidth: 2,
                         }}
-                        {...areaAnimationProps}
+                        {...CHART_ANIMATION_DISABLED}
                       />
                     </>
                   ) : (
@@ -618,7 +558,7 @@ export function RequestsChart({
                         stroke: '#fff',
                         strokeWidth: 2,
                       }}
-                      {...areaAnimationProps}
+                      {...CHART_ANIMATION_DISABLED}
                     />
                   )}
                 </AreaChart>
@@ -630,4 +570,4 @@ export function RequestsChart({
       </div>
     </div>
   )
-}
+})

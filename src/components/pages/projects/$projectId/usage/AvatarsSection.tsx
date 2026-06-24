@@ -17,6 +17,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
 const AVATARS_USAGE_ERROR = {
   title: "Couldn't load avatars usage",
@@ -76,11 +77,11 @@ export function AvatarsSection({
         total={sumUsageChartPoints(chartPoints)}
         changePercent={screenshotsQuery.data?.changePercent ?? 0}
         chartPoints={chartPoints}
-        isLoading={
-          screenshotsQuery.isLoading &&
-          !screenshotsQuery.isError &&
-          !screenshotsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          screenshotsQuery.isError,
+          screenshotsQuery.isLoading,
+          screenshotsQuery.isPlaceholderData,
+        )}
         isError={screenshotsQuery.isError}
         errorTitle={AVATARS_USAGE_ERROR.title}
         errorMessage={AVATARS_USAGE_ERROR.message}

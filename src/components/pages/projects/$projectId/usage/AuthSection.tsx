@@ -27,6 +27,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
 const AUTH_USAGE_ERROR = {
   title: "Couldn't load auth usage",
@@ -100,9 +101,11 @@ export function AuthSection({
         total={getAuthMauDisplayTotal(mauPoints)}
         changePercent={mauQuery.data?.changePercent ?? 0}
         chartPoints={mauPoints}
-        isLoading={
-          mauQuery.isLoading && !mauQuery.isError && !mauQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          mauQuery.isError,
+          mauQuery.isLoading,
+          mauQuery.isPlaceholderData,
+        )}
         isError={mauQuery.isError}
         errorTitle={AUTH_USAGE_ERROR.title}
         errorMessage={AUTH_USAGE_ERROR.message}
@@ -120,9 +123,11 @@ export function AuthSection({
         total={sumUsageChartPoints(otpPoints)}
         changePercent={otpQuery.data?.changePercent ?? 0}
         chartPoints={otpPoints}
-        isLoading={
-          otpQuery.isLoading && !otpQuery.isError && !otpQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          otpQuery.isError,
+          otpQuery.isLoading,
+          otpQuery.isPlaceholderData,
+        )}
         isError={otpQuery.isError}
         errorTitle={AUTH_USAGE_ERROR.title}
         errorMessage={AUTH_USAGE_ERROR.message}
@@ -140,9 +145,11 @@ export function AuthSection({
         total={getAuthSignupsDisplayTotal(signupsPoints)}
         changePercent={signupsQuery.data?.changePercent ?? 0}
         chartPoints={signupsPoints}
-        isLoading={
-          signupsQuery.isLoading && !signupsQuery.isError && !signupsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          signupsQuery.isError,
+          signupsQuery.isLoading,
+          signupsQuery.isPlaceholderData,
+        )}
         isError={signupsQuery.isError}
         errorTitle={AUTH_USAGE_ERROR.title}
         errorMessage={AUTH_USAGE_ERROR.message}

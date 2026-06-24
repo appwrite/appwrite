@@ -31,6 +31,7 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { GbHoursUnitInfo } from '../overview/GbHoursUnitInfo'
 import { ComputeMetricBentoCard } from './_components/ComputeMetricBentoCard'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
 type ComputeSectionProps = {
   projectId: string
@@ -123,11 +124,11 @@ export function ComputeSection({
         chartPoints={executionsPoints}
         total={sumUsageChartPoints(executionsPoints)}
         changePercent={executionsQuery.data?.changePercent ?? 0}
-        isLoading={
-          executionsQuery.isLoading &&
-          !executionsQuery.isError &&
-          !executionsQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          executionsQuery.isError,
+          executionsQuery.isLoading,
+          executionsQuery.isPlaceholderData,
+        )}
         isError={executionsQuery.isError}
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
@@ -148,11 +149,11 @@ export function ComputeSection({
         chartPoints={gbHoursPoints}
         total={sumUsageChartPoints(gbHoursPoints)}
         changePercent={gbHoursQuery.data?.changePercent ?? 0}
-        isLoading={
-          gbHoursQuery.isLoading &&
-          !gbHoursQuery.isError &&
-          !gbHoursQuery.data
-        }
+        isLoading={shouldShowUsageChartSkeleton(
+          gbHoursQuery.isError,
+          gbHoursQuery.isLoading,
+          gbHoursQuery.isPlaceholderData,
+        )}
         isError={gbHoursQuery.isError}
         formatTotal={formatGbHoursTotal}
         formatValue={formatGbHoursValue}

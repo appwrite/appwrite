@@ -19,9 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  createCompactCountAxisTickFormatter,
-} from '@/lib/usage/format-metric'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 
 interface MessagesDataPoint {
@@ -289,6 +287,7 @@ export function RealtimeMessagesChart({
                 strokeWidth={2}
                 fill="url(#messagesGradient)"
                 name="Messages/min"
+                {...CHART_ANIMATION_DISABLED}
               />
             </AreaChart>
           </ResponsiveContainer>

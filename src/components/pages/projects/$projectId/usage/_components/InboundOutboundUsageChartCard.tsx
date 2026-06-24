@@ -14,6 +14,7 @@ import {
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createCompactBytesAxisTickFormatter } from '@/lib/usage/format-metric'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import type { BandwidthDualChartPoint } from '@/lib/usage/bandwidth-events'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -140,7 +141,7 @@ export function InboundOutboundUsageChartCard({
           <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
 
           <div className={metricHeaderClass}>
-            {isLoading && !dualChartPoints.length ? (
+            {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
               <>
@@ -212,7 +213,7 @@ export function InboundOutboundUsageChartCard({
               ) : null}
             </div>
           </ChartArea>
-        ) : isLoading && chartData.length === 0 ? (
+        ) : isLoading ? (
           <ChartSkeleton />
         ) : chartData.length === 0 ? (
           <ChartArea>
@@ -325,6 +326,7 @@ export function InboundOutboundUsageChartCard({
                       stroke="var(--chart-2)"
                       strokeWidth={2}
                       fill={`url(#${inboundGradientId})`}
+                      {...CHART_ANIMATION_DISABLED}
                     />
                     <Area
                       type="monotone"
@@ -334,6 +336,7 @@ export function InboundOutboundUsageChartCard({
                       stroke="var(--chart-brand)"
                       strokeWidth={2}
                       fill={`url(#${outboundGradientId})`}
+                      {...CHART_ANIMATION_DISABLED}
                     />
                   </>
                 ) : (
@@ -344,6 +347,7 @@ export function InboundOutboundUsageChartCard({
                     strokeWidth={2}
                     fill={`url(#${outboundGradientId})`}
                     name="Bandwidth"
+                    {...CHART_ANIMATION_DISABLED}
                   />
                 )}
               </AreaChart>

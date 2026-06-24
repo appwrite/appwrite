@@ -22,6 +22,7 @@ import {
 import {
   createCompactCountAxisTickFormatter,
 } from '@/lib/usage/format-metric'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 
 interface ChannelsDataPoint {
@@ -282,6 +283,7 @@ export function RealtimeChannelsChart({
                 strokeWidth={2}
                 fill="url(#channelsGradient)"
                 name="Channels"
+                {...CHART_ANIMATION_DISABLED}
               />
             </AreaChart>
           </ResponsiveContainer>
