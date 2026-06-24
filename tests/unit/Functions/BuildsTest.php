@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Functions\Workers\Builds;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 final class BuildsTest extends TestCase
@@ -85,6 +86,61 @@ final class BuildsTest extends TestCase
 
         $this->assertSame('ssr', $detection->getName());
         $this->assertNull($detection->getFallbackFile());
+    }
+
+    public function testDisconnectVcsClearsAllFieldsAndDeletesRepository(): void
+    {
+        $resource = new Document([
+            '$id' => 'func123',
+            '$collection' => 'functions',
+            'repositoryId' => 'repo456',
+            'installationId' => 'install789',
+            'installationInternalId' => 'install789internal',
+            'providerRepositoryId' => 'gh123',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => 'functions/my-func',
+            'providerSilentMode' => true,
+            'repositoryInternalId' => 'repo456internal',
+        ]);
+
+        $dbForProject = $this->createMock(Database::class);
+        $dbForPlatform = $this->createMock(Database::class);
+
+        $dbForPlatform->expects($this->once())
+            ->method('deleteDocument')
+            ->with('repositories', 'repo456');
+
+        $dbForProject->expects($this->once())
+            ->method('updateDocument')
+            ->with('functions', 'func123', $this->callback(function (Document $doc) {
+                return $doc->getAttribute('installationId') === ''
+                    && $doc->getAttribute('installationInternalId') === ''
+                    && $doc->getAttribute('providerRepositoryId') === ''
+                    && $doc->getAttribute('providerBranch') === ''
+                    && $doc->getAttribute('providerRootDirectory') === ''
+                    && $doc->getAttribute('providerSilentMode') === false
+                    && $doc->getAttribute('repositoryId') === ''
+                    && $doc->getAttribute('repositoryInternalId') === '';
+            }));
+
+        $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
+    }
+
+    public function testDisconnectVcsSkipsRepositoryDeletionWhenRepositoryIdEmpty(): void
+    {
+        $resource = new Document([
+            '$id' => 'func123',
+            '$collection' => 'functions',
+            'repositoryId' => '',
+        ]);
+
+        $dbForProject = $this->createMock(Database::class);
+        $dbForPlatform = $this->createMock(Database::class);
+
+        $dbForPlatform->expects($this->never())->method('deleteDocument');
+        $dbForProject->expects($this->once())->method('updateDocument');
+
+        $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
     }
 
     private function callBuilds(string $method, mixed ...$arguments): mixed

@@ -299,19 +299,7 @@ class Builds extends Action
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             } catch (\Exception $e) {
                 if (\str_contains($e->getMessage(), 'Status: 404')) {
-                    $repositoryId = $resource->getAttribute('repositoryId', '');
-                    if (!empty($repositoryId)) {
-                        $dbForPlatform->deleteDocument('repositories', $repositoryId);
-                    }
-                    $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource
-                        ->setAttribute('installationId', '')
-                        ->setAttribute('installationInternalId', '')
-                        ->setAttribute('providerRepositoryId', '')
-                        ->setAttribute('providerBranch', '')
-                        ->setAttribute('providerSilentMode', false)
-                        ->setAttribute('providerRootDirectory', '')
-                        ->setAttribute('repositoryId', '')
-                        ->setAttribute('repositoryInternalId', ''));
+                    $this->disconnectVcs($resource, $dbForProject, $dbForPlatform);
                 }
                 throw $e;
             }
@@ -1572,6 +1560,23 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
         }
+    }
+
+    protected function disconnectVcs(Document $resource, Database $dbForProject, Database $dbForPlatform): void
+    {
+        $repositoryId = $resource->getAttribute('repositoryId', '');
+        if (!empty($repositoryId)) {
+            $dbForPlatform->deleteDocument('repositories', $repositoryId);
+        }
+        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource
+            ->setAttribute('installationId', '')
+            ->setAttribute('installationInternalId', '')
+            ->setAttribute('providerRepositoryId', '')
+            ->setAttribute('providerBranch', '')
+            ->setAttribute('providerSilentMode', false)
+            ->setAttribute('providerRootDirectory', '')
+            ->setAttribute('repositoryId', '')
+            ->setAttribute('repositoryInternalId', ''));
     }
 
     private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
