@@ -12,11 +12,12 @@ import {
   POSTGRES_SQL_SAVE_SHORTCUT_COMBOS,
 } from '@/lib/postgres-sql-editor-shortcuts'
 import type { PostgresSqlEditorActions } from '@/lib/postgres-sql-editor-actions'
-import { isPostgresSqlWorkbenchFocused } from '@/lib/postgres-sql-editor-actions'
+import { isPostgresSqlMonacoFocused } from '@/lib/postgres-sql-editor-actions'
 
 const WORKBENCH_SHORTCUT_OPTIONS = {
   ignoreInputs: false,
   capture: true,
+  preventDefault: false,
 } as const
 
 function useWorkbenchModShortcut(
@@ -26,8 +27,9 @@ function useWorkbenchModShortcut(
 ) {
   const wrappedHandler = useCallback(
     (event: KeyboardEvent) => {
-      if (!isPostgresSqlWorkbenchFocused()) return
+      if (!isPostgresSqlMonacoFocused()) return
       event.preventDefault()
+      event.stopPropagation()
       handler()
     },
     [handler],
@@ -50,8 +52,9 @@ function useWorkbenchCtrlShortcut(
 ) {
   const wrappedHandler = useCallback(
     (event: KeyboardEvent) => {
-      if (!isPostgresSqlWorkbenchFocused()) return
+      if (!isPostgresSqlMonacoFocused()) return
       event.preventDefault()
+      event.stopPropagation()
       handler()
     },
     [handler],
@@ -71,7 +74,7 @@ function useWorkbenchModDigitShortcuts(
     if (!enabled) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isPostgresSqlWorkbenchFocused()) return
+      if (!isPostgresSqlMonacoFocused()) return
       if (!event.metaKey && !event.ctrlKey) return
       if (event.altKey || event.shiftKey) return
 
@@ -164,8 +167,9 @@ export function usePostgresSqlEditorShortcuts(
 
   const wrappedFormatHandler = useCallback(
     (event: KeyboardEvent) => {
-      if (!isPostgresSqlWorkbenchFocused()) return
+      if (!isPostgresSqlMonacoFocused()) return
       event.preventDefault()
+      event.stopPropagation()
       format()
     },
     [format],
@@ -174,6 +178,5 @@ export function usePostgresSqlEditorShortcuts(
   useKeyboardShortcut(POSTGRES_SQL_FORMAT_SHORTCUT_COMBOS[0], wrappedFormatHandler, {
     ...WORKBENCH_SHORTCUT_OPTIONS,
     enabled,
-    stopPropagation: true,
   })
 }

@@ -84,8 +84,13 @@ export function isPostgresSqlEditorPath(pathname: string): boolean {
   return parsePostgresDatabaseTabFromPathname(pathname) === 'sql'
 }
 
+/** True when keyboard focus is in the SQL Monaco editor (not tabs, toolbar, etc.). */
+export function isPostgresSqlMonacoFocused(): boolean {
+  if (typeof document === 'undefined') return false
+  const workbench = document.querySelector('[data-postgres-sql-workbench]')
+  return workbench?.querySelector('.monaco-editor:focus-within') != null
+}
+
 export function isPostgresSqlWorkbenchFocused(): boolean {
-  const activeElement = document.activeElement
-  if (!activeElement || !(activeElement instanceof Element)) return false
-  return activeElement.closest('[data-postgres-sql-workbench]') !== null
+  return isPostgresSqlMonacoFocused()
 }

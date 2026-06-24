@@ -255,6 +255,7 @@ export function SqlEditorTabBar({
       modifiers={tabDragModifiers}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragEnd}
     >
       <SortableContext
         items={tabs.map((tab) => tab.id)}

@@ -52,10 +52,6 @@ let getCompletionResolvers: () => PostgresSqlCompletionResolvers = () => ({
 
 function focusEditorInstance(editorInstance: editor.IStandaloneCodeEditor) {
   requestAnimationFrame(() => {
-    const model = editorInstance.getModel()
-    if (model) {
-      editorInstance.setPosition(model.getFullModelRange().getEndPosition())
-    }
     editorInstance.focus()
   })
 }
@@ -82,10 +78,8 @@ export const PostgresSqlCodeEditor = forwardRef<
     resolveTableRef: async () => null,
   })
 
-  const sqlRef = useRef(sql)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const undoRedoDisposeRef = useRef<(() => void) | null>(null)
-  const isApplyingExternalSqlRef = useRef(false)
   const onUndoRedoStateChangeRef = useRef(onUndoRedoStateChange)
 
   useEffect(() => {
@@ -104,10 +98,6 @@ export const PostgresSqlCodeEditor = forwardRef<
       void model.redo()
     },
   }))
-
-  useEffect(() => {
-    sqlRef.current = sql
-  }, [sql])
 
   useEffect(() => {
     resolversRef.current = {
@@ -199,24 +189,6 @@ export const PostgresSqlCodeEditor = forwardRef<
   }, [databaseId, projectId, queryClient])
 
   useEffect(() => {
-    const editorInstance = editorRef.current
-    const model = editorInstance?.getModel()
-    if (!editorInstance || !model || model.getValue() === sql) return
-
-    isApplyingExternalSqlRef.current = true
-    editorInstance.pushUndoStop()
-    editorInstance.executeEdits('table-switch', [
-      {
-        range: model.getFullModelRange(),
-        text: sql,
-        forceMoveMarkers: true,
-      },
-    ])
-    editorInstance.pushUndoStop()
-    isApplyingExternalSqlRef.current = false
-  }, [sql])
-
-  useEffect(() => {
     return () => {
       undoRedoDisposeRef.current?.()
       undoRedoDisposeRef.current = null
@@ -302,43 +274,27 @@ export const PostgresSqlCodeEditor = forwardRef<
         },
       })
 
-      const model = editorInstance.getModel()
-      if (model && model.getValue() !== sqlRef.current) {
-        isApplyingExternalSqlRef.current = true
-        editorInstance.pushUndoStop()
-        editorInstance.executeEdits('initial-sql', [
-          {
-            range: model.getFullModelRange(),
-            text: sqlRef.current,
-            forceMoveMarkers: true,
-          },
-        ])
-        editorInstance.pushUndoStop()
-        isApplyingExternalSqlRef.current = false
-      }
-
       focusEditorInstance(editorInstance)
     },
     [attachUndoRedoListeners, databaseId, projectId],
   )
 
-  const handleSqlChange = useCallback(
-    (value: string) => {
-      if (isApplyingExternalSqlRef.current) return
-      onSqlChange(value)
-    },
-    [onSqlChange],
-  )
+  const handleEditorAreaMouseDown = useCallback(() => {
+    requestAnimationFrame(() => {
+      editorRef.current?.focus()
+    })
+  }, [])
 
   return (
     <div
       className="relative h-full min-h-0 flex-1 overflow-hidden"
       data-postgres-sql-editor
+      onMouseDown={handleEditorAreaMouseDown}
     >
       <div className="absolute inset-0 overflow-hidden">
         <CodeEditor
           value={sql}
-          onChange={handleSqlChange}
+          onChange={onSqlChange}
           language="sql"
           height="100%"
           modelPath={`postgres-sql/${projectId}/${databaseId}/${tabId}`}

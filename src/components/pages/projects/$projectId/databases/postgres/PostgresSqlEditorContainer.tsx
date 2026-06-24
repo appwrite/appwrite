@@ -1,5 +1,5 @@
 import type { PointerEvent, ReactNode } from 'react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { usePostgresSqlEditorHeight } from '@/lib/react-query/hooks'
 import {
@@ -134,6 +134,28 @@ export function PostgresSqlEditorContainer({
     },
     [persistEditorHeightPx],
   )
+
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleWindowPointerEnd = () => {
+      finishDrag()
+    }
+
+    window.addEventListener('pointerup', handleWindowPointerEnd)
+    window.addEventListener('pointercancel', handleWindowPointerEnd)
+    return () => {
+      window.removeEventListener('pointerup', handleWindowPointerEnd)
+      window.removeEventListener('pointercancel', handleWindowPointerEnd)
+    }
+  }, [finishDrag, isDragging])
 
   return (
     <div

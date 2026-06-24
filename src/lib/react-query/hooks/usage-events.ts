@@ -2,7 +2,13 @@
  * React Query hooks for project usage events (overview dashboard).
  */
 
-import { queryOptions, useQuery, useQueries, keepPreviousData, type QueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useQuery,
+  useQueries,
+  type Query,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import {
@@ -115,13 +121,44 @@ function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   }
 }
 
+function getProjectIdFromUsageQueryKey(
+  queryKey: readonly unknown[],
+): string | undefined {
+  const projectIndex = queryKey.indexOf('project')
+  if (projectIndex === -1) return undefined
+  const projectId = queryKey[projectIndex + 1]
+  return typeof projectId === 'string' ? projectId : undefined
+}
+
+/** Keep chart data when filters change, but not when switching projects. */
+function keepPreviousUsageChartDataForProject<T>(
+  currentProjectId: string | null | undefined,
+) {
+  return (
+    previousData: T | undefined,
+    previousQuery: Query<T> | undefined,
+  ): T | undefined => {
+    if (previousData === undefined || !previousQuery || !currentProjectId) {
+      return undefined
+    }
+
+    const previousProjectId = getProjectIdFromUsageQueryKey(
+      previousQuery.queryKey,
+    )
+    if (previousProjectId !== currentProjectId) {
+      return undefined
+    }
+
+    return previousData
+  }
+}
+
 const usageEventsQueryOptionsBase = {
   staleTime: DEFAULT_STALE_TIME,
   retry: false,
   refetchOnMount: false as const,
   refetchOnWindowFocus: false as const,
   refetchOnReconnect: false as const,
-  placeholderData: keepPreviousData,
   meta: {
     skipInitialLoader: true,
   },
@@ -152,6 +189,7 @@ export function bandwidthOverviewQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -184,6 +222,7 @@ export function requestsOverviewQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -216,6 +255,7 @@ export function executionsOverviewQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -248,6 +288,7 @@ export function gbHoursOverviewQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -280,6 +321,7 @@ export function storageOverviewQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -313,6 +355,7 @@ export function requestsChartOverviewQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -510,6 +553,7 @@ export function requestsBreakdownQueryOptions(
       fetchProjectRequestsBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -545,6 +589,7 @@ export function requestsBreakdownDrawerQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -655,6 +700,7 @@ export function bandwidthChartOnlyQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -695,6 +741,7 @@ export function bandwidthBreakdownQueryOptions(
       fetchProjectBandwidthBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -730,6 +777,7 @@ export function bandwidthBreakdownDrawerQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -893,6 +941,7 @@ function databaseReadsChartQueryOptions(
       fetchProjectDatabaseReadsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -922,6 +971,7 @@ function databaseWritesChartQueryOptions(
       fetchProjectDatabaseWritesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -951,6 +1001,7 @@ function databaseCollectionsChartQueryOptions(
       fetchProjectDatabaseCollectionsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -980,6 +1031,7 @@ function databaseDocumentsChartQueryOptions(
       fetchProjectDatabaseDocumentsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1057,6 +1109,7 @@ function databaseReadsBreakdownQueryOptions(
       fetchProjectDatabaseReadsBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1086,6 +1139,7 @@ function databaseWritesBreakdownQueryOptions(
       fetchProjectDatabaseWritesBreakdown(projectId!, getBounds(), dimension),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1122,6 +1176,7 @@ function databaseReadsBreakdownDrawerQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1158,6 +1213,7 @@ function databaseWritesBreakdownDrawerQueryOptions(
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1359,6 +1415,7 @@ function realtimeConnectionsChartQueryOptions(
       fetchProjectRealtimeConnectionsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1388,6 +1445,7 @@ function realtimeMessagesChartQueryOptions(
       fetchProjectRealtimeMessagesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1417,6 +1475,7 @@ function realtimeBandwidthChartQueryOptions(
       fetchProjectRealtimeBandwidthOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1497,6 +1556,7 @@ function authMauChartQueryOptions(
       fetchProjectAuthMauOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1526,6 +1586,7 @@ function authOtpChartQueryOptions(
       fetchProjectAuthOtpOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1555,6 +1616,7 @@ function authSignupsChartQueryOptions(
       fetchProjectAuthSignupsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1635,6 +1697,7 @@ function avatarsScreenshotsChartQueryOptions(
       fetchProjectAvatarsScreenshotsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1691,6 +1754,7 @@ function messagingMessagesChartQueryOptions(
       fetchProjectMessagingMessagesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1720,6 +1784,7 @@ function messagingSmsChartQueryOptions(
       fetchProjectMessagingSmsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1749,6 +1814,7 @@ function messagingTopicsChartQueryOptions(
       fetchProjectMessagingTopicsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1831,6 +1897,7 @@ function webhooksEventsSentChartQueryOptions(
       fetchProjectWebhooksEventsSentOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1860,6 +1927,7 @@ function webhooksEventsFailedChartQueryOptions(
       fetchProjectWebhooksEventsFailedOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,
@@ -1889,6 +1957,7 @@ function webhooksCountChartQueryOptions(
       fetchProjectWebhooksCountOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageEventsQueryOptionsBase.refetchOnMount,

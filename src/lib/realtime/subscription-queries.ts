@@ -24,6 +24,18 @@ export const REALTIME_QUERY_VALUE_TYPES: ReadonlyArray<{
   { value: 'datetime', label: 'Datetime' },
 ]
 
+/** Attribute-level operators supported by realtime subscription queries. */
+export const REALTIME_ALLOWED_QUERY_OPERATOR_KEYS = [
+  'equal',
+  'notEqual',
+  'lessThan',
+  'lessThanEqual',
+  'greaterThan',
+  'greaterThanEqual',
+  'isNull',
+  'isNotNull',
+] as const
+
 export type SubscriptionQueryEntry = {
   id: string
   attribute: string
@@ -63,9 +75,10 @@ export function createSubscriptionQueryEntry(
 export function subscriptionQueryOperatorsForType(
   valueType: RealtimeQueryValueType = 'string',
 ) {
-  return getOperatorsForType(valueType as FilterColumnType, {
-    fulltextSearchable: valueType === 'string',
-  })
+  const allowed = new Set<string>(REALTIME_ALLOWED_QUERY_OPERATOR_KEYS)
+  return getOperatorsForType(valueType as FilterColumnType).filter((operator) =>
+    allowed.has(operator.key),
+  )
 }
 
 /** @deprecated Use subscriptionQueryOperatorsForType */
@@ -74,7 +87,7 @@ export function subscriptionQueryOperators() {
 }
 
 export function subscriptionQueryNeedsValue(operatorKey: string): boolean {
-  return !['isNull', 'isNotNull', 'exists', 'notExists'].includes(operatorKey)
+  return operatorKey !== 'isNull' && operatorKey !== 'isNotNull'
 }
 
 export function parseQueryEntryValue(
@@ -86,10 +99,6 @@ export function parseQueryEntryValue(
   if (!raw) return ''
 
   const valueType = entry.valueType ?? 'string'
-
-  if (entry.operatorKey === 'between' || entry.operatorKey === 'notBetween') {
-    return raw
-  }
 
   switch (valueType) {
     case 'boolean':

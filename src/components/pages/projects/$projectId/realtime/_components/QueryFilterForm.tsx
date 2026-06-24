@@ -42,7 +42,6 @@ export function QueryFilterForm({
   const [valueType, setValueType] = useState<RealtimeQueryValueType>('string')
   const [operatorKey, setOperatorKey] = useState('equal')
   const [valueInput, setValueInput] = useState('')
-  const [valueEndInput, setValueEndInput] = useState('')
 
   const operators = useMemo(
     () => subscriptionQueryOperatorsForType(valueType),
@@ -53,17 +52,14 @@ export function QueryFilterForm({
     if (operators.some((operator) => operator.key === operatorKey)) return
     setOperatorKey(operators[0]?.key ?? 'equal')
     setValueInput('')
-    setValueEndInput('')
   }, [operatorKey, operators])
 
   const needsValue = subscriptionQueryNeedsValue(operatorKey)
-  const isBetween = operatorKey === 'between' || operatorKey === 'notBetween'
   const isNumericType = valueType === 'integer' || valueType === 'double'
 
   const handleValueTypeChange = useCallback((nextType: RealtimeQueryValueType) => {
     setValueType(nextType)
     setValueInput('')
-    setValueEndInput('')
     const nextOperators = subscriptionQueryOperatorsForType(nextType)
     setOperatorKey(nextOperators[0]?.key ?? 'equal')
   }, [])
@@ -73,15 +69,13 @@ export function QueryFilterForm({
     setValueType('string')
     setOperatorKey('equal')
     setValueInput('')
-    setValueEndInput('')
   }, [])
 
   const canSubmit = useMemo(() => {
     if (!attribute.trim()) return false
     if (!needsValue) return true
-    if (isBetween) return !!valueInput.trim() && !!valueEndInput.trim()
     return !!valueInput.trim()
-  }, [attribute, isBetween, needsValue, valueEndInput, valueInput])
+  }, [attribute, needsValue, valueInput])
 
   const handleSubmit = useCallback(
     (event: FormEvent) => {
@@ -89,15 +83,12 @@ export function QueryFilterForm({
       if (!canSubmit) return
 
       const trimmedAttribute = attribute.trim()
-      const value = isBetween
-        ? `${valueInput.trim()},${valueEndInput.trim()}`
-        : valueInput
 
       onSubmit(
         createSubscriptionQueryEntry({
           attribute: trimmedAttribute,
           operatorKey,
-          value: needsValue ? value : '',
+          value: needsValue ? valueInput : '',
           valueType,
         }),
       )
@@ -106,12 +97,10 @@ export function QueryFilterForm({
     [
       attribute,
       canSubmit,
-      isBetween,
       needsValue,
       onSubmit,
       operatorKey,
       resetForm,
-      valueEndInput,
       valueInput,
       valueType,
     ],
@@ -119,82 +108,6 @@ export function QueryFilterForm({
 
   const valueInputNode = (() => {
     if (!needsValue) return null
-
-    if (isBetween) {
-      if (valueType === 'datetime') {
-        return (
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className={LABEL_CLASS} htmlFor="query-value-start">
-                From
-              </label>
-              <Input
-                id="query-value-start"
-                type="datetime-local"
-                value={toDatetimeLocal(valueInput)}
-                onChange={(event) => {
-                  const next = event.target.value
-                  setValueInput(next ? new Date(next).toISOString() : '')
-                }}
-                className={INPUT_CLASS}
-                disabled={disabled}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className={LABEL_CLASS} htmlFor="query-value-end">
-                To
-              </label>
-              <Input
-                id="query-value-end"
-                type="datetime-local"
-                value={toDatetimeLocal(valueEndInput)}
-                onChange={(event) => {
-                  const next = event.target.value
-                  setValueEndInput(next ? new Date(next).toISOString() : '')
-                }}
-                className={INPUT_CLASS}
-                disabled={disabled}
-              />
-            </div>
-          </div>
-        )
-      }
-
-      return (
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className={LABEL_CLASS} htmlFor="query-value-start">
-              Min
-            </label>
-            <Input
-              id="query-value-start"
-              type={isNumericType ? 'number' : 'text'}
-              value={valueInput}
-              onChange={(event) => setValueInput(event.target.value)}
-              placeholder="Min"
-              className={cn(INPUT_CLASS, isNumericType ? '' : 'font-mono')}
-              disabled={disabled}
-              spellCheck={false}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className={LABEL_CLASS} htmlFor="query-value-end">
-              Max
-            </label>
-            <Input
-              id="query-value-end"
-              type={isNumericType ? 'number' : 'text'}
-              value={valueEndInput}
-              onChange={(event) => setValueEndInput(event.target.value)}
-              placeholder="Max"
-              className={cn(INPUT_CLASS, isNumericType ? '' : 'font-mono')}
-              disabled={disabled}
-              spellCheck={false}
-            />
-          </div>
-        </div>
-      )
-    }
 
     if (valueType === 'boolean') {
       return (
@@ -307,7 +220,6 @@ export function QueryFilterForm({
             onValueChange={(value) => {
               setOperatorKey(value)
               setValueInput('')
-              setValueEndInput('')
             }}
             items={operators.map((operator) => ({
               value: operator.key,
