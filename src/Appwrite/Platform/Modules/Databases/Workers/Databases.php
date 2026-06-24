@@ -199,7 +199,11 @@ class Databases extends Action
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                         $relatedAttribute->setAttribute('status', 'available');
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'available']));
+                        $relatedAttribute->setAttribute('error', '');
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document([
+                            'status' => 'available',
+                            'error' => ''
+                        ]));
                     }
                     break;
                 default:
@@ -209,7 +213,11 @@ class Databases extends Action
             }
 
             $attribute->setAttribute('status', 'available');
-            $dbForProject->updateDocument('attributes', $attribute->getId(), new Document(['status' => 'available']));
+            $attribute->setAttribute('error', '');
+            $dbForProject->updateDocument('attributes', $attribute->getId(), new Document([
+                'status' => 'available',
+                'error' => ''
+            ]));
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
                 $attribute->setAttribute('error', $e->getMessage());
@@ -298,8 +306,13 @@ class Databases extends Action
                     }
 
                     if (!$dbForProject->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                        $relatedAttribute->setAttribute('status', 'stuck');
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'stuck']));
+                        // Only one-way relationships skip loading $relatedAttribute, so
+                        // guard against writing to an empty id (which would mask the real
+                        // deletion failure with a second failed write).
+                        if (!$relatedAttribute->isEmpty()) {
+                            $relatedAttribute->setAttribute('status', 'stuck');
+                            $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'stuck']));
+                        }
                         throw new DatabaseException('Failed to delete Relationship');
                     }
                 } elseif (!$dbForProject->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
@@ -457,7 +470,11 @@ class Databases extends Action
                 throw new DatabaseException('Failed to create Index');
             }
             $index->setAttribute('status', 'available');
-            $dbForProject->updateDocument('indexes', $index->getId(), new Document(['status' => 'available']));
+            $index->setAttribute('error', '');
+            $dbForProject->updateDocument('indexes', $index->getId(), new Document([
+                'status' => 'available',
+                'error' => ''
+            ]));
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
