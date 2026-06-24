@@ -19,6 +19,8 @@ import {
   Code2,
   Copy,
   Info,
+  ListCollapse,
+  ListTree,
   Loader2,
   MessagesSquare,
   Pause,
@@ -257,7 +259,9 @@ function RealtimeWebSocketUrlField({
 
   return (
     <div
-      className="inline-flex w-max max-w-full shrink-0 items-stretch overflow-hidden rounded-md border border-border bg-background"
+      className={cn(
+        'flex w-full min-w-0 max-w-full items-stretch overflow-hidden rounded-md border border-border bg-background lg:inline-flex lg:w-max',
+      )}
       role="status"
       aria-live="polite"
       aria-label={`Connection status: ${statusDescription}. ${url}`}
@@ -299,8 +303,11 @@ function RealtimeWebSocketUrlField({
         </TooltipContent>
       </Tooltip>
 
-      <div className="flex min-w-0 items-center bg-muted/20 px-3" title={url}>
-        <code className="max-w-full truncate whitespace-nowrap font-mono text-[12px] text-foreground/90">
+      <div
+        className="flex min-w-0 flex-1 items-center bg-muted/20 px-3"
+        title={url}
+      >
+        <code className="block min-w-0 flex-1 truncate whitespace-nowrap font-mono text-[12px] text-foreground/90">
           {url}
         </code>
       </div>
@@ -398,6 +405,9 @@ export function View() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [channelInput, setChannelInput] = useState('')
   const [logs, setLogs] = useState<LogEntry[]>([])
+  const [expandedMessageIds, setExpandedMessageIds] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [isPaused, setIsPaused] = useState(false)
   const [connectionCodeOpen, setConnectionCodeOpen] = useState(false)
   const [activeSubscriptions, setActiveSubscriptions] = useState<
@@ -685,6 +695,35 @@ export function View() {
 
   const handleClearLogs = useCallback(() => {
     setLogs([])
+    setExpandedMessageIds(new Set())
+  }, [])
+
+  const allMessagesExpanded = useMemo(
+    () =>
+      logs.length > 0 &&
+      logs.every((entry) => expandedMessageIds.has(entry.id)),
+    [logs, expandedMessageIds],
+  )
+
+  const handleToggleAllMessages = useCallback(() => {
+    if (allMessagesExpanded) {
+      setExpandedMessageIds(new Set())
+      return
+    }
+
+    setExpandedMessageIds(new Set(logs.map((entry) => entry.id)))
+  }, [allMessagesExpanded, logs])
+
+  const handleToggleMessageExpanded = useCallback((messageId: string) => {
+    setExpandedMessageIds((current) => {
+      const next = new Set(current)
+      if (next.has(messageId)) {
+        next.delete(messageId)
+      } else {
+        next.add(messageId)
+      }
+      return next
+    })
   }, [])
 
   if (!projectId) return null
@@ -701,10 +740,10 @@ export function View() {
               REALTIME_LAYOUT_GRID,
             )}
           >
-            <div className="flex min-h-14 items-center gap-3 border-b border-border px-4 py-3 lg:border-b-0 lg:border-r">
+            <div className="flex min-w-0 flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:gap-3 lg:min-h-14 lg:border-b-0 lg:border-r">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="cursor-default shrink-0 text-[12px] font-medium text-muted-foreground">
+                  <span className="cursor-default shrink-0 text-[12px] font-medium text-muted-foreground sm:w-auto">
                     Act as
                   </span>
                 </TooltipTrigger>
@@ -715,7 +754,7 @@ export function View() {
                 </TooltipContent>
               </Tooltip>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 w-full flex-1">
                 <SearchableSelect
                   value={actAsValue}
                   onValueChange={setActAsValue}
@@ -732,18 +771,20 @@ export function View() {
               </div>
             </div>
 
-            <div className="flex min-h-14 flex-col justify-center gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">
-              <RealtimeWebSocketUrlField
-                url={websocketUrl}
-                status={connectionStatus}
-                socketOpen={socketOpen}
-              />
-              <div className="flex shrink-0 items-center gap-2 sm:ml-auto">
+            <div className="flex min-w-0 flex-col gap-3 px-4 py-3 lg:min-h-14 lg:flex-row lg:items-center lg:gap-3">
+              <div className="min-w-0 w-full lg:w-auto lg:flex-1 lg:overflow-hidden">
+                <RealtimeWebSocketUrlField
+                  url={websocketUrl}
+                  status={connectionStatus}
+                  socketOpen={socketOpen}
+                />
+              </div>
+              <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto lg:ml-auto">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 text-[13px]"
+                  className="h-9 flex-1 text-[13px] sm:flex-none"
                   onClick={() => setConnectionCodeOpen(true)}
                 >
                   <Code2 className="mr-1.5 h-4 w-4" />
@@ -753,7 +794,7 @@ export function View() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-[13px]"
+                    className="h-9 flex-1 text-[13px] sm:flex-none"
                     onClick={() => void handleDisconnect()}
                     disabled={isConnecting}
                   >
@@ -762,7 +803,7 @@ export function View() {
                 ) : (
                   <Button
                     size="sm"
-                    className="h-9 text-[13px]"
+                    className="h-9 flex-1 text-[13px] sm:flex-none"
                     onClick={() => void handleConnect()}
                     disabled={!canConnect}
                   >
@@ -933,6 +974,30 @@ export function View() {
                   <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                   Clear
                 </Button>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
+                        onClick={handleToggleAllMessages}
+                        disabled={logs.length === 0}
+                        aria-label={
+                          allMessagesExpanded ? 'Collapse all' : 'Expand all'
+                        }
+                      >
+                        {allMessagesExpanded ? (
+                          <ListCollapse className="h-3.5 w-3.5" />
+                        ) : (
+                          <ListTree className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{allMessagesExpanded ? 'Collapse all' : 'Expand all'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </>
             }
           />
@@ -955,6 +1020,8 @@ export function View() {
                       key={entry.id}
                       entry={entry}
                       sequence={logs.length - index}
+                      expanded={expandedMessageIds.has(entry.id)}
+                      onToggle={() => handleToggleMessageExpanded(entry.id)}
                     />
                   ))}
                 </div>
@@ -980,7 +1047,7 @@ function MessageDirectionIcon({ entry }: { entry: LogEntry }) {
   if (type === 'info') {
     return (
       <Info
-        className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
         aria-label="Info message"
       />
     )
@@ -1006,29 +1073,32 @@ function MessageDirectionIcon({ entry }: { entry: LogEntry }) {
 function MessageRow({
   entry,
   sequence,
+  expanded,
+  onToggle,
 }: {
   entry: LogEntry
   sequence: number
+  expanded: boolean
+  onToggle: () => void
 }) {
-  const [expanded, setExpanded] = useState(false)
   const type = entry.message.type || 'unknown'
   const payload = useMemo(
     () => formatMessagePayload(entry.message),
     [entry.message],
   )
 
-  const toggleExpanded = useCallback(() => {
-    setExpanded((current) => !current)
-  }, [])
+  const handleToggle = useCallback(() => {
+    onToggle()
+  }, [onToggle])
 
   const handleRowKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
-        toggleExpanded()
+        handleToggle()
       }
     },
-    [toggleExpanded],
+    [handleToggle],
   )
 
   return (
@@ -1037,7 +1107,7 @@ function MessageRow({
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
-        onClick={toggleExpanded}
+        onClick={handleToggle}
         onKeyDown={handleRowKeyDown}
         className="grid cursor-pointer grid-cols-[auto_1.75rem_0.875rem_minmax(0,1fr)] items-center gap-x-1.5 px-4 py-2.5 transition-colors hover:bg-muted/30"
       >

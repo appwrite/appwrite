@@ -6,6 +6,8 @@ import { DatabasesSection } from './DatabasesSection'
 import { RealtimeSection } from './RealtimeSection'
 import { AuthSection } from './AuthSection'
 import { AvatarsSection } from './AvatarsSection'
+import { MessagingSection } from './MessagingSection'
+import { WebhooksSection } from './WebhooksSection'
 import { ComputeSection } from './ComputeSection'
 import { findUsageCategory, getUsageCategories } from './usage-nav'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
@@ -94,6 +96,26 @@ export function UsageCategoryView({
   if (categoryId === 'avatars') {
     return (
       <AvatarsSection
+        projectId={projectId}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+      />
+    )
+  }
+
+  if (categoryId === 'messaging') {
+    return (
+      <MessagingSection
+        projectId={projectId}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+      />
+    )
+  }
+
+  if (categoryId === 'webhooks') {
+    return (
+      <WebhooksSection
         projectId={projectId}
         dateRange={dateRange}
         chartInterval={chartInterval}

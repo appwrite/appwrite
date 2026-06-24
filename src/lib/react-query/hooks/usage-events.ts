@@ -89,6 +89,18 @@ import {
   fetchProjectAvatarsScreenshotsOverview,
   type AvatarsUsageChartOverview,
 } from '@/lib/usage/avatars-usage'
+import {
+  fetchProjectMessagingMessagesOverview,
+  fetchProjectMessagingSmsOverview,
+  fetchProjectMessagingTopicsOverview,
+  type MessagingUsageChartOverview,
+} from '@/lib/usage/messaging-usage'
+import {
+  fetchProjectWebhooksCountOverview,
+  fetchProjectWebhooksEventsFailedOverview,
+  fetchProjectWebhooksEventsSentOverview,
+  type WebhooksUsageChartOverview,
+} from '@/lib/usage/webhooks-usage'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   rangeKeyPart: string
@@ -1657,6 +1669,286 @@ export function refetchProjectAvatarsUsageQueries(
   })
 }
 
+function messagingMessagesChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'messaging',
+      'messages',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectMessagingMessagesOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function messagingSmsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'messaging',
+      'sms',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectMessagingSmsOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function messagingTopicsChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'messaging',
+      'topics',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectMessagingTopicsOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectMessagingMessagesChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...messagingMessagesChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectMessagingSmsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...messagingSmsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectMessagingTopicsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...messagingTopicsChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+/** Refetch messaging usage charts for a project. */
+export function refetchProjectMessagingUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      ((query.queryKey[0] === 'usage-events' &&
+        query.queryKey[1] === 'messaging') ||
+        (query.queryKey[0] === 'usage-gauges' &&
+          query.queryKey[1] === 'messaging')),
+  })
+}
+
+function webhooksEventsSentChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'webhooks',
+      'events-sent',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectWebhooksEventsSentOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function webhooksEventsFailedChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'webhooks',
+      'events-failed',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectWebhooksEventsFailedOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function webhooksCountChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'webhooks',
+      'count',
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectWebhooksCountOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectWebhooksEventsSentChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...webhooksEventsSentChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectWebhooksEventsFailedChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...webhooksEventsFailedChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectWebhooksCountChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...webhooksCountChartQueryOptions(projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+/** Refetch webhooks usage charts for a project. */
+export function refetchProjectWebhooksUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      ((query.queryKey[0] === 'usage-events' &&
+        query.queryKey[1] === 'webhooks') ||
+        (query.queryKey[0] === 'usage-gauges' &&
+          query.queryKey[1] === 'webhooks')),
+  })
+}
+
 /** Refetch compute usage charts (executions, GB-hours) for a project. */
 export function refetchProjectComputeUsageQueries(
   queryClient: QueryClient,
@@ -1698,6 +1990,8 @@ export type {
   RealtimeUsageChartOverview,
   AuthUsageChartOverview,
   AvatarsUsageChartOverview,
+  MessagingUsageChartOverview,
+  WebhooksUsageChartOverview,
 }
 
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'

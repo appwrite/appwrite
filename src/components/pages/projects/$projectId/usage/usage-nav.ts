@@ -15,6 +15,10 @@ import {
   buildComputeUsageCategoryMetrics,
   AVATARS_USAGE_CATEGORY,
   buildAvatarsUsageCategoryMetrics,
+  MESSAGING_USAGE_CATEGORY,
+  buildMessagingUsageCategoryMetrics,
+  WEBHOOKS_USAGE_CATEGORY,
+  buildWebhooksUsageCategoryMetrics,
   REQUESTS_USAGE_CATEGORY,
   buildRequestsUsageCategoryMetrics,
 } from './usage-live-categories'
@@ -34,7 +38,7 @@ export const USAGE_NAV_GROUPS: readonly UsageNavGroupConfig[] = [
   {
     id: 'resources',
     label: 'Resources',
-    categoryIds: ['requests', 'bandwidth', 'compute', 'realtime'],
+    categoryIds: ['requests', 'bandwidth', 'compute', 'realtime', 'webhooks'],
   },
   {
     id: 'products',
@@ -159,16 +163,46 @@ export function insertAvatarsCategory(
   )
 }
 
+export function insertMessagingCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const messagingCategory: UsageCategory = {
+    ...MESSAGING_USAGE_CATEGORY,
+    metrics: buildMessagingUsageCategoryMetrics(),
+  }
+
+  return categories.map((category) =>
+    category.id === 'messaging' ? messagingCategory : category,
+  )
+}
+
+export function insertWebhooksCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const webhooksCategory: UsageCategory = {
+    ...WEBHOOKS_USAGE_CATEGORY,
+    metrics: buildWebhooksUsageCategoryMetrics(),
+  }
+
+  return categories.map((category) =>
+    category.id === 'webhooks' ? webhooksCategory : category,
+  )
+}
+
 export function getUsageCategories(
   plan: 'free' | 'pro' | 'custom' = 'pro',
 ): UsageCategory[] {
   const usageData = generateMockUsageData(plan)
-  return insertAvatarsCategory(
-    insertAuthCategory(
-      insertComputeCategory(
-        insertRealtimeCategory(
-          insertDatabasesCategory(
-            insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+  return insertWebhooksCategory(
+    insertMessagingCategory(
+      insertAvatarsCategory(
+        insertAuthCategory(
+          insertComputeCategory(
+            insertRealtimeCategory(
+              insertDatabasesCategory(
+                insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+              ),
+            ),
           ),
         ),
       ),

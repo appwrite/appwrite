@@ -251,3 +251,74 @@ export function buildAvatarsUsageCategoryMetrics(): UsageCategory['metrics'] {
     timeSeries: [],
   }))
 }
+
+export type MessagingUsageCategory = {
+  id: 'messaging'
+  label: 'Messaging'
+  icon: 'MessageSquare'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const MESSAGING_USAGE_CATEGORY: MessagingUsageCategory = {
+  id: 'messaging',
+  label: 'Messaging',
+  icon: 'MessageSquare',
+  description:
+    'Push notifications, emails, and SMS messages sent through the messaging service.',
+  metrics: [
+    { id: 'messages', name: 'Messages sent' },
+    { id: 'topics', name: 'Topics' },
+    { id: 'sms', name: 'SMS messages' },
+  ],
+}
+
+export function buildMessagingUsageCategoryMetrics(): UsageCategory['metrics'] {
+  return MESSAGING_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit:
+      metric.id === 'topics'
+        ? 'topics'
+        : metric.id === 'sms'
+          ? 'messages'
+          : 'messages',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}
+
+export type WebhooksUsageCategory = {
+  id: 'webhooks'
+  label: 'Webhooks'
+  icon: 'Webhook'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const WEBHOOKS_USAGE_CATEGORY: WebhooksUsageCategory = {
+  id: 'webhooks',
+  label: 'Webhooks',
+  icon: 'Webhook',
+  description:
+    'Webhook event deliveries and configured endpoints for Appwrite event notifications.',
+  metrics: [
+    { id: 'events-sent', name: 'Events sent' },
+    { id: 'events-failed', name: 'Events failed' },
+    { id: 'webhooks', name: 'Webhooks' },
+  ],
+}
+
+export function buildWebhooksUsageCategoryMetrics(): UsageCategory['metrics'] {
+  return WEBHOOKS_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit: metric.id === 'webhooks' ? 'webhooks' : 'events',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}

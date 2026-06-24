@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries } from '@/lib/react-query/hooks'
+import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectMessagingUsageQueries, refetchProjectWebhooksUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import {
   Zap,
@@ -14,6 +14,7 @@ import {
   Activity,
   Cpu,
   UserCircle,
+  Webhook,
   RefreshCw,
   AlertTriangle,
   ChevronRight,
@@ -73,6 +74,7 @@ const iconMap: Record<string, LucideIcon> = {
   Activity,
   Cpu,
   UserCircle,
+  Webhook,
 }
 
 interface UsageLayoutProps {
@@ -229,25 +231,30 @@ function MobileCategoryDrawer({
 
 function UsageLoadingState() {
   return (
-    <div className="flex h-full">
-      <div className="hidden w-[220px] shrink-0 border-r border-border px-3 py-4 lg:block">
-        <div className="space-y-5">
-          {Array.from({ length: 2 }).map((_, groupIndex) => (
-            <div key={groupIndex} className="space-y-0.5">
-              <Skeleton className="mb-1.5 h-3 w-16" />
-              {Array.from({ length: groupIndex === 0 ? 3 : 5 }).map((__, i) => (
-                <Skeleton key={i} className="h-9 w-full rounded-md" />
-              ))}
-            </div>
-          ))}
-        </div>
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="shrink-0 border-b border-border px-4 py-6 sm:px-6">
+        <Skeleton className="h-9 w-full max-w-xl" />
       </div>
-      <div className="flex-1 p-6">
-        <Skeleton className="mb-6 h-8 w-48" />
-        <div className="grid gap-6 lg:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[320px] w-full rounded-lg" />
-          ))}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="hidden w-[220px] shrink-0 border-r border-border px-3 py-4 lg:block">
+          <div className="space-y-5">
+            {Array.from({ length: 2 }).map((_, groupIndex) => (
+              <div key={groupIndex} className="space-y-0.5">
+                <Skeleton className="mb-1.5 h-3 w-16" />
+                {Array.from({ length: groupIndex === 0 ? 4 : 5 }).map((__, i) => (
+                  <Skeleton key={i} className="h-9 w-full rounded-md" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          <Skeleton className="mb-6 h-8 w-48" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-[320px] w-full rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -347,6 +354,8 @@ function UsageLayoutContent({
   const isRealtimeCategory = categoryId === 'realtime'
   const isAuthCategory = categoryId === 'auth'
   const isAvatarsCategory = categoryId === 'avatars'
+  const isMessagingCategory = categoryId === 'messaging'
+  const isWebhooksCategory = categoryId === 'webhooks'
   const showChartIntervalToggle = categorySupportsChartInterval(categoryId)
 
   useEffect(() => {
@@ -393,6 +402,16 @@ function UsageLayoutContent({
 
     if (isAvatarsCategory) {
       void refetchProjectAvatarsUsageQueries(queryClient, projectId)
+      return
+    }
+
+    if (isMessagingCategory) {
+      void refetchProjectMessagingUsageQueries(queryClient, projectId)
+      return
+    }
+
+    if (isWebhooksCategory) {
+      void refetchProjectWebhooksUsageQueries(queryClient, projectId)
     }
   }
 
@@ -409,70 +428,72 @@ function UsageLayoutContent({
   }
 
   return (
-    <div className={cn('flex h-full overflow-hidden', className)}>
-      <aside className="hidden w-[220px] shrink-0 border-r border-border lg:block">
-        <div className="h-full px-3 py-4">
-          <CategoryNavigation
-            projectId={projectId}
-            navGroups={navGroups}
-            activeCategoryId={categoryId}
-          />
-        </div>
-      </aside>
+    <div className={cn('flex h-full flex-col overflow-hidden', className)}>
+      <div className="shrink-0 border-b border-border bg-background">
+        <div className="w-full px-4 py-6 sm:px-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="text-[17px] font-semibold text-foreground">
+                Usage
+              </h1>
+              <UsageHistoricDataNote className="min-w-0" />
+            </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="border-b border-border">
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-                <h1 className="text-[17px] font-semibold text-foreground">
-                  Usage
-                </h1>
-                <UsageHistoricDataNote className="min-w-0" />
-              </div>
-
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                {showChartIntervalToggle ? (
-                  <UsageChartIntervalToggle
-                    value={chartInterval}
-                    onValueChange={setChartInterval}
-                    dateRange={usageDateRange}
-                    className="h-9"
-                  />
-                ) : null}
-                <DateRangePicker
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {showChartIntervalToggle ? (
+                <UsageChartIntervalToggle
+                  value={chartInterval}
+                  onValueChange={setChartInterval}
                   dateRange={usageDateRange}
-                  onDateRangeChange={setUsageDateRange}
                   className="h-9"
                 />
+              ) : null}
+              <DateRangePicker
+                dateRange={usageDateRange}
+                onDateRangeChange={setUsageDateRange}
+                className="h-9"
+              />
 
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRefresh}
-                        disabled={isRefreshing}
-                        className="h-9 w-9 p-0"
-                      >
-                        <RefreshCw
-                          className={cn(
-                            'h-4 w-4',
-                            isRefreshing && 'animate-spin',
-                          )}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Refresh</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      className="h-9 w-9 p-0"
+                    >
+                      <RefreshCw
+                        className={cn(
+                          'h-4 w-4',
+                          isRefreshing && 'animate-spin',
+                        )}
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Refresh</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
+      </div>
 
-        <div ref={contentScrollRef} className="flex-1 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <aside className="hidden w-[220px] shrink-0 border-r border-border lg:block">
+          <ScrollArea className="h-full">
+            <div className="px-3 py-4">
+              <CategoryNavigation
+                projectId={projectId}
+                navGroups={navGroups}
+                activeCategoryId={categoryId}
+              />
+            </div>
+          </ScrollArea>
+        </aside>
+
+        <div ref={contentScrollRef} className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             <div className="mb-6 lg:hidden">
               <MobileCategoryDrawer

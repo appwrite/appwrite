@@ -155,6 +155,7 @@ export const planQuotas = {
     realtime: { connections: 250 },
     messaging: { messages: 10_000, topics: 100, sms: 0 },
     avatars: { screenshots: 50 },
+    webhooks: { webhooks: 5, eventsSent: null, eventsFailed: null },
   },
   pro: {
     compute: { executions: 3_500_000, gbHours: 500 },
@@ -170,6 +171,7 @@ export const planQuotas = {
     realtime: { connections: 500 },
     messaging: { messages: 100_000, topics: 500, sms: 100 },
     avatars: { screenshots: 5_000 },
+    webhooks: { webhooks: 25, eventsSent: null, eventsFailed: null },
   },
   custom: {
     compute: { executions: null, gbHours: null },
@@ -185,6 +187,7 @@ export const planQuotas = {
     realtime: { connections: null },
     messaging: { messages: null, topics: null, sms: null },
     avatars: { screenshots: null },
+    webhooks: { webhooks: null, eventsSent: null, eventsFailed: null },
   },
 }
 
@@ -472,6 +475,47 @@ export function generateMockUsageData(
           currentValue: 1_240,
           quota: quotas.avatars.screenshots,
           timeSeries: generateTimeSeries(30, 41, 0.35, 'up'),
+          thresholds: { warning: 75, critical: 90 },
+        },
+      ],
+    },
+    {
+      id: 'webhooks',
+      label: 'Webhooks',
+      icon: 'Webhook',
+      description:
+        'Webhook event deliveries and configured endpoints for Appwrite event notifications.',
+      metrics: [
+        {
+          id: 'events-sent',
+          name: 'Events Sent',
+          description:
+            'Webhook events successfully delivered to your endpoints. Each HTTP request sent counts as one event.',
+          unit: 'events',
+          currentValue: 12_840,
+          quota: quotas.webhooks.eventsSent,
+          timeSeries: generateTimeSeries(30, 428, 0.35, 'up'),
+          thresholds: { warning: 75, critical: 90 },
+        },
+        {
+          id: 'events-failed',
+          name: 'Events Failed',
+          description:
+            'Webhook delivery failures including non-2xx responses and connection errors.',
+          unit: 'events',
+          currentValue: 42,
+          quota: quotas.webhooks.eventsFailed,
+          timeSeries: generateTimeSeries(30, 1.4, 0.5, 'stable'),
+        },
+        {
+          id: 'webhooks',
+          name: 'Webhooks',
+          description:
+            'Number of webhooks configured in your project. Each webhook can subscribe to multiple Appwrite events.',
+          unit: 'webhooks',
+          currentValue: 6,
+          quota: quotas.webhooks.webhooks,
+          timeSeries: generateTimeSeries(30, 6, 0.05, 'stable'),
           thresholds: { warning: 75, critical: 90 },
         },
       ],
