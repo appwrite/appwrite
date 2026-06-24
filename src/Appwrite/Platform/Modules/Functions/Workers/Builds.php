@@ -298,16 +298,19 @@ class Builds extends Action
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             } catch (\Exception $e) {
                 if (\str_contains($e->getMessage(), 'Status: 404')) {
-                    $collection = $resource->getCollection();
-                    $dbForProject->updateDocument($collection, $resource->getId(), new Document([
-                        'providerRepositoryId' => '',
-                        'installationId' => '',
-                        'repositoryId' => '',
-                        'repositoryInternalId' => '',
-                        'providerBranch' => '',
-                        'providerRootDirectory' => '',
-                        'providerSilentMode' => true,
-                    ]));
+                    $repositoryId = $resource->getAttribute('repositoryId', '');
+                    if (!empty($repositoryId)) {
+                        $dbForPlatform->deleteDocument('repositories', $repositoryId);
+                    }
+                    $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource
+                        ->setAttribute('installationId', '')
+                        ->setAttribute('installationInternalId', '')
+                        ->setAttribute('providerRepositoryId', '')
+                        ->setAttribute('providerBranch', '')
+                        ->setAttribute('providerSilentMode', false)
+                        ->setAttribute('providerRootDirectory', '')
+                        ->setAttribute('repositoryId', '')
+                        ->setAttribute('repositoryInternalId', ''));
                 }
                 throw $e;
             }
