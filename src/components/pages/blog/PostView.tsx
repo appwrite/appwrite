@@ -165,7 +165,7 @@ export function CategoryView({ category, posts, authors }: CategoryViewProps) {
             </BreadcrumbList>
           </Breadcrumb>
 
-          <header className="mt-8 max-w-4xl border-y border-border py-6">
+          <header className="mt-8 max-w-4xl border-b border-border py-6">
             <h1 className={BLOG_CATEGORY_TITLE_CLASS}>{category.name}</h1>
             <p className={BLOG_PAGE_DESCRIPTION_CLASS}>
               {category.description}
@@ -243,7 +243,7 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
             </BreadcrumbList>
           </Breadcrumb>
 
-          <header className="mt-8 flex flex-col items-start gap-4 border-y border-border py-8 sm:flex-row sm:items-center">
+          <header className="mt-8 flex flex-col items-start gap-4 border-b border-border py-8 sm:flex-row sm:items-center">
             <BlogAvatar name={author.name} avatar={author.avatar} className="size-20 text-[18px]" />
             <div>
               <h1 className={BLOG_PAGE_TITLE_CLASS}>{author.name}</h1>

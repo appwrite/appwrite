@@ -158,7 +158,7 @@ export function BlogArticleHeader({
         </header>
       ) : null}
 
-      <header className="border-y border-border py-4">
+      <header className="border-b border-border py-4">
         <div className="min-w-0">
           <h1 className={BLOG_PAGE_TITLE_CLASS}>
             {title}
