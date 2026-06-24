@@ -95,9 +95,9 @@ final class GitHubInstallationEventTest extends TestCase
                 return true;
             }));
 
-        // 1: getDocument(projects), 2: find(functions), 3: updateDocument(func1),
-        // 4: find(sites), 5: find(repositories), 6: deleteDocument(installations)
-        $authorization->expects($this->exactly(6))
+        // 1: find(installations), 2: getDocument(projects), 3: find(functions), 4: updateDocument(func1),
+        // 5: find(sites), 6: find(repositories), 7: deleteDocument(installations)
+        $authorization->expects($this->exactly(7))
             ->method('skip')
             ->willReturnCallback(fn (callable $fn): mixed => $fn());
 
@@ -138,8 +138,8 @@ final class GitHubInstallationEventTest extends TestCase
             ->with('projects', 'project1')
             ->willReturn(new Document());
 
-        // 1: getDocument(projects), 2: find(repositories), 3: deleteDocument(installations)
-        $authorization->expects($this->exactly(3))
+        // 1: find(installations), 2: getDocument(projects), 3: find(repositories), 4: deleteDocument(installations)
+        $authorization->expects($this->exactly(4))
             ->method('skip')
             ->willReturnCallback(fn (callable $fn): mixed => $fn());
 

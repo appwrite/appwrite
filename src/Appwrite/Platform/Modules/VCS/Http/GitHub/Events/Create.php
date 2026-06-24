@@ -113,7 +113,7 @@ class Create extends Action
             if ($installationCursor !== null) {
                 $installationQueries[] = Query::cursorAfter($installationCursor);
             }
-            $installations = $dbForPlatform->find('installations', $installationQueries);
+            $installations = $authorization->skip(fn () => $dbForPlatform->find('installations', $installationQueries));
 
             foreach ($installations as $installation) {
                 $projectId = $installation->getAttribute('projectId', '');
