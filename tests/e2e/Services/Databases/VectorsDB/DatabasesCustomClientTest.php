@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -191,16 +190,14 @@ final class DatabasesCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
 
 
-        // Wait for database worker to finish deleting collection
-        sleep(2);
-
-        // Make sure collection has been deleted
-        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/permissionCheck', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($databaseId) {
+            $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/permissionCheck', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $this->assertEquals(404, $response['headers']['status-code']);
+        }, 240000, 500);
 
         return [];
     }

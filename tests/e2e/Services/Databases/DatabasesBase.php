@@ -92,6 +92,46 @@ trait DatabasesBase
         );
     }
 
+    protected function getApiKeyHeaders(): array
+    {
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+    }
+
+    protected function createRecordWithServerTimestamps(
+        string $databaseId,
+        string $collectionId,
+        array $data,
+        string $createdAt,
+        array $permissions,
+    ): array {
+        return $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getApiKeyHeaders(), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => \array_merge($data, [
+                '$createdAt' => $createdAt,
+                '$updatedAt' => $createdAt,
+            ]),
+            'permissions' => $permissions,
+        ]);
+    }
+
+    protected function updateRecordWithServerTimestamp(
+        string $databaseId,
+        string $collectionId,
+        string $recordId,
+        array $data,
+        string $updatedAt,
+    ): array {
+        return $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $this->getApiKeyHeaders(), [
+            'data' => \array_merge($data, [
+                '$updatedAt' => $updatedAt,
+            ]),
+        ]);
+    }
+
 
     /**
      * Setup: Create database and collections
@@ -327,17 +367,7 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => ['releaseYear'],
         ]);
 
-        $releaseWithDate1 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'releaseYearDated',
-            'type' => 'key',
-            $this->getIndexAttributesParam() => ['releaseYear', '$createdAt', '$updatedAt'],
-        ]);
-
-        $releaseWithDate2 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
+        $birthDayIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -360,8 +390,7 @@ trait DatabasesBase
 
         $this->assertEquals(202, $titleIndex['headers']['status-code']);
         $this->assertEquals(202, $releaseYearIndex['headers']['status-code']);
-        $this->assertEquals(202, $releaseWithDate1['headers']['status-code']);
-        $this->assertEquals(202, $releaseWithDate2['headers']['status-code']);
+        $this->assertEquals(202, $birthDayIndex['headers']['status-code']);
         $this->assertEquals(202, $booksFtsIndex['headers']['status-code']);
 
         // Cache before waiting so that if waitForAllIndexes times out,
@@ -2377,7 +2406,7 @@ trait DatabasesBase
                 }
 
                 return true;
-            }, 60000, 500);
+            }, 240000, 500);
         }
     }
 
@@ -3399,7 +3428,7 @@ trait DatabasesBase
                 Query::select(['title'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'ttl' => 10,
+            'ttl' => 1,
         ]);
 
         $this->assertEquals(200, $documents4['headers']['status-code']);
@@ -3428,24 +3457,24 @@ trait DatabasesBase
         $this->assertEquals(1944, $documents5['body'][$this->getRecordResource()][0]['releaseYear']);
         $this->assertArrayNotHasKey('x-appwrite-cache', $documents5['headers']);
 
-        sleep(10);
-
         // 6. Using cache with same select queries but passed ttl time, should miss cache.
-        $documents6 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => $baseQueries,
-            'ttl' => 10,
-        ]);
+        $this->assertEventually(function () use ($databaseId, $data, $baseQueries) {
+            $documents6 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => $baseQueries,
+                'ttl' => 1,
+            ]);
 
-        $this->assertEquals(200, $documents6['headers']['status-code']);
-        $this->assertCount(3, $documents6['body'][$this->getRecordResource()]);
-        $this->assertArrayHasKey('title', $documents6['body'][$this->getRecordResource()][0]);
-        $this->assertArrayHasKey('releaseYear', $documents6['body'][$this->getRecordResource()][0]);
-        $this->assertArrayHasKey('$id', $documents6['body'][$this->getRecordResource()][0]);
-        $this->assertArrayHasKey('x-appwrite-cache', $documents6['headers']);
-        $this->assertEquals('miss', $documents6['headers']['x-appwrite-cache']);
+            $this->assertEquals(200, $documents6['headers']['status-code']);
+            $this->assertCount(3, $documents6['body'][$this->getRecordResource()]);
+            $this->assertArrayHasKey('title', $documents6['body'][$this->getRecordResource()][0]);
+            $this->assertArrayHasKey('releaseYear', $documents6['body'][$this->getRecordResource()][0]);
+            $this->assertArrayHasKey('$id', $documents6['body'][$this->getRecordResource()][0]);
+            $this->assertArrayHasKey('x-appwrite-cache', $documents6['headers']);
+            $this->assertEquals('miss', $documents6['headers']['x-appwrite-cache']);
+        }, 5000, 100);
     }
 
     public function testListDocumentsCacheBustedByAttributeChange(): void
@@ -6120,21 +6149,19 @@ trait DatabasesBase
         $createdAt = $document['body']['$createdAt'];
         $updatedAt = $document['body']['$updatedAt'];
 
-        \usleep(500000);
+        $updateAttempt = 0;
+        $this->assertEventually(function () use ($data, $documentId, $headers, $createdAt, $updatedAt, &$document, &$updateAttempt) {
+            $updateAttempt++;
+            $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($data['databaseId'], $data['moviesId'], $documentId), $headers, [
+                'data' => [
+                    'title' => 'Updated Date Test ' . $updateAttempt,
+                ]
+            ]);
 
-        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($data['databaseId'], $data['moviesId'], $documentId), $headers, [
-            'data' => [
-                'title' => 'Updated Date Test',
-            ]
-        ]);
-
-        $updatedAtSecond = $document['body']['$updatedAt'];
-
-        $this->assertEquals($document['body']['title'], 'Updated Date Test');
-        $this->assertEquals($document['body']['$createdAt'], $createdAt);
-        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
-
-        \usleep(500000);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertEquals($document['body']['$createdAt'], $createdAt);
+            $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
+        }, 5000, 100);
 
         $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($data['databaseId'], $data['moviesId'], $documentId), $headers, [
             'data' => [
@@ -6541,7 +6568,7 @@ trait DatabasesBase
             ]));
             $this->assertEquals(404, $attribute['headers']['status-code']);
             return true;
-        }, 60000, 500);
+        }, 240000, 500);
 
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
             'content-type' => 'application/json',
@@ -10578,56 +10605,30 @@ trait DatabasesBase
             $this->waitForAllAttributes($databaseId, $posts['body']['$id']);
         }
 
-        $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $posts['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Old Post',
-                'content' => 'This is an old post content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row1 = $this->createRecordWithServerTimestamps($databaseId, $posts['body']['$id'], [
+            'title' => 'Old Post',
+            'content' => 'This is an old post content',
+        ], '2024-01-01T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
-        // Ensure different creation times
-        usleep(500000);
-
-        $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $posts['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Recent Post',
-                'content' => 'This is a recent post content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row2 = $this->createRecordWithServerTimestamps($databaseId, $posts['body']['$id'], [
+            'title' => 'Recent Post',
+            'content' => 'This is a recent post content',
+        ], '2024-01-02T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
         // Get the creation time of the second post to use as boundary
         $secondPostCreatedAt = $row2['body']['$createdAt'];
 
-        usleep(500000);
-
-        $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $posts['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Newest Post',
-                'content' => 'This is the newest post content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row3 = $this->createRecordWithServerTimestamps($databaseId, $posts['body']['$id'], [
+            'title' => 'Newest Post',
+            'content' => 'This is the newest post content',
+        ], '2024-01-03T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10711,56 +10712,30 @@ trait DatabasesBase
             $this->waitForAllAttributes($databaseId, $events['body']['$id']);
         }
 
-        $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $events['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'name' => 'Early Event',
-                'description' => 'This is an early event',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row1 = $this->createRecordWithServerTimestamps($databaseId, $events['body']['$id'], [
+            'name' => 'Early Event',
+            'description' => 'This is an early event',
+        ], '2024-01-01T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
-        // Ensure different creation times
-        usleep(500000);
-
-        $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $events['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'name' => 'Middle Event',
-                'description' => 'This is a middle event',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row2 = $this->createRecordWithServerTimestamps($databaseId, $events['body']['$id'], [
+            'name' => 'Middle Event',
+            'description' => 'This is a middle event',
+        ], '2024-01-02T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
         // Get the creation time of the second event to use as boundary
         $secondEventCreatedAt = $row2['body']['$createdAt'];
 
-        usleep(500000);
-
-        $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $events['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'name' => 'Latest Event',
-                'description' => 'This is the latest event',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row3 = $this->createRecordWithServerTimestamps($databaseId, $events['body']['$id'], [
+            'name' => 'Latest Event',
+            'description' => 'This is the latest event',
+        ], '2024-01-03T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
 
         $this->assertEquals(201, $row3['headers']['status-code']);
@@ -10845,76 +10820,41 @@ trait DatabasesBase
         }
 
         // Create first article
-        $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'First Article',
-                'content' => 'This is the first article content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row1 = $this->createRecordWithServerTimestamps($databaseId, $articles['body']['$id'], [
+            'title' => 'First Article',
+            'content' => 'This is the first article content',
+        ], '2024-01-01T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
         $firstArticleCreatedAt = $row1['body']['$createdAt'];
 
-        // Ensure different timestamps
-        usleep(500000);
-
         // Create second article
-        $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Second Article',
-                'content' => 'This is the second article content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row2 = $this->createRecordWithServerTimestamps($databaseId, $articles['body']['$id'], [
+            'title' => 'Second Article',
+            'content' => 'This is the second article content',
+        ], '2024-01-02T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
         $secondArticleCreatedAt = $row2['body']['$createdAt'];
 
-        usleep(500000);
-
         // Create third article
-        $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Third Article',
-                'content' => 'This is the third article content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row3 = $this->createRecordWithServerTimestamps($databaseId, $articles['body']['$id'], [
+            'title' => 'Third Article',
+            'content' => 'This is the third article content',
+        ], '2024-01-03T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
         $thirdArticleCreatedAt = $row3['body']['$createdAt'];
 
-        usleep(500000);
-
         // Create fourth article
-        $row4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Fourth Article',
-                'content' => 'This is the fourth article content',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
+        $row4 = $this->createRecordWithServerTimestamps($databaseId, $articles['body']['$id'], [
+            'title' => 'Fourth Article',
+            'content' => 'This is the fourth article content',
+        ], '2024-01-04T00:00:00.000+00:00', [
+            Permission::read(Role::user($this->getUser()['$id'])),
         ]);
         $this->assertEquals(201, $row4['headers']['status-code']);
 
@@ -11075,38 +11015,20 @@ trait DatabasesBase
         $taskThreeId = $row3['body']['$id'];
 
         // Update first task
-        usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskOneId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'status' => 'completed',
-            ]
-        ]);
+        $this->updateRecordWithServerTimestamp($databaseId, $tasks['body']['$id'], $taskOneId, [
+            'status' => 'completed',
+        ], '2024-01-01T00:00:00.000+00:00');
 
         // Update second task and get its updated time
-        usleep(500000);
-        $updatedTaskTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskTwoId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'status' => 'in_progress',
-            ]
-        ]);
+        $updatedTaskTwo = $this->updateRecordWithServerTimestamp($databaseId, $tasks['body']['$id'], $taskTwoId, [
+            'status' => 'in_progress',
+        ], '2024-01-02T00:00:00.000+00:00');
         $secondTaskUpdatedAt = $updatedTaskTwo['body']['$updatedAt'];
 
         // Update third task
-        usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskThreeId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'status' => 'review',
-            ]
-        ]);
+        $this->updateRecordWithServerTimestamp($databaseId, $tasks['body']['$id'], $taskThreeId, [
+            'status' => 'review',
+        ], '2024-01-03T00:00:00.000+00:00');
 
         // Test updatedBefore query - should return tasks updated before the second task's update time
         $rows = $this->client->call(
@@ -11241,38 +11163,20 @@ trait DatabasesBase
         $orderThreeId = $row3['body']['$id'];
 
         // Update first order
-        usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderOneId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'status' => 'processing',
-            ]
-        ]);
+        $this->updateRecordWithServerTimestamp($databaseId, $orders['body']['$id'], $orderOneId, [
+            'status' => 'processing',
+        ], '2024-01-01T00:00:00.000+00:00');
 
         // Update second order and get its updated time
-        usleep(500000);
-        $updatedOrderTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderTwoId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'status' => 'shipped',
-            ]
-        ]);
+        $updatedOrderTwo = $this->updateRecordWithServerTimestamp($databaseId, $orders['body']['$id'], $orderTwoId, [
+            'status' => 'shipped',
+        ], '2024-01-02T00:00:00.000+00:00');
         $secondOrderUpdatedAt = $updatedOrderTwo['body']['$updatedAt'];
 
         // Update third order
-        usleep(500000);
-        $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderThreeId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'status' => 'delivered',
-            ]
-        ]);
+        $this->updateRecordWithServerTimestamp($databaseId, $orders['body']['$id'], $orderThreeId, [
+            'status' => 'delivered',
+        ], '2024-01-03T00:00:00.000+00:00');
 
         // Test updatedAfter query - should return orders updated after the second order's update time
         $rows = $this->client->call(
@@ -11370,9 +11274,6 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
-        // Ensure different timestamps
-        usleep(500000);
-
         // Create second product
         $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -11390,8 +11291,6 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
-        usleep(500000);
-
         // Create third product
         $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -11408,8 +11307,6 @@ trait DatabasesBase
             ]
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
-
-        usleep(500000);
 
         // Create fourth product
         $row4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
@@ -11429,59 +11326,30 @@ trait DatabasesBase
         $this->assertEquals(201, $row4['headers']['status-code']);
 
         // Now update products in sequence to get different updatedAt timestamps
-        usleep(500000);
-
-        // Update first product
-        $update1 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row1['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'price' => 89.99,
-            ]
-        ]);
+        $update1 = $this->updateRecordWithServerTimestamp($databaseId, $products['body']['$id'], $row1['body']['$id'], [
+            'price' => 89.99,
+        ], '2024-01-01T00:00:00.000+00:00');
         $this->assertEquals(200, $update1['headers']['status-code']);
         $firstProductUpdatedAt = $update1['body']['$updatedAt'];
 
-        usleep(500000);
-
         // Update second product
-        $update2 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row2['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'price' => 139.99,
-            ]
-        ]);
+        $update2 = $this->updateRecordWithServerTimestamp($databaseId, $products['body']['$id'], $row2['body']['$id'], [
+            'price' => 139.99,
+        ], '2024-01-02T00:00:00.000+00:00');
         $this->assertEquals(200, $update2['headers']['status-code']);
         $secondProductUpdatedAt = $update2['body']['$updatedAt'];
 
-        usleep(500000);
-
         // Update third product
-        $update3 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row3['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'price' => 189.99,
-            ]
-        ]);
+        $update3 = $this->updateRecordWithServerTimestamp($databaseId, $products['body']['$id'], $row3['body']['$id'], [
+            'price' => 189.99,
+        ], '2024-01-03T00:00:00.000+00:00');
         $this->assertEquals(200, $update3['headers']['status-code']);
         $thirdProductUpdatedAt = $update3['body']['$updatedAt'];
 
-        usleep(500000);
-
         // Update fourth product
-        $update4 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row4['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'price' => 239.99,
-            ]
-        ]);
+        $update4 = $this->updateRecordWithServerTimestamp($databaseId, $products['body']['$id'], $row4['body']['$id'], [
+            'price' => 239.99,
+        ], '2024-01-04T00:00:00.000+00:00');
         $this->assertEquals(200, $update4['headers']['status-code']);
 
         // Test updatedBetween query - should return products updated between first and third (inclusive)

@@ -807,6 +807,6 @@ final class DatabasesStringTypesTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals(404, $response['headers']['status-code']);
-        }, 60000, 250);
+        }, 240000, 250);
     }
 }

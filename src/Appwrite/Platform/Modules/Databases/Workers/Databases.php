@@ -40,6 +40,7 @@ class Databases extends Action
             ->inject('getDatabasesDB')
             ->inject('queueForRealtime')
             ->inject('log')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -53,7 +54,7 @@ class Databases extends Action
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime, Log $log, callable $locks): void
     {
         $payload = $message->getPayload();
 
@@ -90,7 +91,7 @@ class Databases extends Action
 
         $log->addTag('databaseId', $database->getId());
 
-        match (\strval($type)) {
+        $run = fn () => match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
@@ -99,6 +100,13 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
+
+        // Serialize schema jobs per database: concurrent metadata writes clobber
+        // each other, and a finer lock would let DELETE_DATABASE race in-flight
+        // attribute/index builds. Distinct databases still run in parallel.
+        $lockKey = 'database-schema:' . $dbForProject->getNamespace() . ':' . $database->getId();
+
+        $locks($lockKey, 600, $run, timeout: 120.0);
     }
 
     /**

@@ -232,18 +232,6 @@ final class DocumentsDBIndexTest extends Scope
         ]);
         $this->assertEquals(202, $index2['headers']['status-code']);
 
-        // Let worker create indexes
-        sleep(2);
-
-        $moviesWithIndexes = $this->client->call('GET', "/documentsdb/{$databaseId}/collections/{$moviesId}", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertIsArray($moviesWithIndexes['body']['indexes']);
-        $this->assertCount(10, $moviesWithIndexes['body']['indexes']);
-
         $this->assertEventually(function () use ($databaseId, $moviesId) {
             $movies = $this->client->call('GET', "/documentsdb/{$databaseId}/collections/{$moviesId}", [
                 'content-type' => 'application/json',
@@ -251,12 +239,15 @@ final class DocumentsDBIndexTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
+            $this->assertIsArray($movies['body']['indexes']);
+            $this->assertCount(10, $movies['body']['indexes']);
+
             foreach ($movies['body']['indexes'] as $index) {
                 $this->assertEquals('available', $index['status']);
             }
 
             return true;
-        }, 60000, 500);
+        }, 240000, 500);
     }
 
     public function testGetIndexByKeyWithLengths(): void

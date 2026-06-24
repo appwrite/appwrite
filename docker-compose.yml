@@ -307,6 +307,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -479,6 +480,7 @@ services:
     <<: [*x-logging, *x-build]
     container_name: appwrite-worker-databases
     image: appwrite-dev
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -492,7 +494,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1333,6 +1335,10 @@ services:
     container_name: appwrite-mongodb
     <<: *x-logging
     restart: on-failure:3
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
     networks:
       - appwrite
     volumes:
