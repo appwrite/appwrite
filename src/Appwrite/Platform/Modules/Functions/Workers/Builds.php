@@ -298,7 +298,8 @@ class Builds extends Action
             try {
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             } catch (\Exception $e) {
-                if (\str_contains($e->getMessage(), 'Status: 404')) {
+                if (\str_contains($e->getMessage(), 'Status: 404')
+                    && $resource->getAttribute('installationId', '') === $installationId) {
                     $this->disconnectVcs($resource, $dbForProject, $dbForPlatform);
                 }
                 throw $e;
