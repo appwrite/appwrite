@@ -27,6 +27,7 @@ import {
   Play,
   Plus,
   Radio,
+  Route,
   Trash2,
   Unplug,
   X,
@@ -43,6 +44,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectionCodeDialog } from './_components/ConnectionCodeDialog'
@@ -404,6 +406,7 @@ export function View() {
   const [socketOpen, setSocketOpen] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [channelInput, setChannelInput] = useState('')
+  const [channelBuilderOpen, setChannelBuilderOpen] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [expandedMessageIds, setExpandedMessageIds] = useState<Set<string>>(
     () => new Set(),
@@ -676,6 +679,23 @@ export function View() {
     [channelInput, subscribeToChannel],
   )
 
+  const handleChannelBuilt = useCallback(
+    async (channel: string) => {
+      const trimmed = channel.trim()
+      if (!trimmed) return
+      await subscribeToChannel(trimmed)
+      setChannelInput('')
+    },
+    [subscribeToChannel],
+  )
+
+  const handleOpenChannelBuilder = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    window.setTimeout(() => setChannelBuilderOpen(true), 0)
+  }, [])
+
   const handleUnsubscribe = useCallback(
     async (subscriptionId: string) => {
       const entry = subscriptionsRef.current.get(subscriptionId)
@@ -847,10 +867,29 @@ export function View() {
                     value={channelInput}
                     onChange={(event) => setChannelInput(event.target.value)}
                     placeholder="e.g. account"
-                    className="h-9 font-mono text-[13px]"
+                    className="h-9 min-w-0 flex-1 font-mono text-[13px]"
                     disabled={!isConnected}
                     spellCheck={false}
                   />
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 shrink-0 px-3"
+                          disabled={!isConnected}
+                          onClick={handleOpenChannelBuilder}
+                        >
+                          <Route className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Build channel</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <Button
                     type="submit"
                     size="sm"
@@ -1036,6 +1075,15 @@ export function View() {
         onOpenChange={setConnectionCodeOpen}
         projectId={projectId}
         channels={snippetChannels}
+      />
+
+      <EventEditorModal
+        open={channelBuilderOpen}
+        onOpenChange={setChannelBuilderOpen}
+        onCreated={handleChannelBuilt}
+        projectId={projectId}
+        channelMode
+        initialValue={channelInput.trim() || undefined}
       />
     </div>
   )

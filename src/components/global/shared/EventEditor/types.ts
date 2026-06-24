@@ -6,4 +6,9 @@ export interface EventEditorModalProps {
   description?: string
   /** Required for database/table/bucket selectors; omit to show only * */
   projectId?: string | null
+  /** When true, builds Realtime channel strings (no action/attribute segment). */
+  channelMode?: boolean
+  docsLink?: string
+  confirmLabel?: string
+  title?: string
 }

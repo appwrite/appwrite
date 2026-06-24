@@ -20,6 +20,7 @@ import {
   getResourceActions,
   DOCS_LINK,
 } from '@/lib/events-editor/events-model'
+import { buildChannelString, isValidChannelString, REALTIME_CHANNELS_DOCS_LINK } from '@/lib/realtime/channel-builder'
 import { useEventBuilder } from '@/lib/events-editor/use-event-builder'
 import { EventResourceIdSelector } from './EventResourceIdSelector'
 import type { EventEditorModalProps } from './types'
@@ -30,17 +31,29 @@ export function EventEditor({
   onOpenChange,
   initialValue,
   onCreated,
-  description = 'Select events that will trigger your function or webhook.',
+  description,
   projectId,
+  channelMode = false,
+  docsLink,
+  confirmLabel,
+  title,
 }: EventEditorModalProps) {
   const builder = useEventBuilder(initialValue)
   const [copied, setCopied] = useState(false)
 
+  const builtString = channelMode
+    ? buildChannelString(builder.selection)
+    : builder.eventString
+  const previewString = builder.customMode ? builder.customInput : builtString
+  const isConfirmValid = channelMode
+    ? builder.customMode
+      ? isValidChannelString(builder.customInput)
+      : builtString.trim().length > 0
+    : builder.isValid
+
   const handleConfirm = () => {
-    const str = builder.customMode
-      ? builder.customInput.trim()
-      : builder.eventString
-    if (str && builder.isValid) {
+    const str = builder.customMode ? builder.customInput.trim() : builtString
+    if (str && isConfirmValid) {
       onCreated(str)
       onOpenChange(false)
       builder.reset()
@@ -48,7 +61,7 @@ export function EventEditor({
   }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(builder.eventString)
+    navigator.clipboard.writeText(previewString)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
@@ -63,9 +76,31 @@ export function EventEditor({
     (a) => a.name === builder.selection.action,
   )
   const showResourceRow = resources.length > 0
-  const showActionRow = builder.selection.service
+  const showActionRow = !channelMode && builder.selection.service
   const showAttributeRow =
-    selectedAction?.columns && selectedAction.columns.length > 0
+    !channelMode &&
+    selectedAction?.columns &&
+    selectedAction.columns.length > 0
+
+  const resolvedDocsLink =
+    docsLink ?? (channelMode ? REALTIME_CHANNELS_DOCS_LINK : DOCS_LINK)
+  const resolvedTitle =
+    title ??
+    (channelMode
+      ? initialValue
+        ? 'Edit channel'
+        : 'Create channel'
+      : initialValue
+        ? 'Edit event'
+        : 'Create event')
+  const resolvedConfirmLabel =
+    confirmLabel ??
+    (channelMode ? 'Subscribe' : initialValue ? 'Update' : 'Add event')
+  const resolvedDescription =
+    description ??
+    (channelMode
+      ? 'Build a Realtime channel to subscribe to. Use wildcards (*) to match multiple resources.'
+      : 'Select events that will trigger your function or webhook.')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,13 +109,11 @@ export function EventEditor({
         overlayClassName="z-[130]"
       >
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>
-            {initialValue ? 'Edit event' : 'Create event'}
-          </DialogTitle>
+          <DialogTitle>{resolvedTitle}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {description}{' '}
+            {resolvedDescription}{' '}
             <a
-              href={DOCS_LINK}
+              href={resolvedDocsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="link-neutral"
@@ -96,7 +129,11 @@ export function EventEditor({
               <Input
                 value={builder.customInput}
                 onChange={(e) => builder.setCustomInput(e.target.value)}
-                placeholder="e.g. databases.*.tables.*.rows.*.create"
+                placeholder={
+                  channelMode
+                    ? 'e.g. account or databases.*.tables.*.rows.*'
+                    : 'e.g. databases.*.tables.*.rows.*.create'
+                }
                 className="font-mono text-[13px]"
                 autoFocus
               />
@@ -111,7 +148,11 @@ export function EventEditor({
                 <Button
                   size="sm"
                   onClick={builder.applyCustomAndExit}
-                  disabled={!builder.isValid}
+                  disabled={
+                    channelMode
+                      ? !isValidChannelString(builder.customInput)
+                      : !builder.isValid
+                  }
                 >
                   <Check className="h-4 w-4 mr-1.5" />
                   Apply
@@ -332,7 +373,7 @@ export function EventEditor({
               <div className="flex min-w-0 items-center gap-2 pt-2">
                 <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-[12px] text-foreground select-text">
                   <span className="whitespace-nowrap">
-                    {builder.eventString || (
+                    {previewString || (
                       <span className="text-muted-foreground">
                         Select a service to build
                       </span>
@@ -353,7 +394,7 @@ export function EventEditor({
                   size="sm"
                   className="h-8 w-8 p-0 shrink-0"
                   onClick={handleCopy}
-                  disabled={!builder.eventString}
+                  disabled={!previewString}
                   title="Copy"
                 >
                   {copied ? (
@@ -370,8 +411,8 @@ export function EventEditor({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={!builder.isValid}>
-            {initialValue ? 'Update' : 'Add event'}
+          <Button onClick={handleConfirm} disabled={!isConfirmValid}>
+            {resolvedConfirmLabel}
           </Button>
         </div>
       </DialogContent>
