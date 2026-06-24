@@ -1271,6 +1271,9 @@ function MethodListPanel({
                             onClick={() => onSelectMethod(method)}
                             className={apiNavMethodItemClassName(isActive)}
                           >
+                            <span className="min-w-0 truncate text-[13px] font-medium">
+                              {method.summary}
+                            </span>
                             <div className="flex w-full min-w-0 max-w-full items-center gap-2">
                               <Badge
                                 variant={getHttpMethodVariant(method.httpMethod)}
@@ -1278,14 +1281,11 @@ function MethodListPanel({
                               >
                                 {method.httpMethod}
                               </Badge>
-                              <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
-                                {method.summary}
-                              </span>
+                              <StartTruncatedText
+                                text={method.path}
+                                className="min-w-0 flex-1 font-mono text-[11px] text-muted-foreground"
+                              />
                             </div>
-                            <StartTruncatedText
-                              text={method.path}
-                              className="font-mono text-[11px] text-muted-foreground"
-                            />
                           </button>
                         </li>
                       )
