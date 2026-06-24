@@ -78,7 +78,7 @@ class Create extends Action
         $parsedPayload = $github->getEvent($event, $payload);
 
         match ($event) {
-            $github::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization),
+            $github::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
             $github::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $githubAppId, $privateKey, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             $github::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $privateKey, $githubAppId, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
@@ -96,12 +96,12 @@ class Create extends Action
         array $parsedPayload,
         Database $dbForPlatform,
         Authorization $authorization,
+        callable $getProjectDB,
     ) {
         if ($parsedPayload["action"] !== "deleted") {
             return;
         }
 
-        // TODO: Use worker for this job instead (update function/site as well)
         $providerInstallationId = $parsedPayload["installationId"];
 
         $installations = $dbForPlatform->find('installations', [
@@ -110,6 +110,32 @@ class Create extends Action
         ]);
 
         foreach ($installations as $installation) {
+            $projectId = $installation->getAttribute('projectId', '');
+            $project = $dbForPlatform->getDocument('projects', $projectId);
+
+            if (!$project->isEmpty()) {
+                $dbForProject = $getProjectDB($project);
+
+                foreach (['functions', 'sites'] as $collection) {
+                    $resources = $dbForProject->find($collection, [
+                        Query::equal('installationInternalId', [$installation->getSequence()]),
+                        Query::limit(1000),
+                    ]);
+
+                    foreach ($resources as $resource) {
+                        $dbForProject->updateDocument($collection, $resource->getId(), $resource
+                            ->setAttribute('installationId', '')
+                            ->setAttribute('installationInternalId', '')
+                            ->setAttribute('providerRepositoryId', '')
+                            ->setAttribute('providerBranch', '')
+                            ->setAttribute('providerSilentMode', false)
+                            ->setAttribute('providerRootDirectory', '')
+                            ->setAttribute('repositoryId', '')
+                            ->setAttribute('repositoryInternalId', ''));
+                    }
+                }
+            }
+
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('installationInternalId', [$installation->getSequence()]),
                 Query::limit(1000)
