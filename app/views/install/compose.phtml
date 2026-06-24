@@ -14,7 +14,7 @@ $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
 $executorImages = $this->getParam('executorImages', '');
 $dbService = $this->getParam('database', 'mongodb');
-$allowedDbServices = ['mariadb', 'mongodb'];
+$allowedDbServices = ['mariadb', 'mongodb', 'postgresql'];
 if (!\in_array($dbService, $allowedDbServices, true)) {
     $dbService = 'mongodb';
 }

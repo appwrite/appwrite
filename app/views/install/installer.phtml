@@ -9,7 +9,7 @@ $defaultAppDomain = ($defaultAppDomain === 'traefik') ? 'localhost' : $defaultAp
 $defaultEmailCertificates = $defaultEmailCertificates ?? '';
 $defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
 $lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
-$enabledDatabases = $enabledDatabases ?? ['mongodb', 'mariadb', 'postgresql'];
+$enabledDatabases = $enabledDatabases ?? ['mongodb', 'mariadb'];
 $isLocalInstall = $isLocalInstall ?? false;
 
 
