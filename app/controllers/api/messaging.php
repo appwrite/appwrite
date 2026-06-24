@@ -26,7 +26,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -47,7 +46,6 @@ use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Http;
-use Utopia\Locale\Locale;
 use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -1237,10 +1235,9 @@ Http::get('/v1/messaging/providers/:providerId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
     ->inject('audit')
-    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
+    ->inject('getGeoForIp')
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Audit $audit, callable $getGeoForIp) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1291,18 +1288,10 @@ Http::get('/v1/messaging/providers/:providerId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
+                'countryCode' => $getGeoForIp($log['ip'])->getCountryCode(),
+                'countryName' => $getGeoForIp($log['ip'])->getCountryName()
             ]);
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
         }
 
         $response->dynamic(new Document([
@@ -2755,10 +2744,9 @@ Http::get('/v1/messaging/topics/:topicId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
     ->inject('audit')
-    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
+    ->inject('getGeoForIp')
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Audit $audit, callable $getGeoForIp) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2810,18 +2798,10 @@ Http::get('/v1/messaging/topics/:topicId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
+                'countryCode' => $getGeoForIp($log['ip'])->getCountryCode(),
+                'countryName' => $getGeoForIp($log['ip'])->getCountryName()
             ]);
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
         }
 
         $response->dynamic(new Document([
@@ -3173,10 +3153,9 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
     ->inject('audit')
-    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
+    ->inject('getGeoForIp')
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Audit $audit, callable $getGeoForIp) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -3228,18 +3207,10 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
+                'countryCode' => $getGeoForIp($log['ip'])->getCountryCode(),
+                'countryName' => $getGeoForIp($log['ip'])->getCountryName()
             ]);
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
         }
 
         $response->dynamic(new Document([
@@ -3981,10 +3952,9 @@ Http::get('/v1/messaging/messages/:messageId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
     ->inject('audit')
-    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
+    ->inject('getGeoForIp')
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Audit $audit, callable $getGeoForIp) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4036,18 +4006,10 @@ Http::get('/v1/messaging/messages/:messageId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
+                'countryCode' => $getGeoForIp($log['ip'])->getCountryCode(),
+                'countryName' => $getGeoForIp($log['ip'])->getCountryName()
             ]);
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
         }
 
         $response->dynamic(new Document([

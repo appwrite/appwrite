@@ -6056,6 +6056,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('Document unique constraint violation. Please try again with different data.', $duplicate['body']['message']);
 
         // Test for exception when inserting new doc and then updating to conflict
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -6092,6 +6093,62 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+    }
+
+    public function testUniqueUid(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'uniqueUidTest',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create a document with a known ID
+        $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => 'same-id',
+            'data' => ['title' => 'First'],
+            'permissions' => [
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ]
+        ]);
+
+        // Try creating a document with same ID (_uid duplicate)
+        $duplicate = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => 'same-id',
+            'data' => ['title' => 'Second'],
+            'permissions' => [
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ]
+        ]);
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertStringContainsString('already exists', $duplicate['body']['message']);
     }
 
     public function testPersistentCreatedAt(): void

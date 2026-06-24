@@ -11,6 +11,7 @@ use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -30,7 +31,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
@@ -916,8 +916,8 @@ Http::get('/v1/users/:userId/sessions')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->action(function (string $userId, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale) {
+    ->inject('geoRecord')
+    ->action(function (string $userId, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -927,7 +927,7 @@ Http::get('/v1/users/:userId/sessions')
         $sessions = $user->getAttribute('sessions', []);
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
-            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryName = $geoRecord->getCountryName($session->getAttribute('countryCode'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
             $sessions[$key] = $session;
@@ -1016,10 +1016,9 @@ Http::get('/v1/users/:userId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
     ->inject('audit')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
+    ->inject('getGeoForIp')
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Audit $audit, callable $getGeoForIp) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1067,14 +1066,8 @@ Http::get('/v1/users/:userId/logs')
                 'deviceBrand' => $device['deviceBrand'],
                 'deviceModel' => $device['deviceModel']
             ]);
-            $record = $geodb->get($log['ip']);
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $getGeoForIp($log['ip'])->getCountryCode();
+            $output[$i]['countryName'] = $getGeoForIp($log['ip'])->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -2382,12 +2375,11 @@ Http::post('/v1/users/:userId/sessions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2395,7 +2387,6 @@ Http::post('/v1/users/:userId/sessions')
 
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
@@ -2410,7 +2401,7 @@ Http::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord->getCountryCode(),
                 'expire' => $expire,
             ],
             $detector->getOS(),

@@ -4,6 +4,7 @@ namespace Appwrite\Event\Message;
 
 use Utopia\Database\Document;
 
+/** @phpstan-consistent-constructor */
 class Usage extends Base
 {
     /**
@@ -40,7 +41,6 @@ class Usage extends Base
      */
     public static function fromArray(array $data): static
     {
-        /** @phpstan-ignore new.static (subclass constructors are backwards-compatible via optional params) */
         return new static(
             project: new Document($data['project'] ?? []),
             metrics: $data['metrics'] ?? [],

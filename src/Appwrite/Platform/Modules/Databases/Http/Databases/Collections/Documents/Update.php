@@ -18,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -332,6 +333,8 @@ class Update extends Action
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
+        } catch (UniqueException) {
+            throw new Exception($this->getUniqueException());
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (RelationshipException $e) {

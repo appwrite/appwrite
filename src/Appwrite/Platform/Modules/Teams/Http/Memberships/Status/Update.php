@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
@@ -71,7 +71,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('project')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
@@ -80,7 +80,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -133,7 +133,6 @@ class Update extends Action
             $authorization->addRole(Role::user($user->getId())->toString());
 
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
@@ -152,7 +151,7 @@ class Update extends Action
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord->getCountryCode(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 

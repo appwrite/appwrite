@@ -112,6 +112,10 @@ services:
         condition: service_healthy
       coredns:
         condition: service_started
+      appwrite-geo:
+        condition: service_healthy
+      ollama:
+        condition: service_started
       appwrite-embedding:
         condition: service_started
     entrypoint:
@@ -247,6 +251,8 @@ services:
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
       - _APP_MIGRATION_HOST
+      - _APP_GEO_SECRET
+      - _APP_GEO_ENDPOINT
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
     extra_hosts:
@@ -1244,6 +1250,22 @@ services:
     image: appwrite/browser:0.3.2
     networks:
       - appwrite
+
+  appwrite-geo:
+    container_name: appwrite-geo
+    <<: *x-logging
+    image: appwrite/geo:0.2.0
+    restart: unless-stopped
+    networks:
+      - appwrite
+    environment:
+      - GEO_SECRET=$_APP_GEO_SECRET
+    healthcheck:
+      test: "php -r \"exit(json_decode(file_get_contents('http://localhost/v1/health'))->status === 'ok' ? 0 : 1);\""
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   openruntimes-executor:
     container_name: exc1
