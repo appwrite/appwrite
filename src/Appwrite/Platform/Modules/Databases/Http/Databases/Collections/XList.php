@@ -85,7 +85,7 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (!empty($search) && $search !== 'null') {
             $queries[] = Query::search('search', $search);
         }
 

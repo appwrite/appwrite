@@ -73,7 +73,7 @@ class XList extends Action
     {
         $queries = Query::parseQueries($queries);
 
-        if (!empty($search)) {
+        if (!empty($search) && $search !== 'null') {
             $queries[] = Query::search('search', $search);
         }
 
