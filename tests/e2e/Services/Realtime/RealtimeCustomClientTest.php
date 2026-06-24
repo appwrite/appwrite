@@ -276,6 +276,89 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testConnectionJWT()
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Mint a JWT for the authenticated user.
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt = $response['body']['jwt'];
+
+        /**
+         * Test for SUCCESS - JWT via x-appwrite-jwt header
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt,
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+
+        $client->close();
+
+        /**
+         * Test for SUCCESS - JWT via ?jwt= query string
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'channels' => ['account'],
+            'jwt' => $jwt,
+        ], [
+            'origin' => 'http://localhost',
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+
+        $client->close();
+
+        /**
+         * Test for FAILURE - invalid JWT via query string
+         */
+        $client = $this->getWebsocketWithCustomQuery([
+            'project' => $projectId,
+            'channels' => ['account'],
+            'jwt' => 'invalid-token',
+        ], [
+            'origin' => 'http://localhost',
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertEquals(401, $response['data']['code']); // USER_JWT_INVALID
+
+        \usleep(250000); // 250ms
+        $this->expectException(ConnectionException::class); // server should disconnect
+        $client->close();
+    }
+
     public function testConnectionPlatform()
     {
         /**

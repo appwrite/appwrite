@@ -271,7 +271,7 @@ return function (Container $container): void {
             $user = new User([]);
         }
 
-        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
         if (!empty($authJWT) && !$project->isEmpty()) {
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);

@@ -33,6 +33,7 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
+use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
 use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
@@ -823,6 +824,10 @@ class Messaging extends Action
             $from
         );
         $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+        // Attach the project ID so the SMS provider's delivery logs and
+        // webhooks can be attributed back to the originating project.
+        $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
         $this->adapter->send($sms);
     }

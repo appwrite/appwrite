@@ -38,6 +38,7 @@ class Create extends Action
             ->label('event', 'variables.[variableId].create')
             ->label('audits.event', 'project.variable.create')
             ->label('audits.resource', 'project.variable/{response.$id}')
+            ->label('usage.resource', 'project.variable/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'variables',

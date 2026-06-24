@@ -200,7 +200,7 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testListSpecs(): void
     {
-        $specifications = $this->listSpecifications();
+        $specifications = $this->listSpecifications(['type' => 'runtimes']);
         $this->assertEquals(200, $specifications['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);
@@ -214,20 +214,25 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
+        $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $function = $this->getFunction($function['body']['$id']);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $this->cleanupFunction($function['body']['$id']);

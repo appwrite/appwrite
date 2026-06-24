@@ -35,6 +35,7 @@ class Delete extends Base
             ->label('event', 'sites.[siteId].logs.[logId].delete')
             ->label('audits.event', 'logs.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'logs',
