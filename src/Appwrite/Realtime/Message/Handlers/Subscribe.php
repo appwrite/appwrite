@@ -92,9 +92,31 @@ class Subscribe extends Action
                     continue;
                 }
 
-                $project = $dbForConsole->getAuthorization()->skip(
-                    fn () => $dbForConsole->getDocument('projects', $targetProjectId)
-                );
+                // Tail channels are console-only. A normal project websocket (even for a
+                // team member) must not tail — that would expose compact metadata for
+                // resources the user could not read through the project API. Only a
+                // connection to the `console` project may register a tail.
+                if ($projectId !== 'console') {
+                    throw new Exception(
+                        Exception::REALTIME_POLICY_VIOLATION,
+                        'Console live tail is only available on the console connection.'
+                    );
+                }
+
+                // Resolve ownership fresh (projects can move between teams). Treat any
+                // lookup failure (missing/invalid project) as a policy violation so the
+                // connection is closed with 1008, consistent with an unauthorized tail —
+                // rather than leaking a raw not-found error and staying open.
+                try {
+                    $project = $dbForConsole->getAuthorization()->skip(
+                        fn () => $dbForConsole->getDocument('projects', $targetProjectId)
+                    );
+                } catch (\Throwable) {
+                    throw new Exception(
+                        Exception::REALTIME_POLICY_VIOLATION,
+                        'Not authorized to tail project "' . $targetProjectId . '".'
+                    );
+                }
                 $teamId = (string) $project->getAttribute('teamId', '');
 
                 if ($teamId === '' || !\in_array(Role::team($teamId)->toString(), $roles, true)) {

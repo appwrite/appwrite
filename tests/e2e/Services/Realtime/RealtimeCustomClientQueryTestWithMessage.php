@@ -1026,14 +1026,14 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             $response = \json_decode($client->receive(), true);
             $this->assertEquals('error', $response['type'] ?? null);
             $this->assertEquals(1008, $response['data']['code'] ?? null);
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             $this->addToAssertionCount(1);
         }
 
         // close() can itself throw on an already-closed socket — best effort.
         try {
             $client->close();
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             // already closed by the server
         }
     }
@@ -1108,5 +1108,48 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertArrayNotHasKey('name', $match); // still no document body
 
         $client->close();
+    }
+
+    public function testProjectConnectionCannotTail(): void
+    {
+        // A normal project websocket (not the console project) must not be able to tail,
+        // even for a team member — only the console connection may. Expect a 1008 reject.
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $queryString = \http_build_query(['project' => $projectId]); // NOT console
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_' . $projectId . '=' . $session,
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? null);
+
+        $client->send(\json_encode([
+            'type' => 'subscribe',
+            'data' => [['channels' => ['console.tail.' . $projectId], 'subscriptionId' => 'tail-proj']],
+        ]));
+
+        try {
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type'] ?? null);
+            $this->assertEquals(1008, $response['data']['code'] ?? null);
+        } catch (ConnectionException) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $client->close();
+        } catch (ConnectionException) {
+            // already closed by the server
+        }
     }
 }

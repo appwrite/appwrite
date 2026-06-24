@@ -167,6 +167,33 @@ final class EventTailRegistryTest extends TestCase
         $this->assertSame('t1', $meta['collectionId']);
     }
 
+    public function testTailMetadataExtractsScopeForAllDatabasePrefixes(): void
+    {
+        // The database family is published under several prefixes. `type` keeps the
+        // actual prefix, and databaseId/collectionId are extracted for every one of them
+        // (so scope filters work across the whole family regardless of the variant).
+        foreach (['databases', 'tablesdb', 'documentsdb', 'vectorsdb'] as $prefix) {
+            $meta = Realtime::toTailMetadata([
+                'userId' => 'u1',
+                'data' => [
+                    'events' => ["{$prefix}.main.collections.posts.documents.p1.create"],
+                    'payload' => ['$id' => 'p1'],
+                ],
+            ]);
+            $this->assertSame($prefix, $meta['type'], 'type preserves the actual prefix');
+            $this->assertSame('main', $meta['databaseId']);
+            $this->assertSame('posts', $meta['collectionId']);
+        }
+
+        // `tables` sub-resource under a projected prefix still maps to collectionId.
+        $rows = Realtime::toTailMetadata([
+            'data' => ['events' => ['tablesdb.main.tables.t1.rows.r1.create'], 'payload' => ['$id' => 'r1']],
+        ]);
+        $this->assertSame('tablesdb', $rows['type']);
+        $this->assertSame('main', $rows['databaseId']);
+        $this->assertSame('t1', $rows['collectionId']);
+    }
+
     public function testTailMetadataAttributeTrailingAction(): void
     {
         // `users.U.update.email` — action is the second-to-last segment.

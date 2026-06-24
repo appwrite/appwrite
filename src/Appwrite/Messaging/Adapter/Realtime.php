@@ -16,6 +16,11 @@ class Realtime extends MessagingAdapter
 {
     public const SUPPORTED_ACTIONS = ['create', 'update', 'upsert', 'delete'];
 
+    // The database family is published under several event prefixes (legacy `databases`
+    // plus the per-type projections). They share the same `databases.<db>.<collections|tables>.<id>…`
+    // shape, so the tail normalizes them to `databases` for consistent metadata + filtering.
+    public const DATABASE_EVENT_PREFIXES = ['databases', 'tablesdb', 'documentsdb', 'vectorsdb'];
+
     // Resources whose channels receive an action-suffixed sibling at publish time.
     // The suffix loop in fromPayload() treats any channel whose last OR second-to-last
     // segment matches an entry here as a candidate for `.{action}` suffixing.
@@ -513,6 +518,12 @@ class Realtime extends MessagingAdapter
         $count = \count($parts);
         $type = $parts[0] ?? null;
 
+        // The database family is published under several prefixes (databases/tablesdb/
+        // documentsdb/vectorsdb). `type` keeps the actual prefix (more informative), but
+        // scope ids are extracted for all of them so databaseId/collectionId filters work
+        // across the whole family.
+        $isDatabaseFamily = \in_array($type, self::DATABASE_EVENT_PREFIXES, true);
+
         $action = null;
         if ($count >= 1 && \in_array($parts[$count - 1], self::SUPPORTED_ACTIONS, true)) {
             $action = $parts[$count - 1];
@@ -541,30 +552,31 @@ class Realtime extends MessagingAdapter
         // name encodes the id at every level — parts[1] is the top-level resource id and
         // parts[3] the collection/table id.
         $scope = [];
-        switch ($type) {
-            case 'databases':
-                if (isset($parts[1])) {
-                    $scope['databaseId'] = $parts[1];
-                }
-                if (isset($parts[2], $parts[3]) && \in_array($parts[2], ['collections', 'tables'], true)) {
-                    $scope['collectionId'] = $parts[3];
-                }
-                break;
-            case 'buckets':
-                if (isset($parts[1])) {
-                    $scope['bucketId'] = $parts[1];
-                }
-                break;
-            case 'functions':
-                if (isset($parts[1])) {
-                    $scope['functionId'] = $parts[1];
-                }
-                break;
-            case 'teams':
-                if (isset($parts[1])) {
-                    $scope['teamId'] = $parts[1];
-                }
-                break;
+        if ($isDatabaseFamily) {
+            if (isset($parts[1])) {
+                $scope['databaseId'] = $parts[1];
+            }
+            if (isset($parts[2], $parts[3]) && \in_array($parts[2], ['collections', 'tables'], true)) {
+                $scope['collectionId'] = $parts[3];
+            }
+        } else {
+            switch ($type) {
+                case 'buckets':
+                    if (isset($parts[1])) {
+                        $scope['bucketId'] = $parts[1];
+                    }
+                    break;
+                case 'functions':
+                    if (isset($parts[1])) {
+                        $scope['functionId'] = $parts[1];
+                    }
+                    break;
+                case 'teams':
+                    if (isset($parts[1])) {
+                        $scope['teamId'] = $parts[1];
+                    }
+                    break;
+            }
         }
 
         foreach ($scope as $key => $value) {
