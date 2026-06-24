@@ -194,7 +194,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.8.26
+    image: <?php echo $organization; ?>/console:8
     restart: unless-stopped
     networks:
       - appwrite
@@ -1003,7 +1003,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
       - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
-      - OPR_EXECUTOR_IMAGES=<?php echo $executorImages; ?>
+      - OPR_EXECUTOR_IMAGES=<?php echo $executorImages . "\n"; ?>
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
