@@ -66,7 +66,7 @@ import {
   formatStorageTotal,
   formatStorageValue,
 } from '@/lib/usage/storage-gauges'
-import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { formatApiEndpointDisplay, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -654,27 +654,10 @@ export function View({ projectId, initialData }: ViewProps) {
     [currentProject?.region],
   )
 
-  // Extract hostname and path from endpoint URL
-  const endpointDisplay = useMemo(() => {
-    if (!projectEndpoint) return ''
-
-    try {
-      const url = new URL(projectEndpoint)
-      // Ensure we include the full hostname (with region code if present) and path
-      const hostname = url.hostname
-      const pathname = url.pathname || '/v1'
-      return `${hostname}${pathname}`
-    } catch {
-      // If URL parsing fails, try to extract hostname and path manually
-      const match = projectEndpoint.match(/https?:\/\/([^\/]+)(\/.*)?/)
-      if (match) {
-        const hostname = match[1]
-        const path = match[2] || '/v1'
-        return `${hostname}${path}`
-      }
-      return projectEndpoint.replace(/^https?:\/\//, '')
-    }
-  }, [projectEndpoint])
+  const endpointDisplay = useMemo(
+    () => formatApiEndpointDisplay(projectEndpoint),
+    [projectEndpoint],
+  )
 
   const copyToClipboard = (text: string, field?: string) => {
     navigator.clipboard.writeText(text)

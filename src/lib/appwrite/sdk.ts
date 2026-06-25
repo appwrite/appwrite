@@ -135,6 +135,23 @@ export function getApiEndpoint(region?: string): string {
   return `${protocol}//${subdomain}${hostWithPort}/v1`
 }
 
+/** Compact endpoint label: host (with port when non-default) and path, without protocol. */
+export function formatApiEndpointDisplay(endpoint: string): string {
+  if (!endpoint) return ''
+
+  try {
+    const url = new URL(endpoint)
+    const pathname = url.pathname || '/v1'
+    return `${url.host}${pathname}`
+  } catch {
+    const match = endpoint.match(/https?:\/\/([^/]+)(\/.*)?/)
+    if (match) {
+      return `${match[1]}${match[2] || '/v1'}`
+    }
+    return endpoint.replace(/^https?:\/\//, '')
+  }
+}
+
 /** Base endpoint (console / default). Use for console-level URLs. */
 export function getBaseEndpoint(): string {
   return getApiEndpoint()
