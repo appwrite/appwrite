@@ -1421,6 +1421,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'UI & tools',
               ),
               createDebugFeatureFlagItem(
+                'Unlock onboarding',
+                'Unlock all Get started product sections without completing Connect.',
+                'unlockOnboardingLocks',
+                overrides.unlockOnboardingLocks,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    unlockOnboardingLocks: checked,
+                  }))
+                  setDebugOverride('unlockOnboardingLocks', checked)
+                },
+                undefined,
+                'UI & tools',
+              ),
+              createDebugFeatureFlagItem(
                 'Disable usage breakdown queries',
                 'Skip dimension-based usage API calls on the project overview (top endpoints, buckets, functions/sites). Charts and KPIs still load.',
                 'disableUsageBreakdownQueries',

@@ -28,6 +28,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   disableOverviewStorageChart: 'debug:disableOverviewStorageChart',
   disableOverviewExecutionsChart: 'debug:disableOverviewExecutionsChart',
   disableOverviewComputeChart: 'debug:disableOverviewComputeChart',
+  /** When true, onboarding product sections are unlocked without completing Connect. */
+  unlockOnboardingLocks: 'debug:unlockOnboardingLocks',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -87,6 +89,8 @@ export type DebugOverrides = {
   disableOverviewStorageChart: boolean
   disableOverviewExecutionsChart: boolean
   disableOverviewComputeChart: boolean
+  /** When true, skip the Connect gate on the Get started onboarding page. */
+  unlockOnboardingLocks: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -196,6 +200,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.disableOverviewComputeChart,
       false,
     ),
+    unlockOnboardingLocks: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.unlockOnboardingLocks,
+      false,
+    ),
   }
 }
 
@@ -250,6 +258,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'disableOverviewStorageChart',
   'disableOverviewExecutionsChart',
   'disableOverviewComputeChart',
+  'unlockOnboardingLocks',
 ] as const satisfies readonly (keyof DebugOverrides)[]
 
 export type FeatureFlagsMenuDebugKey =
@@ -271,6 +280,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   disableOverviewStorageChart: false,
   disableOverviewExecutionsChart: false,
   disableOverviewComputeChart: false,
+  unlockOnboardingLocks: false,
 }
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */

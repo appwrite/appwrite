@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   useOnboardingProgressFromSnapshot,
   useOnboardingStepStates,
@@ -470,14 +471,16 @@ export function View({ initialData }: ViewProps = {}) {
     useProjectOnboardingSnapshot(projectId)
   const snapshot = snapshotFromHook ?? initialData?.snapshot
   const { isDebugModeOpen } = useDebugMode()
+  const { unlockOnboardingLocks } = useDebugOverrides()
 
   const { progress, completedSteps, totalSteps } =
     useOnboardingProgressFromSnapshot(snapshot)
   const stepStates = useOnboardingStepStates(snapshot)
 
   const connectComplete =
-    !!snapshot &&
-    ONBOARDING_CONNECT.every((step) => step.isDone(snapshot))
+    unlockOnboardingLocks ||
+    (!!snapshot &&
+      ONBOARDING_CONNECT.every((step) => step.isDone(snapshot)))
 
   const showSkeleton = isLoading && !snapshot
 
