@@ -37,6 +37,12 @@ import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
+import {
+  getBillingProjectResourceIdMap,
+  groupBillingProjectResources,
+  type BillingProjectResourceCategoryGroup,
+  type BillingProjectResourceItem,
+} from '@/lib/billing/project-breakdown-resources'
 
 /**
  * PlanSummary Component
@@ -57,96 +63,6 @@ interface PlanSummaryProps {
   onChangePlan?: () => void
   orgId?: string
 }
-
-interface ResourceItem {
-  name: string
-  usage: number
-  limit: number | null
-  cost: number
-  formatType: 'bytes' | 'number' | 'sms'
-  showLimit?: boolean
-}
-
-type BillingProjectResourceMapping = {
-  name: string
-  format: 'bytes' | 'number' | 'sms'
-  planKey: string
-  showLimit?: boolean
-  /** Hide rows with zero usage and zero cost (for billable add-ons). */
-  showOnlyWhenUsed?: boolean
-}
-
-type PlanUsageNameMap = Record<string, { name?: string } | undefined>
-
-function getBillingResourceLabel(
-  resourceId: string,
-  defaultName: string,
-  plan: Models.BillingPlan | null | undefined,
-): string {
-  const usage = plan?.usage as PlanUsageNameMap | undefined
-  const fromPlan = usage?.[resourceId]?.name?.trim()
-  return fromPlan || defaultName
-}
-
-const DEDICATED_DB_PROJECT_RESOURCES: Record<string, BillingProjectResourceMapping> =
-  {
-    dedicatedDbSpecificationCost: {
-      name: 'Dedicated databases',
-      format: 'number',
-      planKey: 'dedicatedDbSpecificationCost',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbStorage: {
-      name: 'Dedicated database storage',
-      format: 'bytes',
-      planKey: 'dedicatedDbStorage',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbBandwidth: {
-      name: 'Dedicated database bandwidth',
-      format: 'bytes',
-      planKey: 'dedicatedDbBandwidth',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbHaReplica: {
-      name: 'HA replicas',
-      format: 'number',
-      planKey: 'dedicatedDbHaReplica',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbCrossRegionReplica: {
-      name: 'Cross-region replicas',
-      format: 'number',
-      planKey: 'dedicatedDbCrossRegionReplica',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbCrossRegion: {
-      name: 'Cross-region transfer',
-      format: 'number',
-      planKey: 'dedicatedDbCrossRegion',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbPitr: {
-      name: 'Point-in-time recovery',
-      format: 'number',
-      planKey: 'dedicatedDbPitr',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-    dedicatedDbExtensions: {
-      name: 'Database extensions',
-      format: 'number',
-      planKey: 'dedicatedDbExtensions',
-      showLimit: false,
-      showOnlyWhenUsed: true,
-    },
-  }
 
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const [expanded, setExpanded] = useState(true) // Default to expanded
@@ -368,7 +284,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     if (!Array.isArray(projects) || projects.length === 0) return []
 
     return projects.map((project) => {
-      const resources: ResourceItem[] = []
+      const resources: BillingProjectResourceItem[] = []
       let projectTotal = 0
 
       // Resources are in project.resources array with resourceId and value
@@ -376,91 +292,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         ? project.resources
         : []
 
-      // Map aggregation resourceIds to our internal keys and display info
-      // The aggregation uses resourceId like "bandwidth", "storage", "users", "databasesReads", "GBHours", etc.
-      const resourceIdMap: Record<string, BillingProjectResourceMapping> = {
-        bandwidth: {
-          name: 'Bandwidth',
-          format: 'bytes',
-          planKey: 'bandwidth',
-        },
-        storage: {
-          name: 'Storage',
-          format: 'bytes',
-          planKey: 'storage',
-        },
-        users: {
-          name: 'Users',
-          format: 'number',
-          planKey: 'users',
-        },
-        databasesReads: {
-          name: 'Database reads',
-          format: 'number',
-          planKey: 'databaseReads',
-        },
-        databasesWrites: {
-          name: 'Database writes',
-          format: 'number',
-          planKey: 'databaseWrites',
-        },
-        executions: {
-          name: 'Executions',
-          format: 'number',
-          planKey: 'executions',
-        },
-        imageTransformations: {
-          name: 'Image transformations',
-          format: 'number',
-          planKey: 'imageTransformations',
-        },
-        screenshotsGenerated: {
-          name: 'Screenshots generated',
-          format: 'number',
-          planKey: 'screenshotsGenerated',
-        },
-        GBHours: {
-          name: 'GB-hours',
-          format: 'number',
-          planKey: 'gbHours',
-        },
-        realtime: {
-          name: 'Realtime connections',
-          format: 'number',
-          planKey: 'realtime',
-        },
-        realtimeMessages: {
-          name: 'Realtime messages',
-          format: 'number',
-          planKey: 'realtimeMessages',
-        },
-        realtimeBandwidth: {
-          name: 'Realtime bandwidth',
-          format: 'bytes',
-          planKey: 'realtimeBandwidth',
-          showLimit: false,
-        },
-        authPhone: {
-          name: 'Phone OTP',
-          format: 'sms',
-          planKey: 'authPhone',
-        },
-        ...Object.fromEntries(
-          Object.entries(DEDICATED_DB_PROJECT_RESOURCES).map(
-            ([resourceId, mapping]) => [
-              resourceId,
-              {
-                ...mapping,
-                name: getBillingResourceLabel(
-                  resourceId,
-                  mapping.name,
-                  plan,
-                ),
-              },
-            ],
-          ),
-        ),
-      }
+      const resourceIdMap = getBillingProjectResourceIdMap(plan)
 
       // Helper to get resource from aggregation by resourceId
       const getResourceByResourceId = (resourceId: string) => {
@@ -532,6 +364,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           name,
           format,
           planKey,
+          category,
           showLimit = true,
           showOnlyWhenUsed = false,
         } = mappedResource
@@ -556,12 +389,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         // This matches the old UI which shows all resources
         if (shouldShow) {
           resources.push({
+            resourceId,
             name,
             usage,
             limit,
             cost,
             formatType: format,
             showLimit,
+            category,
           })
           projectTotal += cost
         }
@@ -570,7 +405,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       return {
         projectId: project.$id,
         projectName: project.name || 'Unknown Project',
-        resources,
+        categories: groupBillingProjectResources(resources),
         total: projectTotal,
       }
     })
@@ -786,85 +621,13 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div className="ml-5 mt-1 border-l border-border pl-3 pr-6 pb-2">
-                          <div className="space-y-0.5">
-                            {project.resources.map((resource, index) => {
-                              const usagePercentage =
-                                resource.limit && resource.limit > 0
-                                  ? Math.min(
-                                      100,
-                                      (resource.usage / resource.limit) * 100,
-                                    )
-                                  : null
-                              const usageFormatted = formatResourceUsage(
-                                resource.usage,
-                                resource.formatType,
-                              )
-                              const limitFormatted =
-                                resource.limit !== null
-                                  ? formatResourceLimit(
-                                      resource.limit,
-                                      resource.formatType,
-                                    )
-                                  : 'Unlimited'
-
-                              return (
-                                <div
-                                  key={index}
-                                  className="py-2 border-b border-border last:border-0"
-                                >
-                                  <div className="flex items-center gap-6">
-                                    {/* Resource name - fixed width */}
-                                    <span className="text-[12px] font-medium text-foreground w-[140px] shrink-0">
-                                      {resource.name}
-                                    </span>
-
-                                    {/* Progress bar - fixed width column for alignment */}
-                                    <div className="w-[120px] shrink-0">
-                                      {usagePercentage !== null ? (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <div>
-                                                <Progress
-                                                  value={usagePercentage}
-                                                  className={cn(
-                                                    'h-2 cursor-pointer',
-                                                    usagePercentage >= 80 &&
-                                                      '[&>div]:bg-blue-500',
-                                                  )}
-                                                />
-                                              </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="text-[12px]">
-                                                {usagePercentage.toFixed(1)}%
-                                                used
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      ) : (
-                                        <div className="h-2" /> // Spacer to maintain alignment
-                                      )}
-                                    </div>
-
-                                    {/* Usage/limit text - flexible; when plan has 0 included quota, show count only */}
-                                    <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
-                                      {!resource.showLimit
-                                        ? usageFormatted
-                                        : resource.limit === 0
-                                          ? usageFormatted
-                                          : `${usageFormatted} / ${limitFormatted}`}
-                                    </span>
-
-                                    {/* Cost - right aligned to match parent prices */}
-                                    <span className="text-[12px] font-medium text-foreground shrink-0 text-right min-w-[70px]">
-                                      {formatCurrency(resource.cost)}
-                                    </span>
-                                  </div>
-                                </div>
-                              )
-                            })}
+                          <div className="divide-y divide-border">
+                            {project.categories.map((category) => (
+                              <BillingProjectResourceCategorySection
+                                key={category.id}
+                                category={category}
+                              />
+                            ))}
                           </div>
                           {orgId && (
                             <Link
@@ -949,6 +712,96 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function BillingProjectResourceCategorySection({
+  category,
+}: {
+  category: BillingProjectResourceCategoryGroup
+}) {
+  return (
+    <div className="py-3 first:pt-0 last:pb-0">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pb-1.5">
+        {category.label}
+      </p>
+      <div className="space-y-1">
+        {category.resources.map((resource) => (
+          <BillingProjectResourceRow
+            key={resource.resourceId}
+            resource={resource}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BillingProjectResourceRow({
+  resource,
+}: {
+  resource: BillingProjectResourceItem
+}) {
+  const usagePercentage =
+    resource.limit && resource.limit > 0
+      ? Math.min(100, (resource.usage / resource.limit) * 100)
+      : null
+  const usageFormatted = formatResourceUsage(
+    resource.usage,
+    resource.formatType,
+  )
+  const limitFormatted =
+    resource.limit !== null
+      ? formatResourceLimit(resource.limit, resource.formatType)
+      : 'Unlimited'
+
+  return (
+    <div className="py-1.5">
+      <div className="flex items-center gap-6">
+        <span className="text-[12px] font-medium text-foreground w-[140px] shrink-0">
+          {resource.name}
+        </span>
+
+        <div className="w-[120px] shrink-0">
+          {usagePercentage !== null ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Progress
+                      value={usagePercentage}
+                      className={cn(
+                        'h-2 cursor-pointer',
+                        usagePercentage >= 80 && '[&>div]:bg-blue-500',
+                      )}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-[12px]">
+                    {usagePercentage.toFixed(1)}% used
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <div className="h-2" />
+          )}
+        </div>
+
+        <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
+          {!resource.showLimit
+            ? usageFormatted
+            : resource.limit === 0
+              ? usageFormatted
+              : `${usageFormatted} / ${limitFormatted}`}
+        </span>
+
+        <span className="text-[12px] font-medium text-foreground shrink-0 text-right min-w-[70px]">
+          {formatCurrency(resource.cost)}
+        </span>
+      </div>
     </div>
   )
 }
