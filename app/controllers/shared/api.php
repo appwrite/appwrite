@@ -42,6 +42,7 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
+use Throwable;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -881,106 +882,6 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
-    ->inject('response')
-    ->inject('project')
-    ->inject('user')
-    ->inject('queueForRealtime')
-    ->inject('dbForPlatform')
-    ->inject('authorization')
-    ->inject('apiKey')
-    ->inject('mode')
-    ->action(function (Route $route, Response $response, Document $project, User $user, Realtime $queueForRealtime, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode) {
-        /**
-         * Persist completed stage when the route matches a configured SDK method (stored on project as `onboarding`: method → row).
-         * Hot path: fail fast on status/console, O(1) onboarding key lookup, O(1) project state check — no work on unrelated routes.
-         */
-        $statusCode = $response->getStatusCode();
-        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
-            return;
-        }
-
-        $sdkLabel = $route->getLabel('sdk', false);
-        if ($sdkLabel === false || $sdkLabel === null) {
-            return;
-        }
-
-        /** @var array<string, true> $onboarding */
-        $onboarding = Config::getParam('onboarding', []);
-        if ($onboarding === []) {
-            return;
-        }
-
-        $method = null;
-        if ($sdkLabel instanceof Method) {
-            $key = $sdkLabel->getNamespace() . '.' . $sdkLabel->getMethodName();
-            if (isset($onboarding[$key])) {
-                $method = $key;
-            }
-        } elseif (\is_array($sdkLabel)) {
-            foreach ($sdkLabel as $sdkMethod) {
-                if (! $sdkMethod instanceof Method) {
-                    continue;
-                }
-                $key = $sdkMethod->getNamespace() . '.' . $sdkMethod->getMethodName();
-                if (isset($onboarding[$key])) {
-                    $method = $key;
-                    break;
-                }
-            }
-        }
-
-        if ($method === null) {
-            return;
-        }
-
-        $byMethod = $project->getAttribute('onboarding', []);
-        $status = \is_array($byMethod) ? ($byMethod[$method]['status'] ?? null) : null;
-        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
-            return;
-        }
-
-        if (! \is_array($byMethod)) {
-            $byMethod = [];
-        }
-
-        $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_APPS)
-            ? match ($apiKey->getType()) {
-                API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
-                API_KEY_ORGANIZATION => ACTOR_TYPE_KEY_ORGANIZATION,
-                API_KEY_STANDARD, API_KEY_EPHEMERAL => ACTOR_TYPE_KEY_PROJECT,
-                default => ACTOR_TYPE_KEY_PROJECT,
-            }
-            : (! $user->isEmpty()
-                ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
-                : ACTOR_TYPE_GUEST);
-        $byMethod[$method] = [
-            'status' => ONBOARDING_STATUS_COMPLETED,
-            'at' => DateTime::now(),
-            'actorType' => $actorType,
-        ];
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'onboarding' => $byMethod,
-        ])));
-
-        $queueForRealtime->reset();
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console'])
-            ->setEvent('projects.[projectId].stages.[stageId].complete')
-            ->setParam('projectId', $project->getId())
-            ->setParam('stageId', $method)
-            ->setPayload([
-                'stageId' => $method,
-                'status' => ONBOARDING_STATUS_COMPLETED,
-                'at' => $byMethod[$method]['at'],
-                'actorType' => $actorType,
-            ])
-            ->trigger();
-    });
-
-Http::shutdown()
-    ->groups(['api'])
-    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1209,6 +1110,111 @@ Http::shutdown()
             );
 
             $publisherForUsage->enqueue($message);
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('queueForRealtime')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->inject('apiKey')
+    ->inject('mode')
+    ->action(function (Route $route, Response $response, Document $project, User $user, Realtime $queueForRealtime, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode) {
+        /**
+         * Persist completed onboarding stage after usage shutdown so a schema/write failure here
+         * cannot suppress RequestCompleted or usage metrics on the same request.
+         */
+        $statusCode = $response->getStatusCode();
+        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
+            return;
+        }
+
+        $sdkLabel = $route->getLabel('sdk', false);
+        if ($sdkLabel === false || $sdkLabel === null) {
+            return;
+        }
+
+        /** @var array<string, true> $onboarding */
+        $onboarding = Config::getParam('onboarding', []);
+        if ($onboarding === []) {
+            return;
+        }
+
+        $method = null;
+        if ($sdkLabel instanceof Method) {
+            $key = $sdkLabel->getNamespace() . '.' . $sdkLabel->getMethodName();
+            if (isset($onboarding[$key])) {
+                $method = $key;
+            }
+        } elseif (\is_array($sdkLabel)) {
+            foreach ($sdkLabel as $sdkMethod) {
+                if (! $sdkMethod instanceof Method) {
+                    continue;
+                }
+                $key = $sdkMethod->getNamespace() . '.' . $sdkMethod->getMethodName();
+                if (isset($onboarding[$key])) {
+                    $method = $key;
+                    break;
+                }
+            }
+        }
+
+        if ($method === null) {
+            return;
+        }
+
+        $byMethod = $project->getAttribute('onboarding', []);
+        $status = \is_array($byMethod) ? ($byMethod[$method]['status'] ?? null) : null;
+        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+            return;
+        }
+
+        if (! \is_array($byMethod)) {
+            $byMethod = [];
+        }
+
+        $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_APPS)
+            ? match ($apiKey->getType()) {
+                API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                API_KEY_ORGANIZATION => ACTOR_TYPE_KEY_ORGANIZATION,
+                API_KEY_STANDARD, API_KEY_EPHEMERAL => ACTOR_TYPE_KEY_PROJECT,
+                default => ACTOR_TYPE_KEY_PROJECT,
+            }
+            : (! $user->isEmpty()
+                ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
+                : ACTOR_TYPE_GUEST);
+        $byMethod[$method] = [
+            'status' => ONBOARDING_STATUS_COMPLETED,
+            'at' => DateTime::now(),
+            'actorType' => $actorType,
+        ];
+
+        try {
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'onboarding' => $byMethod,
+            ])));
+
+            $queueForRealtime->reset();
+            $queueForRealtime
+                ->setProject($project)
+                ->setSubscribers(['console'])
+                ->setEvent('projects.[projectId].stages.[stageId].complete')
+                ->setParam('projectId', $project->getId())
+                ->setParam('stageId', $method)
+                ->setPayload([
+                    'stageId' => $method,
+                    'status' => ONBOARDING_STATUS_COMPLETED,
+                    'at' => $byMethod[$method]['at'],
+                    'actorType' => $actorType,
+                ])
+                ->trigger();
+        } catch (Throwable) {
+            // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
         }
     });
 
