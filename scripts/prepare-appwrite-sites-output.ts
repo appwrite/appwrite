@@ -3,41 +3,36 @@
  * `server/server.js` (or `server/index.mjs`). TanStack Start framework presets
  * default to `./.output`, but this repo builds to `dist/` via Vite.
  *
- * Link `.output` -> `dist` after build so bundle helpers find the SSR server entry
- * when the site still uses the framework default path (`.output`).
+ * Link `.output` -> `dist` after build so bundle helpers and Appwrite's post-build
+ * `find` (when outputDirectory is `.output`) see `server/server.js`.
  *
- * Adapter type (ssr vs static) is detected separately from vite.config.ts; see the
- * `appwriteAdapterHint` in vite.config.ts when using partial marketing prerender.
+ * Appwrite build caches can restore a real `.output/` tree without an SSR entry;
+ * leaving that directory in place causes "Adapter mismatch: static vs ssr".
  *
- * Run: bun run scripts/prepare-appwrite-sites-output.ts
+ * Set the site output directory to `dist` when possible. Keep this script for
+ * sites still using the TanStack default `.output`.
+ *
+ * Run: node --experimental-strip-types scripts/prepare-appwrite-sites-output.ts
  */
-import { access, lstat, rm, symlink } from 'node:fs/promises'
+import { lstat, rm, symlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const SSR_ENTRY = join(ROOT, 'dist', 'server', 'server.js')
 const OUTPUT_LINK = join(ROOT, '.output')
 
 async function run() {
-  try {
-    await access(SSR_ENTRY)
-  } catch {
-    console.log(
-      'Skipping .output link: dist/server/server.js not found (not an SSR build)',
-    )
-    return
-  }
+  // verify-appwrite-sites-output.ts runs immediately before this script in build:node
 
   try {
     const stat = await lstat(OUTPUT_LINK)
     if (stat.isSymbolicLink()) {
       await rm(OUTPUT_LINK)
     } else {
-      console.warn(
-        '.output exists and is not a symlink; leaving it unchanged for Appwrite Sites detection',
+      console.log(
+        'Removing stale .output directory so Appwrite SSR detection can use dist/server/server.js',
       )
-      return
+      await rm(OUTPUT_LINK, { recursive: true, force: true })
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
@@ -46,7 +41,9 @@ async function run() {
   }
 
   await symlink('dist', OUTPUT_LINK)
-  console.log('Linked .output -> dist for Appwrite Sites SSR detection')
+  console.log(
+    'Linked .output -> dist for Appwrite Sites SSR detection (server/server.js)',
+  )
 }
 
 await run()

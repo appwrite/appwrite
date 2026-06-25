@@ -67,7 +67,7 @@ import path from 'node:path'
 import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
-} from './src/lib/marketing/prerender-paths.ts'
+} from './src/lib/marketing/marketing-build-paths.ts'
 import {
   injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,

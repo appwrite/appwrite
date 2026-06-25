@@ -46,7 +46,7 @@ COPY --from=prod-deps /app/node_modules/ node_modules
 COPY server.ts server.ts
 
 # WORKAROUND: server.ts imports a handful of modules from src/ at runtime that
-# aren't bundled into dist (marketing/prerender-paths, runtime-config-shared, and
+# aren't bundled into dist (marketing/marketing-build-paths, runtime-config-shared, and
 # their transitive imports). Cherry-picking individual files here is fragile —
 # every new local import in that tree silently breaks the production image while
 # dev/CI stay green. Until server.ts and its runtime deps are bundled into a

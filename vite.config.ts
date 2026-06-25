@@ -11,10 +11,7 @@ import {
   almostnodeBuildPlugin,
   ensureAlmostnodePatchCache,
 } from './src/lib/cli-shell/vite-almostnode-plugin'
-import {
-  getAllMarketingPrerenderPaths,
-  isMarketingPrerenderPath,
-} from './src/lib/marketing/prerender-paths'
+import { getTanstackStartSitesOptions } from './vite.sites-config'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -49,12 +46,6 @@ const decimalJsShim = path.resolve(
 )
 const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
-// Appwrite Sites reads vite.config.ts via utopia-php/detector TanStackStart::getAdapter:
-// any `prerender` key without a matching `prerender: false` is classified as static.
-// Marketing prerender below is partial SSR; this hint keeps adapter detection as ssr.
-const appwriteAdapterHint = { prerender: false } as const
-void appwriteAdapterHint
-
 export default defineConfig(async () => {
   const isSitesBuild = process.env.FOR_SITES === 'true'
   // Source-map upload is a build-time concern, gated only on the auth token.
@@ -79,23 +70,7 @@ export default defineConfig(async () => {
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart(
-        isSitesBuild
-          ? {
-              prerender: {
-                enabled: true,
-                crawlLinks: false,
-                concurrency: 8,
-                failOnError: true,
-                filter: ({ path }) => isMarketingPrerenderPath(path),
-              },
-              pages: getAllMarketingPrerenderPaths().map((path) => ({
-                path,
-                prerender: { enabled: true },
-              })),
-            }
-          : undefined,
-      ),
+      tanstackStart(isSitesBuild ? getTanstackStartSitesOptions() : undefined),
       devtoolsJson(),
       almostnodeBuildPlugin(almostnodeDist, almostnodeCacheDir, {
         projectRoot,
