@@ -288,6 +288,7 @@ const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+const API_KEY_OAUTH2 = 'oauth2';
 
 // Realtime
 const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
