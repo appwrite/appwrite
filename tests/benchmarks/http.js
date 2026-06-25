@@ -1,3 +1,5 @@
+import { ENDPOINT } from './config.js';
+
 /*
  * Run locally:
  * Requires k6 and a running Appwrite instance.
@@ -11,7 +13,6 @@ import { check, group, sleep } from 'k6';
 import encoding from 'k6/encoding';
 import { Counter, Trend } from 'k6/metrics';
 
-const ENDPOINT = (__ENV.APPWRITE_ENDPOINT || 'http://localhost/v1').replace(/\/+$/, '');
 const CONSOLE_PROJECT = __ENV.APPWRITE_CONSOLE_PROJECT || 'console';
 const REGION = __ENV.APPWRITE_REGION || 'default';
 const REDIRECT_URL = __ENV.APPWRITE_BENCHMARK_REDIRECT_URL || 'http://localhost';
