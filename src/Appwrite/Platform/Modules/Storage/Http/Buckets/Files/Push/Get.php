@@ -40,7 +40,7 @@ class Get extends Action
             ->desc('Get file for push notification')
             ->groups(['api', 'storage'])
             ->label('scope', 'public')
-            ->label('usage.resource', 'bucket/{request.bucketId}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
