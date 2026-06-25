@@ -215,58 +215,15 @@ class Mails extends Action
         );
         $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
-        $sendAndCheck = function (EmailAdapter $adapter) use ($emailMessage): void {
-            $response = $adapter->send($emailMessage);
-            $failed = array_filter($response['results'] ?? [], fn($r) => ($r['status'] ?? '') !== 'success');
-            if (!empty($failed)) {
-                $error = array_values($failed)[0]['error'] ?? 'Unknown error';
-                throw new Exception($error);
-            }
-        };
-
         try {
-            $sendAndCheck($adapter);
+            $adapter->send($emailMessage);
         } catch (\Throwable $error) {
-            $msg = $error->getMessage();
-            $is421Timeout = str_contains($msg, '421') && str_contains($msg, 'Timeout');
+            Span::add('mail.status', 'failure');
 
-            if ($is421Timeout) {
-                $fresh = empty($smtp)
-                    ? new SMTP(
-                        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
-                        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
-                        username: System::getEnv('_APP_SMTP_USERNAME', ''),
-                        password: System::getEnv('_APP_SMTP_PASSWORD', ''),
-                        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
-                        smtpAutoTLS: false,
-                        xMailer: 'Appwrite Mailer',
-                        timeout: 10,
-                        keepAlive: false,
-                        timelimit: 30,
-                    )
-                    : new SMTP(
-                        host: $smtp['host'],
-                        port: (int) $smtp['port'],
-                        username: $smtp['username'] ?? '',
-                        password: $smtp['password'] ?? '',
-                        smtpSecure: $smtp['secure'] ?? '',
-                        smtpAutoTLS: false,
-                        xMailer: 'Appwrite Mailer',
-                        timeout: 10,
-                        keepAlive: false,
-                        timelimit: 30,
-                    );
-
-                try {
-                    $sendAndCheck($fresh);
-                } catch (\Throwable $retryError) {
-                    $code = ($type === 'smtp') ? 401 : 500;
-                    throw new Exception('Error sending mail: ' . $retryError->getMessage(), $code);
-                }
-            } else {
-                $code = ($type === 'smtp') ? 401 : 500;
-                throw new Exception('Error sending mail: ' . $msg, $code);
+            if ($type === 'smtp') {
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
             }
+            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
 
         Span::add('mail.status', 'success');
