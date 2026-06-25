@@ -70,7 +70,14 @@ function buildComment(core) {
     }
 
     lines.push(
-        metricTable(rows),
+        '<details>',
+        '<summary><strong>Per-scenario breakdown</strong></summary>',
+        '',
+        '<br>',
+        '',
+        metricTable(rows.slice(1)),
+        '',
+        '</details>',
         '',
         '<details>',
         '<summary><strong>Top API waits</strong></summary>',
@@ -240,17 +247,11 @@ function metricValues(data, metric) {
 }
 
 function headline(apiRow) {
-    const before = apiRow?.before?.rps;
-    const after = apiRow?.after?.rps;
-    if (after === null || after === undefined || Number.isNaN(after)) {
-        return '**API throughput:** n/a';
-    }
-    if (before === null || before === undefined || Number.isNaN(before) || before === 0) {
-        return `**API throughput:** ${formatRate(after)} req/s`;
-    }
-
-    const change = ((after - before) / before) * 100;
-    return `**API throughput:** ${formatRate(before)} → ${formatRate(after)} req/s (${change >= 0 ? '+' : ''}${trimNumber(change.toFixed(1))}%)`;
+    return [
+        `**API total** — P50 ${cell(apiRow, 'p50', formatMs, false, ' ms')}`,
+        `P95 ${cell(apiRow, 'p95', formatMs, false, ' ms')}`,
+        cell(apiRow, 'rps', formatRate, true, ' req/s'),
+    ].join(' · ');
 }
 
 function metricTable(rows) {
@@ -262,22 +263,34 @@ function metricTable(rows) {
 }
 
 function metricRow(row) {
-    return `| ${row.label} | ${cell(row, 'p50', formatMs)} | ${cell(row, 'p95', formatMs)} | ${cell(row, 'rps', formatRate)} |`;
+    return `| ${row.label} | ${cell(row, 'p50', formatMs, false)} | ${cell(row, 'p95', formatMs, false)} | ${cell(row, 'rps', formatRate, true)} |`;
 }
 
-function cell(row, key, format) {
+function cell(row, key, format, higherIsBetter, unit = '') {
     const before = row.before?.[key];
     const after = row.after?.[key];
     if (after === null || after === undefined || Number.isNaN(after)) {
         return 'n/a';
     }
+
+    const base = `${format(after)}${unit}`;
     if (before === null || before === undefined || Number.isNaN(before) || before === 0) {
-        return format(after);
+        return base;
     }
 
     const change = ((after - before) / before) * 100;
     const sign = change >= 0 ? '+' : '−';
-    return `${format(after)} (${sign}${trimNumber(Math.abs(change).toFixed(1))}%)`;
+    const delta = `(${sign}${trimNumber(Math.abs(change).toFixed(1))}%)`;
+    return `${base} ${delta}${indicator(change, higherIsBetter)}`;
+}
+
+function indicator(change, higherIsBetter) {
+    if (Math.abs(change) < 2) {
+        return '';
+    }
+
+    const improved = higherIsBetter ? change > 0 : change < 0;
+    return improved ? ' 🟢' : ' 🔴';
 }
 
 function topSamples(samples, metric, limit) {
