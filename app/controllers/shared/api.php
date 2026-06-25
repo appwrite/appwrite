@@ -1178,7 +1178,7 @@ Http::shutdown()
             $byMethod = [];
         }
 
-        $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_APPS)
+        $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
             ? match ($apiKey->getType()) {
                 API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
                 API_KEY_ORGANIZATION => ACTOR_TYPE_KEY_ORGANIZATION,

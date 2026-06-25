@@ -17,6 +17,8 @@ return [
 
     // Auth
     'users.create' => true,
+    'account.create' => true,
+    'account.createAnonymousSession' => true,
     'teams.create' => true,
 
     // Databases — tablesDB

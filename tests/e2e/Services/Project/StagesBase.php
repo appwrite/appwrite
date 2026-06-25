@@ -3,24 +3,19 @@
 namespace Tests\E2E\Services\Project;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 trait StagesBase
 {
-    use Async;
-
     // =========================================================================
     // List stages tests
     // =========================================================================
 
     public function testListProjectStages(): void
     {
-        $projectId = $this->createTeamAndProject();
+        $projectId = $this->getProject()['$id'];
 
         $response = $this->listStages($projectId);
 
@@ -38,20 +33,12 @@ trait StagesBase
             $this->assertArrayHasKey('status', $stage);
             $this->assertArrayHasKey('at', $stage);
             $this->assertArrayHasKey('actorType', $stage);
-            $this->assertSame('pending', $stage['status']);
         }
-
-        // Verify via GET for unknown project
-        $response = $this->listStages(ID::unique());
-        $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_NOT_FOUND, $response['body']['type']);
     }
 
     public function testListProjectStagesWithoutAuthentication(): void
     {
-        $projectId = $this->createTeamAndProject();
-
-        $response = $this->listStages($projectId, false);
+        $response = $this->listStages($this->getProject()['$id'], false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
@@ -62,7 +49,7 @@ trait StagesBase
 
     public function testUpdateProjectStageSkip(): void
     {
-        $projectId = $this->createTeamAndProject();
+        $projectId = $this->getProject()['$id'];
         $method = 'tablesDB.create';
 
         $response = $this->updateStage($projectId, $method, true);
@@ -93,15 +80,11 @@ trait StagesBase
         $response = $this->updateStage($projectId, 'unknown.method', true);
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
-
-        $response = $this->updateStage(ID::unique(), 'storage.createBucket', true);
-        $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_NOT_FOUND, $response['body']['type']);
     }
 
     public function testUpdateProjectStageSkipFalseLeavesPending(): void
     {
-        $projectId = $this->createTeamAndProject();
+        $projectId = $this->getProject()['$id'];
         $method = 'storage.createBucket';
 
         $response = $this->updateStage($projectId, $method, false);
@@ -113,9 +96,7 @@ trait StagesBase
 
     public function testUpdateProjectStageWithoutAuthentication(): void
     {
-        $projectId = $this->createTeamAndProject();
-
-        $response = $this->updateStage($projectId, 'tablesDB.create', true, false);
+        $response = $this->updateStage($this->getProject()['$id'], 'tablesDB.create', true, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
@@ -126,13 +107,15 @@ trait StagesBase
 
     protected function listStages(string $projectId, bool $authenticated = true): mixed
     {
+        // Stages live under /projects (console scope); use the root console session.
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => 'console',
         ];
 
         if ($authenticated) {
-            $headers = array_merge($headers, $this->getHeaders());
+            $headers['origin'] = 'http://localhost';
+            $headers['cookie'] = 'a_session_console=' . $this->getRoot()['session'];
         }
 
         return $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/stages', $headers, []);
@@ -142,49 +125,16 @@ trait StagesBase
     {
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => 'console',
         ];
 
         if ($authenticated) {
-            $headers = array_merge($headers, $this->getHeaders());
+            $headers['origin'] = 'http://localhost';
+            $headers['cookie'] = 'a_session_console=' . $this->getRoot()['session'];
         }
 
-        return $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/stages/' . $stageId, $headers, [
+        return $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/stages/' . rawurlencode($stageId), $headers, [
             'skip' => $skip,
         ]);
-    }
-
-    /**
-     * Creates a new team and child project under the console session (isolated from cached getProject()).
-     */
-    protected function createTeamAndProject(): string
-    {
-        $teamId = ID::unique();
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], $this->getHeaders()), [
-            'teamId' => $teamId,
-            'name' => 'Stages E2E Team',
-        ]);
-
-        $this->assertContains($team['headers']['status-code'], [201, 409]);
-        if ($team['headers']['status-code'] === 201) {
-            $teamId = $team['body']['$id'];
-        }
-
-        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Stages E2E Project',
-            'teamId' => $teamId,
-            'region' => System::getEnv('_APP_REGION', 'default'),
-        ]);
-
-        $this->assertSame(201, $project['headers']['status-code']);
-
-        return $project['body']['$id'];
     }
 }

@@ -126,7 +126,7 @@ class Update extends Action
 
     private function resolveActorType(?Key $apiKey, User $user, string $mode): string
     {
-        if ($apiKey !== null && $apiKey->getRole() === User::ROLE_APPS) {
+        if ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS) {
             return match ($apiKey->getType()) {
                 API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
                 API_KEY_ORGANIZATION => ACTOR_TYPE_KEY_ORGANIZATION,
