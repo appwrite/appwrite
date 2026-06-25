@@ -285,7 +285,7 @@ function cell(row, key, format, higherIsBetter, unit = '') {
 }
 
 function indicator(change, higherIsBetter) {
-    if (Math.abs(change) < 2) {
+    if (Math.abs(change) < 5) {
         return '';
     }
 
