@@ -34,6 +34,7 @@ class XList extends Base
             ->desc('List templates')
             ->groups(['api'])
             ->label('scope', 'public')
+            ->label('usage.resource', 'site')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
