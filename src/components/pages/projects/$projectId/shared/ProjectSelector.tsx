@@ -126,8 +126,27 @@ export function ProjectSelector({
   const [teamSearch, setTeamSearch] = useState('')
 
   // Sync UI with prefetched route data on first paint (state starts null; effects run after paint)
-  const resolvedTeam = selectedTeam ?? initialTeam
   const resolvedProject = selectedProject ?? currentProject ?? null
+  const resolvedTeam = useMemo(() => {
+    const fromSelection = selectedTeam ?? initialTeam
+    if (fromSelection) return fromSelection
+    // Self-hosted has no org/team UI; use project teamId so the header can render without orgs fetch
+    if (!supportsMultiTenancy && currentProject?.teamId) {
+      return {
+        $id: currentProject.teamId,
+        name: '',
+        color: '',
+        members: 0,
+        orgId: currentProject.teamId,
+      } satisfies Team
+    }
+    return null
+  }, [
+    selectedTeam,
+    initialTeam,
+    supportsMultiTenancy,
+    currentProject?.teamId,
+  ])
 
   // Note: Infinite query automatically resets when team or search changes
 
@@ -448,13 +467,15 @@ export function ProjectSelector({
     supportsMultiTenancy,
   ])
 
-  // Show loading state if data is not ready
-  if (
-    orgsLoading ||
-    currentProjectLoading ||
-    !resolvedProject ||
-    !resolvedTeam
-  ) {
+  // Show loading state if data is not ready (self-hosted only needs the current project)
+  const isProjectSelectorLoading = supportsMultiTenancy
+    ? orgsLoading ||
+      currentProjectLoading ||
+      !resolvedProject ||
+      !resolvedTeam
+    : currentProjectLoading || !resolvedProject
+
+  if (isProjectSelectorLoading) {
     return (
       <div
         className={cn(

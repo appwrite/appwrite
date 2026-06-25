@@ -77,8 +77,6 @@ import {
 import {
   setDebugEndpointOverride,
   ENDPOINT_PRESETS,
-  getEnvEndpointBaseUrl,
-  isCloudEndpointUrl,
   type EndpointPresetId,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
@@ -865,12 +863,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Keyboard className="h-3 w-3" />,
     }))
 
-    type TargetProfileId = 'cloud' | 'self-hosted'
-
-    const envEndpoint = getEnvEndpointBaseUrl()
-    const isCloudEnvEndpoint = envEndpoint
-      ? isCloudEndpointUrl(envEndpoint)
-      : false
     const activeEndpointLabel = !endpointPreset
       ? 'Use env var'
       : endpointPreset === 'custom' && endpointCustomUrl
@@ -881,140 +873,32 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               .label
           : endpointPreset
 
-    const isEnvEndpointAllowedForProfile = (targetProfileId: TargetProfileId) =>
-      !!envEndpoint &&
-      (targetProfileId === 'cloud' ? isCloudEnvEndpoint : !isCloudEnvEndpoint)
-
-    const getEnvEndpointDisabledDescription = (
-      targetProfileId: TargetProfileId,
-    ) => {
-      if (!envEndpoint) return 'VITE_APPWRITE_ENDPOINT is not configured'
-      return targetProfileId === 'cloud'
-        ? 'Unavailable because the env endpoint is not a cloud endpoint'
-        : 'Unavailable because the env endpoint is a cloud endpoint'
-    }
-
-    const setProfileAndEndpoint = (
-      targetProfileId: TargetProfileId,
-      setEndpoint: () => void,
-    ) => {
-      applyProfileOverrideAndGoHome(() => {
-        setDebugProfileOverride(targetProfileId)
-        setEndpoint()
-      })
-    }
-
-    const buildProfileEndpointOptions = (
-      targetProfileId: TargetProfileId,
-    ): MenuItem[] => {
-      const presetOptions = (
-        Object.entries(ENDPOINT_PRESETS) as [
-          Exclude<EndpointPresetId, 'custom'>,
-          (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
-        ][]
-      ).map(([id, { label, description }]) => {
-        const disabled =
-          (targetProfileId === 'self-hosted' &&
-            (id === 'production' || id === 'stage')) ||
-          (targetProfileId === 'cloud' && id === 'localhost')
-
-        return {
-          label,
-          description: disabled
-            ? targetProfileId === 'cloud'
-              ? 'Unavailable with the Cloud profile'
-              : 'Unavailable with the self-hosted profile'
-            : description,
-          onClick: disabled
-            ? undefined
-            : () => {
-                setProfileAndEndpoint(targetProfileId, () =>
-                  setDebugEndpointOverride(id),
-                )
-              },
-          active: profileId === targetProfileId && endpointPreset === id,
-          disabled,
-          icon: <Globe className="h-3 w-3" />,
-        }
-      })
-
-      const useEnvDisabled = !isEnvEndpointAllowedForProfile(targetProfileId)
-
-      return [
-        ...presetOptions,
-        ...(targetProfileId === 'self-hosted'
-          ? [
-              {
-                label: 'Custom...',
-                description: 'Enter a custom API URL',
-                onClick: () => {
-                  const url = window.prompt(
-                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
-                    endpointPreset === 'custom' && endpointCustomUrl
-                      ? endpointCustomUrl
-                      : 'http://localhost/v1',
-                  )
-                  if (!url?.trim()) return
-                  if (isCloudEndpointUrl(url.trim())) {
-                    window.alert(
-                      'Cloud endpoints cannot be used with the self-hosted profile.',
-                    )
-                    return
-                  }
-                  setProfileAndEndpoint(targetProfileId, () =>
-                    setDebugEndpointOverride('custom', url.trim()),
-                  )
-                },
-                active:
-                  profileId === targetProfileId && endpointPreset === 'custom',
-                icon: <Globe className="h-3 w-3" />,
-              } satisfies MenuItem,
-            ]
-          : []),
-        {
-          label: 'Use env var',
-          description: useEnvDisabled
-            ? getEnvEndpointDisabledDescription(targetProfileId)
-            : 'Reset to VITE_APPWRITE_ENDPOINT',
-          onClick: useEnvDisabled
-            ? undefined
-            : () => {
-                setProfileAndEndpoint(targetProfileId, () =>
-                  setDebugEndpointOverride(null),
-                )
-              },
-          active: profileId === targetProfileId && !endpointPreset,
-          disabled: useEnvDisabled,
-          icon: <RotateCcw className="h-3 w-3" />,
-        },
-      ]
-    }
-
     const profileOptions: MenuItem[] = [
       {
         label: 'Cloud',
-        description:
-          'Full feature set. Choose a cloud endpoint to use with this profile.',
+        description: CONSOLE_PROFILES.cloud.description,
         active: profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
-        submenu: buildProfileEndpointOptions('cloud'),
+        onClick: () => {
+          applyProfileOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
+        },
       },
       {
         label: 'Self-hosted',
-        description:
-          'Cloud-only features disabled. Choose a self-hosted endpoint to use with this profile.',
+        description: CONSOLE_PROFILES['self-hosted'].description,
         active: profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
-        submenu: buildProfileEndpointOptions('self-hosted'),
+        onClick: () => {
+          applyProfileOverrideAndGoHome(() =>
+            setDebugProfileOverride('self-hosted'),
+          )
+        },
       },
       {
-        label: 'Use env vars',
-        description: 'Reset to VITE_CONSOLE_PROFILE and VITE_APPWRITE_ENDPOINT',
+        label: 'Use env var',
+        description: 'Reset to VITE_CONSOLE_PROFILE',
         onClick: () => {
-          applyProfileOverrideAndGoHome(() => {
-            setDebugProfileOverride(null)
-            setDebugEndpointOverride(null)
-          })
+          applyProfileOverrideAndGoHome(() => setDebugProfileOverride(null))
         },
         icon: <RotateCcw className="h-3 w-3" />,
       },
@@ -1640,80 +1524,44 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             const endpointOptions: MenuItem[] = [
               ...(
                 Object.entries(ENDPOINT_PRESETS) as [
-                  keyof typeof ENDPOINT_PRESETS,
+                  Exclude<EndpointPresetId, 'custom'>,
                   (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
                 ][]
-              ).map(([id, { label, description }]) => {
-                const disabled =
-                  (profileId === 'self-hosted' &&
-                    (id === 'production' || id === 'stage')) ||
-                  (profileId === 'cloud' && id === 'localhost')
-
-                return {
-                  label,
-                  description: disabled
-                    ? profileId === 'cloud'
-                      ? 'Unavailable while cloud profile is active'
-                      : 'Unavailable while self-hosted profile is active'
-                    : description,
-                  onClick: disabled
-                    ? undefined
-                    : () => {
-                        applyOverrideAndReload(() =>
-                          setDebugEndpointOverride(id),
-                        )
-                      },
-                  active: endpointPreset === id,
-                  disabled,
-                  icon: <Globe className="h-3 w-3" />,
-                }
-              }),
+              ).map(([id, { label, description }]) => ({
+                label,
+                description,
+                onClick: () => {
+                  applyOverrideAndReload(() => setDebugEndpointOverride(id))
+                },
+                active: endpointPreset === id,
+                icon: <Globe className="h-3 w-3" />,
+              })),
               {
                 label: 'Custom...',
-                description:
-                  profileId === 'cloud'
-                    ? 'Unavailable while cloud profile is active'
-                    : 'Enter a custom API URL',
-                onClick:
-                  profileId === 'cloud'
-                    ? undefined
-                    : () => {
-                        const url = window.prompt(
-                          'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
-                          endpointPreset === 'custom' && endpointCustomUrl
-                            ? endpointCustomUrl
-                            : 'http://localhost/v1',
-                        )
-                        if (url?.trim()) {
-                          if (isCloudEndpointUrl(url.trim())) {
-                            window.alert(
-                              'Cloud endpoints cannot be used with the self-hosted profile.',
-                            )
-                            return
-                          }
-                          applyOverrideAndReload(() =>
-                            setDebugEndpointOverride('custom', url.trim()),
-                          )
-                        }
-                      },
+                description: 'Enter a custom API URL',
+                onClick: () => {
+                  const url = window.prompt(
+                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
+                    endpointPreset === 'custom' && endpointCustomUrl
+                      ? endpointCustomUrl
+                      : 'http://localhost/v1',
+                  )
+                  if (url?.trim()) {
+                    applyOverrideAndReload(() =>
+                      setDebugEndpointOverride('custom', url.trim()),
+                    )
+                  }
+                },
                 active: endpointPreset === 'custom',
-                disabled: profileId === 'cloud',
                 icon: <Globe className="h-3 w-3" />,
               },
               {
                 label: 'Use env var',
-                description: !isEnvEndpointAllowedForProfile(profileId)
-                  ? getEnvEndpointDisabledDescription(profileId)
-                  : 'Reset to VITE_APPWRITE_ENDPOINT',
-                onClick: !isEnvEndpointAllowedForProfile(profileId)
-                  ? undefined
-                  : () => {
-                      applyOverrideAndReload(() =>
-                        setDebugEndpointOverride(null),
-                      )
-                    },
+                description: 'Reset to VITE_APPWRITE_ENDPOINT',
+                onClick: () => {
+                  applyOverrideAndReload(() => setDebugEndpointOverride(null))
+                },
                 active: !endpointPreset,
-                disabled: !isEnvEndpointAllowedForProfile(profileId),
                 icon: <RotateCcw className="h-3 w-3" />,
               },
             ]

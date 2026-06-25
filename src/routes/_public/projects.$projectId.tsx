@@ -114,6 +114,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Fetch project data (needed for header/sidebar and paused curtain) - CRITICAL: blocks navigation until ready
     // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
     try {
+      const features = getActiveProfileFeatures()
       const [projectData] = await Promise.all([
         queryClient.ensureQueryData({
           queryKey: ['project', projectId],
@@ -121,16 +122,17 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           staleTime: 5 * 60 * 1000, // 5 minutes
         }),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
-        queryClient
-          .ensureQueryData(organizationsQueryOptions())
-          .catch(() => {}),
+        features.multiTenancy
+          ? queryClient
+              .ensureQueryData(organizationsQueryOptions())
+              .catch(() => {})
+          : Promise.resolve(),
       ])
 
       registerProjectRegionFromProject(projectData)
 
       // Fetch organization plan if we have a teamId (critical for header/limit checking)
       if (projectData?.teamId) {
-        const features = getActiveProfileFeatures()
         if (features.billing) {
           await queryClient
             .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
