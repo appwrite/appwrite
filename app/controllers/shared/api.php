@@ -23,6 +23,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Throwable;
 use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
@@ -42,7 +43,6 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
-use Throwable;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -1185,9 +1185,9 @@ Http::shutdown()
                 API_KEY_STANDARD, API_KEY_EPHEMERAL => ACTOR_TYPE_KEY_PROJECT,
                 default => ACTOR_TYPE_KEY_PROJECT,
             }
-            : (! $user->isEmpty()
-                ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
-                : ACTOR_TYPE_GUEST);
+        : (! $user->isEmpty()
+            ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
+            : ACTOR_TYPE_GUEST);
         $byMethod[$method] = [
             'status' => ONBOARDING_STATUS_COMPLETED,
             'at' => DateTime::now(),
