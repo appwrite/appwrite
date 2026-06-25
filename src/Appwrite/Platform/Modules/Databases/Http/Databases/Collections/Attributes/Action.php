@@ -630,8 +630,7 @@ abstract class Action extends DatabasesAction
                 }
 
                 $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
-                $relatedAttribute->setAttribute('options', $relatedOptions);
-                $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey'], new Document(['options' => $relatedOptions]));
+                $relatedAttribute = $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey'], new Document(['options' => $relatedOptions]));
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
             }
@@ -682,8 +681,7 @@ abstract class Action extends DatabasesAction
 
                 if ($found !== false) {
                     $attributes[$found] = $newKey;
-                    $index->setAttribute('attributes', $attributes);
-                    $dbForProject->updateDocument('indexes', $index->getId(), new Document(['attributes' => $attributes]));
+                    $index = $dbForProject->updateDocument('indexes', $index->getId(), new Document(['attributes' => $attributes]));
                 }
             }
         } else {
