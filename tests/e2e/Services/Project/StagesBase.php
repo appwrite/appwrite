@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Extend\Exception;
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
+use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
@@ -25,13 +26,15 @@ trait StagesBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['stages']);
-        $this->assertCount(3, $response['body']['stages']);
+        $this->assertCount(\count(Config::getParam('onboarding', [])), $response['body']['stages']);
 
         $ids = array_column($response['body']['stages'], 'id');
-        $this->assertSame(['create_database', 'create_bucket', 'create_function'], $ids);
+        $this->assertContains('tablesDB.create', $ids);
+        $this->assertContains('storage.createBucket', $ids);
+        $this->assertContains('functions.create', $ids);
 
         foreach ($response['body']['stages'] as $stage) {
-            $this->assertArrayHasKey('sdk', $stage);
+            $this->assertSame($stage['id'], $stage['sdk']);
             $this->assertArrayHasKey('status', $stage);
             $this->assertArrayHasKey('at', $stage);
             $this->assertArrayHasKey('actorType', $stage);
@@ -60,31 +63,38 @@ trait StagesBase
     public function testUpdateProjectStageSkip(): void
     {
         $projectId = $this->createTeamAndProject();
+        $method = 'tablesDB.create';
 
-        $response = $this->updateStage($projectId, 'create_database', true);
+        $response = $this->updateStage($projectId, $method, true);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('create_database', $response['body']['id']);
-        $this->assertSame('databases.create', $response['body']['sdk']);
+        $this->assertSame($method, $response['body']['id']);
+        $this->assertSame($method, $response['body']['sdk']);
         $this->assertSame(ONBOARDING_STATUS_SKIPPED, $response['body']['status']);
         $this->assertNotEmpty($response['body']['at']);
-        $this->assertSame(ACTIVITY_TYPE_USER, $response['body']['actorType']);
+        $this->assertSame(ACTOR_TYPE_USER, $response['body']['actorType']);
 
         $dateValidator = new DatetimeValidator();
         $this->assertSame(true, $dateValidator->isValid($response['body']['at']));
 
         $list = $this->listStages($projectId);
         $this->assertSame(200, $list['headers']['status-code']);
-        $first = $list['body']['stages'][0];
-        $this->assertSame('create_database', $first['id']);
-        $this->assertSame(ONBOARDING_STATUS_SKIPPED, $first['status']);
-        $this->assertSame(ACTIVITY_TYPE_USER, $first['actorType']);
+        $databaseStage = null;
+        foreach ($list['body']['stages'] as $stage) {
+            if ($stage['id'] === $method) {
+                $databaseStage = $stage;
+                break;
+            }
+        }
+        $this->assertNotNull($databaseStage);
+        $this->assertSame(ONBOARDING_STATUS_SKIPPED, $databaseStage['status']);
+        $this->assertSame(ACTOR_TYPE_USER, $databaseStage['actorType']);
 
-        $response = $this->updateStage($projectId, 'unknown_stage_xyz', true);
+        $response = $this->updateStage($projectId, 'unknown.method', true);
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
 
-        $response = $this->updateStage(ID::unique(), 'create_bucket', true);
+        $response = $this->updateStage(ID::unique(), 'storage.createBucket', true);
         $this->assertSame(404, $response['headers']['status-code']);
         $this->assertSame(Exception::PROJECT_NOT_FOUND, $response['body']['type']);
     }
@@ -92,11 +102,12 @@ trait StagesBase
     public function testUpdateProjectStageSkipFalseLeavesPending(): void
     {
         $projectId = $this->createTeamAndProject();
+        $method = 'storage.createBucket';
 
-        $response = $this->updateStage($projectId, 'create_bucket', false);
+        $response = $this->updateStage($projectId, $method, false);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('create_bucket', $response['body']['id']);
+        $this->assertSame($method, $response['body']['id']);
         $this->assertSame('pending', $response['body']['status']);
     }
 
@@ -104,7 +115,7 @@ trait StagesBase
     {
         $projectId = $this->createTeamAndProject();
 
-        $response = $this->updateStage($projectId, 'create_database', true, false);
+        $response = $this->updateStage($projectId, 'tablesDB.create', true, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }

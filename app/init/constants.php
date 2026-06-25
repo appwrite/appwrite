@@ -173,7 +173,7 @@ const ACTOR_TYPE_KEY_ACCOUNT = 'keyAccount';
 const ACTOR_TYPE_KEY_ORGANIZATION = 'keyOrganization';
 
 /**
- * Project onboarding stage status (stored per stage id under project.onboarding JSON).
+ * Project onboarding stage status (stored per SDK method key under project.onboarding JSON).
  */
 const ONBOARDING_STATUS_COMPLETED = 'completed';
 const ONBOARDING_STATUS_SKIPPED = 'skipped';

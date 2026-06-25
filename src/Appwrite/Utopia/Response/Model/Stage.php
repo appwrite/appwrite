@@ -15,13 +15,13 @@ class Stage extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Stage ID.',
                 'default' => '',
-                'example' => 'create_database',
+                'example' => 'tablesDB.create',
             ])
             ->addRule('sdk', [
                 'type' => self::TYPE_STRING,
                 'description' => 'SDK method key (namespace.name) for this stage.',
                 'default' => '',
-                'example' => 'databases.create',
+                'example' => 'tablesDB.create',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,

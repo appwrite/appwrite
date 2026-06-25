@@ -1,30 +1,66 @@
 <?php
 
 /**
- * Project onboarding: each stage maps to an SDK method key (namespace + method name, same as Appwrite\SDK\Method).
- * The sdk index is built once for O(1) lookup in the API shutdown hook.
+ * Project onboarding stages keyed by SDK method (namespace + method name, same as Appwrite\SDK\Method).
+ * Values are `true` for O(1) isset() lookup in the API shutdown hook. Each key is persisted under
+ * project.onboarding when the matching API call succeeds.
  */
-$stages = [
-    [
-        'id' => 'create_database',
-        'sdk' => 'databases.create',
-    ],
-    [
-        'id' => 'create_bucket',
-        'sdk' => 'storage.createBucket',
-    ],
-    [
-        'id' => 'create_function',
-        'sdk' => 'functions.create',
-    ],
-];
-
-$sdkIndex = [];
-foreach ($stages as $stage) {
-    $sdkIndex[$stage['sdk']] = $stage['id'];
-}
-
 return [
-    'stages' => $stages,
-    'sdkIndex' => $sdkIndex,
+    // Connect — register platform
+    'project.createWebPlatform' => true,
+    'project.createAndroidPlatform' => true,
+    'project.createApplePlatform' => true,
+    'project.createWindowsPlatform' => true,
+    'project.createLinuxPlatform' => true,
+    // Connect — API key
+    'project.createKey' => true,
+
+    // Auth
+    'users.create' => true,
+    'teams.create' => true,
+
+    // Databases — tablesDB
+    'tablesDB.create' => true,
+    'tablesDB.createTable' => true,
+    'tablesDB.createRow' => true,
+    // Databases — documentsDB
+    'documentsDB.create' => true,
+    'documentsDB.createCollection' => true,
+    'documentsDB.createDocument' => true,
+    // Databases — legacy
+    'databases.create' => true,
+    'databases.createCollection' => true,
+    'databases.createDocument' => true,
+
+    // Storage
+    'storage.createBucket' => true,
+    'storage.createFile' => true,
+
+    // Functions
+    'functions.create' => true,
+    'functions.createDeployment' => true,
+    'functions.updateFunctionDeployment' => true,
+
+    // Messaging
+    'messaging.createTopic' => true,
+    'messaging.createMailgunProvider' => true,
+    'messaging.createSendgridProvider' => true,
+    'messaging.createSesProvider' => true,
+    'messaging.createResendProvider' => true,
+    'messaging.createSmtpProvider' => true,
+    'messaging.createSMTPProvider' => true,
+    'messaging.createMsg91Provider' => true,
+    'messaging.createTelesignProvider' => true,
+    'messaging.createTextmagicProvider' => true,
+    'messaging.createTwilioProvider' => true,
+    'messaging.createVonageProvider' => true,
+    'messaging.createFcmProvider' => true,
+    'messaging.createFCMProvider' => true,
+    'messaging.createApnsProvider' => true,
+    'messaging.createAPNSProvider' => true,
+
+    // Sites
+    'sites.create' => true,
+    'sites.createDeployment' => true,
+    'sites.updateSiteDeployment' => true,
 ];

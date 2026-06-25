@@ -52,7 +52,7 @@ class Update extends Action
                 ],
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('stageId', '', new Text(64), 'Stage ID.')
+            ->param('stageId', '', new Text(128), 'SDK method key (namespace.method).')
             ->param('skip', true, new Boolean(), 'Mark the stage as skipped.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -70,60 +70,54 @@ class Update extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $definition = $this->getStageDefinition($stageId);
+        $this->assertOnboardingMethod($stageId);
 
-        $byStageId = $project->getAttribute('onboarding', []);
-        if (! \is_array($byStageId)) {
-            $byStageId = [];
+        $byMethod = $project->getAttribute('onboarding', []);
+        if (! \is_array($byMethod)) {
+            $byMethod = [];
         }
 
-        $row = \is_array($byStageId[$stageId] ?? null) ? $byStageId[$stageId] : null;
+        $row = \is_array($byMethod[$stageId] ?? null) ? $byMethod[$stageId] : null;
 
         if ($skip) {
             $prev = \is_array($row) ? ($row['status'] ?? '') : '';
             if ($prev !== ONBOARDING_STATUS_COMPLETED) {
-                $byStageId[$stageId] = [
+                $byMethod[$stageId] = [
                     'status' => ONBOARDING_STATUS_SKIPPED,
                     'at' => DateTime::now(),
                     'actorType' => $this->resolveActorType($apiKey, $user, $mode),
                 ];
-                $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('onboarding', $byStageId));
-                $byStageId = $project->getAttribute('onboarding', []);
-                $row = \is_array($byStageId[$stageId] ?? null) ? $byStageId[$stageId] : null;
+                $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'onboarding' => $byMethod,
+                ]));
+                $byMethod = $project->getAttribute('onboarding', []);
+                $row = \is_array($byMethod[$stageId] ?? null) ? $byMethod[$stageId] : null;
             }
         }
 
-        $response->dynamic(new Document($this->formatStageRow($definition, $row)), Response::MODEL_STAGE);
+        $response->dynamic(new Document($this->formatStageRow($stageId, $row)), Response::MODEL_STAGE);
     }
 
-    /**
-     * @return array{id: string, sdk: string}
-     */
-    private function getStageDefinition(string $stageId): array
+    private function assertOnboardingMethod(string $method): void
     {
-        foreach (Config::getParam('onboarding', [])['stages'] ?? [] as $definition) {
-            if (($definition['id'] ?? '') === $stageId) {
-                return $definition;
-            }
+        if (! \array_key_exists($method, Config::getParam('onboarding', []))) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unknown SDK method: ' . $method);
         }
-
-        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unknown stage ID: ' . $stageId);
     }
 
     /**
      * @param  array<string, mixed>|null  $row
      * @return array<string, mixed>
      */
-    private function formatStageRow(array $definition, ?array $row): array
+    private function formatStageRow(string $method, ?array $row): array
     {
-        $stageId = $definition['id'];
         $status = \is_array($row) ? ($row['status'] ?? null) : null;
         $at = \is_array($row) ? ($row['at'] ?? '') : '';
         $actorType = \is_array($row) ? ($row['actorType'] ?? '') : '';
 
         return [
-            'id' => $stageId,
-            'sdk' => $definition['sdk'] ?? '',
+            'id' => $method,
+            'sdk' => $method,
             'status' => $status ?? 'pending',
             'at' => $at,
             'actorType' => $actorType,
@@ -134,17 +128,17 @@ class Update extends Action
     {
         if ($apiKey !== null && $apiKey->getRole() === User::ROLE_APPS) {
             return match ($apiKey->getType()) {
-                API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
-                API_KEY_ORGANIZATION => ACTIVITY_TYPE_KEY_ORGANIZATION,
-                API_KEY_STANDARD, API_KEY_DYNAMIC => ACTIVITY_TYPE_KEY_PROJECT,
-                default => ACTIVITY_TYPE_KEY_PROJECT,
+                API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                API_KEY_ORGANIZATION => ACTOR_TYPE_KEY_ORGANIZATION,
+                API_KEY_STANDARD, API_KEY_EPHEMERAL => ACTOR_TYPE_KEY_PROJECT,
+                default => ACTOR_TYPE_KEY_PROJECT,
             };
         }
 
         if (! $user->isEmpty()) {
-            return $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER;
+            return $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER;
         }
 
-        return ACTIVITY_TYPE_GUEST;
+        return ACTOR_TYPE_GUEST;
     }
 }

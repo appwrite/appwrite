@@ -68,24 +68,23 @@ class XList extends Action
      */
     private function buildStagesList(Document $project): array
     {
-        $definitions = Config::getParam('onboarding', [])['stages'] ?? [];
-        $byStageId = $project->getAttribute('onboarding', []);
-        if (! \is_array($byStageId)) {
-            $byStageId = [];
+        $methods = \array_keys(Config::getParam('onboarding', []));
+        $byMethod = $project->getAttribute('onboarding', []);
+        if (! \is_array($byMethod)) {
+            $byMethod = [];
         }
 
         $out = [];
-        foreach ($definitions as $definition) {
-            $stageId = $definition['id'];
-            $row = $byStageId[$stageId] ?? null;
+        foreach ($methods as $method) {
+            $row = $byMethod[$method] ?? null;
             $status = \is_array($row) ? ($row['status'] ?? null) : null;
 
             $at = \is_array($row) ? ($row['at'] ?? '') : '';
             $actorType = \is_array($row) ? ($row['actorType'] ?? '') : '';
 
             $out[] = [
-                'id' => $stageId,
-                'sdk' => $definition['sdk'] ?? '',
+                'id' => $method,
+                'sdk' => $method,
                 'status' => $status ?? 'pending',
                 'at' => $at,
                 'actorType' => $actorType,
