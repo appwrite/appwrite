@@ -165,13 +165,6 @@ Http::init()
 
         // Step 4: Get scopes for the role
         $scopes = $roles[$role]['scopes'];
-        $isAdminProjectRequest = ! $user->isEmpty()
-            && $project->getId() !== 'console'
-            && $mode === APP_MODE_ADMIN;
-        $isOAuthAdminProjectRequest = ! empty($apiKey)
-            && $apiKey->getType() === API_KEY_OAUTH2
-            && $apiKey->getRole() === User::ROLE_OWNER
-            && $isAdminProjectRequest;
 
         // Step 5: API Key Authentication
         if (! empty($apiKey)) {
@@ -375,6 +368,14 @@ Http::init()
         foreach ($rolesSource->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
         }
+
+        $isAdminProjectRequest = ! $user->isEmpty()
+            && $project->getId() !== 'console'
+            && $mode === APP_MODE_ADMIN;
+        $isOAuthAdminProjectRequest = ! empty($apiKey)
+            && $apiKey->getType() === API_KEY_OAUTH2
+            && $apiKey->getRole() === User::ROLE_OWNER
+            && $isAdminProjectRequest;
 
         if ($isOAuthAdminProjectRequest) {
             $authorization->setDefaultStatus(false);
