@@ -46,6 +46,7 @@ class Update extends Action
             ->label('event', 'buckets.[bucketId].update')
             ->label('audits.event', 'bucket.update')
             ->label('audits.resource', 'bucket/{response.$id}')
+            ->label('usage.resource', 'bucket/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'buckets',

@@ -16,7 +16,8 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
   adminer:
     image: adminer

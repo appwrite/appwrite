@@ -37,6 +37,7 @@ class Delete extends Action
             ->label('event', 'platforms.[platformId].delete')
             ->label('audits.event', 'project.platform.delete')
             ->label('audits.resource', 'project.platform/{request.platformId}')
+            ->label('usage.resource', 'project.platform/{request.platformId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',

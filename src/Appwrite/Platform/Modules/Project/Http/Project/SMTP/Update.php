@@ -45,6 +45,7 @@ class Update extends Action
             // ->label('event', 'project.smtp.update')
             ->label('audits.event', 'project.smtp.update')
             ->label('audits.resource', 'project.smtp/{response.$id}')
+            ->label('usage.resource', 'project.smtp/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'smtp',
@@ -170,6 +171,7 @@ class Update extends Action
         ]);
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

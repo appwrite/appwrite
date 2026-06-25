@@ -35,6 +35,7 @@ class Update extends Action
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
+            ->label('usage.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
@@ -103,6 +104,7 @@ class Update extends Action
         ]);
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

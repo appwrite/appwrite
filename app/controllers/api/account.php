@@ -474,13 +474,13 @@ Http::get('/v1/account')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
-        if ($user->isEmpty()) {
+    ->inject('targetUser')
+    ->action(function (Response $response, User $targetUser) {
+        if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
+        $response->dynamic($targetUser, Response::MODEL_ACCOUNT);
     });
 
 Http::delete('/v1/account')
@@ -503,20 +503,20 @@ Http::delete('/v1/account')
         ],
         contentType: ContentType::NONE
     ))
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
-        if ($user->isEmpty()) {
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
+        if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if ($project->getId() === 'console') {
-            $memberships = $user->getAttribute('memberships', []);
+            $memberships = $targetUser->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if (!$membership->getAttribute('confirm', false)) {
                     continue;
@@ -532,17 +532,17 @@ Http::delete('/v1/account')
             }
         }
 
-        $dbForProject->deleteDocument('users', $user->getId());
+        $dbForProject->deleteDocument('users', $targetUser->getId());
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
-            document: $user,
+            document: $targetUser,
         ));
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER));
+            ->setParam('userId', $targetUser->getId())
+            ->setPayload($response->output($targetUser, Response::MODEL_USER));
 
         $response->noContent();
     });

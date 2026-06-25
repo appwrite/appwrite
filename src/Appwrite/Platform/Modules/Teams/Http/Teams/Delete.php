@@ -38,6 +38,7 @@ class Delete extends Action
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.delete')
             ->label('audits.resource', 'team/{request.teamId}')
+            ->label('usage.resource', 'team/{request.teamId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'teams',
