@@ -20,7 +20,6 @@ use Utopia\Validator\Text;
 class Create extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -73,6 +72,20 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
+        $auths = $project->getAttribute('auths', []);
+
+        $mockNumbers = $auths['mockNumbers'] ?? [];
+
+        if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
+            throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
+        }
+
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $number) {
+                throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
+            }
+        }
+
         // Set to now date
         $mockNumber = [
             'phone' => $number,
@@ -81,27 +94,14 @@ class Create extends Action
             '$updatedAt' => DateTime::now(),
         ];
 
-        $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $number, $mockNumber) {
-            $auths = $current->getAttribute('auths', []);
-            $mockNumbers = $auths['mockNumbers'] ?? [];
+        $mockNumbers[] = $mockNumber;
+        $auths['mockNumbers'] = $mockNumbers;
+//here
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
 
-            if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
-                throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
-            }
-
-            foreach ($mockNumbers as $existing) {
-                if ($existing['phone'] === $number) {
-                    throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
-                }
-            }
-
-            $mockNumbers[] = $mockNumber;
-            $auths['mockNumbers'] = $mockNumbers;
-
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'auths' => $auths,
-            ]));
-        });
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
         $queueForEvents->setParam('number', $number);
 
