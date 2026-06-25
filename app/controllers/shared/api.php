@@ -299,7 +299,8 @@ Http::init()
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
-            $memberships = $user->getAttribute('memberships', []);
+            $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
+            $memberships = $membershipSource->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
