@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Resource;
+namespace Appwrite\Event\Resource;
 
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;

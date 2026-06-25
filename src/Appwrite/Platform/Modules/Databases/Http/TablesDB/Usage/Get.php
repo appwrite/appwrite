@@ -29,7 +29,6 @@ class Get extends DatabaseUsageGet
             ->desc('Get TablesDB usage stats')
             ->groups(['api', 'database', 'usage'])
             ->label('scope', ['tables.read', 'collections.read'])
-            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(

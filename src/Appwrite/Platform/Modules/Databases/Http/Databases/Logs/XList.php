@@ -40,7 +40,6 @@ class XList extends Action
             ->desc('List database logs')
             ->groups(['api', 'database'])
             ->label('scope', 'databases.read')
-            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
