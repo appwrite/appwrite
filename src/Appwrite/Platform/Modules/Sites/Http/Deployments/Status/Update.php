@@ -130,6 +130,12 @@ class Update extends Action
                     'buildLogs' => $logs,
                 ]));
             }
+
+            if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
+                $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
+            }
         }
 
         try {

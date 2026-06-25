@@ -1891,10 +1891,6 @@ class Builds extends Action
             return;
         }
 
-        $queueForRealtime
-            ->setPayload($deployment->getArrayCopy())
-            ->trigger();
-
         $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
 
         $logs = $deployment->getAttribute('buildLogs', '');

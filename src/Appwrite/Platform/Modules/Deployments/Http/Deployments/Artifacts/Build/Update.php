@@ -6,6 +6,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -36,7 +37,7 @@ class Update extends Action
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
-            ->inject('project')
+            ->inject('dbForPlatform')
             ->inject('resourceToken')
             ->inject('deviceForBuilds')
             ->inject('publisherForBuilds')
@@ -51,7 +52,7 @@ class Update extends Action
         Response $response,
         Request $request,
         Database $dbForProject,
-        Document $project,
+        Database $dbForPlatform,
         Document $resourceToken,
         Device $deviceForBuilds,
         BuildPublisher $publisherForBuilds,
@@ -67,6 +68,11 @@ class Update extends Action
             $resourceToken->getAttribute('purpose') !== 'build'
         ) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Build artifact token mismatch.');
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $resourceToken->getAttribute('projectId'));
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND, 'Project not found.', 404);
         }
 
         $resourceType = $resourceToken->getAttribute('resourceType');

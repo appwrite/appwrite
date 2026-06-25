@@ -132,6 +132,12 @@ class Update extends Action
                     'buildLogs' => $logs,
                 ]));
             }
+
+            if ($deployment->getSequence() === $function->getAttribute('latestDeploymentInternalId', '')) {
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
+            }
         }
 
         try {
