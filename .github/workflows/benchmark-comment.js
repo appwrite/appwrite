@@ -52,13 +52,14 @@ function buildComment(core) {
     const headRef = markdownText(process.env.BENCHMARK_HEAD_REF || 'head');
     const rows = benchmarkRows(before, after, beforeSamples, afterSamples);
     const topWaits = topSamples(afterSamples, 'appwrite_api_waiting', 3);
+    const summary = verdict(rows[0]);
     const lines = [
         marker,
         '## :sparkles: Benchmark results',
         '',
         `Comparing ${baseRef} (before) to ${headRef} (after).`,
         '',
-        headline(rows[0]),
+        summary.line,
         '',
     ];
 
@@ -70,12 +71,12 @@ function buildComment(core) {
     }
 
     lines.push(
-        '<details>',
-        '<summary><strong>Per-scenario breakdown</strong></summary>',
+        `<details${summary.significant ? ' open' : ''}>`,
+        '<summary><strong>Metrics</strong></summary>',
         '',
         '<br>',
         '',
-        metricTable(rows.slice(1)),
+        metricTable(rows),
         '',
         '</details>',
         '',
@@ -246,12 +247,41 @@ function metricValues(data, metric) {
     return data?.metrics?.[metric]?.values ?? null;
 }
 
-function headline(apiRow) {
-    return [
-        `**API total** — P50 ${cell(apiRow, 'p50', formatMs, false, ' ms')}`,
-        `P95 ${cell(apiRow, 'p95', formatMs, false, ' ms')}`,
-        cell(apiRow, 'rps', formatRate, true, ' req/s'),
-    ].join(' · ');
+const THRESHOLD = 5;
+const METRICS = [
+    { key: 'p50', label: 'P50', higherIsBetter: false },
+    { key: 'p95', label: 'P95', higherIsBetter: false },
+    { key: 'rps', label: 'RPS', higherIsBetter: true },
+];
+
+function verdict(apiRow) {
+    const moves = METRICS
+        .map((metric) => ({ ...metric, change: pctChange(apiRow, metric.key) }))
+        .filter((metric) => metric.change !== null)
+        .map((metric) => ({
+            ...metric,
+            improved: metric.higherIsBetter ? metric.change > 0 : metric.change < 0,
+            magnitude: Math.abs(metric.change),
+        }));
+
+    if (moves.length === 0) {
+        return { significant: false, line: '⚪ **No benchmark data**' };
+    }
+
+    const significant = moves.filter((move) => move.magnitude >= THRESHOLD);
+    const regressions = significant.filter((move) => !move.improved).sort((a, b) => b.magnitude - a.magnitude);
+    const improvements = significant.filter((move) => move.improved).sort((a, b) => b.magnitude - a.magnitude);
+
+    if (regressions.length > 0) {
+        const worst = regressions[0];
+        return { significant: true, line: `🔴 **Performance regression** — ${worst.label} ${signed(worst.change)}` };
+    }
+    if (improvements.length > 0) {
+        const best = improvements[0];
+        return { significant: true, line: `🟢 **Performance improved** — ${best.label} ${signed(best.change)}` };
+    }
+
+    return { significant: false, line: `⚪ **No significant change** (within ±${THRESHOLD}%)` };
 }
 
 function metricTable(rows) {
@@ -266,31 +296,33 @@ function metricRow(row) {
     return `| ${row.label} | ${cell(row, 'p50', formatMs, false)} | ${cell(row, 'p95', formatMs, false)} | ${cell(row, 'rps', formatRate, true)} |`;
 }
 
-function cell(row, key, format, higherIsBetter, unit = '') {
-    const before = row.before?.[key];
+function cell(row, key, format, higherIsBetter) {
     const after = row.after?.[key];
     if (after === null || after === undefined || Number.isNaN(after)) {
         return 'n/a';
     }
 
-    const base = `${format(after)}${unit}`;
-    if (before === null || before === undefined || Number.isNaN(before) || before === 0) {
-        return base;
+    const change = pctChange(row, key);
+    if (change === null) {
+        return format(after);
     }
 
-    const change = ((after - before) / before) * 100;
-    const sign = change >= 0 ? '+' : '−';
-    const delta = `(${sign}${trimNumber(Math.abs(change).toFixed(1))}%)`;
-    return `${base} ${delta}${indicator(change, higherIsBetter)}`;
+    const indicator = Math.abs(change) >= THRESHOLD ? (higherIsBetter === change > 0 ? ' 🟢' : ' 🔴') : '';
+    return `${format(after)} (${signed(change)})${indicator}`;
 }
 
-function indicator(change, higherIsBetter) {
-    if (Math.abs(change) < 5) {
-        return '';
+function pctChange(row, key) {
+    const before = row.before?.[key];
+    const after = row.after?.[key];
+    if (before === null || before === undefined || after === null || after === undefined || Number.isNaN(before) || Number.isNaN(after) || before === 0) {
+        return null;
     }
 
-    const improved = higherIsBetter ? change > 0 : change < 0;
-    return improved ? ' 🟢' : ' 🔴';
+    return ((after - before) / before) * 100;
+}
+
+function signed(change) {
+    return `${change >= 0 ? '+' : '−'}${trimNumber(Math.abs(change).toFixed(1))}%`;
 }
 
 function topSamples(samples, metric, limit) {
