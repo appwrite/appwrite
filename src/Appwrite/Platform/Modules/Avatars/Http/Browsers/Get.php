@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get browser icon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('usage.resource', 'browser/{request.code}')
             ->label('cache', true)
             ->label('cache.resource', 'avatar/browser')
             ->label('sdk', new Method(

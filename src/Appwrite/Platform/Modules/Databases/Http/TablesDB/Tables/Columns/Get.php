@@ -43,6 +43,7 @@ class Get extends AttributesGet
             ->desc('Get column')
             ->groups(['api', 'database'])
             ->label('scope', ['tables.read', 'collections.read', 'columns.read', 'attributes.read'])
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),

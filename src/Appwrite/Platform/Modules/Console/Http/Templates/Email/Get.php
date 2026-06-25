@@ -32,6 +32,7 @@ class Get extends Action
             ->desc('Get email template')
             ->groups(['api'])
             ->label('scope', 'public')
+            ->label('usage.resource', 'email/{request.templateId}')
             ->label('sdk', new Method(
                 namespace: 'console',
                 group: null,

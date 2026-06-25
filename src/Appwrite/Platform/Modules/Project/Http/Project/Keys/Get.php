@@ -33,6 +33,7 @@ class Get extends Base
             ->desc('Get project key')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.read')
+            ->label('usage.resource', 'key/{request.keyId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',

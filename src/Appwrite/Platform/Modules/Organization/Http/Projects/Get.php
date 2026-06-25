@@ -30,6 +30,7 @@ class Get extends Action
             ->desc('Get organization project')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.read')
+            ->label('usage.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'projects',

@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get project email template')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.read')
+            ->label('usage.resource', 'email/{request.templateId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'templates',

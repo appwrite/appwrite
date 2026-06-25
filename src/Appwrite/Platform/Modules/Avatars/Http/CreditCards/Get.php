@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get credit card icon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('usage.resource', 'credit-card/{request.code}')
             ->label('cache', true)
             ->label('cache.resource', 'avatar/credit-card')
             ->label('sdk', new Method(

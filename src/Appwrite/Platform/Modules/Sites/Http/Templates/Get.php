@@ -31,6 +31,7 @@ class Get extends Base
             ->desc('Get site template')
             ->groups(['api'])
             ->label('scope', 'public')
+            ->label('usage.resource', 'template/{request.templateId}')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',

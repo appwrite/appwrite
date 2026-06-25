@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get country flag')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('usage.resource', 'flag/{request.code}')
             ->label('cache', true)
             ->label('cache.resource', 'avatar/flag')
             ->label('sdk', new Method(

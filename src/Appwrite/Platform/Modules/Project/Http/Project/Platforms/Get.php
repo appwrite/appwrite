@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get project platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.read')
+            ->label('usage.resource', 'platform/{request.platformId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',

@@ -29,6 +29,7 @@ class Get extends Action
             ->desc('Get migration')
             ->groups(['api', 'migrations'])
             ->label('scope', 'migrations.read')
+            ->label('usage.resource', 'migration/{request.migrationId}')
             ->label('sdk', new Method(
                 namespace: 'migrations',
                 group: null,

@@ -77,6 +77,7 @@ class XList extends Action
             ->desc('List repositories')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.read')
+            ->label('usage.resource', 'installation/{request.installationId}')
             ->label('resourceType', RESOURCE_TYPE_VCS)
             ->label('sdk', new Method(
                 namespace: 'vcs',

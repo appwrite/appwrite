@@ -36,6 +36,7 @@ class XList extends Action
             ->desc('List insights')
             ->groups(['api', 'advisor'])
             ->label('scope', 'insights.read')
+            ->label('usage.resource', 'report/{request.reportId}')
             ->label('resourceType', RESOURCE_TYPE_INSIGHTS)
             ->label('sdk', new Method(
                 namespace: 'advisor',

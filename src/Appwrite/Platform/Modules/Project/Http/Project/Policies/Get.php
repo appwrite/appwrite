@@ -32,6 +32,7 @@ class Get extends Action
             ->desc('Get project policy')
             ->groups(['api', 'project'])
             ->label('scope', ['policies.read', 'project.policies.read'])
+            ->label('usage.resource', 'policy/{request.policyId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',

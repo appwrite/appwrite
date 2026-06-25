@@ -31,6 +31,7 @@ class Get extends Action
             ->desc('Get project OAuth2 provider')
             ->groups(['api', 'project'])
             ->label('scope', 'oauth2.read')
+            ->label('usage.resource', 'oauth2/{request.provider}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',

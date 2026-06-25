@@ -31,6 +31,7 @@ class Get extends Action
             ->desc('Get team preferences')
             ->groups(['api', 'teams'])
             ->label('scope', 'teams.read')
+            ->label('usage.resource', 'team/{request.teamId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'teams',

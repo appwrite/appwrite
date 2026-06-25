@@ -29,6 +29,7 @@ class Get extends Action
             ->desc('Get project variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.read')
+            ->label('usage.resource', 'variable/{request.variableId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'variables',

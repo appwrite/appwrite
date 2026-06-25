@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get webhook')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.read')
+            ->label('usage.resource', 'webhook/{request.webhookId}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,

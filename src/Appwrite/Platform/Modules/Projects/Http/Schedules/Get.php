@@ -29,6 +29,7 @@ class Get extends Action
             ->desc('Get schedule')
             ->groups(['api', 'projects'])
             ->label('scope', 'schedules.read')
+            ->label('usage.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'schedules',

@@ -29,6 +29,7 @@ class Get extends Action
         ->desc('Get token')
         ->groups(['api', 'tokens'])
         ->label('scope', 'tokens.read')
+        ->label('usage.resource', 'token/{request.tokenId}')
         ->label('usage.metric', 'tokens.{scope}.requests.read')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
         ->label('sdk', new Method(

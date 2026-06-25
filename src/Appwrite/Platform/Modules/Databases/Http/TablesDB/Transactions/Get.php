@@ -32,6 +32,7 @@ class Get extends TransactionsGet
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', ['documents.read', 'rows.read'])
+            ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',

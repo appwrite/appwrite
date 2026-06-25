@@ -53,6 +53,7 @@ class Get extends Action
             ->desc('Get file preview')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')

@@ -40,6 +40,7 @@ class XList extends Action
             ->desc('List team logs')
             ->groups(['api', 'teams'])
             ->label('scope', 'teams.read')
+            ->label('usage.resource', 'team/{request.teamId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'logs',

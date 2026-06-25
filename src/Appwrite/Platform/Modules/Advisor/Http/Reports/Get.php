@@ -31,6 +31,7 @@ class Get extends Action
             ->desc('Get report')
             ->groups(['api', 'advisor'])
             ->label('scope', 'reports.read')
+            ->label('usage.resource', 'report/{request.reportId}')
             ->label('resourceType', RESOURCE_TYPE_REPORTS)
             ->label('sdk', new Method(
                 namespace: 'advisor',

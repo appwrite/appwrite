@@ -36,6 +36,7 @@ class XList extends Action
             ->desc('List schedules')
             ->groups(['api', 'projects'])
             ->label('scope', 'schedules.read')
+            ->label('usage.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'schedules',

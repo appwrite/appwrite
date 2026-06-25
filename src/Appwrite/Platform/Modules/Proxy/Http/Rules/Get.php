@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get rule')
             ->groups(['api', 'proxy'])
             ->label('scope', 'rules.read')
+            ->label('usage.resource', 'rule/{request.ruleId}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',

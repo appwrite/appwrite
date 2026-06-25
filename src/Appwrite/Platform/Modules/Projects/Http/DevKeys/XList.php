@@ -33,6 +33,7 @@ class XList extends Action
             ->desc('List dev keys')
             ->groups(['api', 'projects'])
             ->label('scope', 'devKeys.read')
+            ->label('usage.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',

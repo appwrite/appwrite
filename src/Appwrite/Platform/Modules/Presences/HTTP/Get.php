@@ -31,6 +31,7 @@ class Get extends PlatformAction
             ->desc('Get presence')
             ->groups(['api', 'presences'])
             ->label('scope', 'presences.read')
+            ->label('usage.resource', 'presence/{request.presenceId}')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',

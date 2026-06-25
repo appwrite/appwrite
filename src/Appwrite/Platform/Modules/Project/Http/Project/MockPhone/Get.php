@@ -29,6 +29,7 @@ class Get extends Action
             ->desc('Get project mock phone')
             ->groups(['api', 'project'])
             ->label('scope', 'mocks.read')
+            ->label('usage.resource', 'mock-phone/{request.number}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'mocks',
