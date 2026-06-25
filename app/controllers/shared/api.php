@@ -9,7 +9,6 @@ use Appwrite\Event\Message\Audit as AuditMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Audit;
-use Appwrite\Event\Label\Renderer as LabelRenderer;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -19,6 +18,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -43,15 +43,6 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
-
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project): string {
-    return LabelRenderer::render($label, [
-        'user' => (array) $user,
-        'project' => $project,
-        'request' => $requestParams,
-        'response' => $responsePayload,
-    ]);
-};
 
 Http::init()
     ->groups(['api'])
@@ -891,12 +882,18 @@ Http::shutdown()
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $params, $targetUser, $project);
+            $renderer = new Renderer([
+                'user' => (array) $targetUser,
+                'project' => $project,
+                'request' => $params,
+                'response' => $responsePayload,
+            ]);
+            $resource = $renderer->render($pattern);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
@@ -955,7 +952,7 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -985,11 +982,18 @@ Http::shutdown()
             $resourcePattern = $route->getLabel('cache.resource', null);
             $resourceTypePattern = $route->getLabel('cache.resourceType', null);
 
+            $renderer = new Renderer([
+                'user' => (array) $user,
+                'project' => $project,
+                'request' => $requestParams,
+                'response' => $data,
+            ]);
+
             try {
                 $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'resource' => empty($resourcePattern) ? null : $parseLabel($resourcePattern, $data, $requestParams, $user, $project),
-                    'resourceType' => empty($resourceTypePattern) ? null : $parseLabel($resourceTypePattern, $data, $requestParams, $user, $project),
+                    'resource' => empty($resourcePattern) ? null : $renderer->render($resourcePattern),
+                    'resourceType' => empty($resourceTypePattern) ? null : $renderer->render($resourceTypePattern),
                     'mimeType' => $response->getContentType(),
                     'accessedAt' => $now,
                     'signature' => $signature,
