@@ -33,7 +33,6 @@ class Delete extends Action
         ->label('event', 'tokens.[tokenId].delete')
         ->label('audits.event', 'tokens.delete')
         ->label('audits.resource', 'token/{request.tokenId}')
-        ->label('usage.resource', 'token/{request.tokenId}')
         ->label('usage.metric', 'tokens.{scope}.requests.delete')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')

@@ -39,6 +39,7 @@ class Get extends CollectionUsageGet
             ->desc('Get collection usage stats')
             ->groups(['api', 'database', 'usage'])
             ->label('scope', 'collections.read')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',

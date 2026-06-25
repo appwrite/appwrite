@@ -35,7 +35,6 @@ class Update extends Action
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')
             ->label('audits.resource', 'team/{response.$id}')
-            ->label('usage.resource', 'team/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'teams',

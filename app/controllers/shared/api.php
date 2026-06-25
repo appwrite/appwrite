@@ -43,45 +43,13 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project) {
-    preg_match_all('/{(.*?)}/', $label, $matches);
-    foreach ($matches[1] as $pos => $match) {
-        $find = $matches[0][$pos];
-        $parts = explode('.', $match);
-
-        if (count($parts) !== 2) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
-        }
-
-        $namespace = $parts[0];
-        $replace = $parts[1];
-
-        $params = match ($namespace) {
-            'user' => (array) $user,
-            'project' => $project->getArrayCopy(),
-            'request' => $requestParams,
-            default => $responsePayload,
-        };
-
-        if (array_key_exists($replace, $params)) {
-            $replacement = $params[$replace];
-            // Convert to string if it's not already a string
-            if (! is_string($replacement)) {
-                if (is_array($replacement)) {
-                    $replacement = json_encode($replacement);
-                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
-                    $replacement = (string) $replacement;
-                } elseif (is_scalar($replacement)) {
-                    $replacement = (string) $replacement;
-                } else {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
-                }
-            }
-            $label = \str_replace($find, $replacement, $label);
-        }
-    }
-
-    return $label;
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project): string {
+    return \Appwrite\Resource\Parser::render($label, [
+        'user' => (array) $user,
+        'project' => $project,
+        'request' => $requestParams,
+        'response' => $responsePayload,
+    ]);
 };
 
 Http::init()

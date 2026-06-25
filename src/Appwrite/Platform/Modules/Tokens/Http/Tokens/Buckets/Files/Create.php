@@ -40,7 +40,6 @@ class Create extends Action
         ->label('event', 'tokens.[tokenId].create')
         ->label('audits.event', 'token.create')
         ->label('audits.resource', 'token/{response.$id}')
-        ->label('usage.resource', 'token/{response.$id}')
         ->label('usage.metric', 'tokens.{scope}.requests.create')
         ->label('usage.params', ['resourceId:{request.resourceId}', 'resourceType:{request.resourceType}'])
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')

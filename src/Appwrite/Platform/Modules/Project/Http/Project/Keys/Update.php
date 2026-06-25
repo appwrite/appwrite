@@ -44,7 +44,6 @@ class Update extends Base
             ->label('event', 'keys.[keyId].update')
             ->label('audits.event', 'project.key.update')
             ->label('audits.resource', 'project.key/{response.$id}')
-            ->label('usage.resource', 'project.key/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',
