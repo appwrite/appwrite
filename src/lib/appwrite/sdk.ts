@@ -123,6 +123,7 @@ export function getApiEndpoint(region?: string): string {
 
   const protocol = url.protocol
   const hostname = url.hostname
+  const hostWithPort = url.port ? `${hostname}:${url.port}` : hostname
 
   const subdomain =
     region &&
@@ -131,7 +132,7 @@ export function getApiEndpoint(region?: string): string {
       ? `${region.trim().toLowerCase().replace(/\s+/g, '')}.`
       : ''
 
-  return `${protocol}//${subdomain}${hostname}/v1`
+  return `${protocol}//${subdomain}${hostWithPort}/v1`
 }
 
 /** Base endpoint (console / default). Use for console-level URLs. */
