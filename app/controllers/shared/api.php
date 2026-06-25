@@ -1119,12 +1119,11 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('queueForRealtime')
     ->inject('dbForPlatform')
     ->inject('authorization')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Route $route, Response $response, Document $project, User $user, Realtime $queueForRealtime, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode) {
+    ->action(function (Route $route, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1198,21 +1197,6 @@ Http::shutdown()
             $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                 'onboarding' => $byMethod,
             ])));
-
-            $queueForRealtime->reset();
-            $queueForRealtime
-                ->setProject($project)
-                ->setSubscribers(['console'])
-                ->setEvent('projects.[projectId].stages.[stageId].complete')
-                ->setParam('projectId', $project->getId())
-                ->setParam('stageId', $method)
-                ->setPayload([
-                    'stageId' => $method,
-                    'status' => ONBOARDING_STATUS_COMPLETED,
-                    'at' => $byMethod[$method]['at'],
-                    'actorType' => $actorType,
-                ])
-                ->trigger();
         } catch (Throwable) {
             // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
         }
