@@ -19,7 +19,6 @@ use Utopia\Platform\Scope\HTTP;
 class Delete extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -71,31 +70,32 @@ class Delete extends Action
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $number) {
-            $auths = $current->getAttribute('auths', []);
-            $mockNumbers = $auths['mockNumbers'] ?? [];
+        $auths = $project->getAttribute('auths', []);
 
-            $mockNumberIndex = null;
-            foreach ($mockNumbers as $index => $mock) {
-                if ($mock['phone'] === $number) {
-                    $mockNumberIndex = $index;
-                    break;
-                }
+        $mockNumbers = $auths['mockNumbers'] ?? [];
+
+        $mockNumberIndex = null;
+        foreach ($mockNumbers as $index => $mock) {
+            if ($mock['phone'] === $number) {
+                $mockNumberIndex = $index;
+                break;
             }
+        }
 
-            if (\is_null($mockNumberIndex)) {
-                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-            }
+        if (\is_null($mockNumberIndex)) {
+            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+        }
 
-            unset($mockNumbers[$mockNumberIndex]);
-            $mockNumbers = array_values($mockNumbers);
+        unset($mockNumbers[$mockNumberIndex]);
+        $mockNumbers = array_values($mockNumbers);
 
-            $auths['mockNumbers'] = $mockNumbers;
+        $auths['mockNumbers'] = $mockNumbers;
+//here
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
 
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'auths' => $auths,
-            ]));
-        });
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
         $queueForEvents->setParam('number', $number);
 
