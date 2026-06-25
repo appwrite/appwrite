@@ -262,11 +262,22 @@ function metricTable(rows) {
 }
 
 function metricRow(row) {
-    return `| ${row.label} | ${beforeAfter(row, 'p50', formatMs)} | ${beforeAfter(row, 'p95', formatMs)} | ${beforeAfter(row, 'rps', formatRate)} |`;
+    return `| ${row.label} | ${cell(row, 'p50', formatMs)} | ${cell(row, 'p95', formatMs)} | ${cell(row, 'rps', formatRate)} |`;
 }
 
-function beforeAfter(row, key, format) {
-    return `${format(row.before?.[key])} → ${format(row.after?.[key])}`;
+function cell(row, key, format) {
+    const before = row.before?.[key];
+    const after = row.after?.[key];
+    if (after === null || after === undefined || Number.isNaN(after)) {
+        return 'n/a';
+    }
+    if (before === null || before === undefined || Number.isNaN(before) || before === 0) {
+        return format(after);
+    }
+
+    const change = ((after - before) / before) * 100;
+    const sign = change >= 0 ? '+' : '−';
+    return `${format(after)} (${sign}${trimNumber(Math.abs(change).toFixed(1))}%)`;
 }
 
 function topSamples(samples, metric, limit) {
