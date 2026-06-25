@@ -312,8 +312,7 @@ class Databases extends Action
                         // guard against writing to an empty id (which would mask the real
                         // deletion failure with a second failed write).
                         if (!$relatedAttribute->isEmpty()) {
-                            $relatedAttribute->setAttribute('status', 'stuck');
-                            $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'stuck']));
+                            $relatedAttribute = $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'stuck']));
                         }
                         throw new DatabaseException('Failed to delete Relationship');
                     }
