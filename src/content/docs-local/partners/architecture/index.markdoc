@@ -58,6 +58,6 @@ Partner platforms typically use **both**: Console SDK for provisioning, project 
 
 # Related guides {% #related-guides %}
 
-{% arrow_link href="/docs/partners/guides/multi-tenant" %}
+{% arrow_link href="/docs/partners/guides/multi-tenancy" %}
 Multi-tenant platforms
 {% /arrow_link %}

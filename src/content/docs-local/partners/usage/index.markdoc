@@ -75,7 +75,7 @@ await organizations.updateSelectedProjects(
 ```
 {% /multicode %}
 
-Check plan limits from `getPlan` before creating new customer workspaces. See [Provision projects](/docs/partners/guides/provision-projects).
+Check plan limits from `getPlan` before creating new customer workspaces. See [Provisioning](/docs/partners/guides/provisioning).
 
 # Partner patterns {% #partner-patterns %}
 
@@ -90,5 +90,5 @@ Usage and billing APIs are available on Appwrite Cloud. Self-hosted deployments 
 # Related {% #related %}
 
 {% arrow_link href="/docs/partners/organizations" %}
-Organizations API
+Organization API
 {% /arrow_link %}

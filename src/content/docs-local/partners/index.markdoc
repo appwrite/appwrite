@@ -37,10 +37,10 @@ Many platforms combine both: OAuth connect for user-linked accounts and org API 
 Partner integrations use the **Console SDK** (`sdk.forConsole.*`) to manage infrastructure-level resources:
 
 {% cards %}
-{% cards_item href="/docs/partners/organizations" title="Organizations" %}
+{% cards_item href="/docs/partners/organizations" title="Organization" %}
 Create organizations, manage members, and read billing and plan information for accounts you operate.
 {% /cards_item %}
-{% cards_item href="/docs/partners/projects" title="Projects" %}
+{% cards_item href="/docs/partners/projects" title="Project" %}
 Create and configure projects, then manage databases, storage, functions, and other project resources through the project SDK.
 {% /cards_item %}
 {% cards_item href="/docs/partners/domains" title="Domains" %}

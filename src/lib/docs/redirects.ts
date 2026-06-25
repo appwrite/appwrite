@@ -30,6 +30,9 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'tutorials/sveltekit-ssr-auth': 'tutorials/sveltekit-ssr-auth/step-1',
   'tutorials/vue': 'tutorials/vue/step-1',
   'partners/guides/manage-domains': 'partners/domains',
+  'partners/guides/provision-projects': 'partners/guides/provisioning',
+  'partners/guides/marketplace': 'partners/guides/marketplaces',
+  'partners/guides/multi-tenant': 'partners/guides/multi-tenancy',
 }
 
 export function getDocsRedirectTarget(slug: string): DocsRedirectTarget | null {

@@ -1031,39 +1031,39 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "partners/guides/marketplace",
-    "title": "App marketplaces",
+    "slug": "partners/guides/marketplaces",
+    "title": "Marketplaces",
     "description": "Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.",
     "excerpt": "Use this guide when you run a **marketplace** where Appwrite organizations discover, install, and manage third-party integrations. Your platform lists OAuth apps, starts authorization on install, and tracks which apps are connected to each customer organization. Marketplace roles | Role | Responsibility | | ---- | -------------- | | **Marketplace operator** (you) | Curates the catalog, registers or approves OAuth apps, runs install and uninstall flows | | **Integration developer** | Builds the app that requests Console scopes after install…",
     "breadcrumbs": [
       "Marketplaces",
       "Partners",
       "guides",
-      "App marketplaces"
+      "Marketplaces"
     ]
   },
   {
-    "slug": "partners/guides/multi-tenant",
-    "title": "Multi-tenant platforms",
+    "slug": "partners/guides/multi-tenancy",
+    "title": "Multi-tenancy",
     "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.",
     "excerpt": "Multi-tenant platforms give each customer an isolated Appwrite backend while sharing operational tooling on your side. Tenant isolation model The recommended pattern is **one Appwrite project per tenant**: - Data and permissions stay isolated by project boundary - Project API keys can be scoped per tenant - Blast radius of a leaked key is limited to one customer - You can place tenants in different regions Mapping tenants Maintain a table in your platform: | Your tenant ID | Appwrite…",
     "breadcrumbs": [
       "Multi-tenancy",
       "Partners",
       "guides",
-      "Multi-tenant platforms"
+      "Multi-tenancy"
     ]
   },
   {
-    "slug": "partners/guides/provision-projects",
-    "title": "Provision projects",
+    "slug": "partners/guides/provisioning",
+    "title": "Provisioning",
     "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
     "excerpt": "This guide walks through provisioning a dedicated Appwrite project when a customer signs up for your platform. Flow overview 1. Customer completes signup in your product 2. Your backend creates or selects an Appwrite organization 3. Console API creates a new project in the target region 4. Your backend creates a scoped project API key 5. Your platform stores the mapping and initializes default resources Step 1: Create the project Step 2: Create a project API key Create a key…",
     "breadcrumbs": [
       "Provisioning",
       "Partners",
       "guides",
-      "Provision projects"
+      "Provisioning"
     ]
   },
   {
@@ -1123,11 +1123,11 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     "slug": "partners/organizations",
-    "title": "Organizations API",
-    "description": "Use the Appwrite Console Organizations API to manage organizations, members, and org-level settings from your partner platform.",
-    "excerpt": "The Organizations API is part of the Console SDK (). Use it to list organizations, read plan information, and manage organization settings when operating a partner platform. Console SDK access Authenticate with an organization API key or a user's OAuth access token: Common operations | Operation | Use case | | --------- | -------- | | | Show organizations available to a linked user or your platform account | | | Read organization details and preferences | | | Provision…",
+    "title": "Organization API",
+    "description": "Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.",
+    "excerpt": "The Organization API is part of the Console SDK (). Use it to list organizations, read plan information, and manage organization settings when operating a partner platform. Console SDK access Authenticate with an organization API key or a user's OAuth access token: Common operations | Operation | Use case | | --------- | -------- | | | Show organizations available to a linked user or your platform account | | | Read organization details and preferences | | | Provision…",
     "breadcrumbs": [
-      "Organizations",
+      "Organization",
       "Partners API",
       "Overview"
     ]
@@ -1135,10 +1135,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "partners/organizations/manage",
     "title": "Manage organizations",
-    "description": "Create and update Appwrite organizations from your partner platform using the Console Organizations API.",
-    "excerpt": "Use the Organizations API to provision and configure organizations as part of your onboarding flow. Create an organization Store the returned organization ID in your platform database and associate it with the customer record. Update organization settings Update name, billing email, and preferences when customers change settings in your product: Map organizations to customers Maintain a stable mapping between your customer ID and Appwrite . Use this mapping for all Console API calls and audit logs. Related Create projects",
+    "description": "Create and update Appwrite organizations from your partner platform using the Console Organization API.",
+    "excerpt": "Use the Organization API to provision and configure organizations as part of your onboarding flow. Create an organization Store the returned organization ID in your platform database and associate it with the customer record. Update organization settings Update name, billing email, and preferences when customers change settings in your product: Map organizations to customers Maintain a stable mapping between your customer ID and Appwrite . Use this mapping for all Console API calls and audit logs. Related Create projects",
     "breadcrumbs": [
-      "Organizations",
+      "Organization",
       "Partners API",
       "Manage organizations"
     ]
@@ -1149,18 +1149,18 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage organization members and roles from your partner platform using the Console Organizations and Teams APIs.",
     "excerpt": "Partner platforms often invite customer admins to an Appwrite organization or sync membership from an existing identity provider. Organization roles Appwrite organizations use roles such as owner, developer, and analyst to control Console access. Your platform should assign the minimum role required for each member. When you proxy Console access, enforce the same role boundaries in your product UI. Invite members Use organization membership APIs to invite users by email. Invited users receive Appwrite Console access according to the role…",
     "breadcrumbs": [
-      "Organizations",
+      "Organization",
       "Partners API",
       "Members and roles"
     ]
   },
   {
     "slug": "partners/projects",
-    "title": "Projects API",
-    "description": "Use the Appwrite Console Projects API to create and manage projects for your customers from a partner platform.",
-    "excerpt": "The Projects API () creates and configures Appwrite projects inside an organization. Each customer workspace in your platform typically maps to one project. Initialize the Projects service Project lifecycle | Stage | Console API | Next step | | ----- | ----------- | --------- | | Create | | Store and region | | Configure | , platforms, webhooks | Set URLs and integration settings | | Operate | Project SDK + project API key | Manage databases, storage, functions…",
+    "title": "Project API",
+    "description": "Use the Appwrite Console Project API to create and manage projects for your customers from a partner platform.",
+    "excerpt": "The Project API () creates and configures Appwrite projects inside an organization. Each customer workspace in your platform typically maps to one project. Initialize the Project service Project lifecycle | Stage | Console API | Next step | | ----- | ----------- | --------- | | Create | | Store and region | | Configure | , platforms, webhooks | Set URLs and integration settings | | Operate | Project SDK + project API key | Manage databases, storage, functions…",
     "breadcrumbs": [
-      "Projects",
+      "Project",
       "Partners API",
       "Overview"
     ]
@@ -1168,10 +1168,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "partners/projects/create",
     "title": "Create projects",
-    "description": "Provision Appwrite projects for customers using the Console Projects API and organization API keys.",
+    "description": "Provision Appwrite projects for customers using the Console Project API and organization API keys.",
     "excerpt": "Create a project After creation 1. Store and in your platform database 2. Create a project API key with scopes for the services you manage 3. Register platforms if the customer uses client SDKs 4. Initialize the project SDK with the regional endpoint for resource APIs Idempotency Use a deterministic custom project ID or store provisioning state so retries do not create duplicate projects for the same customer. Related Provision projects guide",
     "breadcrumbs": [
-      "Projects",
+      "Project",
       "Partners API",
       "Create projects"
     ]
@@ -1182,7 +1182,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage Appwrite project resources from your partner platform using the project SDK and project API keys.",
     "excerpt": "After you create a project, use the **project SDK** () to manage resources inside that project. Switch from Console to project SDK Console APIs manage the project shell. Project APIs manage services inside the project: Common partner operations | Service | Example operations | | ------- | ------------------ | | TablesDB | Create databases, tables, and rows for customer data | | Storage | Create buckets and manage files | | Functions | Deploy functions on behalf of customers |…",
     "breadcrumbs": [
-      "Projects",
+      "Project",
       "Partners API",
       "Manage resources"
     ]

@@ -1,6 +1,6 @@
 ---
 layout: article
-title: Provision projects
+title: Provisioning
 description: End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.
 ---
 

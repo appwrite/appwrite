@@ -1,10 +1,10 @@
 ---
 layout: article
-title: Organizations API
-description: Use the Appwrite Console Organizations API to manage organizations, members, and org-level settings from your partner platform.
+title: Organization API
+description: Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.
 ---
 
-The Organizations API is part of the Console SDK (`sdk.forConsole.organizations`). Use it to list organizations, read plan information, and manage organization settings when operating a partner platform.
+The Organization API is part of the Console SDK (`sdk.forConsole.organizations`). Use it to list organizations, read plan information, and manage organization settings when operating a partner platform.
 
 # Console SDK access {% #console-sdk-access %}
 

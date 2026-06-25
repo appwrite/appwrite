@@ -57,7 +57,7 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     prefix: 'partners/organizations',
     parent: {
       href: '/docs/partners',
-      label: 'Organizations',
+      label: 'Organization',
     },
     navigation: [
       {
@@ -83,7 +83,7 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     prefix: 'partners/projects',
     parent: {
       href: '/docs/partners',
-      label: 'Projects',
+      label: 'Project',
     },
     navigation: [
       {

@@ -74,13 +74,13 @@ export const DOCS_PARTNERS_HOME_INTEGRATIONS: DocsPartnersHomeCard[] = [
 
 export const DOCS_PARTNERS_HOME_APIS: DocsPartnersHomeCard[] = [
   {
-    title: 'Organizations',
+    title: 'Organization',
     description: 'Create organizations, manage members, and read billing and plan information.',
     href: '/docs/partners/organizations',
     icon: Building2,
   },
   {
-    title: 'Projects',
+    title: 'Project',
     description: 'Create projects and manage databases, storage, functions, and other resources.',
     href: '/docs/partners/projects',
     icon: Boxes,
@@ -115,19 +115,19 @@ export const DOCS_PARTNERS_HOME_GUIDES: DocsPartnersHomeCard[] = [
   {
     title: 'Provisioning',
     description: 'Choose an integration model and provision projects for your customers.',
-    href: '/docs/partners/guides/provision-projects',
+    href: '/docs/partners/guides/provisioning',
     icon: FileText,
   },
   {
     title: 'Marketplaces',
     description: 'Publish OAuth apps, run install flows, and manage integrations with the Apps and OAuth APIs.',
-    href: '/docs/partners/guides/marketplace',
+    href: '/docs/partners/guides/marketplaces',
     icon: FileText,
   },
   {
     title: 'Multi-tenancy',
     description: 'Isolate customer data and resources across organizations and projects.',
-    href: '/docs/partners/guides/multi-tenant',
+    href: '/docs/partners/guides/multi-tenancy',
     icon: FileText,
   },
 ]

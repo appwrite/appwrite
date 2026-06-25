@@ -1,10 +1,10 @@
 ---
 layout: article
 title: Manage organizations
-description: Create and update Appwrite organizations from your partner platform using the Console Organizations API.
+description: Create and update Appwrite organizations from your partner platform using the Console Organization API.
 ---
 
-Use the Organizations API to provision and configure organizations as part of your onboarding flow.
+Use the Organization API to provision and configure organizations as part of your onboarding flow.
 
 # Create an organization {% #create-an-organization %}
 

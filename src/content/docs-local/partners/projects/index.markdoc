@@ -1,12 +1,12 @@
 ---
 layout: article
-title: Projects API
-description: Use the Appwrite Console Projects API to create and manage projects for your customers from a partner platform.
+title: Project API
+description: Use the Appwrite Console Project API to create and manage projects for your customers from a partner platform.
 ---
 
-The Projects API (`sdk.forConsole.projects`) creates and configures Appwrite projects inside an organization. Each customer workspace in your platform typically maps to one project.
+The Project API (`sdk.forConsole.projects`) creates and configures Appwrite projects inside an organization. Each customer workspace in your platform typically maps to one project.
 
-# Initialize the Projects service {% #initialize-the-projects-service %}
+# Initialize the Project service {% #initialize-the-project-service %}
 
 {% multicode %}
 ```server-nodejs

@@ -160,7 +160,7 @@ Apps with `deviceFlow` enabled can authorize CLI tools and devices without a bro
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/partners/guides/marketplace" %}
+{% arrow_link href="/docs/partners/guides/marketplaces" %}
 App marketplaces guide
 {% /arrow_link %}
 

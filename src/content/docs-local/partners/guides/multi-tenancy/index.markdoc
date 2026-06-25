@@ -1,6 +1,6 @@
 ---
 layout: article
-title: Multi-tenant platforms
+title: Multi-tenancy
 description: Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.
 ---
 
@@ -44,7 +44,7 @@ Route requests based on whether the tenant is platform-provisioned or OAuth-link
 # Related {% #related %}
 
 {% cards %}
-{% cards_item href="/docs/partners/guides/provision-projects" title="Provision projects" %}
+{% cards_item href="/docs/partners/guides/provisioning" title="Provisioning" %}
 Automate project creation on signup.
 {% /cards_item %}
 {% cards_item href="/docs/partners/architecture" title="Architecture" %}

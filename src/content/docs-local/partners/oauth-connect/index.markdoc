@@ -28,7 +28,7 @@ For platform-owned provisioning inside your organization, use [Org API keys](/do
 # Getting started {% #getting-started %}
 
 {% cards %}
-{% cards_item href="/docs/partners/guides/marketplace" title="App marketplaces" %}
+{% cards_item href="/docs/partners/guides/marketplaces" title="Marketplaces" %}
 Publish OAuth apps and run install flows for organization admins.
 {% /cards_item %}
 {% cards_item href="/docs/partners/oauth-connect/setup" title="Setup" %}

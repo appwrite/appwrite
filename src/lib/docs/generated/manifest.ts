@@ -640,22 +640,22 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
-    "slug": "partners/guides/marketplace",
-    "title": "App marketplaces",
+    "slug": "partners/guides/marketplaces",
+    "title": "Marketplaces",
     "description": "Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.",
     "layout": "article",
     "readingTimeMinutes": 4
   },
   {
-    "slug": "partners/guides/multi-tenant",
-    "title": "Multi-tenant platforms",
+    "slug": "partners/guides/multi-tenancy",
+    "title": "Multi-tenancy",
     "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
-    "slug": "partners/guides/provision-projects",
-    "title": "Provision projects",
+    "slug": "partners/guides/provisioning",
+    "title": "Provisioning",
     "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
     "layout": "article",
     "readingTimeMinutes": 1
@@ -697,15 +697,15 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "partners/organizations",
-    "title": "Organizations API",
-    "description": "Use the Appwrite Console Organizations API to manage organizations, members, and org-level settings from your partner platform.",
+    "title": "Organization API",
+    "description": "Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "partners/organizations/manage",
     "title": "Manage organizations",
-    "description": "Create and update Appwrite organizations from your partner platform using the Console Organizations API.",
+    "description": "Create and update Appwrite organizations from your partner platform using the Console Organization API.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
@@ -718,15 +718,15 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "partners/projects",
-    "title": "Projects API",
-    "description": "Use the Appwrite Console Projects API to create and manage projects for your customers from a partner platform.",
+    "title": "Project API",
+    "description": "Use the Appwrite Console Project API to create and manage projects for your customers from a partner platform.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
   {
     "slug": "partners/projects/create",
     "title": "Create projects",
-    "description": "Provision Appwrite projects for customers using the Console Projects API and organization API keys.",
+    "description": "Provision Appwrite projects for customers using the Console Project API and organization API keys.",
     "layout": "article",
     "readingTimeMinutes": 1
   },

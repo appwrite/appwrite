@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Create projects
-description: Provision Appwrite projects for customers using the Console Projects API and organization API keys.
+description: Provision Appwrite projects for customers using the Console Project API and organization API keys.
 ---
 
 # Create a project {% #create-a-project %}
@@ -39,6 +39,6 @@ Use a deterministic custom project ID or store provisioning state so retries do 
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/partners/guides/provision-projects" %}
+{% arrow_link href="/docs/partners/guides/provisioning" %}
 Provision projects guide
 {% /arrow_link %}

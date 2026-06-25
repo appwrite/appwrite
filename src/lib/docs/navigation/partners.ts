@@ -31,13 +31,13 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
     label: 'Partners APIs',
     items: [
       {
-        label: 'Organizations',
+        label: 'Organization',
         href: '/docs/partners/organizations',
         icon: 'building',
         isParent: true,
       },
       {
-        label: 'Projects',
+        label: 'Project',
         href: '/docs/partners/projects',
         icon: 'boxes',
         isParent: true,
@@ -69,17 +69,17 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
     items: [
       {
         label: 'Provisioning',
-        href: '/docs/partners/guides/provision-projects',
+        href: '/docs/partners/guides/provisioning',
         icon: 'document-text',
       },
       {
         label: 'Marketplaces',
-        href: '/docs/partners/guides/marketplace',
+        href: '/docs/partners/guides/marketplaces',
         icon: 'document-text',
       },
       {
         label: 'Multi-tenancy',
-        href: '/docs/partners/guides/multi-tenant',
+        href: '/docs/partners/guides/multi-tenancy',
         icon: 'document-text',
       },
     ],

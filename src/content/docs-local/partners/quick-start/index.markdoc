@@ -92,7 +92,7 @@ Register an OAuth app and request access to user organizations.
 {% cards_item href="/docs/partners/org-api-keys/scopes" title="Configure org API key scopes" %}
 Grant only the Console scopes your platform needs.
 {% /cards_item %}
-{% cards_item href="/docs/partners/guides/provision-projects" title="Provision projects guide" %}
+{% cards_item href="/docs/partners/guides/provisioning" title="Provisioning guide" %}
 End-to-end flow for creating a project per customer.
 {% /cards_item %}
 {% /cards %}
