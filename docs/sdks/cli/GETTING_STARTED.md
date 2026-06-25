@@ -9,7 +9,7 @@ $ appwrite login
 ? Enter your password ********
 ✓ Success 
 ```
-This will also prompt you to enter your Appwrite endpoint ( default: http://localhost/v1 ) 
+This will also prompt you to enter your Appwrite endpoint ( default: http://localhost:9520/v1 ) 
 
 * ### Initialising your project
 Once logged in, the CLI needs to be initialised before you can use it with your Appwrite project. You can do this with the `appwrite init project` command. 
@@ -139,5 +139,5 @@ $ appwrite client --reset
 The Appwrite CLI can also work in a CI environment. The initialisation of the CLI works a bit differently in CI. In CI, you set your `endpoint`, `projectId` and `API Key` using 
 
 ```sh
-appwrite client --endpoint http://localhost/v1 --projectId <PROJECT_ID> --key <API KEY>
+appwrite client --endpoint http://localhost:9520/v1 --projectId <PROJECT_ID> --key <API KEY>
 ```
