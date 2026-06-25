@@ -3,8 +3,11 @@
  * `server/server.js` (or `server/index.mjs`). TanStack Start framework presets
  * default to `./.output`, but this repo builds to `dist/` via Vite.
  *
- * Link `.output` -> `dist` after build so adapter detection and bundle helpers
- * find the SSR server entry when the site still uses the framework default path.
+ * Link `.output` -> `dist` after build so bundle helpers find the SSR server entry
+ * when the site still uses the framework default path (`.output`).
+ *
+ * Adapter type (ssr vs static) is detected separately from vite.config.ts; see the
+ * `appwriteAdapterHint` in vite.config.ts when using partial marketing prerender.
  *
  * Run: bun run scripts/prepare-appwrite-sites-output.ts
  */
