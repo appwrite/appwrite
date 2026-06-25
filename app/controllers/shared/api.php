@@ -299,7 +299,8 @@ Http::init()
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
-            $memberships = $user->getAttribute('memberships', []);
+            $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
+            $memberships = $membershipSource->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
@@ -474,7 +475,8 @@ Http::init()
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         // Step 13: Handle Multi-Factor Authentication
-        if (! in_array('mfa', $route->getGroups())) {
+        // Skip MFA check when impersonating — the actor already satisfied their own MFA during login.
+        if (! in_array('mfa', $route->getGroups()) && $impersonatorUser->isEmpty()) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
