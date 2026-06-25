@@ -58,6 +58,8 @@ function buildComment(core) {
         '',
         `Comparing ${baseRef} (before) to ${headRef} (after).`,
         '',
+        headline(rows[0]),
+        '',
     ];
 
     if (before === null) {
@@ -68,19 +70,7 @@ function buildComment(core) {
     }
 
     lines.push(
-        '**Before**',
-        '',
-        metricTable(rows, 'before'),
-        '',
-        '**After**',
-        '',
-        metricTable(rows, 'after'),
-        '',
-        '**Delta**',
-        '',
-        '| Scenario | P95 delta (ms) |',
-        '| --- | ---: |',
-        ...rows.map(deltaRow),
+        metricTable(rows),
         '',
         '<details>',
         '<summary><strong>Top API waits</strong></summary>',
@@ -150,7 +140,7 @@ function benchmarkRows(before, after, beforeSamples, afterSamples) {
     ];
 }
 
-function summaryStats(summary, durationMetric, iterationsMetric = null, rpsMetric = null) {
+function summaryStats(summary, durationMetric) {
     const values = metricValues(summary, durationMetric);
     if (!values) {
         return null;
@@ -159,8 +149,7 @@ function summaryStats(summary, durationMetric, iterationsMetric = null, rpsMetri
     return {
         p50: values.med ?? null,
         p95: values['p(95)'] ?? null,
-        iterations: iterationsMetric ? metricValue(summary, iterationsMetric, 'count') : values.count ?? null,
-        rps: rpsMetric ? metricValue(summary, rpsMetric, 'rate') : null,
+        rps: null,
     };
 }
 
@@ -187,7 +176,6 @@ function serviceStats(samples) {
         return [service, {
             p50: percentile(values, 50),
             p95: percentile(values, 95),
-            iterations: values.length,
             rps: durationSeconds ? values.length / durationSeconds : null,
         }];
     }));
@@ -206,7 +194,6 @@ function apiSampleStats(samples) {
     return {
         p50: percentile(values, 50),
         p95: percentile(values, 95),
-        iterations: values.length,
         rps: durationSeconds ? values.length / durationSeconds : null,
     };
 }
@@ -252,25 +239,34 @@ function metricValues(data, metric) {
     return data?.metrics?.[metric]?.values ?? null;
 }
 
-function metricValue(data, metric, stat) {
-    return metricValues(data, metric)?.[stat] ?? null;
+function headline(apiRow) {
+    const before = apiRow?.before?.rps;
+    const after = apiRow?.after?.rps;
+    if (after === null || after === undefined || Number.isNaN(after)) {
+        return '**API throughput:** n/a';
+    }
+    if (before === null || before === undefined || Number.isNaN(before) || before === 0) {
+        return `**API throughput:** ${formatRate(after)} req/s`;
+    }
+
+    const change = ((after - before) / before) * 100;
+    return `**API throughput:** ${formatRate(before)} → ${formatRate(after)} req/s (${change >= 0 ? '+' : ''}${trimNumber(change.toFixed(1))}%)`;
 }
 
-function metricTable(rows, side) {
+function metricTable(rows) {
     return [
-        '| Scenario | P50 (ms) | P95 (ms) | Requests | RPS |',
-        '| --- | ---: | ---: | ---: | ---: |',
-        ...rows.map((row) => metricRow(row, side)),
+        '| Scenario | P50 (ms) | P95 (ms) | RPS |',
+        '| --- | ---: | ---: | ---: |',
+        ...rows.map(metricRow),
     ].join('\n');
 }
 
-function metricRow(row, side) {
-    const values = row[side];
-    return `| ${row.label} | ${formatMs(values?.p50)} | ${formatMs(values?.p95)} | ${formatCount(values?.iterations)} | ${formatRate(values?.rps)} |`;
+function metricRow(row) {
+    return `| ${row.label} | ${beforeAfter(row, 'p50', formatMs)} | ${beforeAfter(row, 'p95', formatMs)} | ${beforeAfter(row, 'rps', formatRate)} |`;
 }
 
-function deltaRow(row) {
-    return `| ${row.label} | ${formatDelta(row.before?.p95, row.after?.p95)} |`;
+function beforeAfter(row, key, format) {
+    return `${format(row.before?.[key])} → ${format(row.after?.[key])}`;
 }
 
 function topSamples(samples, metric, limit) {
@@ -315,23 +311,6 @@ function formatMs(value) {
 
 function formatRate(value) {
     return formatNumber(value, 2);
-}
-
-function formatCount(value) {
-    if (value === null || value === undefined || Number.isNaN(value)) {
-        return 'n/a';
-    }
-
-    return `${Math.round(value)}`;
-}
-
-function formatDelta(before, after) {
-    if (before === null || before === undefined || after === null || after === undefined || Number.isNaN(before) || Number.isNaN(after)) {
-        return 'n/a';
-    }
-
-    const difference = Number((after - before).toFixed(2));
-    return `${difference > 0 ? '+' : ''}${trimNumber(difference)}`;
 }
 
 function formatNumber(value, decimals) {
