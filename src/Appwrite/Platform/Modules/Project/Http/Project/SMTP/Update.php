@@ -27,7 +27,6 @@ use Utopia\Validator\WhiteList;
 class Update extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -46,6 +45,7 @@ class Update extends Action
             // ->label('event', 'project.smtp.update')
             ->label('audits.event', 'project.smtp.update')
             ->label('audits.resource', 'project.smtp/{response.$id}')
+            ->label('usage.resource', 'project.smtp/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'smtp',
@@ -95,27 +95,20 @@ class Update extends Action
         Document $project,
         Authorization $authorization
     ): void {
-        // Fetch current configuration. This read is only used to validate the
-        // effective config (incl. the SMTP connection test below); the value
-        // actually persisted is re-read fresh under a row lock at write time so
-        // a concurrent update can't be clobbered.
+        // Fetch current configuration
         $smtp = $project->getAttribute('smtp', []);
 
-        // Collect only the fields the caller provided. null means "not provided,
-        // keep existing"; empty string explicitly clears a previously-set value.
+        // Apply changes — null means "not provided, keep existing".
+        // Empty string explicitly clears a previously-set value.
         $keys = ['host', 'port', 'username', 'password', 'senderEmail', 'senderName', 'replyToEmail', 'replyToName', 'secure', 'enabled'];
-        $changes = [];
         foreach ($keys as $key) {
             if (!\is_null(${$key})) {
-                $changes[$key] = ${$key};
+                $smtp[$key] = ${$key};
             }
         }
 
-        // Effective config = stored values overlaid with this request's changes.
-        $smtp = \array_merge($smtp, $changes);
-
         // Backwards compatibility
-        $smtp['replyToEmail'] = $changes['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+        $smtp['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
 
         if (($smtp['enabled'] ?? false) === true) {
             // Ensure required fields are set
@@ -163,7 +156,7 @@ class Update extends Action
                 // Auto-enable if configuration is valid
                 // Dont do this if specifically request to mark disabled
                 if (\is_null($enabled)) {
-                    $smtp['enabled'] = $changes['enabled'] = true;
+                    $smtp['enabled'] = true;
                 }
             } catch (Throwable $error) {
                 if (($smtp['enabled'] ?? null) === true) {
@@ -171,17 +164,14 @@ class Update extends Action
                 }
             }
         }
+//here
+        // Save configuration
+        $updates = new Document([
+            'smtp' => $smtp,
+        ]);
 
-        // Save configuration. Re-read fresh under a row lock and apply only the
-        // changed keys so a concurrent SMTP update can't be clobbered. The
-        // expensive connection test above intentionally stays outside the lock.
-        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $changes) {
-            $smtp = \array_merge($current->getAttribute('smtp', []), $changes);
-
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'smtp' => $smtp,
-            ]));
-        });
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

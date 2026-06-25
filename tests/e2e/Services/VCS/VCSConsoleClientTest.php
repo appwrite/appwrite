@@ -185,6 +185,7 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('npm install', $framework['body']['installCommand']);
         $this->assertEquals('npm run build', $framework['body']['buildCommand']);
         $this->assertEquals('./build', $framework['body']['outputDirectory']);
+        $this->assertEquals('ssr', $framework['body']['adapter']);
 
         $framework = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -200,6 +201,7 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('npm install', $framework['body']['installCommand']);
         $this->assertEquals('npm run build', $framework['body']['buildCommand']);
         $this->assertEquals('./dist', $framework['body']['outputDirectory']);
+        $this->assertEquals('ssr', $framework['body']['adapter']);
 
         $framework = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -215,6 +217,23 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('npm install', $framework['body']['installCommand']);
         $this->assertEquals('npm run build', $framework['body']['buildCommand']);
         $this->assertEquals('./build', $framework['body']['outputDirectory']);
+        $this->assertEquals('ssr', $framework['body']['adapter']);
+
+        $framework = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-type' => 'application/json',
+        ], $this->getHeaders()), [
+            'providerRepositoryId' => $this->providerRepositoryId4,
+            'type' => 'framework',
+            'providerRootDirectory' => 'tanstack-start/starter'
+        ]);
+
+        $this->assertEquals(200, $framework['headers']['status-code']);
+        $this->assertEquals('tanstack-start', $framework['body']['framework']);
+        $this->assertEquals('npm install', $framework['body']['installCommand']);
+        $this->assertEquals('npm run build', $framework['body']['buildCommand']);
+        $this->assertEquals('./.output', $framework['body']['outputDirectory']);
+        $this->assertEquals('ssr', $framework['body']['adapter']);
 
         /**
          * Test for FAILURE

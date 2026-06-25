@@ -18,7 +18,6 @@ use Utopia\Validator\Range;
 class Update extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -37,6 +36,7 @@ class Update extends Action
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
+            ->label('usage.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
@@ -69,19 +69,20 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $total) {
-            $auths = $current->getAttribute('auths', []);
+        $auths = $project->getAttribute('auths', []);
 
-            if (\is_null($total)) {
-                $auths['maxSessions'] = 0;
-            } else {
-                $auths['maxSessions'] = $total;
-            }
+        if (\is_null($total)) {
+            $auths['maxSessions'] = 0;
+        } else {
+            $auths['maxSessions'] = $total;
+        }
 
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'auths' => $auths,
-            ]));
-        });
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
+//here
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

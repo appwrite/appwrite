@@ -39,6 +39,7 @@ class Delete extends Action
             ->label('scope', 'account')
             ->label('audits.event', 'user.update')
             ->label('audits.resource', 'user/{user.$id}')
+            ->label('usage.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
             ->label('sdk', [
                 new Method(

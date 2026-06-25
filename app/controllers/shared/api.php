@@ -99,7 +99,9 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->inject('impersonatorUser')
+    ->inject('targetUser')
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -297,7 +299,8 @@ Http::init()
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
-            $memberships = $user->getAttribute('memberships', []);
+            $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
+            $memberships = $membershipSource->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
@@ -353,7 +356,7 @@ Http::init()
             !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
-                || $user->getAttribute('impersonatorUserId')
+                || !$impersonatorUser->isEmpty()
             )
         ) {
             $scopes[] = 'users.read';
@@ -361,8 +364,14 @@ Http::init()
         }
 
         $authorization->addRole($role);
-        foreach ($user->getRoles($authorization) as $authRole) {
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
+        foreach ($rolesSource->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
+        }
+
+        if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
+            $dbForProject->setMetadata('user', $targetUser->getId());
+            $dbForPlatform->setMetadata('user', $targetUser->getId());
         }
 
         /**
@@ -391,11 +400,10 @@ Http::init()
         }
 
         if (! empty($user->getId())) {
-            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
 
             // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
-            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+            if ($impersonatorUser->isEmpty() && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
@@ -409,6 +417,8 @@ Http::init()
                 }
             }
         }
+
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
 
         // Steps 7-9: Access Control - Method, Namespace and Scope Validation
         $method = $route->getLabel('sdk', false);
@@ -425,7 +435,7 @@ Http::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+                && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -435,7 +445,7 @@ Http::init()
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && ! $project->getAttribute('apis', [])['rest']
-            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+            && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -447,20 +457,20 @@ Http::init()
         }
 
         // Step 10: Check if user is blocked
-        if ($user->getAttribute('status') === false) { // Account is blocked
+        if ($rolesSource->getAttribute('status') === false) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
         // Step 11: Verify password status
-        if ($user->getAttribute('reset')) {
+        if ($rolesSource->getAttribute('reset')) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
         // Step 12: Validate MFA requirements
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+        $mfaEnabled = $rolesSource->getAttribute('mfa', false);
+        $hasVerifiedEmail = $rolesSource->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $rolesSource->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($rolesSource)?->getAttribute('verified') ?? false;
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
@@ -566,10 +576,13 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->inject('impersonatorUser')
+    ->inject('targetUser')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
 
-        $response->setUser($user);
-        $request->setUser($user);
+        $response->setUser($targetUser);
+        $response->setImpersonatorUser($impersonatorUser);
+        $request->setUser($targetUser);
 
         $path = $route->getPath();
         $databaseType = match (true) {
@@ -588,7 +601,7 @@ Http::init()
         $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user);
+            ->setUser($targetUser);
 
         $auditContext->mode = $mode;
         $auditContext->userAgent = $request->getUserAgent('');
@@ -596,24 +609,27 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
+        $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
 
-        /* If a session exists, use the user associated with the session */
-        if (! $user->isEmpty()) {
-            $userClone = clone $user;
+        /* If a session exists, use the target user (impersonated target or actor) for audit */
+        if (! $targetUser->isEmpty()) {
+            $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
-            if (empty($user->getAttribute('type'))) {
+            if (empty($targetUser->getAttribute('type'))) {
                 $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         }
 
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
+
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $roles = $authorization->getRoles();
-            $isAppUser = $user->isKey($roles);
+            $isAppUser = $rolesSource->isKey($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($roles);
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
@@ -903,24 +919,25 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('targetUser')
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $params, $user, $project);
+            $resource = $parseLabel($pattern, $responsePayload, $params, $targetUser, $project);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
         }
 
-        if (! $user->isEmpty()) {
-            $userClone = clone $user;
+        if (! $targetUser->isEmpty()) {
+            $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
-            if (empty($user->getAttribute('type'))) {
+            if (empty($targetUser->getAttribute('type'))) {
                 $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;

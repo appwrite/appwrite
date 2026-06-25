@@ -17,7 +17,6 @@ use Utopia\Validator\Boolean;
 class Update extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -36,6 +35,7 @@ class Update extends Action
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
+            ->label('usage.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
@@ -78,32 +78,33 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $userId, $userEmail, $userPhone, $userName, $userMFA, $userAccessedAt) {
-            $auths = $current->getAttribute('auths', []);
+        $auths = $project->getAttribute('auths', []);
 
-            if ($userId !== null) {
-                $auths['membershipsUserId'] = $userId;
-            }
-            if ($userEmail !== null) {
-                $auths['membershipsUserEmail'] = $userEmail;
-            }
-            if ($userPhone !== null) {
-                $auths['membershipsUserPhone'] = $userPhone;
-            }
-            if ($userName !== null) {
-                $auths['membershipsUserName'] = $userName;
-            }
-            if ($userMFA !== null) {
-                $auths['membershipsMfa'] = $userMFA;
-            }
-            if ($userAccessedAt !== null) {
-                $auths['membershipsUserAccessedAt'] = $userAccessedAt;
-            }
+        if ($userId !== null) {
+            $auths['membershipsUserId'] = $userId;
+        }
+        if ($userEmail !== null) {
+            $auths['membershipsUserEmail'] = $userEmail;
+        }
+        if ($userPhone !== null) {
+            $auths['membershipsUserPhone'] = $userPhone;
+        }
+        if ($userName !== null) {
+            $auths['membershipsUserName'] = $userName;
+        }
+        if ($userMFA !== null) {
+            $auths['membershipsMfa'] = $userMFA;
+        }
+        if ($userAccessedAt !== null) {
+            $auths['membershipsUserAccessedAt'] = $userAccessedAt;
+        }
+//here
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
 
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'auths' => $auths,
-            ]));
-        });
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

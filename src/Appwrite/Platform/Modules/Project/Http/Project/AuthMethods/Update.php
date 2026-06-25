@@ -20,7 +20,6 @@ use Utopia\Validator\WhiteList;
 class Update extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -39,6 +38,7 @@ class Update extends Action
             ->label('event', 'authMethod.[methodId].update')
             ->label('audits.event', 'project.authMethods.[methodId].update')
             ->label('audits.resource', 'project.authMethods/{response.$id}')
+            ->label('usage.resource', 'project.authMethods/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
@@ -77,14 +77,13 @@ class Update extends Action
         $auth = Config::getParam('auth')[$methodId] ?? [];
         $authKey = $auth['key'] ?? '';
 
-        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $authKey, $enabled) {
-            $auths = $current->getAttribute('auths', []);
-            $auths[$authKey] = $enabled;
-
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'auths' => $auths,
-            ]));
-        });
+        $auths = $project->getAttribute('auths', []);
+        $auths[$authKey] = $enabled;
+//here
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'auths' => $auths,
+        ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('methodId', $methodId);
 

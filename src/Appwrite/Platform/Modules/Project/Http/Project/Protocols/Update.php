@@ -20,7 +20,6 @@ use Utopia\Validator\WhiteList;
 class Update extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -40,6 +39,7 @@ class Update extends Action
             ->label('event', 'protocols.[protocolId].update')
             ->label('audits.event', 'project.protocols.[protocolId].update')
             ->label('audits.resource', 'project.protocols/{response.$id}')
+            ->label('usage.resource', 'project.protocols/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
@@ -74,14 +74,14 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $protocolId, $enabled) {
-            $protocols = $current->getAttribute('apis', []);
-            $protocols[$protocolId] = $enabled;
+        $protocols = $project->getAttribute('apis', []);
+        $protocols[$protocolId] = $enabled;
 
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'apis' => $protocols,
-            ]));
-        });
+        // here
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'apis' => $protocols,
+        ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('protocolId', $protocolId);
 

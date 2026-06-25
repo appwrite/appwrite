@@ -255,7 +255,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:8
+    image: appwrite/console:8.7.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -310,6 +310,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1253,7 +1254,6 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -1265,7 +1265,7 @@ services:
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
       - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
-      - OPR_EXECUTOR_IMAGE_PULL=enabled
+      - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
@@ -1352,13 +1352,20 @@ services:
     healthcheck:
       test: |
         bash -c "
-          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
-            exit 0
-          else
-            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
-              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
-            \" 2>/dev/null || exit 1
-          fi
+          mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+            try {
+              const hello = db.adminCommand({hello: 1});
+              if (hello.isWritablePrimary) {
+                quit(0);
+              }
+            } catch (e) {}
+
+            try {
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]});
+            } catch (e) {}
+
+            quit(1);
+          \" 2>/dev/null
         "
       interval: 10s
       timeout: 10s

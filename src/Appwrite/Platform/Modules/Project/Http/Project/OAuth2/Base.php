@@ -21,7 +21,6 @@ use Utopia\Validator\Text;
 abstract class Base extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     /**
      * Provider ID used in paths, database keys and event labels.
@@ -243,6 +242,7 @@ abstract class Base extends Action
             ->label('event', 'oauth2.[providerId].update')
             ->label('audits.event', 'project.oauth2.[providerId].update')
             ->label('audits.resource', 'project.oauth2/{response.$id}')
+            ->label('usage.resource', 'project.oauth2/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',
@@ -388,39 +388,33 @@ abstract class Base extends Action
         $appSecretKey = $providerId . 'Secret';
         $enabledKey = $providerId . 'Enabled';
 
-        // Collect only the fields the caller provided.
-        $changes = [];
         if (!\is_null($clientId)) {
-            $changes[$appIdKey] = $clientId;
+            $oAuthProviders[$appIdKey] = $clientId;
         }
 
         if (!\is_null($clientSecret)) {
-            $changes[$appSecretKey] = $clientSecret;
+            $oAuthProviders[$appSecretKey] = $clientSecret;
         }
 
         if (!\is_null($enabled)) {
-            $changes[$enabledKey] = $enabled;
+            $oAuthProviders[$enabledKey] = $enabled;
         }
 
         if ($enabled === true || \is_null($enabled)) {
-            // Effective credentials = stored values overlaid with this request's changes.
-            $effectiveAppId = $changes[$appIdKey] ?? $oAuthProviders[$appIdKey] ?? '';
-            $effectiveAppSecret = $changes[$appSecretKey] ?? $oAuthProviders[$appSecretKey] ?? '';
-
             try {
-                if (empty($effectiveAppId) || empty($effectiveAppSecret)) {
+                if (empty($oAuthProviders[$appIdKey]) || empty($oAuthProviders[$appSecretKey])) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Client ID and Client Secret are required when enabling OAuth2 provider.');
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $effectiveAppId, appSecret: $effectiveAppSecret, callback: '', state: [], scopes: []);
+                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {
                     $providerInstance->verifyCredentials();
                 }
 
-                $changes[$enabledKey] = true;
+                $oAuthProviders[$enabledKey] = true;
             } catch (\Throwable $err) {
                 if ($enabled === true) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not enable OAuth2 provider: ' . $err->getMessage());
@@ -428,19 +422,16 @@ abstract class Base extends Action
             }
         }
 
-        // Re-read fresh under a row lock and apply only the changed keys so a
-        // concurrent provider update can't be clobbered. The credentials check
-        // above intentionally stays outside the lock.
-        return $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $changes) {
-            $oAuthProviders = $current->getAttribute('oAuthProviders', []);
-            foreach ($changes as $key => $value) {
-                $oAuthProviders[$key] = $value;
-            }
+        $updates = new Document([
+            'oAuthProviders' => $oAuthProviders
+        ]);
 
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'oAuthProviders' => $oAuthProviders,
-            ]));
-        });
+
+        // here
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        return $project;
     }
 
     public function action(

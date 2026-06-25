@@ -17,7 +17,6 @@ use Utopia\Validator\Boolean;
 class Update extends Action
 {
     use HTTP;
-    use \Appwrite\Platform\Modules\Project\Http\Project\UpdatesProject;
 
     public static function getName()
     {
@@ -36,6 +35,7 @@ class Update extends Action
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.resource', 'project/{response.$id}')
+            ->label('usage.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
@@ -68,14 +68,15 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
     ): void {
-        $project = $this->updateProjectDocument($dbForPlatform, $authorization, $project, function (Document $current) use ($dbForPlatform, $enabled) {
-            $auths = $current->getAttribute('auths', []);
-            $auths['invalidateSessions'] = $enabled;
+        $auths = $project->getAttribute('auths', []);
+        $auths['invalidateSessions'] = $enabled;
+//here
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
 
-            return $dbForPlatform->updateDocument('projects', $current->getId(), new Document([
-                'auths' => $auths,
-            ]));
-        });
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
