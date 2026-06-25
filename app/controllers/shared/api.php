@@ -475,8 +475,7 @@ Http::init()
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         // Step 13: Handle Multi-Factor Authentication
-        // Skip MFA check when impersonating — the actor already satisfied their own MFA during login.
-        if (! in_array('mfa', $route->getGroups()) && $impersonatorUser->isEmpty()) {
+        if (! in_array('mfa', $route->getGroups())) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
