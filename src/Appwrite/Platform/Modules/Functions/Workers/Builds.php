@@ -295,7 +295,15 @@ class Builds extends Action
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            try {
+                $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            } catch (\Exception $e) {
+                if ($e->getCode() === 404
+                    && $resource->getAttribute('installationId', '') === $installationId) {
+                    $this->disconnectVcs($resource, $dbForProject, $dbForPlatform);
+                }
+                throw $e;
+            }
         }
 
         Span::add('timings.setup', \round(\microtime(true) - $phaseStart, 3));
@@ -1553,6 +1561,24 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
         }
+    }
+
+    protected function disconnectVcs(Document $resource, Database $dbForProject, Database $dbForPlatform): void
+    {
+        $repositoryId = $resource->getAttribute('repositoryId', '');
+        if (!empty($repositoryId)) {
+            $dbForPlatform->deleteDocument('repositories', $repositoryId);
+        }
+        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+            'installationId' => '',
+            'installationInternalId' => '',
+            'providerRepositoryId' => '',
+            'providerBranch' => '',
+            'providerSilentMode' => false,
+            'providerRootDirectory' => '',
+            'repositoryId' => '',
+            'repositoryInternalId' => '',
+        ]));
     }
 
     private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
