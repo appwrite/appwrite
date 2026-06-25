@@ -39,6 +39,7 @@ class Update extends Base
             ->label('event', 'variables.[variableId].update')
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',

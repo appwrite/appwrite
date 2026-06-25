@@ -80,6 +80,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Up
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\Update as UpdatePasswordStrengthPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\Update as UpdateSessionInvalidationPolicy;
@@ -168,6 +169,7 @@ class Http extends Service
         $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
         $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
+        $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
         $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
         $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
         $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());

@@ -51,6 +51,7 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::ANY,
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
@@ -99,7 +100,7 @@ class Get extends Action
         }
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         $response
             ->setContentType('application/gzip')

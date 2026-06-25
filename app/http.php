@@ -270,8 +270,8 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             '$id' => ID::custom($index['$id']),
             'type' => $index['type'],
             'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
+            'lengths' => $index['lengths'] ?? [],
+            'orders' => $index['orders'] ?? [],
         ]), $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
@@ -353,8 +353,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]), $files['indexes']);
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
@@ -399,8 +399,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]), $files['indexes']);
 
                 $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
@@ -529,6 +529,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
+    $error = null;
     try {
         $authorization = $app->context()->get('authorization');
 
@@ -542,7 +543,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
         $route = $app->match($request)?->route;
         Span::add('http.path', $route?->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
-        Span::error($th);
+        $error = $th;
 
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -577,7 +578,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
             $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
 
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
@@ -631,7 +632,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
         $swooleResponse->end(\json_encode($output));
     } finally {
         Span::add('http.response.code', $response->getStatusCode());
-        Span::current()?->finish();
+        Span::current()?->finish(error: $error);
     }
 });
 

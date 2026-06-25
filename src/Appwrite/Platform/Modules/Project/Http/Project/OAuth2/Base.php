@@ -242,6 +242,7 @@ abstract class Base extends Action
             ->label('event', 'oauth2.[providerId].update')
             ->label('audits.event', 'project.oauth2.[providerId].update')
             ->label('audits.resource', 'project.oauth2/{response.$id}')
+            ->label('usage.resource', 'project.oauth2/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',
@@ -425,7 +426,10 @@ abstract class Base extends Action
             'oAuthProviders' => $oAuthProviders
         ]);
 
-        return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        return $project;
     }
 
     public function action(

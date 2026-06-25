@@ -46,6 +46,7 @@ class Upsert extends PlatformAction
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')
+            ->label('usage.resource', 'presence/{response.$id}')
             ->label('sdk', [
                 // Client-side SDK: `userId` is not accepted (session callers should just upsert their own presence).
                 new Method(
@@ -156,7 +157,7 @@ class Upsert extends PlatformAction
         if (empty($userInternalId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to resolve valid user internal ID.');
         }
-        $isGraphQL = $request->getHeader('x-appwrite-source') === 'graphql';
+        $isGraphQL = $request->getHeaderLine('x-appwrite-source') === 'graphql';
 
         $presenceData = [
             'userInternalId' => $userInternalId,

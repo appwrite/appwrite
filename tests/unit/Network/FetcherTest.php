@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Network;
 
 use Appwrite\Extend\Exception;
@@ -10,7 +12,7 @@ use Utopia\Fetch\Adapter;
 use Utopia\Fetch\Options\Request as RequestOptions;
 use Utopia\Fetch\Response;
 
-class FetcherTest extends TestCase
+final class FetcherTest extends TestCase
 {
     public function testAssertSafeAcceptsPublicIpLiteral(): void
     {
@@ -36,25 +38,23 @@ class FetcherTest extends TestCase
         }
     }
 
-    public static function unsafeUrls(): array
+    public static function unsafeUrls(): \Iterator
     {
-        return [
-            'loopback v4'           => ['http://127.0.0.1/iam', 'private or reserved'],
-            'loopback v6'           => ['http://[::1]/iam', 'private or reserved'],
-            'link-local imds'       => ['http://169.254.169.254/latest/', 'private or reserved'],
-            'private rfc1918 a'     => ['http://10.0.0.5/secret', 'private or reserved'],
-            'private rfc1918 b'     => ['http://192.168.1.1/admin', 'private or reserved'],
-            'private rfc1918 c'     => ['http://172.16.0.1/x', 'private or reserved'],
-            'cgnat'                 => ['http://100.64.0.1/x', 'private or reserved'],
-            'ipv4-mapped loopback'  => ['http://[::ffff:127.0.0.1]/x', 'private or reserved'],
-            '6to4 imds'             => ['http://[2002:a9fe:a9fe::]/x', 'private or reserved'],
-            'file scheme'           => ['file:///etc/passwd', "Scheme 'file' is not allowed"],
-            'gopher scheme'         => ['gopher://attacker/x', "Scheme 'gopher' is not allowed"],
-            'ftp scheme'            => ['ftp://internal/file', "Scheme 'ftp' is not allowed"],
-            'no scheme'             => ['example.com/path', "Scheme '' is not allowed"],
-            'malformed no host'     => ['http:///path', 'Malformed URL'],
-            'unknown psl'           => ['http://not-a-real-tld.notreal/x', 'not a known public domain'],
-        ];
+        yield 'loopback v4' => ['http://127.0.0.1/iam', 'private or reserved'];
+        yield 'loopback v6' => ['http://[::1]/iam', 'private or reserved'];
+        yield 'link-local imds' => ['http://169.254.169.254/latest/', 'private or reserved'];
+        yield 'private rfc1918 a' => ['http://10.0.0.5/secret', 'private or reserved'];
+        yield 'private rfc1918 b' => ['http://192.168.1.1/admin', 'private or reserved'];
+        yield 'private rfc1918 c' => ['http://172.16.0.1/x', 'private or reserved'];
+        yield 'cgnat' => ['http://100.64.0.1/x', 'private or reserved'];
+        yield 'ipv4-mapped loopback' => ['http://[::ffff:127.0.0.1]/x', 'private or reserved'];
+        yield '6to4 imds' => ['http://[2002:a9fe:a9fe::]/x', 'private or reserved'];
+        yield 'file scheme' => ['file:///etc/passwd', "Scheme 'file' is not allowed"];
+        yield 'gopher scheme' => ['gopher://attacker/x', "Scheme 'gopher' is not allowed"];
+        yield 'ftp scheme' => ['ftp://internal/file', "Scheme 'ftp' is not allowed"];
+        yield 'no scheme' => ['example.com/path', "Scheme '' is not allowed"];
+        yield 'malformed no host' => ['http:///path', 'Malformed URL'];
+        yield 'unknown psl' => ['http://not-a-real-tld.notreal/x', 'not a known public domain'];
     }
 
     public function testFetchFollowsPublicRedirect(): void

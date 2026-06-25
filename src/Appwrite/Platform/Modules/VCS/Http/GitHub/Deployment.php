@@ -237,6 +237,8 @@ trait Deployment
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
                                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                             } finally {
                                 $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                             }
@@ -308,6 +310,8 @@ trait Deployment
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                             } finally {
                                 $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                             }
@@ -390,18 +394,6 @@ trait Deployment
                     'providerCommentId' => \strval($latestCommentId),
                     'providerBranch' => $providerBranch,
                     'activate' => $activate,
-                ])));
-
-                $resource = $resource
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $authorization->skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
-                    'latestDeploymentId' => $resource->getAttribute('latestDeploymentId'),
-                    'latestDeploymentInternalId' => $resource->getAttribute('latestDeploymentInternalId'),
-                    'latestDeploymentCreatedAt' => $resource->getAttribute('latestDeploymentCreatedAt'),
-                    'latestDeploymentStatus' => $resource->getAttribute('latestDeploymentStatus'),
                 ])));
 
                 if ($resource->getCollection() === 'sites') {
@@ -538,6 +530,8 @@ trait Deployment
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                                 $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                             }
+                        } catch (\Throwable $e) {
+                            Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                         } finally {
                             $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }

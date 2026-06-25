@@ -1,13 +1,13 @@
 <?php
-$isUpgrade = $isUpgrade ?? false;
-$lockedDatabase = $lockedDatabase ?? null;
-$defaultAppDomain = $defaultAppDomain ?? 'localhost';
-$defaultHttpPort = $defaultHttpPort ?? '80';
-$defaultHttpsPort = $defaultHttpsPort ?? '443';
-$defaultEmailCertificates = $defaultEmailCertificates ?? '';
-$defaultAssistantOpenAIKey = $defaultAssistantOpenAIKey ?? '';
-$defaultDatabase = $defaultDatabase ?? 'mongodb';
-$enabledDatabases = $enabledDatabases ?? ['mongodb', 'mariadb', 'postgresql'];
+$isUpgrade ??= false;
+$lockedDatabase ??= null;
+$defaultAppDomain ??= 'localhost';
+$defaultHttpPort ??= '80';
+$defaultHttpsPort ??= '443';
+$defaultEmailCertificates ??= '';
+$defaultAssistantOpenAIKey ??= '';
+$defaultDatabase ??= 'mongodb';
+$enabledDatabases ??= ['mongodb', 'mariadb'];
 $selectedDatabase = $lockedDatabase ?: $defaultDatabase;
 $isDatabaseLocked = !empty($lockedDatabase);
 $mongoEnabled = in_array('mongodb', $enabledDatabases, true);

@@ -84,6 +84,7 @@ class Exception extends \Exception
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';
+    public const string USER_EMAIL_NOT_CORPORATE = 'user_email_not_corporate';
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';

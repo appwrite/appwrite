@@ -35,14 +35,32 @@ trait SitesBase
 
     protected function setupDeployment(string $siteId, mixed $params): string
     {
+        $deploymentId = $this->createDeploymentAccepted($siteId, $params);
+
+        $this->waitDeploymentReady($siteId, $deploymentId);
+
+        // Not === so multipart/form-data works fine too
+        if (($params['activate'] ?? false) == true) {
+            $this->waitDeploymentActivated($siteId, $deploymentId);
+        }
+
+        return $deploymentId;
+    }
+
+    protected function createDeploymentAccepted(string $siteId, mixed $params): string
+    {
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), $params);
         $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        $deploymentId = $deployment['body']['$id'] ?? '';
 
+        return $deployment['body']['$id'] ?? '';
+    }
+
+    protected function waitDeploymentReady(string $siteId, string $deploymentId): void
+    {
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
                 'content-type' => 'application/json',
@@ -54,11 +72,11 @@ trait SitesBase
                 throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
-            Console::execute("docker inspect openruntimes-executor --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
-            if (\trim($this->stdout) !== '0') {
+            $code = Console::execute("docker inspect exc1 --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            if ($code === 0 && \trim($this->stdout) !== '' && \trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
-                Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
+                Console::execute("docker logs exc1", '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
                 throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
@@ -66,20 +84,18 @@ trait SitesBase
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 120000, 500);
+    }
 
-        // Not === so multipart/form-data works fine too
-        if (($params['activate'] ?? false) == true) {
-            $this->assertEventually(function () use ($siteId, $deploymentId) {
-                $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
-                ]));
-                $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 120000, 500);
-        }
-
-        return $deploymentId;
+    protected function waitDeploymentActivated(string $siteId, string $deploymentId): void
+    {
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        }, 120000, 500);
     }
 
     protected function cleanupSite(string $siteId): void
@@ -473,11 +489,11 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function listSpecifications(): mixed
+    protected function listSpecifications(array $params = []): mixed
     {
         $specifications = $this->client->call(Client::METHOD_GET, '/sites/specifications', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), $params);
 
         return $specifications;
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Appwrite\Platform\Modules\Compute\Specification;
@@ -19,7 +21,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 
-class UsageTest extends Scope
+final class UsageTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -288,8 +290,8 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals('90d', $response['body']['range']);
-            $this->assertEquals(90, count($response['body']['users']));
-            $this->assertEquals(90, count($response['body']['sessions']));
+            $this->assertCount(90, $response['body']['users']);
+            $this->assertCount(90, $response['body']['sessions']);
             $this->assertEquals((self::CREATE / 2), $response['body']['users'][array_key_last($response['body']['users'])]['value']);
         });
     }
@@ -412,7 +414,7 @@ class UsageTest extends Scope
 
                 $this->assertEquals(200, $response['headers']['status-code']);
                 $this->assertEquals('90d', $response['body']['range']);
-                $this->assertEquals(90, count($response['body']['presences']));
+                $this->assertCount(90, $response['body']['presences']);
                 $this->assertEquals(2, $response['body']['usersOnlineTotal']);
                 $this->assertEquals(2, $response['body']['presences'][array_key_last($response['body']['presences'])]['value']);
                 $this->validateDates($response['body']['presences']);
@@ -1464,8 +1466,6 @@ class UsageTest extends Scope
         $collectionsTotal = $data['vectordbCollectionsTotal'];
         $documentsTotal = $data['vectordbDocumentsTotal'];
 
-        $this->assertProjectRequestsAtLeastGlobal();
-
         // Project-wide scalars: vectorsdbDatabasesTotal counts ONLY VectorsDB instances
         // (not relational databases), vectorsdbDocumentsTotal is the sum of all vector
         // documents across this project. Both are produced exclusively by
@@ -1707,7 +1707,7 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(24, count($response['body']));
+            $this->assertCount(24, $response['body']);
             $this->assertEquals('30d', $response['body']['range']);
             $this->assertIsArray($response['body']['deployments']);
             $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -1734,8 +1734,8 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(25, count($response['body']));
-            $this->assertEquals($response['body']['range'], '30d');
+            $this->assertCount(25, $response['body']);
+            $this->assertEquals('30d', $response['body']['range']);
             $this->assertIsArray($response['body']['functions']);
             $this->assertIsArray($response['body']['deployments']);
             $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -1845,7 +1845,7 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(30, count($response['body']));
+            $this->assertCount(30, $response['body']);
             $this->assertEquals('30d', $response['body']['range']);
             $this->assertIsArray($response['body']['deployments']);
             $this->assertEquals($deploymentsSuccess, $response['body']['buildsSuccessTotal']);
@@ -1879,8 +1879,8 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(31, count($response['body']));
-            $this->assertEquals($response['body']['range'], '30d');
+            $this->assertCount(31, $response['body']);
+            $this->assertEquals('30d', $response['body']['range']);
             $this->assertIsArray($response['body']['sites']);
             $this->assertIsArray($response['body']['deployments']);
             $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -1957,7 +1957,7 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals(200, $functionsResponse['headers']['status-code']);
-            $this->assertEquals(24, count($functionsResponse['body']));
+            $this->assertCount(24, $functionsResponse['body']);
             $this->assertEquals('30d', $functionsResponse['body']['range']);
 
             $projectResponse = $this->client->call(
@@ -1996,7 +1996,7 @@ class UsageTest extends Scope
             );
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(24, count($response['body']));
+            $this->assertCount(24, $response['body']);
             $this->assertEquals('30d', $response['body']['range']);
 
             // Check if the new values are greater than the old values

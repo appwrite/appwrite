@@ -38,6 +38,7 @@ class Update extends Action
             ->label('event', 'authMethod.[methodId].update')
             ->label('audits.event', 'project.authMethods.[methodId].update')
             ->label('audits.resource', 'project.authMethods/{response.$id}')
+            ->label('usage.resource', 'project.authMethods/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
@@ -82,6 +83,7 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
         ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('methodId', $methodId);
 

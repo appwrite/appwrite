@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Presences;
 
 use Tests\E2E\Client;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
-class PresenceConsoleClientTest extends Scope
+final class PresenceConsoleClientTest extends Scope
 {
     use PresenceBase;
     use ProjectCustom {

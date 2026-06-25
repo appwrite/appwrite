@@ -12,9 +12,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Queue\Adapter\Swoole;
-use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Broker\Redis as BrokerRedis;
+use Utopia\Queue\Connection\Locking;
+use Utopia\Queue\Connection\Redis as RedisConnection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -37,22 +38,6 @@ $container->set('authorization', function () {
 $container->set('project', fn () => new Document([]), []);
 
 $container->set('log', fn () => new Log(), []);
-
-$container->set('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
-}, ['pools']);
-
-$container->set('consumerDatabases', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
-$container->set('consumerMigrations', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
-$container->set('consumerStatsUsage', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
 
 $container->set('certificates', function () {
     $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
@@ -80,16 +65,15 @@ if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
 
-/** @var \Utopia\Pools\Group $pools */
-$pools = $container->get('pools');
+$redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
+$redisPort = (int) System::getEnv('_APP_REDIS_PORT', 6379);
 
-// Each consume coroutine leases its own broker connection from the pool for
-// the lifetime of its consume loop, so concurrent coroutines never share a
-// connection. The publisher side backs the queue-depth telemetry gauge.
+// A dedicated connection drives the blocking receive loop; a lock-guarded one
+// serializes acks/publishes from the per-message coroutines.
 $adapter = new Swoole(
-    new BrokerPool(
-        publisher: $pools->get('consumer'),
-        consumer: $pools->get('consumer'),
+    new BrokerRedis(
+        receive: new RedisConnection($redisHost, $redisPort),
+        commands: new Locking(new RedisConnection($redisHost, $redisPort)),
     ),
     System::getEnv('_APP_WORKERS_NUM', 1),
     $queueName,
@@ -134,7 +118,7 @@ $worker
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        Span::error($error);
+        Span::current()?->setError($error);
 
         if ($logger) {
             $log->setNamespace('appwrite-worker');

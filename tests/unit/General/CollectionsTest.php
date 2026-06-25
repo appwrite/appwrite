@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\General;
 
 use PHPUnit\Framework\TestCase;
 
-class CollectionsTest extends TestCase
+final class CollectionsTest extends TestCase
 {
     protected array $collections;
 
@@ -25,7 +27,7 @@ class CollectionsTest extends TestCase
                                 $occurrences++;
                             }
                         }
-                        $this->assertEquals(1, $occurrences);
+                        $this->assertSame(1, $occurrences);
                     }
                 }
             }

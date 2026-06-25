@@ -7,6 +7,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Throwable;
@@ -44,6 +45,7 @@ class Update extends Action
             // ->label('event', 'project.smtp.update')
             ->label('audits.event', 'project.smtp.update')
             ->label('audits.resource', 'project.smtp/{response.$id}')
+            ->label('usage.resource', 'project.smtp/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'smtp',
@@ -62,7 +64,7 @@ class Update extends Action
             ->param('host', null, new Nullable(new Hostname()), 'SMTP server hostname (domain)', optional: true)
             ->param('port', null, new Nullable(new Integer()), 'SMTP server port', optional: true)
             ->param('username', null, new Nullable(new Text(256, 0)), 'SMTP server username. Pass an empty string to clear a previously set value.', optional: true)
-            ->param('password', null, new Nullable(new Text(256, 0)), 'SMTP server password. Pass an empty string to clear a previously set value. This property is stored securely and cannot be read in future (write-only).', optional: true)
+            ->param('password', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'SMTP server password. Pass an empty string to clear a previously set value. This property is stored securely and cannot be read in future (write-only).', optional: true)
             ->param('senderEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)
             ->param('senderName', null, new Nullable(new Text(256, 0)), 'Name shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)
             ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email used when user replies to the email. Pass an empty string to clear a previously set value.', optional: true)
@@ -169,6 +171,7 @@ class Update extends Action
         ]);
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

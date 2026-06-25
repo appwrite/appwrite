@@ -57,6 +57,7 @@ class Create extends Action
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')
+            ->label('usage.resource', 'user/{response.userId}')
             ->label('audits.userId', '{response.userId}')
             ->label('sdk', [
                 new Method(
@@ -336,6 +337,7 @@ class Create extends Action
                     project: $project,
                     recipient: $user->getAttribute('email'),
                     subject: $subject,
+                    template: MAIL_TEMPLATE_MFA_CHALLENGE,
                     bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,

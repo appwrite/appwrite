@@ -14,6 +14,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
@@ -293,7 +294,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $body = $swooleRequest->getContent() ?: '';
         $method = $swooleRequest->server['request_method'];
 
-        $requestHeaders = $request->getHeaders();
+        // getHeaders() follows PSR-7 and returns each header as a list of values;
+        // collapse to single-line strings for the function/site header map below.
+        $requestHeaders = \array_map(
+            static fn (array $values) => \implode(', ', $values),
+            $request->getHeaders()
+        );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             if ($type === 'function') {
@@ -803,7 +809,7 @@ Http::init()
     ->inject('request')
     ->action(function (Document $project, Request $request) {
         if ($project->getId() === 'console') {
-            $message = empty($request->getHeader('x-appwrite-project')) ?
+            $message = empty($request->getHeaderLine('x-appwrite-project')) ?
                 'No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.' :
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
@@ -861,7 +867,7 @@ Http::init()
             return;
         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
                 $request->addFilter(new RequestV16());
@@ -899,7 +905,7 @@ Http::init()
             }
         }
 
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -919,7 +925,7 @@ Http::init()
         /*
          * Response format
          */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.9.5', '<')) {
                 $response->addFilter(new ResponseV26());
@@ -1006,7 +1012,7 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeader('x-appwrite-key'))) {
+        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
         $route = $request->getRoute();
@@ -1198,7 +1204,7 @@ Http::error()
         $line = $error->getLine();
         $trace = $error->getTrace();
 
-        Span::error($error);
+        Span::current()?->setError($error);
 
         switch ($class) {
             case Utopia\Http\Exception::class:
@@ -1315,7 +1321,7 @@ Http::error()
             }
 
             $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
 
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
@@ -1657,11 +1663,10 @@ Http::get('/v1/ping')
         namespace: 'ping',
         group: null,
         name: 'get',
-        hide: true,
         description: <<<EOT
         Send a ping to project as part of onboarding.
         EOT,
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,

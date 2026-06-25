@@ -61,6 +61,7 @@ class Create extends Action
             ->label('auth.type', 'invites')
             ->label('audits.event', 'membership.create')
             ->label('audits.resource', 'team/{request.teamId}')
+            ->label('usage.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
@@ -202,6 +203,10 @@ class Create extends Action
 
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $hash = $proofForPassword->hash($proofForPassword->generate());
@@ -414,6 +419,7 @@ class Create extends Action
                     recipient: $invitee->getAttribute('email'),
                     name: $invitee->getAttribute('name', ''),
                     subject: $subject,
+                    template: MAIL_TEMPLATE_INVITATION,
                     body: $body,
                     preview: $preview,
                     smtp: $smtpConfig,

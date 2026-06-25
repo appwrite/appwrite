@@ -221,6 +221,7 @@ class Deletes extends Action
                 $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
+                $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
@@ -1105,7 +1106,7 @@ class Deletes extends Action
             // fast path, no need to list anything!
             $delete($dbForProject, $resourceInternalId, $resourceType);
         } else {
-            $processResource = function (string $type) use ($dbForProject, $delete) {
+            foreach ([RESOURCE_TYPE_SITES, RESOURCE_TYPE_FUNCTIONS] as $type) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [Query::select(['$id', '$sequence'])],
@@ -1114,13 +1115,7 @@ class Deletes extends Action
                         $delete($dbForProject, $resource->getSequence(), $type);
                     }
                 );
-            };
-
-            /* perform processing in parallel */
-            batch([
-                fn () => $processResource(RESOURCE_TYPE_SITES),
-                fn () => $processResource(RESOURCE_TYPE_FUNCTIONS),
-            ]);
+            }
         }
     }
 
@@ -1144,6 +1139,27 @@ class Deletes extends Action
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
+        ], $dbForProject);
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteExpiredOAuth2Grants(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired OAuth2 grants');
+
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('tokens', [
+            Query::select([...$this->selects, 'expire']),
+            Query::equal('type', [TOKEN_TYPE_OAUTH2]),
+            Query::lessThan('expire', DateTime::format(new \DateTime())),
+            Query::orderAsc('expire'),
+            Query::orderAsc(),
         ], $dbForProject);
     }
 

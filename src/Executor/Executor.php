@@ -71,7 +71,8 @@ class Executor
         array $variables = [],
         ?string $command = null,
         string $outputDirectory = '',
-        string $runtimeEntrypoint = ''
+        string $runtimeEntrypoint = '',
+        string $cacheKey = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
@@ -95,7 +96,8 @@ class Executor
             'version' => $version,
             'timeout' => $timeout,
             'outputDirectory' => $outputDirectory,
-            'runtimeEntrypoint' => $runtimeEntrypoint
+            'runtimeEntrypoint' => $runtimeEntrypoint,
+            'cacheKey' => $cacheKey
         ];
 
 

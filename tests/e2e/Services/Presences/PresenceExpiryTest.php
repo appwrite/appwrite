@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Presences;
 
 use Tests\E2E\Client;
@@ -10,7 +12,7 @@ use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 
-class PresenceExpiryTest extends Scope
+final class PresenceExpiryTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -73,7 +75,7 @@ class PresenceExpiryTest extends Scope
         );
 
         $this->assertEquals(200, $expireServer['headers']['status-code']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($expiresAt))->getTimestamp(),
             (new \DateTime($expireServer['body']['expiresAt']))->getTimestamp()
         );

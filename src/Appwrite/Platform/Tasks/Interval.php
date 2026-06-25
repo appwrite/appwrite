@@ -60,12 +60,13 @@ class Interval extends Action
             $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $publisherForCertificates) {
                 $taskName = $task['name'];
                 Span::init("interval.{$taskName}");
+                $error = null;
                 try {
                     $task['callback']($dbForPlatform, $getProjectDB, $publisherForCertificates);
                 } catch (\Exception $e) {
-                    Span::error($e);
+                    $error = $e;
                 } finally {
-                    Span::current()?->finish();
+                    Span::current()?->finish(error: $error);
                 }
             });
         }

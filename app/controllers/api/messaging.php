@@ -17,6 +17,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -458,7 +459,7 @@ Http::post('/v1/messaging/providers/smtp')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
-    ->param('password', '', new Text(0), 'Authentication password.', true)
+    ->param('password', '', new PasswordFormat(new Text(0)), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
@@ -1809,7 +1810,7 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
     ->param('port', null, new Nullable(new Range(1, 65535)), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
-    ->param('password', '', new Text(0), 'Authentication password.', true)
+    ->param('password', '', new PasswordFormat(new Text(0)), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', null, new Nullable(new Boolean()), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)

@@ -57,7 +57,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb']), 'Database to use (mongodb|mariadb)', true)
             ->callback($this->action(...));
     }
 
@@ -101,6 +101,8 @@ class Install extends Action
         $data = $this->readExistingCompose();
         $envFileExists = file_exists($this->path . '/' . $this->getEnvFileName());
         $existingInstallation = $data !== '' || $envFileExists;
+
+        $existingDatabase = null;
 
         if ($existingInstallation) {
             $time = \time();
@@ -171,7 +173,6 @@ class Install extends Action
             // Detect database type from existing installation.
             // 1.9.0+ installs have _APP_DB_ADAPTER; pre-1.9.0 installs
             // can be detected by the DB service name or _APP_DB_HOST.
-            $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
                 $svcEnv = $service->getEnvironment()->list();
                 if (isset($svcEnv['_APP_DB_ADAPTER'])) {
@@ -200,7 +201,8 @@ class Install extends Action
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
-        if (!in_array($database, $enabledDatabases, true)) {
+        $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
+        if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
@@ -332,6 +334,9 @@ class Install extends Action
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
+            $enabledDatabases[] = $lockedDatabase;
+        }
 
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
@@ -538,6 +543,19 @@ class Install extends Action
 
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
         $enableAssistant = trim($assistantKey) !== '';
+        $enabledRuntimes = \array_unique(\array_filter(\array_map(
+            'trim',
+            \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
+        )));
+        $runtimes = Config::getParam('runtimes', []);
+        $runtimeImages = [];
+        foreach ($enabledRuntimes as $runtime) {
+            $imageName = $runtimes[$runtime]['image'] ?? '';
+            if ($imageName !== '') {
+                $runtimeImages[] = $imageName;
+            }
+        }
+        $executorImages = \implode(',', \array_unique($runtimeImages));
 
         $templateForCompose
             ->setParam('httpPort', $httpPort)
@@ -547,17 +565,24 @@ class Install extends Action
             ->setParam('image', $image)
             ->setParam('database', $database)
             ->setParam('hostPath', $this->hostPath)
-            ->setParam('enableAssistant', $enableAssistant);
+            ->setParam('enableAssistant', $enableAssistant)
+            ->setParam('executorImages', $executorImages);
 
         $templateForEnv->setParam('vars', $input);
 
         $steps = [
             InstallerServer::STEP_DOCKER_COMPOSE,
             InstallerServer::STEP_ENV_VARS,
-            InstallerServer::STEP_DOCKER_CONTAINERS
+            InstallerServer::STEP_DOCKER_CONTAINERS,
+            InstallerServer::STEP_ACCOUNT_SETUP,
+            InstallerServer::STEP_MIGRATION,
         ];
 
         $startIndex = 0;
+        $resumeFromStep = match ($resumeFromStep) {
+            InstallerServer::STEP_CONFIG_FILES => InstallerServer::STEP_DOCKER_COMPOSE,
+            default => $resumeFromStep,
+        };
         if ($resumeFromStep !== null) {
             $resumeIndex = array_search($resumeFromStep, $steps, true);
             if ($resumeIndex !== false) {
@@ -597,37 +622,43 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig) {
+            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
                 $this->copyMongoEntrypointIfNeeded();
             }
 
             if (!$noStart) {
-                $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
-                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
-                $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
+                $shouldStartContainers = $startIndex <= 2;
+                if ($shouldStartContainers) {
+                    $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
+                    $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+                    $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
-                if (!$isUpgrade) {
-                    $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
-                    $this->updateProgress($progress, InstallerServer::STEP_ACCOUNT_SETUP, InstallerServer::STATUS_IN_PROGRESS, messageOverride: 'Creating Appwrite account...');
+                    if (!$isUpgrade) {
+                        $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                        $this->updateProgress($progress, InstallerServer::STEP_ACCOUNT_SETUP, InstallerServer::STATUS_IN_PROGRESS, messageOverride: 'Creating Appwrite account...');
+                    }
                 }
 
-                if (!$isLocalInstall) {
+                if (!$isLocalInstall || file_exists('/.dockerenv') || file_exists('/run/.containerenv')) {
                     $this->connectInstallerToAppwriteNetwork();
                 }
 
                 $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
                 $healthStep = $isUpgrade ? InstallerServer::STEP_DOCKER_CONTAINERS : InstallerServer::STEP_ACCOUNT_SETUP;
+                if ($isUpgrade && $startIndex >= 4) {
+                    $healthStep = InstallerServer::STEP_MIGRATION;
+                }
                 if (!$isUpgrade) {
                     $currentStep = InstallerServer::STEP_ACCOUNT_SETUP;
                 }
                 $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, $healthStep);
 
-                if ($isUpgrade) {
+                if ($isUpgrade && $shouldStartContainers) {
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
                 }
 
-                if (!$isUpgrade) {
+                if (!$isUpgrade && $startIndex <= 3) {
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
@@ -762,13 +793,30 @@ class Install extends Action
         // Allow the SSE chunk to flush before the blocking exec
         usleep(100_000);
 
-        // Static command — no user input involved
-        $command = $isLocalInstall
-            ? 'docker compose exec appwrite migrate 2>&1'
-            : 'docker exec appwrite migrate 2>&1';
+        if ($isLocalInstall) {
+            $composePath = $this->hostPath !== '' ? $this->hostPath : $this->path;
+            $command = [
+                'docker',
+                'compose',
+                '--env-file',
+                $composePath . '/' . $this->getEnvFileName(),
+                '-f',
+                $composePath . '/' . $this->getComposeFileName(),
+                '--project-name',
+                'appwrite',
+                '--project-directory',
+                $composePath,
+                'exec',
+                'appwrite',
+                'migrate',
+            ];
+        } else {
+            $command = ['docker', 'exec', 'appwrite', 'migrate'];
+        }
+        $commandLine = implode(' ', array_map(escapeshellarg(...), $command));
 
         $output = [];
-        \exec($command, $output, $exit);
+        \exec($commandLine . ' 2>&1', $output, $exit);
 
         if ($exit !== 0) {
             $message = trim(implode("\n", $output));
@@ -856,9 +904,9 @@ class Install extends Action
      * the runtime context and returns whichever responds first.
      *
      * Candidates (in order of preference):
-     *  - Docker internal DNS (http://appwrite) — only if on the appwrite network
-     *  - host.docker.internal:{port} — reaches host-published ports from inside a container
+     *  - Docker internal DNS (http://appwrite) — preferred when on the appwrite network
      *  - localhost:{port} — works when running directly on the host (local dev)
+     *  - host.docker.internal:{port} — non-local fallback for host-published ports
      */
     private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_ACCOUNT_SETUP): string
     {
@@ -872,6 +920,7 @@ class Install extends Action
 
         if ($isLocalInstall) {
             $candidates = [
+                self::APPWRITE_API_URL . $healthPath,
                 'http://localhost:' . $httpPort . $healthPath,
             ];
         } else {
@@ -1081,12 +1130,18 @@ class Install extends Action
             Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
         }
 
-        $composeFileName = $this->getComposeFileName();
-        $composeFile = $this->path . '/' . $composeFileName;
+        $composePath = $this->path;
+        if ($isLocalInstall && $this->hostPath !== '') {
+            $composePath = $this->hostPath;
+        }
+        $composeFile = $composePath . '/' . $this->getComposeFileName();
+        $envFile = $composePath . '/' . $this->getEnvFileName();
 
         $command = [
             'docker',
             'compose',
+            '--env-file',
+            $envFile,
             '-f',
             $composeFile,
         ];
@@ -1097,7 +1152,7 @@ class Install extends Action
         }
 
         $command[] = '--project-directory';
-        $command[] = $this->path;
+        $command[] = $composePath;
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';

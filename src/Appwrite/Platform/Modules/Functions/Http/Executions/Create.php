@@ -13,7 +13,6 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
@@ -67,6 +66,7 @@ class Create extends Base
             ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -81,7 +81,6 @@ class Create extends Base
                         model: Response::MODEL_EXECUTION,
                     )
                 ],
-                contentType: ContentType::MULTIPART,
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
@@ -519,7 +518,7 @@ class Create extends Base
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeader('accept'));
+        $acceptTypes = \explode(', ', $request->getHeaderLine('accept'));
         foreach ($acceptTypes as $acceptType) {
             if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);

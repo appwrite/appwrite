@@ -12,6 +12,7 @@ use Executor\Executor;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -35,6 +36,7 @@ class Update extends Action
             ->label('scope', 'sites.write')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -89,17 +91,30 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildEndedAt' => DateTime::now(),
-            'buildDuration' => $duration,
-            'status' => 'canceled'
-        ]));
-
-        if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
-            $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+        try {
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildEndedAt' => DateTime::now(),
+                'buildDuration' => $duration,
+                'status' => 'canceled'
             ]));
+        } catch (TransactionException) {
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+
+            if ($deployment->isEmpty()) {
+                throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+            }
+
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+            }
+
+            if ($deployment->getAttribute('status') !== 'canceled') {
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildEndedAt' => DateTime::now(),
+                    'buildDuration' => $duration,
+                    'status' => 'canceled'
+                ]));
+            }
         }
 
         try {

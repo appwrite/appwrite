@@ -88,6 +88,12 @@ class Membership extends Model
                 'default' => false,
                 'example' => false,
             ])
+            ->addRule('userAccessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. Show this attribute by toggling membership privacy in the Console.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('roles', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User list of roles',

@@ -49,6 +49,7 @@ class Create extends Base
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -182,18 +183,6 @@ class Create extends Base
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'activate' => $activate,
-        ]));
-
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
         ]));
 
         $sitesDomain = $platform['sitesDomain'];
