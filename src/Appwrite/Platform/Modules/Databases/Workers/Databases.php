@@ -222,17 +222,23 @@ class Databases extends Action
                 }
             }
 
-            $dbForProject->updateDocument(
+            $attribute = $dbForProject->updateDocument(
                 'attributes',
                 $attribute->getId(),
-                $attribute->setAttribute('status', 'failed')
+                new Document([
+                    'status' => 'failed',
+                    'error' => $attribute->getAttribute('error'),
+                ])
             );
 
             if (! $relatedAttribute->isEmpty()) {
-                $dbForProject->updateDocument(
+                $relatedAttribute = $dbForProject->updateDocument(
                     'attributes',
                     $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', 'failed')
+                    new Document([
+                        'status' => 'failed',
+                        'error' => $relatedAttribute->getAttribute('error'),
+                    ])
                 );
             }
 
@@ -473,10 +479,13 @@ class Databases extends Action
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
-            $dbForProject->updateDocument(
+            $index = $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
-                $index->setAttribute('status', 'failed')
+                new Document([
+                    'status' => 'failed',
+                    'error' => $index->getAttribute('error'),
+                ])
             );
 
             throw $e;
@@ -528,10 +537,13 @@ class Databases extends Action
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
-            $dbForProject->updateDocument(
+            $index = $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
-                $index->setAttribute('status', 'stuck')
+                new Document([
+                    'status' => 'stuck',
+                    'error' => $index->getAttribute('error'),
+                ])
             );
 
             throw $e;

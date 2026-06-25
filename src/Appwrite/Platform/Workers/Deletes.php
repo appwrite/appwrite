@@ -1725,16 +1725,16 @@ class Deletes extends Action
                     $dbForPlatform->deleteDocument('repositories', $repositoryId);
                 }
 
-                $document = $document
-                    ->setAttribute('installationId', '')
-                    ->setAttribute('installationInternalId', '')
-                    ->setAttribute('providerRepositoryId', '')
-                    ->setAttribute('providerBranch', '')
-                    ->setAttribute('providerSilentMode', false)
-                    ->setAttribute('providerRootDirectory', '')
-                    ->setAttribute('repositoryId', '')
-                    ->setAttribute('repositoryInternalId', '');
-                $dbForProject->updateDocument($collection, $document->getId(), $document);
+                $dbForProject->updateDocument($collection, $document->getId(), new Document([
+                    'installationId' => '',
+                    'installationInternalId' => '',
+                    'providerRepositoryId' => '',
+                    'providerBranch' => '',
+                    'providerSilentMode' => false,
+                    'providerRootDirectory' => '',
+                    'repositoryId' => '',
+                    'repositoryInternalId' => '',
+                ]));
             });
         }
     }
