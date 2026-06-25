@@ -9,7 +9,7 @@ use Appwrite\Event\Message\Audit as AuditMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Audit;
-use Appwrite\Event\Resource\Parser as ResourceParser;
+use Appwrite\Event\Label\Renderer as LabelRenderer;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -45,7 +45,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project): string {
-    return ResourceParser::render($label, [
+    return LabelRenderer::render($label, [
         'user' => (array) $user,
         'project' => $project,
         'request' => $requestParams,

@@ -6,54 +6,9 @@ namespace Tests\Unit\Event\Resource;
 
 use Appwrite\Event\Resource\Parser;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Document;
 
 final class ParserTest extends TestCase
 {
-    public function testRenderSubstitutesRequestAndResponseNamespaces(): void
-    {
-        $rendered = Parser::render('database/{request.databaseId}/collection/{response.$id}', [
-            'request' => ['databaseId' => 'db1'],
-            'response' => ['$id' => 'col9'],
-        ]);
-
-        $this->assertSame('database/db1/collection/col9', $rendered);
-    }
-
-    public function testRenderFallsBackToResponseForUnknownNamespace(): void
-    {
-        $rendered = Parser::render('thing/{unknown.id}', [
-            'response' => ['id' => 'r1'],
-        ]);
-
-        $this->assertSame('thing/r1', $rendered);
-    }
-
-    public function testRenderSupportsUserAndProjectNamespaces(): void
-    {
-        $rendered = Parser::render('user/{user.$id}/project/{project.$id}', [
-            'user' => ['$id' => 'usr1'],
-            'project' => new Document(['$id' => 'prj1']),
-        ]);
-
-        $this->assertSame('user/usr1/project/prj1', $rendered);
-    }
-
-    public function testRenderLeavesUnresolvedTokensIntact(): void
-    {
-        $rendered = Parser::render('database/{request.databaseId}', [
-            'request' => [],
-        ]);
-
-        $this->assertSame('database/{request.databaseId}', $rendered);
-    }
-
-    public function testRenderShortCircuitsWhenNoTemplate(): void
-    {
-        $this->assertSame('database/db1', Parser::render('database/db1', []));
-        $this->assertSame('', Parser::render('', []));
-    }
-
     public function testParseSplitsIntoTypeIdSegmentsAndDropsTrailingCollectionName(): void
     {
         $this->assertSame(
@@ -70,6 +25,29 @@ final class ParserTest extends TestCase
         );
 
         $this->assertSame([], Parser::parse(''));
+    }
+
+    public function testAuditTargetReturnsLeafAndParentChain(): void
+    {
+        $segments = Parser::parse('database/db1/collection/col1/document/doc1');
+
+        $this->assertSame(
+            ['type' => 'document', 'id' => 'doc1', 'parent' => 'database/db1/collection/col1'],
+            Parser::auditTarget($segments),
+        );
+    }
+
+    public function testAuditTargetForTopLevelResourceHasEmptyParent(): void
+    {
+        $this->assertSame(
+            ['type' => 'database', 'id' => 'db1', 'parent' => ''],
+            Parser::auditTarget(Parser::parse('database/db1')),
+        );
+
+        $this->assertSame(
+            ['type' => '', 'id' => '', 'parent' => ''],
+            Parser::auditTarget([]),
+        );
     }
 
     public function testCapForUsageStopsAtCollectionForDatabaseResources(): void

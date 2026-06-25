@@ -2,64 +2,12 @@
 
 namespace Appwrite\Event\Resource;
 
-use Appwrite\Extend\Exception;
-use Utopia\Database\Document;
-
 class Parser
 {
     /**
-     * Substitute `{namespace.key}` placeholders inside a label using the
-     * supplied context. Supported namespaces map to the keys of `$context`;
-     * an unknown namespace falls back to the `response` payload to preserve
-     * the historical behaviour of `audits.resource` rendering.
-     *
-     * @param array<string, array<string, mixed>|Document|object> $context
-     */
-    public static function render(string $template, array $context): string
-    {
-        if ($template === '' || !str_contains($template, '{')) {
-            return $template;
-        }
-
-        $fallback = self::asArray($context['response'] ?? []);
-
-        preg_match_all('/{([^}]+)}/', $template, $matches);
-        foreach ($matches[1] as $pos => $match) {
-            $find = $matches[0][$pos];
-            $parts = explode('.', $match, 2);
-            if (count($parts) !== 2) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid resource label template: {$template}");
-            }
-
-            [$namespace, $key] = $parts;
-            $bag = array_key_exists($namespace, $context) ? self::asArray($context[$namespace]) : $fallback;
-            if (!array_key_exists($key, $bag)) {
-                continue;
-            }
-
-            $value = $bag[$key];
-            if (!is_string($value)) {
-                if (is_array($value)) {
-                    $value = json_encode($value);
-                } elseif (is_object($value) && method_exists($value, '__toString')) {
-                    $value = (string) $value;
-                } elseif (is_scalar($value)) {
-                    $value = (string) $value;
-                } else {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Cannot stringify label value: {$template}");
-                }
-            }
-
-            $template = str_replace($find, $value, $template);
-        }
-
-        return $template;
-    }
-
-    /**
-     * Split a rendered resource string into ordered {type, id} segments.
-     * Trailing odd segment (e.g. `bucket/{id}/files`) is treated as a
-     * collection name with no id and dropped.
+     * Split a rendered resource path (e.g. `database/db1/collection/col1/document/doc1`)
+     * into ordered {type, id} segments. Trailing odd segment (e.g.
+     * `bucket/b1/files`) is treated as a collection name with no id and dropped.
      *
      * @return array<int, array{type: string, id: string}>
      */
@@ -78,11 +26,40 @@ class Parser
     }
 
     /**
-     * Apply the usage-warehouse granularity rule on top of {@see parse()}:
+     * Pick the audit-log target — the deepest known segment, plus the joined
+     * parent chain. Matches the granular shape the audit worker writes (e.g.
+     * type=document, id=doc1, parent=database/db1/collection/col1).
+     *
+     * @param array<int, array{type: string, id: string}> $segments
+     * @return array{type: string, id: string, parent: string}
+     */
+    public static function auditTarget(array $segments): array
+    {
+        if ($segments === []) {
+            return ['type' => '', 'id' => '', 'parent' => ''];
+        }
+
+        $count = count($segments);
+        $leaf = $segments[$count - 1];
+        $parent = '';
+        if ($count > 1) {
+            $parts = [];
+            for ($i = 0; $i < $count - 1; $i++) {
+                $parts[] = $segments[$i]['type'];
+                $parts[] = $segments[$i]['id'];
+            }
+            $parent = implode('/', $parts);
+        }
+
+        return ['type' => $leaf['type'], 'id' => $leaf['id'], 'parent' => $parent];
+    }
+
+    /**
+     * Apply the usage-warehouse granularity rule:
      *  - databases stop at `database/{databaseId}/table` + tableId
      *  - storage stops at `bucket` + bucketId
      *  - functions/sites are scalar (`function`/`site` + id)
-     *  - everything else returns the head segment unchanged
+     *  - anything else returns the head segment unchanged
      *
      * @param array<int, array{type: string, id: string}> $segments
      * @return array{resource: string, resourceId: string}
@@ -102,22 +79,5 @@ class Parser
         }
 
         return ['resource' => $head['type'], 'resourceId' => $head['id']];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function asArray(mixed $value): array
-    {
-        if (is_array($value)) {
-            return $value;
-        }
-        if ($value instanceof Document) {
-            return $value->getArrayCopy();
-        }
-        if (is_object($value)) {
-            return (array) $value;
-        }
-        return [];
     }
 }
