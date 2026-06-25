@@ -165,6 +165,13 @@ Http::init()
 
         // Step 4: Get scopes for the role
         $scopes = $roles[$role]['scopes'];
+        $isAdminProjectRequest = ! $user->isEmpty()
+            && $project->getId() !== 'console'
+            && $mode === APP_MODE_ADMIN;
+        $isOAuthAdminProjectRequest = ! empty($apiKey)
+            && $apiKey->getType() === API_KEY_OAUTH2
+            && $apiKey->getRole() === User::ROLE_OWNER
+            && $isAdminProjectRequest;
 
         // Step 5: API Key Authentication
         if (! empty($apiKey)) {
@@ -369,6 +376,10 @@ Http::init()
             $authorization->addRole($authRole);
         }
 
+        if ($isOAuthAdminProjectRequest) {
+            $authorization->setDefaultStatus(false);
+        }
+
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
             $dbForProject->setMetadata('user', $targetUser->getId());
             $dbForPlatform->setMetadata('user', $targetUser->getId());
@@ -379,7 +390,7 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+        if ($isAdminProjectRequest && (empty($apiKey) || $isOAuthAdminProjectRequest)) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
