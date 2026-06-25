@@ -1,6 +1,7 @@
 /**
- * Fail the build if Appwrite Sites SSR detection would classify the output as static.
- * Appwrite looks for `server/server.js` (or `server/index.mjs`) inside the output dir.
+ * Fail early if the SSR entry is missing. Appwrite's post-build find lists
+ * `./server/server.js`, but utopia-php/detector expects an exact `server/server.js`
+ * line; emit-appwrite-ssr-detection.ts prints that path in the first log block.
  */
 import { access } from 'node:fs/promises'
 import { join } from 'node:path'

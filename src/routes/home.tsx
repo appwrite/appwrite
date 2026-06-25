@@ -90,7 +90,7 @@ const productBentoItems: {
   {
     title: 'Databases',
     description:
-      "Model, query, and scale with Appwrite databases or native Postgres and MySQL, so you can match your use case and team's needs.",
+      "Model, query, and scale with Appwrite databases or native PostgreSQL and MySQL, so you can match your use case and team's needs.",
     icon: Database,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',

@@ -42,7 +42,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     group: 'build',
     path: '/products/databases',
     icon: Database,
-    tagline: 'TablesDB, DocumentsDB, VectorsDB, Postgres, MySQL.',
+    tagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
     docsPath: '/docs/products/databases',
   },
   storage: {

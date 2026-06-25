@@ -76,7 +76,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       },
       {
         id: 'databases',
-        title: 'Postgres comes to Appwrite',
+        title: 'PostgreSQL comes to Appwrite',
         statusLabel: 'Starting in 15m',
         status: 'upcoming',
       },

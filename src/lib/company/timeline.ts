@@ -435,9 +435,9 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
   {
     id: '2026-native-databases',
     date: 'July 2026',
-    title: 'Native Postgres and MySQL',
+    title: 'Native PostgreSQL and MySQL',
     description:
-      'Appwrite introduced native Postgres and MySQL database solutions to the platform, giving teams dedicated relational engines for SQL workflows, portable schemas, and production workloads alongside Appwrite\'s managed data layer.',
+      'Appwrite introduced native PostgreSQL and MySQL database solutions to the platform, giving teams dedicated relational engines for SQL workflows, portable schemas, and production workloads alongside Appwrite\'s managed data layer.',
     category: 'product',
   },
 ]

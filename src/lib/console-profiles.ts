@@ -106,7 +106,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   dedicatedDbsTablesDB: 'Dedicated DBs: Tables',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
   dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
-  nativeDbsPostgres: 'Native DBs: Postgres',
+  nativeDbsPostgres: 'Native DBs: PostgreSQL',
   nativeDbsMySQL: 'Native DBs: MySQL',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',

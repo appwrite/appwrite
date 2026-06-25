@@ -27,7 +27,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       day: 2,
       dateLabel: 'JULY 7',
       scheduleItemId: 'sched-reddit-databases-ama',
-      sessionTitle: 'Postgres AMA',
+      sessionTitle: 'PostgreSQL AMA',
       platform: 'reddit',
       timeLabel: '3:00 PM',
       href: 'https://reddit.com/r/appwrite',

@@ -1388,8 +1388,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
-                'Native DBs: Postgres',
-                'Enable dedicated Postgres databases in the create wizard.',
+                'Native DBs: PostgreSQL',
+                'Enable dedicated PostgreSQL databases in the create wizard.',
                 'nativeDbsPostgres',
                 profileId,
                 features.nativeDbsPostgres,

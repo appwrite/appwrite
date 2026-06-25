@@ -3,11 +3,11 @@ import type { ProductPageContent } from '@/lib/products/types'
 export const databasesProductContent: ProductPageContent = {
   id: 'databases',
   metaDescription:
-    'Store and query structured data with TablesDB, native Postgres, and MySQL. Permissions, relationships, vector search, and backups included.',
+    'Store and query structured data with TablesDB, native PostgreSQL, and MySQL. Permissions, relationships, vector search, and backups included.',
   hero: {
     title: 'Databases built for modern applications',
     description:
-      'Model, query, and scale structured data with Appwrite TablesDB or connect native Postgres and MySQL when you need full SQL control.',
+      'Model, query, and scale structured data with Appwrite TablesDB or connect native PostgreSQL and MySQL when you need full SQL control.',
     stats: [
       { value: '5', label: 'Database engines' },
       { value: 'SQL', label: 'In-console query editor' },
@@ -17,9 +17,9 @@ export const databasesProductContent: ProductPageContent = {
   },
   faq: [
     {
-      question: 'Should I use TablesDB or Postgres?',
+      question: 'Should I use TablesDB or PostgreSQL?',
       answer:
-        'TablesDB is fastest to integrate with Appwrite SDKs and permissions. Choose Postgres when you need advanced SQL, extensions like pgvector, or an existing SQL toolchain.',
+        'TablesDB is fastest to integrate with Appwrite SDKs and permissions. Choose PostgreSQL when you need advanced SQL, extensions like pgvector, or an existing SQL toolchain.',
     },
     {
       question: 'Can I migrate from a legacy document database?',

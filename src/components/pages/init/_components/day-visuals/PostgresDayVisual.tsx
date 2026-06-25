@@ -26,7 +26,7 @@ export function PostgresDayVisual() {
               <p className={cn('truncate text-[11px] font-medium sm:text-[12px]', productBentoIdle.text)}>
                 race_analytics
               </p>
-              <p className="truncate text-[10px] text-muted-foreground">Postgres · us-east</p>
+              <p className="truncate text-[10px] text-muted-foreground">PostgreSQL · us-east</p>
             </div>
           </div>
         </div>

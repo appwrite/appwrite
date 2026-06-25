@@ -116,11 +116,11 @@ const DB_TYPE_GROUPS: {
   {
     title: 'Native databases',
     description:
-      'Dedicated Postgres and MySQL engines for teams that need direct SQL compatibility.',
+      'Dedicated PostgreSQL and MySQL engines for teams that need direct SQL compatibility.',
     options: [
       {
         id: 'Postgres',
-        label: 'Postgres',
+        label: 'PostgreSQL',
         description:
           'A dedicated PostgreSQL database for relational workloads, SQL tooling, and portable schemas.',
         icon: 'elephant',

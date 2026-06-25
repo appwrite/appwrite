@@ -322,7 +322,7 @@ export function DedicatedDatabasesSection({
           <EmptyState
             icon={Cpu}
             title="No dedicated databases yet"
-            description="Create a Postgres or MySQL database to get started with dedicated compute."
+            description="Create a PostgreSQL or MySQL database to get started with dedicated compute."
             isEmpty
             variant="card"
           />
@@ -362,7 +362,7 @@ export function DedicatedDatabasesSection({
                 <EmptyState
                   icon={Cpu}
                   title="No dedicated databases yet"
-                  description="Create a Postgres or MySQL database to get started with dedicated compute."
+                  description="Create a PostgreSQL or MySQL database to get started with dedicated compute."
                   isEmpty
                   variant="card"
                 />

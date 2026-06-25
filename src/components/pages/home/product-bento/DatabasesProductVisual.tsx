@@ -74,7 +74,7 @@ const VECTOR_FILTERS = ['session: Monaco GP', 'type: strategy'] as const
 const NATIVE_DATABASES = [
   {
     id: 'postgres',
-    label: 'Postgres',
+    label: 'PostgreSQL',
     Icon: PostgresElephantIcon,
   },
   {
