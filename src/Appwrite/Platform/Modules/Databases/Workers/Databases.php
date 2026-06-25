@@ -215,31 +215,17 @@ class Databases extends Action
                 'error' => ''
             ]));
         } catch (\Throwable $e) {
+            $updates = new Document([
+                'status' => 'failed',
+            ]);
             if ($e instanceof DatabaseException) {
-                $attribute->setAttribute('error', $e->getMessage());
-                if (! $relatedAttribute->isEmpty()) {
-                    $relatedAttribute->setAttribute('error', $e->getMessage());
-                }
+                $updates->setAttribute('error', $e->getMessage());
             }
 
-            $attribute = $dbForProject->updateDocument(
-                'attributes',
-                $attribute->getId(),
-                new Document([
-                    'status' => 'failed',
-                    'error' => $attribute->getAttribute('error'),
-                ])
-            );
+            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $updates);
 
             if (! $relatedAttribute->isEmpty()) {
-                $relatedAttribute = $dbForProject->updateDocument(
-                    'attributes',
-                    $relatedAttribute->getId(),
-                    new Document([
-                        'status' => 'failed',
-                        'error' => $relatedAttribute->getAttribute('error'),
-                    ])
-                );
+                $relatedAttribute = $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $updates);
             }
 
             throw $e;
@@ -475,17 +461,13 @@ class Databases extends Action
                 'error' => ''
             ]));
         } catch (\Throwable $e) {
+            $updates = new Document([
+                'status' => 'failed',
+            ]);
             if ($e instanceof DatabaseException) {
-                $index->setAttribute('error', $e->getMessage());
+                $updates->setAttribute('error', $e->getMessage());
             }
-            $index = $dbForProject->updateDocument(
-                'indexes',
-                $index->getId(),
-                new Document([
-                    'status' => 'failed',
-                    'error' => $index->getAttribute('error'),
-                ])
-            );
+            $index = $dbForProject->updateDocument('indexes', $index->getId(), $updates);
 
             throw $e;
         } finally {
@@ -533,17 +515,13 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
+            $updates = new Document([
+                'status' => 'stuck',
+            ]);
             if ($e instanceof DatabaseException) {
-                $index->setAttribute('error', $e->getMessage());
+                $updates->setAttribute('error', $e->getMessage());
             }
-            $index = $dbForProject->updateDocument(
-                'indexes',
-                $index->getId(),
-                new Document([
-                    'status' => 'stuck',
-                    'error' => $index->getAttribute('error'),
-                ])
-            );
+            $index = $dbForProject->updateDocument('indexes', $index->getId(), $updates);
 
             throw $e;
 
