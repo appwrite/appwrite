@@ -67,6 +67,87 @@ interface ResourceItem {
   showLimit?: boolean
 }
 
+type BillingProjectResourceMapping = {
+  name: string
+  format: 'bytes' | 'number' | 'sms'
+  planKey: string
+  showLimit?: boolean
+  /** Hide rows with zero usage and zero cost (for billable add-ons). */
+  showOnlyWhenUsed?: boolean
+}
+
+type PlanUsageNameMap = Record<string, { name?: string } | undefined>
+
+function getBillingResourceLabel(
+  resourceId: string,
+  defaultName: string,
+  plan: Models.BillingPlan | null | undefined,
+): string {
+  const usage = plan?.usage as PlanUsageNameMap | undefined
+  const fromPlan = usage?.[resourceId]?.name?.trim()
+  return fromPlan || defaultName
+}
+
+const DEDICATED_DB_PROJECT_RESOURCES: Record<string, BillingProjectResourceMapping> =
+  {
+    dedicatedDbSpecificationCost: {
+      name: 'Dedicated databases',
+      format: 'number',
+      planKey: 'dedicatedDbSpecificationCost',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbStorage: {
+      name: 'Dedicated database storage',
+      format: 'bytes',
+      planKey: 'dedicatedDbStorage',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbBandwidth: {
+      name: 'Dedicated database bandwidth',
+      format: 'bytes',
+      planKey: 'dedicatedDbBandwidth',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbHaReplica: {
+      name: 'HA replicas',
+      format: 'number',
+      planKey: 'dedicatedDbHaReplica',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbCrossRegionReplica: {
+      name: 'Cross-region replicas',
+      format: 'number',
+      planKey: 'dedicatedDbCrossRegionReplica',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbCrossRegion: {
+      name: 'Cross-region transfer',
+      format: 'number',
+      planKey: 'dedicatedDbCrossRegion',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbPitr: {
+      name: 'Point-in-time recovery',
+      format: 'number',
+      planKey: 'dedicatedDbPitr',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+    dedicatedDbExtensions: {
+      name: 'Database extensions',
+      format: 'number',
+      planKey: 'dedicatedDbExtensions',
+      showLimit: false,
+      showOnlyWhenUsed: true,
+    },
+  }
+
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const [expanded, setExpanded] = useState(true) // Default to expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
@@ -297,95 +378,88 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
       // Map aggregation resourceIds to our internal keys and display info
       // The aggregation uses resourceId like "bandwidth", "storage", "users", "databasesReads", "GBHours", etc.
-      const resourceIdMap: Record<
-        string,
-        {
-          key: string
-          name: string
-          format: 'bytes' | 'number' | 'sms'
-          planKey: string
-          showLimit?: boolean
-        }
-      > = {
+      const resourceIdMap: Record<string, BillingProjectResourceMapping> = {
         bandwidth: {
-          key: 'bandwidth',
           name: 'Bandwidth',
           format: 'bytes',
           planKey: 'bandwidth',
         },
         storage: {
-          key: 'storage',
           name: 'Storage',
           format: 'bytes',
           planKey: 'storage',
         },
         users: {
-          key: 'users',
           name: 'Users',
           format: 'number',
           planKey: 'users',
         },
         databasesReads: {
-          key: 'databaseReads',
           name: 'Database reads',
           format: 'number',
           planKey: 'databaseReads',
         },
         databasesWrites: {
-          key: 'databaseWrites',
           name: 'Database writes',
           format: 'number',
           planKey: 'databaseWrites',
         },
         executions: {
-          key: 'executions',
           name: 'Executions',
           format: 'number',
           planKey: 'executions',
         },
         imageTransformations: {
-          key: 'imageTransformations',
           name: 'Image transformations',
           format: 'number',
           planKey: 'imageTransformations',
         },
         screenshotsGenerated: {
-          key: 'screenshotsGenerated',
           name: 'Screenshots generated',
           format: 'number',
           planKey: 'screenshotsGenerated',
         },
         GBHours: {
-          key: 'gbHours',
           name: 'GB-hours',
           format: 'number',
           planKey: 'gbHours',
         },
         realtime: {
-          key: 'realtime',
           name: 'Realtime connections',
           format: 'number',
           planKey: 'realtime',
         },
         realtimeMessages: {
-          key: 'realtimeMessages',
           name: 'Realtime messages',
           format: 'number',
           planKey: 'realtimeMessages',
         },
         realtimeBandwidth: {
-          key: 'realtimeBandwidth',
           name: 'Realtime bandwidth',
           format: 'bytes',
           planKey: 'realtimeBandwidth',
           showLimit: false,
         },
         authPhone: {
-          key: 'authPhone',
           name: 'Phone OTP',
           format: 'sms',
           planKey: 'authPhone',
         },
+        ...Object.fromEntries(
+          Object.entries(DEDICATED_DB_PROJECT_RESOURCES).map(
+            ([resourceId, mapping]) => [
+              resourceId,
+              {
+                ...mapping,
+                name: getBillingResourceLabel(
+                  resourceId,
+                  mapping.name,
+                  plan,
+                ),
+              },
+            ],
+          ),
+        ),
       }
 
       // Helper to get resource from aggregation by resourceId
@@ -454,7 +528,13 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         const mappedResource = resourceIdMap[resourceId]
         if (!mappedResource) return
 
-        const { name, format, planKey, showLimit = true } = mappedResource
+        const {
+          name,
+          format,
+          planKey,
+          showLimit = true,
+          showOnlyWhenUsed = false,
+        } = mappedResource
         const resource = getResourceByResourceId(resourceId)
 
         // Get usage from resource.value (aggregation format)
@@ -467,9 +547,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         const cost =
           resource?.amount !== undefined ? Number(resource.amount) : 0
 
+        const hasUsageOrCost = usage > 0 || cost > 0
+        const shouldShow = showOnlyWhenUsed
+          ? resource != null && hasUsageOrCost
+          : resource != null || limit !== null
+
         // Always show the resource if it exists in aggregation or if plan has a limit
         // This matches the old UI which shows all resources
-        if (resource || limit !== null) {
+        if (shouldShow) {
           resources.push({
             name,
             usage,
