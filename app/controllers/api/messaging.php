@@ -3390,6 +3390,7 @@ Http::post('/v1/messaging/messages/email')
     ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
+    ->param('emails', [], new ArrayList(new Email()), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
     ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
     ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
     ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
@@ -3402,7 +3403,7 @@ Http::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $emails, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3415,7 +3416,7 @@ Http::post('/v1/messaging/messages/email')
                 : MessageStatus::SCHEDULED;
         }
 
-        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0 && \count($emails) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
@@ -3476,6 +3477,7 @@ Http::post('/v1/messaging/messages/email')
                 'cc' => $cc,
                 'bcc' => $bcc,
                 'attachments' => $attachments,
+                'emails' => $emails,
             ],
             'status' => $status,
         ]);
@@ -4190,6 +4192,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
     ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
+    ->param('emails', null, new Nullable(new ArrayList(new Email())), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
     ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
     ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
     ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
@@ -4204,7 +4207,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
     ->inject('project')
     ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?array $emails, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4228,6 +4231,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             && \count($topics ?? $message->getAttribute('topics', [])) === 0
             && \count($users ?? $message->getAttribute('users', [])) === 0
             && \count($targets ?? $message->getAttribute('targets', [])) === 0
+            && \count($emails ?? $message->getAttribute('data', [])['emails'] ?? []) === 0
         ) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
@@ -4349,6 +4353,10 @@ Http::patch('/v1/messaging/messages/email/:messageId')
 
         if (!\is_null($bcc)) {
             $data['bcc'] = $bcc;
+        }
+
+        if (!\is_null($emails)) {
+            $data['emails'] = $emails;
         }
 
         $message->setAttribute('data', $data);
