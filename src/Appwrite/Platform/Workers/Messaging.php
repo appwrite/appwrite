@@ -466,8 +466,9 @@ class Messaging extends Action
 
         if (\count($emails) > 0) {
             // Raw emails are already delivery identifiers, so they bypass the targets/subscribers lookups
-            // entirely and route straight to the default provider in bounded pages.
-            foreach (\array_chunk($emails, MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+            // entirely and route straight to the default provider in bounded pages. Deduplicate up front so a
+            // repeated address spanning two chunks is not delivered to more than once.
+            foreach (\array_chunk(\array_values(\array_unique($emails)), MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
                 $identifiers = [];
 
                 foreach ($chunk as $email) {

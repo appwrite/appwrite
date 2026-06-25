@@ -430,6 +430,33 @@ final class MessagingFanoutTest extends TestCase
         );
     }
 
+    public function testStreamDeduplicatesRawEmailsAcrossPages(): void
+    {
+        // A duplicate address at the start and end of a list longer than one page would land in different
+        // array_chunk pages; the per-page key dedup cannot collapse it, so it must be deduplicated up front
+        // or it would be delivered to twice.
+        $emails = [];
+        for ($i = 1; $i <= MESSAGE_RECIPIENTS_PAGE_SIZE; $i++) {
+            $emails[] = "raw{$i}@example.com";
+        }
+        $emails[] = 'raw1@example.com';
+
+        $database = new RecordingDatabase();
+        $pages = $this->collectPages($database, emails: $emails);
+
+        $providerId = $this->provider()->getId();
+        $deliveries = 0;
+        foreach ($pages as $page) {
+            $deliveries += \count($page[$providerId] ?? []);
+        }
+
+        $this->assertSame(
+            MESSAGE_RECIPIENTS_PAGE_SIZE,
+            $deliveries,
+            'A duplicate raw email spanning two pages must be delivered to exactly once'
+        );
+    }
+
     public function testStreamCombinesRawEmailsWithRegisteredRecipients(): void
     {
         // A direct target and a raw email together: both resolve, the target via the database and the raw email
