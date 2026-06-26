@@ -70,7 +70,7 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
-
+//here
         $updates = new Document([
             'auths' => $auths,
         ]);

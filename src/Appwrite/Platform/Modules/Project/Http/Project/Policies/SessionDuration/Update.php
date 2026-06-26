@@ -70,7 +70,7 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['duration'] = $duration;
-
+//here
         $updates = new Document([
             'auths' => $auths,
         ]);

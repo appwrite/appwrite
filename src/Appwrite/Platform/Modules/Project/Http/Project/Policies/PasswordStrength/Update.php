@@ -100,7 +100,7 @@ class Update extends Action
         if ($symbols !== null) {
             $auths['passwordStrength']['symbols'] = $symbols;
         }
-
+//here
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
         ])));

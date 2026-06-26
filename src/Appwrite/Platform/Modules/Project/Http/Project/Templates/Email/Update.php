@@ -125,6 +125,8 @@ class Update extends Action
 
         // Save configuration
         $templates['email.' . $templateId . '-' . $locale] = $template;
+
+        //here
         $updates = new Document([
             'templates' => $templates,
         ]);

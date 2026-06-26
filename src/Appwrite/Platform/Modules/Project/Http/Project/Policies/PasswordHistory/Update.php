@@ -79,6 +79,7 @@ class Update extends Action
             $auths['passwordHistory'] = $total;
         }
 
+        //here
         $updates = new Document([
             'auths' => $auths,
         ]);

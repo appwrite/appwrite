@@ -80,7 +80,7 @@ class Update extends Action
         $updates = new Document([
             'auths' => $auths,
         ]);
-
+//here
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 

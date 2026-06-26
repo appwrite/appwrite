@@ -71,7 +71,7 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['personalDataCheck'] = $enabled;
-
+//here
         $updates = new Document([
             'auths' => $auths,
         ]);

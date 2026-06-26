@@ -76,7 +76,7 @@ class Update extends Action
     ): void {
         $services = $project->getAttribute('services', []);
         $services[$serviceId] = $enabled;
-
+//here
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'services' => $services,
         ])));

@@ -98,7 +98,7 @@ class Update extends Action
         if ($userAccessedAt !== null) {
             $auths['membershipsUserAccessedAt'] = $userAccessedAt;
         }
-
+//here
         $updates = new Document([
             'auths' => $auths,
         ]);

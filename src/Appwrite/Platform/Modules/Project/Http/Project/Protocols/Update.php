@@ -77,6 +77,7 @@ class Update extends Action
         $protocols = $project->getAttribute('apis', []);
         $protocols[$protocolId] = $enabled;
 
+        // here
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'apis' => $protocols,
         ])));

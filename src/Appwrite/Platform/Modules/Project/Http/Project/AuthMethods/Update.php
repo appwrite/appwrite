@@ -79,7 +79,7 @@ class Update extends Action
 
         $auths = $project->getAttribute('auths', []);
         $auths[$authKey] = $enabled;
-
+//here
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
         ])));
