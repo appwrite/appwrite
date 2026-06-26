@@ -55,7 +55,7 @@ export const startupsEligibility = {
     {
       title: 'Early-stage company',
       description:
-        'Your company is 5 years old or younger and is pre-seed or VC-backed up to Series A. Bootstrapped companies with up to $5M in annual recurring revenue are also eligible.',
+        'Your company is 5 years old or younger and has raised funding (pre-seed through Series A) or bootstrapped revenue up to $5M in annual recurring revenue.',
       icon: TrendingUp,
     },
     {
@@ -65,10 +65,17 @@ export const startupsEligibility = {
       icon: ArrowRightLeft,
     },
   ] satisfies StartupsEligibilityCriterion[],
+  proPlanCallout: {
+    title: 'No funding or revenue yet?',
+    description:
+      'The Startups program is for companies with traction through funding or revenue. If you have neither, Appwrite Cloud Pro is the right place to start building.',
+    ctaLabel: 'View Pro plan',
+    ctaHref: '/pricing',
+  },
   exclusions: {
     title: 'Outside the program',
     description:
-      'The Startups program is reserved for early-stage product companies. These profiles are usually not accepted.',
+      'The Startups program is reserved for early-stage product companies with funding or revenue. These profiles are usually not accepted.',
     items: [
       {
         title: 'Beyond early stage',
@@ -89,8 +96,6 @@ export const startupsEligibility = {
           'Businesses primarily offering services rather than building their own software product.',
       },
     ] satisfies StartupsEligibilityExclusion[],
-    footnote:
-      'If your company is close to these criteria, you may still submit an application. Our team will review each request individually.',
   },
 } as const
 
@@ -242,6 +247,7 @@ export const startupsApplySteps: StartupsApplyStep[] = [
 export type StartupsFaqItem = {
   question: string
   answer: string
+  links?: { label: string; href: string }[]
 }
 
 export const startupsFaqItems: StartupsFaqItem[] = [
@@ -258,7 +264,13 @@ export const startupsFaqItems: StartupsFaqItem[] = [
   {
     question: 'Who is eligible to apply?',
     answer:
-      'We welcome product-focused startups that are 5 years old or younger and are pre-seed or VC-backed up to Series A. Bootstrapped companies with up to $5M in annual recurring revenue are also eligible. The program is not open to agencies, consultancies, or resellers.',
+      'We welcome product-focused startups that are 5 years old or younger and have raised funding (pre-seed through Series A) or bootstrapped revenue up to $5M in annual recurring revenue. Companies with no funding and no revenue are not eligible. The program is not open to agencies, consultancies, or resellers.',
+  },
+  {
+    question: 'What if we have no funding or revenue yet?',
+    answer:
+      'The Startups program requires evidence of traction through funding or revenue. If your company has neither, start with Appwrite Cloud Pro instead of applying here.',
+    links: [{ label: 'View Pro plan', href: '/pricing' }],
   },
   {
     question: 'Does the Appwrite Startups program include web hosting?',

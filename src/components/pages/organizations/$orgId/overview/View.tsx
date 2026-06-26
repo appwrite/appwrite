@@ -1776,7 +1776,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         showFooter
         containerClassName="org-layout-container"
       >
-        {activeTab === 'projects' ? <InitOrgPromoBanner /> : null}
+        <InitOrgPromoBanner />
 
         {/* Org Header with Switcher */}
         <div>

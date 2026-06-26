@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
 import { MarketingApplicationForm } from '@/components/pages/marketing/MarketingApplicationForm'
@@ -67,6 +68,21 @@ export function View() {
           <div className="mt-10">
             <MarketingFeatureGrid items={startupsEligibility.criteria} columns={3} />
           </div>
+          <div className="mt-10 flex flex-col gap-4 rounded-xl border border-border bg-card/45 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="max-w-2xl">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                {startupsEligibility.proPlanCallout.title}
+              </h3>
+              <p className="mt-2 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
+                {startupsEligibility.proPlanCallout.description}
+              </p>
+            </div>
+            <Button variant="outline" className="w-fit shrink-0" asChild>
+              <Link to={startupsEligibility.proPlanCallout.ctaHref}>
+                {startupsEligibility.proPlanCallout.ctaLabel}
+              </Link>
+            </Button>
+          </div>
           <div className="mt-12 border-t border-border pt-10">
             <div className="max-w-2xl">
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -95,9 +111,6 @@ export function View() {
                 </article>
               ))}
             </div>
-            <p className="mt-6 max-w-2xl text-[13px] leading-6 text-muted-foreground">
-              {startupsEligibility.exclusions.footnote}
-            </p>
           </div>
         </div>
       </section>
