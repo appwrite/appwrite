@@ -46,17 +46,19 @@ export function View() {
         title={startupsHero.title}
         description={startupsHero.description}
         gradientTitle
+        wideFooter
+        footer={
+          <MarketingFeatureGrid
+            items={startupsTopBenefits}
+            columns={4}
+            className="mt-16 text-left sm:mt-20"
+          />
+        }
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
           Apply now
         </Button>
       </MarketingHeroSection>
-
-      <section className="border-b border-border py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <MarketingFeatureGrid items={startupsTopBenefits} columns={4} />
-        </div>
-      </section>
 
       <section className="border-b border-border bg-muted/20 py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
