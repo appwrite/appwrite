@@ -25,24 +25,24 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repo
-              uses: actions/checkout@v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - name: Login to GitHub Container Registry
-              uses: docker/login-action@v3
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
               with:
                   registry: ${{ env.REGISTRY_GITHUB }}
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Login to Docker Hub
-              uses: docker/login-action@v3
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
             - name: Build and push
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
               with:
                   context: .
                   push: true
@@ -71,7 +71,7 @@ jobs:
         steps:
             - name: Get token for ${{ env.DECLARATIVE_REPOSITORY }}
               id: app-token
-              uses: actions/create-github-app-token@v2
+              uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
               with:
                   app-id: ${{ vars.DECLARATIVE_DEPLOYMENT_GITHUB_APP_ID }}
                   private-key: ${{ secrets.DECLARATIVE_DEPLOYMENT_GITHUB_APP_PRIVATE_KEY }}
@@ -79,7 +79,7 @@ jobs:
                   repositories: ${{ env.DECLARATIVE_REPOSITORY }}
 
             - name: Checkout ${{ env.DECLARATIVE_REPOSITORY }}
-              uses: actions/checkout@v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
               with:
                   repository: ${{ env.DECLARATIVE_OWNER }}/${{ env.DECLARATIVE_REPOSITORY }}
                   token: ${{ steps.app-token.outputs.token }}
