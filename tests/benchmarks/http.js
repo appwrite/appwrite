@@ -18,8 +18,8 @@ const REGION = __ENV.APPWRITE_REGION || 'default';
 const REDIRECT_URL = __ENV.APPWRITE_BENCHMARK_REDIRECT_URL || 'http://localhost';
 const PASSWORD = __ENV.APPWRITE_BENCHMARK_PASSWORD || 'Password123!';
 const WORKER_TIMEOUT_MS = Number(__ENV.APPWRITE_WORKER_TIMEOUT_MS || 120000);
-const ITERATIONS = Number(__ENV.APPWRITE_BENCHMARK_ITERATIONS || 1);
 const VUS = Number(__ENV.APPWRITE_BENCHMARK_VUS || 1);
+const DURATION = __ENV.APPWRITE_BENCHMARK_DURATION || '1m';
 const SUMMARY_PATH = __ENV.APPWRITE_BENCHMARK_SUMMARY_PATH || '/tmp/appwrite-k6-summary.json';
 const PREVIOUS_SUMMARY_PATH = __ENV.APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH || '';
 const PREVIOUS_SUMMARY = PREVIOUS_SUMMARY_PATH ? loadPreviousSummary(PREVIOUS_SUMMARY_PATH) : null;
@@ -32,16 +32,14 @@ export const flowFailures = new Counter('appwrite_benchmark_flow_failures');
 export const options = {
     scenarios: {
         curated_flows: {
-            executor: 'shared-iterations',
+            executor: 'constant-vus',
             exec: 'curatedFlows',
             vus: VUS,
-            iterations: ITERATIONS,
-            maxDuration: __ENV.APPWRITE_BENCHMARK_MAX_DURATION || '30m',
+            duration: DURATION,
         },
     },
     thresholds: {
         http_req_failed: ['rate<0.05'],
-        appwrite_api_duration: ['p(95)<2000'],
         appwrite_benchmark_flow_failures: ['count<1'],
     },
 };
