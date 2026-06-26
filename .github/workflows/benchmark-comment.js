@@ -110,11 +110,11 @@ function changeCell(before, after, lowerIsBetter) {
 
     const percent = Number((((after - before) / before) * 100).toFixed(1));
     if (percent === 0) {
-        return ':white_circle: 0%';
+        return `:white_circle: ${code('0%')}`;
     }
 
     const improved = lowerIsBetter ? percent < 0 : percent > 0;
-    return `${improved ? ':green_circle:' : ':red_circle:'} ${percent > 0 ? '+' : ''}${trimNumber(percent)}%`;
+    return `${improved ? ':green_circle:' : ':red_circle:'} ${code(`${percent > 0 ? '+' : ''}${trimNumber(percent)}%`)}`;
 }
 
 function detailTable(rows) {
@@ -326,16 +326,16 @@ function markdownText(value) {
 }
 
 function formatMs(value) {
-    return formatNumber(value, 2);
+    return code(formatNumber(value, 2));
 }
 
 function formatMsUnit(value) {
     const formatted = formatNumber(value, 2);
-    return formatted === 'n/a' ? formatted : `${formatted} ms`;
+    return formatted === 'n/a' ? formatted : code(`${formatted} ms`);
 }
 
 function formatRate(value) {
-    return formatNumber(value, 2);
+    return code(formatNumber(value, 2));
 }
 
 function formatCount(value) {
@@ -343,7 +343,7 @@ function formatCount(value) {
         return 'n/a';
     }
 
-    return `${Math.round(value)}`;
+    return code(Math.round(value).toLocaleString('en-US'));
 }
 
 function formatDelta(before, after) {
@@ -352,7 +352,8 @@ function formatDelta(before, after) {
     }
 
     const difference = Number((after - before).toFixed(2));
-    return `${difference > 0 ? '+' : ''}${trimNumber(difference)}`;
+    const sign = difference > 0 ? '+' : difference < 0 ? '-' : '';
+    return code(`${sign}${formatNumber(Math.abs(difference), 2)}`);
 }
 
 function formatNumber(value, decimals) {
@@ -360,7 +361,14 @@ function formatNumber(value, decimals) {
         return 'n/a';
     }
 
-    return trimNumber(Number(value).toFixed(decimals));
+    return trimNumber(Number(value).toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    }));
+}
+
+function code(text) {
+    return text === 'n/a' ? text : `\`${text}\``;
 }
 
 function trimNumber(value) {
