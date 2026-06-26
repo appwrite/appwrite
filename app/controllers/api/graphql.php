@@ -18,6 +18,8 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
@@ -32,7 +34,10 @@ Http::init()
     ->inject('request')
     ->inject('response')
     ->inject('authorization')
-    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
+    ->inject('dbForPlatform')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization, Database $dbForPlatform, Database $dbForProject, string $mode) {
         $response->setUser($user);
         $request->setUser($user);
 
@@ -42,6 +47,37 @@ Http::init()
             && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+
+        // Update project last activity
+        if ($project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', 0);
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => DateTime::now()
+                ])));
+            }
+        }
+
+        // Update user last activity
+        if (! empty($user->getId())) {
+            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
+            $accessedAt = $user->getAttribute('accessedAt', 0);
+
+            // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
+            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
+                    $dbForProject->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt')
+                    ]));
+                } else {
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt')
+                    ])));
+                }
+            }
         }
     });
 
