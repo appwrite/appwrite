@@ -1,3 +1,7 @@
 #!/bin/sh
 
-exec php /usr/src/code/app/cli.php doctor "$@"
+# Run without opcache/JIT: doctor is a short-lived health check that gains
+# nothing from JIT, and enabling opcache shifts object-destruction timing so a
+# hooked-I/O destructor (PHPMailer's SMTP close) fires outside the coroutine
+# and fatals -- failing the container healthcheck.
+exec php -d opcache.enable_cli=0 /usr/src/code/app/cli.php doctor "$@"
