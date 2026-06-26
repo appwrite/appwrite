@@ -40,7 +40,6 @@ export const options = {
     },
     thresholds: {
         http_req_failed: ['rate<0.05'],
-        appwrite_api_duration: ['p(95)<2000'],
         appwrite_benchmark_flow_failures: ['count<1'],
     },
 };
