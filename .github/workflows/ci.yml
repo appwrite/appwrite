@@ -687,7 +687,7 @@ jobs:
         env:
           APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
           APPWRITE_BENCHMARK_DURATION: '1m'
-          APPWRITE_BENCHMARK_VUS: '50'
+          APPWRITE_BENCHMARK_VUS: '20'
           APPWRITE_WORKER_TIMEOUT_MS: '120000'
           APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-before-summary.json'
         with:
@@ -748,7 +748,7 @@ jobs:
         env:
           APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
           APPWRITE_BENCHMARK_DURATION: '1m'
-          APPWRITE_BENCHMARK_VUS: '50'
+          APPWRITE_BENCHMARK_VUS: '20'
           APPWRITE_WORKER_TIMEOUT_MS: '120000'
           APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH: '../../benchmark-before-summary.json'
           APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-after-summary.json'
