@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -43,6 +44,7 @@ class Update extends Action
             ->label('event', 'webhooks.[webhookId].update')
             ->label('audits.event', 'webhooks.update')
             ->label('audits.resource', 'webhook/{response.$id}')
+            ->label('usage.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,
@@ -65,7 +67,7 @@ class Update extends Action
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
             ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
-            ->param('authPassword', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('authPassword', '', new PasswordFormat(new Text(256)), 'Webhook HTTP password. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')

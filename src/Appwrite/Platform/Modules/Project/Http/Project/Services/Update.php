@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -38,6 +39,7 @@ class Update extends Action
             ->label('event', 'services.[serviceId].update')
             ->label('audits.event', 'project.services.[serviceId].update')
             ->label('audits.resource', 'project.services/{response.$id}')
+            ->label('usage.resource', 'project.services/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
@@ -53,7 +55,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('serviceId', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name. Can be one of: '.\implode(', ', array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']))))
+            ->param('serviceId', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name. Can be one of: '.\implode(', ', array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']))), enum: new Enum(name: 'ProjectServiceId'))
             ->param('enabled', null, new Boolean(), 'Service status.')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -78,6 +80,7 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'services' => $services,
         ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('serviceId', $serviceId);
 

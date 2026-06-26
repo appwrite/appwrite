@@ -213,6 +213,15 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'tokens':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_type_expire');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_type_expire\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         try {

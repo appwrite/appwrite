@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
@@ -21,7 +22,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -33,7 +34,6 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
@@ -41,7 +41,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
-use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -111,33 +110,86 @@ return function (Container $context): void {
     $context->set('queueForRealtime', fn () => new Realtime(), []);
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
+
+    $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
+        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+            return new Document();
+        }
+
+        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+
+        if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
+            return new Document();
+        }
+
+        $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+        $targetUser = null;
+        if (!empty($impersonateUserId)) {
+            $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
+        } elseif (!empty($impersonateEmail)) {
+            $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+        } elseif (!empty($impersonatePhone)) {
+            $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+        }
+
+        if ($targetUser === null || $targetUser->isEmpty()) {
+            return new Document();
+        }
+
+        return new Document([
+            '$id' => $user->getId(),
+            '$sequence' => $user->getSequence(),
+            'name' => $user->getAttribute('name', ''),
+            'email' => $user->getAttribute('email', ''),
+            'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+        ]);
+    }, ['mode', 'project', 'user', 'request', 'dbForProject', 'dbForPlatform']);
+
+    $context->set('targetUser', function (Document $user, Document $impersonatorUser, string $mode, Document $project, Request $request, Database $dbForProject, Database $dbForPlatform) {
+        if ($impersonatorUser->isEmpty()) {
+            return $user;
+        }
+
+        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
+        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
+        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+
+        $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+        if (!empty($impersonateUserId)) {
+            return $userDb->getAuthorization()->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
+        } elseif (!empty($impersonateEmail)) {
+            return $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+        } elseif (!empty($impersonatePhone)) {
+            return $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+        }
+
+        return $user;
+    }, ['user', 'impersonatorUser', 'mode', 'project', 'request', 'dbForProject', 'dbForPlatform']);
+
     $context->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
-    $context->set('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
-        $adapter = new DatabasePool($pools->get('console'));
-        $database = new Database($adapter, $cache);
+    $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+        $pools,
+        $cache,
+        $authorization
+    ), ['pools', 'cache', 'authorization']);
 
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', 'console')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+    $context->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(
+        APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+        APP_DATABASE_QUERY_MAX_VALUES,
+        ['host' => \gethostname(), 'project' => 'console']
+    ), ['databaseFactory']);
 
-        $database->setDocumentType('users', User::class);
+    $context->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
 
-        return $database;
-    }, ['pools', 'cache', 'authorization']);
-
-    $context->set('getProjectDB', function (Group $pools, Database $dbForPlatform, Cache $cache, Authorization $authorization) {
-        $adapters = [];
-
-        return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$adapters) {
+        return function (Document $project) use ($databaseFactory, $dbForPlatform) {
             if ($project->isEmpty() || $project->getId() === 'console') {
                 return $dbForPlatform;
             }
@@ -147,78 +199,25 @@ return function (Container $context): void {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
             }
 
-            try {
-                $dsn = new DSN($database);
-            } catch (\InvalidArgumentException) {
-                // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $database);
-            }
-
-            $adapter = $adapters[$dsn->getHost()] ??= new DatabasePool($pools->get($dsn->getHost()));
-            $database = new Database($adapter, $cache);
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES)
-                ->setDocumentType('users', User::class);
-
-            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-            if (\in_array($dsn->getHost(), $sharedTables)) {
-                /** @var array $collections */
-                $collections = Config::getParam('collections', []);
-                $projectCollections = $collections['projects'] ?? [];
-                $projectsGlobalCollections = array_keys($projectCollections);
-                $projectsGlobalCollections[] = 'audit';
-
-                $database
-                    ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
-                    ->setGlobalCollections($projectsGlobalCollections)
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
-
-            return $database;
+            return $databaseFactory->project(
+                $project,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+                APP_DATABASE_QUERY_MAX_VALUES,
+                ['host' => \gethostname(), 'project' => $project->getId()]
+            );
         };
-    }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
+    }, ['databaseFactory', 'dbForPlatform']);
 
-    $context->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
-        $adapter = null;
+    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
 
-        return function (?Document $project = null) use ($pools, $cache, $authorization, &$adapter) {
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $logsCollections = $collections['logs'] ?? [];
-            $logsCollections = array_keys($logsCollections);
-
-            $adapter ??= new DatabasePool($pools->get('logs'));
-            $database = new Database($adapter, $cache);
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setSharedTables(true)
-                ->setGlobalCollections($logsCollections)
-                ->setNamespace('logsV1')
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-            if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-                $database->setTenant($project->getSequence());
-            }
-
-            return $database;
+        return function (?Document $project = null) use ($databaseFactory) {
+            return $databaseFactory->logs(
+                $project,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+                APP_DATABASE_QUERY_MAX_VALUES
+            );
         };
-    }, ['pools', 'cache', 'authorization']);
+    }, ['databaseFactory']);
 
     /**
      * List of allowed request hostnames for the request.
@@ -448,7 +447,7 @@ return function (Container $context): void {
 
         // Get session from header for SSR clients
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            $sessionHeader = $request->getHeader('x-appwrite-session', '');
+            $sessionHeader = $request->getHeaderLine('x-appwrite-session', '');
 
             if (! empty($sessionHeader)) {
                 $store->decode($sessionHeader);
@@ -460,7 +459,7 @@ return function (Container $context): void {
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
             $response->addHeader('X-Debug-Fallback', 'true');
-            $fallback = $request->getHeader('x-fallback-cookies', '');
+            $fallback = $request->getHeaderLine('x-fallback-cookies', '');
             $fallback = \json_decode($fallback, true);
             $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
         }
@@ -493,7 +492,7 @@ return function (Container $context): void {
             $user = new User([]);
         }
 
-        $authJWT = $request->getHeader('x-appwrite-jwt', '');
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! empty($authJWT) && ! $project->isEmpty()) { // JWT authentication
             if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -523,8 +522,8 @@ return function (Container $context): void {
         }
 
         // Account based on account API key
-        $accountKey = $request->getHeader('x-appwrite-key', '');
-        $accountKeyUserId = $request->getHeader('x-appwrite-user', '');
+        $accountKey = $request->getHeaderLine('x-appwrite-key', '');
+        $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
         if (! empty($accountKeyUserId) && ! empty($accountKey)) {
             if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
@@ -549,33 +548,6 @@ return function (Container $context): void {
             }
         }
 
-        // Impersonation: if current user has impersonator capability and headers/params are set, act as another user
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
-        // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)$request->getParam('impersonateUserId', ''));
-        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)$request->getParam('impersonateEmail', ''));
-        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)$request->getParam('impersonatePhone', ''));
-        if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
-            $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
-            $targetUser = null;
-            if (!empty($impersonateUserId)) {
-                $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
-            } elseif (!empty($impersonateEmail)) {
-                $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
-            } elseif (!empty($impersonatePhone)) {
-                $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
-            }
-            if ($targetUser !== null && !$targetUser->isEmpty()) {
-                $impersonator = clone $user;
-                $user = clone $targetUser;
-                $user->setAttribute('impersonatorUserId', $impersonator->getId());
-                $user->setAttribute('impersonatorUserInternalId', $impersonator->getSequence());
-                $user->setAttribute('impersonatorUserName', $impersonator->getAttribute('name', ''));
-                $user->setAttribute('impersonatorUserEmail', $impersonator->getAttribute('email', ''));
-                $user->setAttribute('impersonatorAccessedAt', $impersonator->getAttribute('accessedAt', 0));
-            }
-        }
-
         $dbForProject->setMetadata('user', $user->getId());
         $dbForPlatform->setMetadata('user', $user->getId());
 
@@ -586,10 +558,10 @@ return function (Container $context): void {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
-        $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
-            $projectId = $request->getHeader('x-appwrite-project', '');
+            $projectId = $request->getHeaderLine('x-appwrite-project', '');
         }
 
         // Backwards compatibility for new services, originally project resources
@@ -636,7 +608,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Authorization $authorization, Request $request) {
+    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -646,45 +618,12 @@ return function (Container $context): void {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
         }
 
-        try {
-            $dsn = new DSN($database);
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $database);
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, $cache);
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId())
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-        $database->setDocumentType('users', User::class);
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($projectsGlobalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
+        $database = $databaseFactory->project(
+            $project,
+            APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+            APP_DATABASE_QUERY_MAX_VALUES,
+            ['host' => \gethostname(), 'project' => $project->getId()]
+        );
 
         /**
          * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
@@ -915,7 +854,7 @@ return function (Container $context): void {
             ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
 
         return $database;
-    }, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'authorization', 'request']);
+    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
 
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 
@@ -1014,9 +953,9 @@ return function (Container $context): void {
          * - 'default' => Requests for Client and Server Side
          * - 'admin' => Request from the Console on non-console projects
          */
-        $mode = $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
+        $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
 
-        $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
         if (!empty($projectId) && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
@@ -1026,7 +965,7 @@ return function (Container $context): void {
 
     $context->set('requestTimestamp', function ($request) {
         // TODO: Move this to the Request class itself
-        $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+        $timestampHeader = $request->getHeaderLine('x-appwrite-timestamp');
         $requestTimestamp = null;
         if (! empty($timestampHeader)) {
             try {
@@ -1040,7 +979,7 @@ return function (Container $context): void {
     }, ['request']);
 
     $context->set('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
+        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
 
         // Check if given key match project's development keys
         $key = $project->find('secret', $devKey, 'devKeys');
@@ -1066,7 +1005,7 @@ return function (Container $context): void {
 
         // add sdk to key
         $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeader('x-sdk-name', 'UNKNOWN'));
+        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
 
         if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
@@ -1095,7 +1034,7 @@ return function (Container $context): void {
         } else {
             $route = $utopia->match($request)?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
-            $orgHeader = $request->getHeader('x-appwrite-organization', '');
+            $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $uri = $request->getURI();
                 $pid = explode('/', $uri)[3];
@@ -1141,7 +1080,7 @@ return function (Container $context): void {
         }
 
         if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeader('x-appwrite-hostname', '')) ?? '';
+            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
             if (! empty($host)) {
                 return $host;
             }
@@ -1151,7 +1090,7 @@ return function (Container $context): void {
     }, ['request', 'apiKey']);
 
     $context->set('apiKey', function (Request $request, Document $project, Document $team, Document $user): ?Key {
-        $key = $request->getHeader('x-appwrite-key');
+        $key = $request->getHeaderLine('x-appwrite-key');
 
         if (empty($key)) {
             return null;
@@ -1159,9 +1098,9 @@ return function (Container $context): void {
 
         $key = Key::decode($project, $team, $user, $key);
 
-        $userHeader = $request->getHeader('x-appwrite-user');
-        $organizationHeader = $request->getHeader('x-appwrite-organization');
-        $projectHeader = $request->getHeader('x-appwrite-project');
+        $userHeader = $request->getHeaderLine('x-appwrite-user');
+        $organizationHeader = $request->getHeaderLine('x-appwrite-organization');
+        $projectHeader = $request->getHeaderLine('x-appwrite-project');
 
         if (! empty($key->getProjectId())) {
             if (empty($projectHeader) || $projectHeader !== $key->getProjectId()) {
@@ -1202,7 +1141,11 @@ return function (Container $context): void {
                 return new Document([]);
             }
 
-            $token = $authorization->skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+            try {
+                $token = $authorization->skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+            } catch (\Utopia\Database\Exception\NotFound) {
+                return new Document([]);
+            }
 
             if ($token->isEmpty()) {
                 return new Document([]);
@@ -1251,83 +1194,20 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, UsageContext $usage) {
 
-        return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
-            $databaseDSN = $database->getAttribute('database') ?: $project->getAttribute('database', '');
+        return function (Document $database) use ($databaseFactory, $project, $request, $usage): Database {
             $databaseType = $database->getAttribute('type', '');
 
-            try {
-                $databaseDSN = new DSN($databaseDSN);
-            } catch (\InvalidArgumentException) {
-                // for old databases migrated through patch script
-                // databaseDSN determines the adapter
-                $databaseDSN = new DSN('mysql://' . $databaseDSN);
-            }
-            try {
-                $dsn = new DSN($project->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-            }
+            $database = $databaseFactory->tenant(
+                $database,
+                $project,
+                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
+                APP_DATABASE_QUERY_MAX_VALUES,
+                ['host' => \gethostname(), 'project' => $project->getId()]
+            );
 
-            $databaseHost = $databaseDSN->getHost();
-            $pool = $pools->get($databaseHost);
-
-            $adapter = new DatabasePool($pool);
-            $database = new Database($adapter, $cache);
-            $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
-
-            /** @var array $collections */
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-            // inside pools authorization needs to be set first
-            $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
-
-            // For separate pools (documentsdb/vectorsdb), check their own shared tables config.
-            // If not configured, use dedicated mode to avoid cross-engine tenant type mismatches.
-            if ($databaseHost !== $dsn->getHost()) {
-                $dbTypeSharedTables = match ($databaseType) {
-                    DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
-                    VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
-                    default => [],
-                };
-
-                if (\in_array($databaseHost, $dbTypeSharedTables)) {
-                    $database
-                        ->setSharedTables(true)
-                        ->setGlobalCollections($projectsGlobalCollections)
-                        ->setTenant($project->getSequence())
-                        ->setNamespace($databaseDSN->getParam('namespace'));
-                } else {
-                    $database
-                        ->setSharedTables(false)
-                        ->setTenant(null)
-                        ->setNamespace('_' . $project->getSequence());
-                }
-            } elseif (\in_array($dsn->getHost(), $sharedTables)) {
-                $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($projectsGlobalCollections)
-                    ->setTenant($project->getSequence())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
-            $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+            $timeout = \intval($request->getHeaderLine('x-appwrite-timeout'));
             if (!empty($timeout) && Http::isDevelopment()) {
                 $database->setTimeout($timeout);
             }
@@ -1411,7 +1291,7 @@ return function (Container $context): void {
             return $database;
         };
 
-    }, ['pools', 'cache', 'project', 'request', 'usage', 'authorization']);
+    }, ['databaseFactory', 'project', 'request', 'usage']);
 
     $context->set(
         'transactionState',
@@ -1434,8 +1314,8 @@ return function (Container $context): void {
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
 
     $context->set('embeddingAgent', function ($register) {
-        $adapter = new Ollama();
-        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
+        $adapter = new AppwriteAdapter();
+        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'));
         $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
         return new Agent($adapter);
     }, ['register']);

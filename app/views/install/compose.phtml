@@ -12,8 +12,9 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
+$executorImages = $this->getParam('executorImages', '');
 $dbService = $this->getParam('database', 'mongodb');
-$allowedDbServices = ['mariadb', 'mongodb'];
+$allowedDbServices = ['mariadb', 'mongodb', 'postgresql'];
 if (!\in_array($dbService, $allowedDbServices, true)) {
     $dbService = 'mongodb';
 }
@@ -193,7 +194,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.8.26
+    image: <?php echo $organization; ?>/console:8.7.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -456,6 +457,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
+      - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
@@ -983,15 +985,14 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
 
   openruntimes-executor:
-    container_name: openruntimes-executor
+    container_name: exc1
     hostname: exc1
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.4
+    image: openruntimes/executor:0.25.1
     networks:
       - appwrite
-      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -1001,7 +1002,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
+      - OPR_EXECUTOR_IMAGES=<?php echo $executorImages . "\n"; ?>
+      - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
@@ -1010,6 +1014,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
+      - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -1123,7 +1128,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
         exec mongod --replSet rs0 --bind_ip_all --auth --keyFile "$$KEYFILE_PATH"
     healthcheck:
       test: |
-        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "rs.status().ok" | grep -q 1
+        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "const hello = db.adminCommand({hello: 1}); if (!hello.isWritablePrimary) { quit(1); }"
       interval: 10s
       timeout: 10s
       retries: 10
@@ -1209,3 +1214,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  openruntimes-node-modules-cache:

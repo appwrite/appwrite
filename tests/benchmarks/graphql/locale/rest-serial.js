@@ -1,34 +1,35 @@
 import http from 'k6/http';
+import { ENDPOINT } from '../../config.js';
 export const options = {
     vus: 20,
     duration: '60s',
 };
 export default function () {
-    http.get('http://localhost/v1/locale/countries', {
+    http.get(`${ENDPOINT}/locale/countries`, {
         headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': 'test',
         }
     })
-    http.get('http://localhost/v1/locale/continents', {
+    http.get(`${ENDPOINT}/locale/continents`, {
         headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': 'test',
         }
     })
-    http.get('http://localhost/v1/locale/countries/eu', {
+    http.get(`${ENDPOINT}/locale/countries/eu`, {
         headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': 'test',
         }
     })
-    http.get('http://localhost/v1/locale/countries/phones', {
+    http.get(`${ENDPOINT}/locale/countries/phones`, {
         headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': 'test',
         }
     })
-    http.get('http://localhost/v1/locale/languages', {
+    http.get(`${ENDPOINT}/locale/languages`, {
         headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': 'test',

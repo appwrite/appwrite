@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -37,6 +38,7 @@ class Update extends Action
             ->label('event', 'authMethod.[methodId].update')
             ->label('audits.event', 'project.authMethods.[methodId].update')
             ->label('audits.resource', 'project.authMethods/{response.$id}')
+            ->label('usage.resource', 'project.authMethods/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
@@ -53,7 +55,7 @@ class Update extends Action
                 ],
             ))
 
-            ->param('methodId', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method ID. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
+            ->param('methodId', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method ID. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false, enum: new Enum(name: 'ProjectAuthMethodId'))
             ->param('enabled', null, new Boolean(), 'Auth method status.')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -81,6 +83,7 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
         ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('methodId', $methodId);
 

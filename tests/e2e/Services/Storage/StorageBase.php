@@ -25,6 +25,38 @@ trait StorageBase
     private static array $cachedZstdBucket = [];
 
     /**
+     * Valid signatures for a chunk-uploaded file: the content MD5 on local
+     * devices, or the composite multipart ETag (md5 of part MD5s suffixed
+     * with the part count) on S3 devices.
+     */
+    protected function getChunkedFileSignatures(string $path, int $chunkSize = 5 * 1024 * 1024): array
+    {
+        $signatures = [\md5_file($path)];
+
+        $handle = \fopen($path, 'rb');
+        if ($handle === false) {
+            return $signatures;
+        }
+        $binary = '';
+        $parts = 0;
+        while (!\feof($handle)) {
+            $chunk = \fread($handle, $chunkSize);
+            if ($chunk === '' || $chunk === false) {
+                break;
+            }
+            $binary .= \md5($chunk, true);
+            $parts++;
+        }
+        \fclose($handle);
+
+        if ($parts > 1) {
+            $signatures[] = \md5($binary) . '-' . $parts;
+        }
+
+        return $signatures;
+    }
+
+    /**
      * Helper method to set up bucket and file data for tests.
      * Uses static caching to avoid recreating resources.
      */
@@ -287,7 +319,7 @@ trait StorageBase
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
-        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
+        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // should validate that the file is not encrypted
 
         /**
          * Failure
@@ -1016,7 +1048,20 @@ trait StorageBase
         $this->assertEquals(200, $cachedPreview['headers']['status-code']);
         $this->assertEquals('image/png', $cachedPreview['headers']['content-type']);
         $this->assertStringStartsWith('private, max-age=', $cachedPreview['headers']['cache-control']);
-        $this->assertEquals($preview['body'], $cachedPreview['body']);
+        $this->assertNotEmpty($cachedPreview['body']);
+
+        $cachedPreviewAgain = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $headers,
+            $params
+        );
+
+        $this->assertEquals(200, $cachedPreviewAgain['headers']['status-code']);
+        $this->assertEquals('image/png', $cachedPreviewAgain['headers']['content-type']);
+        $this->assertStringStartsWith('private, max-age=', $cachedPreviewAgain['headers']['cache-control']);
+        $this->assertEquals('hit', $cachedPreviewAgain['headers']['x-appwrite-cache']);
+        $this->assertEquals($cachedPreview['body'], $cachedPreviewAgain['body']);
     }
 
     public function testFilePreviewZstdCompression(): void
@@ -1287,6 +1332,100 @@ trait StorageBase
         ]);
 
         $this->assertEquals(204, $deleteBucketResponse['headers']['status-code']);
+    }
+
+    public function testCreateBucketFileChunkedUploadWithoutReadPermission(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Chunked Upload No Read Permission',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $mimeType = mime_content_type($source);
+        $fileId = ID::unique();
+        $uploadedFileId = null;
+        $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Test file must span at least 2 chunks');
+
+        try {
+            $handle = fopen($source, 'rb');
+            $this->assertNotFalse($handle, "Could not open test resource: $source");
+
+            $permissions = [
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ];
+            $upload = null;
+
+            for ($chunk = 0; $chunk < $chunksTotal; $chunk++) {
+                $start = $chunk * $chunkSize;
+                $chunkData = fread($handle, min($chunkSize, $totalSize - $start));
+                $end = $start + strlen($chunkData) - 1;
+
+                $headers = [
+                    'content-type' => 'multipart/form-data',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-range' => 'bytes ' . $start . '-' . $end . '/' . $totalSize,
+                ];
+
+                if (!empty($uploadedFileId)) {
+                    $headers['x-appwrite-id'] = $uploadedFileId;
+                }
+
+                $upload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, $this->getHeaders()), [
+                    'fileId' => $fileId,
+                    'file' => new CURLFile('data://' . $mimeType . ';base64,' . base64_encode($chunkData), $mimeType, 'large-file.mp4'),
+                    'permissions' => $permissions,
+                ]);
+
+                $this->assertEquals(201, $upload['headers']['status-code'], $upload['body']['message'] ?? '');
+                $this->assertEquals($chunk + 1, $upload['body']['chunksUploaded']);
+
+                $uploadedFileId ??= $upload['body']['$id'];
+            }
+
+            fclose($handle);
+
+            if ($upload === null) {
+                $this->fail('Expected at least one chunk upload response.');
+            }
+
+            $this->assertNotContains(Permission::read(Role::user($this->getUser()['$id'])), $upload['body']['$permissions']);
+            $this->assertEquals($chunksTotal, $upload['body']['chunksTotal']);
+            $this->assertEquals($chunksTotal, $upload['body']['chunksUploaded']);
+        } finally {
+            if (isset($handle) && \is_resource($handle)) {
+                fclose($handle);
+            }
+
+            if (!empty($uploadedFileId)) {
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $uploadedFileId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+        }
     }
 
     public function testCreateBucketFileOutOfOrder(): void

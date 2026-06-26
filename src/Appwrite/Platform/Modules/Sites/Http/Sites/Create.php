@@ -17,6 +17,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -46,6 +47,7 @@ class Create extends Base
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
+            ->label('usage.resource', 'site/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',
@@ -63,7 +65,7 @@ class Create extends Base
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
-            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
+            ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
@@ -71,8 +73,8 @@ class Create extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
-            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
-            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
+            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', enum: new Enum(name: 'BuildRuntime'))
+            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
@@ -81,11 +83,12 @@ class Create extends Base
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan, 'buildSpecifications', APP_SITES_BUILD_SPECIFICATION_DEFAULT, true), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+                System::getEnv('_APP_COMPUTE_MEMORY', 0),
+                'buildSpecifications'
             ), 'Build specification for the site deployments.', true, ['plan'])
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
@@ -146,6 +149,10 @@ class Create extends Base
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 

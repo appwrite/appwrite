@@ -41,6 +41,7 @@ class Create extends Action
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -118,18 +119,6 @@ class Create extends Action
             'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
-        ]));
-
-        $function = $function
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), new Document([
-            'latestDeploymentId' => $function->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $function->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $function->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
         ]));
 
         $publisherForBuilds->enqueue(new BuildMessage(

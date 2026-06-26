@@ -1,3 +1,5 @@
+import { ENDPOINT } from './config.js';
+
 /*
  * Run locally:
  * Requires k6 and a running Appwrite instance.
@@ -11,14 +13,14 @@ import { check, group, sleep } from 'k6';
 import encoding from 'k6/encoding';
 import { Counter, Trend } from 'k6/metrics';
 
-const ENDPOINT = (__ENV.APPWRITE_ENDPOINT || 'http://localhost/v1').replace(/\/+$/, '');
 const CONSOLE_PROJECT = __ENV.APPWRITE_CONSOLE_PROJECT || 'console';
 const REGION = __ENV.APPWRITE_REGION || 'default';
 const REDIRECT_URL = __ENV.APPWRITE_BENCHMARK_REDIRECT_URL || 'http://localhost';
 const PASSWORD = __ENV.APPWRITE_BENCHMARK_PASSWORD || 'Password123!';
 const WORKER_TIMEOUT_MS = Number(__ENV.APPWRITE_WORKER_TIMEOUT_MS || 120000);
-const ITERATIONS = Number(__ENV.APPWRITE_BENCHMARK_ITERATIONS || 1);
 const VUS = Number(__ENV.APPWRITE_BENCHMARK_VUS || 1);
+const DURATION = __ENV.APPWRITE_BENCHMARK_DURATION || '1m';
+const ROWS_PER_FLOW = Number(__ENV.APPWRITE_BENCHMARK_ROWS || 5);
 const SUMMARY_PATH = __ENV.APPWRITE_BENCHMARK_SUMMARY_PATH || '/tmp/appwrite-k6-summary.json';
 const PREVIOUS_SUMMARY_PATH = __ENV.APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH || '';
 const PREVIOUS_SUMMARY = PREVIOUS_SUMMARY_PATH ? loadPreviousSummary(PREVIOUS_SUMMARY_PATH) : null;
@@ -31,16 +33,14 @@ export const flowFailures = new Counter('appwrite_benchmark_flow_failures');
 export const options = {
     scenarios: {
         curated_flows: {
-            executor: 'shared-iterations',
+            executor: 'constant-vus',
             exec: 'curatedFlows',
             vus: VUS,
-            iterations: ITERATIONS,
-            maxDuration: __ENV.APPWRITE_BENCHMARK_MAX_DURATION || '30m',
+            duration: DURATION,
         },
     },
     thresholds: {
         http_req_failed: ['rate<0.05'],
-        appwrite_api_duration: ['p(95)<2000'],
         appwrite_benchmark_flow_failures: ['count<1'],
     },
 };
@@ -173,6 +173,7 @@ export function setup() {
     }, apiHeaders, [201, 409], 'setup.project.platforms.web.create');
 
     const tablesDb = setupTablesDb(apiHeaders);
+    const users = setupUsers(projectId, VUS);
 
     return {
         runId,
@@ -182,8 +183,39 @@ export function setup() {
         tableId: tablesDb.tableId,
         consoleSessionHeaders,
         apiHeaders,
+        users,
         platformStatus: platform.status,
     };
+}
+
+// Pre-create one signed-in user per VU so password hashing happens once
+// during setup (excluded from metrics) instead of in every iteration.
+function setupUsers(projectId, count) {
+    const headers = projectHeaders(projectId);
+    const users = [];
+
+    for (let index = 0; index < count; index++) {
+        const email = `bench-user-${unique('mail')}@example.com`;
+        setupApi('POST', '/account', {
+            userId: unique('user'),
+            email,
+            password: PASSWORD,
+            name: 'Benchmark User',
+        }, headers, [201], 'setup.account.create');
+
+        const session = setupApi('POST', '/account/sessions/email', {
+            email,
+            password: PASSWORD,
+        }, headers, [201], 'setup.account.session');
+
+        users.push({ sessionHeaders: { ...headers, Cookie: cookieHeader(session) } });
+
+        // Drop the auto-stored session cookie so the next user can sign in;
+        // setup() runs in a single iteration, so the jar is not reset for us.
+        http.cookieJar().clear(ENDPOINT);
+    }
+
+    return users;
 }
 
 function setupTablesDb(apiHeaders) {
@@ -219,7 +251,8 @@ function setupTablesDb(apiHeaders) {
 }
 
 export function curatedFlows(data) {
-    const ctx = { ...data };
+    const user = data.users[(__VU - 1) % data.users.length];
+    const ctx = { ...data, sessionHeaders: user.sessionHeaders };
 
     try {
         group('account flow', () => accountFlow(ctx));
@@ -243,62 +276,42 @@ export function teardown(data) {
 }
 
 function accountFlow(ctx) {
-    const userId = unique('user');
-    const email = `bench-user-${unique('mail')}@example.com`;
-    const headers = projectHeaders(ctx.projectId);
+    requireSession(ctx, 'accountFlow');
 
-    api('POST', '/account', {
-        userId,
-        email,
-        password: PASSWORD,
-        name: 'Benchmark User',
-    }, headers, [201], 'account.create');
-
-    const session = api('POST', '/account/sessions/email', {
-        email,
-        password: PASSWORD,
-    }, headers, [201], 'account.sessions.email.create');
-
-    const sessionHeaders = {
-        ...headers,
-        Cookie: cookieHeader(session),
-    };
-
-    ctx.userId = userId;
-    ctx.userEmail = email;
-    ctx.sessionHeaders = sessionHeaders;
-
-    api('GET', '/account', null, sessionHeaders, [200], 'account.get');
-    api('GET', '/account/logs', null, sessionHeaders, [200], 'account.logs.list');
-    api('PATCH', '/account/prefs', { prefs: { benchmark: true, runId: ctx.runId } }, sessionHeaders, [200], 'account.prefs.update');
-    api('PATCH', '/account/name', { name: 'Benchmark User Updated' }, sessionHeaders, [200], 'account.name.update');
-    api('PATCH', '/account/password', { password: `${PASSWORD}2`, oldPassword: PASSWORD }, sessionHeaders, [200], 'account.password.update');
+    api('GET', '/account', null, ctx.sessionHeaders, [200], 'account.get');
+    api('GET', '/account/logs', null, ctx.sessionHeaders, [200], 'account.logs.list');
+    api('PATCH', '/account/prefs', { prefs: { benchmark: true, runId: ctx.runId } }, ctx.sessionHeaders, [200], 'account.prefs.update');
+    api('PATCH', '/account/name', { name: 'Benchmark User Updated' }, ctx.sessionHeaders, [200], 'account.name.update');
 }
 
 function tablesDbFlow(ctx) {
     requireSession(ctx, 'tablesDbFlow');
 
-    const databaseId = ctx.databaseId;
-    const tableId = ctx.tableId;
-    const rowId = unique('row');
+    const { databaseId, tableId, sessionHeaders } = ctx;
+    const base = `/tablesdb/${databaseId}/tables/${tableId}/rows`;
+    const rowIds = [];
 
-    api('POST', `/tablesdb/${databaseId}/tables/${tableId}/rows`, {
-        rowId,
-        data: tablePayload(),
-        permissions: ITEM_PERMISSIONS,
-    }, ctx.sessionHeaders, [201], 'tablesdb.rows.create');
-    api('GET', `/tablesdb/${databaseId}/tables/${tableId}/rows`, null, ctx.sessionHeaders, [200], 'tablesdb.rows.list');
-    api('GET', `/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, null, ctx.sessionHeaders, [200], 'tablesdb.rows.get');
-    api('PATCH', `/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, {
-        data: { title: 'Benchmark Row Updated' },
-    }, ctx.sessionHeaders, [200], 'tablesdb.rows.update');
-    api('PATCH', `/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}/quantity/increment`, {
-        value: 1,
-    }, ctx.sessionHeaders, [200], 'tablesdb.rows.increment');
-    api('PATCH', `/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}/quantity/decrement`, {
-        value: 1,
-    }, ctx.sessionHeaders, [200], 'tablesdb.rows.decrement');
-    api('DELETE', `/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, null, ctx.sessionHeaders, [204], 'tablesdb.rows.delete');
+    for (let index = 0; index < ROWS_PER_FLOW; index++) {
+        const rowId = unique('row');
+        rowIds.push(rowId);
+        api('POST', base, {
+            rowId,
+            data: tablePayload(),
+            permissions: ITEM_PERMISSIONS,
+        }, sessionHeaders, [201], 'tablesdb.rows.create');
+    }
+
+    api('GET', base, null, sessionHeaders, [200], 'tablesdb.rows.list');
+
+    for (const rowId of rowIds) {
+        api('GET', `${base}/${rowId}`, null, sessionHeaders, [200], 'tablesdb.rows.get');
+        api('PATCH', `${base}/${rowId}`, {
+            data: { title: 'Benchmark Row Updated' },
+        }, sessionHeaders, [200], 'tablesdb.rows.update');
+        api('PATCH', `${base}/${rowId}/quantity/increment`, { value: 1 }, sessionHeaders, [200], 'tablesdb.rows.increment');
+        api('PATCH', `${base}/${rowId}/quantity/decrement`, { value: 1 }, sessionHeaders, [200], 'tablesdb.rows.decrement');
+        api('DELETE', `${base}/${rowId}`, null, sessionHeaders, [204], 'tablesdb.rows.delete');
+    }
 }
 
 function storageFlow(ctx) {

@@ -10,13 +10,14 @@ services:
     networks:
       - appwrite
     ports:
-      - "8082:8081"
+      - "9508:8081"
     environment:
       ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
       ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
   adminer:
     image: adminer
@@ -75,7 +76,7 @@ services:
       - "traefik.http.routers.appwrite_redisinsight_https.service=appwrite_redisinsight"
       - "traefik.http.routers.appwrite_redisinsight_https.tls=true"
     ports:
-      - "8081:5540"
+      - "9514:5540"
 
   graphql-explorer:
     container_name: appwrite-graphql-explorer
@@ -86,7 +87,7 @@ services:
     ports:
       - "9509:3000"
     environment:
-      - SERVER_URL=http://localhost/v1/graphql
+      - SERVER_URL=http://localhost:9520/v1/graphql
 
 configs:
   redisinsight-connections.json:

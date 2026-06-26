@@ -49,6 +49,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Validator\Hostname;
 
 class Migrations extends Action
 {
@@ -197,23 +198,58 @@ class Migrations extends Action
         /** @var Database|null $projectDB */
         $projectDB = null;
         $useAppwriteApiSource = false;
-        if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
+        $isAppwriteSource = $source === SourceAppwrite::getName();
+        $isAppwriteToAppwrite = $isAppwriteSource
+            && $destination === DestinationAppwrite::getName();
+
+        if ($isAppwriteSource && empty($credentials['projectId'])) {
             throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED);
         }
 
-        if (! empty($credentials['projectId'])) {
+        if ($isAppwriteSource) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
-            if ($this->sourceProject->isEmpty()) {
-                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+
+            // Trust DB fast path only when the source URL targets this cluster's host
+            // (env-configured or this project's verified custom API domain).
+            $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
+            $publicDomain = parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
+            $internalHost = parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
+
+            $allowedHosts = array_filter([
+                $publicDomain,
+                $publicDomain !== '' ? '*.' . $publicDomain : null,
+                $internalHost,
+            ]);
+
+            if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
+                $rule = $this->dbForPlatform->findOne('rules', [
+                    Query::equal('domain', [$sourceHost]),
+                    Query::equal('type', ['api']),
+                    Query::equal('status', [RULE_STATUS_VERIFIED]),
+                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
+                ]);
+                if (!$rule->isEmpty()) {
+                    $allowedHosts[] = $sourceHost;
+                }
             }
+
+            $isLocalEndpoint = is_string($sourceHost)
+                && !empty($allowedHosts)
+                && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
-            $useAppwriteApiSource = $source === SourceAppwrite::getName()
-                && $destination === DestinationAppwrite::getName()
-                && $sourceRegion !== $destinationRegion;
-            if (! $useAppwriteApiSource) {
+
+            $isLocalSource = !$this->sourceProject->isEmpty()
+                && $isLocalEndpoint
+                && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
+
+            if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+            } elseif ($isAppwriteToAppwrite) {
+                $useAppwriteApiSource = true;
+            } else {
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
@@ -389,6 +425,8 @@ class Migrations extends Action
             'targets.write',
             'webhooks.read',
             'webhooks.write',
+            'rules.read',
+            'rules.write',
             'project.read',
             'project.write',
             'keys.read',
@@ -577,11 +615,21 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                $extras = [
                     'migrationId' => $migration->getId(),
                     'source' => $migration->getAttribute('source') ?? '',
                     'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+                ];
+
+                // Include source identifiers for Appwrite sources to make Sentry events
+                // self-debuggable. Never include the apiKey or any other secret.
+                if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                    $credentials = $migration->getAttribute('credentials', []) ?? [];
+                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
+                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
+                }
+
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), $extras);
             }
         } finally {
             try {
@@ -899,6 +947,7 @@ class Migrations extends Action
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name', $user->getAttribute('email')),
             subject: $subject,
+            template: MAIL_TEMPLATE_DATA_EXPORT,
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $emailBody,
             preview: $preview,

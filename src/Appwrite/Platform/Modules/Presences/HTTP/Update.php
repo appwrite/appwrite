@@ -45,6 +45,7 @@ class Update extends PlatformAction
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')
+            ->label('usage.resource', 'presence/{response.$id}')
             ->label('sdk', [
                 // Client-side SDK: `userId` is not accepted (session callers can only update their own presence).
                 new Method(
@@ -53,7 +54,7 @@ class Update extends PlatformAction
                     name: 'update',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
-                    auth: [AuthType::SESSION],
+                    auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -73,10 +74,10 @@ class Update extends PlatformAction
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
-                    name: 'updatePresence',
+                    name: 'update',
                     desc: 'Update presence',
                     description: '/docs/references/presences/update.md',
-                    auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
+                    auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,

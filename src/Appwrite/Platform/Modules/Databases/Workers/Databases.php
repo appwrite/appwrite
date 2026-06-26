@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
@@ -18,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 
 class Databases extends Action
 {
@@ -62,10 +62,21 @@ class Databases extends Action
         }
 
         $databaseMessage = DatabaseMessage::fromArray($payload);
+
         $type = $databaseMessage->type;
+        Span::add('payload.type', $type);
+
         $document = $databaseMessage->row ?? $databaseMessage->document ?? new Document();
+        Span::add('database.document.id', $document->getId());
+
         $collection = $databaseMessage->table ?? $databaseMessage->collection ?? new Document();
+        Span::add('database.collection.id', $collection->getId());
+
         $database = $databaseMessage->database ?? new Document();
+        Span::add('database.id', $database->getId());
+        Span::add('database.namespace', $dbForProject->getNamespace());
+        Span::add('database.tenant', $dbForProject->getTenant());
+
         /**
          * @var Database $dbForDatabases
          */
@@ -88,14 +99,6 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             default => throw new Exception('No database operation for type: ' . \strval($type)),
         };
-
-        Console::info("Finished processing database operation: \n" . \json_encode([
-            'type' => $type,
-            'projectId' => $project->getId(),
-            'databaseId' => $database->getId(),
-            'collectionId' => $collection->getId(),
-            'documentId' => $document->getId(),
-        ], JSON_PRETTY_PRINT));
     }
 
     /**
@@ -206,8 +209,6 @@ class Databases extends Action
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            Console::error($e->getMessage());
-
             if ($e instanceof DatabaseException) {
                 $attribute->setAttribute('error', $e->getMessage());
                 if (! $relatedAttribute->isEmpty()) {
@@ -309,7 +310,7 @@ class Databases extends Action
                 }
 
             } catch (NotFound $e) {
-                Console::error($e->getMessage());
+                Span::add('database.attribute.not_found', $e->getMessage());
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
 
@@ -318,8 +319,6 @@ class Databases extends Action
                 }
 
             } catch (\Throwable $e) {
-                Console::error($e->getMessage());
-
                 if ($e instanceof DatabaseException) {
                     $attribute->setAttribute('error', $e->getMessage());
                     if (!$relatedAttribute->isEmpty()) {
@@ -456,7 +455,6 @@ class Databases extends Action
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            Console::error($e->getMessage());
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
@@ -512,8 +510,6 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
-            Console::error($e->getMessage());
-
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
@@ -613,7 +609,7 @@ class Databases extends Action
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
-        $start = \microtime(true);
+        Span::add('delete_by_group.collection.id', $collectionId);
 
         try {
             $count = $database->deleteDocuments(
@@ -623,13 +619,11 @@ class Databases extends Action
                 $callback
             );
         } catch (\Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
-            Console::error("Failed to delete documents/rows for collection/table: {$database->getNamespace()}_{$collectionId} {$tenant} :{$th->getMessage()}");
+            Span::add('delete_by_group.error', $th->getMessage());
             return;
         }
 
-        $end = \microtime(true);
-        Console::info("Deleted {$count} documents/rows by group in " . ($end - $start) . " seconds");
+        Span::add('delete_by_group.count', $count);
     }
 
     /**

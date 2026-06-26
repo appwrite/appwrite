@@ -99,7 +99,9 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->inject('impersonatorUser')
+    ->inject('targetUser')
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -201,19 +203,19 @@ Http::init()
                 if (! empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',
-                        find: $request->getHeader('x-appwrite-key', ''),
+                        find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
                 } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
-                        find: $request->getHeader('x-appwrite-key', ''),
+                        find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
                 } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
-                        find: $request->getHeader('x-appwrite-key', ''),
+                        find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
                 }
@@ -231,7 +233,7 @@ Http::init()
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                $sdk = $request->getHeaderLine('x-sdk-name', 'UNKNOWN');
 
                 if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);
@@ -297,7 +299,8 @@ Http::init()
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
-            $memberships = $user->getAttribute('memberships', []);
+            $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
+            $memberships = $membershipSource->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
@@ -353,7 +356,7 @@ Http::init()
             !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
-                || $user->getAttribute('impersonatorUserId')
+                || !$impersonatorUser->isEmpty()
             )
         ) {
             $scopes[] = 'users.read';
@@ -361,8 +364,25 @@ Http::init()
         }
 
         $authorization->addRole($role);
-        foreach ($user->getRoles($authorization) as $authRole) {
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
+        foreach ($rolesSource->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
+        }
+
+        $isAdminProjectRequest = ! $user->isEmpty()
+            && $project->getId() !== 'console'
+            && $mode === APP_MODE_ADMIN;
+        $isOAuthAdminKey = ! empty($apiKey)
+            && $apiKey->getType() === API_KEY_OAUTH2
+            && $apiKey->getRole() === User::ROLE_OWNER;
+
+        if ($isAdminProjectRequest && $isOAuthAdminKey) {
+            $authorization->setDefaultStatus(false);
+        }
+
+        if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
+            $dbForProject->setMetadata('user', $targetUser->getId());
+            $dbForPlatform->setMetadata('user', $targetUser->getId());
         }
 
         /**
@@ -370,7 +390,7 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+        if ($isAdminProjectRequest && (empty($apiKey) || $isOAuthAdminKey)) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
@@ -391,11 +411,10 @@ Http::init()
         }
 
         if (! empty($user->getId())) {
-            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
 
             // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
-            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+            if ($impersonatorUser->isEmpty() && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
@@ -409,6 +428,8 @@ Http::init()
                 }
             }
         }
+
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
 
         // Steps 7-9: Access Control - Method, Namespace and Scope Validation
         $method = $route->getLabel('sdk', false);
@@ -425,7 +446,7 @@ Http::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+                && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -435,7 +456,7 @@ Http::init()
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && ! $project->getAttribute('apis', [])['rest']
-            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+            && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -447,20 +468,20 @@ Http::init()
         }
 
         // Step 10: Check if user is blocked
-        if ($user->getAttribute('status') === false) { // Account is blocked
+        if ($rolesSource->getAttribute('status') === false) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
         // Step 11: Verify password status
-        if ($user->getAttribute('reset')) {
+        if ($rolesSource->getAttribute('reset')) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
         // Step 12: Validate MFA requirements
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+        $mfaEnabled = $rolesSource->getAttribute('mfa', false);
+        $hasVerifiedEmail = $rolesSource->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $rolesSource->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($rolesSource)?->getAttribute('verified') ?? false;
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
@@ -566,10 +587,13 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->inject('impersonatorUser')
+    ->inject('targetUser')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
 
-        $response->setUser($user);
-        $request->setUser($user);
+        $response->setUser($targetUser);
+        $response->setImpersonatorUser($impersonatorUser);
+        $request->setUser($targetUser);
 
         $path = $route->getPath();
         $databaseType = match (true) {
@@ -588,7 +612,7 @@ Http::init()
         $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user);
+            ->setUser($targetUser);
 
         $auditContext->mode = $mode;
         $auditContext->userAgent = $request->getUserAgent('');
@@ -596,24 +620,27 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
+        $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
 
-        /* If a session exists, use the user associated with the session */
-        if (! $user->isEmpty()) {
-            $userClone = clone $user;
+        /* If a session exists, use the target user (impersonated target or actor) for audit */
+        if (! $targetUser->isEmpty()) {
+            $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
-            if (empty($user->getAttribute('type'))) {
+            if (empty($targetUser->getAttribute('type'))) {
                 $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         }
 
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
+
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $roles = $authorization->getRoles();
-            $isAppUser = $user->isKey($roles);
+            $isAppUser = $rolesSource->isKey($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($roles);
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
@@ -786,133 +813,142 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
-    ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('user')
     ->inject('queueForEvents')
-    ->inject('auditContext')
-    ->inject('publisherForAudits')
-    ->inject('usage')
-    ->inject('publisherForUsage')
     ->inject('publisherForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->inject('authorization')
-    ->inject('timelimit')
     ->inject('eventProcessor')
-    ->inject('bus')
-    ->inject('apiKey')
-    ->inject('mode')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor) {
+        if (empty($queueForEvents->getEvent())) {
+            return;
+        }
 
-        $responsePayload = $response->getPayload();
+        if (empty($queueForEvents->getPayload())) {
+            $queueForEvents->setPayload($response->getPayload());
+        }
 
-        if (! empty($queueForEvents->getEvent())) {
-            if (empty($queueForEvents->getPayload())) {
-                $queueForEvents->setPayload($responsePayload);
-            }
+        // Get project and function/webhook events (cached)
+        $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+        $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
-            // Get project and function/webhook events (cached)
-            $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
-            $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+        // Generate events for this operation
+        $generatedEvents = Event::generateEvents(
+            $queueForEvents->getEvent(),
+            $queueForEvents->getParams()
+        );
 
-            // Generate events for this operation
-            $generatedEvents = Event::generateEvents(
-                $queueForEvents->getEvent(),
-                $queueForEvents->getParams()
-            );
+        $allowedOnConsole = !empty(\array_intersect($route->getGroups(), Realtime::CONSOLE_ALLOWLIST));
+        if ($project->getId() !== 'console' || $allowedOnConsole) {
+            $queueForRealtime
+                ->from($queueForEvents)
+                ->trigger();
+        }
 
-            if ($project->getId() !== 'console') {
-                $queueForRealtime
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-
-            // Only trigger functions if there are matching function events
-            if (! empty($functionsEvents)) {
-                foreach ($generatedEvents as $event) {
-                    if (isset($functionsEvents[$event])) {
-                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-                            event: $queueForEvents->getEvent(),
-                            params: $queueForEvents->getParams(),
-                            project: $queueForEvents->getProject(),
-                            user: $queueForEvents->getUser(),
-                            userId: $queueForEvents->getUserId(),
-                            payload: $queueForEvents->getPayload(),
-                            platform: $queueForEvents->getPlatform(),
-                        ));
-                        break;
-                    }
-                }
-            }
-
-            // Only trigger webhooks if there are matching webhook events
-            if (! empty($webhooksEvents)) {
-                foreach ($generatedEvents as $event) {
-                    if (isset($webhooksEvents[$event])) {
-                        $queueForWebhooks
-                            ->from($queueForEvents)
-                            ->trigger();
-                        break;
-                    }
+        // Only trigger functions if there are matching function events
+        if (! empty($functionsEvents)) {
+            foreach ($generatedEvents as $event) {
+                if (isset($functionsEvents[$event])) {
+                    $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                        event: $queueForEvents->getEvent(),
+                        params: $queueForEvents->getParams(),
+                        project: $queueForEvents->getProject(),
+                        user: $queueForEvents->getUser(),
+                        userId: $queueForEvents->getUserId(),
+                        payload: $queueForEvents->getPayload(),
+                        platform: $queueForEvents->getPlatform(),
+                    ));
+                    break;
                 }
             }
         }
 
-        $requestParams = $route->getParamsValues();
+        // Only trigger webhooks if there are matching webhook events
+        if (! empty($webhooksEvents)) {
+            foreach ($generatedEvents as $event) {
+                if (isset($webhooksEvents[$event])) {
+                    $queueForWebhooks
+                        ->from($queueForEvents)
+                        ->trigger();
+                    break;
+                }
+            }
+        }
+    });
 
-        /**
-         * Abuse labels
-         */
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('timelimit')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
 
-        if ($abuseEnabled && \count($abuseResetCode) > 0 && \in_array($response->getStatusCode(), $abuseResetCode)) {
-            $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-            $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
-
-            foreach ($abuseKeyLabel as $abuseKey) {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
-                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
-                $timeLimit
-                    ->setParam('{projectId}', $project->getId())
-                    ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', $request->getUserAgent(''))
-                    ->setParam('{ip}', $request->getIP())
-                    ->setParam('{url}', $request->getHostname() . $route->getPath())
-                    ->setParam('{method}', $request->getMethod())
-                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
-
-                foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                    if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
-                    }
-                }
-
-                $abuse = new Abuse($timeLimit);
-                $abuse->reset();
-            }
+        if (! $abuseEnabled || \count($abuseResetCode) === 0 || ! \in_array($response->getStatusCode(), $abuseResetCode)) {
+            return;
         }
 
-        /**
-         * Audit labels
-         */
+        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+
+        foreach ($abuseKeyLabel as $abuseKey) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+            $timeLimit
+                ->setParam('{projectId}', $project->getId())
+                ->setParam('{userId}', $user->getId())
+                ->setParam('{userAgent}', $request->getUserAgent(''))
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getHostname() . $route->getPath())
+                ->setParam('{method}', $request->getMethod())
+                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+
+            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+                if (! empty($value)) {
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                }
+            }
+
+            $abuse = new Abuse($timeLimit);
+            $abuse->reset();
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('params')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('targetUser')
+    ->inject('auditContext')
+    ->inject('publisherForAudits')
+    ->inject('mode')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
+        $responsePayload = $response->getPayload();
+
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
+            $resource = $parseLabel($pattern, $responsePayload, $params, $targetUser, $project);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
         }
 
-        if (! $user->isEmpty()) {
-            $userClone = clone $user;
+        if (! $targetUser->isEmpty()) {
+            $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
-            if (empty($user->getAttribute('type'))) {
+            if (empty($targetUser->getAttribute('type'))) {
                 $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
@@ -950,97 +986,129 @@ Http::shutdown()
 
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
+    });
 
-        // Cache label
-        $useCache = $route->getLabel('cache', false);
-        if ($useCache) {
-            $resource = $resourceType = null;
-            $data = $response->getPayload();
-            $statusCode = $response->getStatusCode();
-            if (! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
-                $pattern = $route->getLabel('cache.resource', null);
-                if (! empty($pattern)) {
-                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
-                }
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('params')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('authorization')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
+        if (! $route->getLabel('cache', false)) {
+            return;
+        }
 
-                $pattern = $route->getLabel('cache.resourceType', null);
-                if (! empty($pattern)) {
-                    $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
-                }
+        $data = $response->getPayload();
+        $statusCode = $response->getStatusCode();
+        if (empty($data['payload']) || $statusCode < 200 || $statusCode >= 300) {
+            return;
+        }
 
-                $cache = new Cache(
-                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                );
+        $cache = new Cache(
+            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+        );
+        $key = $request->cacheIdentifier();
+        $signature = md5($data['payload']);
+        $now = DateTime::now();
+        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
 
-                $key = $request->cacheIdentifier();
-                $signature = md5($data['payload']);
+        // First request for this resource: record it and persist the payload.
+        if ($cacheLog->isEmpty()) {
+            // Resolve resource labels lazily — only needed when creating the entry.
+            $requestParams = [];
+            foreach ($route->getParams() as $paramKey => $param) {
+                $requestParams[$paramKey] = $params[$paramKey] ?? $request->getParam($paramKey, $param['default']);
+            }
+
+            $resourcePattern = $route->getLabel('cache.resource', null);
+            $resourceTypePattern = $route->getLabel('cache.resourceType', null);
+
+            try {
+                $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    '$id' => $key,
+                    'resource' => empty($resourcePattern) ? null : $parseLabel($resourcePattern, $data, $requestParams, $user, $project),
+                    'resourceType' => empty($resourceTypePattern) ? null : $parseLabel($resourceTypePattern, $data, $requestParams, $user, $project),
+                    'mimeType' => $response->getContentType(),
+                    'accessedAt' => $now,
+                    'signature' => $signature,
+                ])));
+                $cache->save($key, $data['payload']);
+
+                return;
+            } catch (DuplicateException) {
+                // Race condition: another concurrent request already created the entry.
                 $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-                $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
-                $now = DateTime::now();
-                if ($cacheLog->isEmpty()) {
-                    try {
-                        $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
-                            '$id' => $key,
-                            'resource' => $resource,
-                            'resourceType' => $resourceType,
-                            'mimeType' => $response->getContentType(),
-                            'accessedAt' => $now,
-                            'signature' => $signature,
-                        ])));
-                    } catch (DuplicateException) {
-                        // Race condition: another concurrent request already created the cache document
-                        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-                    }
-                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
-                    $cacheLog->setAttribute('accessedAt', $now);
-                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
-                        'accessedAt' => $cacheLog->getAttribute('accessedAt')
-                    ])));
-                    // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
-                    $cache->save($key, $data['payload']);
-                }
-
-                if ($signature !== $cacheLog->getAttribute('signature')) {
-                    $cache->save($key, $data['payload']);
-                }
             }
         }
 
-        if ($project->getId() !== 'console') {
-            if (! $user->isPrivileged($authorization->getRoles())) {
-                $bus->dispatch(new RequestCompleted(
-                    project: $project->getArrayCopy(),
-                    request: $request,
-                    response: $response,
-                ));
-            }
+        // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
+        // (keeps the file mtime current for TTL checks) and re-persist on content change.
+        $stale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', 0);
+        if ($stale) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                'accessedAt' => $now,
+            ])));
+        }
 
-            // Publish usage metrics if context has data
-            if (! $usage->isEmpty()) {
-                $metrics = $usage->getMetrics();
+        if ($stale || $signature !== $cacheLog->getAttribute('signature')) {
+            $cache->save($key, $data['payload']);
+        }
+    });
 
-                // Filter out API key disabled metrics using suffix pattern matching
-                $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
-                if (! empty($disabledMetrics)) {
-                    $metrics = array_values(array_filter($metrics, function ($metric) use ($disabledMetrics) {
-                        foreach ($disabledMetrics as $pattern) {
-                            if (str_ends_with($metric['key'], $pattern)) {
-                                return false;
-                            }
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('usage')
+    ->inject('publisherForUsage')
+    ->inject('authorization')
+    ->inject('bus')
+    ->inject('apiKey')
+    ->action(function (Request $request, Response $response, Document $project, User $user, Context $usage, UsagePublisher $publisherForUsage, Authorization $authorization, Bus $bus, ?Key $apiKey) {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        if (! $user->isPrivileged($authorization->getRoles())) {
+            $bus->dispatch(new RequestCompleted(
+                project: $project->getArrayCopy(),
+                request: $request,
+                response: $response,
+            ));
+        }
+
+        // Publish usage metrics if context has data
+        if (! $usage->isEmpty()) {
+            $metrics = $usage->getMetrics();
+
+            // Filter out API key disabled metrics using suffix pattern matching
+            $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
+            if (! empty($disabledMetrics)) {
+                $metrics = array_values(array_filter($metrics, function ($metric) use ($disabledMetrics) {
+                    foreach ($disabledMetrics as $pattern) {
+                        if (str_ends_with($metric['key'], $pattern)) {
+                            return false;
                         }
+                    }
 
-                        return true;
-                    }));
-                }
-
-                $message = new UsageMessage(
-                    project: $project,
-                    metrics: $metrics,
-                    reduce: $usage->getReduce()
-                );
-
-                $publisherForUsage->enqueue($message);
+                    return true;
+                }));
             }
+
+            $message = new UsageMessage(
+                project: $project,
+                metrics: $metrics,
+                reduce: $usage->getReduce()
+            );
+
+            $publisherForUsage->enqueue($message);
         }
     });
 

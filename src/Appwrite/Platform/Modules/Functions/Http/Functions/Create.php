@@ -33,6 +33,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -63,6 +64,7 @@ class Create extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
+            ->label('usage.resource', 'function/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'functions',
@@ -80,7 +82,7 @@ class Create extends Base
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
+            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -89,7 +91,7 @@ class Create extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
@@ -97,11 +99,12 @@ class Create extends Base
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan, 'buildSpecifications'), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+                System::getEnv('_APP_COMPUTE_MEMORY', 0),
+                'buildSpecifications'
             ), 'Build specification for the function deployments.', true, ['plan'])
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
@@ -217,6 +220,10 @@ class Create extends Base
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
@@ -307,7 +314,7 @@ class Create extends Base
         ]));
 
         // Backwards compatibility with 1.6 behaviour
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
             // build from template
             $template = new Document([]);
@@ -343,12 +350,6 @@ class Create extends Base
                     referenceType: 'branch'
                 );
 
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                ]));
             } elseif (!$template->isEmpty()) {
                 // Deploy non-VCS from template
                 $deploymentId = ID::unique();
@@ -367,13 +368,6 @@ class Create extends Base
                     'startCommand' => $function->getAttribute('startCommand', ''),
                     'type' => 'manual',
                     'activate' => true,
-                ]));
-
-                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                    'latestDeploymentId' => $deployment->getId(),
-                    'latestDeploymentInternalId' => $deployment->getSequence(),
-                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
                 ]));
 
                 $publisherForBuilds->enqueue(new BuildMessage(

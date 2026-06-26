@@ -2,6 +2,15 @@
 # This is a development version of THE Appwrite docker-compose.yml file.
 # Avoid using this file in your production environment.
 # We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
+#
+# Development port map (host:container)
+# -----------------------------------
+# Entry points: 9520:80 (HTTP), 9521:443 (HTTPS), 9522:80 (HTTP alt)
+# Reserve 9600-9699 for Appwrite Cloud dev when running both stacks locally.
+# 9500 Traefik dashboard, 9501 Appwrite API, 9502 Realtime, 9503 Mail catcher
+# 9504 Request catcher (webhook), 9505 Embedding, 9507 Request catcher (SMS)
+# 9510 MariaDB, 9511 MongoDB, 9512 PostgreSQL, 9513 Redis
+# Dev tools in docker-compose.override.yml: 9506 Adminer, 9508 Mongo Express, 9509 GraphQL, 9514 Redis Insight
 
 x-logging: &x-logging
   logging:
@@ -36,9 +45,9 @@ services:
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
     ports:
-      - 80:80
-      - 8080:80
-      - 443:443
+      - 9520:80
+      - 9522:80
+      - 9521:443
       - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -112,7 +121,7 @@ services:
         condition: service_healthy
       coredns:
         condition: service_started
-      ollama:
+      appwrite-embedding:
         condition: service_started
     entrypoint:
       - php
@@ -255,7 +264,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:8
+    image: appwrite/console:8.7.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -281,7 +290,7 @@ services:
     image: appwrite-dev
     restart: unless-stopped
     ports:
-      - 9505:80
+      - 9502:80
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -304,12 +313,13 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -346,9 +356,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -380,9 +392,11 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -411,7 +425,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -424,6 +438,8 @@ services:
       
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -481,9 +497,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -504,7 +522,6 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
-      - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
 
@@ -524,9 +541,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -551,6 +570,7 @@ services:
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
+      - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
@@ -605,6 +625,8 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       # Basic
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
@@ -657,7 +679,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -665,6 +687,8 @@ services:
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -705,8 +729,11 @@ services:
       - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -735,6 +762,8 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -781,6 +810,8 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -822,6 +853,8 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -882,6 +915,8 @@ services:
       - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1043,6 +1078,8 @@ services:
       - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1074,9 +1111,11 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1108,7 +1147,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1146,7 +1185,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1184,7 +1223,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ollama
+      - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1217,15 +1256,14 @@ services:
       - appwrite
 
   openruntimes-executor:
-    container_name: openruntimes-executor
+    container_name: exc1
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.4
+    image: openruntimes/executor:0.25.1
     restart: unless-stopped
     networks:
       - appwrite
-      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -1235,8 +1273,10 @@ services:
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_IMAGE_PULL=enabled
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
+      - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
+      - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
@@ -1245,6 +1285,7 @@ services:
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
+      - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -1284,7 +1325,7 @@ services:
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "3306:3306"
+      - "9510:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -1311,7 +1352,7 @@ services:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     ports:
-      - "27017:27017"
+      - "9511:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
@@ -1322,13 +1363,20 @@ services:
     healthcheck:
       test: |
         bash -c "
-          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
-            exit 0
-          else
-            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
-              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
-            \" 2>/dev/null || exit 1
-          fi
+          mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+            try {
+              const hello = db.adminCommand({hello: 1});
+              if (hello.isWritablePrimary) {
+                quit(0);
+              }
+            } catch (e) {}
+
+            try {
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]});
+            } catch (e) {}
+
+            quit(1);
+          \" 2>/dev/null
         "
       interval: 10s
       timeout: 10s
@@ -1344,7 +1392,7 @@ services:
     volumes:
       - appwrite-postgresql:/var/lib/postgresql/18/data:rw
     ports:
-      - "5432:5432"
+      - "9512:5432"
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
@@ -1355,19 +1403,23 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    command: "postgres"
+    command: >
+      postgres
+      -c fsync=off
+      -c synchronous_commit=off
+      -c full_page_writes=off
 
-  ollama:
-    image: appwrite/ollama:0.1.1
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    restart: unless-stopped
+  appwrite-embedding:
+    image: appwrite/embedding:0.1.0
     environment:
-      MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
-      OLLAMA_KEEP_ALIVE: 24h
+      EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
+    container_name: appwrite-embedding
+    ports:
+      - "9505:3000"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
     volumes:
-      - appwrite-models:/root/.ollama
+      - appwrite-models:/home/embedder/models
     networks:
       - appwrite
 
@@ -1381,7 +1433,7 @@ services:
       --maxmemory-policy     allkeys-lru
       --maxmemory-samples    5
     ports:
-      - "6379:6379"
+      - "9513:6379"
     networks:
       - appwrite
     volumes:
@@ -1493,3 +1545,4 @@ volumes:
   appwrite-builds:
   appwrite-config:
   appwrite-models:
+  openruntimes-node-modules-cache:

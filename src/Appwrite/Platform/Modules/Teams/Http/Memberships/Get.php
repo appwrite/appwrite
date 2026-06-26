@@ -70,6 +70,10 @@ class Get extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
         // Default should be "false", but existing projects already rely on this being "true"
         $membershipsPrivacy =  [
             'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
@@ -77,6 +81,7 @@ class Get extends Action
             'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
             'userId' => $project->getAttribute('auths', [])['membershipsUserId'] ?? true,
             'userPhone' => $project->getAttribute('auths', [])['membershipsUserPhone'] ?? true,
+            'userAccessedAt' => $project->getAttribute('auths', [])['membershipsUserAccessedAt'] ?? false,
         ];
 
         $roles = $authorization->getRoles();
@@ -124,6 +129,10 @@ class Get extends Action
 
         if ($membershipsPrivacy['userPhone']) {
             $membership->setAttribute('userPhone', $memberUser->getAttribute('phone'));
+        }
+
+        if ($membershipsPrivacy['userAccessedAt']) {
+            $membership->setAttribute('userAccessedAt', $memberUser->getAttribute('accessedAt'));
         }
 
         $membership->setAttribute('teamName', $team->getAttribute('name'));

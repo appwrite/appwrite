@@ -17,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -64,7 +65,14 @@ class Get extends Action
                 ),
             ))
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')

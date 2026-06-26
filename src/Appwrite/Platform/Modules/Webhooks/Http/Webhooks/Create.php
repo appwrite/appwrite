@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -46,6 +47,7 @@ class Create extends Action
             ->label('event', 'webhooks.[webhookId].create')
             ->label('audits.event', 'webhook.create')
             ->label('audits.resource', 'webhook/{response.$id}')
+            ->label('usage.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,
@@ -68,7 +70,7 @@ class Create extends Action
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
             ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
-            ->param('authPassword', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('authPassword', '', new PasswordFormat(new Text(256)), 'Webhook HTTP password. Max length: 256 chars.', true)
             ->param('secret', null, new Nullable(new Text(256, 8)), 'Webhook secret key. If not provided, a new key will be generated automatically. Key must be at least 8 characters long, and at max 256 characters.', optional: true)
             ->inject('response')
             ->inject('project')

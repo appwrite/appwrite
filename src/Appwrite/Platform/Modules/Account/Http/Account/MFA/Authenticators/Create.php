@@ -6,6 +6,7 @@ use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -17,7 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -41,6 +42,7 @@ class Create extends Action
             ->label('scope', 'account')
             ->label('audits.event', 'user.update')
             ->label('audits.resource', 'user/{response.$id}')
+            ->label('usage.resource', 'user/{response.$id}')
             ->label('audits.userId', '{response.$id}')
             ->label('sdk', [
                 new Method(
@@ -77,7 +79,7 @@ class Create extends Action
                     contentType: ContentType::JSON
                 )
             ])
-            ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
+            ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`', enum: new Enum(name: 'AuthenticatorType'))
             ->inject('response')
             ->inject('project')
             ->inject('user')

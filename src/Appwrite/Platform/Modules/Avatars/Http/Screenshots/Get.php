@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Screenshots;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -16,6 +17,7 @@ use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -55,6 +57,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-screenshot.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -68,21 +71,21 @@ class Get extends Action
             ->param('viewportWidth', 1280, new Range(1, 1920), 'Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.', true, example: '1920')
             ->param('viewportHeight', 720, new Range(1, 1080), 'Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.', true, example: '1080')
             ->param('scale', 1, new Range(0.1, 3, Range::TYPE_FLOAT), 'Browser scale factor. Pass a number between 0.1 to 3. Defaults to 1.', true, example: '2')
-            ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true, example: 'dark')
+            ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true, example: 'dark', enum: new Enum(name: 'BrowserTheme'))
             ->param('userAgent', '', new Text(512), 'Custom user agent string. Defaults to browser default.', true, example: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15')
             ->param('fullpage', false, new Boolean(true), 'Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.', true, example: 'true')
             ->param('locale', '', new Text(10), 'Browser locale (e.g., "en-US", "fr-FR"). Defaults to browser default.', true, example: 'en-US')
-            ->param('timezone', '', new WhiteList(timezone_identifiers_list()), 'IANA timezone identifier (e.g., "America/New_York", "Europe/London"). Defaults to browser default.', true, example: 'America/New_York')
+            ->param('timezone', '', new WhiteList(timezone_identifiers_list()), 'IANA timezone identifier (e.g., "America/New_York", "Europe/London"). Defaults to browser default.', true, example: 'America/New_York', enum: new Enum(name: 'Timezone'))
             ->param('latitude', 0, new Range(-90, 90, Range::TYPE_FLOAT), 'Geolocation latitude. Pass a number between -90 to 90. Defaults to 0.', true, example: '37.7749')
             ->param('longitude', 0, new Range(-180, 180, Range::TYPE_FLOAT), 'Geolocation longitude. Pass a number between -180 to 180. Defaults to 0.', true, example: '-122.4194')
             ->param('accuracy', 0, new Range(0, 100000, Range::TYPE_FLOAT), 'Geolocation accuracy in meters. Pass a number between 0 to 100000. Defaults to 0.', true, example: '100')
             ->param('touch', false, new Boolean(true), 'Enable touch support. Pass 0 for no touch, or 1 for touch enabled. Defaults to 0.', true, example: 'true')
-            ->param('permissions', [], new ArrayList(new WhiteList(['geolocation', 'camera', 'microphone', 'notifications', 'midi', 'push', 'clipboard-read', 'clipboard-write', 'payment-handler', 'usb', 'bluetooth', 'accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor', 'background-sync', 'persistent-storage', 'screen-wake-lock', 'web-share', 'xr-spatial-tracking'])), 'Browser permissions to grant. Pass an array of permission names like ["geolocation", "camera", "microphone"]. Defaults to empty.', true, example: '["geolocation","notifications"]')
+            ->param('permissions', [], new ArrayList(new WhiteList(['geolocation', 'camera', 'microphone', 'notifications', 'midi', 'push', 'clipboard-read', 'clipboard-write', 'payment-handler', 'usb', 'bluetooth', 'accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor', 'background-sync', 'persistent-storage', 'screen-wake-lock', 'web-share', 'xr-spatial-tracking'])), 'Browser permissions to grant. Pass an array of permission names like ["geolocation", "camera", "microphone"]. Defaults to empty.', true, example: '["geolocation","notifications"]', enum: new Enum(name: 'BrowserPermission'))
             ->param('sleep', 0, new Range(0, 10), 'Wait time in seconds before taking the screenshot. Pass an integer between 0 to 10. Defaults to 0.', true, example: '3')
             ->param('width', 0, new Range(0, 2000), 'Output image width. Pass 0 to use original width, or an integer between 1 to 2000. Defaults to 0 (original width).', true, example: '800')
             ->param('height', 0, new Range(0, 2000), 'Output image height. Pass 0 to use original height, or an integer between 1 to 2000. Defaults to 0 (original height).', true, example: '600')
             ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true, example: '85')
-            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, example: 'jpeg')
+            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, example: 'jpeg', enum: new Enum(name: 'ImageFormat'))
             ->inject('response')
             ->inject('usage')
             ->callback($this->action(...));
@@ -94,10 +97,19 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+        $host = \parse_url($url, PHP_URL_HOST) ?? '';
 
-        if (!$domain->isKnown()) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
+        if (!$isIpLiteral) {
+            $domain = new Domain($host);
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+            }
+        }
+
+        $hostnameValidator = new PublicHostname();
+        if (!$hostnameValidator->isValid($host)) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostnameValidator->getDescription());
         }
 
         $client = new Client();

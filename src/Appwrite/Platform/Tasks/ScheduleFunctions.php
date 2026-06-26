@@ -56,12 +56,15 @@ class ScheduleFunctions extends ScheduleBase
         foreach ($this->schedules as $key => $schedule) {
             try {
                 $cron = new CronExpression($schedule['schedule']);
+                $nextDate = $cron->getNextRunDate();
             } catch (\InvalidArgumentException) {
                 // ignore invalid cron expressions
                 continue;
+            } catch (\RuntimeException) {
+                // ignore impossible cron expressions
+                continue;
             }
 
-            $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
             $currentTick = $next < $timeFrame;

@@ -10,6 +10,7 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -29,7 +30,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -56,6 +57,7 @@ class Create extends Action
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')
+            ->label('usage.resource', 'user/{response.userId}')
             ->label('audits.userId', '{response.userId}')
             ->label('sdk', [
                 new Method(
@@ -94,7 +96,7 @@ class Create extends Action
             ])
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
-            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
+            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.', enum: new Enum(name: 'AuthenticationFactor'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -335,6 +337,7 @@ class Create extends Action
                     project: $project,
                     recipient: $user->getAttribute('email'),
                     subject: $subject,
+                    template: MAIL_TEMPLATE_MFA_CHALLENGE,
                     bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,

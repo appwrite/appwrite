@@ -25,6 +25,7 @@ use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -55,6 +56,7 @@ class Update extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.update')
             ->label('audits.resource', 'function/{response.$id}')
+            ->label('usage.resource', 'function/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'functions',
@@ -72,7 +74,7 @@ class Update extends Base
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
+            ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true, enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -81,7 +83,7 @@ class Update extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
@@ -89,12 +91,13 @@ class Update extends Base
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Build specification for the function deployments.', true, ['plan'])
+                System::getEnv('_APP_COMPUTE_MEMORY', 0),
+                'buildSpecifications'
+            )), 'Build specification for the function deployments.', true, ['plan'])
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
@@ -136,7 +139,7 @@ class Update extends Base
         string $providerRootDirectory,
         ?array $providerBranches,
         ?array $providerPaths,
-        string $buildSpecification,
+        ?string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
         Request $request,
@@ -172,6 +175,8 @@ class Update extends Base
             $runtime = $function->getAttribute('runtime');
         }
 
+        $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
+
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
 
@@ -180,6 +185,21 @@ class Update extends Base
         }
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
+
+        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        // Omitted providerRepositoryId (null) on a connected function — preserve existing VCS values
+        if ($isConnected && $providerRepositoryId === null) {
+            $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
+            $installationId = $function->getAttribute('installationId', '');
+            $providerBranch = $providerBranch ?: $function->getAttribute('providerBranch', '');
+            $providerRootDirectory = $providerRootDirectory ?: $function->getAttribute('providerRootDirectory', '');
+            $repositoryId = $function->getAttribute('repositoryId', '');
+            $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+        }
 
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {

@@ -14,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -41,6 +42,7 @@ class Update extends Action
             ->label('event', 'templates.[templateId].update')
             ->label('audits.event', 'project.template.update')
             ->label('audits.resource', 'project.template/{response.templateId}')
+            ->label('usage.resource', 'project.template/{response.templateId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'templates',
@@ -56,8 +58,8 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
+            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []), enum: new Enum(name: 'ProjectEmailTemplateId'))
+            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'], enum: new Enum(name: 'ProjectEmailTemplateLocale'))
             ->param('subject', null, new Nullable(new Text(255)), 'Subject of the email template. Can be up to 255 characters.', optional: true)
             ->param('message', null, new Nullable(new Text(10485760)), 'Plain or HTML body of the email template message. Can be up to 10MB of content.', optional: true)
             ->param('senderName', null, new Nullable(new Text(255, 0)), 'Name of the email sender.', optional: true)
@@ -89,45 +91,63 @@ class Update extends Action
     ) {
         $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
-        // Prevent template update if custom SMTP is not configured
-        $smtp = $project->getAttribute('smtp', []);
-        if (($smtp['enabled'] ?? false) !== true) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP must be enabled on the project to configure custom email templates.');
-        }
+        $templateKey = "email.{$templateId}-{$locale}";
+        $changes = [
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'replyToEmail' => $replyToEmail,
+            'replyToName' => $replyToName,
+            'message' => $message,
+            'subject' => $subject,
+        ];
 
-        // Fetch current configuration
-        $templates = $project->getAttribute('templates', []);
-        $template = $templates['email.' . $templateId . '-' . $locale] ?? [];
+        $project = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $authorization, $project, $templateKey, $changes) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true));
 
-        // Apply changes — null means "not provided, keep existing".
-        // Empty string explicitly clears a previously-set value.
-        $keys = ['senderName', 'senderEmail', 'replyToEmail', 'replyToName', 'message', 'subject'];
-        foreach ($keys as $key) {
-            if (!\is_null(${$key})) {
-                $template[$key] = ${$key};
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
             }
-        }
 
-        // Backwards compatibility
-        if (!\is_null($template['replyTo'] ?? null)) {
-            $template['replyToEmail'] = $template['replyToEmail'] ?? $template['replyTo'] ?? '';
-        }
-
-        // Ensure required fields are set
-        $requiredKeys = ['subject', 'message'];
-        foreach ($requiredKeys as $key) {
-            if (empty($template[$key])) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+            // Prevent template update if custom SMTP is not configured
+            $smtp = $project->getAttribute('smtp', []);
+            if (($smtp['enabled'] ?? false) !== true) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP must be enabled on the project to configure custom email templates.');
             }
-        }
 
-        // Save configuration
-        $templates['email.' . $templateId . '-' . $locale] = $template;
-        $updates = new Document([
-            'templates' => $templates,
-        ]);
+            // Fetch current configuration from the locked row so concurrent updates
+            // to other locale/template entries are preserved.
+            $templates = $project->getAttribute('templates', []);
+            $template = $templates[$templateKey] ?? [];
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            // Apply changes: null means "not provided, keep existing".
+            // Empty string explicitly clears a previously-set value.
+            foreach ($changes as $key => $value) {
+                if ($value !== null) {
+                    $template[$key] = $value;
+                }
+            }
+
+            // Backwards compatibility
+            if (($template['replyTo'] ?? null) !== null) {
+                $template['replyToEmail'] ??= $template['replyTo'] ?? '';
+            }
+
+            // Ensure required fields are set
+            $requiredKeys = ['subject', 'message'];
+            foreach ($requiredKeys as $key) {
+                if (empty($template[$key])) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+                }
+            }
+
+            $templates[$templateKey] = $template;
+
+            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'templates' => $templates,
+            ])));
+        });
+
+        $template = $project->getAttribute('templates', [])[$templateKey] ?? [];
 
         $queueForEvents->setParam('templateId', $templateId);
 

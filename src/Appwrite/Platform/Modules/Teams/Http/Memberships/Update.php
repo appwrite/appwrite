@@ -40,6 +40,7 @@ class Update extends Action
             ->label('scope', 'teams.write')
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
+            ->label('usage.resource', 'team/{request.teamId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',
@@ -76,6 +77,10 @@ class Update extends Action
         $membership = $dbForProject->getDocument('memberships', $membershipId);
         if ($membership->isEmpty()) {
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));

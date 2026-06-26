@@ -3,7 +3,6 @@
 namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
-use Utopia\Config\Config;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
 
@@ -41,78 +40,6 @@ abstract class Format
         'license.url' => '',
     ];
 
-    /**
-     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
-     */
-    private const array OAUTH_PROVIDER_BLACKLIST = [
-        [
-            'namespace' => 'account',
-            'methods' => [
-                'createOAuth2Session',
-                'createOAuth2Token',
-                'updateMagicURLSession'
-            ],
-            'parameter' => 'provider',
-            'excludeKeys' => [
-                'mock',
-                'mock-unverified'
-            ],
-        ],
-        [
-            'namespace' => 'projects',
-            'methods' => [
-                'updateOAuth2'
-            ],
-            'parameter' => 'provider',
-            'excludeKeys' => [
-                'mock',
-                'mock-unverified'
-            ],
-        ],
-        [
-            'namespace' => 'project',
-            'methods' => [
-                'getOAuth2Provider'
-            ],
-            'parameter' => 'providerId',
-            'excludeKeys' => [
-                'mock',
-                'mock-unverified'
-            ],
-        ],
-    ];
-
-    /**
-     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
-     */
-    private const array PROVIDER_USAGE_BLACKLIST = [
-        [
-            'namespace' => 'users',
-            'methods' => [
-                'getUsage'
-            ],
-            'parameter' => 'provider',
-            'exclude' => true, /* fully excluded */
-        ],
-    ];
-
-    /**
-     * @var list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
-     */
-    private const array REQUEST_PARAMETER_OVERRIDES = [
-        [
-            'namespace' => 'project',
-            'methods' => [
-                'createWebPlatform',
-                'updateWebPlatform',
-            ],
-            'parameter' => 'hostname',
-            'required' => true,
-        ],
-    ];
-
-    protected array $enumBlacklist = [];
-
     public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
         $this->container = $container;
@@ -122,32 +49,6 @@ abstract class Format
         $this->keys = $keys;
         $this->authCount = $authCount;
         $this->platform = $platform;
-
-        $this->enumBlacklist = $this->buildEnumBlacklist();
-    }
-
-    protected function buildEnumBlacklist(): array
-    {
-        $blacklist = [];
-
-        foreach ([...self::OAUTH_PROVIDER_BLACKLIST, ...self::PROVIDER_USAGE_BLACKLIST] as $config) {
-            foreach ($config['methods'] as $method) {
-                $entry = [
-                    'namespace' => $config['namespace'],
-                    'method' => $method,
-                    'parameter' => $config['parameter'],
-                ];
-                if (isset($config['excludeKeys'])) {
-                    $entry['excludeKeys'] = $config['excludeKeys'];
-                }
-                if (isset($config['exclude'])) {
-                    $entry['exclude'] = $config['exclude'];
-                }
-                $blacklist[] = $entry;
-            }
-        }
-
-        return $blacklist;
     }
 
     /**
@@ -198,6 +99,60 @@ abstract class Format
     public function getParam(string $key, string $default = ''): string
     {
         return $this->params[$key] ?? $default;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getArrayItemsSchema(mixed $example): array
+    {
+        if (\is_string($example)) {
+            $decoded = \json_decode($example, true);
+            if (\is_array($decoded)) {
+                $example = $decoded;
+            }
+        }
+
+        if (!\is_array($example) || empty($example)) {
+            return ['type' => 'object'];
+        }
+
+        foreach ($example as $item) {
+            if ($item === null) {
+                continue;
+            }
+
+            if (\is_array($item)) {
+                if (!\array_is_list($item)) {
+                    return [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ];
+                }
+
+                return [
+                    'type' => 'array',
+                    'items' => $this->getArrayItemsSchema($item),
+                ];
+            }
+
+            if (\is_int($item) || \is_float($item)) {
+                return [
+                    'type' => 'number',
+                    'format' => 'double',
+                ];
+            }
+
+            return [
+                'type' => match (\gettype($item)) {
+                    'boolean' => 'boolean',
+                    'string' => 'string',
+                    default => 'object',
+                },
+            ];
+        }
+
+        return ['type' => 'object'];
     }
 
     /**
@@ -443,596 +398,6 @@ abstract class Format
         ]);
     }
 
-    protected function getRequestEnumName(string $service, string $method, string $param): ?string
-    {
-        /* `$service` is `$namespace` */
-        switch ($service) {
-            case 'proxy':
-                switch ($method) {
-                    case 'createRedirectRule':
-                        switch ($param) {
-                            case 'resourceType':
-                                return 'ProxyResourceType';
-                        }
-                        break;
-                }
-                break;
-            case 'console':
-                switch ($method) {
-                    case 'getResource':
-                        switch ($param) {
-                            case 'type':
-                                return 'ConsoleResourceType';
-                            case 'value':
-                                return 'ConsoleResourceValue';
-                        }
-                        break;
-                    case 'getEmailTemplate':
-                        switch ($param) {
-                            case 'templateId':
-                                return 'ProjectEmailTemplateId';
-                            case 'locale':
-                                return 'ProjectEmailTemplateLocale';
-                        }
-                        break;
-                }
-                break;
-            case 'account':
-                switch ($method) {
-                    case 'createOAuth2Session':
-                    case 'createOAuth2Token':
-                        switch ($param) {
-                            case 'provider':
-                                return 'OAuthProvider';
-                        }
-                        break;
-                    case 'createMfaAuthenticator':
-                    case 'updateMfaAuthenticator':
-                    case 'deleteMfaAuthenticator':
-                        switch ($param) {
-                            case 'type':
-                                return 'AuthenticatorType';
-                        }
-                        break;
-                    case 'createMfaChallenge':
-                        switch ($param) {
-                            case 'factor':
-                                return 'AuthenticationFactor';
-                        }
-                        break;
-                }
-                break;
-            case 'avatars':
-                switch ($method) {
-                    case 'getBrowser':
-                        return 'Browser';
-                    case 'getCreditCard':
-                        return 'CreditCard';
-                    case 'getFlag':
-                        return  'Flag';
-                    case 'getScreenshot':
-                        switch ($param) {
-                            case 'permissions':
-                                return 'BrowserPermission';
-                            case 'output':
-                                return 'ImageFormat';
-                        }
-                        break;
-                }
-                break;
-            case 'databases':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                    case 'getCollectionUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createRelationshipAttribute':
-                        switch ($param) {
-                            case 'type':
-                                return 'RelationshipType';
-                            case 'onDelete':
-                                return 'RelationMutate';
-                        }
-                        break;
-                    case 'updateRelationshipAttribute':
-                        switch ($param) {
-                            case 'onDelete':
-                                return 'RelationMutate';
-                        }
-                        break;
-                    case 'createIndex':
-                        switch ($param) {
-                            case 'type':
-                                return 'DatabasesIndexType';
-                            case 'orders':
-                                return 'OrderBy';
-                        }
-                }
-                break;
-            case 'tablesDB':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                    case 'getTableUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createRelationshipColumn':
-                        switch ($param) {
-                            case 'type':
-                                return 'RelationshipType';
-                            case 'onDelete':
-                                return 'RelationMutate';
-                        }
-                        break;
-                    case 'updateRelationshipColumn':
-                        switch ($param) {
-                            case 'onDelete':
-                                return 'RelationMutate';
-                        }
-                        break;
-                    case 'createIndex':
-                        switch ($param) {
-                            case 'type':
-                                return 'TablesDBIndexType';
-                            case 'orders':
-                                return 'OrderBy';
-                        }
-                }
-                break;
-            case 'documentsDB':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                    case 'getCollectionUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createIndex':
-                        switch ($param) {
-                            case 'type':
-                                return 'DocumentsDBIndexType';
-                            case 'orders':
-                                return 'OrderBy';
-                        }
-                }
-                break;
-            case 'vectorsDB':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                    case 'getCollectionUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createIndex':
-                        switch ($param) {
-                            case 'type':
-                                return 'VectorsDBIndexType';
-                            case 'orders':
-                                return 'OrderBy';
-                        }
-                }
-                break;
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createExecution':
-                        switch ($param) {
-                            case 'method':
-                                return 'ExecutionMethod';
-                        }
-                        break;
-                    case 'getDeploymentDownload':
-                        switch ($param) {
-                            case 'type':
-                                return 'DeploymentDownloadType';
-                        }
-                        break;
-                    case 'createVcsDeployment':
-                        switch ($param) {
-                            case 'type':
-                                return 'VCSReferenceType';
-                        }
-                        break;
-                    case 'createTemplateDeployment':
-                        switch ($param) {
-                            case 'type':
-                                return 'TemplateReferenceType';
-                        }
-                        break;
-                }
-                break;
-            case 'sites':
-                switch ($method) {
-                    case 'getDeploymentDownload':
-                        switch ($param) {
-                            case 'type':
-                                return 'DeploymentDownloadType';
-                        }
-                        break;
-                    case 'getUsage':
-                    case 'listUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createVcsDeployment':
-                        switch ($param) {
-                            case 'type':
-                                return 'VCSReferenceType';
-                        }
-                        break;
-                    case 'createTemplateDeployment':
-                        switch ($param) {
-                            case 'type':
-                                return 'TemplateReferenceType';
-                        }
-                        break;
-                }
-                break;
-            case 'vcs':
-                switch ($method) {
-                    case 'createRepositoryDetection':
-                    case 'listRepositories':
-                        switch ($param) {
-                            case 'type':
-                                return 'VCSDetectionType';
-                        }
-                        break;
-                }
-                break;
-            case 'messaging':
-                switch ($method) {
-                    case 'getUsage':
-                        switch ($param) {
-                            case 'period':
-                                return 'MessagingUsageRange';
-                        }
-                        break;
-                    case 'createSms':
-                    case 'createPush':
-                    case 'createEmail':
-                    case 'updateSms':
-                    case 'updatePush':
-                    case 'updateEmail':
-                        switch ($param) {
-                            case 'status':
-                                return 'MessageStatus';
-                            case 'priority':
-                                return 'MessagePriority';
-                        }
-                        break;
-                    case 'createSmtpProvider':
-                    case 'updateSmtpProvider':
-                        switch ($param) {
-                            case 'encryption':
-                                return 'SmtpEncryption';
-                        }
-                        break;
-                }
-                break;
-            case 'migrations':
-                switch ($method) {
-                    case 'createAppwriteMigration':
-                    case 'getAppwriteReport':
-                        switch ($param) {
-                            case 'resources':
-                                return 'AppwriteMigrationResource';
-                        }
-                        break;
-                    case 'createFirebaseMigration':
-                    case 'getFirebaseReport':
-                        switch ($param) {
-                            case 'resources':
-                                return 'FirebaseMigrationResource';
-                        }
-                        break;
-                    case 'createSupabaseMigration':
-                    case 'getSupabaseReport':
-                        switch ($param) {
-                            case 'resources':
-                                return 'SupabaseMigrationResource';
-                        }
-                        break;
-                    case 'createNHostMigration':
-                    case 'getNHostReport':
-                        switch ($param) {
-                            case 'resources':
-                                return 'NHostMigrationResource';
-                        }
-                        break;
-                }
-                break;
-            case 'project':
-                switch ($method) {
-                    case 'updateAuthMethod':
-                        switch ($param) {
-                            case 'methodId':
-                                return 'ProjectAuthMethodId';
-                        }
-                        break;
-                    case 'getPolicy':
-                        switch ($param) {
-                            case 'policyId':
-                                return 'ProjectPolicyId';
-                        }
-                        break;
-                    case 'getOAuth2Provider':
-                        switch ($param) {
-                            case 'providerId':
-                                return 'ProjectOAuthProviderId';
-                        }
-                        break;
-                    case 'getEmailTemplate':
-                    case 'updateEmailTemplate':
-                        switch ($param) {
-                            case 'templateId':
-                                return 'ProjectEmailTemplateId';
-                            case 'locale':
-                                return 'ProjectEmailTemplateLocale';
-                        }
-                        break;
-                    case 'getUsage':
-                        switch ($param) {
-                            case 'period':
-                                return 'ProjectUsageRange';
-                        }
-                        break;
-                    case 'updateProtocol':
-                        switch ($param) {
-                            case 'protocolId':
-                                return 'ProjectProtocolId';
-                        }
-                        break;
-                    case 'updateService':
-                        switch ($param) {
-                            case 'serviceId':
-                                return 'ProjectServiceId';
-                        }
-                        break;
-                    case 'updateSMTP':
-                    case 'createSMTPTest':
-                        switch ($param) {
-                            case 'secure':
-                                return 'ProjectSMTPSecure';
-                        }
-                        break;
-                    case 'updateOAuth2Google':
-                        switch ($param) {
-                            case 'prompt':
-                                return 'ProjectOAuth2GooglePrompt';
-                        }
-                        break;
-                    case 'createKey':
-                    case 'createEphemeralKey':
-                    case 'updateKey':
-                        switch ($param) {
-                            case 'scopes':
-                                return 'ProjectKeyScopes';
-                        }
-                        break;
-                }
-                break;
-            case 'projects':
-                switch ($method) {
-                    case 'getEmailTemplate':
-                    case 'updateEmailTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'EmailTemplateType';
-                            case 'locale':
-                                return 'EmailTemplateLocale';
-                        }
-                        break;
-                    case 'createPlatform':
-                        switch ($param) {
-                            case 'type':
-                                return 'PlatformType';
-                        }
-                        break;
-                    case 'createSmtpTest':
-                    case 'updateSmtp':
-                        switch ($param) {
-                            case 'secure':
-                                return 'SMTPSecure';
-                        }
-                        break;
-                    case 'updateOAuth2':
-                        switch ($param) {
-                            case 'provider':
-                                return 'OAuthProvider';
-                        }
-                        break;
-                    case 'updateAuthStatus':
-                        switch ($param) {
-                            case 'method':
-                                return 'AuthMethod';
-                        }
-                        break;
-                    case 'updateServiceStatus':
-                        switch ($param) {
-                            case 'service':
-                                return 'ApiService';
-                        }
-                        break;
-                }
-                break;
-            case 'storage':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'getBucketUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'getFilePreview':
-                        switch ($param) {
-                            case 'gravity':
-                                return 'ImageGravity';
-                            case 'output':
-                                return  'ImageFormat';
-                        }
-                        break;
-                }
-                break;
-            case 'users':
-                switch ($method) {
-                    case 'getUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                    case 'createMfaAuthenticator':
-                    case 'updateMfaAuthenticator':
-                    case 'deleteMfaAuthenticator':
-                        switch ($param) {
-                            case 'type':
-                                return 'AuthenticatorType';
-                        }
-                        break;
-                    case 'createTarget':
-                        switch ($param) {
-                            case 'providerType':
-                                return 'MessagingProviderType';
-                        }
-                        break;
-                    case 'createSHAUser':
-                        switch ($param) {
-                            case 'passwordVersion':
-                                return 'PasswordHash';
-                        }
-                        break;
-                }
-                break;
-            case 'presences':
-                switch ($method) {
-                    case 'getUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'UsageRange';
-                        }
-                        break;
-                }
-                break;
-        }
-        return null;
-    }
-
-    public function getRequestEnumKeys(string $service, string $method, string $param): array
-    {
-        $values = [];
-        switch ($service) {
-            case 'avatars':
-                switch ($method) {
-                    case 'getBrowser':
-                        $codes = Config::getParam('avatar-browsers');
-                        foreach ($codes as $code => $value) {
-                            $values[] = $value['name'];
-                        }
-                        return $values;
-                    case 'getCreditCard':
-                        $codes = Config::getParam('avatar-credit-cards');
-                        foreach ($codes as $code => $value) {
-                            $values[] = $value['name'];
-                        }
-                        return $values;
-                    case 'getFlag':
-                        $codes = Config::getParam('avatar-flags');
-                        foreach ($codes as $code => $value) {
-                            $values[] = $value['name'];
-                        }
-                        return $values;
-                }
-                break;
-            case 'databases':
-            case 'documentsDB':
-            case 'vectorsDB':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                    case 'getCollectionUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
-            case 'tablesDB':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                    case 'getTableUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
-            case 'proxy':
-                switch ($method) {
-                    case 'createRedirectRule':
-                        switch ($param) {
-                            case 'statusCode':
-                                return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
-                            case 'resourceType':
-                                return ['Site', 'Function'];
-                        }
-                        break;
-                }
-                break;
-            case 'sites':
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
-            case 'users':
-                switch ($method) {
-                    case 'getUsage':
-                        // Range Enum Keys
-                        if ($param == 'range') {
-                            return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                        }
-                }
-                break;
-            case 'storage':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'getBucketUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
-            case 'project':
-                switch ($method) {
-                    case 'getUsage':
-                        // Range Enum Keys
-                        return ['One Hour', 'One Day'];
-                }
-                break;
-        }
-        return $values;
-    }
-
     protected function shouldEmitDefaultForSchema(mixed $default, array $schema): bool
     {
         if (isset($schema['enum'])) {
@@ -1046,64 +411,25 @@ abstract class Format
         return true;
     }
 
-    protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
+    protected function getRequestParameterConfig(bool $optional, bool $nullable, mixed $default, string $methodName = '', string $paramName = '')
     {
+        $required = !$optional;
+
+        if (
+            $paramName === 'hostname'
+            && \in_array($methodName, ['project.createWebPlatform', 'project.updateWebPlatform'], true)
+        ) {
+            $required = true;
+        }
+
         $config = [
-            'required' => !$optional,
+            'required' => $required,
             'nullable' => $nullable,
         ];
-
-        foreach ($this->getRequestParameterOverrides() as $override) {
-            if (
-                $override['namespace'] !== $service
-                || !\in_array($method, $override['methods'], true)
-                || $override['parameter'] !== $param
-            ) {
-                continue;
-            }
-
-            if (isset($override['required'])) {
-                $config['required'] = $override['required'];
-            }
-            if (isset($override['nullable'])) {
-                $config['nullable'] = $override['nullable'];
-            }
-            break;
-        }
 
         $config['emitDefault'] = !$config['required'] && !\is_null($default);
 
         return $config;
-    }
-
-    /**
-     * @return list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
-     */
-    private function getRequestParameterOverrides(): array
-    {
-        return self::REQUEST_PARAMETER_OVERRIDES;
-    }
-
-    public function getResponseEnumName(string $model, string $param, ?string $enumSDKName = null): ?string
-    {
-        if ($enumSDKName) {
-            return $enumSDKName;
-        }
-
-        if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
-            return 'PlatformType';
-        }
-
-        if ($param !== 'status') {
-            return null;
-        }
-
-        return match (true) {
-            $model === 'healthStatus' => 'HealthCheckStatus',
-            str_starts_with($model, 'attribute') => 'AttributeStatus',
-            str_starts_with($model, 'column') => 'ColumnStatus',
-            default => null,
-        };
     }
 
     protected function getNestedModels(Model $model, array &$usedModels): void

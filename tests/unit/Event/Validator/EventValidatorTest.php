@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Event\Validator;
 
 use Appwrite\Event\Validator\Event;
 use PHPUnit\Framework\TestCase;
 
-class EventValidatorTest extends TestCase
+final class EventValidatorTest extends TestCase
 {
     protected ?Event $object = null;
 

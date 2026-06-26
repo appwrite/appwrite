@@ -17,6 +17,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -47,6 +48,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -235,6 +237,100 @@ Http::post('/v1/messaging/providers/sendgrid')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
+Http::post('/v1/messaging/providers/ses')
+    ->desc('Create Amazon SES provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createSesProvider',
+        description: '/docs/references/messaging/create-ses-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('accessKey', '', new Text(0), 'AWS access key ID.', true)
+    ->param('secretKey', '', new Text(0), 'AWS secret access key.', true)
+    ->param('region', '', new Text(128), 'AWS region, for example us-east-1.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $accessKey, string $secretKey, string $region, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($accessKey)) {
+            $credentials['accessKey'] = $accessKey;
+        }
+
+        if (!empty($secretKey)) {
+            $credentials['secretKey'] = $secretKey;
+        }
+
+        if (!empty($region)) {
+            $credentials['region'] = $region;
+        }
+
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'replyToName' => $replyToName,
+            'replyToEmail' => $replyToEmail,
+        ];
+
+        if (
+            $enabled === true
+            && !empty($fromEmail)
+            && !empty($credentials['accessKey'])
+            && !empty($credentials['secretKey'])
+            && !empty($credentials['region'])
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'ses',
+            'type' => MESSAGE_TYPE_EMAIL,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+            'options' => $options,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 Http::post('/v1/messaging/providers/resend')
     ->desc('Create Resend provider')
     ->groups(['api', 'messaging'])
@@ -363,8 +459,8 @@ Http::post('/v1/messaging/providers/smtp')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
-    ->param('password', '', new Text(0), 'Authentication password.', true)
-    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true)
+    ->param('password', '', new PasswordFormat(new Text(0)), 'Authentication password.', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
@@ -1457,6 +1553,119 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
+Http::patch('/v1/messaging/providers/ses/:providerId')
+    ->desc('Update Amazon SES provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateSesProvider',
+        description: '/docs/references/messaging/update-ses-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('accessKey', '', new Text(0), 'AWS access key ID.', true)
+    ->param('secretKey', '', new Text(0), 'AWS secret access key.', true)
+    ->param('region', '', new Text(128), 'AWS region, for example us-east-1.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $accessKey, string $secretKey, string $region, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $providerAttr = $provider->getAttribute('provider');
+
+        if ($providerAttr !== 'ses') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        if (!empty($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
+        }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        $provider->setAttribute('options', $options);
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($accessKey)) {
+            $credentials['accessKey'] = $accessKey;
+        }
+
+        if (!empty($secretKey)) {
+            $credentials['secretKey'] = $secretKey;
+        }
+
+        if (!empty($region)) {
+            $credentials['region'] = $region;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    !empty($credentials['accessKey']) &&
+                    !empty($credentials['secretKey']) &&
+                    !empty($credentials['region']) &&
+                    !empty($options['fromEmail'])
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
+            } else {
+                $provider->setAttribute('enabled', false);
+            }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 Http::patch('/v1/messaging/providers/resend/:providerId')
     ->desc('Update Resend provider')
     ->groups(['api', 'messaging'])
@@ -1601,8 +1810,8 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
     ->param('port', null, new Nullable(new Range(1, 65535)), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
-    ->param('password', '', new Text(0), 'Authentication password.', true)
-    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
+    ->param('password', '', new PasswordFormat(new Text(0)), 'Authentication password.', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true, enum: new Enum(name: 'SmtpEncryption'))
     ->param('autoTLS', null, new Nullable(new Boolean()), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
@@ -3501,7 +3710,7 @@ Http::post('/v1/messaging/messages/push')
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
-    ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true)
+    ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -4388,7 +4597,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
-    ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
+    ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')

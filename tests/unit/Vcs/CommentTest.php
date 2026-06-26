@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Vcs\Comment;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 
-class CommentTest extends TestCase
+final class CommentTest extends TestCase
 {
     public function testTipIsPreservedAcrossMultipleGenerations(): void
     {
@@ -30,7 +32,7 @@ class CommentTest extends TestCase
         $second = $comment->generateComment();
         $secondTip = $this->extractTip($second);
 
-        $this->assertEquals($firstTip, $secondTip);
+        $this->assertSame($firstTip, $secondTip);
     }
 
     public function testTipIsRestoredFromParsedComment(): void
@@ -94,7 +96,7 @@ class CommentTest extends TestCase
         $newTip = $this->extractTip($new);
 
         $this->assertNotNull($newTip);
-        $this->assertNotEquals('Old tip that should be ignored', $newTip);
+        $this->assertNotSame('Old tip that should be ignored', $newTip);
         $this->assertContains($newTip, $this->getTips());
     }
 
@@ -132,7 +134,7 @@ class CommentTest extends TestCase
         $second = $comment->generateComment();
         $secondTip = $this->extractTip($second);
 
-        $this->assertEquals($firstTip, $secondTip);
+        $this->assertSame($firstTip, $secondTip);
     }
 
     private function extractTip(string $comment): ?string

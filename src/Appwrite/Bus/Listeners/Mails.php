@@ -143,6 +143,7 @@ class Mails extends Listener
             project: $project,
             recipient: $event->user['email'],
             subject: $subject,
+            template: MAIL_TEMPLATE_SESSION_ALERT,
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/' . $smtpBaseTemplate . '.tpl',
             body: $body,
             preview: $preview,

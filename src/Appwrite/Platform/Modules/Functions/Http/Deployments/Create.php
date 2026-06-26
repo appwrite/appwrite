@@ -55,6 +55,7 @@ class Create extends Action
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -166,7 +167,7 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
         }
 
-        $contentRange = $request->getHeader('content-range');
+        $contentRange = $request->getHeaderLine('content-range');
         $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
@@ -175,7 +176,7 @@ class Create extends Action
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
-            $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
+            $deploymentId = $request->getHeaderLine('x-appwrite-id', $deploymentId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
@@ -202,8 +203,27 @@ class Create extends Action
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         $completed = false;
 
+        $mergeUploadMetadata = function (array $stored, array $current): array {
+            $merged = \array_merge($stored, $current);
+
+            if (isset($stored['parts']) || isset($current['parts'])) {
+                $parts = $stored['parts'] ?? [];
+                foreach (($current['parts'] ?? []) as $part => $value) {
+                    $parts[(int) $part] = $value;
+                }
+                \ksort($parts);
+
+                $merged['parts'] = $parts;
+                $merged['chunks'] = \count($parts);
+            }
+
+            return $merged;
+        };
+
+        $type = $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual';
+
         try {
-            $locks($lockKey, 600, function () use (&$chunks, $dbForProject, $deploymentId, &$metadata, &$completed, $response): void {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, &$metadata, $path, $type, &$completed, $response): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
                 if (!$deployment->isEmpty()) {
@@ -220,6 +240,35 @@ class Create extends Action
                         return;
                     }
                 }
+
+                if ($deployment->isEmpty()) {
+                    $deviceForFunctions->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+
+                    if (!empty($contentRange)) {
+                        $deployment = $dbForProject->createDocument('deployments', new Document([
+                            '$id' => $deploymentId,
+                            '$permissions' => [
+                                Permission::read(Role::any()),
+                                Permission::update(Role::any()),
+                                Permission::delete(Role::any()),
+                            ],
+                            'resourceInternalId' => $function->getSequence(),
+                            'resourceId' => $function->getId(),
+                            'resourceType' => 'functions',
+                            'entrypoint' => $entrypoint,
+                            'buildCommands' => $commands,
+                            'startCommand' => $function->getAttribute('startCommand', ''),
+                            'sourcePath' => $path,
+                            'sourceSize' => $fileSize,
+                            'totalSize' => $fileSize,
+                            'sourceChunksTotal' => $chunks,
+                            'sourceChunksUploaded' => 0,
+                            'activate' => $activate,
+                            'sourceMetadata' => $metadata,
+                            'type' => $type
+                        ]));
+                    }
+                }
             }, timeout: 120.0);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');
@@ -227,28 +276,29 @@ class Create extends Action
         }
 
         if ($completed) {
+            $queueForEvents->reset();
             return;
         }
 
-        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForFunctions->uploadChunk($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
         }
 
-        $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
-
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $platform, $project, $publisherForBuilds, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $mergeUploadMetadata, $platform, $project, $publisherForBuilds, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
                 if (!$deployment->isEmpty()) {
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
-                    $metadata = \array_merge($deployment->getAttribute('sourceMetadata', []), $metadata);
+                    $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);
 
                     if ($uploaded === $chunks) {
+                        $queueForEvents->reset();
+
                         $response
                             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -256,9 +306,11 @@ class Create extends Action
                     }
                 }
 
-                $chunksUploaded = max($uploaded, $chunksUploaded);
+                $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
+                    $deviceForFunctions->finalizeUpload($path, $chunks, $metadata);
+
                     if ($activate) {
                         // Remove deploy for all other deployments.
                         $activeDeployments = $dbForProject->find('deployments', [
@@ -300,12 +352,6 @@ class Create extends Action
                             'type' => $type
                         ]));
 
-                        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                            'latestDeploymentId' => $deployment->getId(),
-                            'latestDeploymentInternalId' => $deployment->getSequence(),
-                            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                        ]));
                     } else {
                         $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                             'sourceSize' => $fileSize,
@@ -323,42 +369,10 @@ class Create extends Action
                         platform: $platform,
                     ));
                 } else {
-                    if ($deployment->isEmpty()) {
-                        $deployment = $dbForProject->createDocument('deployments', new Document([
-                            '$id' => $deploymentId,
-                            '$permissions' => [
-                                Permission::read(Role::any()),
-                                Permission::update(Role::any()),
-                                Permission::delete(Role::any()),
-                            ],
-                            'resourceInternalId' => $function->getSequence(),
-                            'resourceId' => $function->getId(),
-                            'resourceType' => 'functions',
-                            'entrypoint' => $entrypoint,
-                            'buildCommands' => $commands,
-                            'startCommand' => $function->getAttribute('startCommand', ''),
-                            'sourcePath' => $path,
-                            'sourceSize' => $fileSize,
-                            'totalSize' => $fileSize,
-                            'sourceChunksTotal' => $chunks,
-                            'sourceChunksUploaded' => $chunksUploaded,
-                            'activate' => $activate,
-                            'sourceMetadata' => $metadata,
-                            'type' => $type
-                        ]));
-
-                        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                            'latestDeploymentId' => $deployment->getId(),
-                            'latestDeploymentInternalId' => $deployment->getSequence(),
-                            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-                            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-                        ]));
-                    } else {
-                        $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                            'sourceChunksUploaded' => $chunksUploaded,
-                            'sourceMetadata' => $metadata,
-                        ]));
-                    }
+                    $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                        'sourceChunksUploaded' => $chunksUploaded,
+                        'sourceMetadata' => $metadata,
+                    ]));
                 }
 
                 $metadata = null;

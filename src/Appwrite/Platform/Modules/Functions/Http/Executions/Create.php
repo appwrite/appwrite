@@ -13,7 +13,6 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
@@ -38,6 +37,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
@@ -66,6 +66,7 @@ class Create extends Base
             ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -80,13 +81,12 @@ class Create extends Base
                         model: Response::MODEL_EXECUTION,
                     )
                 ],
-                contentType: ContentType::MULTIPART,
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
-            ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true)
+            ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true, enum: new Enum(name: 'ExecutionMethod'))
             ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
             ->param('scheduledAt', null, new Nullable(new Text(100)), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
@@ -518,7 +518,7 @@ class Create extends Base
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeader('accept'));
+        $acceptTypes = \explode(', ', $request->getHeaderLine('accept'));
         foreach ($acceptTypes as $acceptType) {
             if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);
