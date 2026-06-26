@@ -449,7 +449,7 @@ export function InviteMembersDialog({
             <Button
               variant="outline"
               size="sm"
-              className="mt-3 h-9 w-full text-[13px]"
+              className="mt-3 h-9 text-[13px]"
               onClick={handleAddInvite}
             >
               <Plus className="mr-1.5 h-4 w-4" />
