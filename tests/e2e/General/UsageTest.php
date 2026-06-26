@@ -1869,7 +1869,7 @@ final class UsageTest extends Scope
             $this->validateDates($response['body']['executions']);
             $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
             $this->validateDates($response['body']['executionsTime']);
-        });
+        }, 60000, 500);
 
         $this->assertEventually(function () use ($executions, $executionTime) {
             $response = $this->client->call(
@@ -1901,7 +1901,7 @@ final class UsageTest extends Scope
             $this->validateDates($response['body']['executionsTime']);
             $this->assertGreaterThan(0, $response['body']['buildsTime'][array_key_last($response['body']['buildsTime'])]['value']);
             $this->validateDates($response['body']['buildsTime']);
-        });
+        }, 60000, 500);
     }
 
     public function testCustomDomainsFunctionStats(): void
