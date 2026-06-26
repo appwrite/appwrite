@@ -109,12 +109,14 @@ function changeCell(before, after, lowerIsBetter) {
     }
 
     const percent = Number((((after - before) / before) * 100).toFixed(1));
-    if (percent === 0) {
-        return `:white_circle: ${code('0%')}`;
+    const label = code(`${percent > 0 ? '+' : ''}${trimNumber(percent)}%`);
+
+    if (Math.abs(percent) <= 5) {
+        return `:white_circle: ${label}`;
     }
 
     const improved = lowerIsBetter ? percent < 0 : percent > 0;
-    return `${improved ? ':green_circle:' : ':red_circle:'} ${code(`${percent > 0 ? '+' : ''}${trimNumber(percent)}%`)}`;
+    return `${improved ? ':green_circle:' : ':red_circle:'} ${label}`;
 }
 
 function detailTable(rows) {
