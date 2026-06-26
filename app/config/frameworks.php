@@ -16,7 +16,7 @@ return [
         'buildRuntime' => 'node-22',
         'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/analog/bundle.sh',
-        'envCommand' => 'echo "Object.defineProperty(process, \'version\', { value: \'v24.15.0\' }); Object.defineProperty(process.versions, \'node\', { value: \'24.15.0\' });" > /tmp/bypass-node-check.js && export NODE_OPTIONS="--require /tmp/bypass-node-check.js" && source /usr/local/server/helpers/analog/env.sh',
+        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "Object.defineProperty(process, \'version\', { value: \'v24.15.0\' }); Object.defineProperty(process.versions, \'node\', { value: \'24.15.0\' });" > "$BYPASS_NODE_CHECK" && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK" && source /usr/local/server/helpers/analog/env.sh',
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
@@ -42,7 +42,7 @@ return [
         'buildRuntime' => 'node-22',
         'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/angular/bundle.sh',
-        'envCommand' => 'echo "Object.defineProperty(process, \'version\', { value: \'v24.15.0\' }); Object.defineProperty(process.versions, \'node\', { value: \'24.15.0\' });" > /tmp/bypass-node-check.js && export NODE_OPTIONS="--require /tmp/bypass-node-check.js" && source /usr/local/server/helpers/angular/env.sh',
+        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "Object.defineProperty(process, \'version\', { value: \'v24.15.0\' }); Object.defineProperty(process.versions, \'node\', { value: \'24.15.0\' });" > "$BYPASS_NODE_CHECK" && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK" && source /usr/local/server/helpers/angular/env.sh',
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
