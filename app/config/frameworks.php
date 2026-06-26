@@ -16,7 +16,7 @@ return [
         'buildRuntime' => 'node-22',
         'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/analog/bundle.sh',
-        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "Object.defineProperty(process, \'version\', { value: \'v24.15.0\' }); Object.defineProperty(process.versions, \'node\', { value: \'24.15.0\' });" > "$BYPASS_NODE_CHECK" && source /usr/local/server/helpers/analog/env.sh && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK"',
+        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "(function(){function s(o,p,v){try{var d=Object.getOwnPropertyDescriptor(o,p);if(!d||d.configurable){Object.defineProperty(o,p,{value:v,writable:true,enumerable:true,configurable:true});}else if(d.writable){o[p]=v;}}catch(e){}}s(process,\'version\',\'v24.15.0\');s(process.versions,\'node\',\'24.15.0\');})();" > "$BYPASS_NODE_CHECK" && source /usr/local/server/helpers/analog/env.sh && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK"',
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
@@ -42,7 +42,7 @@ return [
         'buildRuntime' => 'node-22',
         'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/angular/bundle.sh',
-        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "Object.defineProperty(process, \'version\', { value: \'v24.15.0\' }); Object.defineProperty(process.versions, \'node\', { value: \'24.15.0\' });" > "$BYPASS_NODE_CHECK" && source /usr/local/server/helpers/angular/env.sh && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK"',
+        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "(function(){function s(o,p,v){try{var d=Object.getOwnPropertyDescriptor(o,p);if(!d||d.configurable){Object.defineProperty(o,p,{value:v,writable:true,enumerable:true,configurable:true});}else if(d.writable){o[p]=v;}}catch(e){}}s(process,\'version\',\'v24.15.0\');s(process.versions,\'node\',\'24.15.0\');})();" > "$BYPASS_NODE_CHECK" && source /usr/local/server/helpers/angular/env.sh && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK"',
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
