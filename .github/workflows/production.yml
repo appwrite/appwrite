@@ -1,24 +1,24 @@
-name: Staging deployment
+name: Production deployment
 
 on:
     workflow_dispatch:
     push:
-        branches:
-            - main
+        tags:
+            - 'v*'
 
 concurrency:
     group: ${{ github.workflow }}
     cancel-in-progress: false
 
 env:
-    ENVIRONMENT: staging
+    ENVIRONMENT: production
     PROJECT: console
     DECLARATIVE_OWNER: appwrite-labs
     DECLARATIVE_REPOSITORY: assets-applications
     REGISTRY_GITHUB: ghcr.io
     REGISTRY_DOCKERHUB: docker.io
     IMAGE_NAME: appwrite/vibes
-    TAG: ${{ github.sha }}
+    TAG: ${{ github.ref_name }}
 
 jobs:
     build:
