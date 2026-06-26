@@ -297,7 +297,7 @@ $register->set('pools', function () {
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
-                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
                         @$mongo->connect();
 
                         return $mongo;
@@ -412,7 +412,7 @@ $register->set('db', function () {
     switch ($dbAdapter) {
         case 'mongodb':
             try {
-                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, true);
                 @$mongo->connect();
                 return $mongo;
             } catch (\Throwable $e) {
