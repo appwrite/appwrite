@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
 
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
@@ -21,14 +23,14 @@ use Utopia\Telemetry\Exception;
  * - Error handling
  */
 #[RequiresPhpExtension('swoole')]
-class TransportTest extends TestCase
+final class TransportTest extends TestCase
 {
     private function runInCoroutine(callable $callback): mixed
     {
         $result = null;
         $exception = null;
 
-        run(function () use ($callback, &$result, &$exception) {
+        run(function () use ($callback, &$result, &$exception): void {
             try {
                 $result = $callback();
             } catch (\Throwable $e) {
@@ -36,7 +38,7 @@ class TransportTest extends TestCase
             }
         });
 
-        if ($exception !== null) {
+        if ($exception instanceof \Throwable) {
             throw $exception;
         }
 
@@ -47,14 +49,14 @@ class TransportTest extends TestCase
     {
         $transport = new Swoole('https://otel.example.com:4318/v1/metrics?foo=bar');
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testConstructorWithHttpEndpoint(): void
     {
         $transport = new Swoole('http://localhost:4318/v1/metrics');
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testConstructorWithCustomContentType(): void
@@ -64,7 +66,7 @@ class TransportTest extends TestCase
             ContentTypes::JSON,
         );
 
-        $this->assertEquals(ContentTypes::JSON, $transport->contentType());
+        $this->assertSame(ContentTypes::JSON, $transport->contentType());
     }
 
     public function testConstructorWithCustomHeaders(): void
@@ -75,7 +77,7 @@ class TransportTest extends TestCase
             ['Authorization' => 'Bearer token123'],
         );
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testConstructorWithCustomTimeout(): void
@@ -87,7 +89,7 @@ class TransportTest extends TestCase
             5.0,
         );
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testConstructorWithCustomPoolSize(): void
@@ -100,7 +102,7 @@ class TransportTest extends TestCase
             16,
         );
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testConstructorWithCustomSocketBufferSize(): void
@@ -114,12 +116,12 @@ class TransportTest extends TestCase
             128 * 1024,
         );
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testShutdownReturnsTrue(): void
     {
-        $this->runInCoroutine(function () {
+        $this->runInCoroutine(function (): void {
             $transport = new Swoole('http://localhost:4318/v1/metrics');
 
             $result = $transport->shutdown();
@@ -130,7 +132,7 @@ class TransportTest extends TestCase
 
     public function testForceFlushReturnsTrue(): void
     {
-        $this->runInCoroutine(function () {
+        $this->runInCoroutine(function (): void {
             $transport = new Swoole('http://localhost:4318/v1/metrics');
 
             $result = $transport->forceFlush();
@@ -141,7 +143,7 @@ class TransportTest extends TestCase
 
     public function testSendAfterShutdownReturnsError(): void
     {
-        $this->runInCoroutine(function () {
+        $this->runInCoroutine(function (): void {
             $transport = new Swoole('http://localhost:4318/v1/metrics');
 
             $transport->shutdown();
@@ -153,14 +155,14 @@ class TransportTest extends TestCase
                 $this->fail('Expected exception was not thrown');
             } catch (Exception $e) {
                 $this->assertInstanceOf(Exception::class, $e);
-                $this->assertEquals('Transport has been shut down', $e->getMessage());
+                $this->assertSame('Transport has been shut down', $e->getMessage());
             }
         });
     }
 
     public function testMultipleShutdownsAreSafe(): void
     {
-        $this->runInCoroutine(function () {
+        $this->runInCoroutine(function (): void {
             $transport = new Swoole('http://localhost:4318/v1/metrics');
 
             $result1 = $transport->shutdown();
@@ -175,7 +177,7 @@ class TransportTest extends TestCase
     {
         $transport = new Swoole('http://localhost:4318/v1/metrics?api_key=secret&env=test');
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testMalformedUrlThrowsException(): void
@@ -190,14 +192,14 @@ class TransportTest extends TestCase
     {
         $transport = new Swoole('http://example.com/v1/metrics');
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testDefaultPortForHttps(): void
     {
         $transport = new Swoole('https://example.com/v1/metrics');
 
-        $this->assertEquals(ContentTypes::PROTOBUF, $transport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $transport->contentType());
     }
 
     public function testContentTypeMatchesConstructor(): void
@@ -205,7 +207,7 @@ class TransportTest extends TestCase
         $jsonTransport = new Swoole('http://localhost:4318', ContentTypes::JSON);
         $protobufTransport = new Swoole('http://localhost:4318', ContentTypes::PROTOBUF);
 
-        $this->assertEquals(ContentTypes::JSON, $jsonTransport->contentType());
-        $this->assertEquals(ContentTypes::PROTOBUF, $protobufTransport->contentType());
+        $this->assertSame(ContentTypes::JSON, $jsonTransport->contentType());
+        $this->assertSame(ContentTypes::PROTOBUF, $protobufTransport->contentType());
     }
 }

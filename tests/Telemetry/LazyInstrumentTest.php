@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Telemetry;
 
 use PHPUnit\Framework\TestCase;
@@ -9,7 +11,7 @@ use Utopia\Telemetry\Gauge;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
 
-class LazyInstrumentTest extends TestCase
+final class LazyInstrumentTest extends TestCase
 {
     public function testLazyCounterCreatesInnerCounterOnFirstAdd(): void
     {

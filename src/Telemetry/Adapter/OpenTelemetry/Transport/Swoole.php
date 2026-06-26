@@ -33,7 +33,6 @@ class Swoole implements TransportInterface
     private array $settings;
 
     private Channel $pool;
-    private int $poolSize;
 
     private Atomic $shutdown;
 
@@ -46,7 +45,7 @@ class Swoole implements TransportInterface
         private string $contentType = ContentTypes::PROTOBUF,
         private array  $headers = [],
         private float  $timeout = 10.0,
-        int $poolSize = 8,
+        private int $poolSize = 8,
         int $socketBufferSize = 64 * 1024, // 64 KB
     ) {
         $parsed = parse_url($endpoint);
@@ -61,8 +60,6 @@ class Swoole implements TransportInterface
         if (isset($parsed['query'])) {
             $this->path .= '?' . $parsed['query'];
         }
-
-        $this->poolSize = $poolSize;
         $this->shutdown = new Atomic(0);
         $this->pool = new Channel($this->poolSize);
 
@@ -91,8 +88,6 @@ class Swoole implements TransportInterface
 
     /**
      * Get the content type used for requests.
-     *
-     * @return string
      */
     public function contentType(): string
     {
@@ -147,7 +142,7 @@ class Swoole implements TransportInterface
 
             return new ErrorFuture($e);
         } finally {
-            if ($client !== null) {
+            if ($client instanceof \Swoole\Coroutine\Http\Client) {
                 $this->putClient($client, $forceClose);
             }
         }

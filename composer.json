@@ -20,8 +20,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml",
-        "bench": "vendor/bin/phpbench run --report=benchmark"
+        "test": "phpunit --configuration phpunit.xml"
     },
     "require": {
         "ext-protobuf": "*",
@@ -33,7 +32,6 @@
         "symfony/http-client": "7.*"
     },
     "require-dev": {
-        "phpbench/phpbench": "1.*",
         "swoole/ide-helper": "6.*"
     },
     "suggest": {

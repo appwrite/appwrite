@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Telemetry\Adapter\OpenTelemetry\Swoole;
 
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
@@ -19,11 +21,11 @@ use Utopia\Telemetry\Exception;
  * actually sends data correctly over HTTP.
  */
 #[RequiresPhpExtension('swoole')]
-class TransportIntegrationTest extends TestCase
+final class TransportIntegrationTest extends TestCase
 {
     public function testSendPayloadToServer(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $server->respondWith(200, 'OK');
 
             $transport = new Swoole($server->getEndpoint());
@@ -34,7 +36,7 @@ class TransportIntegrationTest extends TestCase
             $this->assertEquals('OK', $result);
 
             $request = $server->getLastRequest();
-            $this->assertEquals($testPayload, $request['payload']);
+            $this->assertSame($testPayload, $request['payload']);
             $this->assertEquals(ContentTypes::PROTOBUF, $request['headers']['content-type']);
             $this->assertEquals((string) \strlen($testPayload), $request['headers']['content-length']);
 
@@ -44,7 +46,7 @@ class TransportIntegrationTest extends TestCase
 
     public function testSendWithCustomHeaders(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
                 endpoint: $server->getEndpoint(),
                 headers: [
@@ -65,7 +67,7 @@ class TransportIntegrationTest extends TestCase
 
     public function testSendHandlesServerError(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $server->respondWith(500, 'Internal Server Error');
 
             $transport = new Swoole($server->getEndpoint());
@@ -83,7 +85,7 @@ class TransportIntegrationTest extends TestCase
 
     public function testMultipleSequentialSends(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
                 endpoint: $server->getEndpoint(),
                 poolSize: 2,
@@ -93,7 +95,7 @@ class TransportIntegrationTest extends TestCase
                 $transport->send("payload-$i")->await();
             }
 
-            $this->assertEquals(10, $server->getRequestCount());
+            $this->assertSame(10, $server->getRequestCount());
 
             $transport->shutdown();
         });
@@ -101,7 +103,7 @@ class TransportIntegrationTest extends TestCase
 
     public function testConcurrentSends(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $server->withDelay(0.01);
 
             $transport = new Swoole(
@@ -114,7 +116,7 @@ class TransportIntegrationTest extends TestCase
 
             for ($i = 0; $i < $concurrentRequests; $i++) {
                 $wg->add();
-                go(function () use ($transport, $i, $wg) {
+                go(function () use ($transport, $i, $wg): void {
                     $transport->send("concurrent-payload-$i")->await();
                     $wg->done();
                 });
@@ -122,7 +124,7 @@ class TransportIntegrationTest extends TestCase
 
             $wg->wait();
 
-            $this->assertEquals($concurrentRequests, $server->getRequestCount());
+            $this->assertSame($concurrentRequests, $server->getRequestCount());
 
             $transport->shutdown();
         });
@@ -130,7 +132,7 @@ class TransportIntegrationTest extends TestCase
 
     public function testJsonContentType(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
                 endpoint: $server->getEndpoint(),
                 contentType: ContentTypes::JSON,
@@ -149,7 +151,7 @@ class TransportIntegrationTest extends TestCase
     {
         $exception = null;
 
-        run(function () use (&$exception) {
+        run(function () use (&$exception): void {
             $transport = new Swoole(
                 endpoint: 'http://127.0.0.1:19999/v1/metrics',
                 timeout: 0.5,
@@ -168,13 +170,13 @@ class TransportIntegrationTest extends TestCase
             }
         });
 
-        $this->assertNotNull($exception);
+        $this->assertInstanceOf(\Utopia\Telemetry\Exception::class, $exception);
         $this->assertInstanceOf(Exception::class, $exception);
     }
 
     public function testKeepAliveConnectionReuse(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
                 endpoint: $server->getEndpoint(),
                 poolSize: 1,
@@ -185,7 +187,7 @@ class TransportIntegrationTest extends TestCase
                 $transport->send("payload-$i")->await();
             }
 
-            $this->assertEquals(5, $server->getRequestCount());
+            $this->assertSame(5, $server->getRequestCount());
 
             $transport->shutdown();
         });
@@ -193,7 +195,7 @@ class TransportIntegrationTest extends TestCase
 
     public function testLargePayload(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole($server->getEndpoint());
 
             // 1MB payload
@@ -202,7 +204,7 @@ class TransportIntegrationTest extends TestCase
             $transport->send($largePayload)->await();
 
             $request = $server->getLastRequest();
-            $this->assertEquals(\strlen($largePayload), \strlen($request['payload']));
+            $this->assertSame(\strlen($largePayload), \strlen($request['payload']));
 
             $transport->shutdown();
         });
@@ -210,17 +212,17 @@ class TransportIntegrationTest extends TestCase
 
     public function testServerResetsRequestTracking(): void
     {
-        MockOtlpServer::run(function (MockOtlpServer $server) {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole($server->getEndpoint());
 
             $transport->send('first')->await();
-            $this->assertEquals(1, $server->getRequestCount());
+            $this->assertSame(1, $server->getRequestCount());
 
             $server->reset();
-            $this->assertEquals(0, $server->getRequestCount());
+            $this->assertSame(0, $server->getRequestCount());
 
             $transport->send('second')->await();
-            $this->assertEquals(1, $server->getRequestCount());
+            $this->assertSame(1, $server->getRequestCount());
 
             $transport->shutdown();
         });

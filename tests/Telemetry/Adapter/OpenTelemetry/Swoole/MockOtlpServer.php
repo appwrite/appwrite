@@ -89,7 +89,7 @@ class MockOtlpServer
         $this->server = new Server(self::HOST, $this->port);
         $this->server->set(['open_http2_protocol' => false]);
 
-        $this->server->handle('/v1/metrics', function (Request $request, Response $response) {
+        $this->server->handle('/v1/metrics', function (Request $request, Response $response): void {
             $this->requests[] = [
                 'payload' => $request->getContent(),
                 'headers' => $request->header,
@@ -104,7 +104,7 @@ class MockOtlpServer
             $response->end($this->responseBody);
         });
 
-        go(fn() => $this->server->start());
+        go(fn(): mixed => $this->server->start());
 
         $this->waitUntilReady();
     }
@@ -193,7 +193,7 @@ class MockOtlpServer
     {
         $exception = null;
 
-        $executor = function () use ($test, &$exception) {
+        $executor = function () use ($test, &$exception): void {
             $server = new self();
             $server->start();
 
@@ -212,7 +212,7 @@ class MockOtlpServer
             run($executor);
         }
 
-        if ($exception !== null) {
+        if ($exception instanceof \Throwable) {
             throw $exception;
         }
     }
