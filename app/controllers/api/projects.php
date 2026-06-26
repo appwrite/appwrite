@@ -64,6 +64,8 @@ Http::patch('/v1/projects/:projectId/oauth2')
             ]));
         });
 
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
