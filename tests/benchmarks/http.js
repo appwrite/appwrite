@@ -209,6 +209,10 @@ function setupUsers(projectId, count) {
         }, headers, [201], 'setup.account.session');
 
         users.push({ sessionHeaders: { ...headers, Cookie: cookieHeader(session) } });
+
+        // Drop the auto-stored session cookie so the next user can sign in;
+        // setup() runs in a single iteration, so the jar is not reset for us.
+        http.cookieJar().clear(ENDPOINT);
     }
 
     return users;
