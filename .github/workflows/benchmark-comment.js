@@ -51,41 +51,36 @@ function buildComment(core) {
     const baseRef = markdownText(process.env.BENCHMARK_BASE_REF || 'base');
     const headRef = markdownText(process.env.BENCHMARK_HEAD_REF || 'head');
     const rows = benchmarkRows(before, after, beforeSamples, afterSamples);
-    const topWaits = topSamples(afterSamples, 'appwrite_api_waiting', 3);
+    const total = rows[0];
+    const topWaits = topSamples(afterSamples, 'appwrite_api_waiting', 5);
     const lines = [
         marker,
         '## :sparkles: Benchmark results',
         '',
-        `Comparing ${baseRef} (before) to ${headRef} (after).`,
+        `Comparing \`${baseRef}\` (before) → \`${headRef}\` (after).`,
         '',
     ];
 
     if (before === null) {
-        lines.push('> Before benchmark did not complete; showing current branch metrics only.', '');
+        lines.push('> :warning: Before benchmark did not complete — change column unavailable.', '');
     }
     if (after === null) {
-        lines.push('> Current branch benchmark did not complete; showing available metrics only.', '');
+        lines.push('> :warning: Current branch benchmark did not complete — showing available metrics only.', '');
     }
 
     lines.push(
-        '**Before**',
-        '',
-        metricTable(rows, 'before'),
-        '',
-        '**After**',
-        '',
-        metricTable(rows, 'after'),
-        '',
-        '**Delta**',
-        '',
-        '| Scenario | P95 delta (ms) |',
-        '| --- | ---: |',
-        ...rows.map(deltaRow),
+        ...headlineTable(total),
         '',
         '<details>',
-        '<summary><strong>Top API waits</strong></summary>',
+        '<summary><strong>Per-scenario breakdown & investigation details</strong></summary>',
         '',
         '<br>',
+        '',
+        '_Metrics below reflect the current branch (after). Δ P95 compares against the base._',
+        '',
+        detailTable(rows),
+        '',
+        '**Top API waits (after)**',
         '',
         '| API request | Max wait (ms) |',
         '| --- | ---: |',
@@ -95,6 +90,44 @@ function buildComment(core) {
     );
 
     return `${lines.join('\n')}\n`;
+}
+
+function headlineTable(total) {
+    const { before, after } = total;
+    return [
+        '| Metric | Before | After | Change |',
+        '| --- | ---: | ---: | :--- |',
+        `| :rocket: Requests/sec | ${formatRate(before?.rps)} | ${formatRate(after?.rps)} | ${changeCell(before?.rps, after?.rps, false)} |`,
+        `| :stopwatch: Latency P50 | ${formatMsUnit(before?.p50)} | ${formatMsUnit(after?.p50)} | ${changeCell(before?.p50, after?.p50, true)} |`,
+        `| :stopwatch: Latency P95 | ${formatMsUnit(before?.p95)} | ${formatMsUnit(after?.p95)} | ${changeCell(before?.p95, after?.p95, true)} |`,
+    ];
+}
+
+function changeCell(before, after, lowerIsBetter) {
+    if (before === null || before === undefined || after === null || after === undefined || Number.isNaN(before) || Number.isNaN(after) || before === 0) {
+        return 'n/a';
+    }
+
+    const percent = Number((((after - before) / before) * 100).toFixed(1));
+    if (percent === 0) {
+        return ':white_circle: 0%';
+    }
+
+    const improved = lowerIsBetter ? percent < 0 : percent > 0;
+    return `${improved ? ':green_circle:' : ':red_circle:'} ${percent > 0 ? '+' : ''}${trimNumber(percent)}%`;
+}
+
+function detailTable(rows) {
+    return [
+        '| Scenario | P50 (ms) | P95 (ms) | Requests | RPS | Δ P95 (ms) |',
+        '| --- | ---: | ---: | ---: | ---: | ---: |',
+        ...rows.map(detailRow),
+    ].join('\n');
+}
+
+function detailRow(row) {
+    const values = row.after;
+    return `| ${row.label} | ${formatMs(values?.p50)} | ${formatMs(values?.p95)} | ${formatCount(values?.iterations)} | ${formatRate(values?.rps)} | ${formatDelta(row.before?.p95, row.after?.p95)} |`;
 }
 
 function readSummary(path, core) {
@@ -256,23 +289,6 @@ function metricValue(data, metric, stat) {
     return metricValues(data, metric)?.[stat] ?? null;
 }
 
-function metricTable(rows, side) {
-    return [
-        '| Scenario | P50 (ms) | P95 (ms) | Requests | RPS |',
-        '| --- | ---: | ---: | ---: | ---: |',
-        ...rows.map((row) => metricRow(row, side)),
-    ].join('\n');
-}
-
-function metricRow(row, side) {
-    const values = row[side];
-    return `| ${row.label} | ${formatMs(values?.p50)} | ${formatMs(values?.p95)} | ${formatCount(values?.iterations)} | ${formatRate(values?.rps)} |`;
-}
-
-function deltaRow(row) {
-    return `| ${row.label} | ${formatDelta(row.before?.p95, row.after?.p95)} |`;
-}
-
 function topSamples(samples, metric, limit) {
     const byName = samples.reduce((result, sample) => {
         if (sample.metric !== metric || typeof sample.data?.value !== 'number') {
@@ -311,6 +327,11 @@ function markdownText(value) {
 
 function formatMs(value) {
     return formatNumber(value, 2);
+}
+
+function formatMsUnit(value) {
+    const formatted = formatNumber(value, 2);
+    return formatted === 'n/a' ? formatted : `${formatted} ms`;
 }
 
 function formatRate(value) {
