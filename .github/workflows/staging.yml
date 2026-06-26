@@ -63,6 +63,11 @@ jobs:
     deploy:
         needs: build
         runs-on: ubuntu-latest
+        # Shared across the staging and production workflows so their deploy
+        # jobs never push to assets-applications at the same time.
+        concurrency:
+            group: declarative-deploy
+            cancel-in-progress: false
         steps:
             - name: Get token for ${{ env.DECLARATIVE_REPOSITORY }}
               id: app-token
@@ -89,16 +94,7 @@ jobs:
                   git add ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
                   if git diff --cached --quiet; then
                     echo "No changes to commit"
-                    exit 0
+                  else
+                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.PROJECT }} image tag to ${{ env.TAG }}"
+                    git push
                   fi
-                  git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.PROJECT }} image tag to ${{ env.TAG }}"
-                  for attempt in 1 2 3 4 5; do
-                    if git push; then
-                      echo "Pushed on attempt $attempt"
-                      exit 0
-                    fi
-                    echo "Push rejected (attempt $attempt); rebasing onto latest and retrying"
-                    git pull --rebase
-                  done
-                  echo "Failed to push after 5 attempts" >&2
-                  exit 1
