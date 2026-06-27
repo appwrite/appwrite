@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  COMPOSE_FILE: docker-compose.yml
+  COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
   IMAGE: appwrite-dev
   K6_VERSION: '0.53.0'
 
