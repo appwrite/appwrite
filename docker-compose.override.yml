@@ -450,6 +450,13 @@ services:
       - SERVER_URL=http://localhost/v1/graphql
   traefik:
     command:
+      - --providers.file.directory=/storage/config
+      - --providers.file.watch=true
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
+      - --entrypoints.appwrite_web.address=:80
+      - --entrypoints.appwrite_websecure.address=:443
       - --log.level=DEBUG
       - --api.insecure=true
       - --accesslog=true
