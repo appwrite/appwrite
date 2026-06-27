@@ -239,6 +239,8 @@ class V24 extends Migration
                         'startCommand',
                         'buildSpecification',
                         'runtimeSpecification',
+                        'providerBranches',
+                        'providerPaths',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -254,6 +256,8 @@ class V24 extends Migration
                         'deploymentRetention',
                         'buildSpecification',
                         'runtimeSpecification',
+                        'providerBranches',
+                        'providerPaths',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
