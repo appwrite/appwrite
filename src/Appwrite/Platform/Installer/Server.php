@@ -52,6 +52,10 @@ class Server
 
     private const string DEFAULT_IMAGE = 'appwrite-dev';
     public const string DEFAULT_CONTAINER = 'appwrite-installer';
+    private const string COMPOSE_FILE = 'docker-compose.yml';
+    private const string ENV_FILE = '.env';
+    private const string LOCAL_COMPOSE_FILE = 'docker-compose.web-installer.yml';
+    private const string LOCAL_ENV_FILE = '.env.web-installer';
 
     private State $state;
     private array $paths = [];
@@ -208,8 +212,7 @@ class Server
         }
 
         $basePath = $config->isLocal() ? '/usr/src/code' : (getcwd() ?: '.');
-        $composePath = $basePath . '/docker-compose.yml';
-        $envPath = $basePath . '/.env';
+        [$composePath, $envPath] = $this->getUpgradeDetectionPaths($config, $basePath);
 
         if (!file_exists($composePath) && !file_exists($envPath)) {
             return;
@@ -225,6 +228,24 @@ class Server
         if ($database !== null) {
             $config->setLockedDatabase($database);
         }
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function getUpgradeDetectionPaths(Config $config, string $basePath): array
+    {
+        if ($config->isLocal()) {
+            return [
+                $basePath . '/' . self::LOCAL_COMPOSE_FILE,
+                $basePath . '/' . self::LOCAL_ENV_FILE,
+            ];
+        }
+
+        return [
+            $basePath . '/' . self::COMPOSE_FILE,
+            $basePath . '/' . self::ENV_FILE,
+        ];
     }
 
     private function detectDatabaseFromFiles(string $composePath, string $envPath): ?string
