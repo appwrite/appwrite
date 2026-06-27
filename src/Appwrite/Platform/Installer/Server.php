@@ -212,7 +212,13 @@ class Server
         }
 
         $basePath = $config->isLocal() ? '/usr/src/code' : (getcwd() ?: '.');
-        [$composePath, $envPath] = $this->getUpgradeDetectionPaths($config, $basePath);
+        if ($config->isLocal()) {
+            $composePath = $basePath . '/' . self::LOCAL_COMPOSE_FILE;
+            $envPath = $basePath . '/' . self::LOCAL_ENV_FILE;
+        } else {
+            $composePath = $basePath . '/' . self::COMPOSE_FILE;
+            $envPath = $basePath . '/' . self::ENV_FILE;
+        }
 
         if (!file_exists($composePath) && !file_exists($envPath)) {
             return;
@@ -228,24 +234,6 @@ class Server
         if ($database !== null) {
             $config->setLockedDatabase($database);
         }
-    }
-
-    /**
-     * @return array{0: string, 1: string}
-     */
-    private function getUpgradeDetectionPaths(Config $config, string $basePath): array
-    {
-        if ($config->isLocal()) {
-            return [
-                $basePath . '/' . self::LOCAL_COMPOSE_FILE,
-                $basePath . '/' . self::LOCAL_ENV_FILE,
-            ];
-        }
-
-        return [
-            $basePath . '/' . self::COMPOSE_FILE,
-            $basePath . '/' . self::ENV_FILE,
-        ];
     }
 
     private function detectDatabaseFromFiles(string $composePath, string $envPath): ?string
