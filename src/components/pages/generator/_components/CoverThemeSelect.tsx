@@ -9,7 +9,11 @@ import {
 import { CoverThemePreviewThumb } from '@/components/pages/generator/_components/CoverThemePreviewThumb'
 import { CoverThemeSelectItem } from '@/components/pages/generator/_components/CoverThemeSelectItem'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
-import { getCoverTheme, listCoverThemesByFamily } from '@/lib/cover-generator/themes'
+import {
+  getCoverTheme,
+  listCoverEditorThemesByFamily,
+  resolveCoverEditorThemeId,
+} from '@/lib/cover-generator/themes'
 
 type CoverThemeSelectProps = {
   theme: CoverTheme
@@ -22,17 +26,18 @@ export function CoverThemeSelect({
   onThemeChange,
   className,
 }: CoverThemeSelectProps) {
-  const selectedTheme = getCoverTheme(theme)
+  const editorTheme = resolveCoverEditorThemeId(theme)
+  const selectedTheme = getCoverTheme(editorTheme)
 
   return (
     <Select
-      value={theme}
+      value={editorTheme}
       onValueChange={(value) => {
         onThemeChange(value as CoverTheme)
       }}
     >
       <SelectTrigger className={className ?? 'h-8 w-full text-[12px]'}>
-        <CoverThemePreviewThumb themeId={theme} />
+        <CoverThemePreviewThumb themeId={editorTheme} />
         <SelectValue>{selectedTheme.label}</SelectValue>
       </SelectTrigger>
       <SelectContent className="min-w-[min(100vw-2rem,360px)]">
@@ -41,7 +46,7 @@ export function CoverThemeSelect({
             <SelectLabel className="text-[11px] font-semibold uppercase tracking-wider">
               {family === 'light' ? 'Light backgrounds' : 'Dark backgrounds'}
             </SelectLabel>
-            {listCoverThemesByFamily(family).map((themeOption) => (
+            {listCoverEditorThemesByFamily(family).map((themeOption) => (
               <CoverThemeSelectItem key={themeOption.id} theme={themeOption} />
             ))}
           </SelectGroup>

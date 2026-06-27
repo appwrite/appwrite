@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import {
   buildCoverScreenshotFrameShellLayout,
   COVER_HERO_SCREENSHOT_FRAME,
+  getCoverScreenshotFrameRadii,
   getCoverScreenshotGlassPreviewStyles,
 } from '@/lib/cover-generator/cover-screenshot-frame'
 import type { CoverThemeId } from '@/lib/cover-generator/themes'
@@ -16,6 +17,8 @@ type CoverHeroBrowserFrameProps = {
   focusX?: number
   focusY?: number
   zoom?: number
+  /** When true, the shell is fully enclosed with a bottom border and inset. */
+  closed?: boolean
   className?: string
   placeholder?: ReactNode
 }
@@ -64,13 +67,31 @@ export function CoverHeroBrowserFrame({
   focusX = 0,
   focusY = 0,
   zoom = 1,
+  closed = false,
   className,
   placeholder,
 }: CoverHeroBrowserFrameProps) {
   const glass = getCoverScreenshotGlassPreviewStyles(themeId)
-  const layout = buildCoverScreenshotFrameShellLayout(0, 0, frameWidth, frameHeight)
-  const { screenshot: shotRect, outerRadius, innerRadius, paddingX, paddingTop, chromeHeight } =
-    layout
+  const layout = buildCoverScreenshotFrameShellLayout(
+    0,
+    0,
+    frameWidth,
+    frameHeight,
+    { closed },
+  )
+  const {
+    screenshot: shotRect,
+    outerRadius,
+    paddingX,
+    paddingTop,
+    chromeHeight,
+    borderWidth,
+  } = layout
+  const { paddingBottom } = COVER_HERO_SCREENSHOT_FRAME
+  const radii = getCoverScreenshotFrameRadii(closed)
+  const shellRadius = closed
+    ? outerRadius
+    : `${outerRadius}px ${outerRadius}px 0 0`
 
   return (
     <div
@@ -78,12 +99,11 @@ export function CoverHeroBrowserFrame({
       style={{
         width: frameWidth,
         height: frameHeight,
-        borderTopLeftRadius: outerRadius,
-        borderTopRightRadius: outerRadius,
-        borderWidth: COVER_HERO_SCREENSHOT_FRAME.borderWidth,
+        borderRadius: shellRadius,
+        borderWidth,
         borderStyle: 'solid',
         borderColor: glass.shellBorder,
-        borderBottomWidth: 0,
+        borderBottomWidth: closed ? borderWidth : 0,
         backgroundColor: glass.shellFill,
       }}
     >
@@ -104,8 +124,11 @@ export function CoverHeroBrowserFrame({
           width: shotRect.width,
           height: shotRect.height,
           marginLeft: paddingX,
-          borderTopLeftRadius: innerRadius,
-          borderTopRightRadius: innerRadius,
+          marginBottom: closed ? paddingBottom : 0,
+          borderTopLeftRadius: radii.topLeft,
+          borderTopRightRadius: radii.topRight,
+          borderBottomLeftRadius: radii.bottomLeft,
+          borderBottomRightRadius: radii.bottomRight,
           opacity: COVER_HERO_SCREENSHOT_FRAME.imageOpacity,
         }}
       >

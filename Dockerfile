@@ -40,6 +40,14 @@ FROM base AS final
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# librsvg (Sharp SVG export) resolves fonts via fontconfig on Linux, not SVG @font-face.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends fontconfig fonts-liberation \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /app/public/fonts-ttf/ /usr/share/fonts/appwrite/
+RUN fc-cache -f
+
 # server.ts (Bun.serve) serves dist/client and the dist/server SSR handler
 COPY --from=build /app/dist/ dist
 COPY --from=prod-deps /app/node_modules/ node_modules

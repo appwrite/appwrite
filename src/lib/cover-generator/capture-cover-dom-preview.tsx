@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { toCanvas } from 'html-to-image'
-import { CoverCardsAngledPreview } from '@/components/pages/generator/_components/CoverCardsAngledPreview'
-import { CoverScreenshotAngledPreview } from '@/components/pages/generator/_components/CoverScreenshotAngledPreview'
+import { CoverPreviewContent } from '@/components/pages/generator/_components/CoverPreviewContent'
 import {
   isCoverDomPreviewTemplate,
   normalizeCoverCardsAngledData,
@@ -87,26 +86,21 @@ function renderCoverDomPreview(
   width: number,
   height: number,
 ) {
-  switch (data.template) {
-    case 'screenshot-angled':
-      return (
-        <CoverScreenshotAngledPreview
-          data={data}
-          width={width}
-          height={height}
-        />
-      )
-    case 'cards-angled':
-      return (
-        <CoverCardsAngledPreview
-          data={normalizeCoverCardsAngledData(data)}
-          width={width}
-          height={height}
-        />
-      )
-    default:
-      throw new Error(`Template "${data.template}" does not support DOM preview capture`)
+  if (!isCoverDomPreviewTemplate(data.template)) {
+    throw new Error(`Template "${data.template}" does not support DOM preview capture`)
   }
+
+  const sizedData = { ...data, width, height }
+
+  if (data.template === 'cards-angled') {
+    return (
+      <CoverPreviewContent
+        data={normalizeCoverCardsAngledData(sizedData)}
+      />
+    )
+  }
+
+  return <CoverPreviewContent data={sizedData} />
 }
 
 export async function captureCoverDomPreviewBlob(

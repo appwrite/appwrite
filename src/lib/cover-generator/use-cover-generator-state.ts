@@ -17,7 +17,7 @@ import {
 } from '@/lib/cover-generator/editor-image-fields'
 import type { CoverTemplateCategoryFilter } from '@/lib/cover-generator/template-categories'
 import { createDefaultCoverData } from '@/lib/cover-generator/parse-params'
-import { resolveCoverThemeId } from '@/lib/cover-generator/themes'
+import { resolveCoverEditorThemeId } from '@/lib/cover-generator/themes'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import type { CoverImageFormat, CoverTemplateId } from '@/lib/cover-generator/constants'
 import { isCoverTemplateId } from '@/lib/cover-generator/constants'
@@ -29,14 +29,14 @@ function applyThemeToCoverData(
   data: CoverRenderData,
   theme: CoverThemeId,
 ): CoverRenderData {
-  return { ...data, theme: resolveCoverThemeId(theme) }
+  return { ...data, theme: resolveCoverEditorThemeId(theme) }
 }
 
 function applyThemeToTemplateData(
   templateData: Partial<Record<CoverTemplateId, CoverRenderData>>,
   theme: CoverThemeId,
 ): Partial<Record<CoverTemplateId, CoverRenderData>> {
-  const resolvedTheme = resolveCoverThemeId(theme)
+  const resolvedTheme = resolveCoverEditorThemeId(theme)
   const next: Partial<Record<CoverTemplateId, CoverRenderData>> = {}
 
   for (const [templateId, entry] of Object.entries(templateData)) {
@@ -149,8 +149,8 @@ export function useCoverGeneratorState() {
 
   const setData = (next: CoverRenderData) => {
     setState((current) => {
-      const resolvedTheme = resolveCoverThemeId(next.theme)
-      const resolvedCurrentTheme = resolveCoverThemeId(current.data.theme)
+      const resolvedTheme = resolveCoverEditorThemeId(next.theme)
+      const resolvedCurrentTheme = resolveCoverEditorThemeId(current.data.theme)
       const nextData = applyThemeToCoverData(next, resolvedTheme)
 
       if (resolvedTheme !== resolvedCurrentTheme) {
@@ -170,7 +170,7 @@ export function useCoverGeneratorState() {
 
   const setTheme = (theme: CoverThemeId) => {
     setState((current) => {
-      const resolvedTheme = resolveCoverThemeId(theme)
+      const resolvedTheme = resolveCoverEditorThemeId(theme)
       const nextData = applyThemeToCoverData(current.data, resolvedTheme)
 
       return {
@@ -255,7 +255,7 @@ export function useCoverGeneratorState() {
       }
 
       const cached = templateData[template]
-      const sharedTheme = resolveCoverThemeId(current.data.theme)
+      const sharedTheme = resolveCoverEditorThemeId(current.data.theme)
       const nextData = cached
         ? applyThemeToCoverData(cached, sharedTheme)
         : createDefaultCoverData(template, sharedTheme, {
@@ -287,7 +287,7 @@ export function useCoverGeneratorState() {
       const templateId = current.template
       const nextData = createDefaultCoverData(
         templateId,
-        resolveCoverThemeId(current.theme),
+        resolveCoverEditorThemeId(current.theme),
         {
           width: current.width,
           height: current.height,

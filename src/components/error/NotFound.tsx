@@ -23,6 +23,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'account',
   'blocks',
   'init',
+  'generator',
 ])
 
 function isConsoleAreaPath(pathname: string): boolean {

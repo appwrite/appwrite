@@ -1,4 +1,13 @@
-import { Loader2, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
+import {
+  ChevronDown,
+  Copy,
+  Download,
+  ExternalLink,
+  Loader2,
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react'
 import { useCallback, useEffect } from 'react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import {
@@ -9,12 +18,22 @@ import {
 import {
   COVER_ARTBOARD_DISPLAY_WIDTH,
   getCoverDisplayHeight,
-  getCoverDisplayScale,
 } from '@/lib/cover-generator/cover-layout-scale'
 import { useCoverPreviewImage } from '@/lib/cover-generator/use-cover-preview-image'
-import { CoverCardsAngledPreview } from '@/components/pages/generator/_components/CoverCardsAngledPreview'
-import { CoverScreenshotAngledPreview } from '@/components/pages/generator/_components/CoverScreenshotAngledPreview'
+import {
+  CoverScaledPreview,
+  isCoverGeneratorDomPreviewTemplate,
+} from '@/components/pages/generator/_components/CoverPreviewContent'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -22,16 +41,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { COVER_IMAGE_FORMATS } from '@/lib/cover-generator/constants'
+import type { CoverImageFormat } from '@/lib/cover-generator/constants'
+import {
+  COVER_DOWNLOAD_SCALES,
+  formatCoverDimensionsLabel,
+  formatCoverDownloadScaleLabel,
+  getCoverScaledDimensions,
+  type CoverDownloadScale,
+} from '@/lib/cover-generator/download-scale'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import { useViewportPanZoom } from '@/lib/hooks/useViewportPanZoom'
 import { cn } from '@/lib/utils'
 
 type CoverCanvasProps = {
   data: CoverRenderData
+  recommendsPost: boolean
   onCanvasSizeChange: (width: number, height: number) => void
+  onCopyApiUrl: () => void
+  onOpenImage: () => void
+  onDownload: (format: CoverImageFormat, scale: CoverDownloadScale) => void
 }
 
-export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
+export function CoverCanvas({
+  data,
+  recommendsPost,
+  onCanvasSizeChange,
+  onCopyApiUrl,
+  onOpenImage,
+  onDownload,
+}: CoverCanvasProps) {
+  const handleDownload = (format: CoverImageFormat, scale: CoverDownloadScale) => {
+    onDownload(format, scale)
+  }
+
   const {
     canvasRef,
     pan,
@@ -46,12 +89,10 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
     zoomOutDisabled,
   } = useViewportPanZoom({ maxZoom: 3 })
 
-  const isDomPreview =
-    data.template === 'screenshot-angled' || data.template === 'cards-angled'
+  const isDomPreview = isCoverGeneratorDomPreviewTemplate(data.template)
   const { data: previewUrl, isFetching, isError } = useCoverPreviewImage(data, {
     enabled: !isDomPreview,
   })
-  const displayScale = getCoverDisplayScale(data.width)
   const displayHeight = getCoverDisplayHeight(data.width, data.height)
   const canvasPresetKey = getCoverSizePresetKey(data.width, data.height)
 
@@ -100,7 +141,7 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
             transformOrigin: '0 0',
           }}
         >
-          <SchemaBlueprintMat className={isDomPreview ? 'hidden' : undefined} />
+          <SchemaBlueprintMat />
           <div className="flex h-full w-full items-center justify-center px-4 py-10">
             <div
               className="relative shrink-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm"
@@ -109,49 +150,13 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
                 height: displayHeight,
               }}
             >
-              {data.template === 'screenshot-angled' ? (
-                <div
-                  className="block max-w-none origin-top-left overflow-hidden"
-                  style={{
-                    width: data.width,
-                    height: data.height,
-                    transform: `scale(${displayScale})`,
-                  }}
-                >
-                  <CoverScreenshotAngledPreview
-                    data={data}
-                    width={data.width}
-                    height={data.height}
-                  />
-                </div>
-              ) : data.template === 'cards-angled' ? (
-                <div
-                  className="block max-w-none origin-top-left overflow-hidden"
-                  style={{
-                    width: data.width,
-                    height: data.height,
-                    transform: `scale(${displayScale})`,
-                  }}
-                >
-                  <CoverCardsAngledPreview
-                    data={data}
-                    width={data.width}
-                    height={data.height}
-                  />
-                </div>
-              ) : previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Cover preview"
-                  draggable={false}
-                  className="block max-w-none origin-top-left overflow-hidden"
-                  style={{
-                    width: data.width,
-                    height: data.height,
-                    transform: `scale(${displayScale})`,
-                  }}
+              {previewUrl || isDomPreview ? (
+                <CoverScaledPreview
+                  data={data}
+                  previewUrl={previewUrl}
+                  displayWidth={COVER_ARTBOARD_DISPLAY_WIDTH}
                 />
-              ) : !isDomPreview ? (
+              ) : (
                 <div
                   className="flex items-center justify-center overflow-hidden bg-muted/20 text-[13px] text-muted-foreground"
                   style={{
@@ -161,7 +166,7 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
                 >
                   {isError ? 'Could not render preview' : 'Rendering preview…'}
                 </div>
-              ) : null}
+              )}
               {!isDomPreview && isFetching && previewUrl ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/40">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -172,7 +177,7 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-4 top-4 z-20 flex items-center justify-between gap-2">
+      <div className="pointer-events-none absolute inset-x-4 top-4 z-20 flex items-start justify-between gap-2">
         <div className="pointer-events-auto flex shrink-0 items-center gap-2">
           <Button
             type="button"
@@ -212,7 +217,35 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
             <Maximize2 className="h-4 w-4" />
           </Button>
         </div>
-        <div className="pointer-events-auto shrink-0">
+        <div className="pointer-events-auto flex max-w-[min(100%,720px)] shrink-0 flex-wrap items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 border-border bg-card/95 text-[12px] backdrop-blur-sm"
+            onClick={onCopyApiUrl}
+            disabled={recommendsPost}
+            title={
+              recommendsPost
+                ? 'This cover is too large for a GET URL. Open API docs for POST examples.'
+                : undefined
+            }
+          >
+            <Copy className="mr-1.5 size-3.5" />
+            Copy URL
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 border-border bg-card/95 text-[12px] backdrop-blur-sm"
+            onClick={onOpenImage}
+          >
+            <ExternalLink className="mr-1.5 size-3.5" />
+            Open image
+          </Button>
+
           <Select
             value={canvasPresetKey}
             onValueChange={(value) => {
@@ -234,6 +267,66 @@ export function CoverCanvas({ data, onCanvasSizeChange }: CoverCanvasProps) {
               ))}
             </SelectContent>
           </Select>
+
+          <div className="relative isolate flex shrink-0 items-stretch">
+            <Button
+              type="button"
+              size="sm"
+              className="relative z-[1] h-8 rounded-r-none px-3 text-[12px] shadow-sm"
+              onClick={() => handleDownload(data.format, 1)}
+            >
+              <Download className="mr-1.5 size-3.5" />
+              Download
+            </Button>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="relative z-[2] h-8 rounded-l-none border-l border-primary-foreground/15 px-2 shadow-sm"
+                  aria-label="More download options"
+                >
+                  <ChevronDown className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 p-1.5">
+                {COVER_IMAGE_FORMATS.map((format, formatIndex) => (
+                  <DropdownMenuGroup key={format}>
+                    {formatIndex > 0 ? <DropdownMenuSeparator className="my-1.5" /> : null}
+                    <DropdownMenuLabel className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {format.toUpperCase()}
+                    </DropdownMenuLabel>
+                    {COVER_DOWNLOAD_SCALES.map((scale) => {
+                      const dimensions = getCoverScaledDimensions(data.width, data.height, scale)
+                      const scaleLabel = formatCoverDownloadScaleLabel(scale)
+                      const sizeLabel = dimensions
+                        ? formatCoverDimensionsLabel(dimensions.width, dimensions.height)
+                        : 'Too large'
+
+                      return (
+                        <DropdownMenuItem
+                          key={`${format}-${scale}`}
+                          disabled={!dimensions}
+                          className="min-h-10 cursor-pointer px-2.5 py-2 text-[13px]"
+                          title={
+                            dimensions
+                              ? undefined
+                              : 'Exceeds maximum export size (4096px)'
+                          }
+                          onSelect={() => handleDownload(format, scale)}
+                        >
+                          <span className="font-medium">{scaleLabel}</span>
+                          <span className="ml-auto text-[12px] text-muted-foreground">
+                            {sizeLabel}
+                          </span>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuGroup>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </div>

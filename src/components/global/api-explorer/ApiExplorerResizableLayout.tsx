@@ -18,9 +18,15 @@ import {
   API_EXPLORER_RESPONSE_SPLIT_MIN,
   API_REFERENCE_COLUMNS_MAX,
   API_REFERENCE_COLUMNS_MIN,
+  COVER_GENERATOR_COLUMNS_MAX,
+  COVER_GENERATOR_COLUMNS_MIN,
   normalizeApiExplorerColumnsLayout,
   normalizeApiExplorerResponseSplitLayout,
   normalizeApiReferenceColumnsLayout,
+  normalizeCoverGeneratorColumnsLayout,
+  normalizeDiagramGeneratorPropertiesSplitLayout,
+  DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MIN,
+  DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MAX,
 } from '@/lib/resizable-layout'
 
 const PERSIST_DEBOUNCE_MS = 250
@@ -230,6 +236,16 @@ type ReferenceColumnsLayoutProps = {
   request: ReactNode
 }
 
+type CoverGeneratorColumnsLayoutProps = {
+  layout: number[]
+  persistLayout: (layout: number[]) => void
+  handleClassName: string
+  className?: string
+  templates: ReactNode
+  canvas: ReactNode
+  properties: ReactNode
+}
+
 /** Docs API reference: methods list + request detail (explorer columns 2 and 3). */
 export function ReferenceColumnsResizableLayout({
   layout,
@@ -252,6 +268,68 @@ export function ReferenceColumnsResizableLayout({
       panelClassName="min-h-0 min-w-0 overflow-hidden"
     >
       {[methods, request]}
+    </PersistedResizablePanelGroup>
+  )
+}
+
+/** Cover generator: templates | canvas | properties. */
+export function CoverGeneratorColumnsResizableLayout({
+  layout,
+  persistLayout,
+  handleClassName,
+  className,
+  templates,
+  canvas,
+  properties,
+}: CoverGeneratorColumnsLayoutProps) {
+  return (
+    <PersistedResizablePanelGroup
+      direction="horizontal"
+      layout={layout}
+      persistLayout={persistLayout}
+      normalizeLayout={normalizeCoverGeneratorColumnsLayout}
+      mins={COVER_GENERATOR_COLUMNS_MIN}
+      maxs={COVER_GENERATOR_COLUMNS_MAX}
+      className={className}
+      handleClassName={handleClassName}
+      panelClassName="min-h-0 min-w-0 overflow-hidden"
+    >
+      {[templates, canvas, properties]}
+    </PersistedResizablePanelGroup>
+  )
+}
+
+type DiagramPropertiesSplitLayoutProps = {
+  layout: number[]
+  persistLayout: (layout: number[]) => void
+  handleClassName: string
+  className?: string
+  properties: ReactNode
+  layers: ReactNode
+}
+
+/** Diagram generator: properties | layers. */
+export function DiagramPropertiesSplitResizableLayout({
+  layout,
+  persistLayout,
+  handleClassName,
+  className,
+  properties,
+  layers,
+}: DiagramPropertiesSplitLayoutProps) {
+  return (
+    <PersistedResizablePanelGroup
+      direction="vertical"
+      layout={layout}
+      persistLayout={persistLayout}
+      normalizeLayout={normalizeDiagramGeneratorPropertiesSplitLayout}
+      mins={DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MIN}
+      maxs={DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MAX}
+      className={className}
+      handleClassName={handleClassName}
+      panelClassName="min-h-0 overflow-hidden"
+    >
+      {[properties, layers]}
     </PersistedResizablePanelGroup>
   )
 }

@@ -59,6 +59,9 @@ interface ConsoleLayoutProps {
   /** Whether the main content should have overflow-hidden (for views that manage their own scrolling) */
   fixedLayout?: boolean
 
+  /** Hides the global app header bar (logo, nav, account). Full-screen tool views. */
+  hideHeader?: boolean
+
   /** Custom container class name */
   containerClassName?: string
 
@@ -113,6 +116,7 @@ export function ConsoleLayout({
   showFooter = true,
   footer,
   fixedLayout = false,
+  hideHeader = false,
   containerClassName,
   bottomPanel,
 }: ConsoleLayoutProps) {
@@ -131,6 +135,7 @@ export function ConsoleLayout({
   }, [])
 
   const showNativeAppBar = overrides.showNativeAppBar
+  const showAppHeader = !hideHeader
 
   return (
     <div
@@ -138,23 +143,29 @@ export function ConsoleLayout({
     >
       {/* Sticky header section - takes space in flex layout */}
       {/* z-[110]: above PausedProjectCurtain (z-100) so alerts / exit impersonation stay reachable */}
-      <div className="sticky top-0 z-[110] flex shrink-0 flex-col overflow-visible bg-background">
-        {showNativeAppBar && <NativeAppBar />}
-        <CloudStatusBanner />
-        <ConsoleImpersonationBanner />
-        {headerBanner}
-        <ConsoleHeader
-          onMenuClick={sidebar?.onMenuClick ?? leftSidebar?.onMenuClick}
-          projectId={header?.projectId}
-          onCommandCenterOpen={header?.onCommandCenterOpen}
-          onCreateOrganization={header?.onCreateOrganization}
-          marketingNav={header?.marketingNav}
-          headerTitleSuffix={header?.headerTitleSuffix}
-          centerSearch={header?.centerSearch}
-          centerSearchPlaceholder={header?.centerSearchPlaceholder}
-          hideSearch={showNativeAppBar}
-        />
-      </div>
+      {(showNativeAppBar ||
+        showAppHeader ||
+        headerBanner) && (
+        <div className="sticky top-0 z-[110] flex shrink-0 flex-col overflow-visible bg-background">
+          {showNativeAppBar && <NativeAppBar />}
+          <CloudStatusBanner />
+          <ConsoleImpersonationBanner />
+          {headerBanner}
+          {showAppHeader ? (
+            <ConsoleHeader
+              onMenuClick={sidebar?.onMenuClick ?? leftSidebar?.onMenuClick}
+              projectId={header?.projectId}
+              onCommandCenterOpen={header?.onCommandCenterOpen}
+              onCreateOrganization={header?.onCreateOrganization}
+              marketingNav={header?.marketingNav}
+              headerTitleSuffix={header?.headerTitleSuffix}
+              centerSearch={header?.centerSearch}
+              centerSearchPlaceholder={header?.centerSearchPlaceholder}
+              hideSearch={showNativeAppBar}
+            />
+          ) : null}
+        </div>
+      )}
       {/* After sticky header in DOM: same z-[110] stacks the skip link above the bar; Radix dialogs portaled after #root still cover it at z-[110]. */}
       <SkipToContent />
 

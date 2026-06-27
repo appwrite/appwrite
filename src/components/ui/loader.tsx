@@ -9,29 +9,6 @@ import { cn } from '@/lib/utils'
 // Layout width: wordmark viewBox 132×24 + gap-1.5 + " / 2.0" text
 const CONTENT_MIN_WIDTH = 132 + 6 + 32
 
-/**
- * Static fullscreen loader (logo + " / 2.0") with no theme hooks.
- * Used on first paint before client mount so the user sees the branded loader
- * instead of route-level "Loading..." text. Background and text use theme CSS variables.
- */
-export function StaticFullscreenLoader() {
-  return (
-    <div className="fixed inset-0 z-[9999] bg-background" aria-label="Loading">
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div
-          className="flex items-center gap-1.5 min-h-6 animate-in fade-in duration-500"
-          style={{ minWidth: CONTENT_MIN_WIDTH }}
-        >
-          <AppwriteWordmark />
-          <span className="text-xs font-extralight tracking-tight text-muted-foreground">
-            / 2.0
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export type FullscreenLoaderStatusBanner = {
   /** Main title (inherits container text color). */
   title: string
@@ -95,6 +72,7 @@ export function FullscreenLoader({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-background"
+          aria-label="Loading"
         >
           {statusBanner &&
             (() => {
@@ -155,18 +133,15 @@ export function FullscreenLoader({
               )
             })()}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <motion.div
+            <div
               className="flex items-center gap-1.5 min-h-6"
               style={{ minWidth: CONTENT_MIN_WIDTH }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <AppwriteWordmark />
               <span className="text-xs font-extralight tracking-tight text-muted-foreground">
                 / 2.0
               </span>
-            </motion.div>
+            </div>
           </div>
           {showSpinner && !statusBanner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">

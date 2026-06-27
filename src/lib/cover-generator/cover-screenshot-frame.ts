@@ -47,8 +47,29 @@ export const COVER_HERO_SCREENSHOT_FRAME = {
   chromeDotGap: 6,
   /** Dot row inset from padded shell edge (`ml-2`). */
   chromeDotMarginLeft: 8,
+  /** Bottom inset when the shell is fully closed (diagram / floating frames). */
+  paddingBottom: 16,
   imageOpacity: 0.95,
 } as const
+
+export function getCoverScreenshotFrameRadii(closed: boolean): {
+  topLeft: number
+  topRight: number
+  bottomLeft: number
+  bottomRight: number
+} {
+  const { outerRadius, defaultInnerRadius, paddingX } = COVER_HERO_SCREENSHOT_FRAME
+  const bottomRadius = closed
+    ? Math.max(defaultInnerRadius, outerRadius - paddingX)
+    : 0
+
+  return {
+    topLeft: defaultInnerRadius,
+    topRight: defaultInnerRadius,
+    bottomLeft: bottomRadius,
+    bottomRight: bottomRadius,
+  }
+}
 
 export type CoverScreenshotGlassColors = {
   shellFill: string
@@ -114,14 +135,17 @@ export function buildCoverScreenshotFrameShellLayout(
   frameY: number,
   frameWidth: number,
   frameHeightPx: number,
+  options?: { closed?: boolean },
 ): CoverScreenshotFrameLayout {
-  const { paddingX, paddingTop, chromeHeight, outerRadius, defaultInnerRadius } =
+  const { paddingX, paddingTop, chromeHeight, outerRadius, defaultInnerRadius, paddingBottom } =
     COVER_HERO_SCREENSHOT_FRAME
+  const closed = options?.closed ?? false
+  const bottomInset = closed ? paddingBottom : 0
 
   const screenshotWidth = Math.max(1, frameWidth - paddingX * 2)
   const screenshotHeight = Math.max(
     1,
-    frameHeightPx - paddingTop - chromeHeight,
+    frameHeightPx - paddingTop - chromeHeight - bottomInset,
   )
 
   return {

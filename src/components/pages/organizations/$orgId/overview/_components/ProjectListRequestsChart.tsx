@@ -63,12 +63,6 @@ const EMPTY_CHART_POINTS: UsageChartPoint[] = Array.from(
   }),
 )
 
-/** Soft reveal when usage data replaces the skeleton chart. */
-const CHART_REVEAL_CLASS =
-  'animate-in fade-in-0 slide-in-from-bottom-1 duration-500 ease-out motion-reduce:animate-none'
-
-const CHART_REVEAL_DELAY_CLASS = 'delay-100'
-
 const projectChartLinkClassName =
   'block min-w-0 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_*]:!cursor-pointer'
 
@@ -352,7 +346,6 @@ function RequestsChartBlock({
   chartHeight,
   isLoading,
   isError,
-  animateReveal = true,
   usePortalTooltip = false,
 }: {
   chartData: Array<UsageChartPoint & { value: number }>
@@ -360,7 +353,6 @@ function RequestsChartBlock({
   chartHeight: number
   isLoading: boolean
   isError: boolean
-  animateReveal?: boolean
   usePortalTooltip?: boolean
 }) {
   if (isError) {
@@ -371,36 +363,15 @@ function RequestsChartBlock({
     )
   }
 
-  if (isLoading) {
-    return (
-      <RequestsChartArea
-        chartData={chartData}
-        gradientId={gradientId}
-        isSkeleton
-        tooltipDisabled
-        height={chartHeight}
-        usePortalTooltip={usePortalTooltip}
-      />
-    )
-  }
-
   return (
-    <div
-      key="loaded-chart"
-      className={cn(
-        'h-full',
-        animateReveal && CHART_REVEAL_CLASS,
-        animateReveal && CHART_REVEAL_DELAY_CLASS,
-      )}
-    >
-      <RequestsChartArea
-        chartData={chartData}
-        gradientId={gradientId}
-        tooltipDisabled={false}
-        height={chartHeight}
-        usePortalTooltip={usePortalTooltip}
-      />
-    </div>
+    <RequestsChartArea
+      chartData={chartData}
+      gradientId={gradientId}
+      isSkeleton={isLoading}
+      tooltipDisabled={isLoading}
+      height={chartHeight}
+      usePortalTooltip={usePortalTooltip}
+    />
   )
 }
 
@@ -452,10 +423,7 @@ export function ProjectListRequestsChart({
       aria-hidden
     />
   ) : (
-    <div
-      key="loaded-values"
-      className={cn('min-w-0', !isTable && CHART_REVEAL_CLASS)}
-    >
+    <div className="min-w-0">
       {isZeroUsage ? (
         <span
           className={cn(
@@ -535,7 +503,6 @@ export function ProjectListRequestsChart({
               chartHeight={chartHeight}
               isLoading={isLoading}
               isError={isError}
-              animateReveal={false}
               usePortalTooltip
             />
           </div>
@@ -562,12 +529,7 @@ export function ProjectListRequestsChart({
             <span className="ml-auto inline-flex h-3.5 w-9 shrink-0" aria-hidden />
           </>
         ) : (
-          <div
-            className={cn(
-              'flex min-w-0 flex-1 items-center gap-2',
-              CHART_REVEAL_CLASS,
-            )}
-          >
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {isZeroUsage ? (
               <>
                 {valueContent}

@@ -1,20 +1,18 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/generator/View'
+import { GeneratorLayout } from '@/components/pages/generator/GeneratorLayout'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/generator')({
-  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
     meta: [
-      { title: pageTitle('Cover generator') },
+      { title: pageTitle('Generator') },
       {
         name: 'description',
         content:
-          'Internal cover generator for Appwrite marketing assets and Open Graph images.',
+          'Internal generator for Appwrite marketing assets, Open Graph images, and diagrams.',
       },
       { name: 'robots', content: 'noindex, nofollow' },
     ],
@@ -26,9 +24,5 @@ export const Route = createFileRoute('/generator')({
     }
     await marketingPageLoader(context.queryClient)
   },
-  component: GeneratorPage,
+  component: GeneratorLayout,
 })
-
-function GeneratorPage() {
-  return <View />
-}

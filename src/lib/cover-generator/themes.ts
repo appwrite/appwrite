@@ -197,7 +197,11 @@ export type CoverThemeId = keyof typeof COVER_THEME_DEFINITIONS
 
 export const COVER_THEME_IDS = Object.keys(COVER_THEME_DEFINITIONS) as CoverThemeId[]
 
-export const DEFAULT_COVER_THEME_ID: CoverThemeId = 'light'
+export const COVER_EDITOR_THEME_IDS = ['light-plain', 'dark-plain'] as const satisfies readonly CoverThemeId[]
+
+export type CoverEditorThemeId = (typeof COVER_EDITOR_THEME_IDS)[number]
+
+export const DEFAULT_COVER_THEME_ID: CoverThemeId = 'dark-plain'
 
 export function isCoverThemeId(value: string): value is CoverThemeId {
   return (COVER_THEME_IDS as readonly string[]).includes(value)
@@ -219,12 +223,34 @@ export function getCoverTheme(
   return COVER_THEME_DEFINITIONS[resolveCoverThemeId(themeId)]
 }
 
+export function isCoverEditorThemeId(value: string): value is CoverEditorThemeId {
+  return (COVER_EDITOR_THEME_IDS as readonly string[]).includes(value)
+}
+
+export function resolveCoverEditorThemeId(
+  themeId: CoverThemeId | string | null | undefined,
+): CoverEditorThemeId {
+  const resolved = resolveCoverThemeId(themeId)
+  if (isCoverEditorThemeId(resolved)) return resolved
+  return getCoverTheme(resolved).family === 'dark' ? 'dark-plain' : 'light-plain'
+}
+
 export function listCoverThemes(): CoverThemeDefinition[] {
   return COVER_THEME_IDS.map((id) => COVER_THEME_DEFINITIONS[id])
 }
 
+export function listCoverEditorThemes(): CoverThemeDefinition[] {
+  return COVER_EDITOR_THEME_IDS.map((id) => COVER_THEME_DEFINITIONS[id])
+}
+
 export function listCoverThemesByFamily(family: CoverThemeFamily): CoverThemeDefinition[] {
   return listCoverThemes().filter((theme) => theme.family === family)
+}
+
+export function listCoverEditorThemesByFamily(
+  family: CoverThemeFamily,
+): CoverThemeDefinition[] {
+  return listCoverEditorThemes().filter((theme) => theme.family === family)
 }
 
 /** Rendering tokens used by templates and preview (subset of theme definition). */

@@ -1,8 +1,6 @@
-import { useMemo } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CoverTemplateCategoryFilter } from '@/lib/cover-generator/template-categories'
 import {
-  COVER_HEIGHT,
-  COVER_WIDTH,
   type CoverTemplateId,
   type CoverTheme,
 } from '@/lib/cover-generator/constants'
@@ -14,9 +12,12 @@ import {
 } from '@/lib/cover-generator/template-categories'
 import { COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX } from '@/components/pages/generator/layout'
 import { COVER_TEMPLATE_DEFINITIONS } from '@/lib/cover-generator/template-config'
-import { CoverCardsAngledPreview } from '@/components/pages/generator/_components/CoverCardsAngledPreview'
-import { CoverScreenshotAngledPreview } from '@/components/pages/generator/_components/CoverScreenshotAngledPreview'
 import { CoverThemeSelect } from '@/components/pages/generator/_components/CoverThemeSelect'
+import {
+  CoverScaledPreview,
+  isCoverGeneratorDomPreviewTemplate,
+} from '@/components/pages/generator/_components/CoverPreviewContent'
+import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/themes'
 import { cn } from '@/lib/utils'
 
 export type { CoverTemplateCategoryFilter as CoverTemplateTypeFilter } from '@/lib/cover-generator/template-categories'
@@ -42,18 +43,38 @@ function CoverTemplateCard({
   selected: boolean
   onSelect: () => void
 }) {
+  const previewRef = useRef<HTMLDivElement>(null)
+  const [previewWidth, setPreviewWidth] = useState(
+    COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX,
+  )
   const previewData = useMemo(
     () => createDefaultCoverData(template, theme),
     [template, theme],
   )
-  const usesDomPreview =
-    template === 'cards-angled' || template === 'screenshot-angled'
+  const usesDomPreview = isCoverGeneratorDomPreviewTemplate(template)
   const previewUrl = useMemo(() => {
     if (typeof window === 'undefined' || usesDomPreview) return ''
     return buildCoverApiUrl({ ...previewData, format: 'png' }, window.location.origin)
   }, [previewData, usesDomPreview])
   const definition = COVER_TEMPLATE_DEFINITIONS.find((item) => item.id === template)
-  const thumbnailScale = COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX / COVER_WIDTH
+  const previewBackground = getCoverBrandThemeForSvgExport(theme).background
+
+  useLayoutEffect(() => {
+    const element = previewRef.current
+    if (!element) return
+
+    const updatePreviewWidth = () => {
+      const width = element.getBoundingClientRect().width
+      if (width > 0) {
+        setPreviewWidth(width)
+      }
+    }
+
+    updatePreviewWidth()
+    const resizeObserver = new ResizeObserver(updatePreviewWidth)
+    resizeObserver.observe(element)
+    return () => resizeObserver.disconnect()
+  }, [])
 
   return (
     <button
@@ -66,45 +87,17 @@ function CoverTemplateCard({
           : 'border-border bg-card/40 hover:border-border hover:bg-accent/30',
       )}
     >
-      <div className="relative aspect-[1200/630] w-full overflow-hidden border-b border-border bg-muted/20">
-        {template === 'cards-angled' ? (
-          <div
-            className="pointer-events-none absolute left-0 top-0 origin-top-left"
-            style={{
-              width: COVER_WIDTH,
-              height: COVER_HEIGHT,
-              transform: `scale(${thumbnailScale})`,
-            }}
-          >
-            <CoverCardsAngledPreview
-              data={previewData as Extract<typeof previewData, { template: 'cards-angled' }>}
-              width={COVER_WIDTH}
-              height={COVER_HEIGHT}
-            />
-          </div>
-        ) : template === 'screenshot-angled' ? (
-          <div
-            className="pointer-events-none absolute left-0 top-0 origin-top-left"
-            style={{
-              width: COVER_WIDTH,
-              height: COVER_HEIGHT,
-              transform: `scale(${thumbnailScale})`,
-            }}
-          >
-            <CoverScreenshotAngledPreview
-              data={
-                previewData as Extract<typeof previewData, { template: 'screenshot-angled' }>
-              }
-              width={COVER_WIDTH}
-              height={COVER_HEIGHT}
-            />
-          </div>
-        ) : previewUrl ? (
-          <img
-            src={previewUrl}
-            alt=""
-            draggable={false}
-            className="h-full w-full object-cover"
+      <div
+        ref={previewRef}
+        className="relative aspect-[1200/630] w-full overflow-hidden border-b border-border"
+        style={{ backgroundColor: previewBackground }}
+      >
+        {previewWidth > 0 ? (
+          <CoverScaledPreview
+            data={previewData}
+            previewUrl={previewUrl || undefined}
+            displayWidth={previewWidth}
+            className="absolute left-0 top-0"
           />
         ) : null}
       </div>
@@ -183,12 +176,12 @@ export function CoverTemplatePanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
+      <div className="shrink-0 space-y-2 border-b border-border px-4 py-3">
         <p className="text-[12px] font-medium text-foreground">Templates</p>
         <CoverThemeSelect theme={theme} onThemeChange={onThemeChange} />
       </div>
 
-      <div className="shrink-0 border-b border-border px-2 py-1.5">
+      <div className="shrink-0 border-b border-border px-4 py-2.5">
         <p className="mb-1 px-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Category
         </p>
@@ -209,7 +202,7 @@ export function CoverTemplatePanel({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <div className="space-y-3">
           {categorySections.map((category) => (
             <section key={category.id}>
@@ -218,7 +211,7 @@ export function CoverTemplatePanel({
                   {category.label}
                 </p>
               ) : null}
-              <div className="grid grid-cols-1 gap-1">
+              <div className="grid grid-cols-1 gap-2">
                 {category.templateIds.map((template) => (
                   <CoverTemplateCard
                     key={template}

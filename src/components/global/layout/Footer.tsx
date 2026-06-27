@@ -55,6 +55,18 @@ function docsFooterLink(
   }
 }
 
+function blogFooterLink(
+  label: string,
+  slug: string,
+  marketing: boolean,
+): FooterLink {
+  return {
+    label,
+    href: getBlogPageUrl(`/blog/post/${slug}`, marketing),
+    external: isBlogPageExternal(marketing),
+  }
+}
+
 function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGroup[] {
   return [
   {
@@ -186,14 +198,14 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
   {
     title: 'Compare',
     links: [
-      { label: 'Appwrite vs. Supabase', href: 'https://appwrite.io/compare/supabase', external: true },
-      { label: 'Appwrite vs. Firebase', href: 'https://appwrite.io/compare/firebase', external: true },
-      { label: 'Appwrite vs. Neon', href: 'https://appwrite.io/compare/neon', external: true },
-      { label: 'Appwrite vs. Vercel', href: 'https://appwrite.io/compare/vercel', external: true },
-      { label: 'Appwrite vs. Netlify', href: 'https://appwrite.io/compare/netlify', external: true },
-      { label: 'Appwrite vs. Cloudinary', href: 'https://appwrite.io/compare/cloudinary', external: true },
-      { label: 'Appwrite vs. Auth0', href: 'https://appwrite.io/compare/auth0', external: true },
-      { label: 'Backend as a service (BaaS)', href: 'https://appwrite.io/compare/backend-as-a-service', external: true },
+      blogFooterLink('Appwrite vs. Supabase', 'appwrite-compared-to-supabase', marketing),
+      blogFooterLink('Appwrite vs. Firebase', 'open-source-firebase-alternative', marketing),
+      blogFooterLink('Appwrite vs. Neon', 'appwrite-vs-neon-ai-backends', marketing),
+      blogFooterLink('Appwrite vs. Vercel', 'open-source-vercel-alternative', marketing),
+      blogFooterLink('Appwrite vs. Netlify', 'open-source-netlify-alternative', marketing),
+      blogFooterLink('Appwrite vs. Cloudinary', 'appwrite-vs-cloudinary', marketing),
+      blogFooterLink('Appwrite vs. Auth0', 'appwrite-vs-auth0', marketing),
+      blogFooterLink('Backend as a service (BaaS)', 'backend-as-a-service', marketing),
     ],
   },
 ] as const

@@ -11,6 +11,10 @@ import {
   RIGHT_PANE_MIN_WIDTH_PX,
 } from '@/lib/right-pane/constants'
 import {
+  normalizeGeneratorPanelVisibility,
+  type GeneratorPanelVisibility,
+} from '@/lib/generator/panel-visibility'
+import {
   clampCliShellSessionsSidebarWidthPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
@@ -2141,6 +2145,10 @@ export function clearLegacyCliShellHeightLocalStorage(): void {
 // API Explorer panel layouts (account prefs)
 // ---------------------------------------------------------------------------
 
+/** Full key: `console.coverGenerator.columnsLayout` - JSON `[templates%, canvas%, properties%]`. */
+export const USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT =
+  'console.coverGenerator.columnsLayout'
+
 /** Full key: `console.apiExplorer.columnsLayout` - JSON `[services%, methods%, request%]`. */
 export const USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT =
   'console.apiExplorer.columnsLayout'
@@ -2148,6 +2156,41 @@ export const USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT =
 /** Full key: `console.apiExplorer.responseSplitLayout` - JSON `[request%, response%]`. */
 export const USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT =
   'console.apiExplorer.responseSplitLayout'
+
+/** Full key: `console.diagramGenerator.propertiesSplitLayout` - JSON `[properties%, layers%]`. */
+export const USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT =
+  'console.diagramGenerator.propertiesSplitLayout'
+
+/** Full key: `console.generator.panelVisibility` - JSON `{ left, right }`. */
+export const USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY =
+  'console.generator.panelVisibility'
+
+export function parseGeneratorPanelVisibility(
+  prefs: UserPrefs | null | undefined,
+): GeneratorPanelVisibility | null {
+  const raw = prefs?.[USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY]
+  if (typeof raw !== 'string' || raw.length === 0) return null
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object') return null
+    return normalizeGeneratorPanelVisibility(parsed as GeneratorPanelVisibility)
+  } catch {
+    return null
+  }
+}
+
+export function mergeGeneratorPanelVisibilityIntoPrefs(
+  prefs: UserPrefs,
+  visibility: GeneratorPanelVisibility,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY]: JSON.stringify(
+      normalizeGeneratorPanelVisibility(visibility),
+    ),
+  }
+}
 
 function parsePanelLayoutPref(
   prefs: UserPrefs | null | undefined,
@@ -2166,6 +2209,26 @@ function parsePanelLayoutPref(
     return sizes
   } catch {
     return null
+  }
+}
+
+export function parseCoverGeneratorColumnsLayout(
+  prefs: UserPrefs | null | undefined,
+): number[] | null {
+  return parsePanelLayoutPref(
+    prefs,
+    USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT,
+    3,
+  )
+}
+
+export function mergeCoverGeneratorColumnsLayoutIntoPrefs(
+  prefs: UserPrefs,
+  layout: number[],
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT]: JSON.stringify(layout),
   }
 }
 
@@ -2206,6 +2269,27 @@ export function mergeApiExplorerResponseSplitLayoutIntoPrefs(
   return {
     ...prefs,
     [USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT]: JSON.stringify(layout),
+  }
+}
+
+export function parseDiagramGeneratorPropertiesSplitLayout(
+  prefs: UserPrefs | null | undefined,
+): number[] | null {
+  return parsePanelLayoutPref(
+    prefs,
+    USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
+    2,
+  )
+}
+
+export function mergeDiagramGeneratorPropertiesSplitLayoutIntoPrefs(
+  prefs: UserPrefs,
+  layout: number[],
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT]:
+      JSON.stringify(layout),
   }
 }
 

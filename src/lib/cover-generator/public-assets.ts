@@ -5,7 +5,7 @@ import { getCoverRenderSiteOrigin } from '@/lib/cover-generator/render-context'
 
 /**
  * Resolve bundled static assets for server-side cover rendering.
- * Dev reads from `public/`; Docker reads from `dist/client/` (see Dockerfile).
+ * Dev reads from `public/`; production reads from `dist/client/`.
  * On Appwrite Sites, fall back to fetching from the deployed site's static URLs.
  */
 function getCoverPublicAssetRoots(): string[] {

@@ -16,6 +16,7 @@ import {
 import {
   coverRenderDataToSearchParams,
   DEFAULT_COVER_VALUES,
+  parseCoverRenderData,
 } from '@/lib/cover-generator/parse-params'
 import {
   COVER_TEMPLATE_DEFINITIONS,
@@ -32,17 +33,23 @@ import {
 } from '@/lib/cover-generator/fetch-cover-image'
 import type { CoverFieldDefinition } from '@/lib/cover-generator/types'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
+import {
+  formatApiParametersMarkdownTable,
+  formatApiResponseMarkdown,
+  GENERATOR_API_QUERY_PARAMETERS,
+  type GeneratorApiParameterDoc,
+} from '@/lib/generator/api-docs-shared'
+import { GENERATOR_COVER_API_PATH } from '@/lib/generator/constants'
 
-export const COVER_API_PATH = '/generator/cover'
+export const COVER_API_PATH = GENERATOR_COVER_API_PATH
 export const COVER_API_MAX_GET_URL_LENGTH = 1800
 
-export type CoverApiParameterDoc = {
-  name: string
-  type: string
-  required?: boolean
+export type CoverApiParameterDoc = GeneratorApiParameterDoc
+
+export type CoverApiTemplateSummary = {
+  id: CoverTemplateId
+  label: string
   description: string
-  example?: string
-  enumValues?: readonly string[]
 }
 
 export type CoverApiDocsContext = {
@@ -51,6 +58,10 @@ export type CoverApiDocsContext = {
   templateId: CoverTemplateId
   templateLabel: string
   templateDescription: string
+  templateSummaries: CoverApiTemplateSummary[]
+  sharedParameters: CoverApiParameterDoc[]
+  templateParameters: CoverApiParameterDoc[]
+  queryParameters: CoverApiParameterDoc[]
   parameters: CoverApiParameterDoc[]
   payload: Record<string, string | number | boolean>
   displayPayload: Record<string, string | number | boolean>
@@ -60,7 +71,9 @@ export type CoverApiDocsContext = {
   getUrlTooLong: boolean
   curlGet: string
   curlPost: string
+  curlPostDownload: string
   fetchExample: string
+  fetchDownloadExample: string
 }
 
 function shellQuote(value: string): string {
@@ -119,30 +132,37 @@ function buildSharedParameterDocs(): CoverApiParameterDoc[] {
       name: 'template',
       type: 'string',
       required: true,
-      description: 'Cover template to render.',
+      description: 'Cover template to render. Each template accepts its own content fields in addition to the shared fields below.',
       enumValues: COVER_TEMPLATE_IDS,
+      defaultValue: DEFAULT_COVER_VALUES.template,
     },
     {
       name: 'theme',
       type: 'string',
-      description: `Cover background theme. Default: ${DEFAULT_COVER_VALUES.theme}.`,
+      description: 'Background theme for the cover artboard.',
       enumValues: COVER_THEME_IDS,
+      defaultValue: DEFAULT_COVER_VALUES.theme,
     },
     {
       name: 'format',
       type: 'string',
-      description: `Output image format. Default: ${DEFAULT_COVER_VALUES.format}.`,
+      description: 'Output image format returned by the API.',
       enumValues: COVER_IMAGE_FORMATS,
+      defaultValue: DEFAULT_COVER_VALUES.format,
     },
     {
       name: 'width',
       type: 'number',
-      description: `Canvas width in pixels. Default: ${COVER_WIDTH}. Max: 4096.`,
+      description: 'Canvas width in pixels.',
+      defaultValue: String(COVER_WIDTH),
+      example: '1200',
     },
     {
       name: 'height',
       type: 'number',
-      description: `Canvas height in pixels. Default: ${COVER_HEIGHT}. Max: 4096.`,
+      description: 'Canvas height in pixels.',
+      defaultValue: String(COVER_HEIGHT),
+      example: '630',
     },
   ]
 }
@@ -197,7 +217,7 @@ function buildSupplementalParameterDocs(templateId: CoverTemplateId): CoverApiPa
   }
 }
 
-export function buildCoverApiParameterDocs(
+export function buildCoverTemplateParameterDocs(
   templateId: CoverTemplateId,
 ): CoverApiParameterDoc[] {
   const templateDefinition = getCoverTemplateDefinition(templateId)
@@ -206,7 +226,19 @@ export function buildCoverApiParameterDocs(
   const fieldNames = new Set(templateFields.map((field) => field.name))
   const uniqueSupplemental = supplemental.filter((field) => !fieldNames.has(field.name))
 
-  return [...buildSharedParameterDocs(), ...templateFields, ...uniqueSupplemental]
+  return [...templateFields, ...uniqueSupplemental]
+}
+
+export function buildCoverApiParameterDocs(
+  templateId: CoverTemplateId,
+): CoverApiParameterDoc[] {
+  return [...buildSharedParameterDocs(), ...buildCoverTemplateParameterDocs(templateId)]
+}
+
+export function buildDefaultCoverRenderData(
+  templateId: CoverTemplateId = DEFAULT_COVER_VALUES.template,
+): CoverRenderData {
+  return parseCoverRenderData(new URLSearchParams({ template: templateId }))
 }
 
 export function coverRenderDataToApiPayload(
@@ -290,10 +322,16 @@ export function buildCoverApiCurlPost(
   ].join('\n')
 }
 
-export function buildCoverApiFetchExample(data: CoverRenderData, origin = ''): string {
+export function buildCoverApiFetchExample(
+  data: CoverRenderData,
+  origin = '',
+  options?: { download?: boolean },
+): string {
+  const endpoint = buildCoverApiEndpointUrl(origin)
+  const url = options?.download ? `${endpoint}?disposition=attachment` : endpoint
   const payload = coverRenderDataToApiPayload(data)
   const lines = [
-    `const response = await fetch(${JSON.stringify(buildCoverApiEndpointUrl(origin))}, {`,
+    `const response = await fetch(${JSON.stringify(url)}, {`,
     `  method: 'POST',`,
     `  headers: { 'Content-Type': 'application/json' },`,
     `  body: JSON.stringify(${JSON.stringify(payload, null, 2).replace(/\n/g, '\n  ')}),`,
@@ -312,21 +350,25 @@ function escapeMarkdownTableCell(value: string): string {
   return value.replace(/\|/g, '\\|').replace(/\n/g, ' ')
 }
 
-function formatParameterMarkdownRow(parameter: CoverApiParameterDoc): string {
-  const name = parameter.required ? `\`${parameter.name}\` (required)` : `\`${parameter.name}\``
-  let description = parameter.description
-  if (parameter.enumValues?.length) {
-    description += ` Values: ${parameter.enumValues.join(', ')}.`
-  }
-  return `| ${name} | ${parameter.type} | ${escapeMarkdownTableCell(description)} |`
+function formatCoverTemplateCatalogMarkdown(summaries: CoverApiTemplateSummary[]): string {
+  return [
+    '| Template | Description |',
+    '| --- | --- |',
+    ...summaries.map(
+      (template) =>
+        `| \`${template.id}\` (${template.label}) | ${escapeMarkdownTableCell(template.description)} |`,
+    ),
+  ].join('\n')
 }
 
 export function buildCoverApiDocsMarkdown(docs: CoverApiDocsContext): string {
-  const payloadJson = JSON.stringify(docs.payload, null, 2)
+  const payloadJson = JSON.stringify(docs.displayPayload, null, 2)
   const lines: string[] = [
     '# Cover generator API',
     '',
-    'Render PNG, JPEG, or AVIF cover images from template parameters. Use POST when the request includes uploaded images, data URIs, or a query string longer than about 1,800 characters.',
+    'Render PNG, JPEG, or AVIF cover images from template parameters. The API is available on deployments with the marketing profile enabled.',
+    '',
+    'Use **GET** for simple covers with URL-safe parameters. Use **POST** when the request includes uploaded images, data URIs, or a query string longer than about 1,800 characters.',
     '',
   ]
 
@@ -343,7 +385,7 @@ export function buildCoverApiDocsMarkdown(docs: CoverApiDocsContext): string {
   lines.push(
     '## Endpoint',
     '',
-    'Both methods accept the same template fields. POST is recommended for image-heavy requests.',
+    'Both methods accept the same template fields. POST accepts JSON and is recommended for image-heavy requests.',
     '',
     '```http',
     `GET  ${docs.endpointUrl}`,
@@ -354,19 +396,33 @@ export function buildCoverApiDocsMarkdown(docs: CoverApiDocsContext): string {
     '',
     '### GET',
     '',
-    'Returns the image inline. Best for short, URL-safe parameter sets.',
+    'Pass template fields as query parameters. Returns the image inline. Best for short, URL-safe parameter sets and quick `<img>` or Open Graph links.',
     '',
     '### POST',
     '',
-    'Accepts JSON. Supports data URIs and long payloads. Add `?disposition=attachment` to download the file.',
+    'Send a JSON object with the same fields as GET query parameters. Supports data URIs, long text fields, and custom uploads. Add `?disposition=attachment` to download the file.',
+    '',
+    'Boolean and number fields can be sent as JSON booleans/numbers or as strings. Omitted fields use template defaults.',
+    '',
+    '## Query parameters',
+    '',
+    formatApiParametersMarkdownTable(docs.queryParameters),
+    '',
+    '## Available templates',
+    '',
+    formatCoverTemplateCatalogMarkdown(docs.templateSummaries),
+    '',
+    `## Shared parameters`,
+    '',
+    'These fields apply to every cover template.',
+    '',
+    formatApiParametersMarkdownTable(docs.sharedParameters),
     '',
     `## Parameters for ${docs.templateLabel}`,
     '',
     docs.templateDescription,
     '',
-    '| Parameter | Type | Description |',
-    '| --- | --- | --- |',
-    ...docs.parameters.map(formatParameterMarkdownRow),
+    formatApiParametersMarkdownTable(docs.templateParameters),
     '',
     '## Examples for current cover',
     '',
@@ -388,10 +444,22 @@ export function buildCoverApiDocsMarkdown(docs: CoverApiDocsContext): string {
     docs.curlPost,
     '```',
     '',
+    '### cURL (POST download)',
+    '',
+    '```bash',
+    docs.curlPostDownload,
+    '```',
+    '',
     '### fetch (POST)',
     '',
     '```javascript',
     docs.fetchExample,
+    '```',
+    '',
+    '### fetch (POST download)',
+    '',
+    '```javascript',
+    docs.fetchDownloadExample,
     '```',
     '',
     '### cURL (GET)',
@@ -406,9 +474,7 @@ export function buildCoverApiDocsMarkdown(docs: CoverApiDocsContext): string {
     '',
     '## Response',
     '',
-    '- **200 OK** with `Content-Type: image/png`, `image/jpeg`, or `image/avif` depending on `format`.',
-    '- **404** when the marketing profile is disabled.',
-    '- **500** when rendering fails.',
+    formatApiResponseMarkdown(),
     '',
   )
 
@@ -425,6 +491,7 @@ export function buildCoverApiDocsContext(
   const getUrl = buildCoverApiGetUrl(data, origin)
   const getUrlTooLong = getUrl.length > COVER_API_MAX_GET_URL_LENGTH
   const recommendsPost = shouldPostCoverRenderRequest(data, origin)
+  const templateSummaries = listCoverApiTemplateSummaries()
 
   return {
     origin,
@@ -434,6 +501,10 @@ export function buildCoverApiDocsContext(
     templateDescription:
       templateDefinition?.description ??
       'Render a cover image from template parameters.',
+    templateSummaries,
+    sharedParameters: buildSharedParameterDocs(),
+    templateParameters: buildCoverTemplateParameterDocs(data.template),
+    queryParameters: GENERATOR_API_QUERY_PARAMETERS,
     parameters: buildCoverApiParameterDocs(data.template),
     payload,
     displayPayload: sanitizeCoverApiPayloadForDisplay(payload),
@@ -443,11 +514,13 @@ export function buildCoverApiDocsContext(
     getUrlTooLong,
     curlGet: buildCoverApiCurlGet(data, origin),
     curlPost: buildCoverApiCurlPost(data, origin),
+    curlPostDownload: buildCoverApiCurlPost(data, origin, { download: true }),
     fetchExample: buildCoverApiFetchExample(data, origin),
+    fetchDownloadExample: buildCoverApiFetchExample(data, origin, { download: true }),
   }
 }
 
-export function listCoverApiTemplateSummaries() {
+export function listCoverApiTemplateSummaries(): CoverApiTemplateSummary[] {
   return COVER_TEMPLATE_DEFINITIONS.map((template) => ({
     id: template.id,
     label: template.label,

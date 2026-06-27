@@ -37,7 +37,6 @@ import { SentryContextProvider } from '@/components/global/providers/SentryConte
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
 import {
   FullscreenLoader,
-  StaticFullscreenLoader,
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -421,17 +420,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ContextualDocumentTitle />
         <ClientThemeProvider>
           <NavigationHistoryProvider>
-            {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash.
-                Before client mount: always show static loader for non-auth routes (including "/")
-                so the very first HTML paint shows the logo instead of route-level "Loading...".
-                When clientMounted, use FullscreenLoader so it can run fade-out before unmount. */}
-            {clientMounted ? (
+            {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
+            {!skipStaticLoader ? (
               <FullscreenLoader
-                isVisible={isLoaderVisible}
-                statusBanner={statusBanner}
+                isVisible={clientMounted ? isLoaderVisible : true}
+                statusBanner={clientMounted ? statusBanner : undefined}
               />
-            ) : !skipStaticLoader ? (
-              <StaticFullscreenLoader />
             ) : null}
             <SentryContextProvider>
               <DebugModeProvider>

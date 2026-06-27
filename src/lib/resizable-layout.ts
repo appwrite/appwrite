@@ -210,6 +210,11 @@ export function clampPostgresSqlEditorHeightPx(px: number): number {
   )
 }
 
+/** Cover generator: templates | canvas | properties (%). */
+export const COVER_GENERATOR_COLUMNS_DEFAULT_LAYOUT = [22, 53, 25] as const
+export const COVER_GENERATOR_COLUMNS_MIN = [16, 28, 19] as const
+export const COVER_GENERATOR_COLUMNS_MAX = [38, 100, 38] as const
+
 /** API Explorer: services | methods | request (%). */
 export const API_EXPLORER_COLUMNS_DEFAULT_LAYOUT = [20, 24, 56] as const
 export const API_EXPLORER_COLUMNS_MIN = [14, 18, 36] as const
@@ -224,6 +229,11 @@ export const API_EXPLORER_RESPONSE_SPLIT_MAX = [85, 75] as const
 export const API_REFERENCE_COLUMNS_DEFAULT_LAYOUT = [24, 76] as const
 export const API_REFERENCE_COLUMNS_MIN = [18, 36] as const
 export const API_REFERENCE_COLUMNS_MAX = [34, 100] as const
+
+/** Diagram generator: properties | layers (%). */
+export const DIAGRAM_GENERATOR_PROPERTIES_SPLIT_DEFAULT_LAYOUT = [62, 38] as const
+export const DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MIN = [22, 18] as const
+export const DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MAX = [82, 78] as const
 
 function normalizePanelLayout(
   sizes: number[],
@@ -244,6 +254,15 @@ function normalizePanelLayout(
   if (sum <= 0) return [...fallback]
   if (Math.abs(sum - 100) < 0.01) return clamped
   return clamped.map((size) => (size / sum) * 100)
+}
+
+export function normalizeCoverGeneratorColumnsLayout(sizes: number[]): number[] {
+  return normalizePanelLayout(
+    sizes,
+    COVER_GENERATOR_COLUMNS_MIN,
+    COVER_GENERATOR_COLUMNS_MAX,
+    COVER_GENERATOR_COLUMNS_DEFAULT_LAYOUT,
+  )
 }
 
 export function normalizeApiExplorerColumnsLayout(sizes: number[]): number[] {
@@ -272,6 +291,17 @@ export function normalizeApiReferenceColumnsLayout(sizes: number[]): number[] {
     API_REFERENCE_COLUMNS_MIN,
     API_REFERENCE_COLUMNS_MAX,
     API_REFERENCE_COLUMNS_DEFAULT_LAYOUT,
+  )
+}
+
+export function normalizeDiagramGeneratorPropertiesSplitLayout(
+  sizes: number[],
+): number[] {
+  return normalizePanelLayout(
+    sizes,
+    DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MIN,
+    DIAGRAM_GENERATOR_PROPERTIES_SPLIT_MAX,
+    DIAGRAM_GENERATOR_PROPERTIES_SPLIT_DEFAULT_LAYOUT,
   )
 }
 

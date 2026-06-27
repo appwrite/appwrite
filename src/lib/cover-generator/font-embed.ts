@@ -1,27 +1,29 @@
-import { decompress as decompressWoff2 } from 'wawoff2'
+import { COVER_EXPORT_TTF_SOURCES } from '@/lib/cover-generator/cover-font-paths'
 import { readCoverPublicAssetBuffer } from '@/lib/cover-generator/public-assets'
-
-const AEONIK_REGULAR = 'fonts/aeonik-pro/AeonikPro-Regular.woff2'
-const AEONIK_MEDIUM = 'fonts/aeonik-pro/AeonikPro-Medium.woff2'
-const INTER_REGULAR = 'fonts/inter/inter-latin-400-normal.woff2'
-const INTER_SEMIBOLD = 'fonts/inter/inter-latin-600-normal.woff2'
 
 let cachedFontFaceCss: string | null = null
 const ttfDataUriCache = new Map<string, string>()
 
-/** librsvg (Sharp SVG export) only renders embedded TrueType/OpenType, not WOFF2. */
+/**
+ * librsvg (Sharp SVG export) ignores @font-face data URIs on Linux.
+ * Docker installs TTFs for fontconfig instead (see Dockerfile).
+ * macOS dev may still benefit from embedded faces when system fonts are absent.
+ */
+function shouldEmbedCoverFontsInSvg(): boolean {
+  return process.platform !== 'linux'
+}
+
 async function readFontTtfDataUri(relativePath: string): Promise<string> {
   const normalized = relativePath.replace(/^\/+/, '')
   const cached = ttfDataUriCache.get(normalized)
   if (cached) return cached
 
-  const woff2 = await readCoverPublicAssetBuffer(normalized)
-  if (!woff2) {
+  const ttf = await readCoverPublicAssetBuffer(normalized)
+  if (!ttf) {
     throw new Error(`Cover export font not found: ${normalized}`)
   }
 
-  const ttf = await decompressWoff2(new Uint8Array(woff2))
-  const dataUri = `data:font/truetype;base64,${Buffer.from(ttf).toString('base64')}`
+  const dataUri = `data:font/truetype;base64,${ttf.toString('base64')}`
   ttfDataUriCache.set(normalized, dataUri)
   return dataUri
 }
@@ -37,14 +39,19 @@ function buildFontFaceRule(family: string, weight: number, src: string): string 
 }
 
 export async function getCoverFontFaceCss(): Promise<string> {
-  if (cachedFontFaceCss) return cachedFontFaceCss
+  if (cachedFontFaceCss !== null) return cachedFontFaceCss
+
+  if (!shouldEmbedCoverFontsInSvg()) {
+    cachedFontFaceCss = ''
+    return cachedFontFaceCss
+  }
 
   const [aeonikRegular, aeonikMedium, interRegular, interSemibold] =
     await Promise.all([
-      readFontTtfDataUri(AEONIK_REGULAR),
-      readFontTtfDataUri(AEONIK_MEDIUM),
-      readFontTtfDataUri(INTER_REGULAR),
-      readFontTtfDataUri(INTER_SEMIBOLD),
+      readFontTtfDataUri(COVER_EXPORT_TTF_SOURCES.aeonikRegular),
+      readFontTtfDataUri(COVER_EXPORT_TTF_SOURCES.aeonikMedium),
+      readFontTtfDataUri(COVER_EXPORT_TTF_SOURCES.interRegular),
+      readFontTtfDataUri(COVER_EXPORT_TTF_SOURCES.interSemibold),
     ])
 
   cachedFontFaceCss = [

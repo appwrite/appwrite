@@ -15,7 +15,7 @@ import { isCoverTemplateId } from '@/lib/cover-generator/constants'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import { COVER_SCREENSHOT_FRAME_WIDTH } from '@/lib/cover-generator/cover-frame-width'
 import { COVER_SCREENSHOT_ANGLED_DEFAULTS } from '@/lib/perspective-screenshot-card/constants'
-import { resolveCoverThemeId } from '@/lib/cover-generator/themes'
+import { resolveCoverEditorThemeId } from '@/lib/cover-generator/themes'
 import {
   migrateCoverImageDataUrlsToIndexedDb,
 } from '@/lib/cover-generator/editor-image-fields'
@@ -23,7 +23,7 @@ import {
 function normalizeStoredCoverData(data: CoverRenderData): CoverRenderData {
   const normalizedTheme: CoverRenderData = {
     ...data,
-    theme: resolveCoverThemeId(data.theme),
+    theme: resolveCoverEditorThemeId(data.theme),
   }
 
   if (normalizedTheme.template === 'screenshot-angled') {
@@ -108,7 +108,7 @@ function syncTemplateDataThemes(
   data: CoverRenderData,
   templateData: Partial<Record<CoverTemplateId, CoverRenderData>>,
 ): Partial<Record<CoverTemplateId, CoverRenderData>> {
-  const theme = resolveCoverThemeId(data.theme)
+  const theme = resolveCoverEditorThemeId(data.theme)
   const synced = applyThemeToStoredTemplateData(templateData, theme)
   synced[data.template] = { ...data, theme }
   return synced
@@ -116,7 +116,7 @@ function syncTemplateDataThemes(
 
 function applyThemeToStoredTemplateData(
   templateData: Partial<Record<CoverTemplateId, CoverRenderData>>,
-  theme: ReturnType<typeof resolveCoverThemeId>,
+  theme: ReturnType<typeof resolveCoverEditorThemeId>,
 ): Partial<Record<CoverTemplateId, CoverRenderData>> {
   const next: Partial<Record<CoverTemplateId, CoverRenderData>> = {}
 

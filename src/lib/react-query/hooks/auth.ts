@@ -75,6 +75,9 @@ import {
   mergeApiExplorerColumnsLayoutIntoPrefs,
   mergeApiExplorerExpandedProductGroupIntoPrefs,
   mergeApiExplorerResponseSplitLayoutIntoPrefs,
+  mergeCoverGeneratorColumnsLayoutIntoPrefs,
+  mergeDiagramGeneratorPropertiesSplitLayoutIntoPrefs,
+  mergeGeneratorPanelVisibilityIntoPrefs,
   mergeBuildNotificationsOptedOutIntoPrefs,
   mergeCliShellHeightPxIntoPrefs,
   mergeCliShellHistoryIntoPrefs,
@@ -92,6 +95,9 @@ import {
   parseApiExplorerColumnsLayout,
   parseApiExplorerExpandedProductGroup,
   parseApiExplorerResponseSplitLayout,
+  parseCoverGeneratorColumnsLayout,
+  parseDiagramGeneratorPropertiesSplitLayout,
+  parseGeneratorPanelVisibility,
   parseBuildNotificationsOptedOut,
   parseCliShellHeightPx,
   parseCliShellOpen,
@@ -107,9 +113,19 @@ import {
 import {
   API_EXPLORER_COLUMNS_DEFAULT_LAYOUT,
   API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
+  COVER_GENERATOR_COLUMNS_DEFAULT_LAYOUT,
+  DIAGRAM_GENERATOR_PROPERTIES_SPLIT_DEFAULT_LAYOUT,
   normalizeApiExplorerColumnsLayout,
   normalizeApiExplorerResponseSplitLayout,
+  normalizeCoverGeneratorColumnsLayout,
+  normalizeDiagramGeneratorPropertiesSplitLayout,
 } from '@/lib/resizable-layout'
+import {
+  GENERATOR_PANEL_VISIBILITY_DEFAULT,
+  readGeneratorPanelVisibilityFromStorage,
+  writeGeneratorPanelVisibilityToStorage,
+  type GeneratorPanelVisibility,
+} from '@/lib/generator/panel-visibility'
 import type {
   SavedFilter,
   SavedImageTransformPreset,
@@ -1464,6 +1480,148 @@ export function useApiExplorerResponseSplitLayout(
     API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
     mergeApiExplorerResponseSplitLayoutIntoPrefs,
   )
+}
+
+/** Templates | canvas | properties column split (`console.coverGenerator.columnsLayout`). */
+export function useCoverGeneratorColumnsLayout(
+  account: ConsoleAccountCache | undefined,
+) {
+  return usePersistedPanelLayoutPref(
+    account,
+    parseCoverGeneratorColumnsLayout,
+    normalizeCoverGeneratorColumnsLayout,
+    COVER_GENERATOR_COLUMNS_DEFAULT_LAYOUT,
+    mergeCoverGeneratorColumnsLayoutIntoPrefs,
+  )
+}
+
+/** Diagram generator: properties | layers split in diagram generator (`console.diagramGenerator.propertiesSplitLayout`). */
+export function useDiagramGeneratorPropertiesSplitLayout(
+  account: ConsoleAccountCache | undefined,
+) {
+  return usePersistedPanelLayoutPref(
+    account,
+    parseDiagramGeneratorPropertiesSplitLayout,
+    normalizeDiagramGeneratorPropertiesSplitLayout,
+    DIAGRAM_GENERATOR_PROPERTIES_SPLIT_DEFAULT_LAYOUT,
+    mergeDiagramGeneratorPropertiesSplitLayoutIntoPrefs,
+  )
+}
+
+/** Left/right panel visibility for the generator (`console.generator.panelVisibility`). */
+export function useGeneratorPanelVisibility(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+  const hydratedRef = useRef(false)
+  const visibilityRef = useRef<GeneratorPanelVisibility>(
+    GENERATOR_PANEL_VISIBILITY_DEFAULT,
+  )
+  const [visibility, setVisibility] = useState<GeneratorPanelVisibility>(() =>
+    readGeneratorPanelVisibilityFromStorage(),
+  )
+
+  useEffect(() => {
+    if (!account) {
+      hydratedRef.current = false
+      return
+    }
+    if (hydratedRef.current) return
+    hydratedRef.current = true
+    const parsed =
+      parseGeneratorPanelVisibility(account.prefs as UserPrefs | undefined) ??
+      readGeneratorPanelVisibilityFromStorage()
+    visibilityRef.current = parsed
+    setVisibility(parsed)
+  }, [account])
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: GeneratorPanelVisibility) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeGeneratorPanelVisibilityIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeGeneratorPanelVisibilityIntoPrefs(
+        (account?.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistVisibility = useCallback(
+    (value: GeneratorPanelVisibility) => {
+      writeGeneratorPanelVisibilityToStorage(value)
+      if (account) updateMutation.mutate(value)
+    },
+    [account, updateMutation],
+  )
+
+  const setLeftOpen = useCallback(
+    (open: boolean | ((prev: boolean) => boolean)) => {
+      setVisibility((prev) => {
+        const nextLeft = typeof open === 'function' ? open(prev.left) : open
+        if (nextLeft === prev.left) return prev
+        const next = { ...prev, left: nextLeft }
+        visibilityRef.current = next
+        persistVisibility(next)
+        return next
+      })
+    },
+    [persistVisibility],
+  )
+
+  const setRightOpen = useCallback(
+    (open: boolean | ((prev: boolean) => boolean)) => {
+      setVisibility((prev) => {
+        const nextRight = typeof open === 'function' ? open(prev.right) : open
+        if (nextRight === prev.right) return prev
+        const next = { ...prev, right: nextRight }
+        visibilityRef.current = next
+        persistVisibility(next)
+        return next
+      })
+    },
+    [persistVisibility],
+  )
+
+  const toggleLeft = useCallback(() => {
+    setLeftOpen((prev) => !prev)
+  }, [setLeftOpen])
+
+  const toggleRight = useCallback(() => {
+    setRightOpen((prev) => !prev)
+  }, [setRightOpen])
+
+  return {
+    leftOpen: visibility.left,
+    rightOpen: visibility.right,
+    setLeftOpen,
+    setRightOpen,
+    toggleLeft,
+    toggleRight,
+  }
 }
 
 /** Open services product group in the API explorer (`console.apiExplorer.expandedProductGroup`). */

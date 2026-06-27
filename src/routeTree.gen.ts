@@ -30,6 +30,7 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
 import { Route as IntegrationsIndexRouteImport } from './routes/integrations.index'
+import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
@@ -39,6 +40,7 @@ import { Route as ProductsProductIdRouteImport } from './routes/products.$produc
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as IntegrationsSlugRouteImport } from './routes/integrations.$slug'
+import { Route as GeneratorDiagramsRouteImport } from './routes/generator/diagrams'
 import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
@@ -78,6 +80,7 @@ import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_publi
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
+import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
@@ -419,6 +422,11 @@ const IntegrationsIndexRoute = IntegrationsIndexRouteImport.update({
   path: '/integrations/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GeneratorIndexRoute = GeneratorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GeneratorRoute,
+} as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -463,6 +471,11 @@ const IntegrationsSlugRoute = IntegrationsSlugRouteImport.update({
   id: '/integrations/$slug',
   path: '/integrations/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const GeneratorDiagramsRoute = GeneratorDiagramsRouteImport.update({
+  id: '/diagrams',
+  path: '/diagrams',
+  getParentRoute: () => GeneratorRoute,
 } as any)
 const DomainsContinueRoute = DomainsContinueRouteImport.update({
   id: '/continue',
@@ -663,6 +676,11 @@ const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
   id: '/oauth2/consent',
   path: '/oauth2/consent',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
+  id: '/_api/generator/diagram',
+  path: '/generator/diagram',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
   id: '/_api/generator/cover',
@@ -2253,7 +2271,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
-  '/generator': typeof GeneratorRoute
+  '/generator': typeof GeneratorRouteWithChildren
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2281,6 +2299,7 @@ export interface FileRoutesByFullPath {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
+  '/generator/diagrams': typeof GeneratorDiagramsRoute
   '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
@@ -2290,9 +2309,11 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/generator/': typeof GeneratorIndexRoute
   '/integrations': typeof IntegrationsIndexRoute
   '/threads': typeof ThreadsIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
+  '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2558,7 +2579,6 @@ export interface FileRoutesByTo {
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
-  '/generator': typeof GeneratorRoute
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2585,6 +2605,7 @@ export interface FileRoutesByTo {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
+  '/generator/diagrams': typeof GeneratorDiagramsRoute
   '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
@@ -2594,9 +2615,11 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
+  '/generator': typeof GeneratorIndexRoute
   '/integrations': typeof IntegrationsIndexRoute
   '/threads': typeof ThreadsIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
+  '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2831,7 +2854,7 @@ export interface FileRoutesById {
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
-  '/generator': typeof GeneratorRoute
+  '/generator': typeof GeneratorRouteWithChildren
   '/home': typeof HomeRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -2859,6 +2882,7 @@ export interface FileRoutesById {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
+  '/generator/diagrams': typeof GeneratorDiagramsRoute
   '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
@@ -2868,9 +2892,11 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/generator/': typeof GeneratorIndexRoute
   '/integrations/': typeof IntegrationsIndexRoute
   '/threads/': typeof ThreadsIndexRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
+  '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -3167,6 +3193,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
+    | '/generator/diagrams'
     | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
@@ -3176,9 +3203,11 @@ export interface FileRouteTypes {
     | '/blog'
     | '/changelog'
     | '/docs/'
+    | '/generator/'
     | '/integrations'
     | '/threads'
     | '/generator/cover'
+    | '/generator/diagram'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/account/billing-addresses'
@@ -3444,7 +3473,6 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
-    | '/generator'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -3471,6 +3499,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
+    | '/generator/diagrams'
     | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
@@ -3480,9 +3509,11 @@ export interface FileRouteTypes {
     | '/blog'
     | '/changelog'
     | '/docs'
+    | '/generator'
     | '/integrations'
     | '/threads'
     | '/generator/cover'
+    | '/generator/diagram'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/account/billing-addresses'
@@ -3744,6 +3775,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
+    | '/generator/diagrams'
     | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
@@ -3753,9 +3785,11 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/changelog/'
     | '/docs/'
+    | '/generator/'
     | '/integrations/'
     | '/threads/'
     | '/_api/generator/cover'
+    | '/_api/generator/diagram'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
     | '/_public/account/billing-addresses'
@@ -4026,7 +4060,7 @@ export interface RootRouteChildren {
   DomainsRoute: typeof DomainsRouteWithChildren
   EducationRoute: typeof EducationRoute
   EnterpriseRoute: typeof EnterpriseRoute
-  GeneratorRoute: typeof GeneratorRoute
+  GeneratorRoute: typeof GeneratorRouteWithChildren
   HomeRoute: typeof HomeRoute
   PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
@@ -4045,6 +4079,7 @@ export interface RootRouteChildren {
   IntegrationsIndexRoute: typeof IntegrationsIndexRoute
   ThreadsIndexRoute: typeof ThreadsIndexRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
+  ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
   BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
   BlogPostSlugRoute: typeof BlogPostSlugRoute
@@ -4203,6 +4238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntegrationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/generator/': {
+      id: '/generator/'
+      path: '/'
+      fullPath: '/generator/'
+      preLoaderRoute: typeof GeneratorIndexRouteImport
+      parentRoute: typeof GeneratorRoute
+    }
     '/docs/': {
       id: '/docs/'
       path: '/'
@@ -4265,6 +4307,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/integrations/$slug'
       preLoaderRoute: typeof IntegrationsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/generator/diagrams': {
+      id: '/generator/diagrams'
+      path: '/diagrams'
+      fullPath: '/generator/diagrams'
+      preLoaderRoute: typeof GeneratorDiagramsRouteImport
+      parentRoute: typeof GeneratorRoute
     }
     '/domains/continue': {
       id: '/domains/continue'
@@ -4538,6 +4587,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth2/consent'
       preLoaderRoute: typeof AuthOauth2ConsentRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_api/generator/diagram': {
+      id: '/_api/generator/diagram'
+      path: '/generator/diagram'
+      fullPath: '/generator/diagram'
+      preLoaderRoute: typeof ApiGeneratorDiagramRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_api/generator/cover': {
       id: '/_api/generator/cover'
@@ -7595,6 +7651,20 @@ const DomainsRouteChildren: DomainsRouteChildren = {
 const DomainsRouteWithChildren =
   DomainsRoute._addFileChildren(DomainsRouteChildren)
 
+interface GeneratorRouteChildren {
+  GeneratorDiagramsRoute: typeof GeneratorDiagramsRoute
+  GeneratorIndexRoute: typeof GeneratorIndexRoute
+}
+
+const GeneratorRouteChildren: GeneratorRouteChildren = {
+  GeneratorDiagramsRoute: GeneratorDiagramsRoute,
+  GeneratorIndexRoute: GeneratorIndexRoute,
+}
+
+const GeneratorRouteWithChildren = GeneratorRoute._addFileChildren(
+  GeneratorRouteChildren,
+)
+
 interface ApiGeneratorCoverRouteChildren {
   ApiGeneratorCoverEncodeRoute: typeof ApiGeneratorCoverEncodeRoute
 }
@@ -7619,7 +7689,7 @@ const rootRouteChildren: RootRouteChildren = {
   DomainsRoute: DomainsRouteWithChildren,
   EducationRoute: EducationRoute,
   EnterpriseRoute: EnterpriseRoute,
-  GeneratorRoute: GeneratorRoute,
+  GeneratorRoute: GeneratorRouteWithChildren,
   HomeRoute: HomeRoute,
   PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,
@@ -7638,6 +7708,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsIndexRoute: IntegrationsIndexRoute,
   ThreadsIndexRoute: ThreadsIndexRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
+  ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
   BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,
   BlogPostSlugRoute: BlogPostSlugRoute,
