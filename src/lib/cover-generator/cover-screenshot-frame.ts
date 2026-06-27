@@ -23,9 +23,9 @@ export const COVER_SCREENSHOT_TITLE = {
   fontSize: 56,
   lineHeight: 64,
   subtitleFontSize: 24,
-  subtitleGap: 12,
+  subtitleGap: 20,
   /** Space between title block and browser frame top. */
-  frameGap: 24,
+  frameGap: 48,
   maxCharsPerLine: 42,
   maxLines: 1,
 } as const
