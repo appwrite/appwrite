@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -532,7 +533,7 @@ class Install extends Action
         }
 
         $templateForEnv = new View($this->buildFromProjectPath('/app/views/install/env.phtml'));
-        $templateForCompose = new View($this->buildFromProjectPath('/app/views/install/compose.phtml'));
+        $composeGenerator = new Generator((string)\file_get_contents($this->buildFromProjectPath('/docker-compose.yml')));
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
@@ -557,16 +558,18 @@ class Install extends Action
         }
         $executorImages = \implode(',', \array_unique($runtimeImages));
 
-        $templateForCompose
-            ->setParam('httpPort', $httpPort)
-            ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', $version)
-            ->setParam('organization', $organization)
-            ->setParam('image', $image)
-            ->setParam('database', $database)
-            ->setParam('hostPath', $this->hostPath)
-            ->setParam('enableAssistant', $enableAssistant)
-            ->setParam('executorImages', $executorImages);
+        $input['_APP_HTTP_PORT'] = $httpPort;
+        $input['_APP_HTTPS_PORT'] = $httpsPort;
+        $input['_APP_IMAGE'] = "{$organization}/{$image}";
+        $input['_APP_VERSION'] = $version;
+        $input['_APP_EXECUTOR_IMAGES'] = $executorImages;
+
+        $composeContent = $composeGenerator->render([
+            'version' => $version,
+            'database' => $database,
+            'hostPath' => $this->hostPath,
+            'enableAssistant' => $enableAssistant,
+        ]);
 
         $templateForEnv->setParam('vars', $input);
 
@@ -604,7 +607,7 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    $this->writeComposeFile($templateForCompose);
+                    $this->writeComposeFile($composeContent);
                 }
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_COMPLETED, $messages);
@@ -623,7 +626,7 @@ class Install extends Action
             }
 
             if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoEntrypointIfNeeded();
+                $this->copyMongoFilesIfNeeded();
             }
 
             if (!$noStart) {
@@ -639,7 +642,7 @@ class Install extends Action
                     }
                 }
 
-                if (!$isLocalInstall || file_exists('/.dockerenv') || file_exists('/run/.containerenv')) {
+                if (!$isLocalInstall && (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))) {
                     $this->connectInstallerToAppwriteNetwork();
                 }
 
@@ -919,10 +922,9 @@ class Install extends Action
         $healthPath = '/v1/health/version';
 
         if ($isLocalInstall) {
-            $candidates = [
-                self::APPWRITE_API_URL . $healthPath,
-                'http://localhost:' . $httpPort . $healthPath,
-            ];
+            $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
+                ? ['http://host.docker.internal:' . $httpPort . $healthPath]
+                : ['http://localhost:' . $httpPort . $healthPath];
         } else {
             $candidates = [
                 self::APPWRITE_API_URL . $healthPath,
@@ -1079,11 +1081,10 @@ class Install extends Action
         ];
     }
 
-    private function writeComposeFile(View $template): void
+    private function writeComposeFile(string $renderedContent): void
     {
         $composeFileName = $this->getComposeFileName();
         $targetPath = $this->path . '/' . $composeFileName;
-        $renderedContent = $template->render(false);
 
         $result = @file_put_contents($targetPath, $renderedContent);
         if ($result === false) {
@@ -1101,13 +1102,18 @@ class Install extends Action
         }
     }
 
-    private function copyMongoEntrypointIfNeeded(): void
+    private function copyMongoFilesIfNeeded(): void
     {
-        $mongoEntrypoint = $this->buildFromProjectPath('/mongo-entrypoint.sh');
+        $files = [
+            'mongo-entrypoint.sh',
+            'mongo-init.js',
+        ];
 
-        if (file_exists($mongoEntrypoint)) {
-            // Always use container path for file operations
-            copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh');
+        foreach ($files as $file) {
+            $source = $this->buildFromProjectPath('/' . $file);
+            if (file_exists($source)) {
+                copy($source, $this->path . '/' . $file);
+            }
         }
     }
 
@@ -1153,6 +1159,16 @@ class Install extends Action
 
         $command[] = '--project-directory';
         $command[] = $composePath;
+
+        $validateCommand = $command;
+        $validateCommand[] = 'config';
+        $validateCommand[] = '--quiet';
+        \exec($env . implode(' ', array_map(escapeshellarg(...), $validateCommand)) . ' 2>&1', $validateOutput, $validateExit);
+        if ($validateExit !== 0) {
+            $message = trim(implode("\n", $validateOutput));
+            throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
+        }
+
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';
