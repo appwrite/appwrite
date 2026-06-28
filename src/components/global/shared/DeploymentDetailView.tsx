@@ -82,6 +82,11 @@ import {
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
 import { getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import {
+  SITE_SCREENSHOTS_BUCKET_ID,
+  SITE_SCREENSHOT_CARD_WIDTH,
+  SITE_SCREENSHOT_CARD_HEIGHT,
+} from '@/lib/sites/screenshot-preview-sizes'
 import { useAvifSupport } from '@/lib/avif-support'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { cn } from '@/lib/utils'
@@ -110,9 +115,6 @@ const WIZARD_DIALOG_CONTENT_Z = 'z-[10051]'
 const WIZARD_DRAWER_OVERLAY_Z = 'z-[10052]'
 const WIZARD_DRAWER_CONTENT_Z = 'z-[10053]'
 
-const SCREENSHOTS_BUCKET_ID = 'screenshots'
-const SCREENSHOT_PREVIEW_WIDTH = 1280
-const SCREENSHOT_PREVIEW_HEIGHT = 720
 /** After copying a deployment URL, hide the copy control after this delay (ms). */
 const URL_COPY_HIDE_DELAY_MS = 500
 
@@ -638,10 +640,10 @@ export function DeploymentDetailView({
     const screenshotUrl =
       isSiteDeployment && screenshotId && projectId
         ? getSiteScreenshotFilePreviewUrl(projectId, {
-            bucketId: SCREENSHOTS_BUCKET_ID,
+            bucketId: SITE_SCREENSHOTS_BUCKET_ID,
             fileId: screenshotId,
-            width: SCREENSHOT_PREVIEW_WIDTH,
-            height: SCREENSHOT_PREVIEW_HEIGHT,
+            width: SITE_SCREENSHOT_CARD_WIDTH,
+            height: SITE_SCREENSHOT_CARD_HEIGHT,
             output: avifSupported ? ImageFormat.Avif : undefined,
           })
         : null
@@ -1660,48 +1662,50 @@ export function DeploymentDetailView({
           {/* Metadata - Part of Header */}
           <div className="bg-muted/20">
             <div className="px-4 sm:px-6 py-3 sm:py-4">
-              <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
-                {/* Deployed */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] sm:text-[13px] text-muted-foreground">
-                    Deployed
-                  </span>
-                  <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
-                    <DateTooltip date={deployment.$createdAt} />
-                  </span>
-                </div>
-
-                {deployment.providerCommitAuthor ? (
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 text-[12px] sm:text-[13px] text-muted-foreground">
-                      Committer
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:contents">
+                  {/* Deployed */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] sm:text-[13px] text-muted-foreground">
+                      Deployed
                     </span>
-                    {deployment.providerCommitAuthorUrl ? (
-                      <a
-                        href={deployment.providerCommitAuthorUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link-neutral min-w-0 truncate text-[12px] sm:text-[13px] font-medium"
-                        title={deployment.providerCommitAuthor}
-                      >
-                        {deployment.providerCommitAuthor}
-                      </a>
-                    ) : (
-                      <span
-                        className="min-w-0 truncate text-[12px] sm:text-[13px] font-medium text-foreground"
-                        title={deployment.providerCommitAuthor}
-                      >
-                        {deployment.providerCommitAuthor}
-                      </span>
-                    )}
+                    <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
+                      <DateTooltip date={deployment.$createdAt} />
+                    </span>
                   </div>
-                ) : null}
+
+                  {deployment.providerCommitAuthor ? (
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="shrink-0 text-[12px] sm:text-[13px] text-muted-foreground">
+                        Committer
+                      </span>
+                      {deployment.providerCommitAuthorUrl ? (
+                        <a
+                          href={deployment.providerCommitAuthorUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="link-neutral min-w-0 truncate text-[12px] sm:text-[13px] font-medium"
+                          title={deployment.providerCommitAuthor}
+                        >
+                          {deployment.providerCommitAuthor}
+                        </a>
+                      ) : (
+                        <span
+                          className="min-w-0 truncate text-[12px] sm:text-[13px] font-medium text-foreground"
+                          title={deployment.providerCommitAuthor}
+                        >
+                          {deployment.providerCommitAuthor}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
 
                 {/* Build duration and Status - at end */}
                 {(deployment.buildDuration != null ||
                   isDeploymentInProgress(deployment.status) ||
                   statusBadge) && (
-                  <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                  <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-3 sm:ml-auto">
                     {(isDeploymentInProgress(deployment.status)
                       ? !isDeploymentTimeout(
                           deployment.status,

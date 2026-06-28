@@ -27,6 +27,11 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import {
+  SITE_SCREENSHOTS_BUCKET_ID,
+  SITE_SCREENSHOT_LARGE_WIDTH,
+  SITE_SCREENSHOT_LARGE_HEIGHT,
+} from '@/lib/sites/screenshot-preview-sizes'
 import { useAvifSupport } from '@/lib/avif-support'
 import { ImageFormat } from '@appwrite.io/console'
 import {
@@ -46,8 +51,6 @@ import {
   cancelSiteDeployment,
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
-
-const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -188,10 +191,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       : (deployment as unknown).screenshotLight
     if (!screenshotId || !projectId) return null
     return getSiteScreenshotFilePreviewUrl(projectId, {
-      bucketId: SCREENSHOTS_BUCKET_ID,
+      bucketId: SITE_SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
-      width: 1280,
-      height: 720,
+      width: SITE_SCREENSHOT_LARGE_WIDTH,
+      height: SITE_SCREENSHOT_LARGE_HEIGHT,
       output: avifSupported ? ImageFormat.Avif : undefined,
     })
   }, [deployment, isDark, projectId, avifSupported])

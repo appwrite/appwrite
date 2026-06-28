@@ -12,6 +12,11 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import {
+  SITE_SCREENSHOTS_BUCKET_ID,
+  SITE_SCREENSHOT_LARGE_WIDTH,
+  SITE_SCREENSHOT_LARGE_HEIGHT,
+} from '@/lib/sites/screenshot-preview-sizes'
 import { useAvifSupport } from '@/lib/avif-support'
 import { ImageFormat } from '@appwrite.io/console'
 import {
@@ -37,8 +42,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useWizard } from './WizardContext'
-
-const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
 interface FinishViewProps {
   siteId?: string
@@ -92,10 +95,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
       : (deployment as { screenshotLight?: string }).screenshotLight
     if (!screenshotId || !projectId) return null
     return getSiteScreenshotFilePreviewUrl(projectId, {
-      bucketId: SCREENSHOTS_BUCKET_ID,
+      bucketId: SITE_SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
-      width: 1280,
-      height: 720,
+      width: SITE_SCREENSHOT_LARGE_WIDTH,
+      height: SITE_SCREENSHOT_LARGE_HEIGHT,
       output: avifSupported ? ImageFormat.Avif : undefined,
     })
   }, [deployment, isDark, projectId, avifSupported])

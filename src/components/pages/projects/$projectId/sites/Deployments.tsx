@@ -99,6 +99,11 @@ import {
   DEFAULT_PAGE_SIZE} from '@/lib/react-query/hooks'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import {
+  SITE_SCREENSHOTS_BUCKET_ID,
+  SITE_SCREENSHOT_CARD_WIDTH,
+  SITE_SCREENSHOT_CARD_HEIGHT,
+} from '@/lib/sites/screenshot-preview-sizes'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
@@ -131,10 +136,6 @@ const DEPLOYMENTS_SELECT = [
     '$createdAt',
   ]),
 ]
-const SCREENSHOTS_BUCKET_ID = 'screenshots'
-/** Preview dimensions for deployment screenshot (16:9), 2x for retina. */
-const SCREENSHOT_PREVIEW_WIDTH = 1280
-const SCREENSHOT_PREVIEW_HEIGHT = 720
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -813,10 +814,10 @@ export function View() {
                             if (screenshotId && projectId) {
                               const screenshotUrl =
                                 getSiteScreenshotFilePreviewUrl(projectId, {
-                                  bucketId: SCREENSHOTS_BUCKET_ID,
+                                  bucketId: SITE_SCREENSHOTS_BUCKET_ID,
                                   fileId: screenshotId,
-                                  width: SCREENSHOT_PREVIEW_WIDTH,
-                                  height: SCREENSHOT_PREVIEW_HEIGHT,
+                                  width: SITE_SCREENSHOT_CARD_WIDTH,
+                                  height: SITE_SCREENSHOT_CARD_HEIGHT,
                                   output: avifSupported
                                     ? ImageFormat.Avif
                                     : undefined})

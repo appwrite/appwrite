@@ -59,6 +59,13 @@ import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { ImageFormat, type Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { SiteContextMenu } from './_components/SiteContextMenu'
+import {
+  SITE_SCREENSHOTS_BUCKET_ID,
+  SITE_SCREENSHOT_CARD_WIDTH,
+  SITE_SCREENSHOT_CARD_HEIGHT,
+  SITE_SCREENSHOT_THUMB_WIDTH,
+  SITE_SCREENSHOT_THUMB_HEIGHT,
+} from '@/lib/sites/screenshot-preview-sizes'
 import { SitesListPreviewCell } from './_components/SitesListPreviewCell'
 import {
   DeploymentResourceStatusBadges,
@@ -93,8 +100,6 @@ type SitesListSearch = {
   limit?: number
   sort?: string
 }
-const SCREENSHOTS_BUCKET_ID = 'screenshots'
-
 function formatRuntimeImageLabel(runtime: string | undefined) {
   if (!runtime?.trim()) return undefined
   return runtime.split('-').join(' ')
@@ -373,17 +378,26 @@ export function View() {
     setLoadedScreenshots(new Set())
   }, [isDark])
 
-  // Helper function to get screenshot URL (preview size, theme matches app)
-  const getScreenshotUrl = (site: Models.Site) => {
+  // Helper to get screenshot URL at display-appropriate size (theme matches app)
+  const getScreenshotUrl = (
+    site: Models.Site,
+    size: 'thumb' | 'card',
+  ) => {
     const screenshotId = isDark
       ? (site as unknown).deploymentScreenshotDark
       : (site as unknown).deploymentScreenshotLight
     if (!screenshotId || !projectId) return null
+    const width =
+      size === 'thumb' ? SITE_SCREENSHOT_THUMB_WIDTH : SITE_SCREENSHOT_CARD_WIDTH
+    const height =
+      size === 'thumb'
+        ? SITE_SCREENSHOT_THUMB_HEIGHT
+        : SITE_SCREENSHOT_CARD_HEIGHT
     return getSiteScreenshotFilePreviewUrl(projectId, {
-      bucketId: SCREENSHOTS_BUCKET_ID,
+      bucketId: SITE_SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
-      width: 1280,
-      height: 720,
+      width,
+      height,
       output: avifSupported ? ImageFormat.Avif : undefined,
     })
   }
@@ -794,7 +808,7 @@ export function View() {
                             <TableCell className="px-4 py-3">
                               <SitesListPreviewCell
                                 site={siteData}
-                                screenshotUrl={getScreenshotUrl(siteData)}
+                                screenshotUrl={getScreenshotUrl(siteData, 'thumb')}
                                 screenshotKey={`${siteData.$id}-${isDark ? 'dark' : 'light'}`}
                                 isLoaded={loadedScreenshots.has(
                                   `${siteData.$id}-${isDark ? 'dark' : 'light'}`,
@@ -957,7 +971,7 @@ export function View() {
                 {paginatedSites.map((site) => {
                   const siteData = site as Models.Site
                   if (!siteData?.$id) return null
-                  const screenshotUrl = getScreenshotUrl(siteData)
+                  const screenshotUrl = getScreenshotUrl(siteData, 'card')
                   const activeDeploymentCreatedAt =
                     getActiveDeploymentCreatedAt(siteData)
                   const runtimeImageLabel = formatRuntimeImageLabel(
