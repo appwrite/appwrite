@@ -1080,6 +1080,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPEN_RUNTIMES_NFT',
+                'description' => 'Enables dependency tracing for Open Runtimes build artifacts. When enabled, supported SSR site builds prune unused node_modules files before packaging the build output.',
+                'introduction' => '1.9.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOCKER_HUB_USERNAME',
                 'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '1.2.0',

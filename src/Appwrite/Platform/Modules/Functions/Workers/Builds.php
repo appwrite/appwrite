@@ -662,6 +662,7 @@ class Builds extends Action
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
                         'APPWRITE_FUNCTION_CPUS' => $cpus,
                         'APPWRITE_FUNCTION_MEMORY' => $memory,
+                        'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
                     ];
                     break;
                 case 'sites':
@@ -677,6 +678,7 @@ class Builds extends Action
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
                         'APPWRITE_SITE_CPUS' => $cpus,
                         'APPWRITE_SITE_MEMORY' => $memory,
+                        'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
                     ];
                     break;
             }
