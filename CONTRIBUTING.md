@@ -281,11 +281,34 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all the Appwrite microservices are intended to communicate using the TCP protocol over a private network. With the exception of the public-facing port 80 and 443, which by default are used to expose the Appwrite HTTP API, you should **avoid exposing any other services' ports**.
+Currently, all the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should **avoid exposing services' ports** beyond what is needed for local development and debugging.
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d` command.
+Appwrite server dev publishes all host ports in the **9500–9522** range so the stack can run alongside other local services (including Appwrite Cloud on **9600–9699**). Access the API and console at `http://localhost:9520` (or `https://localhost:9521`).
+
+| Host port | Service |
+|-----------|---------|
+| 9520 | Traefik HTTP (API, console, dev hostnames) |
+| 9521 | Traefik HTTPS |
+| 9522 | Traefik HTTP (alt) |
+| 9500 | Traefik dashboard |
+| 9501 | Appwrite API only (direct; no console) |
+| 9502 | Realtime only (direct; no console) |
+| 9503 | Mail catcher |
+| 9504 | Request catcher (webhook) |
+| 9505 | Embedding |
+| 9506 | Adminer |
+| 9507 | Request catcher (SMS) |
+| 9508 | Mongo Express |
+| 9509 | GraphQL explorer |
+| 9510 | MariaDB |
+| 9511 | MongoDB |
+| 9512 | PostgreSQL |
+| 9513 | Redis |
+| 9514 | Redis Insight |
+
+Containers still talk to each other on the internal Docker network using standard service ports (for example, `mariadb:3306`). The table above is only for connections from your host machine. If you still have a conflict, change the host side in `docker-compose.yml` or `docker-compose.override.yml` and run `docker compose up -d`.
 
 ## Technology Stack
 

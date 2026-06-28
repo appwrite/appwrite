@@ -98,6 +98,7 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
+const APP_SITES_BUILD_SPECIFICATION_DEFAULT = Specification::S_2VCPU_2GB;
 const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
@@ -295,6 +296,11 @@ const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+const API_KEY_OAUTH2 = 'oauth2';
+
+// Realtime
+const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
+
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';

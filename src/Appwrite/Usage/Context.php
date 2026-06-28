@@ -61,6 +61,16 @@ class Context
         return empty($this->metrics) && empty($this->reduce);
     }
 
+    public function setResourcePath(string $path): self
+    {
+        return $this;
+    }
+
+    public function getResourcePath(): string
+    {
+        return '';
+    }
+
     /**
      * Reset the context
      */

@@ -26,7 +26,7 @@ final class SitesCustomServerTest extends Scope
 
     public function testListSpecs(): void
     {
-        $specifications = $this->listSpecifications();
+        $specifications = $this->listSpecifications(['type' => 'runtimes']);
         $this->assertEquals(200, $specifications['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);
@@ -40,21 +40,26 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
+        $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
             'siteId' => ID::unique(),
-            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $site = $this->getSite($site['body']['$id']);
         $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $this->cleanupSite($site['body']['$id']);
@@ -80,11 +85,15 @@ final class SitesCustomServerTest extends Scope
 
     public function testCreateSite(): void
     {
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+
         /**
          * Test for SUCCESS
          */
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -102,6 +111,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
         $this->assertEquals('node-22', $site['body']['buildRuntime']);
+        $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
@@ -716,11 +726,14 @@ final class SitesCustomServerTest extends Scope
 
     public function testListSites(): void
     {
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+
         /**
          * Test for SUCCESS
          */
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecifications['body']['specifications'][0]['slug'],
             'fallbackFile' => '',
             'framework' => 'analog',
             'name' => 'Test List Sites',
@@ -862,8 +875,11 @@ final class SitesCustomServerTest extends Scope
 
     public function testGetSite(): void
     {
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecifications['body']['specifications'][0]['slug'],
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1650,8 +1666,12 @@ final class SitesCustomServerTest extends Scope
 
     public function testUpdateSpecs(): void
     {
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1667,6 +1687,7 @@ final class SitesCustomServerTest extends Scope
         // Change the function specs
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1679,11 +1700,30 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['runtimeSpecification']);
+
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+            'runtimeSpecification' => Specification::S_1VCPU_1GB,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
         $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['runtimeSpecification']);
 
         // Change the specs to 1vcpu 512mb
         $site = $this->updateSite([
             'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1696,6 +1736,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
+        $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
         $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['runtimeSpecification']);
 
         /**

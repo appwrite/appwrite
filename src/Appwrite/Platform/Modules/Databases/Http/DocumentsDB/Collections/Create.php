@@ -43,6 +43,7 @@ class Create extends CollectionCreate
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'collections.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'collections',

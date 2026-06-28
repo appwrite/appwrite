@@ -13,6 +13,7 @@ on:
   pull_request:
   push:
     branches:
+      - main
       - 1.9.x
   workflow_dispatch:
     inputs:
@@ -668,7 +669,7 @@ jobs:
           docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
           for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost/v1/health/version; then
+            if curl -fsS http://localhost:9520/v1/health/version; then
               break
             fi
             if [ "$attempt" -eq 10 ]; then
@@ -685,9 +686,9 @@ jobs:
         continue-on-error: true
         uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
         env:
-          APPWRITE_ENDPOINT: 'http://localhost/v1'
-          APPWRITE_BENCHMARK_ITERATIONS: '5'
-          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
+          APPWRITE_BENCHMARK_DURATION: '1m'
+          APPWRITE_BENCHMARK_VUS: '20'
           APPWRITE_WORKER_TIMEOUT_MS: '120000'
           APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-before-summary.json'
         with:
@@ -707,7 +708,7 @@ jobs:
       - name: Wait for benchmark ports
         if: always()
         run: |
-          for port in 80 443 8080 9503; do
+          for port in 9520 9521 9522 9503; do
             for attempt in $(seq 1 30); do
               if ! ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
                 break
@@ -732,7 +733,7 @@ jobs:
           docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
           for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost/v1/health/version; then
+            if curl -fsS http://localhost:9520/v1/health/version; then
               break
             fi
             if [ "$attempt" -eq 10 ]; then
@@ -746,9 +747,9 @@ jobs:
         continue-on-error: true
         uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
         env:
-          APPWRITE_ENDPOINT: 'http://localhost/v1'
-          APPWRITE_BENCHMARK_ITERATIONS: '5'
-          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
+          APPWRITE_BENCHMARK_DURATION: '1m'
+          APPWRITE_BENCHMARK_VUS: '20'
           APPWRITE_WORKER_TIMEOUT_MS: '120000'
           APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH: '../../benchmark-before-summary.json'
           APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-after-summary.json'

@@ -33,6 +33,7 @@ class Get extends Action
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'rows.read')
+            ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',

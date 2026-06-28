@@ -475,6 +475,16 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
+        if (
+            $this->impersonatorUser !== null
+            && $model === self::MODEL_ACCOUNT
+            && $this->user !== null
+            && $document->getId() === $this->user->getId()
+        ) {
+            $document = clone $document;
+            $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
+        }
+
         $output = $this->output(clone $document, $model);
         $output = $this->applyFilters($output, $model, raw: clone $document);
 
@@ -779,6 +789,7 @@ class Response extends SwooleResponse
 
     private ?Authorization $authorization = null;
     private ?DBUser $user = null;
+    private ?Document $impersonatorUser = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
@@ -788,5 +799,15 @@ class Response extends SwooleResponse
     public function setUser(DBUser $user): void
     {
         $this->user = $user;
+    }
+
+    public function setImpersonatorUser(Document $impersonatorUser): void
+    {
+        $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
+    }
+
+    public function getImpersonatorUser(): ?Document
+    {
+        return $this->impersonatorUser;
     }
 }
