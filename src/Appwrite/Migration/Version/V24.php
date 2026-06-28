@@ -204,21 +204,43 @@ class V24 extends Migration
                         'emailIsCorporate',
                         'emailIsCanonical',
                     ];
-                    try {
-                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
-                    } catch (Throwable $th) {
-                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    $collectionDoc = $this->dbForProject->getCollection($id);
+                    $existingAttributes = [];
+                    $existingIndexes = [];
+                    if (!$collectionDoc->isEmpty()) {
+                        foreach ($collectionDoc->getAttribute('attributes', []) as $attributeDoc) {
+                            $existingAttributes[] = $attributeDoc->getAttribute('key');
+                        }
+                        foreach ($collectionDoc->getAttribute('indexes', []) as $indexDoc) {
+                            $existingIndexes[] = $indexDoc->getAttribute('key');
+                        }
                     }
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'impersonator');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"impersonator\" in collection {$id}: {$th->getMessage()}");
+
+                    $attributesToCreate = \array_diff($attributes, $existingAttributes);
+                    if (!empty($attributesToCreate)) {
+                        try {
+                            $this->createAttributesFromCollection($this->dbForProject, $id, $attributesToCreate);
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to create attributes "' . \implode(', ', $attributesToCreate) . "\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
-                    try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, 'impersonator');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create index \"impersonator\" from {$id}: {$th->getMessage()}");
+
+                    if (!\in_array('impersonator', $existingAttributes)) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'impersonator');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"impersonator\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
+
+                    if (!\in_array('impersonator', $existingIndexes)) {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, 'impersonator');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"impersonator\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
@@ -481,7 +503,7 @@ class V24 extends Migration
                         // In case the email is invalid, set emailCanonical to lowercase email
                         $document
                             ->setAttribute('emailCanonical', \strtolower($email))
-                            ->setAttribute('emailIsCanonical', true)
+                            ->setAttribute('emailIsCanonical', $email === \strtolower($email))
                             ->setAttribute('emailIsCorporate', false)
                             ->setAttribute('emailIsDisposable', false)
                             ->setAttribute('emailIsFree', false);
