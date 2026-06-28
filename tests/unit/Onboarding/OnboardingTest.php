@@ -13,9 +13,11 @@ final class OnboardingTest extends TestCase
     protected function setUp(): void
     {
         Config::setParam('onboarding', [
-            'functions.createDeployment' => true,
+            'functions.createManualDeployment' => true,
+            'functions.createCliDeployment' => true,
+            'functions.createVcsDeployment' => true,
             'functions.updateFunctionDeployment' => true,
-            'sites.createDeployment' => true,
+            'sites.createVcsDeployment' => true,
         ]);
     }
 
@@ -32,15 +34,15 @@ final class OnboardingTest extends TestCase
                 $this->callback(function (Document $document): bool {
                     $onboarding = $document->getAttribute('onboarding');
 
-                    return isset($onboarding['functions.createDeployment'], $onboarding['functions.updateFunctionDeployment'])
-                        && $onboarding['functions.createDeployment']['status'] === ONBOARDING_STATUS_COMPLETED
-                        && $onboarding['functions.createDeployment']['actorType'] === ACTOR_TYPE_SYSTEM
-                        && ! empty($onboarding['functions.createDeployment']['at']);
+                    return isset($onboarding['functions.createCliDeployment'], $onboarding['functions.updateFunctionDeployment'])
+                        && $onboarding['functions.createCliDeployment']['status'] === ONBOARDING_STATUS_COMPLETED
+                        && $onboarding['functions.createCliDeployment']['actorType'] === ACTOR_TYPE_SYSTEM
+                        && ! empty($onboarding['functions.createCliDeployment']['at']);
                 })
             );
 
         Onboarding::complete($dbForPlatform, $project, [
-            'functions.createDeployment',
+            'functions.createCliDeployment',
             'functions.updateFunctionDeployment',
         ], ACTOR_TYPE_SYSTEM);
     }
@@ -52,13 +54,13 @@ final class OnboardingTest extends TestCase
         $dbForPlatform = $this->createMock(Database::class);
         $dbForPlatform->expects($this->never())->method('updateDocument');
 
-        Onboarding::complete($dbForPlatform, $project, ['functions.createDeployment'], ACTOR_TYPE_SYSTEM);
+        Onboarding::complete($dbForPlatform, $project, ['functions.createCliDeployment'], ACTOR_TYPE_SYSTEM);
     }
 
     public function testIgnoresUnknownAndAlreadyCompletedMethods(): void
     {
         $project = new Document(['$id' => 'project1', 'onboarding' => [
-            'functions.createDeployment' => [
+            'functions.createCliDeployment' => [
                 'status' => ONBOARDING_STATUS_COMPLETED,
                 'at' => '2026-01-01 00:00:00.000',
                 'actorType' => ACTOR_TYPE_USER,
@@ -68,13 +70,13 @@ final class OnboardingTest extends TestCase
         $dbForPlatform = $this->createMock(Database::class);
         $dbForPlatform->expects($this->never())->method('updateDocument');
 
-        Onboarding::complete($dbForPlatform, $project, ['functions.createDeployment', 'unknown.method'], ACTOR_TYPE_SYSTEM);
+        Onboarding::complete($dbForPlatform, $project, ['functions.createCliDeployment', 'unknown.method'], ACTOR_TYPE_SYSTEM);
     }
 
     public function testDoesNotOverwriteSkippedStage(): void
     {
         $project = new Document(['$id' => 'project1', 'onboarding' => [
-            'sites.createDeployment' => [
+            'sites.createVcsDeployment' => [
                 'status' => ONBOARDING_STATUS_SKIPPED,
                 'at' => '2026-01-01 00:00:00.000',
                 'actorType' => ACTOR_TYPE_USER,
@@ -84,6 +86,6 @@ final class OnboardingTest extends TestCase
         $dbForPlatform = $this->createMock(Database::class);
         $dbForPlatform->expects($this->never())->method('updateDocument');
 
-        Onboarding::complete($dbForPlatform, $project, ['sites.createDeployment'], ACTOR_TYPE_SYSTEM);
+        Onboarding::complete($dbForPlatform, $project, ['sites.createVcsDeployment'], ACTOR_TYPE_SYSTEM);
     }
 }

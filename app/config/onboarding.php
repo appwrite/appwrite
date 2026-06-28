@@ -40,7 +40,11 @@ return [
 
     // Functions
     'functions.create' => true,
-    'functions.createDeployment' => true,
+    // One key per deployment creation type (deployment `type` attribute);
+    // OR them in the UI for a single "created a deployment" milestone.
+    'functions.createManualDeployment' => true,
+    'functions.createCliDeployment' => true,
+    'functions.createVcsDeployment' => true,
     'functions.updateFunctionDeployment' => true,
 
     // Messaging
@@ -63,6 +67,10 @@ return [
 
     // Sites
     'sites.create' => true,
-    'sites.createDeployment' => true,
+    // One key per deployment creation type (deployment `type` attribute);
+    // OR them in the UI for a single "created a deployment" milestone.
+    'sites.createManualDeployment' => true,
+    'sites.createCliDeployment' => true,
+    'sites.createVcsDeployment' => true,
     'sites.updateSiteDeployment' => true,
 ];
