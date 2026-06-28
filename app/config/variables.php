@@ -577,6 +577,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_SMTP_KEEPALIVE',
+                'description' => 'Whether to reuse the SMTP connection across emails. Set to \'disabled\' if your provider or an intermediate firewall/NAT drops idle SMTP connections, which can cause the first send after an idle period to fail with a 421 timeout.',
+                'introduction' => '1.9.6',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
