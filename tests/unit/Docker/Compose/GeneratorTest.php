@@ -77,6 +77,17 @@ final class GeneratorTest extends TestCase
         $this->assertSame('/tmp/appwrite:/usr/src/code:rw', $compose['services']['appwrite']['volumes'][0]);
     }
 
+    public function testDoesNotAddDatabaseDependencyWithoutPlaceholder(): void
+    {
+        $compose = $this->render([
+            'database' => 'postgresql',
+        ]);
+
+        $this->assertSame(['appwrite'], $compose['services']['traefik']['depends_on']);
+        $this->assertContains('postgresql', $compose['services']['appwrite']['depends_on']);
+        $this->assertNotContains('${_APP_DB_HOST:-mongodb}', $compose['services']['appwrite']['depends_on']);
+    }
+
     public function testKeepsLongCommandsReadable(): void
     {
         $mariadb = $this->render([
