@@ -40,7 +40,11 @@ return [
 
     // Functions
     'functions.create' => true,
+    // Deployment-creation SDK methods; OR them in the UI for a single
+    // "created a deployment" milestone.
     'functions.createDeployment' => true,
+    'functions.createTemplateDeployment' => true,
+    'functions.createVcsDeployment' => true,
     'functions.updateFunctionDeployment' => true,
 
     // Messaging
@@ -63,6 +67,10 @@ return [
 
     // Sites
     'sites.create' => true,
+    // Deployment-creation SDK methods; OR them in the UI for a single
+    // "created a deployment" milestone.
     'sites.createDeployment' => true,
+    'sites.createTemplateDeployment' => true,
+    'sites.createVcsDeployment' => true,
     'sites.updateSiteDeployment' => true,
 ];
