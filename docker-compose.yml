@@ -2,6 +2,15 @@
 # This is a development version of THE Appwrite docker-compose.yml file.
 # Avoid using this file in your production environment.
 # We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
+#
+# Development port map (host:container)
+# -----------------------------------
+# Entry points: 9520:80 (HTTP), 9521:443 (HTTPS), 9522:80 (HTTP alt)
+# Reserve 9600-9699 for Appwrite Cloud dev when running both stacks locally.
+# 9500 Traefik dashboard, 9501 Appwrite API, 9502 Realtime, 9503 Mail catcher
+# 9504 Request catcher (webhook), 9505 Embedding, 9507 Request catcher (SMS)
+# 9510 MariaDB, 9511 MongoDB, 9512 PostgreSQL, 9513 Redis
+# Dev tools in docker-compose.override.yml: 9506 Adminer, 9508 Mongo Express, 9509 GraphQL, 9514 Redis Insight
 
 x-logging: &x-logging
   logging:
@@ -36,9 +45,9 @@ services:
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
     ports:
-      - 80:80
-      - 8080:80
-      - 443:443
+      - 9520:80
+      - 9522:80
+      - 9521:443
       - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -281,7 +290,7 @@ services:
     image: appwrite-dev
     restart: unless-stopped
     ports:
-      - 9505:80
+      - 9502:80
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -561,6 +570,7 @@ services:
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
+      - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
@@ -1266,7 +1276,7 @@ services:
       - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
       - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
       - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
@@ -1275,6 +1285,7 @@ services:
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
+      - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -1314,7 +1325,7 @@ services:
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "3306:3306"
+      - "9510:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -1341,7 +1352,7 @@ services:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     ports:
-      - "27017:27017"
+      - "9511:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
@@ -1381,7 +1392,7 @@ services:
     volumes:
       - appwrite-postgresql:/var/lib/postgresql/18/data:rw
     ports:
-      - "5432:5432"
+      - "9512:5432"
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
@@ -1404,7 +1415,7 @@ services:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding
     ports:
-      - "3000:3000"
+      - "9505:3000"
     restart: unless-stopped
     # persistent for caching models across restarts and preloading
     volumes:
@@ -1422,7 +1433,7 @@ services:
       --maxmemory-policy     allkeys-lru
       --maxmemory-samples    5
     ports:
-      - "6379:6379"
+      - "9513:6379"
     networks:
       - appwrite
     volumes:

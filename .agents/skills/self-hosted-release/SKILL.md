@@ -41,7 +41,7 @@ Build and run the target release with the local Docker Compose stack, then test 
 docker compose down -v
 docker compose up -d --force-recreate --build --wait
 docker compose exec -T appwrite vars
-curl -fsS http://localhost/v1/health/version
+curl -fsS http://localhost:9520/v1/health/version
 ```
 
 2. Inspect runtime health before running tests:

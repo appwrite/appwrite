@@ -259,7 +259,8 @@ Http::init()
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
-            $memberships = $user->getAttribute('memberships', []);
+            $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
+            $memberships = $membershipSource->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
@@ -328,6 +329,17 @@ Http::init()
             $authorization->addRole($authRole);
         }
 
+        $isAdminProjectRequest = ! $user->isEmpty()
+            && $project->getId() !== 'console'
+            && $mode === APP_MODE_ADMIN;
+        $isOAuthAdminKey = ! empty($apiKey)
+            && $apiKey->getType() === API_KEY_OAUTH2
+            && $apiKey->getRole() === User::ROLE_OWNER;
+
+        if ($isAdminProjectRequest && $isOAuthAdminKey) {
+            $authorization->setDefaultStatus(false);
+        }
+
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
             $dbForProject->setMetadata('user', $targetUser->getId());
             $dbForPlatform->setMetadata('user', $targetUser->getId());
@@ -338,7 +350,7 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+        if ($isAdminProjectRequest && (empty($apiKey) || $isOAuthAdminKey)) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
