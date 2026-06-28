@@ -1077,7 +1077,12 @@ class Builds extends Action
             }
 
             if ($stages !== []) {
-                $onboarding = $project->getAttribute('onboarding', []);
+                // Re-read the project: the injected $project is a snapshot from
+                // job-dispatch time, and a build can run for minutes. Reading the
+                // current onboarding map avoids overwriting a stage that was
+                // skipped (or completed) via the API while the build was running.
+                $onboardingProject = $dbForPlatform->getDocument('projects', $project->getId());
+                $onboarding = $onboardingProject->getAttribute('onboarding', []);
                 if (! \is_array($onboarding)) {
                     $onboarding = [];
                 }
@@ -1096,7 +1101,7 @@ class Builds extends Action
                     $onboardingChanged = true;
                 }
 
-                if ($onboardingChanged) {
+                if ($onboardingChanged && ! $onboardingProject->isEmpty()) {
                     try {
                         $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                             'onboarding' => $onboarding,
