@@ -13,18 +13,8 @@ use Utopia\Database\Document;
  */
 class Renderer
 {
-    /** @var array<string, array<string, mixed>> */
-    private array $context;
-
-    /**
-     * @param array<string, array<string, mixed>|Document|object> $context
-     */
-    public function __construct(array $context)
+    public function __construct(private readonly Document $context)
     {
-        $this->context = [];
-        foreach ($context as $namespace => $bag) {
-            $this->context[$namespace] = self::asArray($bag);
-        }
     }
 
     public function render(string $template): string
@@ -33,7 +23,7 @@ class Renderer
             return $template;
         }
 
-        $fallback = $this->context['response'] ?? [];
+        $fallback = self::asArray($this->context->getAttribute('response', []));
 
         preg_match_all('/{([^}]+)}/', $template, $matches);
         foreach ($matches[1] as $pos => $match) {
@@ -44,7 +34,7 @@ class Renderer
             }
 
             [$namespace, $key] = $parts;
-            $bag = $this->context[$namespace] ?? $fallback;
+            $bag = self::asArray($this->context->getAttribute($namespace, $fallback));
             if (!array_key_exists($key, $bag)) {
                 continue;
             }

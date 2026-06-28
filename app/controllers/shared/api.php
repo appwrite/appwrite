@@ -899,12 +899,12 @@ Http::shutdown()
 
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $renderer = new Renderer([
+            $renderer = new Renderer(new Document([
                 'user' => (array) $targetUser,
                 'project' => $project,
                 'request' => $params,
                 'response' => $responsePayload,
-            ]);
+            ]));
             $resource = $renderer->render($pattern);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
@@ -994,12 +994,12 @@ Http::shutdown()
             $resourcePattern = $route->getLabel('cache.resource', null);
             $resourceTypePattern = $route->getLabel('cache.resourceType', null);
 
-            $renderer = new Renderer([
+            $renderer = new Renderer(new Document([
                 'user' => (array) $user,
                 'project' => $project,
                 'request' => $requestParams,
                 'response' => $data,
-            ]);
+            ]));
 
             try {
                 $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
