@@ -1,6 +1,6 @@
 import { useParams } from '@tanstack/react-router'
 import {
-  getSitesServiceTabs,
+  getFunctionsServiceTabs,
   ProductComputeUsageView,
 } from '../shared/ProductComputeUsageView'
 
@@ -12,10 +12,10 @@ export function View() {
   return (
     <ProductComputeUsageView
       projectId={projectId}
-      title="Sites"
-      tabs={getSitesServiceTabs(projectId)}
+      title="Functions"
+      tabs={getFunctionsServiceTabs(projectId)}
       activeTab="usage"
-      scope="sites"
+      scope="functions"
     />
   )
 }

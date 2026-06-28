@@ -28,8 +28,9 @@ import {
   COMPUTE_EXECUTIONS_CHART_TITLE,
 } from '@/lib/usage/compute-usage'
 import { RequestsChart } from './RequestsChart'
+import { OverviewStorageChart } from './OverviewStorageChart'
+import { OverviewStorageBreakdownToggle } from './OverviewStorageBreakdownToggle'
 import { TopRequests } from './TopRequests'
-import { MetricValueWithUnit } from './MetricValueWithUnit'
 import {
   useProject,
   usePlatforms,
@@ -42,8 +43,9 @@ import {
   useProjectRequestsOverview,
   useProjectExecutionsOverview,
   useProjectGbHoursOverview,
-  useProjectStorageOverview,
+  useProjectOverviewStorageOverview,
   useComputeBreakdownResources,
+  useStorageBreakdownResources,
 } from '@/lib/react-query/hooks'
 import {
   formatBandwidthTotal,
@@ -66,6 +68,9 @@ import {
   formatStorageTotal,
   formatStorageValue,
 } from '@/lib/usage/storage-gauges'
+import {
+  type OverviewStorageBreakdownType,
+} from '@/lib/usage/storage-usage'
 import { formatApiEndpointDisplay, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import {
@@ -116,16 +121,9 @@ import {
   overviewChartTabPanelsContainerClass,
   overviewChartTabPanelVisibilityClass,
   overviewBreakdownColumnClass,
-  overviewChartPanelBodyClass,
-  overviewChartPanelChartAreaClass,
-  overviewChartPanelHeaderClass,
-  overviewChartPanelHeaderActionsClass,
   OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT,
 } from './chart-panel'
-import { OverviewChartPanelError } from './OverviewChartPanelError'
-import { OverviewChartPanelSkeleton } from './OverviewChartPanelSkeleton'
 import { OverviewTabMetricContent } from './OverviewTabMetricContent'
-import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
 
 interface OverviewTab {
   id: string
@@ -189,6 +187,8 @@ interface ViewProps {
 export function View({ projectId, initialData }: ViewProps) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('bandwidth')
+  const [storageBreakdownType, setStorageBreakdownType] =
+    useState<OverviewStorageBreakdownType>('files')
   const {
     dateRange: dashboardChartDateRange,
     chartInterval,
@@ -307,7 +307,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isPlaceholderData: isStoragePlaceholderData,
     isError: isStorageError,
     refetch: refetchStorage,
-  } = useProjectStorageOverview(
+  } = useProjectOverviewStorageOverview(
     projectId,
     dashboardChartDateRange,
     isOverviewChartTabVisible('storage'),
@@ -380,6 +380,37 @@ export function View({ projectId, initialData }: ViewProps) {
     [executionsUsage?.topConsumers],
   )
 
+  const storageBreakdownIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of storageUsage?.storageBreakdown?.files ?? []) {
+      const id = item.id?.trim() || item.path?.trim()
+      if (id) ids.add(id)
+    }
+    return Array.from(ids)
+  }, [storageUsage?.storageBreakdown?.files])
+
+  const storageComputeBreakdownIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of [
+      ...(storageUsage?.storageBreakdown?.deployments ?? []),
+      ...(storageUsage?.storageBreakdown?.builds ?? []),
+    ]) {
+      const id = item.id?.trim() || item.path?.trim()
+      if (id) ids.add(id)
+    }
+    return Array.from(ids)
+  }, [
+    storageUsage?.storageBreakdown?.deployments,
+    storageUsage?.storageBreakdown?.builds,
+  ])
+
+  const activeStorageBreakdownTitle = 'Top consumers'
+
+  const activeStorageBreakdownItems = useMemo(() => {
+    if (isStorageError || !storageUsage?.storageBreakdown) return []
+    return storageUsage.storageBreakdown[storageBreakdownType] ?? []
+  }, [isStorageError, storageUsage?.storageBreakdown, storageBreakdownType])
+
   const gbHoursBreakdownIds = useMemo(
     () => gbHoursUsage?.topConsumers.map((item) => item.id) ?? [],
     [gbHoursUsage?.topConsumers],
@@ -392,6 +423,25 @@ export function View({ projectId, initialData }: ViewProps) {
       showUsageBreakdownPanels &&
       executionBreakdownIds.length > 0,
   )
+
+  const { data: storageBreakdownResources } = useStorageBreakdownResources(
+    projectId,
+    storageBreakdownIds,
+    isOverviewChartTabVisible('storage') &&
+      showUsageBreakdownPanels &&
+      activeTab === 'storage' &&
+      storageBreakdownIds.length > 0,
+  )
+
+  const { data: storageComputeBreakdownResources } =
+    useComputeBreakdownResources(
+      projectId,
+      storageComputeBreakdownIds,
+      isOverviewChartTabVisible('storage') &&
+        showUsageBreakdownPanels &&
+        activeTab === 'storage' &&
+        storageComputeBreakdownIds.length > 0,
+    )
 
   const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
     projectId,
@@ -1006,57 +1056,35 @@ export function View({ projectId, initialData }: ViewProps) {
               aria-hidden={activeTab !== 'storage'}
             >
                 <div className={overviewMainChartColumnClass}>
-                  <div className="flex h-full min-w-0 flex-col">
-                    <div className={overviewChartPanelHeaderClass}>
-                      <h3 className="text-[13px] font-medium text-foreground">
-                        File storage
-                      </h3>
-                      <div className={overviewChartPanelHeaderActionsClass}>
-                        <OverviewViewAllUsageLink
-                          projectId={projectId}
-                          tabId="storage"
-                        />
-                      </div>
-                    </div>
-                    <div className={overviewChartPanelBodyClass}>
-                      {isStorageError ? (
-                        <OverviewChartPanelError
-                          title={OVERVIEW_STORAGE_ERROR.title}
-                          message={OVERVIEW_STORAGE_ERROR.message}
-                          onRetry={() => void refetchStorage()}
-                        />
-                      ) : showStorageChartLoading ? (
-                        <OverviewChartPanelSkeleton variant="storage" embedded />
-                      ) : (
-                        <div
-                          className={cn(
-                            overviewChartPanelChartAreaClass,
-                            'justify-center gap-2',
-                          )}
-                        >
-                          <p className="text-[13px] text-muted-foreground">
-                            Current file storage in selected period
-                          </p>
-                          <MetricValueWithUnit
-                            value={formatStorageTotal(storageUsage?.latestValue ?? 0)}
-                            className="text-[28px] font-semibold text-foreground"
-                            amountClassName="tabular-nums"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <OverviewStorageChart
+                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    isPanelVisible={activeTab === 'storage'}
+                    dateRange={dashboardChartDateRange}
+                    chartInterval={chartInterval}
+                    chartData={isStorageError ? [] : (storageUsage?.chartPoints ?? [])}
+                    isLoading={showStorageChartLoading}
+                    isError={isStorageError}
+                    onRetry={() => void refetchStorage()}
+                  />
                 </div>
                 {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
                       className="min-h-0 flex-1"
-                      title="Top storage buckets"
+                      title={activeStorageBreakdownTitle}
                       metric="storage"
                       breakdownVariant="resource"
-                      items={
-                        isStorageError ? [] : storageUsage?.topConsumers
+                      storageBreakdownKind={storageBreakdownType}
+                      projectId={projectId}
+                      storageLookup={storageBreakdownResources?.resources}
+                      resourceLookup={storageComputeBreakdownResources?.resources}
+                      headerAddon={
+                        <OverviewStorageBreakdownToggle
+                          value={storageBreakdownType}
+                          onValueChange={setStorageBreakdownType}
+                        />
                       }
+                      items={activeStorageBreakdownItems}
                       formatCount={formatStorageValue}
                       isLoading={showStorageChartLoading}
                       isError={isStorageError}

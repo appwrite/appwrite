@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/popover'
 import { SheetClose } from '@/components/ui/sheet'
 import {
-  PRODUCT_NAV_CATEGORIES,
+  MARKETING_PRODUCT_NAV_CATEGORIES,
   PRODUCT_NAV_REGISTRY,
   isProductId,
 } from '@/lib/products/registry'
@@ -203,7 +203,7 @@ function DesktopProductsNavPanel({
       </div>
 
       <div className="space-y-4 p-3">
-        {PRODUCT_NAV_CATEGORIES.map((category) => (
+        {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
           <ProductsNavCategorySection
             key={category.id}
             label={category.label}
@@ -237,7 +237,7 @@ function MobileProductsNavPanel({
 }) {
   return (
     <div className="space-y-4 px-1 pb-1">
-      {PRODUCT_NAV_CATEGORIES.map((category) => (
+      {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
         <ProductsNavCategorySection
           key={category.id}
           label={category.label}

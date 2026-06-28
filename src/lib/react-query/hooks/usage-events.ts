@@ -18,10 +18,14 @@ import {
 } from '@/lib/usage/bandwidth-events'
 import {
   fetchProjectExecutionsOverview,
+  fetchProjectFunctionExecutionsOverview,
+  fetchProjectSiteExecutionsOverview,
   type ProjectExecutionsOverview,
 } from '@/lib/usage/executions-events'
 import {
+  fetchProjectFunctionGbHoursOverview,
   fetchProjectGbHoursOverview,
+  fetchProjectSiteGbHoursOverview,
   type ProjectGbHoursOverview,
 } from '@/lib/usage/gb-hours-events'
 import {
@@ -48,7 +52,9 @@ import {
   fetchProjectStorageBuildsOverview,
   fetchProjectStorageDeploymentsOverview,
   fetchProjectStorageFilesUsageOverview,
+  fetchProjectOverviewStorageOverview,
   fetchProjectStorageOverview,
+  type ProjectOverviewStorageOverview,
   type StorageFilesUsageOverview,
   type StorageImageTransformationsOverview,
   type StorageUsageChartOverview,
@@ -311,6 +317,76 @@ export function executionsOverviewQueryOptions(
   })
 }
 
+export function functionExecutionsOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'function-executions',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectFunctionExecutionsOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function siteExecutionsOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'site-executions',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectSiteExecutionsOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function gbHoursOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -346,6 +422,76 @@ export function gbHoursOverviewQueryOptions(
   })
 }
 
+export function functionGbHoursOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'function-gb-hours',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectFunctionGbHoursOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function siteGbHoursOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-events',
+      'site-gb-hours',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectSiteGbHoursOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function storageOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -366,6 +512,42 @@ export function storageOverviewQueryOptions(
     ],
     queryFn: () =>
       fetchProjectStorageOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function overviewStorageOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'storage',
+      'overview',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectOverviewStorageOverview(
         projectId!,
         getBounds(),
         interval,
@@ -540,6 +722,66 @@ export function useProjectExecutionsOverview(
   })
 }
 
+export function useProjectFunctionExecutionsOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...functionExecutionsOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectExecutionsOverview>(
+      queryClient,
+      projectId,
+      functionExecutionsOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
+  })
+}
+
+export function useProjectSiteExecutionsOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...siteExecutionsOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectExecutionsOverview>(
+      queryClient,
+      projectId,
+      siteExecutionsOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
+  })
+}
+
 export function useProjectGbHoursOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -570,6 +812,66 @@ export function useProjectGbHoursOverview(
   })
 }
 
+export function useProjectFunctionGbHoursOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...functionGbHoursOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
+      queryClient,
+      projectId,
+      functionGbHoursOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
+  })
+}
+
+export function useProjectSiteGbHoursOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...siteGbHoursOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
+      queryClient,
+      projectId,
+      siteGbHoursOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
+  })
+}
+
 export function useProjectStorageOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -591,6 +893,36 @@ export function useProjectStorageOverview(
       queryClient,
       projectId,
       storageOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
+  })
+}
+
+export function useProjectOverviewStorageOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...overviewStorageOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<ProjectOverviewStorageOverview>(
+      queryClient,
+      projectId,
+      overviewStorageOverviewQueryOptions(
         projectId,
         dateRange,
         interval,
@@ -2399,14 +2731,23 @@ export function refetchProjectComputeUsageQueries(
   queryClient: QueryClient,
   projectId: string,
 ) {
+  const computeScopes = new Set([
+    'executions',
+    'function-executions',
+    'site-executions',
+    'gb-hours',
+    'function-gb-hours',
+    'site-gb-hours',
+  ])
+
   return queryClient.refetchQueries({
     predicate: (query) =>
       Array.isArray(query.queryKey) &&
       query.queryKey.includes('project') &&
       query.queryKey.includes(projectId) &&
       ((query.queryKey[0] === 'usage-events' &&
-        (query.queryKey[1] === 'executions' ||
-          query.queryKey[1] === 'gb-hours')) ||
+        typeof query.queryKey[1] === 'string' &&
+        computeScopes.has(query.queryKey[1])) ||
         (query.queryKey[0] === 'usage-breakdown' &&
           query.queryKey[1] === 'compute-resources')),
   })

@@ -145,7 +145,7 @@ export function StorageSection({
     <div className="space-y-6">
       <StorageMetricBentoCard
         projectId={projectId}
-        title="File storage"
+        title="Files"
         description={STORAGE_FILE_DESCRIPTION}
         unitLabel="bytes"
         chartGradientId="usage-storage-files-gradient"

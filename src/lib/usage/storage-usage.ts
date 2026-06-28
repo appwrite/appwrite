@@ -12,12 +12,19 @@ import {
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
 import {
+  fetchProjectUsageGaugeChartSeries,
   fetchProjectUsageGaugeSnapshotOverview,
   fetchProjectUsageGaugesChartOverview,
+  fetchUsageGaugeBreakdown,
 } from '@/lib/usage/usage-gauges-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
+import {
+  computeChangePercent,
+  resolveOverviewUsagePeriod,
+} from '@/lib/usage/usage-events-common'
+import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 
 /** Bytes stored across all storage buckets. */
 export const BUCKET_FILE_STORAGE_GAUGE_METRIC = 'files.storage' as const
@@ -80,8 +87,64 @@ export const IMAGE_TRANSFORMATIONS_DOCS_HREF =
   '/docs/advanced/platform/image-transformations'
 
 export const STORAGE_FILE_BREAKDOWN_TITLE = 'Top storage buckets'
+export const STORAGE_DEPLOYMENTS_BREAKDOWN_TITLE = 'Top deployment consumers'
+export const STORAGE_BUILDS_BREAKDOWN_TITLE = 'Top build consumers'
 export const IMAGE_TRANSFORMATIONS_BREAKDOWN_TITLE =
   'Top buckets by origin images'
+export const OVERVIEW_STORAGE_CHART_TITLE = 'Storage over time'
+
+export type OverviewStorageBreakdownType = 'files' | 'deployments' | 'builds'
+
+export const OVERVIEW_STORAGE_BREAKDOWN_OPTIONS: ReadonlyArray<{
+  value: OverviewStorageBreakdownType
+  label: string
+  title: string
+}> = [
+  {
+    value: 'files',
+    label: 'Buckets',
+    title: STORAGE_FILE_BREAKDOWN_TITLE,
+  },
+  {
+    value: 'deployments',
+    label: 'Deployments',
+    title: STORAGE_DEPLOYMENTS_BREAKDOWN_TITLE,
+  },
+  {
+    value: 'builds',
+    label: 'Builds',
+    title: STORAGE_BUILDS_BREAKDOWN_TITLE,
+  },
+] as const
+
+export type OverviewStorageBreakdown = Record<
+  OverviewStorageBreakdownType,
+  StorageTopConsumer[]
+>
+
+export const OVERVIEW_STORAGE_GAUGE_METRICS = [
+  BUCKET_FILE_STORAGE_GAUGE_METRIC,
+  DEPLOYMENTS_STORAGE_GAUGE_METRIC,
+  BUILDS_STORAGE_GAUGE_METRIC,
+] as const
+
+export type OverviewStorageChartPoint = UsageChartPoint & {
+  files: number
+  deployments: number
+  builds: number
+}
+
+export interface ProjectOverviewStorageOverview {
+  changePercent: number
+  latestValue: number
+  latestFiles: number
+  latestDeployments: number
+  latestBuilds: number
+  chartPoints: OverviewStorageChartPoint[]
+  /** @deprecated Use `storageBreakdown.files`. */
+  topConsumers: StorageTopConsumer[]
+  storageBreakdown: OverviewStorageBreakdown
+}
 
 export function formatStorageBytesTotal(bytes: number): string {
   return formatCompactBytes(bytes, { compact: true })
@@ -166,7 +229,7 @@ async function fetchStorageGaugeUsageOverview(
   }
 }
 
-/** Latest bucket file storage snapshot + top bucket breakdown (overview tab). */
+/** Latest bucket file storage snapshot + top bucket breakdown (legacy overview hook). */
 export async function fetchProjectStorageOverview(
   projectId: string,
   dateRange: DateRange | undefined,
@@ -192,6 +255,181 @@ export async function fetchProjectStorageOverview(
     changePercent: overview.changePercent,
     latestValue: overview.latestValue,
     topConsumers: overview.topConsumers,
+  }
+}
+
+function mergeOverviewStorageChartPoints(
+  files: UsageChartPoint[],
+  deployments: UsageChartPoint[],
+  builds: UsageChartPoint[],
+): OverviewStorageChartPoint[] {
+  const byTime = new Map<number, OverviewStorageChartPoint>()
+
+  const applySeries = (
+    points: UsageChartPoint[],
+    key: 'files' | 'deployments' | 'builds',
+  ) => {
+    for (const point of points) {
+      const timeMs = point.day.getTime()
+      const existing = byTime.get(timeMs)
+      if (existing) {
+        existing[key] = point.total
+      } else {
+        byTime.set(timeMs, {
+          date: point.date,
+          day: point.day,
+          files: key === 'files' ? point.total : 0,
+          deployments: key === 'deployments' ? point.total : 0,
+          builds: key === 'builds' ? point.total : 0,
+          total: 0,
+        })
+      }
+    }
+  }
+
+  applySeries(files, 'files')
+  applySeries(deployments, 'deployments')
+  applySeries(builds, 'builds')
+
+  return Array.from(byTime.values())
+    .map((point) => ({
+      ...point,
+      total: point.files + point.deployments + point.builds,
+    }))
+    .sort((a, b) => a.day.getTime() - b.day.getTime())
+}
+
+function getLatestOverviewStorageComponents(
+  chartPoints: OverviewStorageChartPoint[],
+): Pick<
+  ProjectOverviewStorageOverview,
+  'latestValue' | 'latestFiles' | 'latestDeployments' | 'latestBuilds'
+> {
+  const latest = chartPoints.at(-1)
+  return {
+    latestValue: latest?.total ?? 0,
+    latestFiles: latest?.files ?? 0,
+    latestDeployments: latest?.deployments ?? 0,
+    latestBuilds: latest?.builds ?? 0,
+  }
+}
+
+/** Stacked file, deployment, and build storage chart + bucket breakdown for overview. */
+export async function fetchProjectOverviewStorageOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<ProjectOverviewStorageOverview> {
+  if (!projectId) {
+    return {
+      changePercent: 0,
+      latestValue: 0,
+      latestFiles: 0,
+      latestDeployments: 0,
+      latestBuilds: 0,
+      chartPoints: [],
+      topConsumers: [],
+      storageBreakdown: {
+        files: [],
+        deployments: [],
+        builds: [],
+      },
+    }
+  }
+
+  const includeBreakdown =
+    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+
+  const { from, to } = resolveOverviewUsagePeriod(dateRange, interval)
+
+  const [
+    filesSeries,
+    deploymentsSeries,
+    buildsSeries,
+    filesBreakdown,
+    deploymentsBreakdown,
+    buildsBreakdown,
+  ] = await Promise.all([
+    fetchProjectUsageGaugeChartSeries(
+      projectId,
+      dateRange,
+      [BUCKET_FILE_STORAGE_GAUGE_METRIC],
+      interval,
+    ),
+    fetchProjectUsageGaugeChartSeries(
+      projectId,
+      dateRange,
+      [DEPLOYMENTS_STORAGE_GAUGE_METRIC],
+      interval,
+    ),
+    fetchProjectUsageGaugeChartSeries(
+      projectId,
+      dateRange,
+      [BUILDS_STORAGE_GAUGE_METRIC],
+      interval,
+    ),
+    includeBreakdown
+      ? fetchUsageGaugeBreakdown(
+          projectId,
+          BUCKET_FILE_STORAGE_GAUGE_METRIC,
+          from,
+          to,
+          ['resourceId'],
+          OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+        )
+      : Promise.resolve([]),
+    includeBreakdown
+      ? fetchUsageGaugeBreakdown(
+          projectId,
+          DEPLOYMENTS_STORAGE_GAUGE_METRIC,
+          from,
+          to,
+          ['resourceId'],
+          OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+        )
+      : Promise.resolve([]),
+    includeBreakdown
+      ? fetchUsageGaugeBreakdown(
+          projectId,
+          BUILDS_STORAGE_GAUGE_METRIC,
+          from,
+          to,
+          ['resourceId'],
+          OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+        )
+      : Promise.resolve([]),
+  ])
+
+  const chartPoints = mergeOverviewStorageChartPoints(
+    filesSeries.chartPoints,
+    deploymentsSeries.chartPoints,
+    buildsSeries.chartPoints,
+  )
+  const previousChartPoints = mergeOverviewStorageChartPoints(
+    filesSeries.previousChartPoints,
+    deploymentsSeries.previousChartPoints,
+    buildsSeries.previousChartPoints,
+  )
+
+  const latest = getLatestOverviewStorageComponents(chartPoints)
+  const previousLatest = getLatestOverviewStorageComponents(previousChartPoints)
+
+  const storageBreakdown: OverviewStorageBreakdown = {
+    files: filesBreakdown,
+    deployments: deploymentsBreakdown,
+    builds: buildsBreakdown,
+  }
+
+  return {
+    ...latest,
+    changePercent: computeChangePercent(
+      latest.latestValue,
+      previousLatest.latestValue,
+    ),
+    chartPoints,
+    topConsumers: filesBreakdown,
+    storageBreakdown,
   }
 }
 

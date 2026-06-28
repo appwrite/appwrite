@@ -11,13 +11,14 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 
 export type PricingService = {
   name: string
   icon: LucideIcon
 }
 
-export const pricingServices: readonly PricingService[] = [
+const ALL_PRICING_SERVICES: readonly PricingService[] = [
   { name: 'Auth', icon: Users },
   { name: 'Databases', icon: Database },
   { name: 'Storage', icon: Folder },
@@ -29,6 +30,15 @@ export const pricingServices: readonly PricingService[] = [
   { name: 'Firewall', icon: Shield },
   { name: 'Advisor', icon: ScanSearch },
 ]
+
+function isPricingServiceComingSoon(name: string) {
+  const navItem = Object.values(PRODUCT_NAV_REGISTRY).find((item) => item.name === name)
+  return navItem?.comingSoon === true
+}
+
+export const pricingServices: readonly PricingService[] = ALL_PRICING_SERVICES.filter(
+  (service) => !isPricingServiceComingSoon(service.name),
+)
 
 export function formatPricingServiceList() {
   const names = pricingServices.map((service) => service.name)

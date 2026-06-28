@@ -1,10 +1,17 @@
 import { cn, truncateMiddle } from '@/lib/utils'
+import type { ReactNode } from 'react'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
 import {
   getComputeBreakdownResourceRoute,
   getComputeBreakdownResourceTypeLabel,
+  resolveComputeBreakdownResource,
   type ComputeBreakdownResourceMap,
 } from '@/lib/usage/resolve-compute-breakdown-resources'
+import {
+  getStorageBreakdownResourceRoute,
+  resolveStorageBreakdownResource,
+  type StorageBreakdownResourceMap,
+} from '@/lib/usage/resolve-storage-breakdown-resources'
 import { Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import {
@@ -23,6 +30,7 @@ import { MetricValueWithUnit } from './MetricValueWithUnit'
 import {
   TooltipProvider,
 } from '@/components/ui/tooltip'
+import type { OverviewStorageBreakdownType } from '@/lib/usage/storage-usage'
 
 /** Character cap for middle truncation after ID compaction. */
 const PATH_DISPLAY_MAX = 42
@@ -46,6 +54,9 @@ interface TopRequestsProps {
   breakdownVariant?: 'endpoint' | 'resource'
   projectId?: string
   resourceLookup?: ComputeBreakdownResourceMap
+  storageLookup?: StorageBreakdownResourceMap
+  storageBreakdownKind?: OverviewStorageBreakdownType
+  headerAddon?: ReactNode
   itemCount?: number
   items?: RequestItem[]
   formatCount?: (value: number) => string
@@ -121,9 +132,13 @@ const topRequests: RequestItem[] = [
 export function TopRequests({
   className,
   title,
+  metric,
   breakdownVariant = 'endpoint',
   projectId,
   resourceLookup,
+  storageLookup,
+  storageBreakdownKind = 'files',
+  headerAddon,
   itemCount = OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   items,
   formatCount,
@@ -140,6 +155,14 @@ export function TopRequests({
   const displayTitle = title || 'Top requests'
   const formatValue = formatCount ?? ((value: number) => value.toLocaleString())
   const isResourceBreakdown = breakdownVariant === 'resource'
+  const useStorageBucketLookup =
+    isResourceBreakdown &&
+    metric === 'storage' &&
+    storageBreakdownKind === 'files'
+  const useComputeResourceLookup =
+    isResourceBreakdown &&
+    projectId &&
+    (metric !== 'storage' || storageBreakdownKind !== 'files')
   const itemSlots = Array.from(
     { length: itemCount },
     (_, index) => requestItems[index] ?? null,
@@ -148,9 +171,19 @@ export function TopRequests({
 
   return (
     <div className={cn('flex h-full min-w-0 flex-col', className)}>
-      <div className={overviewChartPanelHeaderClass}>
+      <div
+        className={cn(
+          overviewChartPanelHeaderClass,
+          headerAddon && 'mb-3 min-h-0 flex-col items-stretch gap-2',
+        )}
+      >
         <div className="flex min-w-0 items-center gap-1.5">
-          <h3 className="min-w-0 text-[13px] font-medium text-foreground">
+          <h3
+            className={cn(
+              'min-w-0 text-[13px] font-medium text-foreground',
+              headerAddon && 'truncate',
+            )}
+          >
             {displayTitle}
           </h3>
           {showUnitInfo ? (
@@ -159,11 +192,15 @@ export function TopRequests({
             </TooltipProvider>
           ) : null}
         </div>
-        <div className={overviewChartPanelHeaderActionsClass}>
-          <button className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
-            View all
-          </button>
-        </div>
+        {headerAddon ? (
+          <div className="w-full min-w-0">{headerAddon}</div>
+        ) : (
+          <div className={overviewChartPanelHeaderActionsClass}>
+            <button className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+              View all
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={overviewChartPanelBodyClass}>
@@ -198,19 +235,46 @@ export function TopRequests({
 
                   <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                     {(() => {
-                      const resource =
-                        isResourceBreakdown && projectId
-                          ? resourceLookup?.[request.path]
+                      const resourceKey = request.path || request.id
+                      const storageResource =
+                        useStorageBucketLookup
+                          ? resolveStorageBreakdownResource(
+                              resourceKey,
+                              storageLookup,
+                            )
                           : undefined
+                      const computeResource = useComputeResourceLookup
+                        ? resolveComputeBreakdownResource(
+                            resourceKey,
+                            resourceLookup,
+                          )
+                        : undefined
                       const fallbackLabel = formatBreakdownPath(request.path)
 
-                      if (resource && projectId) {
+                      if (storageResource && projectId) {
+                        const route = getStorageBreakdownResourceRoute(
+                          projectId,
+                          storageResource,
+                        )
+                        return (
+                          <Link
+                            to={route.to}
+                            params={route.params}
+                            className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
+                            title={storageResource.name}
+                          >
+                            {storageResource.name}
+                          </Link>
+                        )
+                      }
+
+                      if (computeResource && projectId) {
                         const route = getComputeBreakdownResourceRoute(
                           projectId,
-                          resource,
+                          computeResource,
                         )
                         const typeLabel = getComputeBreakdownResourceTypeLabel(
-                          resource.type,
+                          computeResource.type,
                         )
                         return (
                           <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
@@ -222,9 +286,9 @@ export function TopRequests({
                               to={route.to}
                               params={route.params}
                               className="min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
-                              title={`${typeLabel} / ${resource.name}`}
+                              title={`${typeLabel} / ${computeResource.name}`}
                             >
-                              {resource.name}
+                              {computeResource.name}
                             </Link>
                           </div>
                         )

@@ -15,10 +15,22 @@ import {
   mbSecondsToGbHours,
 } from '@/lib/usage/format-metric'
 
-/** MB-seconds metrics that roll up to GB-hours (matches billing aggregation). */
+/** Combined MB-seconds metrics that roll up to GB-hours (overview). */
 export const GB_HOURS_MB_SECONDS_METRICS = [
   'executions.mbSeconds',
   'builds.mbSeconds',
+] as const
+
+/** Function execution and build MB-seconds rolled up to GB-hours. */
+export const FUNCTION_GB_HOURS_MB_SECONDS_METRICS = [
+  'functions.executions.mbSeconds',
+  'functions.builds.mbSeconds',
+] as const
+
+/** Site execution and build MB-seconds rolled up to GB-hours. */
+export const SITE_GB_HOURS_MB_SECONDS_METRICS = [
+  'sites.executions.mbSeconds',
+  'sites.builds.mbSeconds',
 ] as const
 
 const GB_HOURS_BREAKDOWN_DIMENSIONS = ['resourceId'] as const
@@ -58,17 +70,17 @@ function convertTopConsumersToGbHours(
   }))
 }
 
-/** Chart series + server-side top resource breakdown per MB-seconds metric. */
-export async function fetchProjectGbHoursOverview(
+async function fetchGbHoursOverviewForMetrics(
   projectId: string,
   dateRange: DateRange | undefined,
+  metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<ProjectGbHoursOverview> {
   const overview = await fetchProjectUsageMetricsOverview(
     projectId,
     dateRange,
-    GB_HOURS_MB_SECONDS_METRICS,
+    metrics,
     interval,
     GB_HOURS_BREAKDOWN_DIMENSIONS,
     COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
@@ -80,4 +92,52 @@ export async function fetchProjectGbHoursOverview(
     topConsumers: convertTopConsumersToGbHours(overview.topEndpoints),
     changePercent: overview.changePercent,
   }
+}
+
+/** Chart series + server-side top resource breakdown (functions and sites). */
+export async function fetchProjectGbHoursOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<ProjectGbHoursOverview> {
+  return fetchGbHoursOverviewForMetrics(
+    projectId,
+    dateRange,
+    GB_HOURS_MB_SECONDS_METRICS,
+    interval,
+    options,
+  )
+}
+
+/** Chart series + server-side top function compute breakdown. */
+export async function fetchProjectFunctionGbHoursOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<ProjectGbHoursOverview> {
+  return fetchGbHoursOverviewForMetrics(
+    projectId,
+    dateRange,
+    FUNCTION_GB_HOURS_MB_SECONDS_METRICS,
+    interval,
+    options,
+  )
+}
+
+/** Chart series + server-side top site compute breakdown. */
+export async function fetchProjectSiteGbHoursOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<ProjectGbHoursOverview> {
+  return fetchGbHoursOverviewForMetrics(
+    projectId,
+    dateRange,
+    SITE_GB_HOURS_MB_SECONDS_METRICS,
+    interval,
+    options,
+  )
 }

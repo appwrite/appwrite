@@ -1,22 +1,43 @@
+import {
+  PRODUCT_NAV_REGISTRY,
+  isProductNavItemComingSoon,
+} from '@/lib/products/registry'
+import type { ProductNavItemId } from '@/lib/products/types'
+
 export type MarketingProductToolkitItem = {
   label: string
   href: string
 }
 
-export const marketingProductToolkit = {
+const MARKETING_TOOLKIT_NAV_IDS = {
   build: [
-    { label: 'Auth', href: '/products/auth' },
-    { label: 'Databases', href: '/products/databases' },
-    { label: 'Storage', href: '/products/storage' },
-    { label: 'Functions', href: '/products/functions' },
-    { label: 'Messaging', href: '/products/messaging' },
-    { label: 'Realtime', href: '/docs/apis/realtime' },
+    'auth',
+    'databases',
+    'storage',
+    'functions',
+    'messaging',
+    'realtime',
   ],
-  deploy: [{ label: 'Sites', href: '/products/sites' }],
-  protect: [
-    { label: 'Firewall', href: '/docs/products/network/waf' },
-    { label: 'Advisor', href: '/docs/products/network' },
-  ],
+  deploy: ['sites'],
+  protect: ['firewall', 'advisor'],
+} as const satisfies Record<
+  'build' | 'deploy' | 'protect',
+  readonly ProductNavItemId[]
+>
+
+function toToolkitItems(ids: readonly ProductNavItemId[]) {
+  return ids
+    .filter((id) => !isProductNavItemComingSoon(id))
+    .map((id) => {
+      const item = PRODUCT_NAV_REGISTRY[id]
+      return { label: item.name, href: item.href }
+    })
+}
+
+export const marketingProductToolkit = {
+  build: toToolkitItems(MARKETING_TOOLKIT_NAV_IDS.build),
+  deploy: toToolkitItems(MARKETING_TOOLKIT_NAV_IDS.deploy),
+  protect: toToolkitItems(MARKETING_TOOLKIT_NAV_IDS.protect),
 } as const satisfies {
   build: readonly MarketingProductToolkitItem[]
   deploy: readonly MarketingProductToolkitItem[]

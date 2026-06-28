@@ -1,16 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/sites/usage/View'
+import { View } from '@/components/pages/projects/$projectId/functions/usage/View'
 import { fetchProject } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/usage',
+  '/_public/projects/$projectId/functions/usage',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Usage', 'Sites') }] }),
+  head: () => ({ meta: [{ title: pageTitle('Usage', 'Functions') }] }),
   loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { projectId } = params
     const { queryClient } = context
@@ -23,10 +21,10 @@ export const Route = createFileRoute(
       })
     }
   },
-  component: SitesUsagePage,
+  component: FunctionsUsagePage,
 })
 
-function SitesUsagePage() {
+function FunctionsUsagePage() {
   const { projectId } = Route.useParams()
-  return <View key={`sites-usage-${projectId}`} />
+  return <View key={`functions-usage-${projectId}`} />
 }

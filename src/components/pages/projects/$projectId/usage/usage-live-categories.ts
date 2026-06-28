@@ -204,9 +204,9 @@ export const COMPUTE_USAGE_CATEGORY: ComputeUsageCategory = {
   label: 'Compute',
   icon: 'Cpu',
   description:
-    'Function executions and compute time consumed by serverless functions and sites.',
+    'Function and site executions plus compute time consumed by serverless functions and sites.',
   metrics: [
-    { id: 'executions', name: 'Function executions' },
+    { id: 'executions', name: 'Executions' },
     { id: 'gb-hours', name: 'GB-hours' },
   ],
 }
@@ -338,7 +338,7 @@ export const STORAGE_USAGE_CATEGORY: StorageUsageCategory = {
   description:
     'File, deployment, and build storage usage, plus billable image transformations.',
   metrics: [
-    { id: 'file-storage', name: 'File storage' },
+    { id: 'file-storage', name: 'Files' },
     { id: 'deployment-storage', name: 'Deployment storage' },
     { id: 'build-storage', name: 'Build storage' },
     { id: 'image-transformations', name: 'Image transformations' },

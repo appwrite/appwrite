@@ -1,0 +1,346 @@
+'use client'
+
+import { memo, useMemo } from 'react'
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useParams } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
+import type { OverviewStorageChartPoint } from '@/lib/usage/storage-usage'
+import { OVERVIEW_STORAGE_CHART_TITLE } from '@/lib/usage/storage-usage'
+import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
+import {
+  OVERVIEW_CHART_HEIGHT,
+  OVERVIEW_STORAGE_ERROR,
+  USAGE_CHART_Y_AXIS_WIDTH,
+  overviewChartPanelBodyClass,
+  overviewChartPanelChartAreaClass,
+  overviewChartPanelChartFillClass,
+  overviewChartPanelEmptyClass,
+  overviewChartPanelHeaderActionsClass,
+  overviewChartPanelHeaderClass,
+} from './chart-panel'
+import { OverviewChartPanelError } from './OverviewChartPanelError'
+import { MetricValueWithUnit } from './MetricValueWithUnit'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
+import {
+  createUsageChartAxisTickFormatter,
+  formatCompactBytes,
+} from '@/lib/usage/format-metric'
+import {
+  fillChartPointsGaps,
+} from '@/lib/usage/usage-events-common'
+import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
+import type { DateRange } from 'react-day-picker'
+
+const STORAGE_SERIES = [
+  {
+    key: 'files' as const,
+    label: 'Files',
+    color: 'var(--chart-brand)',
+    gradientId: 'overview-storage-files-gradient',
+  },
+  {
+    key: 'deployments' as const,
+    label: 'Deployments',
+    color: 'var(--chart-2)',
+    gradientId: 'overview-storage-deployments-gradient',
+  },
+  {
+    key: 'builds' as const,
+    label: 'Builds',
+    color: 'var(--chart-3)',
+    gradientId: 'overview-storage-builds-gradient',
+  },
+]
+
+const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
+const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_WAVE = [
+  0.42, 0.58, 0.51, 0.68, 0.59, 0.72, 0.64, 0.7, 0.55, 0.74, 0.62, 0.69,
+] as const
+
+type OverviewStorageChartProps = {
+  className?: string
+  title?: string
+  dateRange?: DateRange
+  chartInterval?: UsageChartInterval
+  chartData?: OverviewStorageChartPoint[]
+  isLoading?: boolean
+  isError?: boolean
+  onRetry?: () => void
+  isPanelVisible?: boolean
+}
+
+function buildSkeletonChartData(
+  dateRange: DateRange | undefined,
+  chartInterval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+): OverviewStorageChartPoint[] {
+  const { from, to } = resolveUsageDateBounds(dateRange)
+  const resolvedInterval = resolveUsageChartIntervalForRange(chartInterval, dateRange)
+  const shell = fillChartPointsGaps(new Map(), from, to, resolvedInterval)
+  const peak = 2_000_000_000
+
+  return shell.map((point, index) => {
+    const wave = SKELETON_WAVE[index % SKELETON_WAVE.length]
+    const files = Math.round(peak * 0.72 * wave)
+    const deployments = Math.round(peak * 0.18 * wave)
+    const builds = Math.round(peak * 0.1 * wave)
+
+    return {
+      date: point.date,
+      day: point.day,
+      files,
+      deployments,
+      builds,
+      total: files + deployments + builds,
+    }
+  })
+}
+
+interface StorageTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    value: number
+    dataKey: string
+    payload: OverviewStorageChartPoint
+  }>
+}
+
+function StorageTooltip({ active, payload }: StorageTooltipProps) {
+  if (!active || !payload?.length) return null
+
+  const data = payload[0]?.payload
+  if (!data) return null
+
+  const format = (value: number) => formatCompactBytes(value, { compact: true })
+
+  return (
+    <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
+      <p className="mb-2 text-[12px] font-medium text-foreground">{data.date}</p>
+      <div className="space-y-1.5">
+        {STORAGE_SERIES.map((series) => (
+          <div
+            key={series.key}
+            className="flex items-center justify-between gap-6"
+          >
+            <span className="text-[11px] text-muted-foreground">
+              {series.label}
+            </span>
+            <span className="text-[12px] font-medium text-foreground">
+              <MetricValueWithUnit
+                value={format(data[series.key])}
+                className="text-[12px] font-medium text-foreground"
+                unitClassName="text-muted-foreground"
+              />
+            </span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
+          <span className="text-[11px] text-muted-foreground">Total</span>
+          <span className="text-[12px] font-medium text-foreground">
+            <MetricValueWithUnit
+              value={format(data.total)}
+              className="text-[12px] font-medium text-foreground"
+              unitClassName="text-muted-foreground"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export const OverviewStorageChart = memo(function OverviewStorageChart({
+  className,
+  title = OVERVIEW_STORAGE_CHART_TITLE,
+  dateRange,
+  chartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  chartData = [],
+  isLoading = false,
+  isError = false,
+  onRetry,
+  isPanelVisible = true,
+}: OverviewStorageChartProps) {
+  const { projectId } = useParams({ strict: false })
+
+  const skeletonChartData = useMemo(
+    () => buildSkeletonChartData(dateRange, chartInterval),
+    [dateRange, chartInterval],
+  )
+
+  const showChartSkeleton = isLoading
+  const showEmptyState = !isLoading && chartData.length === 0
+  const activeChartData = showChartSkeleton ? skeletonChartData : chartData
+  const axisMax = useMemo(
+    () =>
+      activeChartData.reduce(
+        (max, point) => Math.max(max, point.total),
+        0,
+      ),
+    [activeChartData],
+  )
+  const yAxisTickFormatter = useMemo(
+    () => createUsageChartAxisTickFormatter('bytes', axisMax),
+    [axisMax],
+  )
+  const renderChart = isPanelVisible && activeChartData.length > 0
+
+  return (
+    <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
+      <div className={overviewChartPanelHeaderClass}>
+        <span className="text-[13px] font-medium text-foreground">{title}</span>
+        <div className={overviewChartPanelHeaderActionsClass}>
+          {!showChartSkeleton && chartData.length > 0
+            ? STORAGE_SERIES.map((series) => (
+                <div key={series.key} className="flex items-center gap-1.5">
+                  <div
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: series.color }}
+                  />
+                  <span className="text-[11px] text-muted-foreground">
+                    {series.label}
+                  </span>
+                </div>
+              ))
+            : null}
+          {projectId ? (
+            <OverviewViewAllUsageLink projectId={projectId} tabId="storage" />
+          ) : null}
+        </div>
+      </div>
+
+      <div className={overviewChartPanelBodyClass}>
+        {isError ? (
+          <OverviewChartPanelError
+            title={OVERVIEW_STORAGE_ERROR.title}
+            message={OVERVIEW_STORAGE_ERROR.message}
+            onRetry={onRetry}
+          />
+        ) : (
+          <div
+            className={cn(
+              overviewChartPanelChartAreaClass,
+              'text-muted-foreground',
+              showChartSkeleton && 'pointer-events-none',
+            )}
+            aria-busy={showChartSkeleton}
+            aria-label={showChartSkeleton ? 'Loading usage data' : undefined}
+          >
+            {showEmptyState ? (
+              <div className={overviewChartPanelEmptyClass}>
+                No data for this date range
+              </div>
+            ) : null}
+            {renderChart ? (
+              <div className={overviewChartPanelChartFillClass}>
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  minHeight={OVERVIEW_CHART_HEIGHT}
+                  debounce={150}
+                >
+                  <AreaChart
+                    data={activeChartData}
+                    margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      {showChartSkeleton ? (
+                        <linearGradient
+                          id="overview-storage-skeleton-gradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor={SKELETON_CHART_FILL}
+                            stopOpacity={0.14}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor={SKELETON_CHART_FILL}
+                            stopOpacity={0.02}
+                          />
+                        </linearGradient>
+                      ) : (
+                        STORAGE_SERIES.map((series) => (
+                          <linearGradient
+                            key={series.gradientId}
+                            id={series.gradientId}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor={series.color}
+                              stopOpacity={0.18}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor={series.color}
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        ))
+                      )}
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'currentColor', fontSize: 10 }}
+                      dy={10}
+                      interval="preserveStartEnd"
+                      tickFormatter={(value, index) =>
+                        index % 5 === 0 ? value : ''
+                      }
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'currentColor', fontSize: 10 }}
+                      tickFormatter={yAxisTickFormatter}
+                      dx={-5}
+                      width={USAGE_CHART_Y_AXIS_WIDTH}
+                    />
+                    <Tooltip content={<StorageTooltip />} />
+                    {showChartSkeleton ? (
+                      <Area
+                        type="monotone"
+                        dataKey="total"
+                        stroke={SKELETON_CHART_STROKE}
+                        fill="url(#overview-storage-skeleton-gradient)"
+                        strokeWidth={1.5}
+                        isAnimationActive={!CHART_ANIMATION_DISABLED}
+                      />
+                    ) : (
+                      STORAGE_SERIES.map((series) => (
+                        <Area
+                          key={series.key}
+                          type="monotone"
+                          dataKey={series.key}
+                          stackId="storage"
+                          stroke={series.color}
+                          fill={`url(#${series.gradientId})`}
+                          strokeWidth={1.5}
+                          isAnimationActive={!CHART_ANIMATION_DISABLED}
+                        />
+                      ))
+                    )}
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})

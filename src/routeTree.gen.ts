@@ -143,6 +143,7 @@ import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './r
 import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
 import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
 import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
+import { Route as PublicProjectsProjectIdFunctionsUsageRouteImport } from './routes/_public/projects.$projectId.functions.usage'
 import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
 import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './routes/_public/projects.$projectId.functions.editor'
 import { Route as PublicProjectsProjectIdFunctionsCreateRouteImport } from './routes/_public/projects.$projectId.functions.create'
@@ -1051,6 +1052,12 @@ const PublicProjectsProjectIdMessagingMessageIdRoute =
     id: '/$messageId',
     path: '/$messageId',
     getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsUsageRoute =
+  PublicProjectsProjectIdFunctionsUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
   } as any)
 const PublicProjectsProjectIdFunctionsTemplatesRoute =
   PublicProjectsProjectIdFunctionsTemplatesRouteImport.update({
@@ -2402,6 +2409,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
+  '/projects/$projectId/functions/usage': typeof PublicProjectsProjectIdFunctionsUsageRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
@@ -2692,6 +2700,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
+  '/projects/$projectId/functions/usage': typeof PublicProjectsProjectIdFunctionsUsageRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
@@ -2989,6 +2998,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/_public/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/_public/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
+  '/_public/projects/$projectId/functions/usage': typeof PublicProjectsProjectIdFunctionsUsageRoute
   '/_public/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   '/_public/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
@@ -3302,6 +3312,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
+    | '/projects/$projectId/functions/usage'
     | '/projects/$projectId/messaging/$messageId'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
@@ -3592,6 +3603,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
+    | '/projects/$projectId/functions/usage'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
@@ -3888,6 +3900,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/create'
     | '/_public/projects/$projectId/functions/editor'
     | '/_public/projects/$projectId/functions/templates'
+    | '/_public/projects/$projectId/functions/usage'
     | '/_public/projects/$projectId/messaging/$messageId'
     | '/_public/projects/$projectId/realtime/channels'
     | '/_public/projects/$projectId/realtime/debugger'
@@ -5053,6 +5066,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/messaging/$messageId'
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/functions/usage': {
+      id: '/_public/projects/$projectId/functions/usage'
+      path: '/usage'
+      fullPath: '/projects/$projectId/functions/usage'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsUsageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
     }
     '/_public/projects/$projectId/functions/templates': {
       id: '/_public/projects/$projectId/functions/templates'
@@ -7110,6 +7130,7 @@ interface PublicProjectsProjectIdFunctionsRouteChildren {
   PublicProjectsProjectIdFunctionsCreateRoute: typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   PublicProjectsProjectIdFunctionsEditorRoute: typeof PublicProjectsProjectIdFunctionsEditorRoute
   PublicProjectsProjectIdFunctionsTemplatesRoute: typeof PublicProjectsProjectIdFunctionsTemplatesRoute
+  PublicProjectsProjectIdFunctionsUsageRoute: typeof PublicProjectsProjectIdFunctionsUsageRoute
   PublicProjectsProjectIdFunctionsIndexRoute: typeof PublicProjectsProjectIdFunctionsIndexRoute
 }
 
@@ -7123,6 +7144,8 @@ const PublicProjectsProjectIdFunctionsRouteChildren: PublicProjectsProjectIdFunc
       PublicProjectsProjectIdFunctionsEditorRoute,
     PublicProjectsProjectIdFunctionsTemplatesRoute:
       PublicProjectsProjectIdFunctionsTemplatesRoute,
+    PublicProjectsProjectIdFunctionsUsageRoute:
+      PublicProjectsProjectIdFunctionsUsageRoute,
     PublicProjectsProjectIdFunctionsIndexRoute:
       PublicProjectsProjectIdFunctionsIndexRoute,
   }

@@ -64,6 +64,9 @@ import {
 import { DeploymentResourceStatusBadges, resourceHasVisibleStatus } from '../shared/DeploymentResourceStatusBadges'
 import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import {
+  getFunctionsServiceTabs,
+} from '../shared/ProductComputeUsageView'
 
 type FunctionsListSearch = {
   search?: string
@@ -532,20 +535,7 @@ export function View() {
   }
 
   const functionsTabs: Tab[] = useMemo(
-    () => [
-      {
-        id: 'functions',
-        label: 'Functions',
-        to: '/projects/$projectId/functions/',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'templates',
-        label: 'Templates',
-        to: '/projects/$projectId/functions/templates',
-        params: { projectId: projectId as string },
-      },
-    ],
+    () => getFunctionsServiceTabs(projectId as string),
     [projectId],
   )
 

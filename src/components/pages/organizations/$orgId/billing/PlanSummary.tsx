@@ -38,11 +38,20 @@ import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import {
+  buildDedicatedDbBillingSpecLookup,
+  DEDICATED_DB_BILLING_METRIC_IDS,
+  formatDedicatedDbBillingUsageLabel,
   getBillingProjectResourceIdMap,
+  getDedicatedDbBillingUsageDescription,
   groupBillingProjectResources,
+  groupDedicatedDbBillingResources,
+  parseDedicatedDbBillingResourceId,
+  resolveBillingProjectResourceMapping,
   type BillingProjectResourceCategoryGroup,
   type BillingProjectResourceItem,
+  type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
+import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
 
 /**
  * PlanSummary Component
@@ -123,6 +132,27 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   ])
 
   const { credits } = useOrganizationCredits(orgId, 0, 1)
+
+  const dedicatedDbSpecLookupProjectId = useMemo(() => {
+    const projects = aggregation?.breakdown
+    if (!Array.isArray(projects) || projects.length === 0) return null
+    const firstProjectId = projects[0]?.$id
+    return typeof firstProjectId === 'string' && firstProjectId.length > 0
+      ? firstProjectId
+      : null
+  }, [aggregation?.breakdown])
+
+  const { data: databaseSpecificationsData } = useQuery(
+    databaseSpecificationsQueryOptions(dedicatedDbSpecLookupProjectId),
+  )
+
+  const dedicatedDbBillingSpecLookup = useMemo(
+    () =>
+      buildDedicatedDbBillingSpecLookup(
+        databaseSpecificationsData?.specifications,
+      ),
+    [databaseSpecificationsData?.specifications],
+  )
 
   // Calculate available credit
   const availableCredit = useMemo(() => {
@@ -293,6 +323,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         : []
 
       const resourceIdMap = getBillingProjectResourceIdMap(plan)
+      const hasSpecSpecificDedicatedDbResources = projectResources.some(
+        (resource) =>
+          typeof resource.resourceId === 'string' &&
+          parseDedicatedDbBillingResourceId(resource.resourceId) != null,
+      )
 
       // Helper to get resource from aggregation by resourceId
       const getResourceByResourceId = (resourceId: string) => {
@@ -351,13 +386,37 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           (resourceId): resourceId is string =>
             typeof resourceId === 'string' && resourceId.length > 0,
         )
+      const fallbackResourceIds = Object.keys(resourceIdMap).filter(
+        (resourceId) => {
+          if (
+            hasSpecSpecificDedicatedDbResources &&
+            resourceId.startsWith('dedicatedDb')
+          ) {
+            return false
+          }
+          return true
+        },
+      )
       const orderedResourceIds = Array.from(
-        new Set([...apiOrderedResourceIds, ...Object.keys(resourceIdMap)]),
+        new Set([...apiOrderedResourceIds, ...fallbackResourceIds]),
       )
 
       // Process each resource type from the aggregation
       orderedResourceIds.forEach((resourceId) => {
-        const mappedResource = resourceIdMap[resourceId]
+        if (
+          hasSpecSpecificDedicatedDbResources &&
+          (DEDICATED_DB_BILLING_METRIC_IDS as readonly string[]).includes(
+            resourceId,
+          )
+        ) {
+          return
+        }
+
+        const mappedResource = resolveBillingProjectResourceMapping(
+          resourceId,
+          plan,
+          dedicatedDbBillingSpecLookup,
+        )
         if (!mappedResource) return
 
         const {
@@ -409,7 +468,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         total: projectTotal,
       }
     })
-  }, [aggregation, plan])
+  }, [aggregation, plan, dedicatedDbBillingSpecLookup])
 
   // Total projects: from API resources when available (paginated response), else current page length
   const totalProjects = useMemo(() => {
@@ -626,6 +685,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                               <BillingProjectResourceCategorySection
                                 key={category.id}
                                 category={category}
+                                plan={plan}
+                                dedicatedDbBillingSpecLookup={
+                                  dedicatedDbBillingSpecLookup
+                                }
                               />
                             ))}
                           </div>
@@ -718,9 +781,45 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
 function BillingProjectResourceCategorySection({
   category,
+  plan,
+  dedicatedDbBillingSpecLookup,
 }: {
   category: BillingProjectResourceCategoryGroup
+  plan: Models.BillingPlan | null | undefined
+  dedicatedDbBillingSpecLookup: ReturnType<
+    typeof buildDedicatedDbBillingSpecLookup
+  >
 }) {
+  if (category.id === 'dedicated-databases') {
+    const { specGroups, ungrouped } = groupDedicatedDbBillingResources(
+      category.resources,
+      plan,
+      dedicatedDbBillingSpecLookup,
+    )
+
+    return (
+      <div className="py-3 first:pt-0 last:pb-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pb-1.5">
+          {category.label}
+        </p>
+        <div className="space-y-2">
+          {specGroups.map((group) => (
+            <BillingDedicatedDbSpecGroup
+              key={group.key}
+              group={group}
+            />
+          ))}
+          {ungrouped.map((resource) => (
+            <BillingProjectResourceRow
+              key={resource.resourceId}
+              resource={resource}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="py-3 first:pt-0 last:pb-0">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pb-1.5">
@@ -738,6 +837,117 @@ function BillingProjectResourceCategorySection({
   )
 }
 
+function BillingDedicatedDbSpecGroup({
+  group,
+}: {
+  group: DedicatedDbBillingSpecGroup
+}) {
+  const hasMultipleItems = group.items.length > 1
+
+  if (!hasMultipleItems && group.items.length === 1) {
+    const item = group.items[0]!
+    const usageLabel = formatDedicatedDbBillingUsageLabel(
+      item.usage,
+      item.metricId,
+      item.formatType,
+    )
+    return (
+      <BillingProjectResourceRow
+        resource={{
+          resourceId: item.resourceId,
+          name: `${group.title} · ${item.metricLabel}`,
+          usage: item.usage,
+          limit: item.limit,
+          cost: item.cost,
+          formatType: item.formatType,
+          showLimit: item.showLimit,
+          category: 'dedicated-databases',
+          usageLabel,
+          usageDescription: getDedicatedDbBillingUsageDescription(
+            item.metricId,
+            item.formatType,
+          ),
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="rounded-lg border border-border/70 bg-muted/15 overflow-hidden">
+      <div className="flex items-center justify-between gap-4 px-3 py-2 border-b border-border/70">
+        <span className="text-[12px] font-medium text-foreground truncate">
+          {group.title}
+        </span>
+        <span className="text-[12px] font-semibold text-foreground shrink-0 tabular-nums">
+          {formatCurrency(group.totalCost)}
+        </span>
+      </div>
+      <div className="px-3 py-1.5 border-b border-border/50">
+        <div className="flex items-center justify-end gap-4">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[88px] text-right">
+            Usage
+          </span>
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[70px] text-right">
+            Cost
+          </span>
+        </div>
+      </div>
+      <div className="divide-y divide-border/50">
+        {group.items.map((item) => (
+          <BillingDedicatedDbMetricRow key={item.resourceId} item={item} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BillingDedicatedDbMetricRow({
+  item,
+}: {
+  item: DedicatedDbBillingSpecGroup['items'][number]
+}) {
+  const usageLabel = formatDedicatedDbBillingUsageLabel(
+    item.usage,
+    item.metricId,
+    item.formatType,
+  )
+  const usageDescription = getDedicatedDbBillingUsageDescription(
+    item.metricId,
+    item.formatType,
+  )
+
+  return (
+    <div className="flex items-center justify-between gap-4 px-3 py-1.5">
+      <span className="text-[11px] text-muted-foreground truncate">
+        {item.metricLabel}
+      </span>
+      <div className="flex items-center gap-4 shrink-0">
+        {usageDescription ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-[11px] text-muted-foreground tabular-nums min-w-[88px] text-right underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+                  {usageLabel}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[240px]">
+                <p className="text-[12px]">{usageDescription}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <span className="text-[11px] text-muted-foreground tabular-nums min-w-[88px] text-right">
+            {usageLabel}
+          </span>
+        )}
+        <span className="text-[11px] font-medium text-foreground tabular-nums min-w-[70px] text-right">
+          {formatCurrency(item.cost)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function BillingProjectResourceRow({
   resource,
 }: {
@@ -747,14 +957,40 @@ function BillingProjectResourceRow({
     resource.limit && resource.limit > 0
       ? Math.min(100, (resource.usage / resource.limit) * 100)
       : null
-  const usageFormatted = formatResourceUsage(
-    resource.usage,
-    resource.formatType,
-  )
+  const usageFormatted =
+    resource.usageLabel ??
+    formatResourceUsage(resource.usage, resource.formatType)
   const limitFormatted =
     resource.limit !== null
       ? formatResourceLimit(resource.limit, resource.formatType)
       : 'Unlimited'
+
+  const usageContent = resource.usageDescription ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+            {!resource.showLimit
+              ? usageFormatted
+              : resource.limit === 0
+                ? usageFormatted
+                : `${usageFormatted} / ${limitFormatted}`}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[240px]">
+          <p className="text-[12px]">{resource.usageDescription}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : (
+    <>
+      {!resource.showLimit
+        ? usageFormatted
+        : resource.limit === 0
+          ? usageFormatted
+          : `${usageFormatted} / ${limitFormatted}`}
+    </>
+  )
 
   return (
     <div className="py-1.5">
@@ -791,11 +1027,7 @@ function BillingProjectResourceRow({
         </div>
 
         <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
-          {!resource.showLimit
-            ? usageFormatted
-            : resource.limit === 0
-              ? usageFormatted
-              : `${usageFormatted} / ${limitFormatted}`}
+          {usageContent}
         </span>
 
         <span className="text-[12px] font-medium text-foreground shrink-0 text-right min-w-[70px]">

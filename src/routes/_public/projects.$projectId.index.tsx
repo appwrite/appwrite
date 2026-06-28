@@ -8,7 +8,7 @@ import {
   requestsOverviewQueryOptions,
   executionsOverviewQueryOptions,
   gbHoursOverviewQueryOptions,
-  storageOverviewQueryOptions,
+  overviewStorageOverviewQueryOptions,
 } from '@/lib/react-query/hooks'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { ensureProjectRegion } from '@/lib/project-region'
@@ -31,7 +31,13 @@ const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
     parsedRange: { from: Date; to: Date },
     chartInterval: UsageChartInterval,
     includeBreakdown: boolean,
-  ) => ReturnType<typeof bandwidthOverviewQueryOptions>
+  ) => ReturnType<
+    | typeof bandwidthOverviewQueryOptions
+    | typeof requestsOverviewQueryOptions
+    | typeof executionsOverviewQueryOptions
+    | typeof gbHoursOverviewQueryOptions
+    | typeof overviewStorageOverviewQueryOptions
+  >
 > = {
   bandwidth: (projectId, parsedRange, chartInterval, includeBreakdown) =>
     bandwidthOverviewQueryOptions(
@@ -62,7 +68,7 @@ const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
       includeBreakdown,
     ),
   storage: (projectId, parsedRange, chartInterval, includeBreakdown) =>
-    storageOverviewQueryOptions(
+    overviewStorageOverviewQueryOptions(
       projectId,
       parsedRange,
       chartInterval,

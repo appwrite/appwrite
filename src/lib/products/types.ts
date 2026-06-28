@@ -31,6 +31,7 @@ export type ProductNavItem = {
   href: string
   icon: ProductIcon
   tagline: string
+  comingSoon?: boolean
 }
 
 export type ProductRegistryItem = {

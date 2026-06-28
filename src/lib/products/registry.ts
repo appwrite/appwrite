@@ -184,7 +184,12 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: '/docs/products/network',
     icon: ScanSearch,
     tagline: 'Security and performance insights.',
+    comingSoon: true,
   },
+}
+
+export function isProductNavItemComingSoon(id: ProductNavItemId): boolean {
+  return PRODUCT_NAV_REGISTRY[id].comingSoon === true
 }
 
 export const BUILD_NAV_ITEM_IDS = PRODUCT_NAV_ITEM_IDS.filter(
@@ -222,6 +227,13 @@ export const PRODUCT_NAV_CATEGORIES = [
     productIds: PROTECT_NAV_ITEM_IDS,
   },
 ] as const satisfies readonly ProductNavCategory[]
+
+export const MARKETING_PRODUCT_NAV_CATEGORIES = PRODUCT_NAV_CATEGORIES.map(
+  (category) => ({
+    ...category,
+    productIds: category.productIds.filter((id) => !isProductNavItemComingSoon(id)),
+  }),
+)
 
 export function isProductNavItemId(value: string): value is ProductNavItemId {
   return (PRODUCT_NAV_ITEM_IDS as readonly string[]).includes(value)

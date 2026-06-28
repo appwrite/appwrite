@@ -2,16 +2,35 @@ import type { UsageTopEndpoint } from '@/lib/usage/usage-events-common'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 
 export const COMPUTE_EXECUTIONS_DESCRIPTION =
-  'Function and site executions during the selected period. Each HTTP trigger, schedule run, or event invocation counts as one execution.'
+  'Function and site executions during the selected period. Each HTTP trigger, schedule run, event invocation, or site request counts as one execution.'
 
 export const COMPUTE_GB_HOURS_DESCRIPTION =
-  'Compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions and sites multiplied by execution duration.'
+  'Compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions and sites multiplied by execution, request handling, and build duration.'
 
-export const COMPUTE_DOCS_HREF = '/docs/products/functions'
+export const COMPUTE_FUNCTION_EXECUTIONS_DESCRIPTION =
+  'Function executions during the selected period. Each HTTP trigger, schedule run, or event invocation counts as one execution.'
 
-export const COMPUTE_EXECUTIONS_BREAKDOWN_TITLE = 'Top executed functions'
-export const COMPUTE_EXECUTIONS_CHART_TITLE = 'Function executions over time'
+export const COMPUTE_SITE_EXECUTIONS_DESCRIPTION =
+  'Site executions during the selected period. Each HTTP request served by your site counts toward execution usage.'
+
+export const COMPUTE_FUNCTION_GB_HOURS_DESCRIPTION =
+  'Function compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions multiplied by execution and build duration.'
+
+export const COMPUTE_SITE_GB_HOURS_DESCRIPTION =
+  'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.'
+
+export const COMPUTE_FUNCTIONS_DOCS_HREF = '/docs/products/functions'
+export const COMPUTE_SITES_DOCS_HREF = '/docs/products/sites'
+export const COMPUTE_DOCS_HREF = COMPUTE_FUNCTIONS_DOCS_HREF
+
+export const COMPUTE_EXECUTIONS_BREAKDOWN_TITLE = 'Top compute consumers'
 export const COMPUTE_GB_HOURS_BREAKDOWN_TITLE = 'Top compute consumers'
+export const COMPUTE_EXECUTIONS_CHART_TITLE = 'Executions over time'
+export const COMPUTE_FUNCTION_EXECUTIONS_BREAKDOWN_TITLE = 'Top executed functions'
+export const COMPUTE_SITE_EXECUTIONS_BREAKDOWN_TITLE = 'Top executed sites'
+export const COMPUTE_FUNCTION_GB_HOURS_BREAKDOWN_TITLE =
+  'Top function compute consumers'
+export const COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE = 'Top site compute consumers'
 
 export function topConsumersToBreakdownItems(
   topConsumers: UsageTopEndpoint[],
