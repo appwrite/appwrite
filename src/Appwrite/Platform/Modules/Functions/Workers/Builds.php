@@ -1077,38 +1077,27 @@ class Builds extends Action
             }
 
             if ($stages !== []) {
-                // Re-read the project: the injected $project is a snapshot from
-                // job-dispatch time, and a build can run for minutes. Reading the
-                // current onboarding map avoids overwriting a stage that was
-                // skipped (or completed) via the API while the build was running.
-                $onboardingProject = $dbForPlatform->getDocument('projects', $project->getId());
-                $onboarding = $onboardingProject->getAttribute('onboarding', []);
+                // Fetch the project fresh and only set stages that aren't already
+                // recorded, so a stage skipped or completed via the API while the
+                // build was running is left untouched (??= respects it).
+                $onboarding = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('onboarding', []);
                 if (! \is_array($onboarding)) {
                     $onboarding = [];
                 }
 
-                $onboardingChanged = false;
                 foreach ($stages as $stage) {
-                    $stageStatus = $onboarding[$stage]['status'] ?? null;
-                    if ($stageStatus === ONBOARDING_STATUS_COMPLETED || $stageStatus === ONBOARDING_STATUS_SKIPPED) {
-                        continue;
-                    }
-                    $onboarding[$stage] = [
+                    $onboarding[$stage] ??= [
                         'status' => ONBOARDING_STATUS_COMPLETED,
                         'at' => DateTime::now(),
                         'actorType' => ACTOR_TYPE_SYSTEM,
                     ];
-                    $onboardingChanged = true;
                 }
 
-                if ($onboardingChanged && ! $onboardingProject->isEmpty()) {
-                    try {
-                        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                            'onboarding' => $onboarding,
-                        ]));
-                    } catch (\Throwable) {
-                        // Missing `onboarding` attribute on upgraded installs must not break the build lifecycle.
-                    }
+                try {
+                    $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $onboarding,
+                    ]));
+                } catch (\Throwable) {
                 }
             }
 
