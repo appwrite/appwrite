@@ -191,10 +191,20 @@ class V24 extends Migration
                     break;
 
                 case 'users':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'impersonator');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"impersonator\" in collection {$id}: {$th->getMessage()}");
+                    $attributes = [
+                        'impersonator',
+                        'emailCanonical',
+                        'emailIsFree',
+                        'emailIsDisposable',
+                        'emailIsCorporate',
+                        'emailIsCanonical',
+                    ];
+                    foreach ($attributes as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
                     try {
                         $this->createIndexFromCollection($this->dbForProject, $id, 'impersonator');
