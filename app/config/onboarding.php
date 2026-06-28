@@ -44,6 +44,7 @@ return [
     // "created a deployment" milestone.
     'functions.createDeployment' => true,
     'functions.createTemplateDeployment' => true,
+    'functions.createVcsDeployment' => true,
     'functions.updateFunctionDeployment' => true,
 
     // Messaging
@@ -70,5 +71,6 @@ return [
     // "created a deployment" milestone.
     'sites.createDeployment' => true,
     'sites.createTemplateDeployment' => true,
+    'sites.createVcsDeployment' => true,
     'sites.updateSiteDeployment' => true,
 ];
