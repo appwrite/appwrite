@@ -59,9 +59,6 @@ import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { ImageFormat, type Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { SiteContextMenu } from './_components/SiteContextMenu'
-import {
-  getSitesServiceTabs,
-} from '../shared/ProductComputeUsageView'
 import { SitesListPreviewCell } from './_components/SitesListPreviewCell'
 import {
   DeploymentResourceStatusBadges,
@@ -626,17 +623,10 @@ export function View() {
     <ServiceListViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
   )
 
-  const sitesTabs = useMemo(
-    () => getSitesServiceTabs(projectId!),
-    [projectId],
-  )
-
   return (
     <div className="flex flex-col">
       <ServiceHeader
         title="Sites"
-        tabs={sitesTabs}
-        activeTab="sites"
         searchPlaceholder="Search sites..."
         searchValue={searchInput}
         onSearchChange={handleSearchChange}

@@ -38,6 +38,7 @@ import { HomeHashScroll } from '@/components/pages/home/HomeHashScroll'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
 import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
@@ -45,26 +46,26 @@ import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const frameworkTools = [
-  { name: 'React', icon: '/icons/react.svg', href: 'https://appwrite.io/docs/quick-starts/react' },
-  { name: 'Next.js', icon: '/icons/nextjs.svg', href: 'https://appwrite.io/docs/quick-starts/nextjs' },
-  { name: 'Vue', icon: '/icons/vue.svg', href: 'https://appwrite.io/docs/quick-starts/vue' },
-  { name: 'SvelteKit', icon: '/icons/svelte.svg', href: 'https://appwrite.io/docs/quick-starts/sveltekit' },
-  { name: 'Astro', icon: '/icons/astro.svg', href: 'https://appwrite.io/docs/quick-starts/astro' },
-  { name: 'Android', icon: '/icons/android.svg', href: 'https://appwrite.io/docs/quick-starts/android' },
-  { name: 'iOS', icon: '/icons/apple.svg', href: 'https://appwrite.io/docs/quick-starts/apple' },
-  { name: 'Flutter', icon: '/icons/flutter.svg', href: 'https://appwrite.io/docs/quick-starts/flutter' },
-  { name: 'Claude', icon: '/icons/claude.svg', href: 'https://appwrite.io/docs/tooling/mcp/claude-code' },
-  { name: 'ChatGPT', icon: '/icons/chatgpt.svg', href: 'https://appwrite.io/docs/tooling/ai/agents/codex' },
-  { name: 'Cursor', icon: '/icons/cursor-ai.svg', href: 'https://appwrite.io/docs/tooling/mcp/cursor' },
-  { name: 'Lovable', icon: '/icons/lovable.svg', href: 'https://appwrite.io/docs/tooling/ai/vibe-coding/lovable' },
-  { name: 'OpenCode', icon: '/icons/opencode.svg', href: 'https://appwrite.io/docs/tooling/mcp/opencode' },
-  { name: 'Bun', icon: '/icons/bun.svg', href: 'https://appwrite.io/docs/products/functions/runtimes' },
+  { name: 'React', icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
+  { name: 'Next.js', icon: '/icons/nextjs.svg', href: '/docs/quick-starts/nextjs' },
+  { name: 'Vue', icon: '/icons/vue.svg', href: '/docs/quick-starts/vue' },
+  { name: 'SvelteKit', icon: '/icons/svelte.svg', href: '/docs/quick-starts/sveltekit' },
+  { name: 'Astro', icon: '/icons/astro.svg', href: '/docs/quick-starts/astro' },
+  { name: 'Android', icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
+  { name: 'iOS', icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
+  { name: 'Flutter', icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },
+  { name: 'Claude', icon: '/icons/claude.svg', href: '/docs/tooling/mcp/claude-code' },
+  { name: 'ChatGPT', icon: '/icons/chatgpt.svg', href: '/docs/tooling/ai/agents/codex' },
+  { name: 'Cursor', icon: '/icons/cursor-ai.svg', href: '/docs/tooling/mcp/cursor' },
+  { name: 'Lovable', icon: '/icons/lovable.svg', href: '/docs/tooling/ai/vibe-coding/lovable' },
+  { name: 'OpenCode', icon: '/icons/opencode.svg', href: '/docs/tooling/mcp/opencode' },
+  { name: 'Bun', icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
 ] as const
 
 const aiDocLinks = [
-  { label: 'MCP servers', href: 'https://appwrite.io/docs/tooling/ai/mcp-servers' },
-  { label: 'Appwrite Skills', href: 'https://appwrite.io/docs/tooling/ai/skills' },
-  { label: 'AI Arena', href: 'https://arena.appwrite.io/' },
+  { label: 'MCP servers', href: '/docs/tooling/ai/mcp-servers' },
+  { label: 'Appwrite Skills', href: '/docs/tooling/ai/skills' },
+  { label: 'AI Arena', href: 'https://arena.appwrite.io/', external: true },
 ] as const
 
 const productBentoItems: {
@@ -266,16 +267,12 @@ function HomePage() {
               className="h-7 rounded-full px-3 text-[12px]"
               asChild
             >
-              <a
-                href="https://appwrite.io/docs/products/realtime/presence"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <MarketingSiteLink href="/docs/products/realtime/presence">
                 <Radio className="size-3.5" />
                 <span className="text-[var(--brand-cta)]">New</span>
                 Announcing the Presences API
                 <ArrowRight className="size-3.5" />
-              </a>
+              </MarketingSiteLink>
             </Button>
 
             <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-6xl pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] lg:text-[76px]">
@@ -296,7 +293,7 @@ function HomePage() {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-                <Link to="/enterprise">Request a demo</Link>
+                <MarketingSiteLink href="/enterprise">Request a demo</MarketingSiteLink>
               </Button>
             </div>
           </div>
@@ -354,11 +351,9 @@ function HomePage() {
 
             <div className="mx-auto mt-8 flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-7 sm:gap-x-10">
               {frameworkTools.map((tool) => (
-                <a
+                <MarketingSiteLink
                   key={tool.name}
                   href={tool.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   aria-label={tool.name}
                   className="group flex size-9 items-center justify-center transition-transform duration-200 hover:scale-110"
                 >
@@ -367,7 +362,7 @@ function HomePage() {
                     alt=""
                     className="size-8 object-contain opacity-90 [filter:grayscale(1)_brightness(0.38)] transition duration-200 group-hover:opacity-100 group-hover:[filter:grayscale(1)_brightness(0)] dark:opacity-55 dark:[filter:grayscale(1)] dark:group-hover:opacity-100 dark:group-hover:[filter:grayscale(1)]"
                   />
-                </a>
+                </MarketingSiteLink>
               ))}
             </div>
           </div>
@@ -383,14 +378,20 @@ function HomePage() {
                     ·
                   </span>
                 ) : null}
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-neutral text-[12px]"
-                >
-                  {link.label}
-                </a>
+                {'external' in link && link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link-neutral text-[12px]"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <MarketingSiteLink href={link.href} className="link-neutral text-[12px]">
+                    {link.label}
+                  </MarketingSiteLink>
+                )}
               </span>
             ))}
           </nav>

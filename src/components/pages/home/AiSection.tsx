@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import {
   AiFeatureCard,
   AiFeatureCtaButton,
@@ -13,7 +14,6 @@ import {
   type IDEConfig,
 } from '@/lib/config/ide'
 import { AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
-import { cn } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -101,11 +101,7 @@ function McpFeaturePanel() {
       shade="mcp"
       className="border-b border-border lg:border-b-0 lg:border-r"
       cta={
-        <AiFeatureCtaButton
-          href="https://appwrite.io/docs/tooling/mcp"
-          label="Learn more"
-          external
-        />
+        <AiFeatureCtaButton href="/docs/tooling/mcp" label="Learn more" />
       }
     >
       <AiMcpMockVisual />
@@ -120,11 +116,7 @@ function SkillsFeaturePanel() {
       description="Teach AI agents your backend, so they always make the right call."
       shade="skills"
       cta={
-        <AiFeatureCtaButton
-          href="https://appwrite.io/docs/tooling/ai/skills"
-          label="Learn more"
-          external
-        />
+        <AiFeatureCtaButton href="/docs/tooling/ai/skills" label="Learn more" />
       }
     >
       <AiSkillsMockVisual />
@@ -146,13 +138,11 @@ function PluginTile({
   href: string
   badges: PluginTileBadge[]
 }) {
+  const className =
+    'group flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 transition-colors hover:bg-accent/15'
+
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 transition-colors hover:bg-accent/15"
-    >
+    <MarketingSiteLink href={href} className={className}>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
         <img src={plugin.iconPath} alt="" className="size-4 object-contain" />
       </span>
@@ -170,7 +160,7 @@ function PluginTile({
           </Badge>
         ))}
       </span>
-    </a>
+    </MarketingSiteLink>
   )
 }
 
@@ -221,13 +211,7 @@ function AiPluginsSection() {
         </div>
         <div className="relative mt-4">
           <Button variant="outline" className="h-9 text-[13px]" asChild>
-            <a
-              href="https://appwrite.io/docs/tooling/mcp"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn more
-            </a>
+            <MarketingSiteLink href="/docs/tooling/mcp">Learn more</MarketingSiteLink>
           </Button>
         </div>
       </div>

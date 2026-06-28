@@ -1,4 +1,7 @@
+'use client'
+
 import { Link } from '@tanstack/react-router'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { cn } from '@/lib/utils'
@@ -12,7 +15,7 @@ type PricingTier = {
   cta: string
   ctaVariant: 'brandCta' | 'outline'
   href: string
-  internal: boolean
+  marketingAware?: boolean
   popular?: boolean
 }
 
@@ -25,7 +28,6 @@ const pricingTiers: PricingTier[] = [
     cta: 'Start project',
     ctaVariant: 'outline',
     href: '/sign-up',
-    internal: true,
   },
   {
     id: 'pro',
@@ -37,7 +39,6 @@ const pricingTiers: PricingTier[] = [
     cta: 'Start project',
     ctaVariant: 'brandCta',
     href: '/sign-up',
-    internal: true,
     popular: true,
   },
   {
@@ -48,7 +49,7 @@ const pricingTiers: PricingTier[] = [
     cta: 'Contact us',
     ctaVariant: 'outline',
     href: CONTACT_ENTERPRISE_URL,
-    internal: true,
+    marketingAware: true,
   },
 ]
 
@@ -61,21 +62,19 @@ function PricingTierCta({ tier }: { tier: PricingTier }) {
     tier.ctaVariant === 'outline' && outlineTierButtonClassName,
   )
 
-  if (tier.internal) {
+  if (tier.marketingAware) {
     return (
       <Button variant={tier.ctaVariant} className={buttonClassName} asChild>
-        <Link to={tier.href} search={{ redirect: '/' }}>
-          {tier.cta}
-        </Link>
+        <MarketingSiteLink href={tier.href}>{tier.cta}</MarketingSiteLink>
       </Button>
     )
   }
 
   return (
     <Button variant={tier.ctaVariant} className={buttonClassName} asChild>
-      <a href={tier.href} target="_blank" rel="noopener noreferrer">
+      <Link to={tier.href} search={{ redirect: '/' }}>
         {tier.cta}
-      </a>
+      </Link>
     </Button>
   )
 }
@@ -129,7 +128,7 @@ export function PricingSection() {
               </Link>
             </Button>
             <Button variant="outline" className="h-10 text-[13px]" asChild>
-              <Link to="/pricing">View pricing plans</Link>
+              <MarketingSiteLink href="/pricing">View pricing plans</MarketingSiteLink>
             </Button>
           </div>
         </div>

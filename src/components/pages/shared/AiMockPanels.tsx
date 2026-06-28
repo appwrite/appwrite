@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -230,7 +231,6 @@ export function AiPromptsMockVisual() {
 export function AiFeatureCtaButton({
   href,
   label,
-  external = false,
 }: {
   href: string
   label: string
@@ -238,13 +238,7 @@ export function AiFeatureCtaButton({
 }) {
   return (
     <Button variant="outline" className="h-9 text-[13px]" asChild>
-      {external ? (
-        <a href={href} target="_blank" rel="noopener noreferrer">
-          {label}
-        </a>
-      ) : (
-        <a href={href}>{label}</a>
-      )}
+      <MarketingSiteLink href={href}>{label}</MarketingSiteLink>
     </Button>
   )
 }

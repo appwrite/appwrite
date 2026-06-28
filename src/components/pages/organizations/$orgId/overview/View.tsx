@@ -2549,8 +2549,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               canPinProjectsResult) && (
                                               <div
                                                 className={cn(
-                                                  'absolute right-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
-                                                  isDragActive && 'opacity-100',
+                                                  'absolute right-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
+                                                  isDragActive &&
+                                                    'pointer-events-auto opacity-100',
                                                 )}
                                               >
                                                   {canPinProjectsResult ? (
@@ -2745,7 +2746,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 }
                                               />
                                               {canPin && canPinProjectsResult && (
-                                                <div className="absolute right-2 top-2 z-10 flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <div className="absolute right-2 top-2 z-10 flex shrink-0 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                                                       <TooltipProvider
                                                         delayDuration={0}
                                                       >

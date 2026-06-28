@@ -48,7 +48,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     supportsAIChat: true,
     /** Handled by `generateCodexNewThreadDeeplink` — opens the Codex desktop app. */
     aiChatDeeplink: 'codex://threads/new',
-    pluginDocsUrl: 'https://appwrite.io/docs/tooling/ai/agents/codex',
+    pluginDocsUrl: '/docs/tooling/ai/agents/codex',
   },
   // AI-powered IDEs (desktop apps with deeplinks)
   {
@@ -57,8 +57,8 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/cursor-ai.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'cursor://anysphere.cursor-deeplink/prompt?text={prompt}',
-    pluginDocsUrl: 'https://appwrite.io/docs/tooling/ai/ai-dev-tools/cursor',
-    mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/cursor',
+    pluginDocsUrl: '/docs/tooling/ai/ai-dev-tools/cursor',
+    mcpDocsUrl: '/docs/tooling/mcp/cursor',
   },
   {
     id: 'windsurf',
@@ -66,7 +66,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/windsurf.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'windsurf://new-chat?prompt={prompt}',
-    mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/windsurf',
+    mcpDocsUrl: '/docs/tooling/mcp/windsurf',
   },
   {
     id: 'vscode',
@@ -74,7 +74,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/vscode.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'vscode://GitHub.copilot-chat/chat?prompt={prompt}',
-    mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/vscode',
+    mcpDocsUrl: '/docs/tooling/mcp/vscode',
   },
   // MCP-only tools (no AI chat deeplink)
   {
@@ -82,22 +82,22 @@ export const IDE_CONFIGS: IDEConfig[] = [
     name: 'Claude Code',
     iconPath: '/icons/claude.svg',
     supportsAIChat: false,
-    pluginDocsUrl: 'https://appwrite.io/docs/tooling/ai/ai-dev-tools/claude-code',
-    mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/claude',
+    pluginDocsUrl: '/docs/tooling/ai/ai-dev-tools/claude-code',
+    mcpDocsUrl: '/docs/tooling/mcp/claude',
   },
   {
     id: 'google-antigravity',
     name: 'Antigravity',
     iconPath: '/icons/google-antigravity.svg',
     supportsAIChat: false,
-    mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/antigravity',
+    mcpDocsUrl: '/docs/tooling/mcp/antigravity',
   },
   {
     id: 'opencode',
     name: 'OpenCode',
     iconPath: '/icons/opencode.svg',
     supportsAIChat: false,
-    mcpDocsUrl: 'https://appwrite.io/docs/tooling/mcp/opencode',
+    mcpDocsUrl: '/docs/tooling/mcp/opencode',
   },
 ]
 

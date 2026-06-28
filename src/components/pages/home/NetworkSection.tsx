@@ -1,5 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
-import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { NetworkGlobeMount } from './NetworkGlobeMount'
 
@@ -48,9 +48,9 @@ export function NetworkSection() {
             className="relative z-30 mt-6 h-10 text-[13px]"
             asChild
           >
-            <DocsRouteLink href="/docs/products/network">
+            <MarketingSiteLink href="/docs/products/network">
               More about the Appwrite Network
-            </DocsRouteLink>
+            </MarketingSiteLink>
           </Button>
         </div>
 

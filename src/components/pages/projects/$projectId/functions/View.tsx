@@ -64,9 +64,23 @@ import {
 import { DeploymentResourceStatusBadges, resourceHasVisibleStatus } from '../shared/DeploymentResourceStatusBadges'
 import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import {
-  getFunctionsServiceTabs,
-} from '../shared/ProductComputeUsageView'
+
+function getFunctionsServiceTabs(projectId: string): Tab[] {
+  return [
+    {
+      id: 'functions',
+      label: 'Functions',
+      to: '/projects/$projectId/functions/',
+      params: { projectId },
+    },
+    {
+      id: 'templates',
+      label: 'Templates',
+      to: '/projects/$projectId/functions/templates',
+      params: { projectId },
+    },
+  ]
+}
 
 type FunctionsListSearch = {
   search?: string

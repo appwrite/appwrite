@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { cn } from '@/lib/utils'
 
 export type ProductAvatarItem = {
@@ -25,10 +26,6 @@ const avatarClassName = cn(
 )
 
 const iconClassName = 'size-4 text-muted-foreground/70 sm:size-[17px]'
-
-function isExternalHref(href: string) {
-  return href.startsWith('http://') || href.startsWith('https://')
-}
 
 export function ProductAvatarsList({
   items,
@@ -52,16 +49,13 @@ export function ProductAvatarsList({
             <Tooltip>
               <TooltipTrigger asChild>
                 {item.href ? (
-                  <a
+                  <MarketingSiteLink
                     href={item.href}
-                    {...(isExternalHref(item.href)
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
                     className={cn(avatarClassName, 'cursor-pointer')}
                     aria-label={item.name}
                   >
                     <Icon className={iconClassName} strokeWidth={1.5} aria-hidden />
-                  </a>
+                  </MarketingSiteLink>
                 ) : (
                   <div className={cn(avatarClassName, 'cursor-default')} aria-label={item.name}>
                     <Icon className={iconClassName} strokeWidth={1.5} aria-hidden />

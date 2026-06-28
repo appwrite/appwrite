@@ -131,7 +131,6 @@ import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/d
 import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
 import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
-import { Route as PublicProjectsProjectIdSitesUsageRouteImport } from './routes/_public/projects.$projectId.sites.usage'
 import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
 import { Route as PublicProjectsProjectIdSitesSiteIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId'
 import { Route as PublicProjectsProjectIdSettingsWebhooksRouteImport } from './routes/_public/projects.$projectId.settings.webhooks'
@@ -143,7 +142,6 @@ import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './r
 import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
 import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
 import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
-import { Route as PublicProjectsProjectIdFunctionsUsageRouteImport } from './routes/_public/projects.$projectId.functions.usage'
 import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
 import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './routes/_public/projects.$projectId.functions.editor'
 import { Route as PublicProjectsProjectIdFunctionsCreateRouteImport } from './routes/_public/projects.$projectId.functions.create'
@@ -981,12 +979,6 @@ const PublicProjectsProjectIdStorageBucketIdRoute =
     path: '/$bucketId',
     getParentRoute: () => PublicProjectsProjectIdStorageRoute,
   } as any)
-const PublicProjectsProjectIdSitesUsageRoute =
-  PublicProjectsProjectIdSitesUsageRouteImport.update({
-    id: '/sites/usage',
-    path: '/sites/usage',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
 const PublicProjectsProjectIdSitesCreateRoute =
   PublicProjectsProjectIdSitesCreateRouteImport.update({
     id: '/sites/create',
@@ -1052,12 +1044,6 @@ const PublicProjectsProjectIdMessagingMessageIdRoute =
     id: '/$messageId',
     path: '/$messageId',
     getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsUsageRoute =
-  PublicProjectsProjectIdFunctionsUsageRouteImport.update({
-    id: '/usage',
-    path: '/usage',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
   } as any)
 const PublicProjectsProjectIdFunctionsTemplatesRoute =
   PublicProjectsProjectIdFunctionsTemplatesRouteImport.update({
@@ -2409,7 +2395,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
-  '/projects/$projectId/functions/usage': typeof PublicProjectsProjectIdFunctionsUsageRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
@@ -2421,7 +2406,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/sites/$siteId': typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
-  '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
@@ -2700,14 +2684,12 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
-  '/projects/$projectId/functions/usage': typeof PublicProjectsProjectIdFunctionsUsageRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
-  '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
@@ -2998,7 +2980,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/_public/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/_public/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
-  '/_public/projects/$projectId/functions/usage': typeof PublicProjectsProjectIdFunctionsUsageRoute
   '/_public/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   '/_public/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
@@ -3010,7 +2991,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/_public/projects/$projectId/sites/$siteId': typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   '/_public/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
-  '/_public/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/_public/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
@@ -3312,7 +3292,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
-    | '/projects/$projectId/functions/usage'
     | '/projects/$projectId/messaging/$messageId'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
@@ -3324,7 +3303,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/sites/$siteId'
     | '/projects/$projectId/sites/create'
-    | '/projects/$projectId/sites/usage'
     | '/projects/$projectId/storage/$bucketId'
     | '/projects/$projectId/usage/$categoryId'
     | '/docs/references/$version/$platform/$service'
@@ -3603,14 +3581,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
-    | '/projects/$projectId/functions/usage'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
-    | '/projects/$projectId/sites/usage'
     | '/projects/$projectId/usage/$categoryId'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
@@ -3900,7 +3876,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/create'
     | '/_public/projects/$projectId/functions/editor'
     | '/_public/projects/$projectId/functions/templates'
-    | '/_public/projects/$projectId/functions/usage'
     | '/_public/projects/$projectId/messaging/$messageId'
     | '/_public/projects/$projectId/realtime/channels'
     | '/_public/projects/$projectId/realtime/debugger'
@@ -3912,7 +3887,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/settings/webhooks'
     | '/_public/projects/$projectId/sites/$siteId'
     | '/_public/projects/$projectId/sites/create'
-    | '/_public/projects/$projectId/sites/usage'
     | '/_public/projects/$projectId/storage/$bucketId'
     | '/_public/projects/$projectId/usage/$categoryId'
     | '/docs/references/$version/$platform/$service'
@@ -4983,13 +4957,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdStorageRoute
     }
-    '/_public/projects/$projectId/sites/usage': {
-      id: '/_public/projects/$projectId/sites/usage'
-      path: '/sites/usage'
-      fullPath: '/projects/$projectId/sites/usage'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesUsageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
     '/_public/projects/$projectId/sites/create': {
       id: '/_public/projects/$projectId/sites/create'
       path: '/sites/create'
@@ -5066,13 +5033,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/messaging/$messageId'
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/functions/usage': {
-      id: '/_public/projects/$projectId/functions/usage'
-      path: '/usage'
-      fullPath: '/projects/$projectId/functions/usage'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsUsageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
     }
     '/_public/projects/$projectId/functions/templates': {
       id: '/_public/projects/$projectId/functions/templates'
@@ -7130,7 +7090,6 @@ interface PublicProjectsProjectIdFunctionsRouteChildren {
   PublicProjectsProjectIdFunctionsCreateRoute: typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   PublicProjectsProjectIdFunctionsEditorRoute: typeof PublicProjectsProjectIdFunctionsEditorRoute
   PublicProjectsProjectIdFunctionsTemplatesRoute: typeof PublicProjectsProjectIdFunctionsTemplatesRoute
-  PublicProjectsProjectIdFunctionsUsageRoute: typeof PublicProjectsProjectIdFunctionsUsageRoute
   PublicProjectsProjectIdFunctionsIndexRoute: typeof PublicProjectsProjectIdFunctionsIndexRoute
 }
 
@@ -7144,8 +7103,6 @@ const PublicProjectsProjectIdFunctionsRouteChildren: PublicProjectsProjectIdFunc
       PublicProjectsProjectIdFunctionsEditorRoute,
     PublicProjectsProjectIdFunctionsTemplatesRoute:
       PublicProjectsProjectIdFunctionsTemplatesRoute,
-    PublicProjectsProjectIdFunctionsUsageRoute:
-      PublicProjectsProjectIdFunctionsUsageRoute,
     PublicProjectsProjectIdFunctionsIndexRoute:
       PublicProjectsProjectIdFunctionsIndexRoute,
   }
@@ -7594,7 +7551,6 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdIndexRoute: typeof PublicProjectsProjectIdIndexRoute
   PublicProjectsProjectIdSitesSiteIdRoute: typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   PublicProjectsProjectIdSitesCreateRoute: typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
-  PublicProjectsProjectIdSitesUsageRoute: typeof PublicProjectsProjectIdSitesUsageRoute
   PublicProjectsProjectIdSitesIndexRoute: typeof PublicProjectsProjectIdSitesIndexRoute
 }
 
@@ -7635,8 +7591,6 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdSitesSiteIdRouteWithChildren,
     PublicProjectsProjectIdSitesCreateRoute:
       PublicProjectsProjectIdSitesCreateRouteWithChildren,
-    PublicProjectsProjectIdSitesUsageRoute:
-      PublicProjectsProjectIdSitesUsageRoute,
     PublicProjectsProjectIdSitesIndexRoute:
       PublicProjectsProjectIdSitesIndexRoute,
   }

@@ -1,7 +1,9 @@
 import { type ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { PauseCircle } from '@/lib/icons'
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
+import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type {
   ProjectListItem,
@@ -66,18 +68,28 @@ export function ProjectListCardFooter({
   const platformsEntry = platformsByProjectId.get(project.$id)
 
   return (
-    <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
-      <div className="flex min-w-0 items-center gap-2">
+    <div
+      className={cn(RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME, 'relative')}
+    >
+      <Link
+        to="/projects/$projectId"
+        params={{ projectId: project.$id }}
+        className="absolute inset-0"
+        aria-label={`Open ${project.name}`}
+      />
+      <div className="relative flex min-w-0 items-center gap-2">
         <ProjectListPlatformAvatars
           projectId={project.$id}
           platforms={platformsEntry?.platforms ?? []}
           isLoading={platformsEntry?.isLoading ?? true}
           className="min-w-0 flex-1"
         />
-        <ProjectListCardActionsMenu
-          project={project}
-          showSettingsTab={showSettingsTab}
-        />
+        <div className="relative z-10 shrink-0">
+          <ProjectListCardActionsMenu
+            project={project}
+            showSettingsTab={showSettingsTab}
+          />
+        </div>
       </div>
     </div>
   )

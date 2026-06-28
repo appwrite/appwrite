@@ -9,6 +9,8 @@ import { AvatarsSection } from './AvatarsSection'
 import { MessagingSection } from './MessagingSection'
 import { WebhooksSection } from './WebhooksSection'
 import { ComputeSection } from './ComputeSection'
+import { FunctionsSection } from './FunctionsSection'
+import { SitesSection } from './SitesSection'
 import { StorageSection } from './StorageSection'
 import { findUsageCategory, getUsageCategories } from './usage-nav'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
@@ -57,6 +59,26 @@ export function UsageCategoryView({
   if (categoryId === 'compute') {
     return (
       <ComputeSection
+        projectId={projectId}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+      />
+    )
+  }
+
+  if (categoryId === 'functions') {
+    return (
+      <FunctionsSection
+        projectId={projectId}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+      />
+    )
+  }
+
+  if (categoryId === 'sites') {
+    return (
+      <SitesSection
         projectId={projectId}
         dateRange={dateRange}
         chartInterval={chartInterval}

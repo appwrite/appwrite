@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   ChevronRight,
   Menu,
+  Globe,
   type LucideIcon,
 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
@@ -75,6 +76,7 @@ const iconMap: Record<string, LucideIcon> = {
   Cpu,
   UserCircle,
   Webhook,
+  Globe,
 }
 
 interface UsageLayoutProps {
@@ -350,6 +352,8 @@ function UsageLayoutContent({
   const isRequestsCategory = categoryId === 'requests'
   const isBandwidthCategory = categoryId === 'bandwidth'
   const isComputeCategory = categoryId === 'compute'
+  const isFunctionsCategory = categoryId === 'functions'
+  const isSitesCategory = categoryId === 'sites'
   const isDatabasesCategory = categoryId === 'databases'
   const isRealtimeCategory = categoryId === 'realtime'
   const isAuthCategory = categoryId === 'auth'
@@ -381,7 +385,7 @@ function UsageLayoutContent({
       return
     }
 
-    if (isComputeCategory) {
+    if (isComputeCategory || isFunctionsCategory || isSitesCategory) {
       void refetchProjectComputeUsageQueries(queryClient, projectId)
       return
     }

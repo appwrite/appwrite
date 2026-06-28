@@ -4,6 +4,8 @@ export function categorySupportsChartInterval(categoryId: string): boolean {
     categoryId === 'requests' ||
     categoryId === 'bandwidth' ||
     categoryId === 'compute' ||
+    categoryId === 'functions' ||
+    categoryId === 'sites' ||
     categoryId === 'databases' ||
     categoryId === 'realtime' ||
     categoryId === 'auth' ||

@@ -204,7 +204,46 @@ export const COMPUTE_USAGE_CATEGORY: ComputeUsageCategory = {
   label: 'Compute',
   icon: 'Cpu',
   description:
-    'Function and site executions plus compute time consumed by serverless functions and sites.',
+    'Combined function and site executions plus compute time across your project.',
+  metrics: [
+    { id: 'executions', name: 'Executions' },
+    { id: 'gb-hours', name: 'GB-hours' },
+  ],
+}
+
+export type FunctionsUsageCategory = {
+  id: 'functions'
+  label: 'Functions'
+  icon: 'Zap'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const FUNCTIONS_USAGE_CATEGORY: FunctionsUsageCategory = {
+  id: 'functions',
+  label: 'Functions',
+  icon: 'Zap',
+  description:
+    'Function executions and compute time during the selected period.',
+  metrics: [
+    { id: 'executions', name: 'Executions' },
+    { id: 'gb-hours', name: 'GB-hours' },
+  ],
+}
+
+export type SitesUsageCategory = {
+  id: 'sites'
+  label: 'Sites'
+  icon: 'Globe'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const SITES_USAGE_CATEGORY: SitesUsageCategory = {
+  id: 'sites',
+  label: 'Sites',
+  icon: 'Globe',
+  description: 'Site executions and compute time during the selected period.',
   metrics: [
     { id: 'executions', name: 'Executions' },
     { id: 'gb-hours', name: 'GB-hours' },
@@ -213,6 +252,30 @@ export const COMPUTE_USAGE_CATEGORY: ComputeUsageCategory = {
 
 export function buildComputeUsageCategoryMetrics(): UsageCategory['metrics'] {
   return COMPUTE_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit: metric.id === 'gb-hours' ? 'GB-hours' : 'executions',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}
+
+export function buildFunctionsUsageCategoryMetrics(): UsageCategory['metrics'] {
+  return FUNCTIONS_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit: metric.id === 'gb-hours' ? 'GB-hours' : 'executions',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}
+
+export function buildSitesUsageCategoryMetrics(): UsageCategory['metrics'] {
+  return SITES_USAGE_CATEGORY.metrics.map((metric) => ({
     id: metric.id,
     name: metric.name,
     description: '',

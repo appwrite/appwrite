@@ -17,14 +17,13 @@ function FunctionsPage() {
       match.routeId.includes('/functions/editor') ||
       match.routeId.includes('/functions/create') ||
       match.routeId.includes('/functions/templates') ||
-      match.routeId.includes('/functions/usage') ||
       match.routeId.startsWith(
         '/_public/projects/$projectId/functions/$functionId',
       ) ||
       match.routeId === '/_public/projects/$projectId/functions/editor' ||
       match.routeId === '/_public/projects/$projectId/functions/create' ||
       match.routeId === '/_public/projects/$projectId/functions/create/' ||
-      match.routeId === '/_public/projects/$projectId/functions/usage',
+      match.routeId === '/_public/projects/$projectId/functions/templates',
   )
 
   // If we're on a child route, render the outlet (child route component).

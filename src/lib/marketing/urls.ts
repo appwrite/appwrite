@@ -1,3 +1,8 @@
+import {
+  MARKETING_PAGE_PATHS,
+  normalizeMarketingPath,
+} from '@/lib/marketing/marketing-page-paths'
+
 export const MARKETING_SITE_ORIGIN = 'https://appwrite.io'
 
 export type MarketingPagePath =
@@ -120,4 +125,105 @@ export function getDocsPageUrlFromSlug(
 ): string {
   const path = slug ? `/docs/${slug}` : '/docs'
   return getDocsPageUrl(path, marketingEnabled)
+}
+
+function normalizeProductPath(path: string): string {
+  return path.split('#')[0]?.replace(/\/+$/, '') || ''
+}
+
+/** Returns a `/products…` path when `href` points at an Appwrite product page, otherwise null. */
+export function parseProductPagePath(href: string): string | null {
+  const trimmed = href.trim()
+
+  if (trimmed.startsWith('/products/')) {
+    return normalizeProductPath(trimmed)
+  }
+
+  const match = trimmed.match(
+    /^https?:\/\/(?:www\.)?appwrite\.io(\/products\/[^?#]*)(?:[?#].*)?$/i,
+  )
+  if (!match?.[1]) return null
+
+  return normalizeProductPath(match[1])
+}
+
+export function getProductPageUrl(path: string, marketingEnabled: boolean): string {
+  const productPath = parseProductPagePath(path)
+  if (!productPath) return path
+
+  return marketingEnabled ? productPath : `${MARKETING_SITE_ORIGIN}${productPath}`
+}
+
+export function isProductPageExternal(marketingEnabled: boolean): boolean {
+  return !marketingEnabled
+}
+
+/** Returns a known marketing site path (pricing, domains, etc.), otherwise null. */
+export function parseMarketingSitePagePath(href: string): string | null {
+  const trimmed = href.trim()
+  let path: string | null = null
+
+  if (trimmed.startsWith('/')) {
+    path = normalizeMarketingPath(trimmed.split('#')[0] ?? trimmed)
+  } else {
+    const match = trimmed.match(/^https?:\/\/(?:www\.)?appwrite\.io(\/[^?#]*)(?:[?#].*)?$/i)
+    path = match?.[1] ? normalizeMarketingPath(match[1]) : null
+  }
+
+  if (!path) return null
+  return (MARKETING_PAGE_PATHS as readonly string[]).includes(path) ? path : null
+}
+
+/**
+ * Resolves docs, blog, product, and marketing page links based on the active profile.
+ */
+export function resolveSiteLinkUrl(href: string, marketingEnabled: boolean): string {
+  const docsPath = parseDocsPagePath(href)
+  if (docsPath) return getDocsPageUrl(docsPath, marketingEnabled)
+
+  const blogPath = parseBlogPagePath(href)
+  if (blogPath) return getBlogPageUrl(blogPath, marketingEnabled)
+
+  const productPath = parseProductPagePath(href)
+  if (productPath) return getProductPageUrl(productPath, marketingEnabled)
+
+  const marketingPath = parseMarketingSitePagePath(href)
+  if (marketingPath) {
+    return marketingEnabled
+      ? marketingPath
+      : `${MARKETING_SITE_ORIGIN}${marketingPath}`
+  }
+
+  return href
+}
+
+export function isSiteLinkExternal(href: string, marketingEnabled: boolean): boolean {
+  if (parseDocsPagePath(href)) return isDocsPageExternal(marketingEnabled)
+  if (parseBlogPagePath(href)) return isBlogPageExternal(marketingEnabled)
+  if (parseProductPagePath(href)) return isProductPageExternal(marketingEnabled)
+  if (parseMarketingSitePagePath(href)) return isMarketingPageExternal(marketingEnabled)
+
+  return /^https?:\/\//i.test(href.trim())
+}
+
+/** Relative in-app path for TanStack Router when the link is internal. */
+export function getSiteLinkInternalPath(href: string): string | null {
+  const docsPath = parseDocsPagePath(href)
+  if (docsPath) return docsPath
+
+  const blogPath = parseBlogPagePath(href)
+  if (blogPath) return blogPath
+
+  const productPath = parseProductPagePath(href)
+  if (productPath) return productPath
+
+  const marketingPath = parseMarketingSitePagePath(href)
+  if (marketingPath) return marketingPath
+
+  const trimmed = href.trim()
+  if (trimmed.startsWith('/')) {
+    return trimmed.split('#')[0] ?? trimmed
+  }
+
+  return null
 }

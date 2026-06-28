@@ -13,6 +13,10 @@ import {
   buildAuthUsageCategoryMetrics,
   COMPUTE_USAGE_CATEGORY,
   buildComputeUsageCategoryMetrics,
+  FUNCTIONS_USAGE_CATEGORY,
+  buildFunctionsUsageCategoryMetrics,
+  SITES_USAGE_CATEGORY,
+  buildSitesUsageCategoryMetrics,
   AVATARS_USAGE_CATEGORY,
   buildAvatarsUsageCategoryMetrics,
   MESSAGING_USAGE_CATEGORY,
@@ -40,12 +44,26 @@ export const USAGE_NAV_GROUPS: readonly UsageNavGroupConfig[] = [
   {
     id: 'resources',
     label: 'Resources',
-    categoryIds: ['requests', 'bandwidth', 'compute', 'realtime', 'webhooks'],
+    categoryIds: [
+      'requests',
+      'bandwidth',
+      'compute',
+      'realtime',
+      'webhooks',
+    ],
   },
   {
     id: 'products',
     label: 'Products',
-    categoryIds: ['auth', 'databases', 'storage', 'messaging', 'avatars'],
+    categoryIds: [
+      'auth',
+      'databases',
+      'storage',
+      'functions',
+      'messaging',
+      'sites',
+      'avatars',
+    ],
   },
 ]
 
@@ -141,6 +159,62 @@ export function insertComputeCategory(
   )
 }
 
+export function insertFunctionsCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const functionsCategory: UsageCategory = {
+    ...FUNCTIONS_USAGE_CATEGORY,
+    metrics: buildFunctionsUsageCategoryMetrics(),
+  }
+
+  if (categories.some((category) => category.id === 'functions')) {
+    return categories.map((category) =>
+      category.id === 'functions' ? functionsCategory : category,
+    )
+  }
+
+  const computeIndex = categories.findIndex(
+    (category) => category.id === 'compute',
+  )
+  if (computeIndex === -1) {
+    return [...categories, functionsCategory]
+  }
+
+  return [
+    ...categories.slice(0, computeIndex + 1),
+    functionsCategory,
+    ...categories.slice(computeIndex + 1),
+  ]
+}
+
+export function insertSitesCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const sitesCategory: UsageCategory = {
+    ...SITES_USAGE_CATEGORY,
+    metrics: buildSitesUsageCategoryMetrics(),
+  }
+
+  if (categories.some((category) => category.id === 'sites')) {
+    return categories.map((category) =>
+      category.id === 'sites' ? sitesCategory : category,
+    )
+  }
+
+  const functionsIndex = categories.findIndex(
+    (category) => category.id === 'functions',
+  )
+  if (functionsIndex === -1) {
+    return [...categories, sitesCategory]
+  }
+
+  return [
+    ...categories.slice(0, functionsIndex + 1),
+    sitesCategory,
+    ...categories.slice(functionsIndex + 1),
+  ]
+}
+
 export function insertAuthCategory(categories: UsageCategory[]): UsageCategory[] {
   const authCategory: UsageCategory = {
     ...AUTH_USAGE_CATEGORY,
@@ -213,10 +287,14 @@ export function getUsageCategories(
       insertMessagingCategory(
         insertAvatarsCategory(
           insertAuthCategory(
-            insertComputeCategory(
-              insertRealtimeCategory(
-                insertDatabasesCategory(
-                  insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+            insertSitesCategory(
+              insertFunctionsCategory(
+                insertComputeCategory(
+                  insertRealtimeCategory(
+                    insertDatabasesCategory(
+                      insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+                    ),
+                  ),
                 ),
               ),
             ),
