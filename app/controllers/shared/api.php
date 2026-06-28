@@ -18,6 +18,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -42,47 +43,6 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
-
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project) {
-    preg_match_all('/{(.*?)}/', $label, $matches);
-    foreach ($matches[1] as $pos => $match) {
-        $find = $matches[0][$pos];
-        $parts = explode('.', $match);
-
-        if (count($parts) !== 2) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
-        }
-
-        $namespace = $parts[0];
-        $replace = $parts[1];
-
-        $params = match ($namespace) {
-            'user' => (array) $user,
-            'project' => $project->getArrayCopy(),
-            'request' => $requestParams,
-            default => $responsePayload,
-        };
-
-        if (array_key_exists($replace, $params)) {
-            $replacement = $params[$replace];
-            // Convert to string if it's not already a string
-            if (! is_string($replacement)) {
-                if (is_array($replacement)) {
-                    $replacement = json_encode($replacement);
-                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
-                    $replacement = (string) $replacement;
-                } elseif (is_scalar($replacement)) {
-                    $replacement = (string) $replacement;
-                } else {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
-                }
-            }
-            $label = \str_replace($find, $replacement, $label);
-        }
-    }
-
-    return $label;
-};
 
 Http::init()
     ->groups(['api'])
@@ -934,12 +894,18 @@ Http::shutdown()
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $params, $targetUser, $project);
+            $renderer = new Renderer(new Document([
+                'user' => (array) $targetUser,
+                'project' => $project,
+                'request' => $params,
+                'response' => $responsePayload,
+            ]));
+            $resource = $renderer->render($pattern);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
@@ -998,7 +964,7 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1028,11 +994,18 @@ Http::shutdown()
             $resourcePattern = $route->getLabel('cache.resource', null);
             $resourceTypePattern = $route->getLabel('cache.resourceType', null);
 
+            $renderer = new Renderer(new Document([
+                'user' => (array) $user,
+                'project' => $project,
+                'request' => $requestParams,
+                'response' => $data,
+            ]));
+
             try {
                 $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'resource' => empty($resourcePattern) ? null : $parseLabel($resourcePattern, $data, $requestParams, $user, $project),
-                    'resourceType' => empty($resourceTypePattern) ? null : $parseLabel($resourceTypePattern, $data, $requestParams, $user, $project),
+                    'resource' => empty($resourcePattern) ? null : $renderer->render($resourcePattern),
+                    'resourceType' => empty($resourceTypePattern) ? null : $renderer->render($resourceTypePattern),
                     'mimeType' => $response->getContentType(),
                     'accessedAt' => $now,
                     'signature' => $signature,

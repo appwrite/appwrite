@@ -37,7 +37,6 @@ class Update extends Action
             ->label('event', 'mock-phones.[number].update')
             ->label('audits.event', 'project.mock-phone.update')
             ->label('audits.resource', 'project.mock-phone/{response.number}')
-            ->label('usage.resource', 'project.mock-phone/{response.number}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'mocks',

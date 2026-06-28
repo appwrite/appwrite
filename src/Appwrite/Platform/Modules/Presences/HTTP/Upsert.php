@@ -46,7 +46,6 @@ class Upsert extends PlatformAction
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')
-            ->label('usage.resource', 'presence/{response.$id}')
             ->label('sdk', [
                 // Client-side SDK: `userId` is not accepted (session callers should just upsert their own presence).
                 new Method(

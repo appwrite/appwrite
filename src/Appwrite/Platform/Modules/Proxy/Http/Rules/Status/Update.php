@@ -41,7 +41,6 @@ class Update extends Action
             ->label('event', 'rules.[ruleId].update')
             ->label('audits.event', 'rule.update')
             ->label('audits.resource', 'rule/{response.$id}')
-            ->label('usage.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',
