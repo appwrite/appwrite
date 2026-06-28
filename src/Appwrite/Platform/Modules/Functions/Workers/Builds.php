@@ -13,6 +13,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Onboarding\Onboarding;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -1037,6 +1038,24 @@ class Builds extends Action
                 }
 
                 Span::add('build.activated', true);
+            }
+
+            /**
+             * Mark deployment onboarding stages. Done here (not via the HTTP sdk
+             * label) so every creation path - manual upload, template, duplicate
+             * and VCS - and the worker-driven activation are all covered.
+             */
+            $onboardingMethods = match ($resource->getCollection()) {
+                'functions' => ['create' => 'functions.createDeployment', 'activate' => 'functions.updateFunctionDeployment'],
+                'sites' => ['create' => 'sites.createDeployment', 'activate' => 'sites.updateSiteDeployment'],
+                default => null,
+            };
+            if ($onboardingMethods !== null) {
+                $stages = [$onboardingMethods['create']];
+                if ($activateBuild) {
+                    $stages[] = $onboardingMethods['activate'];
+                }
+                Onboarding::complete($dbForPlatform, $project, $stages, ACTOR_TYPE_SYSTEM);
             }
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
