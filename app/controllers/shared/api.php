@@ -250,9 +250,9 @@ Http::init()
                     if (! empty($apiKey->getProjectId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
                     } elseif (! empty($apiKey->getUserId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->purgeCachedDocument('users', $user->getId()));
                     } elseif (! empty($apiKey->getTeamId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 
