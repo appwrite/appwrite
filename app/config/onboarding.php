@@ -40,11 +40,10 @@ return [
 
     // Functions
     'functions.create' => true,
-    // One key per deployment-creation SDK method; OR them in the UI for a
-    // single "created a deployment" milestone.
+    // Deployment-creation SDK methods; OR them in the UI for a single
+    // "created a deployment" milestone.
     'functions.createDeployment' => true,
     'functions.createTemplateDeployment' => true,
-    'functions.createDuplicateDeployment' => true,
     'functions.updateFunctionDeployment' => true,
 
     // Messaging
@@ -67,10 +66,9 @@ return [
 
     // Sites
     'sites.create' => true,
-    // One key per deployment-creation SDK method; OR them in the UI for a
-    // single "created a deployment" milestone.
+    // Deployment-creation SDK methods; OR them in the UI for a single
+    // "created a deployment" milestone.
     'sites.createDeployment' => true,
     'sites.createTemplateDeployment' => true,
-    'sites.createDuplicateDeployment' => true,
     'sites.updateSiteDeployment' => true,
 ];
