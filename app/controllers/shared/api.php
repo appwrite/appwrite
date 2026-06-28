@@ -16,7 +16,6 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
-use Appwrite\Onboarding\Onboarding;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\Method;
@@ -24,6 +23,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Throwable;
 use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
@@ -1167,6 +1167,16 @@ Http::shutdown()
             return;
         }
 
+        $byMethod = $project->getAttribute('onboarding', []);
+        $status = \is_array($byMethod) ? ($byMethod[$method]['status'] ?? null) : null;
+        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+            return;
+        }
+
+        if (! \is_array($byMethod)) {
+            $byMethod = [];
+        }
+
         $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
             ? match ($apiKey->getType()) {
                 API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
@@ -1177,8 +1187,19 @@ Http::shutdown()
         : (! $user->isEmpty()
             ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
             : ACTOR_TYPE_GUEST);
+        $byMethod[$method] = [
+            'status' => ONBOARDING_STATUS_COMPLETED,
+            'at' => DateTime::now(),
+            'actorType' => $actorType,
+        ];
 
-        $authorization->skip(fn () => Onboarding::complete($dbForPlatform, $project, [$method], $actorType));
+        try {
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'onboarding' => $byMethod,
+            ])));
+        } catch (Throwable) {
+            // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
+        }
     });
 
 Http::init()

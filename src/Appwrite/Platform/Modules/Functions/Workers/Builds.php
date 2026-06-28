@@ -13,7 +13,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
-use Appwrite\Onboarding\Onboarding;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -1076,8 +1075,36 @@ class Builds extends Action
             if ($activateBuild && $activateStage !== null) {
                 $stages[] = $activateStage;
             }
+
             if ($stages !== []) {
-                Onboarding::complete($dbForPlatform, $project, $stages, ACTOR_TYPE_SYSTEM);
+                $onboarding = $project->getAttribute('onboarding', []);
+                if (! \is_array($onboarding)) {
+                    $onboarding = [];
+                }
+
+                $onboardingChanged = false;
+                foreach ($stages as $stage) {
+                    $stageStatus = $onboarding[$stage]['status'] ?? null;
+                    if ($stageStatus === ONBOARDING_STATUS_COMPLETED || $stageStatus === ONBOARDING_STATUS_SKIPPED) {
+                        continue;
+                    }
+                    $onboarding[$stage] = [
+                        'status' => ONBOARDING_STATUS_COMPLETED,
+                        'at' => DateTime::now(),
+                        'actorType' => ACTOR_TYPE_SYSTEM,
+                    ];
+                    $onboardingChanged = true;
+                }
+
+                if ($onboardingChanged) {
+                    try {
+                        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                            'onboarding' => $onboarding,
+                        ]));
+                    } catch (\Throwable) {
+                        // Missing `onboarding` attribute on upgraded installs must not break the build lifecycle.
+                    }
+                }
             }
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
