@@ -207,12 +207,21 @@ class Generator
             ];
 
             if (\array_is_list($service['depends_on'])) {
+                $hasSelectedDependency = false;
                 $dependsOn = \array_values(\array_filter(
                     $service['depends_on'],
-                    fn (mixed $dependency): bool => !\in_array($dependency, $removable, true)
+                    function (mixed $dependency) use ($removable, &$hasSelectedDependency): bool {
+                        if (!\in_array($dependency, $removable, true)) {
+                            return true;
+                        }
+
+                        $hasSelectedDependency = true;
+
+                        return false;
+                    }
                 ));
 
-                if (!\in_array($selected, $dependsOn, true)) {
+                if ($hasSelectedDependency && !\in_array($selected, $dependsOn, true)) {
                     $dependsOn[] = $selected;
                 }
 
@@ -220,11 +229,18 @@ class Generator
                 continue;
             }
 
+            $hasSelectedDependency = false;
             foreach ($removable as $dependency) {
+                if (\array_key_exists($dependency, $service['depends_on'])) {
+                    $hasSelectedDependency = true;
+                }
+
                 unset($service['depends_on'][$dependency]);
             }
 
-            $service['depends_on'][$selected] = $selector['condition'];
+            if ($hasSelectedDependency) {
+                $service['depends_on'][$selected] = $selector['condition'];
+            }
         }
     }
 

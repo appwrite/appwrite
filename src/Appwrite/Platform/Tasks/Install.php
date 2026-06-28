@@ -533,7 +533,12 @@ class Install extends Action
         }
 
         $templateForEnv = new View($this->buildFromProjectPath('/app/views/install/env.phtml'));
-        $composeGenerator = new Generator((string)\file_get_contents($this->buildFromProjectPath('/docker-compose.yml')));
+        $composePath = $this->buildFromProjectPath('/docker-compose.yml');
+        $composeYaml = \file_get_contents($composePath);
+        if ($composeYaml === false) {
+            throw new \RuntimeException('Failed to read docker-compose.yml from ' . $composePath);
+        }
+        $composeGenerator = new Generator($composeYaml);
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
