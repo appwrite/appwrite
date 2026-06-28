@@ -80,6 +80,7 @@ export type DiagramTemplateId =
   | 'serverless'
   | 'realtime-flow'
   | 'appwrite-platform'
+  | 'appwrite-architecture'
   | 'appwrite-auth'
   | 'appwrite-storage'
   | 'appwrite-messaging'

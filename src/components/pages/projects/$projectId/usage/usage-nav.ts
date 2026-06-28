@@ -19,6 +19,8 @@ import {
   buildMessagingUsageCategoryMetrics,
   WEBHOOKS_USAGE_CATEGORY,
   buildWebhooksUsageCategoryMetrics,
+  STORAGE_USAGE_CATEGORY,
+  buildStorageUsageCategoryMetrics,
   REQUESTS_USAGE_CATEGORY,
   buildRequestsUsageCategoryMetrics,
 } from './usage-live-categories'
@@ -189,18 +191,33 @@ export function insertWebhooksCategory(
   )
 }
 
+export function insertStorageCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const storageCategory: UsageCategory = {
+    ...STORAGE_USAGE_CATEGORY,
+    metrics: buildStorageUsageCategoryMetrics(),
+  }
+
+  return categories.map((category) =>
+    category.id === 'storage' ? storageCategory : category,
+  )
+}
+
 export function getUsageCategories(
   plan: 'free' | 'pro' | 'custom' = 'pro',
 ): UsageCategory[] {
   const usageData = generateMockUsageData(plan)
-  return insertWebhooksCategory(
-    insertMessagingCategory(
-      insertAvatarsCategory(
-        insertAuthCategory(
-          insertComputeCategory(
-            insertRealtimeCategory(
-              insertDatabasesCategory(
-                insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+  return insertStorageCategory(
+    insertWebhooksCategory(
+      insertMessagingCategory(
+        insertAvatarsCategory(
+          insertAuthCategory(
+            insertComputeCategory(
+              insertRealtimeCategory(
+                insertDatabasesCategory(
+                  insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+                ),
               ),
             ),
           ),

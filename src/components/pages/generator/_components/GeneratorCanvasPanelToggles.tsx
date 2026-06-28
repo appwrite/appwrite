@@ -14,6 +14,7 @@ type GeneratorCanvasPanelTogglesProps = {
   onToggleRight: () => void
   leftLabel?: string
   rightLabel?: string
+  showLeftToggle?: boolean
   className?: string
 }
 
@@ -24,11 +25,13 @@ export function GeneratorCanvasPanelToggles({
   onToggleRight,
   leftLabel = 'Toggle templates panel',
   rightLabel = 'Toggle properties panel',
+  showLeftToggle = true,
   className,
 }: GeneratorCanvasPanelTogglesProps) {
   return (
     <div className={cn('flex shrink-0 items-center gap-2', className)}>
-      <Button
+      {showLeftToggle ? (
+        <Button
         type="button"
         variant="outline"
         size="sm"
@@ -45,6 +48,7 @@ export function GeneratorCanvasPanelToggles({
         )}
         <span className="sr-only">{leftLabel}</span>
       </Button>
+      ) : null}
       <Button
         type="button"
         variant="outline"

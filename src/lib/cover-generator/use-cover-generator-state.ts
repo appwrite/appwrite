@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  getInitialCoverGeneratorEditorState,
-  migrateLegacyCoverGeneratorImageFields,
-  writeCoverGeneratorEditorState,
-  type CoverGeneratorEditorState,
-} from '@/lib/cover-generator/editor-storage'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { CoverTemplateCategoryFilter } from '@/lib/cover-generator/template-categories'
+import { createDefaultCoverData } from '@/lib/cover-generator/parse-params'
+import { resolveCoverEditorThemeId } from '@/lib/cover-generator/themes'
+import type { CoverRenderData } from '@/lib/cover-generator/types'
+import type { CoverImageFormat, CoverTemplateId } from '@/lib/cover-generator/constants'
+import type { CoverThemeId } from '@/lib/cover-generator/themes'
 import {
   clearCoverImageFieldsForTemplate,
   loadCoverImageFieldUrlsForTemplate,
@@ -15,36 +15,20 @@ import {
   revokeCoverImageObjectUrl,
   revokeCoverImageObjectUrls,
 } from '@/lib/cover-generator/editor-image-fields'
-import type { CoverTemplateCategoryFilter } from '@/lib/cover-generator/template-categories'
-import { createDefaultCoverData } from '@/lib/cover-generator/parse-params'
-import { resolveCoverEditorThemeId } from '@/lib/cover-generator/themes'
-import type { CoverRenderData } from '@/lib/cover-generator/types'
-import type { CoverImageFormat, CoverTemplateId } from '@/lib/cover-generator/constants'
-import { isCoverTemplateId } from '@/lib/cover-generator/constants'
-import type { CoverThemeId } from '@/lib/cover-generator/themes'
+import type { CoverGeneratorEditorState } from '@/lib/cover-generator/editor-storage'
 
 const PERSIST_DEBOUNCE_MS = 400
+
+type UseCoverGeneratorStateOptions = {
+  generationId?: string | null
+  onDocumentPersist?: (data: CoverRenderData) => void
+}
 
 function applyThemeToCoverData(
   data: CoverRenderData,
   theme: CoverThemeId,
 ): CoverRenderData {
   return { ...data, theme: resolveCoverEditorThemeId(theme) }
-}
-
-function applyThemeToTemplateData(
-  templateData: Partial<Record<CoverTemplateId, CoverRenderData>>,
-  theme: CoverThemeId,
-): Partial<Record<CoverTemplateId, CoverRenderData>> {
-  const resolvedTheme = resolveCoverEditorThemeId(theme)
-  const next: Partial<Record<CoverTemplateId, CoverRenderData>> = {}
-
-  for (const [templateId, entry] of Object.entries(templateData)) {
-    if (!entry || !isCoverTemplateId(templateId)) continue
-    next[templateId] = { ...entry, theme: resolvedTheme }
-  }
-
-  return next
 }
 
 function withTemplateDataEntry(
@@ -61,14 +45,29 @@ function withTemplateDataEntry(
   }
 }
 
-export function useCoverGeneratorState() {
-  const [state, setState] = useState<CoverGeneratorEditorState>(
-    getInitialCoverGeneratorEditorState,
-  )
+function createEmptyEditorState(
+  data: CoverRenderData = createDefaultCoverData(),
+): CoverGeneratorEditorState {
+  return {
+    data,
+    templateData: { [data.template]: data },
+    imageFields: {},
+    typeFilter: 'all',
+  }
+}
+
+export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = {}) {
+  const generationIdRef = useRef(options.generationId ?? null)
+  generationIdRef.current = options.generationId ?? null
+  const onDocumentPersistRef = useRef(options.onDocumentPersist)
+  onDocumentPersistRef.current = options.onDocumentPersist
+
+  const [state, setState] = useState<CoverGeneratorEditorState>(createEmptyEditorState)
   const [imagesHydrated, setImagesHydrated] = useState(false)
   const imageFieldsRef = useRef(state.imageFields)
   const dataRef = useRef(state.data)
   const previousTemplateRef = useRef(state.data.template)
+  const persistTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     imageFieldsRef.current = state.imageFields
@@ -78,29 +77,30 @@ export function useCoverGeneratorState() {
     dataRef.current = state.data
   }, [state.data])
 
-  useEffect(() => {
-    let cancelled = false
-    const templateId = state.data.template
+  const hydrateImages = async (templateId: CoverTemplateId, generationId: string | null) => {
+    await migrateLegacyCoverImageStorageKeys(templateId)
+    return loadCoverImageFieldUrlsForTemplate(templateId, generationId)
+  }
+
+  const loadCover = (data: CoverRenderData) => {
+    revokeCoverImageObjectUrls(imageFieldsRef.current)
+    const nextData = applyThemeToCoverData(data, data.theme)
+    setState(createEmptyEditorState(nextData))
+    setImagesHydrated(false)
+    previousTemplateRef.current = nextData.template
 
     void (async () => {
-      await migrateLegacyCoverGeneratorImageFields(templateId)
-      await migrateLegacyCoverImageStorageKeys(templateId)
-      if (cancelled) return
-
-      const imageFields = await loadCoverImageFieldUrlsForTemplate(templateId)
-      if (cancelled) return
-
-      setState((current) => ({
-        ...current,
+      const imageFields = await hydrateImages(
+        nextData.template,
+        generationIdRef.current,
+      )
+      setState(() => ({
+        ...createEmptyEditorState(nextData),
         imageFields,
       }))
       setImagesHydrated(true)
     })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  }
 
   useEffect(() => {
     if (!imagesHydrated) return
@@ -111,7 +111,7 @@ export function useCoverGeneratorState() {
     let cancelled = false
     const templateId = state.data.template
 
-    void loadCoverImageFieldUrlsForTemplate(templateId).then((imageFields) => {
+    void hydrateImages(templateId, generationIdRef.current).then((imageFields) => {
       if (cancelled) return
 
       setState((current) => {
@@ -137,34 +137,35 @@ export function useCoverGeneratorState() {
     if (!imagesHydrated) return
 
     const timeoutId = window.setTimeout(() => {
-      writeCoverGeneratorEditorState({
-        data: state.data,
-        templateData: state.templateData,
-        typeFilter: state.typeFilter,
-      })
+      onDocumentPersistRef.current?.(state.data)
     }, PERSIST_DEBOUNCE_MS)
+    persistTimerRef.current = timeoutId
 
-    return () => window.clearTimeout(timeoutId)
-  }, [state.data, state.templateData, state.typeFilter, imagesHydrated])
-
-  const setData = (next: CoverRenderData) => {
-    setState((current) => {
-      const resolvedTheme = resolveCoverEditorThemeId(next.theme)
-      const resolvedCurrentTheme = resolveCoverEditorThemeId(current.data.theme)
-      const nextData = applyThemeToCoverData(next, resolvedTheme)
-
-      if (resolvedTheme !== resolvedCurrentTheme) {
-        return {
-          ...current,
-          data: nextData,
-          templateData: {
-            ...applyThemeToTemplateData(current.templateData, resolvedTheme),
-            [nextData.template]: nextData,
-          },
-        }
+    return () => {
+      window.clearTimeout(timeoutId)
+      if (persistTimerRef.current === timeoutId) {
+        persistTimerRef.current = null
       }
+    }
+  }, [state.data, imagesHydrated])
 
-      return withTemplateDataEntry(current, nextData)
+  const cancelPersistDebounce = useCallback(() => {
+    if (persistTimerRef.current == null) return
+    window.clearTimeout(persistTimerRef.current)
+    persistTimerRef.current = null
+  }, [])
+
+  const flushPersist = useCallback(() => {
+    cancelPersistDebounce()
+    onDocumentPersistRef.current?.(dataRef.current)
+  }, [cancelPersistDebounce])
+
+  const setData = (
+    next: CoverRenderData | ((current: CoverRenderData) => CoverRenderData),
+  ) => {
+    setState((current) => {
+      const resolved = typeof next === 'function' ? next(current.data) : next
+      return withTemplateDataEntry(current, applyThemeToCoverData(resolved, resolved.theme))
     })
   }
 
@@ -172,26 +173,19 @@ export function useCoverGeneratorState() {
     setState((current) => {
       const resolvedTheme = resolveCoverEditorThemeId(theme)
       const nextData = applyThemeToCoverData(current.data, resolvedTheme)
-
-      return {
-        ...current,
-        data: nextData,
-        templateData: {
-          ...applyThemeToTemplateData(current.templateData, resolvedTheme),
-          [nextData.template]: nextData,
-        },
-      }
+      return withTemplateDataEntry(current, nextData)
     })
   }
 
   const setImageField = (key: string, value: string | undefined) => {
     void (async () => {
       const templateId = dataRef.current.template
+      const generationId = generationIdRef.current
       const previousUrl = imageFieldsRef.current[key]
 
       if (!value) {
         revokeCoverImageObjectUrl(previousUrl)
-        await removeCoverImageField(templateId, key)
+        await removeCoverImageField(templateId, key, generationId)
         setState((current) => {
           const nextFields = { ...current.imageFields }
           delete nextFields[key]
@@ -201,7 +195,12 @@ export function useCoverGeneratorState() {
       }
 
       if (value.startsWith('data:')) {
-        const objectUrl = await persistCoverImageDataUrl(templateId, key, value)
+        const objectUrl = await persistCoverImageDataUrl(
+          templateId,
+          key,
+          value,
+          generationId,
+        )
         revokeCoverImageObjectUrl(previousUrl)
         setState((current) => ({
           ...current,
@@ -219,7 +218,7 @@ export function useCoverGeneratorState() {
       }
 
       revokeCoverImageObjectUrl(previousUrl)
-      await removeCoverImageField(templateId, key)
+      await removeCoverImageField(templateId, key, generationId)
       setState((current) => {
         const nextFields = { ...current.imageFields }
         delete nextFields[key]
@@ -231,8 +230,14 @@ export function useCoverGeneratorState() {
   const setImageFile = (key: string, file: File) => {
     void (async () => {
       const templateId = dataRef.current.template
+      const generationId = generationIdRef.current
       const previousUrl = imageFieldsRef.current[key]
-      const objectUrl = await persistCoverImageUpload(templateId, key, file)
+      const objectUrl = await persistCoverImageUpload(
+        templateId,
+        key,
+        file,
+        generationId,
+      )
       revokeCoverImageObjectUrl(previousUrl)
       setState((current) => ({
         ...current,
@@ -245,46 +250,15 @@ export function useCoverGeneratorState() {
     setState((current) => ({ ...current, typeFilter: categoryFilter }))
   }
 
-  const selectTemplate = (template: CoverTemplateId) => {
-    setState((current) => {
-      if (template === current.data.template) return current
-
-      const templateData = {
-        ...current.templateData,
-        [current.data.template]: current.data,
-      }
-
-      const cached = templateData[template]
-      const sharedTheme = resolveCoverEditorThemeId(current.data.theme)
-      const nextData = cached
-        ? applyThemeToCoverData(cached, sharedTheme)
-        : createDefaultCoverData(template, sharedTheme, {
-            width: current.data.width,
-            height: current.data.height,
-            format: current.data.format,
-          })
-
-      revokeCoverImageObjectUrls(current.imageFields)
-
-      return {
-        ...current,
-        templateData,
-        data: nextData,
-        imageFields: {},
-      }
-    })
-  }
-
   const setFormat = (format: CoverImageFormat) => {
-    setState((current) =>
-      withTemplateDataEntry(current, { ...current.data, format }),
-    )
+    setState((current) => withTemplateDataEntry(current, { ...current.data, format }))
   }
 
   const resetCurrentTemplate = () => {
     void (async () => {
       const current = dataRef.current
       const templateId = current.template
+      const generationId = generationIdRef.current
       const nextData = createDefaultCoverData(
         templateId,
         resolveCoverEditorThemeId(current.theme),
@@ -296,7 +270,7 @@ export function useCoverGeneratorState() {
       )
 
       revokeCoverImageObjectUrls(imageFieldsRef.current)
-      await clearCoverImageFieldsForTemplate(templateId)
+      await clearCoverImageFieldsForTemplate(templateId, generationId)
 
       setState((currentState) =>
         withTemplateDataEntry(
@@ -319,11 +293,12 @@ export function useCoverGeneratorState() {
     setImageField,
     setImageFile,
     setCategoryFilter,
-    /** @deprecated Use setCategoryFilter */
     setTypeFilter: setCategoryFilter,
-    selectTemplate,
     setFormat,
     setTheme,
     resetCurrentTemplate,
+    loadCover,
+    flushPersist,
+    cancelPersistDebounce,
   }
 }

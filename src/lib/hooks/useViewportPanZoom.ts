@@ -6,11 +6,22 @@ export const VIEWPORT_PAN_ZOOM_MAX = 2
 export const VIEWPORT_PAN_ZOOM_STEP = 0.05
 export const VIEWPORT_PAN_ZOOM_WHEEL_STEP = 0.02
 
+export type ViewportContentSize = {
+  width: number
+  height: number
+}
+
 export type ViewportPanZoomOptions = {
   minZoom?: number
   maxZoom?: number
   zoomStep?: number
   wheelZoomStep?: number
+  /**
+   * `scaled` (default): zoom is applied via CSS scale on the panned layer.
+   * `sized`: zoom changes content layout size; pan layer only translates.
+   */
+  contentLayout?: 'scaled' | 'sized'
+  getContentSize?: (zoom: number) => ViewportContentSize
 }
 
 /**
@@ -21,6 +32,8 @@ export function useViewportPanZoom(options?: ViewportPanZoomOptions) {
   const maxZoom = options?.maxZoom ?? VIEWPORT_PAN_ZOOM_MAX
   const zoomStep = options?.zoomStep ?? VIEWPORT_PAN_ZOOM_STEP
   const wheelZoomStep = options?.wheelZoomStep ?? VIEWPORT_PAN_ZOOM_WHEEL_STEP
+  const contentLayout = options?.contentLayout ?? 'scaled'
+  const getContentSize = options?.getContentSize
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
@@ -42,6 +55,31 @@ export function useViewportPanZoom(options?: ViewportPanZoomOptions) {
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
+      if (contentLayout === 'sized' && getContentSize) {
+        const contentSize = getContentSize(zoom)
+        const contentLeft = (rect.width - contentSize.width) / 2 + pan.x
+        const contentTop = (rect.height - contentSize.height) / 2 + pan.y
+        const relX = mouseX - contentLeft
+        const relY = mouseY - contentTop
+        const contentFractionX =
+          contentSize.width > 0 ? relX / contentSize.width : 0
+        const contentFractionY =
+          contentSize.height > 0 ? relY / contentSize.height : 0
+
+        const nextContentSize = getContentSize(newZoom)
+        const nextRelX = contentFractionX * nextContentSize.width
+        const nextRelY = contentFractionY * nextContentSize.height
+        const nextContentLeft = mouseX - nextRelX
+        const nextContentTop = mouseY - nextRelY
+
+        setZoom(newZoom)
+        setPan({
+          x: nextContentLeft - (rect.width - nextContentSize.width) / 2,
+          y: nextContentTop - (rect.height - nextContentSize.height) / 2,
+        })
+        return
+      }
+
       const zoomPointX = (mouseX - pan.x) / zoom
       const zoomPointY = (mouseY - pan.y) / zoom
 
@@ -54,7 +92,7 @@ export function useViewportPanZoom(options?: ViewportPanZoomOptions) {
 
     canvas.addEventListener('wheel', handleWheel, { passive: false })
     return () => canvas.removeEventListener('wheel', handleWheel)
-  }, [zoom, pan, minZoom, maxZoom, wheelZoomStep])
+  }, [zoom, pan, minZoom, maxZoom, wheelZoomStep, contentLayout, getContentSize])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -84,12 +122,68 @@ export function useViewportPanZoom(options?: ViewportPanZoomOptions) {
   }, [])
 
   const zoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(maxZoom, prev + zoomStep))
-  }, [maxZoom, zoomStep])
+    const nextZoom = Math.min(maxZoom, zoom + zoomStep)
+    if (nextZoom === zoom) return
+
+    if (contentLayout === 'sized' && getContentSize && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect()
+      const centerX = rect.width / 2
+      const centerY = rect.height / 2
+      const contentSize = getContentSize(zoom)
+      const relX = centerX - (rect.width - contentSize.width) / 2 - pan.x
+      const relY = centerY - (rect.height - contentSize.height) / 2 - pan.y
+      const contentFractionX =
+        contentSize.width > 0 ? relX / contentSize.width : 0.5
+      const contentFractionY =
+        contentSize.height > 0 ? relY / contentSize.height : 0.5
+      const nextContentSize = getContentSize(nextZoom)
+
+      setPan({
+        x:
+          centerX -
+          contentFractionX * nextContentSize.width -
+          (rect.width - nextContentSize.width) / 2,
+        y:
+          centerY -
+          contentFractionY * nextContentSize.height -
+          (rect.height - nextContentSize.height) / 2,
+      })
+    }
+
+    setZoom(nextZoom)
+  }, [maxZoom, zoomStep, contentLayout, getContentSize, zoom, pan.x, pan.y])
 
   const zoomOut = useCallback(() => {
-    setZoom((prev) => Math.max(minZoom, prev - zoomStep))
-  }, [minZoom, zoomStep])
+    const nextZoom = Math.max(minZoom, zoom - zoomStep)
+    if (nextZoom === zoom) return
+
+    if (contentLayout === 'sized' && getContentSize && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect()
+      const centerX = rect.width / 2
+      const centerY = rect.height / 2
+      const contentSize = getContentSize(zoom)
+      const relX = centerX - (rect.width - contentSize.width) / 2 - pan.x
+      const relY = centerY - (rect.height - contentSize.height) / 2 - pan.y
+      const contentFractionX =
+        contentSize.width > 0 ? relX / contentSize.width : 0.5
+      const contentFractionY =
+        contentSize.height > 0 ? relY / contentSize.height : 0.5
+      const nextContentSize = getContentSize(nextZoom)
+
+      setPan({
+        x:
+          centerX -
+          contentFractionX * nextContentSize.width -
+          (rect.width - nextContentSize.width) / 2,
+        y:
+          centerY -
+          contentFractionY * nextContentSize.height -
+          (rect.height - nextContentSize.height) / 2,
+      })
+    }
+
+    setZoom(nextZoom)
+  }, [minZoom, zoomStep, contentLayout, getContentSize, zoom, pan.x, pan.y])
 
   const resetView = useCallback(() => {
     setZoom(1)

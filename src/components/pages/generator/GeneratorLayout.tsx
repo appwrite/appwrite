@@ -5,6 +5,8 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { GeneratorApiDocsDrawer } from '@/components/pages/generator/_components/GeneratorApiDocsDrawer'
 import { GeneratorCanvasPanelToggles } from '@/components/pages/generator/_components/GeneratorCanvasPanelToggles'
+import { GeneratorDocumentMenu } from '@/components/pages/generator/_components/GeneratorDocumentMenu'
+import { GeneratorEditorTitle } from '@/components/pages/generator/_components/GeneratorEditorTitle'
 import {
   GeneratorLayoutProvider,
   useGeneratorLayout,
@@ -28,6 +30,8 @@ function GeneratorLayoutContent() {
     setApiDocsOpen,
     coverExportData,
     diagramDocument,
+    documentChrome,
+    editorTitle,
     leftPanelOpen,
     rightPanelOpen,
     toggleLeftPanel,
@@ -43,19 +47,34 @@ function GeneratorLayoutContent() {
     <>
       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         <ServiceHeader
-          title="Generator"
+          title={
+            editorTitle ? (
+              <GeneratorEditorTitle
+                name={editorTitle.name}
+                maxLength={editorTitle.maxLength}
+                isSaving={editorTitle.isSaving}
+                onChange={editorTitle.onChange}
+              />
+            ) : (
+              'Generator'
+            )
+          }
           tabs={tabs}
           activeTab={activeTab}
           titleRightContent={
             <div className="flex items-center gap-2">
-              <GeneratorCanvasPanelToggles
-                leftOpen={leftPanelOpen}
-                rightOpen={rightPanelOpen}
-                onToggleLeft={toggleLeftPanel}
-                onToggleRight={toggleRightPanel}
-                leftLabel="Toggle templates panel"
-                rightLabel="Toggle properties panel"
-              />
+              <GeneratorDocumentMenu />
+              {documentChrome?.phase === 'editor' ? (
+                <GeneratorCanvasPanelToggles
+                  leftOpen={leftPanelOpen}
+                  rightOpen={rightPanelOpen}
+                  onToggleLeft={toggleLeftPanel}
+                  onToggleRight={toggleRightPanel}
+                  leftLabel={documentChrome.leftPanelLabel}
+                  rightLabel="Toggle properties panel"
+                  showLeftToggle={documentChrome.showLeftPanelToggle}
+                />
+              ) : null}
               <Button
                 type="button"
                 variant="outline"

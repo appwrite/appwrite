@@ -4,14 +4,14 @@ import { normalizeDiagramNode } from '@/lib/diagram-generator/node-normalize'
 import { createDefaultDiagramDocument } from '@/lib/diagram-generator/templates'
 import type { DiagramDocument, DiagramEdge, DiagramNode } from '@/lib/diagram-generator/types'
 import { resolveCoverEditorThemeId } from '@/lib/cover-generator/themes'
-import { resolveCoverSizePresetKey } from '@/lib/cover-generator/constants'
+import { resolveDiagramSizePresetKey } from '@/lib/diagram-generator/constants'
 
 type StoredDiagramState = {
   version: 1
   document: DiagramDocument
 }
 
-function normalizeDocument(document: DiagramDocument): DiagramDocument {
+export function normalizeDiagramDocument(document: DiagramDocument): DiagramDocument {
   return {
     ...document,
     theme: resolveCoverEditorThemeId(document.theme),
@@ -37,7 +37,7 @@ export function readDiagramGeneratorState(): DiagramDocument {
       return createDefaultDiagramDocument()
     }
 
-    return normalizeDocument(parsed.document)
+    return normalizeDiagramDocument(parsed.document)
   } catch {
     return createDefaultDiagramDocument()
   }
@@ -48,7 +48,7 @@ export function writeDiagramGeneratorState(document: DiagramDocument): void {
 
   const payload: StoredDiagramState = {
     version: 1,
-    document: normalizeDocument(document),
+    document: normalizeDiagramDocument(document),
   }
 
   window.localStorage.setItem(DIAGRAM_STORAGE_KEY, JSON.stringify(payload))
@@ -69,7 +69,7 @@ export function resolveDiagramCanvasSize(width: number, height: number): {
     return { width: Math.round(width), height: Math.round(height) }
   }
 
-  return resolveCoverSizePresetKey('og')
+  return resolveDiagramSizePresetKey('og')
 }
 
 export function getDiagramDisplayHeight(width: number, height: number): number {

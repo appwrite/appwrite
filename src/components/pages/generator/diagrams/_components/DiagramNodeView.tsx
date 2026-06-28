@@ -139,7 +139,7 @@ export function DiagramNodeView({
         }}
       >
         <p
-          className="max-w-full text-balance text-[28px] font-bold leading-tight tracking-tight"
+          className="font-aeonik-pro max-w-full text-balance text-[28px] font-normal leading-tight tracking-[-0.022em]"
           style={{ color: brand.foreground }}
         >
           {node.label}

@@ -13,7 +13,7 @@ import type { DiagramEdgeStrokeTone } from '@/lib/diagram-generator/types'
 type DiagramEdgesLayerProps = {
   paths: DiagramEdgePath[]
   brand: CoverBrandTheme
-  layer: 'strokes' | 'labels' | 'hit'
+  layer: 'strokes' | 'arrowheads' | 'labels' | 'hit'
   selectedEdgeId?: string | null
   onEdgeClick?: (edgeId: string) => void
 }
@@ -66,6 +66,46 @@ export function DiagramEdgesLayer({
             ) : null}
           </g>
         ))}
+      </>
+    )
+  }
+
+  if (layer === 'arrowheads') {
+    return (
+      <>
+        {paths.map((path) => {
+          const selected = selectedEdgeId === path.id
+          const stroke = getDiagramEdgeStroke(
+            path.strokeTone as DiagramEdgeStrokeTone,
+            brand,
+            selected,
+          )
+          const strokeOpacity = getDiagramEdgeOpacity(path.lineStyle, path.strokeTone, {
+            selected,
+            part: 'stroke',
+          })
+
+          return (
+            <g key={path.id} pointerEvents="none">
+              {path.forwardArrow ? (
+                <path
+                  d={buildDiagramEdgeArrowheadPath(path.forwardArrow)}
+                  fill={stroke}
+                  stroke="none"
+                  opacity={strokeOpacity}
+                />
+              ) : null}
+              {path.backwardArrow ? (
+                <path
+                  d={buildDiagramEdgeArrowheadPath(path.backwardArrow)}
+                  fill={stroke}
+                  stroke="none"
+                  opacity={strokeOpacity}
+                />
+              ) : null}
+            </g>
+          )
+        })}
       </>
     )
   }
@@ -133,27 +173,12 @@ export function DiagramEdgesLayer({
               fill="none"
               stroke={stroke}
               strokeWidth={selected ? 2.5 : 2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              strokeLinecap="butt"
+              strokeLinejoin="miter"
+              strokeMiterlimit={4}
               strokeDasharray={getDiagramEdgeDash(path.lineStyle)}
               opacity={strokeOpacity}
             />
-            {path.forwardArrow ? (
-              <path
-                d={buildDiagramEdgeArrowheadPath(path.forwardArrow)}
-                fill={stroke}
-                stroke="none"
-                opacity={strokeOpacity}
-              />
-            ) : null}
-            {path.backwardArrow ? (
-              <path
-                d={buildDiagramEdgeArrowheadPath(path.backwardArrow)}
-                fill={stroke}
-                stroke="none"
-                opacity={strokeOpacity}
-              />
-            ) : null}
           </g>
         )
       })}

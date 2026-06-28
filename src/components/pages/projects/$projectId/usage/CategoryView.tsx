@@ -9,6 +9,7 @@ import { AvatarsSection } from './AvatarsSection'
 import { MessagingSection } from './MessagingSection'
 import { WebhooksSection } from './WebhooksSection'
 import { ComputeSection } from './ComputeSection'
+import { StorageSection } from './StorageSection'
 import { findUsageCategory, getUsageCategories } from './usage-nav'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 
@@ -116,6 +117,16 @@ export function UsageCategoryView({
   if (categoryId === 'webhooks') {
     return (
       <WebhooksSection
+        projectId={projectId}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+      />
+    )
+  }
+
+  if (categoryId === 'storage') {
+    return (
+      <StorageSection
         projectId={projectId}
         dateRange={dateRange}
         chartInterval={chartInterval}

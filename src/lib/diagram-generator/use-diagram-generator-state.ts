@@ -20,26 +20,39 @@ import {
   snapDiagramValue,
 } from '@/lib/diagram-generator/templates'
 import {
-  readDiagramGeneratorState,
-  writeDiagramGeneratorState,
+  normalizeDiagramDocument,
 } from '@/lib/diagram-generator/storage'
 import { DIAGRAM_NODE_DEFAULTS } from '@/lib/diagram-generator/constants'
 import { clampDiagramNodeSize } from '@/lib/diagram-generator/node-size'
 import { normalizeDiagramNode } from '@/lib/diagram-generator/node-normalize'
 import { reorderDiagramNodesInDisplayOrder } from '@/lib/diagram-generator/node-layers'
 import { normalizeDiagramEdge } from '@/lib/diagram-generator/edge-appearance'
-import { selectDiagramNode, sanitizeDiagramSelection } from '@/lib/diagram-generator/selection'
+import { selectDiagramNode, sanitizeDiagramSelection, selectDiagramNodes } from '@/lib/diagram-generator/selection'
+import {
+  buildDiagramClipboardPayload,
+  pasteDiagramClipboardPayload,
+  type DiagramClipboardPayload,
+} from '@/lib/diagram-generator/diagram-clipboard'
 import { useDiagramDocumentHistory } from '@/lib/diagram-generator/use-diagram-document-history'
 
 const PERSIST_DEBOUNCE_MS = 400
 
-export function useDiagramGeneratorState() {
+type UseDiagramGeneratorStateOptions = {
+  onDocumentPersist?: (document: DiagramDocument) => void
+}
+
+export function useDiagramGeneratorState(options: UseDiagramGeneratorStateOptions = {}) {
+  const onDocumentPersistRef = useRef(options.onDocumentPersist)
+  onDocumentPersistRef.current = options.onDocumentPersist
+
   const [document, setDocumentState] = useState<DiagramDocument>(() =>
-    readDiagramGeneratorState(),
+    createDefaultDiagramDocument(),
   )
   const [selection, setSelection] = useState<DiagramSelection>({ type: 'none' })
   const [connectDraft, setConnectDraft] = useState<DiagramConnectDraft | null>(null)
   const persistTimerRef = useRef<number | null>(null)
+  const clipboardRef = useRef<DiagramClipboardPayload | null>(null)
+  const pasteGenerationRef = useRef(0)
 
   const {
     canUndo,
@@ -56,12 +69,14 @@ export function useDiagramGeneratorState() {
   } = useDiagramDocumentHistory(document)
 
   useEffect(() => {
+    if (!onDocumentPersistRef.current) return
+
     if (persistTimerRef.current) {
       window.clearTimeout(persistTimerRef.current)
     }
 
     persistTimerRef.current = window.setTimeout(() => {
-      writeDiagramGeneratorState(document)
+      onDocumentPersistRef.current?.(document)
     }, PERSIST_DEBOUNCE_MS)
 
     return () => {
@@ -74,14 +89,16 @@ export function useDiagramGeneratorState() {
   const updateDocument = useCallback(
     (patch: Partial<DiagramDocument>) => {
       beginHistoryGroup()
-      setDocumentState((current) => ({ ...current, ...patch }))
+      setDocumentState((current) =>
+        normalizeDiagramDocument({ ...current, ...patch }),
+      )
       scheduleCoalescedCommit()
     },
     [beginHistoryGroup, scheduleCoalescedCommit],
   )
 
   const applyDocument = useCallback((next: DiagramDocument) => {
-    setDocumentState(next)
+    setDocumentState(normalizeDiagramDocument(next))
     finishApplyingHistory()
   }, [finishApplyingHistory])
 
@@ -109,12 +126,16 @@ export function useDiagramGeneratorState() {
 
   const applyTemplate = useCallback((templateId: DiagramTemplateId) => {
     recordUndoPoint()
-    setDocumentState((current) => ({
-      ...createDiagramFromTemplate(templateId),
-      theme: current.theme,
-    }))
+    setDocumentState((current) =>
+      normalizeDiagramDocument({
+        ...createDiagramFromTemplate(templateId),
+        theme: current.theme,
+      }),
+    )
     setSelection({ type: 'none' })
     setConnectDraft(null)
+    clipboardRef.current = null
+    pasteGenerationRef.current = 0
     clearHistory()
   }, [clearHistory, recordUndoPoint])
 
@@ -313,6 +334,44 @@ export function useDiagramGeneratorState() {
     )
   }, [recordUndoPoint])
 
+  const copySelection = useCallback(() => {
+    const payload = buildDiagramClipboardPayload(document, selection)
+    if (!payload) return false
+
+    clipboardRef.current = payload
+    pasteGenerationRef.current = 0
+    return true
+  }, [document, selection])
+
+  const pasteClipboard = useCallback(() => {
+    const payload = clipboardRef.current
+    if (!payload || payload.nodes.length === 0) return false
+
+    pasteGenerationRef.current += 1
+    const pasted = pasteDiagramClipboardPayload(payload, pasteGenerationRef.current)
+
+    recordUndoPoint()
+    setDocumentState((current) => ({
+      ...current,
+      nodes: [...current.nodes, ...pasted.nodes],
+      edges: [...current.edges, ...pasted.edges],
+    }))
+    setSelection(selectDiagramNodes(pasted.selectedNodeIds))
+    setConnectDraft(null)
+    return true
+  }, [recordUndoPoint])
+
+  const cutSelection = useCallback(() => {
+    const nodeIds = buildDiagramClipboardPayload(document, selection)?.nodes.map(
+      (node) => node.id,
+    )
+    if (!nodeIds?.length) return false
+    if (!copySelection()) return false
+
+    removeNodes(nodeIds)
+    return true
+  }, [copySelection, document, removeNodes, selection])
+
   const handleNodeClick = useCallback(
     (
       nodeId: string,
@@ -397,11 +456,32 @@ export function useDiagramGeneratorState() {
     }))
   }, [recordUndoPoint])
 
+  const loadDocument = useCallback((next: DiagramDocument) => {
+    cancelCoalescedCommit()
+    setDocumentState(normalizeDiagramDocument(next))
+    setSelection({ type: 'none' })
+    setConnectDraft(null)
+    clipboardRef.current = null
+    pasteGenerationRef.current = 0
+    clearHistory()
+    finishApplyingHistory()
+  }, [cancelCoalescedCommit, clearHistory, finishApplyingHistory])
+
+  const flushPersist = useCallback(() => {
+    if (persistTimerRef.current) {
+      window.clearTimeout(persistTimerRef.current)
+      persistTimerRef.current = null
+    }
+    onDocumentPersistRef.current?.(document)
+  }, [document])
+
   const resetDocument = useCallback(() => {
     recordUndoPoint()
     setDocumentState(createDefaultDiagramDocument())
     setSelection({ type: 'none' })
     setConnectDraft(null)
+    clipboardRef.current = null
+    pasteGenerationRef.current = 0
     clearHistory()
   }, [clearHistory, recordUndoPoint])
 
@@ -425,6 +505,8 @@ export function useDiagramGeneratorState() {
     canRedo,
     undo,
     redo,
+    loadDocument,
+    flushPersist,
     setDocument: updateDocument,
     setSelection,
     cancelConnectDraft,
@@ -441,6 +523,9 @@ export function useDiagramGeneratorState() {
     reorderNodes,
     updateEdge,
     removeEdge,
+    copySelection,
+    pasteClipboard,
+    cutSelection,
     handleNodeClick,
     handlePortClick,
     completePortConnect,

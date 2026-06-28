@@ -11,48 +11,11 @@ import {
 import { CoverThemeSelect } from '@/components/pages/generator/_components/CoverThemeSelect'
 import { Button } from '@/components/ui/button'
 import { DIAGRAM_NODE_KIND_LABELS } from '@/lib/diagram-generator/constants'
+import { DIAGRAM_TEMPLATE_CATALOG } from '@/lib/diagram-generator/diagram-template-catalog'
 import type { DiagramTemplateId } from '@/lib/diagram-generator/types'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
 
-const DIAGRAM_TEMPLATES: Array<{ id: DiagramTemplateId; label: string; description: string }> =
-  [
-    { id: 'blank', label: 'Blank', description: 'Start from an empty canvas' },
-    {
-      id: 'appwrite-platform',
-      label: 'Appwrite platform',
-      description: 'Clients, API, and core project services',
-    },
-    {
-      id: 'appwrite-auth',
-      label: 'Appwrite auth',
-      description: 'Sign in, sessions, and users table',
-    },
-    {
-      id: 'appwrite-storage',
-      label: 'Appwrite storage',
-      description: 'Uploads, functions, and file metadata',
-    },
-    {
-      id: 'appwrite-messaging',
-      label: 'Appwrite messaging',
-      description: 'Function triggers to email and push',
-    },
-    {
-      id: 'three-tier',
-      label: 'Three-tier',
-      description: 'Client, API, and database',
-    },
-    {
-      id: 'serverless',
-      label: 'Serverless',
-      description: 'Functions with data and storage',
-    },
-    {
-      id: 'realtime-flow',
-      label: 'Realtime',
-      description: 'Subscribe and event flow',
-    },
-  ]
+const DIAGRAM_TEMPLATES = DIAGRAM_TEMPLATE_CATALOG
 
 const ELEMENT_ITEMS = [
   { kind: 'service' as const, label: DIAGRAM_NODE_KIND_LABELS.service, icon: Box },

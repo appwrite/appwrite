@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CoverEditorForm } from '@/components/pages/generator/_components/CoverEditorForm'
+import { CoverThemeSelect } from '@/components/pages/generator/_components/CoverThemeSelect'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
+import type { CoverTheme } from '@/lib/cover-generator/constants'
 import { getCoverTemplateDefinition } from '@/lib/cover-generator/template-config'
 
 type CoverPropertiesPanelProps = {
@@ -19,6 +21,7 @@ type CoverPropertiesPanelProps = {
   imageFields: Record<string, string | undefined>
   apiUrl: string
   onChange: (next: CoverRenderData) => void
+  onThemeChange: (theme: CoverTheme) => void
   onImageFieldChange: (key: string, value: string | undefined) => void
   onImageFileUpload: (key: string, file: File) => void
   onResetTemplate: () => void
@@ -29,6 +32,7 @@ export function CoverPropertiesPanel({
   imageFields,
   apiUrl,
   onChange,
+  onThemeChange,
   onImageFieldChange,
   onImageFileUpload,
   onResetTemplate,
@@ -57,6 +61,9 @@ export function CoverPropertiesPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="mb-4">
+          <CoverThemeSelect theme={data.theme} onThemeChange={onThemeChange} />
+        </div>
         <CoverEditorForm
           data={data}
           imageFields={imageFields}

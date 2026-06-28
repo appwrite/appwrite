@@ -40,7 +40,7 @@ import { Route as ProductsProductIdRouteImport } from './routes/products.$produc
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as IntegrationsSlugRouteImport } from './routes/integrations.$slug'
-import { Route as GeneratorDiagramsRouteImport } from './routes/generator/diagrams'
+import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
 import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
@@ -62,9 +62,11 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
+import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as ThreadsAuthorsAuthorIdRouteImport } from './routes/threads.authors.$authorId'
+import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
 import { Route as BlogPostSlugRouteImport } from './routes/blog.post.$slug'
 import { Route as BlogCategoryCategoryRouteImport } from './routes/blog.category.$category'
@@ -472,9 +474,9 @@ const IntegrationsSlugRoute = IntegrationsSlugRouteImport.update({
   path: '/integrations/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GeneratorDiagramsRoute = GeneratorDiagramsRouteImport.update({
-  id: '/diagrams',
-  path: '/diagrams',
+const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
+  id: '/$generationId',
+  path: '/$generationId',
   getParentRoute: () => GeneratorRoute,
 } as any)
 const DomainsContinueRoute = DomainsContinueRouteImport.update({
@@ -583,6 +585,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   path: '/hello',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GeneratorDiagramsIndexRoute = GeneratorDiagramsIndexRouteImport.update({
+  id: '/diagrams/',
+  path: '/diagrams/',
+  getParentRoute: () => GeneratorRoute,
+} as any)
 const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
   id: '/partners/',
   path: '/partners/',
@@ -598,6 +605,12 @@ const ThreadsAuthorsAuthorIdRoute = ThreadsAuthorsAuthorIdRouteImport.update({
   path: '/threads/authors/$authorId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GeneratorDiagramsGenerationIdRoute =
+  GeneratorDiagramsGenerationIdRouteImport.update({
+    id: '/diagrams/$generationId',
+    path: '/diagrams/$generationId',
+    getParentRoute: () => GeneratorRoute,
+  } as any)
 const ChangelogEntryEntryRoute = ChangelogEntryEntryRouteImport.update({
   id: '/changelog/entry/$entry',
   path: '/changelog/entry/$entry',
@@ -2299,7 +2312,7 @@ export interface FileRoutesByFullPath {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
-  '/generator/diagrams': typeof GeneratorDiagramsRoute
+  '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
@@ -2329,9 +2342,11 @@ export interface FileRoutesByFullPath {
   '/blog/category/$category': typeof BlogCategoryCategoryRoute
   '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
+  '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account/': typeof PublicAccountIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
+  '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2605,7 +2620,7 @@ export interface FileRoutesByTo {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
-  '/generator/diagrams': typeof GeneratorDiagramsRoute
+  '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
@@ -2633,9 +2648,11 @@ export interface FileRoutesByTo {
   '/blog/category/$category': typeof BlogCategoryCategoryRoute
   '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
+  '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/account': typeof PublicAccountIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
+  '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -2882,7 +2899,7 @@ export interface FileRoutesById {
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
-  '/generator/diagrams': typeof GeneratorDiagramsRoute
+  '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
@@ -2912,9 +2929,11 @@ export interface FileRoutesById {
   '/blog/category/$category': typeof BlogCategoryCategoryRoute
   '/blog/post/$slug': typeof BlogPostSlugRoute
   '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
+  '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
+  '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
@@ -3193,7 +3212,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
-    | '/generator/diagrams'
+    | '/generator/$generationId'
     | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
@@ -3223,9 +3242,11 @@ export interface FileRouteTypes {
     | '/blog/category/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
+    | '/generator/diagrams/$generationId'
     | '/threads/authors/$authorId'
     | '/account/'
     | '/docs/partners'
+    | '/generator/diagrams'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
@@ -3499,7 +3520,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
-    | '/generator/diagrams'
+    | '/generator/$generationId'
     | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
@@ -3527,9 +3548,11 @@ export interface FileRouteTypes {
     | '/blog/category/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
+    | '/generator/diagrams/$generationId'
     | '/threads/authors/$authorId'
     | '/account'
     | '/docs/partners'
+    | '/generator/diagrams'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
@@ -3775,7 +3798,7 @@ export interface FileRouteTypes {
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
-    | '/generator/diagrams'
+    | '/generator/$generationId'
     | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
@@ -3805,9 +3828,11 @@ export interface FileRouteTypes {
     | '/blog/category/$category'
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
+    | '/generator/diagrams/$generationId'
     | '/threads/authors/$authorId'
     | '/_public/account/'
     | '/docs/partners/'
+    | '/generator/diagrams/'
     | '/_api/generator/cover/encode'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
@@ -4308,11 +4333,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntegrationsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/generator/diagrams': {
-      id: '/generator/diagrams'
-      path: '/diagrams'
-      fullPath: '/generator/diagrams'
-      preLoaderRoute: typeof GeneratorDiagramsRouteImport
+    '/generator/$generationId': {
+      id: '/generator/$generationId'
+      path: '/$generationId'
+      fullPath: '/generator/$generationId'
+      preLoaderRoute: typeof GeneratorGenerationIdRouteImport
       parentRoute: typeof GeneratorRoute
     }
     '/domains/continue': {
@@ -4462,6 +4487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/generator/diagrams/': {
+      id: '/generator/diagrams/'
+      path: '/diagrams'
+      fullPath: '/generator/diagrams'
+      preLoaderRoute: typeof GeneratorDiagramsIndexRouteImport
+      parentRoute: typeof GeneratorRoute
+    }
     '/docs/partners/': {
       id: '/docs/partners/'
       path: '/partners'
@@ -4482,6 +4514,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/threads/authors/$authorId'
       preLoaderRoute: typeof ThreadsAuthorsAuthorIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/generator/diagrams/$generationId': {
+      id: '/generator/diagrams/$generationId'
+      path: '/diagrams/$generationId'
+      fullPath: '/generator/diagrams/$generationId'
+      preLoaderRoute: typeof GeneratorDiagramsGenerationIdRouteImport
+      parentRoute: typeof GeneratorRoute
     }
     '/changelog/entry/$entry': {
       id: '/changelog/entry/$entry'
@@ -7652,13 +7691,17 @@ const DomainsRouteWithChildren =
   DomainsRoute._addFileChildren(DomainsRouteChildren)
 
 interface GeneratorRouteChildren {
-  GeneratorDiagramsRoute: typeof GeneratorDiagramsRoute
+  GeneratorGenerationIdRoute: typeof GeneratorGenerationIdRoute
   GeneratorIndexRoute: typeof GeneratorIndexRoute
+  GeneratorDiagramsGenerationIdRoute: typeof GeneratorDiagramsGenerationIdRoute
+  GeneratorDiagramsIndexRoute: typeof GeneratorDiagramsIndexRoute
 }
 
 const GeneratorRouteChildren: GeneratorRouteChildren = {
-  GeneratorDiagramsRoute: GeneratorDiagramsRoute,
+  GeneratorGenerationIdRoute: GeneratorGenerationIdRoute,
   GeneratorIndexRoute: GeneratorIndexRoute,
+  GeneratorDiagramsGenerationIdRoute: GeneratorDiagramsGenerationIdRoute,
+  GeneratorDiagramsIndexRoute: GeneratorDiagramsIndexRoute,
 }
 
 const GeneratorRouteWithChildren = GeneratorRoute._addFileChildren(

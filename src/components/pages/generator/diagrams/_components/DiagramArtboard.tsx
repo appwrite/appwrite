@@ -118,6 +118,21 @@ export function DiagramArtboard({
       )}
       style={{ width, height }}
       onPointerDown={interactive ? onCanvasPointerDown : undefined}
+      onMouseDown={
+        interactive
+          ? (event) => {
+              const target = event.target as HTMLElement
+              if (
+                target.closest(
+                  '[data-diagram-node],[data-diagram-edge],[data-diagram-port],[data-diagram-resize]',
+                )
+              ) {
+                return
+              }
+              event.stopPropagation()
+            }
+          : undefined
+      }
       onPointerMove={interactive ? onPointerMove : undefined}
       onClick={
         interactive
@@ -130,6 +145,7 @@ export function DiagramArtboard({
               ) {
                 return
               }
+              event.stopPropagation()
               onCanvasClick?.()
             }
           : undefined
@@ -254,6 +270,22 @@ export function DiagramArtboard({
           )
         })}
       </div>
+
+      <svg
+        className="pointer-events-none absolute inset-0 z-[11]"
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        overflow={interactive ? 'visible' : 'hidden'}
+        aria-hidden
+      >
+        <DiagramEdgesLayer
+          paths={edgePaths}
+          brand={brand}
+          layer="arrowheads"
+          selectedEdgeId={selection?.type === 'edge' ? selection.id : null}
+        />
+      </svg>
 
       {interactive && alignGuides.length > 0 ? (
         <DiagramAlignGuidesLayer

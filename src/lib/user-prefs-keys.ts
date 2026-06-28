@@ -2142,6 +2142,18 @@ export function clearLegacyCliShellHeightLocalStorage(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Diagram generator: saved generations (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.diagramGenerator.generations` - JSON SavedDiagramGeneration[] */
+export {
+  USER_PREFS_KEY_DIAGRAM_GENERATIONS,
+  MAX_SAVED_DIAGRAM_GENERATIONS,
+  MAX_SAVED_DIAGRAM_GENERATION_NAME_LENGTH,
+  type SavedDiagramGeneration,
+} from '@/lib/diagram-generator/generation-prefs'
+
+// ---------------------------------------------------------------------------
 // API Explorer panel layouts (account prefs)
 // ---------------------------------------------------------------------------
 

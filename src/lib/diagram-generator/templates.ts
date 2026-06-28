@@ -1,6 +1,4 @@
 import {
-  DIAGRAM_DEFAULT_HEIGHT,
-  DIAGRAM_DEFAULT_WIDTH,
   DIAGRAM_NODE_DEFAULTS,
   DIAGRAM_NODE_KIND_LABELS,
   DIAGRAM_SNAP_GRID,
@@ -10,103 +8,26 @@ import type {
   DiagramDocument,
   DiagramEdge,
   DiagramNode,
-  DiagramNodeKind,
   DiagramTemplateId,
 } from '@/lib/diagram-generator/types'
-import {
-  pickDiagramAnchorSides,
-} from '@/lib/diagram-generator/edge-paths'
+import { createAppwriteArchitectureDiagram } from '@/lib/diagram-generator/appwrite-architecture-template'
 import { getDefaultDiagramEdgeAppearance } from '@/lib/diagram-generator/edge-appearance'
 import type { DiagramEdgeAppearance } from '@/lib/diagram-generator/edge-appearance'
-import { getDiagramNodeCreateDefaults } from '@/lib/diagram-generator/node-normalize'
-import { DEFAULT_COVER_THEME_ID } from '@/lib/cover-generator/themes'
 import { formatCoverLucideIconValue } from '@/lib/cover-generator/lucide-icon-utils'
 
-function createId(): string {
-  return crypto.randomUUID()
-}
+import {
+  createDefaultDiagramDocument,
+  createDiagramEdge,
+  createDiagramNode,
+  snapDiagramValue,
+} from '@/lib/diagram-generator/diagram-factory'
 
-export function snapDiagramValue(value: number): number {
-  return Math.round(value / DIAGRAM_SNAP_GRID) * DIAGRAM_SNAP_GRID
-}
-
-export function createDefaultDiagramDocument(): DiagramDocument {
-  return {
-    title: 'Untitled diagram',
-    theme: DEFAULT_COVER_THEME_ID,
-    width: DIAGRAM_DEFAULT_WIDTH,
-    height: DIAGRAM_DEFAULT_HEIGHT,
-    format: 'png',
-    nodes: [],
-    edges: [],
-  }
-}
-
-export function createDiagramNode(
-  kind: DiagramNodeKind,
-  position: { x: number; y: number },
-  overrides?: Partial<
-    Pick<
-      DiagramNode,
-      | 'label'
-      | 'subtitle'
-      | 'width'
-      | 'height'
-      | 'iconSrc'
-      | 'imageSrc'
-      | 'focusX'
-      | 'focusY'
-      | 'tableHeaders'
-      | 'tableRows'
-    >
-  >,
-): DiagramNode {
-  const defaults = DIAGRAM_NODE_DEFAULTS[kind]
-  const kindDefaults = getDiagramNodeCreateDefaults(kind)
-
-  return {
-    id: createId(),
-    kind,
-    x: snapDiagramValue(position.x),
-    y: snapDiagramValue(position.y),
-    width: overrides?.width ?? defaults.width,
-    height: overrides?.height ?? defaults.height,
-    label: overrides?.label ?? kindDefaults.label ?? DIAGRAM_NODE_KIND_LABELS[kind],
-    subtitle: overrides?.subtitle,
-    iconSrc: overrides?.iconSrc ?? kindDefaults.iconSrc,
-    imageSrc: overrides?.imageSrc ?? kindDefaults.imageSrc,
-    focusX: overrides?.focusX ?? kindDefaults.focusX,
-    focusY: overrides?.focusY ?? kindDefaults.focusY,
-    tableHeaders: overrides?.tableHeaders ?? kindDefaults.tableHeaders,
-    tableRows: overrides?.tableRows ?? kindDefaults.tableRows,
-  }
-}
-
-export function createDiagramEdge(
-  fromNode: DiagramNode,
-  toNode: DiagramNode,
-  overrides?: Partial<
-    Pick<
-      DiagramEdge,
-      'lineStyle' | 'arrow' | 'strokeTone' | 'label' | 'fromSide' | 'toSide'
-    >
-  >,
-): DiagramEdge {
-  const sides = pickDiagramAnchorSides(fromNode, toNode)
-  const defaults = getDefaultDiagramEdgeAppearance()
-
-  return {
-    id: createId(),
-    fromNodeId: fromNode.id,
-    toNodeId: toNode.id,
-    fromSide: overrides?.fromSide ?? sides.fromSide,
-    toSide: overrides?.toSide ?? sides.toSide,
-    lineStyle: overrides?.lineStyle ?? defaults.lineStyle,
-    arrow: overrides?.arrow ?? defaults.arrow,
-    strokeTone: overrides?.strokeTone ?? defaults.strokeTone,
-    label: overrides?.label,
-  }
-}
+export {
+  createDefaultDiagramDocument,
+  createDiagramEdge,
+  createDiagramNode,
+  snapDiagramValue,
+} from '@/lib/diagram-generator/diagram-factory'
 
 type DiagramEdgePresetId =
   | 'request'
@@ -161,7 +82,11 @@ function diagramElement(
   })
 }
 
-const DIAGRAM_TITLE_GAP = 40
+const DIAGRAM_TITLE_STACK_GAP = 16
+/** Space between the title block and the diagram content or group below. */
+const DIAGRAM_TITLE_TO_CONTENT_GAP = 72
+/** Legacy offset used while building template node coordinates. */
+const DIAGRAM_TITLE_GAP = DIAGRAM_TITLE_TO_CONTENT_GAP
 
 function diagramTitle(
   label: string,
@@ -235,13 +160,14 @@ function fitNodesToArtboard(
   artboardWidth: number,
   artboardHeight: number,
   margin = DIAGRAM_TEMPLATE_MARGIN,
+  reservedTop = 0,
 ): DiagramNode[] {
   if (nodes.length === 0) return nodes
 
   const { minX, minY, width: contentWidth, height: contentHeight } =
     getNodesBoundingBox(nodes)
   const availableWidth = artboardWidth - margin * 2
-  const availableHeight = artboardHeight - margin * 2
+  const availableHeight = artboardHeight - margin * 2 - reservedTop
 
   if (contentWidth <= 0 || contentHeight <= 0 || availableWidth <= 0 || availableHeight <= 0) {
     return nodes
@@ -252,7 +178,7 @@ function fitNodesToArtboard(
   const contentCenterX = minX + contentWidth / 2
   const contentCenterY = minY + contentHeight / 2
   const artboardCenterX = artboardWidth / 2
-  const artboardCenterY = artboardHeight / 2
+  const artboardCenterY = margin + reservedTop + availableHeight / 2
 
   return nodes.map((node) => {
     const nodeCenterX = node.x + node.width / 2
@@ -266,6 +192,59 @@ function fitNodesToArtboard(
       y: snapDiagramValue(newCenterY - node.height / 2),
     }
   })
+}
+
+function getDiagramTitleBlockHeight(titleNodes: DiagramNode[]): number {
+  if (titleNodes.length === 0) return 0
+
+  const titlesHeight = titleNodes.reduce((total, node) => total + node.height, 0)
+  const stackGaps = DIAGRAM_TITLE_STACK_GAP * Math.max(0, titleNodes.length - 1)
+
+  return (
+    DIAGRAM_TEMPLATE_MARGIN +
+    titlesHeight +
+    stackGaps +
+    DIAGRAM_TITLE_TO_CONTENT_GAP
+  )
+}
+
+function positionDiagramTitlesAboveContent(
+  titleNodes: DiagramNode[],
+  bodyNodes: DiagramNode[],
+  artboardWidth: number,
+  margin = DIAGRAM_TEMPLATE_MARGIN,
+  anchorTop?: number,
+): DiagramNode[] {
+  if (titleNodes.length === 0) return []
+
+  const titleWidth = snapDiagramValue(
+    Math.min(720, artboardWidth - margin * 2),
+  )
+  const contentTop =
+    anchorTop ??
+    (bodyNodes.length > 0
+      ? getNodesBoundingBox(bodyNodes).minY
+      : margin + DIAGRAM_TITLE_TO_CONTENT_GAP)
+  let cursor = contentTop - DIAGRAM_TITLE_TO_CONTENT_GAP
+
+  return [...titleNodes].reverse().map((title) => {
+    const y = snapDiagramValue(cursor - title.height)
+    cursor = y - DIAGRAM_TITLE_STACK_GAP
+
+    return {
+      ...title,
+      width: titleWidth,
+      x: snapDiagramValue((artboardWidth - titleWidth) / 2),
+      y,
+    }
+  }).reverse()
+}
+
+function splitDiagramTitleNodes(contentNodes: DiagramNode[]) {
+  return {
+    titleNodes: contentNodes.filter((node) => node.kind === 'title'),
+    bodyNodes: contentNodes.filter((node) => node.kind !== 'title'),
+  }
 }
 
 function createDiagramGroupFromNodes(
@@ -299,18 +278,30 @@ function finalizeTemplateDocument(
   groupLabel?: string,
   options?: { fit?: boolean },
 ): DiagramDocument {
-  const fittedNodes =
+  const { titleNodes, bodyNodes } = splitDiagramTitleNodes(contentNodes)
+  const reservedTop = getDiagramTitleBlockHeight(titleNodes)
+  const fittedBody =
     options?.fit === false
-      ? contentNodes
-      : fitNodesToArtboard(contentNodes, base.width, base.height)
-  const nodes = groupLabel
-    ? [createDiagramGroupFromNodes(groupLabel, fittedNodes), ...fittedNodes]
-    : fittedNodes
+      ? bodyNodes
+      : fitNodesToArtboard(bodyNodes, base.width, base.height, DIAGRAM_TEMPLATE_MARGIN, reservedTop)
+  const groupNode = groupLabel
+    ? createDiagramGroupFromNodes(groupLabel, fittedBody)
+    : undefined
+  const positionedTitles = positionDiagramTitlesAboveContent(
+    titleNodes,
+    fittedBody,
+    base.width,
+    DIAGRAM_TEMPLATE_MARGIN,
+    groupNode?.y,
+  )
+  const contentLayer = groupNode
+    ? [groupNode, ...fittedBody]
+    : fittedBody
 
   return {
     ...base,
     title,
-    nodes,
+    nodes: [...contentLayer, ...positionedTitles],
     edges,
   }
 }
@@ -369,6 +360,9 @@ export function createDiagramFromTemplate(templateId: DiagramTemplateId): Diagra
         'Realtime data flow',
       )
     }
+
+    case 'appwrite-architecture':
+      return createAppwriteArchitectureDiagram()
 
     case 'appwrite-platform': {
       const heading = diagramTitleAt(

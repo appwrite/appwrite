@@ -62,9 +62,33 @@ type LucideIconModule = {
 
 type LucideDynamicIconImports = Record<string, () => Promise<LucideIconModule>>
 
+const coverLucideIconNodeCache = new Map<string, CoverLucideIconNode>()
+
+export function getCachedCoverLucideIconNode(
+  iconName: string,
+): CoverLucideIconNode | null {
+  return coverLucideIconNodeCache.get(iconName) ?? null
+}
+
+export async function preloadCoverLucideIconNodes(
+  iconNames: Iterable<string>,
+): Promise<void> {
+  const pending = [...new Set(iconNames)]
+    .filter((name) => name && !coverLucideIconNodeCache.has(name))
+    .map(async (name) => {
+      const node = await loadCoverLucideIconNode(name)
+      if (node) coverLucideIconNodeCache.set(name, node)
+    })
+
+  await Promise.all(pending)
+}
+
 export async function loadCoverLucideIconNode(
   iconName: string,
 ): Promise<CoverLucideIconNode | null> {
+  const cached = coverLucideIconNodeCache.get(iconName)
+  if (cached) return cached
+
   try {
     const dynamicIconImports = (
       await import('lucide-react/dist/esm/dynamicIconImports.js')
@@ -74,7 +98,9 @@ export async function loadCoverLucideIconNode(
     if (!loader) return null
 
     const mod = await loader()
-    return mod.__iconNode?.length ? mod.__iconNode : null
+    const iconNode = mod.__iconNode?.length ? mod.__iconNode : null
+    if (iconNode) coverLucideIconNodeCache.set(iconName, iconNode)
+    return iconNode
   } catch {
     return null
   }

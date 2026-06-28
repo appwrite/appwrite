@@ -27,6 +27,11 @@ import {
   type ComputeBreakdownResourceMap,
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
+  getStorageBreakdownResourceRoute,
+  resolveStorageBreakdownResource,
+  type StorageBreakdownResourceMap,
+} from '@/lib/usage/resolve-storage-breakdown-resources'
+import {
   getDatabaseBreakdownResourceRoute,
   resolveDatabaseBreakdownResource,
   type DatabaseBreakdownResourceMap,
@@ -55,6 +60,7 @@ export function formatBreakdownLabel(
   countryLookups: CountryLookups | null,
   databaseLookup?: DatabaseBreakdownResourceMap | null,
   computeLookup?: ComputeBreakdownResourceMap | null,
+  storageLookup?: StorageBreakdownResourceMap | null,
 ): string {
   if (dimension === 'resourceId') {
     const computeResource = resolveComputeBreakdownResource(
@@ -62,6 +68,8 @@ export function formatBreakdownLabel(
       computeLookup,
     )
     if (computeResource) return computeResource.name
+    const storageResource = resolveStorageBreakdownResource(label, storageLookup)
+    if (storageResource) return storageResource.name
     const resource = resolveDatabaseBreakdownResource(label, databaseLookup)
     if (resource) return resource.name
   }
@@ -183,6 +191,7 @@ type UsageBreakdownRowProps = {
   countryLookups: CountryLookups | null
   databaseLookup?: DatabaseBreakdownResourceMap | null
   computeLookup?: ComputeBreakdownResourceMap | null
+  storageLookup?: StorageBreakdownResourceMap | null
   projectId?: string
   maxCount: number
   formatValue?: (value: number) => string
@@ -195,6 +204,7 @@ export function UsageBreakdownRow({
   countryLookups,
   databaseLookup,
   computeLookup,
+  storageLookup,
   projectId,
   maxCount,
   formatValue = formatRequestsValue,
@@ -206,8 +216,12 @@ export function UsageBreakdownRow({
     dimension === 'resourceId'
       ? resolveComputeBreakdownResource(item.label, computeLookup)
       : undefined
-  const databaseResource =
+  const storageResource =
     dimension === 'resourceId' && !computeResource
+      ? resolveStorageBreakdownResource(item.label, storageLookup)
+      : undefined
+  const databaseResource =
+    dimension === 'resourceId' && !computeResource && !storageResource
       ? resolveDatabaseBreakdownResource(item.label, databaseLookup)
       : undefined
   const showDatabaseIcons = !!databaseResource
@@ -219,6 +233,7 @@ export function UsageBreakdownRow({
     countryLookups,
     databaseLookup,
     computeLookup,
+    storageLookup,
   )
   const countryCode =
     showCountryFlags && countryLookups
@@ -233,6 +248,10 @@ export function UsageBreakdownRow({
   const computeRoute =
     computeResource && projectId
       ? getComputeBreakdownResourceRoute(projectId, computeResource)
+      : null
+  const storageRoute =
+    storageResource && projectId
+      ? getStorageBreakdownResourceRoute(projectId, storageResource)
       : null
 
   return (
@@ -287,6 +306,15 @@ export function UsageBreakdownRow({
             title={databaseResource!.name}
           >
             {databaseResource!.name}
+          </Link>
+        ) : storageRoute ? (
+          <Link
+            to={storageRoute.to}
+            params={storageRoute.params}
+            className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
+            title={storageResource!.name}
+          >
+            {storageResource!.name}
           </Link>
         ) : (
           <span
@@ -357,6 +385,7 @@ type UsageBreakdownRowsListProps = {
   countryLookups: CountryLookups | null
   databaseLookup?: DatabaseBreakdownResourceMap | null
   computeLookup?: ComputeBreakdownResourceMap | null
+  storageLookup?: StorageBreakdownResourceMap | null
   projectId?: string
   variant?: 'card' | 'drawer'
   className?: string
@@ -370,6 +399,7 @@ export function UsageBreakdownRowsList({
   countryLookups,
   databaseLookup,
   computeLookup,
+  storageLookup,
   projectId,
   variant = 'card',
   className,
@@ -410,6 +440,7 @@ export function UsageBreakdownRowsList({
             countryLookups={countryLookups}
             databaseLookup={databaseLookup}
             computeLookup={computeLookup}
+            storageLookup={storageLookup}
             projectId={projectId}
             maxCount={maxCount}
             formatValue={formatValue}

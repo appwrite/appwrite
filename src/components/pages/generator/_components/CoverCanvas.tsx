@@ -262,7 +262,7 @@ export function CoverCanvas({
             <SelectContent align="end">
               {COVER_SIZE_PRESETS.map((preset) => (
                 <SelectItem key={preset.id} value={preset.id}>
-                  {preset.label} ({preset.width} × {preset.height})
+                  {preset.label}
                 </SelectItem>
               ))}
             </SelectContent>

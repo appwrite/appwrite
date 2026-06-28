@@ -1,23 +1,17 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import type { CoverTemplateCategoryFilter } from '@/lib/cover-generator/template-categories'
 import {
   type CoverTemplateId,
   type CoverTheme,
 } from '@/lib/cover-generator/constants'
-import { buildCoverApiUrl, createDefaultCoverData } from '@/lib/cover-generator/parse-params'
 import {
   COVER_TEMPLATE_CATEGORIES,
   getCoverTemplateCategorySections,
   getCoverTemplatesForCategory,
 } from '@/lib/cover-generator/template-categories'
-import { COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX } from '@/components/pages/generator/layout'
 import { COVER_TEMPLATE_DEFINITIONS } from '@/lib/cover-generator/template-config'
 import { CoverThemeSelect } from '@/components/pages/generator/_components/CoverThemeSelect'
-import {
-  CoverScaledPreview,
-  isCoverGeneratorDomPreviewTemplate,
-} from '@/components/pages/generator/_components/CoverPreviewContent'
-import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/themes'
+import { CoverTemplateCard } from '@/components/pages/generator/_components/CoverTemplateCard'
 import { cn } from '@/lib/utils'
 
 export type { CoverTemplateCategoryFilter as CoverTemplateTypeFilter } from '@/lib/cover-generator/template-categories'
@@ -30,84 +24,6 @@ type CoverTemplatePanelProps = {
   onCategoryFilterChange: (filter: CoverTemplateCategoryFilter) => void
   onThemeChange: (theme: CoverTheme) => void
   variant?: 'panel' | 'compact'
-}
-
-function CoverTemplateCard({
-  template,
-  theme,
-  selected,
-  onSelect,
-}: {
-  template: CoverTemplateId
-  theme: CoverTheme
-  selected: boolean
-  onSelect: () => void
-}) {
-  const previewRef = useRef<HTMLDivElement>(null)
-  const [previewWidth, setPreviewWidth] = useState(
-    COVER_GENERATOR_TEMPLATE_PANEL_WIDTH_PX,
-  )
-  const previewData = useMemo(
-    () => createDefaultCoverData(template, theme),
-    [template, theme],
-  )
-  const usesDomPreview = isCoverGeneratorDomPreviewTemplate(template)
-  const previewUrl = useMemo(() => {
-    if (typeof window === 'undefined' || usesDomPreview) return ''
-    return buildCoverApiUrl({ ...previewData, format: 'png' }, window.location.origin)
-  }, [previewData, usesDomPreview])
-  const definition = COVER_TEMPLATE_DEFINITIONS.find((item) => item.id === template)
-  const previewBackground = getCoverBrandThemeForSvgExport(theme).background
-
-  useLayoutEffect(() => {
-    const element = previewRef.current
-    if (!element) return
-
-    const updatePreviewWidth = () => {
-      const width = element.getBoundingClientRect().width
-      if (width > 0) {
-        setPreviewWidth(width)
-      }
-    }
-
-    updatePreviewWidth()
-    const resizeObserver = new ResizeObserver(updatePreviewWidth)
-    resizeObserver.observe(element)
-    return () => resizeObserver.disconnect()
-  }, [])
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'flex w-full flex-col overflow-hidden rounded-md border text-left transition-colors',
-        selected
-          ? 'border-[var(--brand-cta)] bg-[var(--brand-cta)]/5 ring-1 ring-[var(--brand-cta)]/25'
-          : 'border-border bg-card/40 hover:border-border hover:bg-accent/30',
-      )}
-    >
-      <div
-        ref={previewRef}
-        className="relative aspect-[1200/630] w-full overflow-hidden border-b border-border"
-        style={{ backgroundColor: previewBackground }}
-      >
-        {previewWidth > 0 ? (
-          <CoverScaledPreview
-            data={previewData}
-            previewUrl={previewUrl || undefined}
-            displayWidth={previewWidth}
-            className="absolute left-0 top-0"
-          />
-        ) : null}
-      </div>
-      <div className="px-1.5 py-1">
-        <span className="block truncate text-center text-[10px] font-medium text-foreground">
-          {definition?.label ?? template}
-        </span>
-      </div>
-    </button>
-  )
 }
 
 export function CoverTemplatePanel({
@@ -217,6 +133,7 @@ export function CoverTemplatePanel({
                     key={template}
                     template={template}
                     theme={theme}
+                    variant="panel"
                     selected={selectedTemplate === template}
                     onSelect={() => onSelectTemplate(template)}
                   />

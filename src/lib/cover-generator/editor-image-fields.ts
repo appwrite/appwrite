@@ -13,8 +13,12 @@ const COVER_IMAGE_STORAGE_KEY_SEPARATOR = '::'
 export function getCoverImageStorageKey(
   templateId: CoverTemplateId,
   fieldKey: string,
+  generationId?: string | null,
 ): string {
-  return `${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}${fieldKey}`
+  const templateScope = generationId
+    ? `${generationId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}${templateId}`
+    : templateId
+  return `${templateScope}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}${fieldKey}`
 }
 
 export function isCoverUploadedImageValue(value: string): boolean {
@@ -65,10 +69,13 @@ export async function loadAllCoverImageFieldUrls(): Promise<
 
 export async function loadCoverImageFieldUrlsForTemplate(
   templateId: CoverTemplateId,
+  generationId?: string | null,
 ): Promise<Record<string, string>> {
   const stored = await getAllCoverImageFields()
   const fields: Record<string, string> = {}
-  const prefix = `${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}`
+  const prefix = generationId
+    ? `${generationId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}`
+    : `${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}`
 
   for (const [storageKey, blob] of stored) {
     if (!storageKey.startsWith(prefix)) continue
@@ -99,8 +106,12 @@ export async function persistCoverImageUpload(
   templateId: CoverTemplateId,
   fieldKey: string,
   source: File | Blob,
+  generationId?: string | null,
 ): Promise<string> {
-  await saveCoverImageField(getCoverImageStorageKey(templateId, fieldKey), source)
+  await saveCoverImageField(
+    getCoverImageStorageKey(templateId, fieldKey, generationId),
+    source,
+  )
   return URL.createObjectURL(source)
 }
 
@@ -108,23 +119,30 @@ export async function persistCoverImageDataUrl(
   templateId: CoverTemplateId,
   fieldKey: string,
   dataUrl: string,
+  generationId?: string | null,
 ): Promise<string> {
   const blob = dataUrlToBlob(dataUrl)
-  return persistCoverImageUpload(templateId, fieldKey, blob)
+  return persistCoverImageUpload(templateId, fieldKey, blob, generationId)
 }
 
 export async function removeCoverImageField(
   templateId: CoverTemplateId,
   fieldKey: string,
+  generationId?: string | null,
 ): Promise<void> {
-  await deleteCoverImageField(getCoverImageStorageKey(templateId, fieldKey))
+  await deleteCoverImageField(
+    getCoverImageStorageKey(templateId, fieldKey, generationId),
+  )
 }
 
 export async function clearCoverImageFieldsForTemplate(
   templateId: CoverTemplateId,
+  generationId?: string | null,
 ): Promise<void> {
   const stored = await getAllCoverImageFields()
-  const prefix = `${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}`
+  const prefix = generationId
+    ? `${generationId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}`
+    : `${templateId}${COVER_IMAGE_STORAGE_KEY_SEPARATOR}`
 
   await Promise.all(
     [...stored.keys()]

@@ -9,6 +9,7 @@ export function categorySupportsChartInterval(categoryId: string): boolean {
     categoryId === 'auth' ||
     categoryId === 'avatars' ||
     categoryId === 'messaging' ||
-    categoryId === 'webhooks'
+    categoryId === 'webhooks' ||
+    categoryId === 'storage'
   )
 }

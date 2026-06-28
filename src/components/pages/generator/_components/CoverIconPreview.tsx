@@ -1,6 +1,7 @@
 import { createElement, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import {
+  getCachedCoverLucideIconNode,
   loadCoverLucideIconNode,
   type CoverLucideIconNode,
 } from '@/lib/cover-generator/lucide-icon-svg'
@@ -93,7 +94,9 @@ function CoverLucideIconPreviewLoader({
   size: number
   className?: string
 }) {
-  const [iconNode, setIconNode] = useState<CoverLucideIconNode | null>(null)
+  const [iconNode, setIconNode] = useState<CoverLucideIconNode | null>(() =>
+    getCachedCoverLucideIconNode(name),
+  )
   const stroke = getCoverLucideIconStrokeColorForFamily(family)
   const previewClasses = getCoverIconPreviewClassesForFamily(family)
 

@@ -44,9 +44,20 @@ import {
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
 import {
+  fetchProjectImageTransformationsUsageOverview,
+  fetchProjectStorageBuildsOverview,
+  fetchProjectStorageDeploymentsOverview,
+  fetchProjectStorageFilesUsageOverview,
   fetchProjectStorageOverview,
-  type ProjectStorageOverview,
-} from '@/lib/usage/storage-gauges'
+  type StorageFilesUsageOverview,
+  type StorageImageTransformationsOverview,
+  type StorageUsageChartOverview,
+} from '@/lib/usage/storage-usage'
+import type { ProjectStorageOverview } from '@/lib/usage/storage-gauges'
+import {
+  fetchStorageBreakdownResources,
+  normalizeStorageBreakdownResourceIds,
+} from '@/lib/usage/resolve-storage-breakdown-resources'
 import {
   fetchComputeBreakdownResources,
   normalizeComputeBreakdownResourceIds,
@@ -586,6 +597,265 @@ export function useProjectStorageOverview(
         !includeBreakdown,
       ).queryKey,
     ),
+  })
+}
+
+function storageFilesUsageQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'storage',
+      'files',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectStorageFilesUsageOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function storageGaugeChartQueryOptions(
+  scope: 'deployments' | 'builds',
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'storage',
+      scope,
+      'chart',
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      scope === 'deployments'
+        ? fetchProjectStorageDeploymentsOverview(
+            projectId!,
+            getBounds(),
+            interval,
+          )
+        : fetchProjectStorageBuildsOverview(projectId!, getBounds(), interval),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function imageTransformationsUsageQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange)
+
+  return queryOptions({
+    queryKey: [
+      'usage-gauges',
+      'storage',
+      'image-transformations',
+      usageOverviewQueryScope(includeBreakdown),
+      'project',
+      projectId,
+      rangeKeyPart,
+      interval,
+    ],
+    queryFn: () =>
+      fetchProjectImageTransformationsUsageOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        { includeBreakdown },
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useProjectStorageFilesUsage(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...storageFilesUsageQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData: usageOverviewPlaceholderData<StorageFilesUsageOverview>(
+      queryClient,
+      projectId,
+      storageFilesUsageQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+      ).queryKey,
+    ),
+  })
+}
+
+export function useProjectStorageDeploymentsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...storageGaugeChartQueryOptions('deployments', projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectStorageBuildsChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  return useQuery({
+    ...storageGaugeChartQueryOptions('builds', projectId, dateRange, interval),
+    enabled: !!projectId && enabled,
+  })
+}
+
+export function useProjectImageTransformationsUsage(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...imageTransformationsUsageQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+    ),
+    enabled: !!projectId && enabled,
+    placeholderData:
+      usageOverviewPlaceholderData<StorageImageTransformationsOverview>(
+        queryClient,
+        projectId,
+        imageTransformationsUsageQueryOptions(
+          projectId,
+          dateRange,
+          interval,
+          !includeBreakdown,
+        ).queryKey,
+      ),
+  })
+}
+
+export function storageBreakdownResourcesQueryOptions(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+) {
+  const normalizedIds = normalizeStorageBreakdownResourceIds(resourceIds)
+
+  return queryOptions({
+    queryKey: [
+      'usage-breakdown',
+      'storage-resources',
+      'project',
+      projectId,
+      normalizedIds.join(','),
+    ],
+    queryFn: () =>
+      fetchStorageBreakdownResources(projectId!, normalizedIds),
+    enabled: !!projectId && normalizedIds.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
+  })
+}
+
+export function useStorageBreakdownResources(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+  enabled = true,
+) {
+  const normalizedIds = useMemo(
+    () => normalizeStorageBreakdownResourceIds(resourceIds),
+    [resourceIds],
+  )
+
+  return useQuery({
+    ...storageBreakdownResourcesQueryOptions(projectId, normalizedIds),
+    enabled: enabled && !!projectId && normalizedIds.length > 0,
+  })
+}
+
+/** Refetch all storage usage charts for a project. */
+export function refetchProjectStorageUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      ((query.queryKey[0] === 'usage-gauges' &&
+        query.queryKey[1] === 'storage') ||
+        (query.queryKey[0] === 'usage-breakdown' &&
+          query.queryKey[1] === 'storage-resources')),
   })
 }
 
@@ -2147,6 +2417,10 @@ export type {
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 
 export type {
+  StorageBreakdownResourceMap,
+} from '@/lib/usage/resolve-storage-breakdown-resources'
+
+export type {
   DatabaseBreakdownResourceMap,
 } from '@/lib/usage/resolve-database-breakdown-resources'
 
@@ -2155,6 +2429,9 @@ export type {
   ProjectExecutionsOverview,
   ProjectGbHoursOverview,
   ProjectStorageOverview,
+  StorageFilesUsageOverview,
+  StorageImageTransformationsOverview,
+  StorageUsageChartOverview,
   ProjectRequestsOverview,
   ProjectRequestsChartOverview,
   ProjectBandwidthOverview as ProjectBandwidthChartOverview,

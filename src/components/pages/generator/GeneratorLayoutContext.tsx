@@ -15,6 +15,24 @@ import {
 
 export type GeneratorApiTab = 'covers' | 'diagrams'
 
+export type GeneratorDocumentChrome = {
+  phase: 'start' | 'editor'
+  resource: GeneratorApiTab
+  showLeftPanelToggle: boolean
+  leftPanelLabel: string
+  onNewDocument: () => void
+  onBrowseDocuments: () => void
+  newDocumentLabel: string
+  browseDocumentsLabel: string
+}
+
+export type GeneratorEditorTitleState = {
+  name: string
+  maxLength: number
+  isSaving?: boolean
+  onChange: (name: string) => void | Promise<void>
+}
+
 type GeneratorLayoutContextValue = {
   coverExportData: CoverRenderData | null
   setCoverExportData: (data: CoverRenderData | null) => void
@@ -22,6 +40,10 @@ type GeneratorLayoutContextValue = {
   setDiagramDocument: (document: DiagramDocument | null) => void
   apiDocsOpen: boolean
   setApiDocsOpen: (open: boolean) => void
+  documentChrome: GeneratorDocumentChrome | null
+  setDocumentChrome: (chrome: GeneratorDocumentChrome | null) => void
+  editorTitle: GeneratorEditorTitleState | null
+  setEditorTitle: (title: GeneratorEditorTitleState | null) => void
   leftPanelOpen: boolean
   rightPanelOpen: boolean
   setLeftPanelOpen: (open: boolean | ((prev: boolean) => boolean)) => void
@@ -49,6 +71,12 @@ export function GeneratorLayoutProvider({ children }: { children: ReactNode }) {
   const [coverExportData, setCoverExportData] = useState<CoverRenderData | null>(null)
   const [diagramDocument, setDiagramDocument] = useState<DiagramDocument | null>(null)
   const [apiDocsOpen, setApiDocsOpen] = useState(false)
+  const [documentChrome, setDocumentChrome] = useState<GeneratorDocumentChrome | null>(
+    null,
+  )
+  const [editorTitle, setEditorTitle] = useState<GeneratorEditorTitleState | null>(
+    null,
+  )
 
   const value = useMemo(
     () => ({
@@ -58,6 +86,10 @@ export function GeneratorLayoutProvider({ children }: { children: ReactNode }) {
       setDiagramDocument,
       apiDocsOpen,
       setApiDocsOpen,
+      documentChrome,
+      setDocumentChrome,
+      editorTitle,
+      setEditorTitle,
       leftPanelOpen: leftOpen,
       rightPanelOpen: rightOpen,
       setLeftPanelOpen: setLeftOpen,
@@ -69,6 +101,8 @@ export function GeneratorLayoutProvider({ children }: { children: ReactNode }) {
       apiDocsOpen,
       coverExportData,
       diagramDocument,
+      documentChrome,
+      editorTitle,
       leftOpen,
       rightOpen,
       setLeftOpen,

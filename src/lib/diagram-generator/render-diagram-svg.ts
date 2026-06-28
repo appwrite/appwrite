@@ -20,6 +20,10 @@ import {
   parseCoverLucideIconName,
 } from '@/lib/cover-generator/lucide-icon-utils'
 import { loadCoverLucideIconSvgBuffer } from '@/lib/cover-generator/lucide-icon-render'
+import { buildCoverTableFrameComposition } from '@/lib/cover-generator/table/render-frame'
+import type { CoverEditorThemeId } from '@/lib/cover-generator/themes'
+import { DIAGRAM_NODE_KIND_LABELS } from '@/lib/diagram-generator/constants'
+import { createDefaultDiagramTable } from '@/lib/diagram-generator/diagram-table'
 
 function escapeXml(value: string): string {
   return value
@@ -55,6 +59,29 @@ function buildDiagramEdgeStrokesSvg(
       const dash = getDiagramEdgeDash(path.lineStyle)
       const dashAttr = dash ? ` stroke-dasharray="${dash}"` : ''
 
+      return `
+        <g opacity="${strokeOpacity}">
+          <path d="${path.d}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"${dashAttr} />
+        </g>
+      `
+    })
+    .join('')
+}
+
+function buildDiagramEdgeArrowheadsSvg(
+  document: DiagramDocument,
+  brand: ReturnType<typeof getCoverBrandThemeForSvgExport>,
+): string {
+  const paths = buildDiagramEdgePaths(document.nodes, document.edges)
+
+  return paths
+    .map((path) => {
+      const stroke = getDiagramEdgeStroke(path.strokeTone, brand, false)
+      const strokeOpacity = getDiagramEdgeOpacity(path.lineStyle, path.strokeTone, {
+        selected: false,
+        part: 'stroke',
+      })
+
       const arrows = [
         path.forwardArrow
           ? `<path d="${buildDiagramEdgeArrowheadPath(path.forwardArrow)}" fill="${stroke}" stroke="none" opacity="${strokeOpacity}" />`
@@ -64,12 +91,9 @@ function buildDiagramEdgeStrokesSvg(
           : '',
       ].join('')
 
-      return `
-        <g opacity="${strokeOpacity}">
-          <path d="${path.d}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${dashAttr} />
-          ${arrows}
-        </g>
-      `
+      if (!arrows) return ''
+
+      return `<g opacity="${strokeOpacity}">${arrows}</g>`
     })
     .join('')
 }
@@ -126,6 +150,7 @@ async function buildNodeIconSvg(
 async function buildDiagramNodeSvg(
   node: DiagramNode,
   brand: ReturnType<typeof getCoverBrandThemeForSvgExport>,
+  themeId: CoverEditorThemeId,
 ): Promise<string> {
   const { x, y, width, height, label } = node
 
@@ -133,7 +158,7 @@ async function buildDiagramNodeSvg(
     return `
       <g>
         <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="16" fill="${withAlpha(brand.muted, 0.18)}" stroke="${withAlpha(brand.border, 0.9)}" stroke-width="1" stroke-dasharray="6 4" />
-        <text x="${x + 16}" y="${y + 24}" fill="${brand.mutedForeground}" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="600" letter-spacing="0.08em">${escapeXml(label.toUpperCase())}</text>
+        <text x="${x + 16}" y="${y + 12}" dominant-baseline="hanging" fill="${brand.mutedForeground}" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="600" letter-spacing="0.08em">${escapeXml(label.toUpperCase())}</text>
       </g>
     `
   }
@@ -142,89 +167,136 @@ async function buildDiagramNodeSvg(
     return `
       <g>
         <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="8" fill="${withAlpha(brand.background, 0.72)}" stroke="${withAlpha(brand.border, 0.65)}" stroke-width="1" />
-        <text x="${x + width / 2}" y="${y + height / 2 + 5}" text-anchor="middle" fill="${brand.foreground}" font-size="14" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(label)}</text>
+        <text x="${x + width / 2}" y="${y + height / 2}" dominant-baseline="middle" text-anchor="middle" fill="${brand.foreground}" font-size="14" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(label)}</text>
       </g>
     `
   }
 
   if (node.kind === 'title') {
-    const titleY = node.subtitle ? y + height / 2 - 8 : y + height / 2 + 6
+    const titleLineHeight = 35
+    const subtitleGap = 8
+    const subtitleLineHeight = 19
+    const blockHeight = node.subtitle
+      ? titleLineHeight + subtitleGap + subtitleLineHeight
+      : titleLineHeight
+    const blockTop = y + (height - blockHeight) / 2
+    const titleBaseline = blockTop + 24
+    const subtitleBaseline = blockTop + titleLineHeight + subtitleGap + 12
+
     return `
       <g>
-        <text x="${x + width / 2}" y="${titleY}" text-anchor="middle" fill="${brand.foreground}" font-size="28" font-family="Inter, system-ui, sans-serif" font-weight="700">${escapeXml(label)}</text>
-        ${node.subtitle ? `<text x="${x + width / 2}" y="${titleY + 28}" text-anchor="middle" fill="${brand.mutedForeground}" font-size="14" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(node.subtitle)}</text>` : ''}
+        <text x="${x + width / 2}" y="${titleBaseline}" text-anchor="middle" class="cover-title" fill="${brand.foreground}" font-size="28">${escapeXml(label)}</text>
+        ${node.subtitle ? `<text x="${x + width / 2}" y="${subtitleBaseline}" text-anchor="middle" class="cover-body" fill="${brand.mutedForeground}" font-size="14">${escapeXml(node.subtitle)}</text>` : ''}
       </g>
     `
   }
 
   if (node.kind === 'table') {
-    const headers = node.tableHeaders ?? []
-    const rows = node.tableRows ?? []
-    const headerHeight = 28
-    const rowHeight = 24
-    const tableHeight = headerHeight + rows.length * rowHeight
-    const colWidth = headers.length > 0 ? width / headers.length : width
-
-    const headerCells = headers
-      .map(
-        (header, index) => `
-          <rect x="${x + index * colWidth}" y="${y}" width="${colWidth}" height="${headerHeight}" fill="${withAlpha(brand.muted, 0.35)}" stroke="${brand.border}" stroke-width="1" />
-          <text x="${x + index * colWidth + colWidth / 2}" y="${y + 18}" text-anchor="middle" fill="${brand.foreground}" font-size="11" font-family="Inter, system-ui, sans-serif" font-weight="600">${escapeXml(header)}</text>
-        `,
-      )
-      .join('')
-
-    const bodyRows = rows
-      .map(
-        (row, rowIndex) =>
-          row
-            .map((cell, colIndex) => {
-              const cellY = y + headerHeight + rowIndex * rowHeight
-              return `
-                <rect x="${x + colIndex * colWidth}" y="${cellY}" width="${colWidth}" height="${rowHeight}" fill="${withAlpha(brand.background, 0.92)}" stroke="${brand.border}" stroke-width="1" />
-                <text x="${x + colIndex * colWidth + 8}" y="${cellY + 16}" fill="${brand.foreground}" font-size="11" font-family="Inter, system-ui, sans-serif">${escapeXml(cell)}</text>
-              `
-            })
-            .join(''),
-      )
-      .join('')
+    const defaults = createDefaultDiagramTable()
+    const headers = node.tableHeaders ?? defaults.tableHeaders
+    const rows = node.tableRows ?? defaults.tableRows
+    const defaultLabel = DIAGRAM_NODE_KIND_LABELS.table
+    const showTitle = Boolean(label.trim() && label !== defaultLabel)
+    const composition = buildCoverTableFrameComposition({
+      themeId,
+      frameWidth: width,
+      title: showTitle ? label : undefined,
+      subtitle: node.subtitle,
+      headers,
+      rows,
+      clipIdPrefix: `diagram-table-${node.id}`,
+    })
 
     return `
-      <g>
-        <rect x="${x}" y="${y}" width="${width}" height="${Math.max(height, tableHeight)}" rx="12" fill="${withAlpha(brand.background, 0.92)}" stroke="${brand.border}" stroke-width="1" />
-        ${headerCells}
-        ${bodyRows}
+      <g transform="translate(${x}, ${y})">
+        <defs>${composition.defs}</defs>
+        ${composition.svg}
       </g>
     `
   }
 
-  const iconSize = node.kind === 'icon' ? Math.min(width, height) - 24 : 24
-  const iconX = x + 16
-  const iconY = y + (height - (node.kind === 'icon' ? iconSize : 40)) / 2
-  const iconMarkup = await buildNodeIconSvg(node, brand, iconX, iconY, iconSize)
-  const hasIcon = Boolean(iconMarkup)
+  if (node.kind === 'screenshot') {
+    const defaultLabel = DIAGRAM_NODE_KIND_LABELS.screenshot
+    const showCaption = Boolean(label.trim() && label !== defaultLabel)
+    const captionBandHeight = showCaption ? 28 : 0
+    const frameHeight = Math.max(1, height - captionBandHeight)
+    const imageHref = node.imageSrc?.trim()
+      ? await resolveCoverImageHref(node.imageSrc.trim())
+      : null
+    const clipId = `diagram-screenshot-${node.id}`
+
+    return `
+      <g>
+        <defs>
+          <clipPath id="${clipId}">
+            <rect x="${x}" y="${y}" width="${width}" height="${frameHeight}" rx="12" />
+          </clipPath>
+        </defs>
+        <rect x="${x}" y="${y}" width="${width}" height="${frameHeight}" rx="12" fill="${withAlpha(brand.muted, 0.35)}" stroke="${brand.border}" stroke-width="1" />
+        ${
+          imageHref
+            ? `<image href="${escapeXml(imageHref)}" x="${x}" y="${y}" width="${width}" height="${frameHeight}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" />`
+            : ''
+        }
+        ${
+          showCaption
+            ? `
+              <rect x="${x}" y="${y + frameHeight}" width="${width}" height="${captionBandHeight}" fill="${withAlpha(brand.background, 0.88)}" stroke="${brand.border}" stroke-width="1" />
+              <text x="${x + width / 2}" y="${y + frameHeight + captionBandHeight / 2}" dominant-baseline="middle" text-anchor="middle" fill="${brand.foreground}" font-size="11" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(label)}</text>
+            `
+            : ''
+        }
+      </g>
+    `
+  }
+
+  const serviceIconBoxSize = 40
+  const serviceIconRenderSize = 24
+  const servicePaddingX = 16
+  const serviceGap = 12
 
   if (node.kind === 'icon') {
+    const defaultLabel = DIAGRAM_NODE_KIND_LABELS.icon
+    const showCaption = Boolean(label.trim() && label !== defaultLabel)
+    const chromePadding = 16
+    const captionBand = showCaption ? 20 : 0
+    const availableWidth = width - chromePadding * 2
+    const availableHeight = height - chromePadding * 2 - captionBand
+    const iconSize = Math.max(24, Math.min(availableWidth, availableHeight))
+    const iconX = x + (width - iconSize) / 2
+    const iconY = y + chromePadding + (availableHeight - iconSize) / 2
+    const iconMarkup = await buildNodeIconSvg(node, brand, iconX, iconY, iconSize)
+
     return `
       <g>
         <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12" fill="${withAlpha(brand.background, 0.92)}" stroke="${brand.border}" stroke-width="1" />
         ${iconMarkup}
-        ${label && label !== 'Icon'
-          ? `<text x="${x + width / 2}" y="${y + height - 10}" text-anchor="middle" fill="${brand.mutedForeground}" font-size="11" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(label)}</text>`
-          : ''}
+        ${
+          showCaption
+            ? `<text x="${x + width / 2}" y="${y + height - 10}" text-anchor="middle" fill="${brand.mutedForeground}" font-size="11" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(label)}</text>`
+            : ''
+        }
       </g>
     `
   }
 
-  const textX = hasIcon ? x + 64 : x + 16
+  const iconBoxX = x + servicePaddingX
+  const iconBoxY = y + (height - serviceIconBoxSize) / 2
+  const iconX = iconBoxX + (serviceIconBoxSize - serviceIconRenderSize) / 2
+  const iconY = iconBoxY + (serviceIconBoxSize - serviceIconRenderSize) / 2
+  const iconMarkup = await buildNodeIconSvg(node, brand, iconX, iconY, serviceIconRenderSize)
+  const hasIcon = Boolean(iconMarkup)
+  const textX = hasIcon ? x + servicePaddingX + serviceIconBoxSize + serviceGap : x + servicePaddingX
+  const titleBaseline = y + (node.subtitle ? height / 2 - 6 : height / 2 + 5)
+  const subtitleBaseline = y + height / 2 + 14
 
   return `
     <g>
       <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12" fill="${withAlpha(brand.background, 0.92)}" stroke="${brand.border}" stroke-width="1" />
-      ${hasIcon ? `<rect x="${iconX - 4}" y="${iconY - 4}" width="40" height="40" rx="8" fill="${withAlpha(brand.muted, 0.85)}" />` : ''}
+      ${hasIcon ? `<rect x="${iconBoxX}" y="${iconBoxY}" width="${serviceIconBoxSize}" height="${serviceIconBoxSize}" rx="8" fill="${withAlpha(brand.muted, 0.85)}" />` : ''}
       ${iconMarkup}
-      <text x="${textX}" y="${y + (node.subtitle ? height / 2 - 2 : height / 2 + 5)}" fill="${brand.foreground}" font-size="14" font-family="Inter, system-ui, sans-serif" font-weight="600">${escapeXml(label)}</text>
-      ${node.subtitle ? `<text x="${textX}" y="${y + height / 2 + 18}" fill="${brand.mutedForeground}" font-size="12" font-family="Inter, system-ui, sans-serif">${escapeXml(node.subtitle)}</text>` : ''}
+      <text x="${textX}" y="${titleBaseline}" fill="${brand.foreground}" font-size="14" font-family="Inter, system-ui, sans-serif" font-weight="600">${escapeXml(label)}</text>
+      ${node.subtitle ? `<text x="${textX}" y="${subtitleBaseline}" fill="${brand.mutedForeground}" font-size="12" font-family="Inter, system-ui, sans-serif">${escapeXml(node.subtitle)}</text>` : ''}
     </g>
   `
 }
@@ -238,7 +310,10 @@ export async function renderDiagramTemplateSvg(document: DiagramDocument): Promi
   )
   const fontFaceCss = await getCoverFontFaceCss()
   const edgeStrokes = buildDiagramEdgeStrokesSvg(document, brand)
-  const nodeFragments = await Promise.all(document.nodes.map((node) => buildDiagramNodeSvg(node, brand)))
+  const nodeFragments = await Promise.all(
+    document.nodes.map((node) => buildDiagramNodeSvg(node, brand, document.theme)),
+  )
+  const edgeArrowheads = buildDiagramEdgeArrowheadsSvg(document, brand)
   const edgeLabels = buildDiagramEdgeLabelsSvg(document, brand)
 
   return `
@@ -248,6 +323,7 @@ export async function renderDiagramTemplateSvg(document: DiagramDocument): Promi
       ${layers}
       ${edgeStrokes}
       ${nodeFragments.join('')}
+      ${edgeArrowheads}
       ${edgeLabels}
     </svg>
   `

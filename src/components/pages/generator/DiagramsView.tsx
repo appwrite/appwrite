@@ -1,10 +1,11 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { GeneratorColumnsResizableLayout } from '@/components/pages/generator/_components/GeneratorColumnsResizableLayout'
 import { DiagramCanvas } from '@/components/pages/generator/diagrams/_components/DiagramCanvas'
-import { DiagramPalettePanel } from '@/components/pages/generator/diagrams/_components/DiagramPalettePanel'
+import { DiagramElementsPanel } from '@/components/pages/generator/diagrams/_components/DiagramElementsPanel'
 import { DiagramPropertiesPanel } from '@/components/pages/generator/diagrams/_components/DiagramPropertiesPanel'
+import { DiagramStartView } from '@/components/pages/generator/diagrams/_components/DiagramStartView'
 import { useGeneratorLayout } from '@/components/pages/generator/GeneratorLayoutContext'
 import { useIsXlUp } from '@/hooks/use-mobile'
 import {
@@ -12,13 +13,22 @@ import {
   downloadDiagramBlob,
   openDiagramImage,
 } from '@/lib/diagram-generator/export-diagram'
+import { normalizeDiagramDocument } from '@/lib/diagram-generator/storage'
+import type { SavedDiagramGeneration } from '@/lib/diagram-generator/generation-prefs'
+import {
+  createDiagramFromTemplate,
+  createDefaultDiagramDocument,
+} from '@/lib/diagram-generator/templates'
 import { useDiagramGeneratorState } from '@/lib/diagram-generator/use-diagram-generator-state'
+import type { DiagramTemplateId } from '@/lib/diagram-generator/types'
 import type { CoverImageFormat } from '@/lib/cover-generator/constants'
 import type { CoverDownloadScale } from '@/lib/cover-generator/download-scale'
 import {
   useCoverGeneratorColumnsLayout,
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
+import { useDiagramGenerations } from '@/lib/react-query/hooks/diagram-generations'
+import { useRouteGenerationEditor } from '@/lib/generator/use-route-generation-editor'
 import { cn } from '@/lib/utils'
 
 const RESIZE_HANDLE_CLASS = cn(
@@ -28,9 +38,15 @@ const RESIZE_HANDLE_CLASS = cn(
   'after:w-2 after:left-1/2 after:-translate-x-1/2',
 )
 
-export function DiagramsView() {
+type DiagramsViewProps = {
+  generationId?: string
+}
+
+export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewProps = {}) {
   const {
     setDiagramDocument,
+    setDocumentChrome,
+    setEditorTitle,
     leftPanelOpen,
     rightPanelOpen,
     setLeftPanelOpen,
@@ -40,13 +56,76 @@ export function DiagramsView() {
   const consoleAccount = account as ConsoleAccountCache | undefined
   const { layout, persistLayout } = useCoverGeneratorColumnsLayout(consoleAccount)
   const {
+    generations,
+    isAuthenticated,
+    isDeleting,
+    isRenaming,
+    saveGeneration,
+    deleteGeneration,
+    renameGeneration,
+    maxNameLength,
+    migrateLegacyIfNeeded,
+  } = useDiagramGenerations(consoleAccount)
+
+  const loadDocumentRef = useRef<
+    (document: ReturnType<typeof createDefaultDiagramDocument>) => void
+  >(() => {})
+
+  const loadSavedDiagramGeneration = useCallback((generation: SavedDiagramGeneration) => {
+    loadDocumentRef.current(generation.document)
+  }, [])
+
+  const leaveEditorRef = useRef<() => void>(() => {})
+
+  const getDiagramGenerationId = useCallback(
+    (generation: SavedDiagramGeneration) => generation.id,
+    [],
+  )
+
+  const {
+    phase,
+    activeGenerationId,
+    activeGenerationIdRef,
+    isRouteSyncing,
+    openEditorRoute,
+    backToStart,
+  } = useRouteGenerationEditor({
+    routeGenerationId,
+    startTo: '/generator/diagrams',
+    editorTo: '/generator/diagrams/$generationId',
+    generations,
+    getGenerationId: getDiagramGenerationId,
+    loadGeneration: loadSavedDiagramGeneration,
+    migrateLegacyIfNeeded,
+    onEnterEditor: () => setLeftPanelOpen(false),
+    onLeaveEditor: () => leaveEditorRef.current(),
+    notFoundMessage: 'Diagram not found',
+  })
+
+  const persistActiveGeneration = useCallback(
+    (document: ReturnType<typeof createDefaultDiagramDocument>) => {
+      const generationId = activeGenerationIdRef.current
+      if (!generationId) return
+
+      void saveGeneration({
+        id: generationId,
+        name: document.title.trim() || 'Untitled diagram',
+        updatedAt: Date.now(),
+        document: normalizeDiagramDocument(document),
+      }).catch(() => {
+        toast.error('Could not save diagram')
+      })
+    },
+    [saveGeneration],
+  )
+
+  const {
     document,
     selection,
     connectDraft,
     setDocument,
     setSelection,
     cancelConnectDraft,
-    applyTemplate,
     addNode,
     updateNode,
     moveNode,
@@ -57,6 +136,9 @@ export function DiagramsView() {
     removeNodes,
     updateEdge,
     removeEdge,
+    copySelection,
+    pasteClipboard,
+    cutSelection,
     handleNodeClick,
     handlePortClick,
     completePortConnect,
@@ -70,8 +152,163 @@ export function DiagramsView() {
     setTheme,
     setFormat,
     setCanvasSize,
-  } = useDiagramGeneratorState()
+    loadDocument,
+    flushPersist,
+  } = useDiagramGeneratorState({ onDocumentPersist: persistActiveGeneration })
+
+  loadDocumentRef.current = loadDocument
+  leaveEditorRef.current = () => {
+    setSelection({ type: 'none' })
+    cancelConnectDraft()
+  }
+
   const isXlUp = useIsXlUp()
+  const migratedLegacyRef = useRef(false)
+
+  useEffect(() => {
+    if (migratedLegacyRef.current) return
+    migratedLegacyRef.current = true
+    void migrateLegacyIfNeeded().catch(() => {
+      /* ignore migration errors */
+    })
+  }, [migrateLegacyIfNeeded])
+
+  useEffect(() => {
+    if (phase === 'editor') {
+      setDiagramDocument(document)
+      return () => setDiagramDocument(null)
+    }
+
+    setDiagramDocument(null)
+  }, [document, phase, setDiagramDocument])
+
+  const openEditor = useCallback(
+    async (generationId: string, nextDocument: ReturnType<typeof createDefaultDiagramDocument>, templateId?: DiagramTemplateId) => {
+      try {
+        await saveGeneration({
+          id: generationId,
+          name: nextDocument.title.trim() || 'Untitled diagram',
+          updatedAt: Date.now(),
+          ...(templateId ? { templateId } : {}),
+          document: normalizeDiagramDocument(nextDocument),
+        })
+      } catch {
+        toast.error('Could not save diagram')
+        return
+      }
+
+      openEditorRoute(generationId)
+    },
+    [openEditorRoute, saveGeneration],
+  )
+
+  const handleSelectTemplate = useCallback(
+    (templateId: DiagramTemplateId) => {
+      const nextDocument = normalizeDiagramDocument(createDiagramFromTemplate(templateId))
+      void openEditor(crypto.randomUUID(), nextDocument, templateId)
+    },
+    [openEditor],
+  )
+
+  const handleOpenGeneration = useCallback(
+    (generationId: string) => {
+      if (!generations.some((item) => item.id === generationId)) {
+        toast.error('Diagram not found')
+        return
+      }
+
+      openEditorRoute(generationId)
+    },
+    [generations, openEditorRoute],
+  )
+
+  const handleBackToStart = useCallback(() => {
+    backToStart(() => {
+      flushPersist()
+      leaveEditorRef.current()
+    })
+    setLeftPanelOpen(false)
+  }, [backToStart, flushPersist, setLeftPanelOpen])
+
+  const handleBackToStartRef = useRef(handleBackToStart)
+  handleBackToStartRef.current = handleBackToStart
+
+  useEffect(() => {
+    setDocumentChrome({
+      phase: phase === 'editor' ? 'editor' : 'start',
+      resource: 'diagrams',
+      showLeftPanelToggle: phase === 'editor',
+      leftPanelLabel: 'Toggle elements panel',
+      onNewDocument: () => handleBackToStartRef.current(),
+      onBrowseDocuments: () => handleBackToStartRef.current(),
+      newDocumentLabel: 'New diagram',
+      browseDocumentsLabel: 'All diagrams',
+    })
+    return () => setDocumentChrome(null)
+  }, [phase, setDocumentChrome])
+
+  const handleDeleteGeneration = useCallback(
+    async (generationId: string) => {
+      try {
+        await deleteGeneration(generationId)
+        if (activeGenerationId === generationId) {
+          handleBackToStart()
+        }
+        toast.success('Diagram deleted')
+      } catch {
+        toast.error('Could not delete diagram')
+      }
+    },
+    [activeGenerationId, deleteGeneration, handleBackToStart],
+  )
+
+  const handleRenameGeneration = useCallback(
+    async (generationId: string, name: string) => {
+      try {
+        await renameGeneration(generationId, name)
+        toast.success('Name updated')
+      } catch {
+        toast.error('Could not update name')
+        throw new Error('Could not update name')
+      }
+    },
+    [renameGeneration],
+  )
+
+  const handleEditorTitleChange = useCallback(
+    async (name: string) => {
+      if (!activeGenerationId) return
+      await handleRenameGeneration(activeGenerationId, name)
+      setDocument({ ...document, title: name })
+    },
+    [activeGenerationId, document, handleRenameGeneration, setDocument],
+  )
+
+  const handleEditorTitleChangeRef = useRef(handleEditorTitleChange)
+  handleEditorTitleChangeRef.current = handleEditorTitleChange
+
+  useEffect(() => {
+    if (phase !== 'editor' || !activeGenerationId) {
+      setEditorTitle(null)
+      return
+    }
+
+    const documentName = document.title.trim() || 'Untitled diagram'
+    setEditorTitle({
+      name: documentName,
+      maxLength: maxNameLength,
+      isSaving: isRenaming,
+      onChange: (name) => handleEditorTitleChangeRef.current(name),
+    })
+    return () => setEditorTitle(null)
+  }, [
+    activeGenerationId,
+    document.title,
+    isRenaming,
+    maxNameLength,
+    phase,
+    setEditorTitle,
+  ])
 
   useEffect(() => {
     const isEditableTarget = (target: HTMLElement | null) =>
@@ -84,6 +321,8 @@ export function DiagramsView() {
       )
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (phase !== 'editor') return
+
       const target = event.target as HTMLElement | null
       const isMeta = event.metaKey || event.ctrlKey
 
@@ -105,6 +344,32 @@ export function DiagramsView() {
         return
       }
 
+      if (isMeta && !event.shiftKey) {
+        if (isEditableTarget(target)) return
+
+        const key = event.key.toLowerCase()
+        if (key === 'c') {
+          if (copySelection()) {
+            event.preventDefault()
+          }
+          return
+        }
+
+        if (key === 'v') {
+          if (pasteClipboard()) {
+            event.preventDefault()
+          }
+          return
+        }
+
+        if (key === 'x') {
+          if (cutSelection()) {
+            event.preventDefault()
+          }
+          return
+        }
+      }
+
       if (event.key !== 'Delete' && event.key !== 'Backspace') return
       if (isEditableTarget(target)) return
 
@@ -122,12 +387,20 @@ export function DiagramsView() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [canRedo, canUndo, redo, removeEdge, removeNode, removeNodes, selection, undo])
-
-  useEffect(() => {
-    setDiagramDocument(document)
-    return () => setDiagramDocument(null)
-  }, [document, setDiagramDocument])
+  }, [
+    canRedo,
+    canUndo,
+    copySelection,
+    cutSelection,
+    pasteClipboard,
+    phase,
+    redo,
+    removeEdge,
+    removeNode,
+    removeNodes,
+    selection,
+    undo,
+  ])
 
   const handleDownload = useCallback(
     async (format: CoverImageFormat, scale: CoverDownloadScale) => {
@@ -152,6 +425,32 @@ export function DiagramsView() {
       toast.error('Could not open diagram image')
     }
   }, [document])
+
+  if (phase === 'editor' && (isRouteSyncing || activeGenerationId !== routeGenerationId)) {
+    return (
+      <div className="flex h-full items-center justify-center text-[13px] text-muted-foreground">
+        Loading diagram…
+      </div>
+    )
+  }
+
+  if (phase === 'start') {
+    return (
+      <DiagramStartView
+        generations={generations}
+        isAuthenticated={isAuthenticated}
+        isDeleting={isDeleting}
+        isRenaming={isRenaming}
+        maxNameLength={maxNameLength}
+        onSelectTemplate={handleSelectTemplate}
+        onOpenGeneration={handleOpenGeneration}
+        onRenameGeneration={handleRenameGeneration}
+        onDeleteGeneration={(generationId) => {
+          void handleDeleteGeneration(generationId)
+        }}
+      />
+    )
+  }
 
   const propertiesPanel = (
     <DiagramPropertiesPanel
@@ -202,10 +501,9 @@ export function DiagramsView() {
         <div className="flex h-full min-h-0 flex-col overflow-hidden">
           {leftPanelOpen ? (
             <div className="shrink-0 border-b border-border px-4 py-3">
-              <DiagramPalettePanel
+              <DiagramElementsPanel
                 theme={document.theme}
                 onThemeChange={setTheme}
-                onApplyTemplate={applyTemplate}
                 onAddNode={addNode}
                 variant="compact"
               />
@@ -230,10 +528,9 @@ export function DiagramsView() {
           className="h-full min-h-0"
           templates={
             <div className="flex h-full min-h-0 flex-col overflow-hidden border-r border-border bg-background">
-              <DiagramPalettePanel
+              <DiagramElementsPanel
                 theme={document.theme}
                 onThemeChange={setTheme}
-                onApplyTemplate={applyTemplate}
                 onAddNode={addNode}
               />
             </div>

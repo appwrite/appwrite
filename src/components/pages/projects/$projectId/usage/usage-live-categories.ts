@@ -322,3 +322,40 @@ export function buildWebhooksUsageCategoryMetrics(): UsageCategory['metrics'] {
     timeSeries: [],
   }))
 }
+
+export type StorageUsageCategory = {
+  id: 'storage'
+  label: 'Storage'
+  icon: 'Folder'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const STORAGE_USAGE_CATEGORY: StorageUsageCategory = {
+  id: 'storage',
+  label: 'Storage',
+  icon: 'Folder',
+  description:
+    'File, deployment, and build storage usage, plus billable image transformations.',
+  metrics: [
+    { id: 'file-storage', name: 'File storage' },
+    { id: 'deployment-storage', name: 'Deployment storage' },
+    { id: 'build-storage', name: 'Build storage' },
+    { id: 'image-transformations', name: 'Image transformations' },
+  ],
+}
+
+export function buildStorageUsageCategoryMetrics(): UsageCategory['metrics'] {
+  return STORAGE_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit:
+      metric.id === 'image-transformations'
+        ? 'origin images'
+        : 'bytes',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}

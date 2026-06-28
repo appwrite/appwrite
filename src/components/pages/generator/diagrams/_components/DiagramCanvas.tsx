@@ -2,6 +2,7 @@ import {
   ChevronDown,
   Download,
   ExternalLink,
+  LayoutGrid,
   Maximize2,
   Redo2,
   Undo2,
@@ -29,12 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { COVER_IMAGE_FORMATS } from '@/lib/cover-generator/constants'
 import {
-  COVER_IMAGE_FORMATS,
-  COVER_SIZE_PRESETS,
-  getCoverSizePresetKey,
-  resolveCoverSizePresetKey,
-} from '@/lib/cover-generator/constants'
+  DIAGRAM_SIZE_PRESETS,
+  getDiagramSizePresetKey,
+  resolveDiagramSizePresetKey,
+} from '@/lib/diagram-generator/constants'
 import type { CoverImageFormat } from '@/lib/cover-generator/constants'
 import {
   COVER_DOWNLOAD_SCALES,
@@ -43,8 +44,10 @@ import {
   getCoverScaledDimensions,
   type CoverDownloadScale,
 } from '@/lib/cover-generator/download-scale'
-import { DIAGRAM_ARTBOARD_DISPLAY_WIDTH } from '@/lib/diagram-generator/constants'
-import { getDiagramDisplayHeight } from '@/lib/diagram-generator/storage'
+import {
+  getDiagramArtboardDisplaySize,
+  getDiagramArtboardRenderScale,
+} from '@/lib/diagram-generator/constants'
 import type {
   DiagramConnectDraft,
   DiagramDocument,
@@ -88,6 +91,7 @@ type DiagramCanvasProps = {
   onCanvasSizeChange: (width: number, height: number) => void
   onDownload: (format: CoverImageFormat, scale: CoverDownloadScale) => void
   onOpenImage: () => void
+  onBackToStart?: () => void
 }
 
 export function DiagramCanvas({
@@ -110,15 +114,9 @@ export function DiagramCanvas({
   onCanvasSizeChange,
   onDownload,
   onOpenImage,
+  onBackToStart,
 }: DiagramCanvasProps) {
-  const displayHeight = getDiagramDisplayHeight(document.width, document.height)
-  const canvasPresetKey = getCoverSizePresetKey(document.width, document.height)
-  const artboardScale = DIAGRAM_ARTBOARD_DISPLAY_WIDTH / document.width
-  const artboardTransformStyle = {
-    width: document.width,
-    height: document.height,
-    transform: `scale(${artboardScale})`,
-  } as const
+  const canvasPresetKey = getDiagramSizePresetKey(document.width, document.height)
   const dragStateRef = useRef<{
     anchorNodeId: string
     startX: number
@@ -193,6 +191,12 @@ export function DiagramCanvas({
     [document.width, document.height],
   )
 
+  const getArtboardContentSize = useCallback(
+    (nextZoom: number) =>
+      getDiagramArtboardDisplaySize(document.width, document.height, nextZoom),
+    [document.width, document.height],
+  )
+
   const {
     canvasRef,
     pan,
@@ -205,7 +209,24 @@ export function DiagramCanvas({
     zoomPercentage,
     zoomInDisabled,
     zoomOutDisabled,
-  } = useViewportPanZoom({ maxZoom: 3 })
+  } = useViewportPanZoom({
+    maxZoom: 3,
+    contentLayout: 'sized',
+    getContentSize: getArtboardContentSize,
+  })
+
+  const artboardDisplaySize = getDiagramArtboardDisplaySize(
+    document.width,
+    document.height,
+    zoom,
+  )
+  const artboardRenderScale = getDiagramArtboardRenderScale(document.width, zoom)
+  const artboardTransformStyle = {
+    width: document.width,
+    height: document.height,
+    transform: `scale(${artboardRenderScale})`,
+    transformOrigin: 'top left',
+  } as const
 
   const isDiagramElementTarget = useCallback((target: EventTarget | null) => {
     if (!(target instanceof HTMLElement)) return false
@@ -217,9 +238,17 @@ export function DiagramCanvas({
     )
   }, [])
 
+  const isArtboardBackgroundTarget = useCallback(
+    (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false
+      if (!target.closest('[data-diagram-artboard]')) return false
+      return !isDiagramElementTarget(target)
+    },
+    [isDiagramElementTarget],
+  )
+
   const clearCanvasFocus = useCallback(() => {
     if (suppressNextCanvasClickRef.current) {
-      suppressNextCanvasClickRef.current = false
       return
     }
     onSelectionChange({ type: 'none' })
@@ -227,9 +256,16 @@ export function DiagramCanvas({
     setConnectPreviewPoint(null)
   }, [onCancelConnectDraft, onSelectionChange])
 
+  const consumeSuppressedCanvasClick = useCallback(() => {
+    if (!suppressNextCanvasClickRef.current) return false
+    suppressNextCanvasClickRef.current = false
+    return true
+  }, [])
+
   const handleCanvasMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
       if (isDiagramElementTarget(event.target)) return
+      if (isArtboardBackgroundTarget(event.target)) return
       canvasPanGestureRef.current = {
         active: true,
         moved: false,
@@ -238,7 +274,7 @@ export function DiagramCanvas({
       }
       bindCanvas.onMouseDown(event)
     },
-    [bindCanvas, isDiagramElementTarget],
+    [bindCanvas, isArtboardBackgroundTarget, isDiagramElementTarget],
   )
 
   const handleCanvasMouseMove = useCallback(
@@ -267,17 +303,17 @@ export function DiagramCanvas({
 
   const handleCanvasClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (suppressNextCanvasClickRef.current) {
-        suppressNextCanvasClickRef.current = false
+      if (event.target instanceof HTMLElement && event.target.closest('[data-diagram-artboard]')) {
         return
       }
+      if (consumeSuppressedCanvasClick()) return
       if (isDiagramElementTarget(event.target)) return
       const wasPanGesture = canvasPanGestureRef.current.moved
       canvasPanGestureRef.current.moved = false
       if (wasPanGesture) return
       clearCanvasFocus()
     },
-    [clearCanvasFocus, isDiagramElementTarget],
+    [clearCanvasFocus, consumeSuppressedCanvasClick, isDiagramElementTarget],
   )
 
   useEffect(() => {
@@ -450,8 +486,8 @@ export function DiagramCanvas({
         const dragState = dragStateRef.current
         if (!dragState || dragState.anchorNodeId !== anchorNodeId) return
 
-        const deltaX = (moveEvent.clientX - dragState.startX) / (artboardScale * zoom)
-        const deltaY = (moveEvent.clientY - dragState.startY) / (artboardScale * zoom)
+        const deltaX = (moveEvent.clientX - dragState.startX) / artboardRenderScale
+        const deltaY = (moveEvent.clientY - dragState.startY) / artboardRenderScale
         const anchorOrigin = dragState.nodeOrigins.get(anchorNodeId)
         const draggedNode = document.nodes.find((item) => item.id === anchorNodeId)
         if (!anchorOrigin || !draggedNode) return
@@ -502,7 +538,7 @@ export function DiagramCanvas({
       window.addEventListener('pointerup', handlePointerUp)
     },
     [
-      artboardScale,
+      artboardRenderScale,
       connectDraft,
       document.nodes,
       onMoveNode,
@@ -511,14 +547,12 @@ export function DiagramCanvas({
       onCommitDocumentGesture,
       onSelectionChange,
       selection,
-      zoom,
     ],
   )
 
   const handleCanvasMarqueePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (connectDraft) return
-      if (!event.shiftKey) return
 
       const target = event.target as HTMLElement
       if (
@@ -530,7 +564,10 @@ export function DiagramCanvas({
       }
 
       event.stopPropagation()
+      event.preventDefault()
       isNodeDraggingRef.current = true
+      const marqueePointerTarget = event.currentTarget
+      marqueePointerTarget.setPointerCapture(event.pointerId)
 
       const point = toDocumentPointFromClient(event.clientX, event.clientY)
       if (!point) return
@@ -538,7 +575,7 @@ export function DiagramCanvas({
       marqueeStateRef.current = {
         startX: point.x,
         startY: point.y,
-        additive: event.metaKey || event.ctrlKey,
+        additive: event.shiftKey || event.metaKey || event.ctrlKey,
       }
       setMarqueeRect({ x: point.x, y: point.y, width: 0, height: 0 })
 
@@ -568,6 +605,14 @@ export function DiagramCanvas({
         window.removeEventListener('pointermove', handlePointerMove)
         window.removeEventListener('pointerup', handlePointerUp)
         window.removeEventListener('pointercancel', handlePointerUp)
+
+        try {
+          if (marqueePointerTarget.hasPointerCapture(upEvent.pointerId)) {
+            marqueePointerTarget.releasePointerCapture(upEvent.pointerId)
+          }
+        } catch {
+          /* pointer may already be released */
+        }
 
         if (!marqueeState) return
 
@@ -636,8 +681,8 @@ export function DiagramCanvas({
       }
 
       const handlePointerMove = (moveEvent: PointerEvent) => {
-        const deltaX = (moveEvent.clientX - start.clientX) / (artboardScale * zoom)
-        const deltaY = (moveEvent.clientY - start.clientY) / (artboardScale * zoom)
+        const deltaX = (moveEvent.clientX - start.clientX) / artboardRenderScale
+        const deltaY = (moveEvent.clientY - start.clientY) / artboardRenderScale
         onResizeNode(nodeId, start.width + deltaX, start.height + deltaY)
       }
 
@@ -652,12 +697,11 @@ export function DiagramCanvas({
       window.addEventListener('pointerup', handlePointerUp)
     },
     [
-      artboardScale,
+      artboardRenderScale,
       document.nodes,
       onBeginDocumentGesture,
       onCommitDocumentGesture,
       onResizeNode,
-      zoom,
     ],
   )
 
@@ -718,65 +762,58 @@ export function DiagramCanvas({
         )}
       >
         <div
-          className="pointer-events-none h-full w-full overflow-hidden will-change-transform"
+          className="pointer-events-none absolute inset-0 overflow-visible will-change-transform"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: '0 0',
+            transform: `translate(${pan.x}px, ${pan.y}px)`,
           }}
         >
           <SchemaBlueprintMat />
-          <div className="flex h-full w-full items-center justify-center px-4 py-10">
+          <div
+            className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{
+              width: artboardDisplaySize.width,
+              height: artboardDisplaySize.height,
+            }}
+          >
             <div
-              className="relative shrink-0 overflow-visible"
-              style={{
-                width: DIAGRAM_ARTBOARD_DISPLAY_WIDTH,
-                height: displayHeight,
-              }}
+              className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-xl border border-border shadow-sm"
+              style={artboardTransformStyle}
             >
-              <div
-                className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl border border-border shadow-sm"
-                aria-hidden
-              >
-                <div
-                  className="absolute left-0 top-0 origin-top-left"
-                  style={artboardTransformStyle}
-                >
-                  <CoverBrandBackgroundPreview
-                    themeId={document.theme}
-                    width={document.width}
-                    height={document.height}
-                  />
-                </div>
-              </div>
-
-              <div
-                data-diagram-artboard=""
-                className="pointer-events-auto absolute left-0 top-0 origin-top-left overflow-visible"
-                style={artboardTransformStyle}
-              >
-                <DiagramArtboard
-                  document={document}
+                <CoverBrandBackgroundPreview
+                  themeId={document.theme}
                   width={document.width}
                   height={document.height}
-                  hideBackground
-                  interactive
-                  selection={selection}
-                  connectDraft={effectiveConnectDraft}
-                  connectPreviewPoint={connectPreviewPoint}
-                  onNodePointerDown={handleNodePointerDown}
-                  onPortPointerDown={handlePortPointerDown}
-                  onResizePointerDown={handleResizePointerDown}
-                  onCanvasPointerDown={handleCanvasMarqueePointerDown}
-                  marqueeRect={marqueeRect}
-                  onEdgeClick={(edgeId) => {
-                    onCancelConnectDraft()
-                    onSelectionChange({ type: 'edge', id: edgeId })
-                  }}
-                  onPointerMove={handleArtboardPointerMove}
-                  alignGuides={alignGuides}
-                  onCanvasClick={clearCanvasFocus}
                 />
-              </div>
+                <div
+                  data-diagram-artboard=""
+                  className="absolute inset-0 overflow-visible"
+                >
+                  <DiagramArtboard
+                    document={document}
+                    width={document.width}
+                    height={document.height}
+                    hideBackground
+                    interactive
+                    selection={selection}
+                    connectDraft={effectiveConnectDraft}
+                    connectPreviewPoint={connectPreviewPoint}
+                    onNodePointerDown={handleNodePointerDown}
+                    onPortPointerDown={handlePortPointerDown}
+                    onResizePointerDown={handleResizePointerDown}
+                    onCanvasPointerDown={handleCanvasMarqueePointerDown}
+                    marqueeRect={marqueeRect}
+                    onEdgeClick={(edgeId) => {
+                      onCancelConnectDraft()
+                      onSelectionChange({ type: 'edge', id: edgeId })
+                    }}
+                    onPointerMove={handleArtboardPointerMove}
+                    alignGuides={alignGuides}
+                    onCanvasClick={() => {
+                      if (consumeSuppressedCanvasClick()) return
+                      clearCanvasFocus()
+                    }}
+                  />
+                </div>
             </div>
           </div>
         </div>
@@ -846,6 +883,18 @@ export function DiagramCanvas({
         </div>
 
         <div className="pointer-events-auto flex max-w-[min(100%,720px)] shrink-0 flex-wrap items-center justify-end gap-2">
+          {onBackToStart ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 border-border bg-card/95 text-[12px] backdrop-blur-sm"
+              onClick={onBackToStart}
+            >
+              <LayoutGrid className="mr-1.5 size-3.5" />
+              All diagrams
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"
@@ -860,7 +909,7 @@ export function DiagramCanvas({
           <Select
             value={canvasPresetKey}
             onValueChange={(value) => {
-              const { width, height } = resolveCoverSizePresetKey(value)
+              const { width, height } = resolveDiagramSizePresetKey(value)
               onCanvasSizeChange(width, height)
             }}
           >
@@ -871,9 +920,9 @@ export function DiagramCanvas({
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end">
-              {COVER_SIZE_PRESETS.slice(0, 4).map((preset) => (
+              {DIAGRAM_SIZE_PRESETS.map((preset) => (
                 <SelectItem key={preset.id} value={preset.id}>
-                  {preset.label} ({preset.width} × {preset.height})
+                  {preset.label}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -138,6 +138,13 @@ function buildPersistedTemplateData(
   })
 }
 
+export function restoreCoverRenderDataFromJson(
+  value: unknown,
+): CoverRenderData | null {
+  const parsed = parseStoredCoverData(value)
+  return parsed ? normalizeStoredCoverData(parsed) : null
+}
+
 function parseStoredCoverData(value: unknown): CoverRenderData | null {
   if (!value || typeof value !== 'object') return null
 

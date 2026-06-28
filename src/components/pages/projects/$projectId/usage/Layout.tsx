@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectMessagingUsageQueries, refetchProjectWebhooksUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries } from '@/lib/react-query/hooks'
+import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectMessagingUsageQueries, refetchProjectWebhooksUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries, refetchProjectStorageUsageQueries } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import {
   Zap,
@@ -356,6 +356,7 @@ function UsageLayoutContent({
   const isAvatarsCategory = categoryId === 'avatars'
   const isMessagingCategory = categoryId === 'messaging'
   const isWebhooksCategory = categoryId === 'webhooks'
+  const isStorageCategory = categoryId === 'storage'
   const showChartIntervalToggle = categorySupportsChartInterval(categoryId)
 
   useEffect(() => {
@@ -412,6 +413,11 @@ function UsageLayoutContent({
 
     if (isWebhooksCategory) {
       void refetchProjectWebhooksUsageQueries(queryClient, projectId)
+      return
+    }
+
+    if (isStorageCategory) {
+      void refetchProjectStorageUsageQueries(queryClient, projectId)
     }
   }
 
