@@ -1117,7 +1117,12 @@ class Install extends Action
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
-                copy($source, $this->path . '/' . $file);
+                $target = $this->path . '/' . $file;
+                if (@copy($source, $target) === false) {
+                    $lastError = error_get_last();
+                    $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
+                    throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
+                }
             }
         }
     }
