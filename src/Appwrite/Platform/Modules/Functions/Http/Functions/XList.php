@@ -37,7 +37,6 @@ class XList extends Base
             ->groups(['api', 'functions'])
             ->desc('List functions')
             ->label('scope', 'functions.read')
-            ->label('usage.resource', 'function')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',

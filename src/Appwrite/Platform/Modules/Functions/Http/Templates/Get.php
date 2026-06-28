@@ -31,7 +31,6 @@ class Get extends Base
             ->desc('Get function template')
             ->groups(['api', 'functions'])
             ->label('scope', 'public')
-            ->label('usage.resource', 'function/{request.templateId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
