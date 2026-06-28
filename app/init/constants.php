@@ -171,7 +171,6 @@ const ACTOR_TYPE_GUEST = 'guest';
 const ACTOR_TYPE_KEY_PROJECT = 'keyProject';
 const ACTOR_TYPE_KEY_ACCOUNT = 'keyAccount';
 const ACTOR_TYPE_KEY_ORGANIZATION = 'keyOrganization';
-const ACTOR_TYPE_SYSTEM = 'system';
 
 /**
  * Project onboarding stage status (stored per SDK method key under project.onboarding JSON).

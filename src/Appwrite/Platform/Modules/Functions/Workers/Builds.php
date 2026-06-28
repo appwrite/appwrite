@@ -1039,68 +1039,6 @@ class Builds extends Action
                 Span::add('build.activated', true);
             }
 
-            /**
-             * Mark deployment onboarding stages. Done here (not via the HTTP sdk
-             * label) so every creation path - manual upload, CLI, template,
-             * duplicate and VCS - and the worker-driven activation are covered.
-             * The create stage is keyed by the deployment `type` so each type
-             * has its own stage (OR them in the UI for a single milestone).
-             */
-            $collection = $resource->getCollection();
-            $createStage = match ($collection) {
-                'functions' => match ($deployment->getAttribute('type')) {
-                    'manual' => 'functions.createManualDeployment',
-                    'cli' => 'functions.createCliDeployment',
-                    'vcs' => 'functions.createVcsDeployment',
-                    default => null,
-                },
-                'sites' => match ($deployment->getAttribute('type')) {
-                    'manual' => 'sites.createManualDeployment',
-                    'cli' => 'sites.createCliDeployment',
-                    'vcs' => 'sites.createVcsDeployment',
-                    default => null,
-                },
-                default => null,
-            };
-            $activateStage = match ($collection) {
-                'functions' => 'functions.updateFunctionDeployment',
-                'sites' => 'sites.updateSiteDeployment',
-                default => null,
-            };
-
-            $stages = [];
-            if ($createStage !== null) {
-                $stages[] = $createStage;
-            }
-            if ($activateBuild && $activateStage !== null) {
-                $stages[] = $activateStage;
-            }
-
-            if ($stages !== []) {
-                // Fetch the project fresh and only set stages that aren't already
-                // recorded, so a stage skipped or completed via the API while the
-                // build was running is left untouched (??= respects it).
-                $onboarding = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('onboarding', []);
-                if (! \is_array($onboarding)) {
-                    $onboarding = [];
-                }
-
-                foreach ($stages as $stage) {
-                    $onboarding[$stage] ??= [
-                        'status' => ONBOARDING_STATUS_COMPLETED,
-                        'at' => DateTime::now(),
-                        'actorType' => ACTOR_TYPE_SYSTEM,
-                    ];
-                }
-
-                try {
-                    $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                        'onboarding' => $onboarding,
-                    ]));
-                } catch (\Throwable) {
-                }
-            }
-
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $this->afterDeploymentSuccess(
