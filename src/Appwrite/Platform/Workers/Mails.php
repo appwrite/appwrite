@@ -157,7 +157,7 @@ class Mails extends Action
                 smtpAutoTLS: false,
                 xMailer: 'Appwrite Mailer',
                 timeout: 10,
-                keepAlive: true,
+                keepAlive: System::getEnv('_APP_SMTP_KEEPALIVE', 'enabled') === 'enabled',
                 timelimit: 30,
             );
         $adapter->setTelemetry($telemetry);
