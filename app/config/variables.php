@@ -305,33 +305,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
-                'introduction' => '1.1.0',
-                'default' => '30',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
-                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
-                'introduction' => '1.0.0',
-                'default' => '30',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_DATABASE_INTERVAL',
-                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
-                'introduction' => '1.0.0',
-                'default' => '900',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_WORKER_PER_CORE',
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',
