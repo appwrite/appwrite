@@ -773,17 +773,18 @@ services:
 
   appwrite-worker-notifications:
     entrypoint: worker-notifications
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-notifications
-    image: appwrite-dev
+    restart: unless-stopped
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - maildev
       - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV

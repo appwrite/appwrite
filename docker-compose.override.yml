@@ -175,6 +175,20 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - maildev
+  appwrite-worker-notifications:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - maildev
   appwrite-worker-messaging:
     build:
       context: .
