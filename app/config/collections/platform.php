@@ -343,6 +343,17 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('onboarding'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65536,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'status',
                 'type' => Database::VAR_STRING,
                 'format' => '',

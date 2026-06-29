@@ -75,6 +75,16 @@ return [
             "Access to create, update, and delete project\'s templates",
         "category" => "Project",
     ],
+    "stages.read" => [
+        "description" =>
+            "Access to read project\'s stages",
+        "category" => "Project",
+    ],
+    "stages.write" => [
+        "description" =>
+            "Access to update project\'s stages",
+        "category" => "Project",
+    ],
     "oauth2.read" => [
         "description" =>
             "Access to read project\'s OAuth2 configuration",

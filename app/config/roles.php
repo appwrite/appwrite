@@ -107,6 +107,8 @@ $admins = [
     'tokens.write',
     'schedules.read',
     'schedules.write',
+    'stages.read',
+    'stages.write',
     'insights.read',
     'insights.write',
     'reports.read',
