@@ -73,6 +73,13 @@ import {
   readRuntimeConfigFromEnv,
   serializeRuntimeConfig,
 } from './src/lib/runtime-config-shared.ts'
+import {
+  applyNoIndexResponseHeaders,
+  getNonProductionRobotsTxt,
+  getRequestHostFromHeaders,
+  isSeoIndexableHost,
+  NOINDEX_ROBOTS_HEADER,
+} from './src/lib/seo/indexing.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -87,6 +94,33 @@ const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
 
 function injectRuntimeConfig(html: string): string {
   return injectRuntimeConfigIntoHtml(html, RUNTIME_CONFIG_JSON)
+}
+
+function isIndexableRequest(req: Request): boolean {
+  return isSeoIndexableHost(getRequestHostFromHeaders(req.headers, req.url))
+}
+
+function withSeoIndexingHeaders(req: Request, response: Response): Response {
+  if (isIndexableRequest(req)) return response
+
+  const headers = applyNoIndexResponseHeaders(response.headers)
+  headers.delete('content-length')
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  })
+}
+
+function htmlResponse(
+  req: Request,
+  html: string,
+  headers: Record<string, string>,
+): Response {
+  return withSeoIndexingHeaders(
+    req,
+    new Response(injectRuntimeConfig(html), { headers }),
+  )
 }
 
 // Logging utilities for professional output
@@ -392,25 +426,23 @@ async function initializeStaticRoutes(
           // Serve large or filtered files on-demand. HTML documents get the
           // runtime config stamped in (prerendered pages would otherwise carry
           // build-time config frozen into window.__APP_CONFIG__).
-          routes[route] = async () => {
+          routes[route] = async (req: Request) => {
             if (metadata.type.includes('text/html')) {
-              return new Response(
-                injectRuntimeConfig(await Bun.file(filepath).text()),
-                {
-                  headers: {
-                    'Content-Type': metadata.type,
-                    'Cache-Control': 'public, max-age=3600',
-                  },
-                },
-              )
-            }
-            const fileOnDemand = Bun.file(filepath)
-            return new Response(fileOnDemand, {
-              headers: {
+              return htmlResponse(req, await Bun.file(filepath).text(), {
                 'Content-Type': metadata.type,
                 'Cache-Control': 'public, max-age=3600',
-              },
-            })
+              })
+            }
+            const fileOnDemand = Bun.file(filepath)
+            return withSeoIndexingHeaders(
+              req,
+              new Response(fileOnDemand, {
+                headers: {
+                  'Content-Type': metadata.type,
+                  'Cache-Control': 'public, max-age=3600',
+                },
+              }),
+            )
           }
 
           skipped.push(metadata)
@@ -431,12 +463,10 @@ async function initializeStaticRoutes(
       const file = Bun.file(filepath)
       if (!(await file.exists())) continue
 
-      routes[urlPath] = async () =>
-        new Response(injectRuntimeConfig(await Bun.file(filepath).text()), {
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
-          },
+      routes[urlPath] = async (req: Request) =>
+        htmlResponse(req, await Bun.file(filepath).text(), {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600',
         })
 
       skipped.push({
@@ -612,7 +642,8 @@ async function initializeServer() {
   }
 
   // Build static routes with intelligent preloading
-  const { routes } = await initializeStaticRoutes(CLIENT_DIRECTORY)
+  const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY)
+  const productionRobotsHandler = staticRoutes['/robots.txt']
 
   // Create Bun server
   const server = Bun.serve({
@@ -631,7 +662,26 @@ async function initializeServer() {
         }),
 
       // Serve static assets (preloaded or on-demand)
-      ...routes,
+      ...staticRoutes,
+
+      '/robots.txt': async (req: Request) => {
+        if (!isIndexableRequest(req)) {
+          return new Response(getNonProductionRobotsTxt(), {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'Cache-Control': 'no-store',
+              'X-Robots-Tag': NOINDEX_ROBOTS_HEADER,
+            },
+          })
+        }
+
+        if (productionRobotsHandler) {
+          return productionRobotsHandler(req)
+        }
+
+        return new Response('Not Found', { status: 404 })
+      },
 
       // Fallback to TanStack Start handler for all other routes. HTML responses
       // get the runtime config stamped in (the SSR shell emits a placeholder).
@@ -639,14 +689,13 @@ async function initializeServer() {
         try {
           const res = await handler.fetch(req)
           const contentType = res.headers.get('content-type') ?? ''
-          if (!contentType.includes('text/html')) return res
+          if (!contentType.includes('text/html')) {
+            return withSeoIndexingHeaders(req, res)
+          }
           const html = await res.text()
-          const headers = new Headers(res.headers)
-          headers.delete('content-length')
-          return new Response(injectRuntimeConfig(html), {
-            status: res.status,
-            statusText: res.statusText,
-            headers,
+          return htmlResponse(req, html, {
+            'Content-Type': contentType,
+            'Cache-Control': res.headers.get('cache-control') ?? 'no-store',
           })
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)

@@ -61,6 +61,8 @@ import {
   getConsoleRouteIds,
   withPageTitleNameContext,
 } from '@/lib/utils/page-title'
+import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
+import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -178,6 +180,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         title: 'Appwrite Console',
       },
+      ...getSeoRobotsMetaTags(getRequestSiteOrigin()),
     ],
     links: [
       {
