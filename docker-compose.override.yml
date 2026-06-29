@@ -3,6 +3,12 @@
 # CI sets COMPOSE_FILE=docker-compose.yml explicitly, so these services are excluded from test runs.
 
 services:
+  # Enable Xdebug for local debugging. Loading Xdebug disables opcache JIT, so
+  # this lives in the dev-only override -- CI and production keep JIT.
+  appwrite:
+    volumes:
+      - ./dev/xdebug.ini:/usr/local/etc/php/conf.d/zz-xdebug.ini
+
   appwrite-mongo-express:
     profiles: ["mongodb"]
     image: mongo-express

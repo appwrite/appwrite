@@ -341,6 +341,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONNECTIONS_MAX',
+                'description' => 'Total database/cache connections the API may open to a backend. Each API worker (one per CPU core) gets a pool of _APP_CONNECTIONS_MAX divided by the core count. The default suits MongoDB; on MariaDB/MySQL keep this at or below the server\'s max_connections (default 151), or raise max_connections accordingly.',
+                'introduction' => '1.9.0',
+                'default' => 600,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
                 'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
                 'introduction' => '1.6.0',

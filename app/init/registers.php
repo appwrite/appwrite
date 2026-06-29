@@ -241,15 +241,11 @@ $register->set('pools', function () {
         ],
     ];
 
-    $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
-
-    $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-    $poolSize = max(1, (int)($instanceConnections / $workerCount));
-
-    // Queue workers consume jobs concurrently with coroutines; each in-flight
-    // job may hold a connection, so pools must cover the coroutine count.
-    $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
+    // Split the backend connection budget across the API's worker processes
+    // (one per core), keeping the API's total connections within budget.
+    $connectionBudget = (int) System::getEnv('_APP_CONNECTIONS_MAX', 600);
+    $apiWorkers = (int) max(1, ceil(System::getCPU()));
+    $poolSize = max(1, intdiv($connectionBudget, $apiWorkers));
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
@@ -301,7 +297,7 @@ $register->set('pools', function () {
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
-                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, true);
                         @$mongo->connect();
 
                         return $mongo;
@@ -331,7 +327,8 @@ $register->set('pools', function () {
                 },
             };
 
-            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
+            // The swoole adapter parks waiting coroutines; stack sleep-retries.
+            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'swoole') === 'stack' ? new StackPool() : new SwoolePool();
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
@@ -415,7 +412,7 @@ $register->set('db', function () {
     switch ($dbAdapter) {
         case 'mongodb':
             try {
-                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, true);
                 @$mongo->connect();
                 return $mongo;
             } catch (\Throwable $e) {

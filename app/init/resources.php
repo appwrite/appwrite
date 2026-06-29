@@ -18,7 +18,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Executor\Executor;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapters\TimeLimit\RedisPool as TimeLimitRedisPool;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -203,26 +203,12 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('redis', function () {
-    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-    $port = System::getEnv('_APP_REDIS_PORT', 6379);
-    $pass = System::getEnv('_APP_REDIS_PASS', '');
-
-    $redis = new \Redis();
-    @$redis->pconnect($host, (int) $port);
-    if ($pass) {
-        $redis->auth($pass);
-    }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
-});
-
 $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
     fn (\Redis $redis) => (new Distributed($redis, $key, ttl: $ttl))->withLock($callback, timeout: $timeout)
 ), ['pools']);
 
-$container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, int $time) => new TimeLimitRedis($key, $limit, $time, $redis), ['redis']);
+// Pooled per operation so coroutines never share a Redis socket.
+$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $time) => new TimeLimitRedisPool($key, $limit, $time, $pools->get('lock')), ['pools']);
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 

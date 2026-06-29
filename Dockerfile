@@ -23,14 +23,11 @@ ENV DEBUG=$DEBUG
 ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
-RUN \
-    if [ "$DEBUG" != "true" ]; then \
-    rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
-    rm -f /usr/local/lib/php/extensions/no-debug-non-zts-*/xdebug.so; \
-    fi && \
-    if [ "$DEBUG" == "true" ]; then \
-    apk add boost boost-dev; \
-    fi
+# Drop Xdebug's autoloader so opcache JIT is active by default. The extension
+# binary stays in the image so the development build can re-enable Xdebug at
+# runtime via docker-compose.override.yml (which disables JIT while loaded).
+RUN rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
+    if [ "$DEBUG" == "true" ]; then apk add boost boost-dev; fi
 
 WORKDIR /usr/src/code
 
@@ -42,6 +39,7 @@ COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
+COPY ./dev/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
@@ -120,11 +118,9 @@ FROM base AS development
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-RUN if [ "$DEBUG" = "true" ]; then \
-    cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini && \
-    mkdir -p /tmp/xdebug && \
-    apk add --update --no-cache openssh-client github-cli; \
-    fi
+# Xdebug is enabled at runtime via docker-compose.override.yml, not baked in.
+RUN mkdir -p /tmp/xdebug && \
+    apk add --update --no-cache openssh-client github-cli
 
 EXPOSE 80
 EXPOSE 8080
