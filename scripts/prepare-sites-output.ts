@@ -12,7 +12,7 @@
  * Set the site output directory to `dist` when possible. Keep this script for
  * sites still using the TanStack default `.output`.
  *
- * Run: node --experimental-strip-types scripts/prepare-appwrite-sites-output.ts
+ * Run: node --experimental-strip-types scripts/prepare-sites-output.ts
  */
 import { lstat, rm, symlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -22,7 +22,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT_LINK = join(ROOT, '.output')
 
 async function run() {
-  // verify-appwrite-sites-output.ts runs immediately before this script in build:node
+  // verify-sites-output.ts runs immediately before this script in build:node
 
   try {
     const stat = await lstat(OUTPUT_LINK)

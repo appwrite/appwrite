@@ -22,7 +22,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Unit Tests
-        run: bun test:unit
+        run: bun test
         env:
           VITE_APPWRITE_ENDPOINT: http://appwrite.test/v1
           PUBLIC_APPWRITE_ENDPOINT: http://appwrite.test/v1

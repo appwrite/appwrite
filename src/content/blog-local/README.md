@@ -9,5 +9,5 @@ Store images under `public/images/blog-local/` so they are not overwritten when 
 To regenerate cover and inline images for a post:
 
 ```bash
-bun run scripts/generate-blog-local-images.ts announcing-console-terminal
+bun run generate:blog-local-images announcing-console-terminal
 ```

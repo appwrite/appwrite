@@ -2,7 +2,7 @@
  * Converts non-AVIF raster images under public/images/{blog,docs,changelog} to AVIF
  * and updates matching paths in imported markdoc content.
  *
- * Run: bun run convert:content-images
+ * Run: bun run generate:content-images
  */
 import { convertImagesToAvif } from './lib/convert-images-to-avif.ts'
 

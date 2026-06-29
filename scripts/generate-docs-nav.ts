@@ -1,6 +1,6 @@
 /**
  * Generates docs section sub-navigation from the Appwrite website repo layouts.
- * Run: bun run scripts/generate-docs-section-nav.ts
+ * Run: bun run generate:docs-nav
  */
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
@@ -324,7 +324,7 @@ export type DocsSectionNavConfig = {
   navigation: DocsNavTree
 }
 
-/** Generated from ../website layout files. Run: bun run scripts/generate-docs-section-nav.ts */
+/** Generated from ../website layout files. Run: bun run generate:docs-nav */
 export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = ${toTsValue(sections, 1)}
 `
 

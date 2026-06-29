@@ -1,3 +1,7 @@
+/**
+ * Fetches GitHub star count and writes src/lib/generated/github-stars.json.
+ * Run: bun run generate:github-stars
+ */
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const outFile = 'src/lib/generated/github-stars.json'

@@ -1,7 +1,7 @@
 /**
  * Fail early if the SSR entry is missing. Appwrite's post-build find lists
  * `./server/server.js`, but utopia-php/detector expects an exact `server/server.js`
- * line; emit-appwrite-ssr-detection.ts prints that path in the first log block.
+ * line; emit-ssr-detection.ts prints that path in the first log block.
  */
 import { access } from 'node:fs/promises'
 import { join } from 'node:path'

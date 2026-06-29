@@ -1,6 +1,6 @@
 /**
  * Generates static docs exports for SEO and LLM crawlers (llms.txt, llms-full.txt).
- * Sitemaps are generated via scripts/generate-sitemap.ts.
+ * Sitemaps are generated via generate:sitemap.
  * Run manually when docs change: bun run generate:docs-exports
  */
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'

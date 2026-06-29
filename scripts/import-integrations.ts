@@ -1,7 +1,7 @@
 /**
  * Imports integrations catalog content from the Appwrite website repo.
  * Copies markdoc plus only images referenced in content (not decorative site assets).
- * Run: bun run scripts/import-integrations.ts
+ * Run: bun run import:integrations
  */
 import { cp, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'

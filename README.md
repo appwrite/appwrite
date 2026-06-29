@@ -114,22 +114,39 @@ Preview the production build:
 bun run serve
 ```
 
-## Available Scripts
+## Scripts
 
-| Script                    | Description                           |
-| ------------------------- | ------------------------------------- |
-| `bun run dev`             | Start development server on port 3000 |
-| `bun run start`           | Start production server               |
-| `bun run build`           | Build for production                  |
-| `bun run build:node`      | Build for Node.js deployment          |
-| `bun run serve`           | Preview production build              |
-| `bun run test`            | Run tests with Vitest                 |
-| `bun run lint`            | Run ESLint                            |
-| `bun run format`          | Format code with Prettier             |
-| `bun run format:check`    | Check code formatting                 |
-| `bun run generate:routes` | Generate route types                  |
-| `bun run generate:icons`  | Generate Apple touch icons            |
-| `bun run clean`           | Clean build artifacts                 |
+Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a file by replacing `:` with `-` (`generate:sitemap` → `generate-sitemap.ts`). Helpers without a task live in `scripts/lib/`.
+
+**Namespaces:** `import:` pulls content from the sibling [`website`](https://github.com/appwrite/website) repo (`../website`); `generate:` writes derived artifacts. Vibes-native content in `src/content/docs-local/` and `src/content/blog-local/` is never overwritten by imports.
+
+| Command | Description |
+| ------- | ----------- |
+| `build` / `build:node` | Production build (CI vs Docker / Sites) |
+| `check` | TypeScript check |
+| `clean` | Remove build artifacts |
+| `dev` | Dev server on port 3000 |
+| `e2e` / `test:e2e:ui` | Playwright tests |
+| `format` / `format:check` | Prettier |
+| `install-browsers` | Install Chromium for Playwright |
+| `lint` | ESLint |
+| `serve` | Preview production build |
+| `start` | Production Bun server |
+| `test` | Vitest unit tests |
+| `import:blog` | Import blog from website |
+| `import:docs` | Import docs from website, then `generate:docs` |
+| `import:integrations` | Import integrations catalog |
+| `generate:blog-local-images` | Blog-local cover images (optional slug) |
+| `generate:content-images` | Convert content images to AVIF |
+| `generate:docs` | Docs manifest, nav, LLM exports, sitemap |
+| `generate:docs-exports` | `llms.txt` / `llms-full.txt` only |
+| `generate:docs-nav` | Docs section navigation only |
+| `generate:github-stars` | GitHub star count JSON |
+| `generate:icons` | Favicon and apple-touch-icon from logo |
+| `generate:public-icon-manifest` | Public icon picker manifest |
+| `generate:routes` | TanStack Router types |
+| `generate:sitemap` | Sitemap files |
+| `generate:specs` | API reference versions; `--copy` after build for `dist/specs/` |
 
 ## Project Structure
 
@@ -147,7 +164,7 @@ src/
 └── styles.css          # Global styles
 
 public/                 # Static assets
-scripts/                # Build and utility scripts
+scripts/                # Build, content, and asset scripts
 ```
 
 ## Development Guidelines

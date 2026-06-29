@@ -7,7 +7,7 @@
  * Generated covers: slugs with a generator function write `cover-source.png`
  * and `cover.avif` automatically.
  *
- * Run: bun run scripts/generate-blog-local-images.ts [slug]
+ * Run: bun run generate:blog-local-images [slug]
  */
 import { access, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'

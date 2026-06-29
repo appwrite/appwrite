@@ -6,7 +6,7 @@ export type DocsSectionNavConfig = {
   navigation: DocsNavTree
 }
 
-/** Generated from ../website layout files. Run: bun run scripts/generate-docs-section-nav.ts */
+/** Generated from ../website layout files. Run: bun run generate:docs-nav */
 export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     {
       prefix: "advanced/billing",

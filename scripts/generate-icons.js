@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Script to generate Apple Touch Icon and favicon.ico from the SVG logo.
- * - apple-touch-icon.png: required for iOS home screen
- * - favicon.ico: used when the browser has no HTML (e.g. plain 500) and requests /favicon.ico
+ * Generates apple-touch-icon.png and favicon.ico from public/logo.svg.
+ * Run: bun run generate:icons
  */
 
 import { readFile, writeFile } from 'fs/promises'
