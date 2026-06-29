@@ -1,7 +1,7 @@
 name: "Generate Specs"
 
 env:
-  COMPOSE_FILE: docker-compose.yml
+  COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
 
 on:
   workflow_dispatch:

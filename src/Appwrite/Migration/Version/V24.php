@@ -115,6 +115,12 @@ class V24 extends Migration
                         } catch (Throwable $th) {
                             Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                         }
+
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_teamInternalId');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_teamInternalId\" from {$id}: {$th->getMessage()}");
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -223,6 +229,15 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'memberships':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_team_confirm');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_team_confirm\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'tokens':
                     try {
                         $this->createIndexFromCollection($this->dbForProject, $id, '_key_type_expire');
@@ -249,6 +264,8 @@ class V24 extends Migration
                         'startCommand',
                         'buildSpecification',
                         'runtimeSpecification',
+                        'providerBranches',
+                        'providerPaths',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -264,6 +281,8 @@ class V24 extends Migration
                         'deploymentRetention',
                         'buildSpecification',
                         'runtimeSpecification',
+                        'providerBranches',
+                        'providerPaths',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -301,6 +320,32 @@ class V24 extends Migration
                         $this->dbForProject->deleteIndex($id, '_fulltext_name');
                     } catch (Throwable $th) {
                         Console::warning("Failed to delete index \"_fulltext_name\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'platforms':
+                case 'webhooks':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_project_id');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_project_id\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'reports':
+                case 'insights':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createCollection($id);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create collection \"{$id}\": {$th->getMessage()}");
+
+                            throw $th;
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
