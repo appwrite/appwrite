@@ -25,11 +25,15 @@ final class ComposeTest extends TestCase
 
     public function testServices(): void
     {
-        $this->assertCount(16, $this->object->getServices());
+        $this->assertCount(17, $this->object->getServices());
         $this->assertSame('appwrite', $this->object->getService('appwrite')->getContainerName());
         $this->assertSame('', $this->object->getService('appwrite')->getImageVersion());
-        $this->assertEquals('3.6', $this->object->getService('traefik')->getImageVersion());
+        $this->assertSame('3.6', $this->object->getService('traefik')->getImageVersion());
         $this->assertSame(['2080' => '80', '2443' => '443', '8080' => '8080'], $this->object->getService('traefik')->getPorts());
+        $this->assertSame('appwrite-worker-mails', $this->object->getService('appwrite-worker-mails')->getContainerName());
+        $this->assertSame('worker-mails', $this->object->getService('appwrite-worker-mails')->getEntrypoint());
+        $this->assertSame('appwrite-worker-notifications', $this->object->getService('appwrite-worker-notifications')->getContainerName());
+        $this->assertSame('worker-notifications', $this->object->getService('appwrite-worker-notifications')->getEntrypoint());
     }
 
     public function testNetworks(): void
@@ -40,8 +44,8 @@ final class ComposeTest extends TestCase
     public function testVolumes(): void
     {
         $this->assertCount(7, $this->object->getVolumes());
-        $this->assertEquals('appwrite-mariadb', $this->object->getVolumes()[0]);
-        $this->assertEquals('appwrite-redis', $this->object->getVolumes()[1]);
-        $this->assertEquals('appwrite-cache', $this->object->getVolumes()[2]);
+        $this->assertSame('appwrite-mariadb', $this->object->getVolumes()[0]);
+        $this->assertSame('appwrite-redis', $this->object->getVolumes()[1]);
+        $this->assertSame('appwrite-cache', $this->object->getVolumes()[2]);
     }
 }
