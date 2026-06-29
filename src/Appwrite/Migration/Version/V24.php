@@ -192,6 +192,7 @@ class V24 extends Migration
 
                 case 'users':
                     $attributes = [
+                        'keys',
                         'emailCanonical',
                         'emailIsFree',
                         'emailIsDisposable',
