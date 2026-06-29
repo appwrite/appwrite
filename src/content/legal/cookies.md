@@ -10,27 +10,28 @@ Cookies are computer files containing small amounts of information which are dow
 
 There are two broad categories of cookies:
 - **First party cookies**, served directly by us to your computer or mobile device.
-- **Third party cookies**, which are served by a third party on our behalf. We use third-party cookies for functionality, performance/analytics, marketing, unclassified, and other technologies, and social media purposes. The third-party cookies are outside of our control. The third parties may, at any time, change their terms of service, purpose, and use of cookies, etc. See below additional information on how to manage such cookies.
+- **Third party cookies**, which are served by a third party on our behalf. We use third-party cookies for functionality and performance/analytics purposes. The third-party cookies are outside of our control. The third parties may, at any time, change their terms of service, purpose, and use of cookies, etc. See below additional information on how to manage such cookies.
 
 Cookies can remain on your computer or mobile device for different periods of time. Some cookies are 'session cookies', meaning that they exist only while your browser is open. These are deleted automatically once you close your browser. Other cookies are 'permanent cookies', meaning that they survive after your browser is closed. They can be used by websites to recognize your computer when you open your browser and browse the Internet again.
 
 ## Web beacons
 
-Cookies are not the only way to recognize or track visitors to a website. We may use other, similar technologies from time to time, like web beacons (sometimes called "tracking pixels" or "clear gifs"). These are small graphics files that contain a unique identifier that enables us to recognize when someone has visited our website. This allows us, for example, to monitor the traffic patterns of users from one page within our website to another, to deliver or communicate with cookies, to understand whether you have come to our website from an online advertisement displayed on a third-party website, to improve website performance, and to measure the success of email marketing campaigns. In most instances, these technologies are reliant on cookies to function, and therefore declining cookies prevents them from functioning.
+Cookies are not the only way to recognize or track visitors to a website. We may use other, similar technologies from time to time, like web beacons (sometimes called "tracking pixels" or "clear gifs"). These are small graphics files that contain a unique identifier that enables us to recognize when someone has visited our website. This allows us, for example, to monitor the traffic patterns of users from one page within our website to another, to understand whether you have come to our website from an online advertisement displayed on a third-party website, to improve website performance, and to measure the success of email marketing campaigns. In most instances, these technologies are reliant on cookies to function, and therefore declining cookies prevents them from functioning.
 
-You may have the right to decide whether to accept or reject cookies. When you access our Site, you are presented with a cookie consent mechanism that allows you to accept or reject cookies that are not essential cookies. You may also control cookies by setting your browser to turn off cookies as described further below. If you turn off cookies, web beacon and other technologies will still detect your visits to our Site; however, they will not be associated with information otherwise stored in cookies.
+You may have the right to decide whether to accept or reject cookies. When you access our Site from the European Union, the United Kingdom, or the European Economic Area, you are presented with a cookie consent banner that allows you to accept or reject cookies that are not essential cookies. You can reopen your preferences at any time from **Cookie settings** in the site footer. You may also control cookies by setting your browser to turn off cookies as described further below. If you turn off cookies, web beacon and other technologies will still detect your visits to our Site; however, they will not be associated with information otherwise stored in cookies.
 
 ## How do we use cookies?
 
 We use cookies to:
-- Track traffic flow and patterns of travel in connection with our Site;
+- Keep you signed in and remember interface preferences;
+- Track traffic flow and patterns of travel in connection with our Site (with your consent where required);
 - Understand the total number of visitors to our Sites on an ongoing basis and the types of internet browsers (e.g. Chrome, Firefox, Safari, or Internet Explorer) and operating systems (e.g. Windows or Mac) used by our visitors;
 - Monitor the performance of our Site and to continually improve it; and
 - Customize and enhance your online experience.
 
 What types of cookies do we use?
 
-The types of cookies used by us in connection with the Site can be considered 'essential website cookies', 'functionality cookies', 'analytics and performance cookies', 'marketing', 'unclassified', and 'other technologies'. We've set out some further information below, and the purposes of the cookies we set in the following table.
+The types of cookies used by us in connection with the Site can be considered 'essential website cookies', 'functionality cookies', and 'analytics and performance cookies'. We've set out some further information below, and the purposes of the cookies we set in the following table.
 
 ## Cookies necessary for essential website purposes
 
@@ -38,26 +39,24 @@ These cookies are essential to provide you with services available through this 
 
 | Cookie name | Source | Expiry (In days) | Purpose |
 | --- | --- | --- | --- |
-| a_session_console | Appwrite Console | 365 | The user will be logged in for 1 year |
+| a_session_console | Appwrite Console | 365 | Keeps you signed in to the Console |
 
 ## Performance / Analytics cookies
 
-We use performance/analytics cookies to analyze how the website is accessed, used, or is performing. We do this in order to provide you with a better user experience and to maintain, operate, and continually improve the website. For example, these cookies allow us to:
+We use performance/analytics cookies and similar technologies to analyze how the website is accessed, used, or is performing. We do this in order to provide you with a better user experience and to maintain, operate, and continually improve the website. These are loaded only after you accept analytics cookies where consent is required. For example, these cookies and tools allow us to:
 
-- Better understand our website visitors so that we can improve how we present our content
-- Test different design ideas for particular pages, such as our homepage;
+- Better understand our website visitors so that we can improve how we present our content;
 - Collect information about Site visitors such as where they are located and what browsers they are using;
 - Determine the number of unique users of the website;
 - Improve the website by measuring any errors that occur; and
 - Conduct research and diagnostics to improve product offerings.
 
-| Cookie name | Source | Expiry (In days) | Purpose |
+| Cookie / technology | Source | Expiry (In days) | Purpose |
 | --- | --- | --- | --- |
-| _lr_uf_-rgthvf | Logrocket | Session | Bug tracking and debugging |
-| _lr5_ | Logrocket | Session | Bug tracking and debugging |
-| _lr_hb_-rgthvf%2Fappwrite | Logrocket | Session | Bug tracking and debugging |
-| _lr_tabs_-rgthvf%2Fappwrite | Logrocket | Session | Bug tracking and debugging |
-| cookiecookie | Logrocket | Session | For debugging actions on our the console |
+| Plausible analytics | Plausible | Session / none | Privacy-friendly usage analytics (no cross-site tracking cookies) |
+| Sentry | Sentry | Session | Error monitoring and performance diagnostics |
+
+We also store your cookie consent choice in your browser's local storage under the key `console.cookieConsent` when you interact with our cookie banner.
 
 ## Functionality cookies
 
@@ -70,9 +69,9 @@ These cookies record information about choices you've made and allow us to tailo
 
 ## How to control or delete cookies
 
-You may have the right to decide whether to accept or reject cookies. When you access our Site, you are presented with a cookie consent mechanism that allows you to accept or reject cookies that are not essential cookies.
+You may have the right to decide whether to accept or reject cookies. When you access our Site from a region where consent is required, you are presented with a cookie consent mechanism that allows you to accept or reject cookies that are not essential cookies. Use **Cookie settings** in the footer to change your preferences at any time.
 
-As another way of controlling cookies, most browsers allow you to change your cookie settings. These settings will typically be found in the “options” or “preferences” menu of your browser. In order to understand these settings and learn how to use them, please consult the “Help” function of your browser, or the documentation published online for your particular browser type and version.
+As another way of controlling cookies, most browsers allow you to change your cookie settings. These settings will typically be found in the "options" or "preferences" menu of your browser. In order to understand these settings and learn how to use them, please consult the "Help" function of your browser, or the documentation published online for your particular browser type and version.
 
 However, please note that if you choose to refuse cookies you may not be able to use the full functionality of our Site.
 
@@ -88,13 +87,9 @@ The following pages have information on how to change your cookies settings for 
 
 If you use another browser, you can check if the procedure for your browser is mentioned in [this explanatory website](https://allaboutcookies.org/how-to-manage-cookies).
 
-To opt out of being tracked by Google Analytics across all websites, visit the [Google Analytics opt-out page](https://tools.google.com/dlpage/gaoptout).
-
 ## Third party websites' cookies
 
 When using our website, you may be directed to other websites for activities such as surveys, making payments in currencies other than U.S. dollars, or job applications. These websites may use their own cookies. We do not have control over the placement of cookies by other websites you visit, even if you are directed to them from our website.
-
-If you use the buttons that allow you to share products and content with your friends via social networks like [Logrocket](https://logrocket.com/privacy), these companies may set a cookie on your computer memory.
 
 ## Need more information?
 

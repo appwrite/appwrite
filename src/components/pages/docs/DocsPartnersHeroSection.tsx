@@ -17,7 +17,7 @@ export function DocsPartnersHeroSection() {
 
       <div
         className={cn(
-          'relative z-[1] mx-auto w-full max-w-7xl pb-16 pt-12 text-left',
+          'relative z-[1] mx-auto w-full max-w-6xl pb-16 pt-12 text-left',
           docsContentPaddingX,
           '@[480px]:pb-20 @[480px]:pt-16 @[900px]:pb-24 @[900px]:pt-20',
         )}

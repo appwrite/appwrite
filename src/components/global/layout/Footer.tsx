@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/accordion'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
+import { useOptionalCookieConsent } from '@/components/global/providers/CookieConsent'
 import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
@@ -249,6 +250,7 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
 export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
+  const cookieConsent = useOptionalCookieConsent()
   const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
   const expandedFooterGroups = getExpandedFooterGroups(features.marketing)
@@ -272,6 +274,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   ]
 
   const legalLinks = getFooterPolicyLinks(features.marketing)
+  const showCookieSettings = cookieConsent?.bannerRequired ?? false
 
   const socialLinks = [
     {
@@ -424,6 +427,18 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                 )}
               </div>
             ))}
+            {showCookieSettings ? (
+              <>
+                <span className="text-border">·</span>
+                <button
+                  type="button"
+                  onClick={() => cookieConsent?.openPreferences()}
+                  className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  Cookie settings
+                </button>
+              </>
+            ) : null}
           </nav>
 
           <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorMd)} />

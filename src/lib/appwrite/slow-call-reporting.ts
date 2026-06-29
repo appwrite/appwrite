@@ -5,11 +5,12 @@
 
 import * as Sentry from '@sentry/tanstackstart-react'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 
 export const SLOW_CALL_THRESHOLD_MS = 5000
 
 function isSentryEnabled(): boolean {
-  return !!getRuntimeConfig().sentryDsn
+  return !!getRuntimeConfig().sentryDsn && canTrackAnalytics()
 }
 
 function reportSlowSdkCall(

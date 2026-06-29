@@ -1,8 +1,13 @@
+import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 
 export const PLAUSIBLE_SCRIPT_SRC = getRuntimeConfig().plausibleScriptSrc
 
 export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_SCRIPT_SRC)
+
+function isAnalyticsAllowed() {
+  return ANALYTICS_ENABLED && canTrackAnalytics()
+}
 
 export const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
 plausible.init({ autoCapturePageviews: false })`
@@ -82,7 +87,7 @@ export function getAnalyticsRouteUrl(routePath: string) {
 }
 
 export function trackPageView(routePath: string) {
-  if (!ANALYTICS_ENABLED || typeof window === 'undefined') return
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
   window.plausible?.('pageview', { url: getAnalyticsRouteUrl(routePath) })
 }
 
@@ -91,7 +96,7 @@ export function trackEvent(
   props: AnalyticsProps = {},
   options: { routePath?: string; url?: string } = {},
 ) {
-  if (!ANALYTICS_ENABLED || typeof window === 'undefined') return
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
 
   const routePath = options.routePath
   window.plausible?.(eventName, {

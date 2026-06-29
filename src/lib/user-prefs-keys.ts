@@ -1629,6 +1629,36 @@ export function deleteTablesDbRowsListColumnsFromPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Navigation sidebar collapsed (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.sidebarCollapsed` - sidebar collapsed when true / `"true"`. */
+export const USER_PREFS_KEY_SIDEBAR_COLLAPSED = 'console.sidebarCollapsed'
+
+/** @deprecated Migrated to `console.sidebarCollapsed`. */
+const LEGACY_USER_PREFS_KEY_SIDEBAR_COLLAPSED = 'sidebarCollapsed'
+
+export function parseSidebarCollapsed(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  const current = parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_SIDEBAR_COLLAPSED])
+  if (current !== null) return current
+  return parseBooleanAccountPref(prefs?.[LEGACY_USER_PREFS_KEY_SIDEBAR_COLLAPSED]) ?? false
+}
+
+export function mergeSidebarCollapsedIntoPrefs(
+  prefs: UserPrefs,
+  collapsed: boolean,
+): UserPrefs {
+  const next = {
+    ...prefs,
+    [USER_PREFS_KEY_SIDEBAR_COLLAPSED]: collapsed,
+  }
+  delete next[LEGACY_USER_PREFS_KEY_SIDEBAR_COLLAPSED]
+  return next
+}
+
+// ---------------------------------------------------------------------------
 // AI assistant panel (account prefs)
 // ---------------------------------------------------------------------------
 

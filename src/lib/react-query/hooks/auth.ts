@@ -84,6 +84,7 @@ import {
   mergeCliShellOpenIntoPrefs,
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
+  mergeSidebarCollapsedIntoPrefs,
   parseCliShellHistory,
   parseCliShellSessions,
   type PersistedCliShellSessionsState,
@@ -102,6 +103,7 @@ import {
   parseCliShellHeightPx,
   parseCliShellOpen,
   parseCliShellSessionsSidebarWidthPx,
+  parseSidebarCollapsed,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
   readLegacyAIChatPanelWidthFromLocalStorage,
@@ -1215,7 +1217,7 @@ export function useToggleFeatureNotification() {
 
 /**
  * Hook to manage navigation sidebar collapsed state persisted in account preferences.
- * Reads from account.prefs.sidebarCollapsed and persists on toggle.
+ * Uses `console.sidebarCollapsed` in account prefs.
  *
  * Must be used within RequireAuth (or where account is available).
  */
@@ -1224,20 +1226,20 @@ export function useSidebarCollapsed(
 ) {
   const queryClient = useQueryClient()
 
-  const accountPrefs = account?.prefs
-  const collapsed =
-    accountPrefs?.sidebarCollapsed === true ||
-    accountPrefs?.sidebarCollapsed === 'true'
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+  const collapsed = parseSidebarCollapsed(accountPrefs)
 
   const updateMutation = useMutation({
     mutationFn: async (value: boolean) => {
       if (!account) {
         throw new Error('Account data not available')
       }
-      return await updateAccountPrefs({
-        ...account.prefs,
-        sidebarCollapsed: value,
-      })
+      return await updateAccountPrefs(
+        mergeSidebarCollapsedIntoPrefs(
+          { ...(account.prefs ?? {}) },
+          value,
+        ),
+      )
     },
     // The auth query key includes consoleImpersonationRevision, so an exact
     // ['account', 'console'] lookup misses it. Use prefix matching to update
@@ -1249,7 +1251,10 @@ export function useSidebarCollapsed(
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, sidebarCollapsed: value },
+                prefs: mergeSidebarCollapsedIntoPrefs(
+                  { ...(current.prefs ?? {}) },
+                  value,
+                ),
               }
             : current,
       )

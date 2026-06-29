@@ -8,8 +8,10 @@ import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 
-const isSentryEnabled = () => !!getRuntimeConfig().sentryDsn
+const isSentryEnabled = () =>
+  !!getRuntimeConfig().sentryDsn && canTrackAnalytics()
 
 /**
  * Extracts project ID from URL pathname

@@ -32,6 +32,7 @@ import {
 } from '@/components/global/providers/ConsoleRightPane'
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
+import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
@@ -51,11 +52,10 @@ import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { useLocation, useMatches } from '@tanstack/react-router'
 import {
-  PLAUSIBLE_INIT_SCRIPT,
-  PLAUSIBLE_SCRIPT_SRC,
   getAnalyticsRoutePath,
   trackPageView,
 } from '@/lib/analytics'
+import { canTrackAnalytics, subscribeCookieConsent } from '@/lib/cookie-consent/consent-state'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -88,40 +88,6 @@ const scripts: React.DetailedHTMLProps<
   React.ScriptHTMLAttributes<HTMLScriptElement>,
   HTMLScriptElement
 >[] = []
-
-/**
- * `type="module"` script URLs must not be path-relative: the browser resolves them
- * against the current pathname, so e.g. `analytics.js` on `/projects/.../messaging`
- * becomes `/projects/.../analytics.js` (SPA HTML) → "text/html is not a valid
- * JavaScript MIME type". Anchor path-only values to `import.meta.env.BASE_URL`.
- */
-function normalizeInstrumentationModuleSrc(raw: string): string {
-  const src = raw.trim()
-  if (!src) return src
-  if (/^(?:https?:)?\/\//.test(src)) return src
-  if (src.startsWith('/')) return src
-  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
-  try {
-    return new URL(src, `http://tsr.local${base}`).pathname
-  } catch {
-    return `${base}${src.replace(/^\//, '')}`
-  }
-}
-
-const instrumentationScriptSrc = getRuntimeConfig().instrumentationScriptSrc
-if (instrumentationScriptSrc) {
-  scripts.push({
-    src: normalizeInstrumentationModuleSrc(instrumentationScriptSrc),
-    type: 'module',
-  })
-}
-
-if (PLAUSIBLE_SCRIPT_SRC) {
-  scripts.push({
-    async: true,
-    src: PLAUSIBLE_SCRIPT_SRC,
-  })
-}
 
 /**
  * Font preloads aligned with VITE_CONSOLE_PROFILE. Cloud uses Aeonik (appwrite/website);
@@ -291,13 +257,20 @@ function PlausibleRouteTracker() {
   const location = useLocation()
   const matches = useMatches()
   const leafRoute = matches[matches.length - 1]
+  const [consentTick, setConsentTick] = useState(0)
 
   useEffect(() => {
-    if (!PLAUSIBLE_SCRIPT_SRC || typeof window === 'undefined') return
+    return subscribeCookieConsent(() => {
+      setConsentTick((tick) => tick + 1)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!canTrackAnalytics() || typeof window === 'undefined') return
 
     const routePath = getAnalyticsRoutePath(leafRoute?.routeId, location.pathname)
     trackPageView(routePath)
-  }, [leafRoute?.routeId, location.pathname])
+  }, [consentTick, leafRoute?.routeId, location.pathname])
 
   return null
 }
@@ -414,15 +387,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
-        {PLAUSIBLE_SCRIPT_SRC ? (
-          <ScriptOnce>{PLAUSIBLE_INIT_SCRIPT}</ScriptOnce>
-        ) : null}
         <DynamicFavicon />
         <UploadWarning />
         <PlausibleRouteTracker />
         <ContextualDocumentTitle />
         <ClientThemeProvider>
-          <NavigationHistoryProvider>
+          <CookieConsentProvider>
+            <NavigationHistoryProvider>
             {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
             {!skipStaticLoader ? (
               <FullscreenLoader
@@ -473,7 +444,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <ClientOnly>
               {!isProjectRoute(location.pathname) && <GlobalUploadProgress />}
             </ClientOnly>
-          </NavigationHistoryProvider>
+            </NavigationHistoryProvider>
+          </CookieConsentProvider>
         </ClientThemeProvider>
         <Scripts />
       </body>

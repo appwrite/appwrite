@@ -1,5 +1,4 @@
 import { createRouter } from '@tanstack/react-router'
-import * as Sentry from '@sentry/tanstackstart-react'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { setupQueryClientRouterIntegration } from './integrations/tanstack-query/ssr-integration'
 
@@ -9,12 +8,8 @@ import { ErrorComponent } from './components/error/Component'
 import { NotFound } from './components/error/NotFound'
 import {
   clearStaleChunkReloadGuard,
-  isStaleChunkLoadError,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
-import { isIndexedDBMutationError } from '@/lib/upload-queue/indexeddb'
-import { getRuntimeConfig } from '@/lib/runtime-config'
-
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
@@ -58,28 +53,6 @@ export const getRouter = () => {
     }
     window.addEventListener('unhandledrejection', onUnhandledRejection)
     window.addEventListener('error', onWindowError)
-  }
-
-  // Initialize Sentry on client side only when the Sentry DSN is set
-  const sentryDsn = getRuntimeConfig().sentryDsn
-  if (!router.isServer && sentryDsn) {
-    Sentry.init({
-      dsn: sentryDsn,
-      // Disable PII collection - we don't want to collect IP addresses or other personal data
-      sendDefaultPii: false,
-      // Don't send 401 Unauthorized to Sentry - we catch these and redirect to login
-      beforeSend(event, hint) {
-        const err = hint.originalException
-        if (err && typeof err === 'object') {
-          const code = (err as { code?: number }).code
-          const status = (err as { status?: number }).status
-          if (code === 401 || status === 401) return null
-        }
-        if (isStaleChunkLoadError(err)) return null
-        if (isIndexedDBMutationError(err)) return null
-        return event
-      },
-    })
   }
 
   return router
