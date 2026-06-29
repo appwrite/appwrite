@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
-use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
@@ -37,7 +37,7 @@ class Webhooks extends Action
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('publisherForMails')
+            ->inject('publisherForNotifications')
             ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
@@ -48,14 +48,14 @@ class Webhooks extends Action
      * @param Message $message
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
      * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
     {
         $payload = $message->getPayload();
 
@@ -72,7 +72,7 @@ class Webhooks extends Action
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForMails, $publisherForUsage, $plan);
+                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan);
                 if ($error !== null) {
                     $errors[] = $error;
                 }
@@ -91,11 +91,12 @@ class Webhooks extends Action
      * @param Document $user
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
+     * @param UsagePublisher $publisherForUsage
      * @param array $plan
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, UsagePublisher $publisherForUsage, array $plan): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return null;
@@ -184,7 +185,7 @@ class Webhooks extends Action
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForMails, $plan);
+                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
@@ -218,65 +219,136 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
      * @param array $plan
      * @return void
      */
-    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, array $plan): void
+    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
             Query::limit(APP_LIMIT_SUBQUERY)
         ]);
 
-        $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
+        $ownerMemberships = \array_filter(
+            $memberships,
+            fn (Document $membership) => self::hasOwnerRole($membership)
+        );
+
+        if (empty($ownerMemberships)) {
+            return;
+        }
+
+        $userIds = \array_values(\array_unique(\array_filter(\array_map(
+            fn (Document $membership) => $membership->getAttribute('userId'),
+            $ownerMemberships
+        ))));
+
+        if (empty($userIds)) {
+            return;
+        }
 
         $users = $dbForPlatform->find('users', [
             Query::equal('$id', $userIds),
+            Query::limit(APP_LIMIT_SUBQUERY),
         ]);
 
+        if (empty($users)) {
+            return;
+        }
+
         $projectId = $project->getId();
+        $projectInternalId = $project->getSequence();
         $region = $project->getAttribute('region', 'default');
         $webhookId = $webhook->getId();
 
-        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
+        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
 
-        $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
-        $template->setParam('{{project}}', $project->getAttribute('name'));
-        $template->setParam('{{url}}', $webhook->getAttribute('url'));
-        $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
-        $template->setParam('{{attempts}}', $attempts);
-
-        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
-        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
-        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
-        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
-        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
-        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
-        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
-
-        // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';
-        $preview = 'Webhook deliveries to your endpoint have been paused.';
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
-
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{message}}', $template->render())
-            ->setParam('{{year}}', date("Y"));
+        $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
 
         foreach ($users as $user) {
-            $publisherForMails->enqueue(new MailMessage(
+            $email = $user->getAttribute('email');
+            $userId = $user->getId();
+
+            $recipients = [[
+                'address' => $userId,
+                'channel' => NOTIFICATION_TYPE_CONSOLE,
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => $userId,
+                'resourceInternalId' => (string) $user->getSequence(),
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => $projectId,
+                'parentResourceInternalId' => (string) $projectInternalId,
+            ]];
+
+            if (!empty($email)) {
+                $recipients[] = [
+                    'address' => $email,
+                    'channel' => NOTIFICATION_TYPE_EMAIL,
+                    'resourceType' => RESOURCE_TYPE_USERS,
+                    'resourceId' => $userId,
+                    'resourceInternalId' => (string) $user->getSequence(),
+                    'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                    'parentResourceId' => $projectId,
+                    'parentResourceInternalId' => (string) $projectInternalId,
+                ];
+            }
+
+            $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
+            $userName = (string) ($user->getAttribute('name', 'there') ?: 'there');
+            $template->setParam('{{user}}', $userName);
+            $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
+            $template->setParam('{{project}}', $project->getAttribute('name'));
+            $template->setParam('{{url}}', $webhook->getAttribute('url'));
+            $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
+            $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
+            $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
+            $template->setParam('{{attempts}}', $attempts);
+
+            $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
-                recipient: $user->getAttribute('email'),
-                name: $user->getAttribute('name', ''),
+                recipients: $recipients,
+                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
                 subject: $subject,
-                template: MAIL_TEMPLATE_WEBHOOK_FAILED,
-                body: $body->render(),
+                bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+                body: $template->render(),
                 preview: $preview,
-                variables: ['user' => $user->getAttribute('name', '')],
+                variables: [
+                    'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                    'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                    'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                    'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                    'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                    'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                    'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                    'platform' => $plan['platformName'] ?? APP_NAME,
+                ],
             ));
         }
+    }
+
+    private static function hasOwnerRole(Document $membership): bool
+    {
+        $roles = $membership->getAttribute('roles', []);
+        if (\is_string($roles)) {
+            $roles = \array_map('trim', \explode(',', $roles));
+        }
+        if (!\is_array($roles)) {
+            return false;
+        }
+
+        foreach ($roles as $role) {
+            if (!\is_string($role)) {
+                continue;
+            }
+
+            if (\strtolower($role) === 'owner') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

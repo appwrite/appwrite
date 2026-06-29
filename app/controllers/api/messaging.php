@@ -3501,6 +3501,7 @@ Http::post('/v1/messaging/messages/email')
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
                     'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
@@ -3647,6 +3648,7 @@ Http::post('/v1/messaging/messages/sms')
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
                     'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
@@ -3869,6 +3871,7 @@ Http::post('/v1/messaging/messages/push')
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
                     'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
@@ -4263,6 +4266,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
                 'schedule' => $scheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
@@ -4279,6 +4283,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             }
 
             $schedule
+                ->setAttribute('projectInternalId', $project->getSequence())
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', $scheduledStatus);
 
@@ -4487,6 +4492,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
                 'schedule' => $scheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
@@ -4503,6 +4509,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
             }
 
             $schedule
+                ->setAttribute('projectInternalId', $project->getSequence())
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', $scheduledStatus);
 
@@ -4664,6 +4671,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
                 'schedule' => $scheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
@@ -4680,6 +4688,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
             }
 
             $schedule
+                ->setAttribute('projectInternalId', $project->getSequence())
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', $scheduledStatus);
 

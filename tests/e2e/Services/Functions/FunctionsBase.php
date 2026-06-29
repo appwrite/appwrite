@@ -494,11 +494,11 @@ trait FunctionsBase
         return $deployment;
     }
 
-    protected function listSpecifications(): mixed
+    protected function listSpecifications(array $params = []): mixed
     {
         $specifications = $this->client->call(Client::METHOD_GET, '/functions/specifications', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), $params);
 
         return $specifications;
     }

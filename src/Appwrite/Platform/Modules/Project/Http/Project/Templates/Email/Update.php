@@ -90,45 +90,63 @@ class Update extends Action
     ) {
         $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
-        // Prevent template update if custom SMTP is not configured
-        $smtp = $project->getAttribute('smtp', []);
-        if (($smtp['enabled'] ?? false) !== true) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP must be enabled on the project to configure custom email templates.');
-        }
+        $templateKey = "email.{$templateId}-{$locale}";
+        $changes = [
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'replyToEmail' => $replyToEmail,
+            'replyToName' => $replyToName,
+            'message' => $message,
+            'subject' => $subject,
+        ];
 
-        // Fetch current configuration
-        $templates = $project->getAttribute('templates', []);
-        $template = $templates['email.' . $templateId . '-' . $locale] ?? [];
+        $project = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $authorization, $project, $templateKey, $changes) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId(), forUpdate: true));
 
-        // Apply changes — null means "not provided, keep existing".
-        // Empty string explicitly clears a previously-set value.
-        $keys = ['senderName', 'senderEmail', 'replyToEmail', 'replyToName', 'message', 'subject'];
-        foreach ($keys as $key) {
-            if (!\is_null(${$key})) {
-                $template[$key] = ${$key};
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
             }
-        }
 
-        // Backwards compatibility
-        if (!\is_null($template['replyTo'] ?? null)) {
-            $template['replyToEmail'] = $template['replyToEmail'] ?? $template['replyTo'] ?? '';
-        }
-
-        // Ensure required fields are set
-        $requiredKeys = ['subject', 'message'];
-        foreach ($requiredKeys as $key) {
-            if (empty($template[$key])) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+            // Prevent template update if custom SMTP is not configured
+            $smtp = $project->getAttribute('smtp', []);
+            if (($smtp['enabled'] ?? false) !== true) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP must be enabled on the project to configure custom email templates.');
             }
-        }
 
-        // Save configuration
-        $templates['email.' . $templateId . '-' . $locale] = $template;
-        $updates = new Document([
-            'templates' => $templates,
-        ]);
+            // Fetch current configuration from the locked row so concurrent updates
+            // to other locale/template entries are preserved.
+            $templates = $project->getAttribute('templates', []);
+            $template = $templates[$templateKey] ?? [];
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            // Apply changes: null means "not provided, keep existing".
+            // Empty string explicitly clears a previously-set value.
+            foreach ($changes as $key => $value) {
+                if ($value !== null) {
+                    $template[$key] = $value;
+                }
+            }
+
+            // Backwards compatibility
+            if (($template['replyTo'] ?? null) !== null) {
+                $template['replyToEmail'] ??= $template['replyTo'] ?? '';
+            }
+
+            // Ensure required fields are set
+            $requiredKeys = ['subject', 'message'];
+            foreach ($requiredKeys as $key) {
+                if (empty($template[$key])) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+                }
+            }
+
+            $templates[$templateKey] = $template;
+
+            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'templates' => $templates,
+            ])));
+        });
+
+        $template = $project->getAttribute('templates', [])[$templateKey] ?? [];
 
         $queueForEvents->setParam('templateId', $templateId);
 

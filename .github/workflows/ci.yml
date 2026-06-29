@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  COMPOSE_FILE: docker-compose.yml
+  COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
   IMAGE: appwrite-dev
   K6_VERSION: '0.53.0'
 
@@ -13,6 +13,7 @@ on:
   pull_request:
   push:
     branches:
+      - main
       - 1.9.x
   workflow_dispatch:
     inputs:
@@ -106,12 +107,21 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '24'
+
       - name: Validate composer.json
         run: composer validate
 
       - name: Install dependencies
         id: install
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Install Node dependencies
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm ci
 
       - name: Cache PHPStan result cache
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
@@ -131,6 +141,10 @@ jobs:
       - name: Run Linter
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: composer lint
+
+      - name: Check Docker Compose formatting
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint:compose
 
       - name: Run Rector
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
@@ -199,6 +213,7 @@ jobs:
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 15 },
               { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 15 },
@@ -667,7 +682,7 @@ jobs:
           docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
           for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost/v1/health/version; then
+            if curl -fsS http://localhost:9520/v1/health/version; then
               break
             fi
             if [ "$attempt" -eq 10 ]; then
@@ -684,9 +699,9 @@ jobs:
         continue-on-error: true
         uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
         env:
-          APPWRITE_ENDPOINT: 'http://localhost/v1'
-          APPWRITE_BENCHMARK_ITERATIONS: '5'
-          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
+          APPWRITE_BENCHMARK_DURATION: '1m'
+          APPWRITE_BENCHMARK_VUS: '20'
           APPWRITE_WORKER_TIMEOUT_MS: '120000'
           APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-before-summary.json'
         with:
@@ -706,7 +721,7 @@ jobs:
       - name: Wait for benchmark ports
         if: always()
         run: |
-          for port in 80 443 8080 9503; do
+          for port in 9520 9521 9522 9503; do
             for attempt in $(seq 1 30); do
               if ! ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
                 break
@@ -731,7 +746,7 @@ jobs:
           docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
           docker compose up -d --wait --no-build
           for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost/v1/health/version; then
+            if curl -fsS http://localhost:9520/v1/health/version; then
               break
             fi
             if [ "$attempt" -eq 10 ]; then
@@ -745,9 +760,9 @@ jobs:
         continue-on-error: true
         uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
         env:
-          APPWRITE_ENDPOINT: 'http://localhost/v1'
-          APPWRITE_BENCHMARK_ITERATIONS: '5'
-          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
+          APPWRITE_BENCHMARK_DURATION: '1m'
+          APPWRITE_BENCHMARK_VUS: '20'
           APPWRITE_WORKER_TIMEOUT_MS: '120000'
           APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH: '../../benchmark-before-summary.json'
           APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-after-summary.json'
