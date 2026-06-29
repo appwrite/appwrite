@@ -213,9 +213,9 @@ Http::init()
                     if (! empty($apiKey->getProjectId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
                     } elseif (! empty($apiKey->getUserId())) {
-                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->purgeCachedDocument('users', $user->getId()));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
                     } elseif (! empty($apiKey->getTeamId())) {
-                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->purgeCachedDocument('teams', $team->getId()));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 
