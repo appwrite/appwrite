@@ -30,6 +30,9 @@ async function run() {
   console.error(
     'Use "pnpm run build:node" for Sites deploys and set output directory to "dist".',
   )
+  console.error(
+    'On 4GB build workers use default SITES_PRERENDER_SCOPE=core (omit env). Set SITES_PRERENDER_SCOPE=full only on larger build specs.',
+  )
   process.exit(1)
 }
 

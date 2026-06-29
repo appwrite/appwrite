@@ -8,6 +8,7 @@ import type { CountryLookups } from '@/lib/locale/country-lookups'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
+import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 import { overviewTopBreakdownListClass } from '../../overview/chart-panel'
 import { OverviewChartPanelError } from '../../overview/OverviewChartPanelError'
@@ -103,6 +104,7 @@ type UsageBreakdownCardProps = {
   databaseLookup?: DatabaseBreakdownResourceMap | null
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
+  tableLookup?: TableBreakdownResourceMap | null
   projectId?: string
   isLoading: boolean
   isError: boolean
@@ -127,6 +129,7 @@ export function UsageBreakdownCard({
   databaseLookup,
   computeLookup,
   storageLookup,
+  tableLookup,
   projectId,
   isLoading,
   isError,
@@ -205,6 +208,7 @@ export function UsageBreakdownCard({
               databaseLookup={databaseLookup}
               computeLookup={computeLookup}
               storageLookup={storageLookup}
+              tableLookup={tableLookup}
               projectId={projectId}
               variant="card"
               formatValue={formatValue}

@@ -2,6 +2,9 @@ import type { CountryLookups } from '@/lib/locale/country-lookups'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
+import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
+import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
+import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import { downloadAsFile } from '@/lib/utils/database-schema-export'
 import { formatBreakdownLabel } from './UsageBreakdownRows'
 
@@ -64,6 +67,9 @@ function buildUsageBreakdownExportRows(
   labelVariant: 'mono' | 'default',
   countryLookups: CountryLookups | null,
   databaseLookup?: DatabaseBreakdownResourceMap | null,
+  computeLookup?: ComputeBreakdownResourceMap | null,
+  storageLookup?: StorageBreakdownResourceMap | null,
+  tableLookup?: TableBreakdownResourceMap | null,
 ): UsageBreakdownExportRow[] {
   return items.map((item) => ({
     label: item.label,
@@ -73,6 +79,9 @@ function buildUsageBreakdownExportRows(
       dimension,
       countryLookups,
       databaseLookup,
+      computeLookup,
+      storageLookup,
+      tableLookup,
     ),
     value: item.count,
   }))
@@ -86,6 +95,9 @@ export function downloadUsageBreakdownJson(
   countryLookups: CountryLookups | null,
   kind: UsageBreakdownExportKind = 'requests',
   databaseLookup?: DatabaseBreakdownResourceMap | null,
+  computeLookup?: ComputeBreakdownResourceMap | null,
+  storageLookup?: StorageBreakdownResourceMap | null,
+  tableLookup?: TableBreakdownResourceMap | null,
 ) {
   const labelColumn = DIMENSION_LABEL_COLUMN[dimension]
   const valueColumn = VALUE_COLUMN_BY_KIND[kind]
@@ -95,6 +107,9 @@ export function downloadUsageBreakdownJson(
     labelVariant,
     countryLookups,
     databaseLookup,
+    computeLookup,
+    storageLookup,
+    tableLookup,
   )
 
   const payload = {
@@ -122,6 +137,9 @@ export function downloadUsageBreakdownCsv(
   countryLookups: CountryLookups | null,
   kind: UsageBreakdownExportKind = 'requests',
   databaseLookup?: DatabaseBreakdownResourceMap | null,
+  computeLookup?: ComputeBreakdownResourceMap | null,
+  storageLookup?: StorageBreakdownResourceMap | null,
+  tableLookup?: TableBreakdownResourceMap | null,
 ) {
   const labelColumn = DIMENSION_LABEL_COLUMN[dimension]
   const valueColumn = VALUE_COLUMN_BY_KIND[kind]
@@ -131,6 +149,9 @@ export function downloadUsageBreakdownCsv(
     labelVariant,
     countryLookups,
     databaseLookup,
+    computeLookup,
+    storageLookup,
+    tableLookup,
   )
 
   const header = [labelColumn, valueColumn].map(escapeCsvCell).join(',')

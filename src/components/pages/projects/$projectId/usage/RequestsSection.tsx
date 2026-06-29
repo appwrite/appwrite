@@ -32,6 +32,7 @@ import {
   useProjectRequestsChartOnly,
   useCountries,
   refetchProjectRequestsUsageQueries,
+  useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
@@ -349,6 +350,20 @@ export function RequestsSection({
     showBreakdown,
   )
 
+  const resourceBreakdownIds = useMemo(() => {
+    const resourceSection = breakdowns.find(
+      (entry) => entry.section.dimension === 'resourceId',
+    )
+    return resourceSection?.items.map((item) => item.label) ?? []
+  }, [breakdowns])
+
+  const { computeLookup, databaseLookup, storageLookup, tableLookup } =
+    useUsageResourceBreakdownLookups(
+      projectId,
+      resourceBreakdownIds,
+      showBreakdown && resourceBreakdownIds.length > 0,
+    )
+
   useEffect(() => {
     registerRefreshHandler(
       () => refetchProjectRequestsUsageQueries(queryClient, projectId),
@@ -401,6 +416,19 @@ export function RequestsSection({
                 items={items}
                 labelVariant={section.labelVariant}
                 countryLookups={countryLookups}
+                projectId={projectId}
+                computeLookup={
+                  section.dimension === 'resourceId' ? computeLookup : undefined
+                }
+                databaseLookup={
+                  section.dimension === 'resourceId' ? databaseLookup : undefined
+                }
+                storageLookup={
+                  section.dimension === 'resourceId' ? storageLookup : undefined
+                }
+                tableLookup={
+                  section.dimension === 'resourceId' ? tableLookup : undefined
+                }
                 isLoading={isLoading}
                 isError={isError}
                 errorTitle={OVERVIEW_REQUESTS_ERROR.title}

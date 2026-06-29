@@ -14,6 +14,11 @@ import {
   isIntegrationPrerenderPath,
 } from '../integrations/prerender-paths'
 import { MARKETING_PAGE_PATHS } from './marketing-page-paths'
+import {
+  getSitesPrerenderScope,
+  sitesPrerenderIncludesBlogPosts,
+  sitesPrerenderIncludesChangelogEntries,
+} from './sites-prerender-scope'
 
 export const MARKETING_PRERENDER_PATHS = MARKETING_PAGE_PATHS
 
@@ -22,17 +27,23 @@ export function getAllMarketingPrerenderPaths(
 ): readonly string[] {
   const changelogPaths = clientDirectory
     ? getChangelogEntryPrerenderPathsFromClient(clientDirectory)
-    : getChangelogEntryPrerenderPaths()
+    : sitesPrerenderIncludesChangelogEntries()
+      ? getChangelogEntryPrerenderPaths()
+      : []
   const blogPaths = clientDirectory
     ? getBlogPrerenderPathsFromClient(clientDirectory)
-    : getBlogPrerenderPaths()
+    : getBlogPrerenderPaths({
+        includePosts: sitesPrerenderIncludesBlogPosts(),
+      })
   const integrationPaths = getIntegrationPrerenderPaths()
 
   return [
-    ...MARKETING_PRERENDER_PATHS,
-    ...changelogPaths,
-    ...blogPaths,
-    ...integrationPaths,
+    ...new Set([
+      ...MARKETING_PRERENDER_PATHS,
+      ...changelogPaths,
+      ...blogPaths,
+      ...integrationPaths,
+    ]),
   ]
 }
 
@@ -43,12 +54,22 @@ export function isMarketingPrerenderPath(path: string): boolean {
   }
 
   if (normalized.startsWith('/changelog/entry/')) {
-    return true
+    return sitesPrerenderIncludesChangelogEntries()
+  }
+
+  if (normalized.startsWith('/blog/post/')) {
+    return sitesPrerenderIncludesBlogPosts()
   }
 
   if (isBlogPrerenderPath(normalized)) return true
 
   return isIntegrationPrerenderPath(normalized)
+}
+
+export function getSitesPrerenderBuildSummary(): string {
+  const scope = getSitesPrerenderScope()
+  const paths = getAllMarketingPrerenderPaths()
+  return `SITES prerender scope=${scope} pages=${String(paths.length)}`
 }
 
 /** Built marketing HTML pages (excludes llms txt exports). */

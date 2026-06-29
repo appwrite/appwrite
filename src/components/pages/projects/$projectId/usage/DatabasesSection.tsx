@@ -21,6 +21,7 @@ import {
 import {
   refetchProjectDatabaseUsageQueries,
   useDatabaseBreakdownResources,
+  useTableBreakdownResources,
   useProjectDatabaseCollectionsChart,
   useProjectDatabaseDocumentsChart,
   useProjectDatabaseReadsBreakdowns,
@@ -104,26 +105,39 @@ export function DatabasesSection({
     showBreakdown,
   )
 
-  const databaseResourceIds = useMemo(() => {
+  const databaseResourceLabels = useMemo(() => {
     if (!showBreakdown) return []
 
-    const ids = new Set<string>()
+    const labels = new Set<string>()
     for (const { section, items } of [...readsBreakdowns, ...writesBreakdowns]) {
       if (section.dimension !== 'resourceId') continue
       for (const item of items) {
-        const databaseId = parseDatabaseIdFromUsageResourceLabel(item.label)
-        if (databaseId) ids.add(databaseId)
+        if (item.label.trim()) labels.add(item.label)
       }
     }
-    return Array.from(ids)
+    return Array.from(labels)
   }, [readsBreakdowns, writesBreakdowns, showBreakdown])
+
+  const databaseResourceIds = useMemo(
+    () =>
+      databaseResourceLabels.map((label) =>
+        parseDatabaseIdFromUsageResourceLabel(label),
+      ),
+    [databaseResourceLabels],
+  )
 
   const { data: databaseBreakdownResources } = useDatabaseBreakdownResources(
     projectId,
     databaseResourceIds,
     showBreakdown && databaseResourceIds.length > 0,
   )
+  const { data: tableBreakdownResources } = useTableBreakdownResources(
+    projectId,
+    databaseResourceLabels,
+    showBreakdown && databaseResourceLabels.length > 0,
+  )
   const databaseLookup = databaseBreakdownResources?.resources
+  const tableLookup = tableBreakdownResources?.resources
 
   useEffect(() => {
     registerRefreshHandler(
@@ -176,6 +190,7 @@ export function DatabasesSection({
         showBreakdown={showBreakdown}
         breakdowns={readsBreakdowns}
         databaseLookup={databaseLookup}
+        tableLookup={tableLookup}
         onRetry={handleRetryAll}
         onOpenBreakdownDrawer={setBreakdownDrawer}
         docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
@@ -200,6 +215,7 @@ export function DatabasesSection({
         showBreakdown={showBreakdown}
         breakdowns={writesBreakdowns}
         databaseLookup={databaseLookup}
+        tableLookup={tableLookup}
         onRetry={handleRetryAll}
         onOpenBreakdownDrawer={setBreakdownDrawer}
         docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
@@ -267,6 +283,7 @@ export function DatabasesSection({
               : 'database-writes'
           }
           databaseLookup={databaseLookup}
+        tableLookup={tableLookup}
         />
       ) : null}
     </div>

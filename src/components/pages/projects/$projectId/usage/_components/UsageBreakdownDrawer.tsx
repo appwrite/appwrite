@@ -18,10 +18,14 @@ import {
   useProjectBandwidthBreakdownDrawer,
   useProjectDatabaseReadsBreakdownDrawer,
   useProjectDatabaseWritesBreakdownDrawer,
+  useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
+import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
+import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
+import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
@@ -58,6 +62,9 @@ type UsageBreakdownDrawerProps = {
   labelVariant: 'mono' | 'default'
   kind?: UsageBreakdownExportKind
   databaseLookup?: DatabaseBreakdownResourceMap | null
+  computeLookup?: ComputeBreakdownResourceMap | null
+  storageLookup?: StorageBreakdownResourceMap | null
+  tableLookup?: TableBreakdownResourceMap | null
 }
 
 export function UsageBreakdownDrawer({
@@ -70,7 +77,10 @@ export function UsageBreakdownDrawer({
   dimension,
   labelVariant,
   kind = 'requests',
-  databaseLookup,
+  databaseLookup: databaseLookupProp,
+  computeLookup: computeLookupProp,
+  storageLookup: storageLookupProp,
+  tableLookup: tableLookupProp,
 }: UsageBreakdownDrawerProps) {
   const { data: countriesData } = useCountries()
   const countryLookups = useMemo(
@@ -119,6 +129,23 @@ export function UsageBreakdownDrawer({
     refetch,
   } = activeQuery
 
+  const resourceLabels = useMemo(
+    () =>
+      dimension === 'resourceId' ? items.map((item) => item.label) : [],
+    [dimension, items],
+  )
+
+  const fetchedLookups = useUsageResourceBreakdownLookups(
+    projectId,
+    resourceLabels,
+    open && dimension === 'resourceId' && resourceLabels.length > 0,
+  )
+
+  const computeLookup = computeLookupProp ?? fetchedLookups.computeLookup
+  const databaseLookup = databaseLookupProp ?? fetchedLookups.databaseLookup
+  const storageLookup = storageLookupProp ?? fetchedLookups.storageLookup
+  const tableLookup = tableLookupProp ?? fetchedLookups.tableLookup
+
   const formatValue =
     kind === 'bandwidth'
       ? formatBandwidthValue
@@ -136,7 +163,11 @@ export function UsageBreakdownDrawer({
     (dimension === 'country' && !!countryLookups) ||
     dimension === 'hostname' ||
     dimension === 'service' ||
-    (dimension === 'resourceId' && !!databaseLookup)
+    (dimension === 'resourceId' &&
+      (!!databaseLookup ||
+        !!computeLookup ||
+        !!storageLookup ||
+        !!tableLookup))
 
   const showLoading = isLoading && items.length === 0
   const showEmpty = !showLoading && !isError && items.length === 0
@@ -152,12 +183,18 @@ export function UsageBreakdownDrawer({
       countryLookups,
       kind,
       databaseLookup,
+      computeLookup,
+      storageLookup,
+      tableLookup,
     )
     toast.success('Exported as JSON')
   }, [
     canExport,
     countryLookups,
+    computeLookup,
     databaseLookup,
+    storageLookup,
+    tableLookup,
     dimension,
     items,
     labelVariant,
@@ -175,12 +212,18 @@ export function UsageBreakdownDrawer({
       countryLookups,
       kind,
       databaseLookup,
+      computeLookup,
+      storageLookup,
+      tableLookup,
     )
     toast.success('Exported as CSV')
   }, [
     canExport,
     countryLookups,
+    computeLookup,
     databaseLookup,
+    storageLookup,
+    tableLookup,
     dimension,
     items,
     labelVariant,
@@ -262,6 +305,9 @@ export function UsageBreakdownDrawer({
               labelVariant={labelVariant}
               countryLookups={countryLookups}
               databaseLookup={databaseLookup}
+              computeLookup={computeLookup}
+              storageLookup={storageLookup}
+              tableLookup={tableLookup}
               projectId={projectId}
               variant="drawer"
               formatValue={formatValue}

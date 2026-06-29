@@ -28,20 +28,35 @@ import {
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
   getStorageBreakdownResourceRoute,
+  getStorageBreakdownResourceTypeLabel,
   resolveStorageBreakdownResource,
   type StorageBreakdownResourceMap,
 } from '@/lib/usage/resolve-storage-breakdown-resources'
 import {
   getDatabaseBreakdownResourceRoute,
+  getDatabaseBreakdownServiceLabel,
   resolveDatabaseBreakdownResource,
   type DatabaseBreakdownResourceMap,
 } from '@/lib/usage/resolve-database-breakdown-resources'
+import {
+  getTableBreakdownResourceRoute,
+  getTableBreakdownResourceTypeLabel,
+  resolveTableBreakdownResource,
+  type TableBreakdownResourceMap,
+} from '@/lib/usage/resolve-table-breakdown-resources'
 import { DatabaseTypeIcon } from '../../databases/_components/DatabaseTypeIcon'
 import {
   overviewTopBreakdownListClass,
   overviewTopBreakdownRowClass,
 } from '../../overview/chart-panel'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
+import { FORM_FIELD_TYPE_PILL_CLASS } from '@/lib/api-explorer/form-field-type-badge'
+import { getHttpStatusCodeBadgeVariant } from '@/lib/http-status-code'
+import {
+  formatHttpMethodBadgeLabel,
+  getHttpMethodBadgeVariant,
+} from '@/lib/http-method-badge'
 
 export const PATH_DISPLAY_MAX = 42
 
@@ -61,17 +76,28 @@ export function formatBreakdownLabel(
   databaseLookup?: DatabaseBreakdownResourceMap | null,
   computeLookup?: ComputeBreakdownResourceMap | null,
   storageLookup?: StorageBreakdownResourceMap | null,
+  tableLookup?: TableBreakdownResourceMap | null,
 ): string {
   if (dimension === 'resourceId') {
     const computeResource = resolveComputeBreakdownResource(
       label,
       computeLookup,
     )
-    if (computeResource) return computeResource.name
+    if (computeResource) {
+      return `${getComputeBreakdownResourceTypeLabel(computeResource.type)} / ${computeResource.name}`
+    }
     const storageResource = resolveStorageBreakdownResource(label, storageLookup)
-    if (storageResource) return storageResource.name
+    if (storageResource) {
+      return `${getStorageBreakdownResourceTypeLabel()} / ${storageResource.name}`
+    }
+    const tableResource = resolveTableBreakdownResource(label, tableLookup)
+    if (tableResource) {
+      return `${getTableBreakdownResourceTypeLabel(tableResource.databaseType)} / ${tableResource.name}`
+    }
     const resource = resolveDatabaseBreakdownResource(label, databaseLookup)
-    if (resource) return resource.name
+    if (resource) {
+      return `${getDatabaseBreakdownServiceLabel(resource.databaseType)} / ${resource.name}`
+    }
   }
   if (dimension === 'country' && countryLookups) {
     return resolveCountryDisplayName(label, countryLookups)
@@ -184,6 +210,53 @@ function UsageServiceIcon({ service }: { service: string }) {
   )
 }
 
+type BreakdownResourceRowLabelProps = {
+  typeLabel: string
+  name: string
+  route?: {
+    to: string
+    params: Record<string, string>
+  } | null
+  fullTitle?: string
+}
+
+function BreakdownResourceRowLabel({
+  typeLabel,
+  name,
+  route,
+  fullTitle,
+}: BreakdownResourceRowLabelProps) {
+  const title = fullTitle ?? `${typeLabel} / ${name}`
+  const nameClassName =
+    'min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary'
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+      <span className="shrink-0 text-[11px] text-muted-foreground">
+        {typeLabel}
+      </span>
+      <ChevronRight
+        className="h-3 w-3 shrink-0 text-muted-foreground/70"
+        aria-hidden
+      />
+      {route ? (
+        <Link
+          to={route.to}
+          params={route.params}
+          className={nameClassName}
+          title={title}
+        >
+          {name}
+        </Link>
+      ) : (
+        <span className={nameClassName} title={title}>
+          {name}
+        </span>
+      )}
+    </div>
+  )
+}
+
 type UsageBreakdownRowProps = {
   item: UsageBreakdownItem
   dimension: UsageEventBreakdownDimension
@@ -192,6 +265,7 @@ type UsageBreakdownRowProps = {
   databaseLookup?: DatabaseBreakdownResourceMap | null
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
+  tableLookup?: TableBreakdownResourceMap | null
   projectId?: string
   maxCount: number
   formatValue?: (value: number) => string
@@ -205,6 +279,7 @@ export function UsageBreakdownRow({
   databaseLookup,
   computeLookup,
   storageLookup,
+  tableLookup,
   projectId,
   maxCount,
   formatValue = formatRequestsValue,
@@ -212,6 +287,8 @@ export function UsageBreakdownRow({
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
   const showServiceIcons = dimension === 'service'
+  const showStatusBadges = dimension === 'status'
+  const showMethodBadges = dimension === 'method'
   const computeResource =
     dimension === 'resourceId'
       ? resolveComputeBreakdownResource(item.label, computeLookup)
@@ -220,8 +297,15 @@ export function UsageBreakdownRow({
     dimension === 'resourceId' && !computeResource
       ? resolveStorageBreakdownResource(item.label, storageLookup)
       : undefined
-  const databaseResource =
+  const tableResource =
     dimension === 'resourceId' && !computeResource && !storageResource
+      ? resolveTableBreakdownResource(item.label, tableLookup)
+      : undefined
+  const databaseResource =
+    dimension === 'resourceId' &&
+    !computeResource &&
+    !storageResource &&
+    !tableResource
       ? resolveDatabaseBreakdownResource(item.label, databaseLookup)
       : undefined
   const showDatabaseIcons = !!databaseResource
@@ -234,6 +318,7 @@ export function UsageBreakdownRow({
     databaseLookup,
     computeLookup,
     storageLookup,
+    tableLookup,
   )
   const countryCode =
     showCountryFlags && countryLookups
@@ -253,6 +338,10 @@ export function UsageBreakdownRow({
     storageResource && projectId
       ? getStorageBreakdownResourceRoute(projectId, storageResource)
       : null
+  const tableRoute =
+    tableResource && projectId
+      ? getTableBreakdownResourceRoute(projectId, tableResource)
+      : null
 
   return (
     <div
@@ -266,71 +355,111 @@ export function UsageBreakdownRow({
         style={{ width: `${(item.count / maxCount) * 100}%` }}
       />
       <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-        {showCountryFlags ? (
-          <CountryFlagIcon countryCode={countryCode ?? item.label} />
-        ) : showFavicon ? (
-          <HostnameFaviconIcon hostname={item.label} />
-        ) : showServiceIcons ? (
-          <UsageServiceIcon service={item.label} />
-        ) : showDatabaseIcons ? (
-          <div className={breakdownLeadingIconFrameClass} aria-hidden>
-            <DatabaseTypeIcon
-              apiType={databaseResource.databaseType}
-              className="h-3 w-3"
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          {showCountryFlags ? (
+            <CountryFlagIcon countryCode={countryCode ?? item.label} />
+          ) : showFavicon ? (
+            <HostnameFaviconIcon hostname={item.label} />
+          ) : showServiceIcons ? (
+            <UsageServiceIcon service={item.label} />
+          ) : showDatabaseIcons ? (
+            <div className={breakdownLeadingIconFrameClass} aria-hidden>
+              <DatabaseTypeIcon
+                apiType={databaseResource.databaseType}
+                className="h-3 w-3"
+              />
+            </div>
+          ) : null}
+          {computeResource ? (
+            <BreakdownResourceRowLabel
+              typeLabel={getComputeBreakdownResourceTypeLabel(
+                computeResource.type,
+              )}
+              name={computeResource.name}
+              route={
+                computeRoute
+                  ? {
+                      to: computeRoute.to,
+                      params: computeRoute.params as Record<string, string>,
+                    }
+                  : null
+              }
             />
-          </div>
-        ) : null}
-        {computeRoute ? (
-          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
-            <span className="shrink-0 text-[11px] text-muted-foreground">
-              {getComputeBreakdownResourceTypeLabel(computeResource!.type)}
-            </span>
-            <ChevronRight
-              className="h-3 w-3 shrink-0 text-muted-foreground/70"
-              aria-hidden
+          ) : storageResource ? (
+            <BreakdownResourceRowLabel
+              typeLabel={getStorageBreakdownResourceTypeLabel()}
+              name={storageResource.name}
+              route={
+                storageRoute
+                  ? {
+                      to: storageRoute.to,
+                      params: storageRoute.params as Record<string, string>,
+                    }
+                  : null
+              }
             />
-            <Link
-              to={computeRoute.to}
-              params={computeRoute.params}
-              className="min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
-              title={`${getComputeBreakdownResourceTypeLabel(computeResource!.type)} / ${computeResource!.name}`}
+          ) : tableResource ? (
+            <BreakdownResourceRowLabel
+              typeLabel={getTableBreakdownResourceTypeLabel(
+                tableResource.databaseType,
+              )}
+              name={tableResource.name}
+              route={
+                tableRoute
+                  ? {
+                      to: tableRoute.to,
+                      params: tableRoute.params,
+                    }
+                  : null
+              }
+            />
+          ) : databaseResource ? (
+            <BreakdownResourceRowLabel
+              typeLabel={getDatabaseBreakdownServiceLabel(
+                databaseResource.databaseType,
+              )}
+              name={databaseResource.name}
+              route={
+                databaseRoute
+                  ? {
+                      to: databaseRoute.to,
+                      params: databaseRoute.params as Record<string, string>,
+                    }
+                  : null
+              }
+            />
+          ) : showMethodBadges ? (
+            <Badge
+              variant={getHttpMethodBadgeVariant(item.label)}
+              className={cn(FORM_FIELD_TYPE_PILL_CLASS, 'uppercase')}
+              title={displayLabel}
             >
-              {computeResource!.name}
-            </Link>
-          </div>
-        ) : databaseRoute ? (
-          <Link
-            to={databaseRoute.to}
-            params={databaseRoute.params}
-            className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
-            title={databaseResource!.name}
-          >
-            {databaseResource!.name}
-          </Link>
-        ) : storageRoute ? (
-          <Link
-            to={storageRoute.to}
-            params={storageRoute.params}
-            className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
-            title={storageResource!.name}
-          >
-            {storageResource!.name}
-          </Link>
-        ) : (
-          <span
-            className={cn(
-              'min-w-0 flex-1 truncate text-[12px] text-foreground/70',
-              labelVariant === 'mono' &&
-                dimension !== 'country' &&
-                dimension !== 'hostname' &&
-                dimension !== 'service' &&
-                'font-mono',
-            )}
-            title={displayLabel}
-          >
-            {displayLabel}
-          </span>
-        )}
+              {formatHttpMethodBadgeLabel(displayLabel)}
+            </Badge>
+          ) : showStatusBadges ? (
+            <Badge
+              variant={getHttpStatusCodeBadgeVariant(item.label)}
+              className={FORM_FIELD_TYPE_PILL_CLASS}
+              title={displayLabel}
+            >
+              {displayLabel}
+            </Badge>
+          ) : (
+            <span
+              className={cn(
+                'min-w-0 flex-1 truncate text-[12px] text-foreground/70',
+                labelVariant === 'mono' &&
+                  dimension !== 'country' &&
+                  dimension !== 'hostname' &&
+                  dimension !== 'service' &&
+                  'font-mono',
+              )}
+              title={displayLabel}
+            >
+              {displayLabel}
+            </span>
+          )}
+        </div>
         <span className="shrink-0 text-[12px] font-medium tabular-nums text-muted-foreground">
           {formatValue(item.count)}
         </span>
@@ -386,6 +515,7 @@ type UsageBreakdownRowsListProps = {
   databaseLookup?: DatabaseBreakdownResourceMap | null
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
+  tableLookup?: TableBreakdownResourceMap | null
   projectId?: string
   variant?: 'card' | 'drawer'
   className?: string
@@ -400,6 +530,7 @@ export function UsageBreakdownRowsList({
   databaseLookup,
   computeLookup,
   storageLookup,
+  tableLookup,
   projectId,
   variant = 'card',
   className,
@@ -441,6 +572,7 @@ export function UsageBreakdownRowsList({
             databaseLookup={databaseLookup}
             computeLookup={computeLookup}
             storageLookup={storageLookup}
+            tableLookup={tableLookup}
             projectId={projectId}
             maxCount={maxCount}
             formatValue={formatValue}

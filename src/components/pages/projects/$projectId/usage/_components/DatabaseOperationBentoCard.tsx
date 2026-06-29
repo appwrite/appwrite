@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
+import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import {
   formatDatabaseOperationsTotal,
   formatDatabaseOperationsValue,
@@ -55,6 +56,7 @@ type DatabaseOperationBentoCardProps = {
   showBreakdown: boolean
   breakdowns: DatabaseBreakdownEntry[]
   databaseLookup: DatabaseBreakdownResourceMap | undefined
+  tableLookup?: TableBreakdownResourceMap | undefined
   onRetry: () => void
   onOpenBreakdownDrawer: (payload: DatabaseBreakdownDrawerPayload) => void
   docsHref?: string
@@ -83,6 +85,7 @@ export function DatabaseOperationBentoCard({
   showBreakdown,
   breakdowns,
   databaseLookup,
+  tableLookup,
   onRetry,
   onOpenBreakdownDrawer,
   docsHref,
@@ -120,6 +123,7 @@ export function DatabaseOperationBentoCard({
               labelVariant={section.labelVariant}
               countryLookups={null}
               databaseLookup={databaseLookup}
+              tableLookup={tableLookup}
               projectId={projectId}
               isLoading={isLoading}
               isError={isError}

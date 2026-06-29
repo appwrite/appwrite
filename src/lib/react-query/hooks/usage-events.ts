@@ -97,6 +97,10 @@ import {
   normalizeDatabaseBreakdownResourceIds,
 } from '@/lib/usage/resolve-database-breakdown-resources'
 import {
+  fetchTableBreakdownResources,
+  normalizeTableBreakdownResourceLabels,
+} from '@/lib/usage/resolve-table-breakdown-resources'
+import {
   fetchProjectRealtimeBandwidthOverview,
   fetchProjectRealtimeConnectionsOverview,
   fetchProjectRealtimeMessagesOverview,
@@ -1237,6 +1241,42 @@ export function useComputeBreakdownResources(
   })
 }
 
+/** Resolve mixed usage breakdown resource IDs to functions, sites, databases, and buckets. */
+export function useUsageResourceBreakdownLookups(
+  projectId: string | null | undefined,
+  resourceIds: string[],
+  enabled = true,
+) {
+  const shouldFetch = enabled && !!projectId && resourceIds.length > 0
+  const { data: computeData } = useComputeBreakdownResources(
+    projectId,
+    resourceIds,
+    shouldFetch,
+  )
+  const { data: databaseData } = useDatabaseBreakdownResources(
+    projectId,
+    resourceIds,
+    shouldFetch,
+  )
+  const { data: storageData } = useStorageBreakdownResources(
+    projectId,
+    resourceIds,
+    shouldFetch,
+  )
+  const { data: tableData } = useTableBreakdownResources(
+    projectId,
+    resourceIds,
+    shouldFetch,
+  )
+
+  return {
+    computeLookup: computeData?.resources,
+    databaseLookup: databaseData?.resources,
+    storageLookup: storageData?.resources,
+    tableLookup: tableData?.resources,
+  }
+}
+
 /** @deprecated Use useProjectBandwidthOverview */
 export function useProjectBandwidthChartOverview(
   projectId: string | null | undefined,
@@ -2079,6 +2119,52 @@ export function useDatabaseBreakdownResources(
   return useQuery({
     ...databaseBreakdownResourcesQueryOptions(projectId, normalizedIds),
     enabled: enabled && !!projectId && normalizedIds.length > 0,
+  })
+}
+
+export function tableBreakdownResourcesQueryOptions(
+  projectId: string | null | undefined,
+  resourceLabels: string[],
+) {
+  const normalizedLabels = normalizeTableBreakdownResourceLabels(resourceLabels)
+
+  return queryOptions({
+    queryKey: [
+      'usage-breakdown',
+      'table-resources',
+      'project',
+      projectId,
+      normalizedLabels.join(','),
+    ],
+    queryFn: () =>
+      fetchTableBreakdownResources(projectId!, normalizedLabels),
+    enabled: !!projectId && normalizedLabels.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
+  })
+}
+
+/** Resolve usage breakdown labels to tables/collections (searches all databases when needed). */
+export function useTableBreakdownResources(
+  projectId: string | null | undefined,
+  resourceLabels: string[],
+  enabled = true,
+) {
+  const normalizedLabels = useMemo(
+    () => normalizeTableBreakdownResourceLabels(resourceLabels),
+    [resourceLabels],
+  )
+
+  return useQuery({
+    ...tableBreakdownResourcesQueryOptions(projectId, normalizedLabels),
+    enabled: enabled && !!projectId && normalizedLabels.length > 0,
   })
 }
 

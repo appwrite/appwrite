@@ -87,7 +87,10 @@ function getBlogAuthorPathsFromSlugs(slugs: string[]): string[] {
 }
 
 /** Build-time paths from source markdoc files. */
-export function getBlogPrerenderPaths(): string[] {
+export function getBlogPrerenderPaths(options?: {
+  includePosts?: boolean
+}): string[] {
+  const includePosts = options?.includePosts ?? true
   const postSlugs = postsDirectories.flatMap((directory) =>
     readPublicPostSlugsFromDirectory(directory),
   )
@@ -97,7 +100,7 @@ export function getBlogPrerenderPaths(): string[] {
 
   return [
     ...getBlogIndexPaths(uniquePostSlugs.length),
-    ...getBlogPostPathsFromSlugs(uniquePostSlugs),
+    ...(includePosts ? getBlogPostPathsFromSlugs(uniquePostSlugs) : []),
     ...getBlogCategoryPathsFromSlugs(categorySlugs),
     ...getBlogAuthorPathsFromSlugs(authorSlugs),
   ]

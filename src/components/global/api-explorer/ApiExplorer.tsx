@@ -7,6 +7,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { Badge } from '@/components/ui/badge'
+import { getHttpMethodBadgeVariant as getHttpMethodVariant } from '@/lib/http-method-badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -307,24 +308,6 @@ function ApiExplorerOpenApiSpecDownloadFooter({
       </Button>
     </div>
   )
-}
-
-function getHttpMethodVariant(
-  method: string,
-): 'info' | 'success' | 'warning' | 'error' | 'secondary' {
-  switch (method.toLowerCase()) {
-    case 'get':
-      return 'info'
-    case 'post':
-      return 'success'
-    case 'put':
-    case 'patch':
-      return 'warning'
-    case 'delete':
-      return 'error'
-    default:
-      return 'secondary'
-  }
 }
 
 function applyMethodFormState(

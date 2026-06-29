@@ -86,3 +86,7 @@ export function getStorageBreakdownResourceRoute(
     params: { projectId, bucketId: resource.id },
   }
 }
+
+export function getStorageBreakdownResourceTypeLabel(): string {
+  return 'Storage'
+}
