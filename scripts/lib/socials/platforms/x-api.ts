@@ -11,6 +11,8 @@ export type XTweet = {
     reply_count: number
     like_count: number
     quote_count: number
+    bookmark_count?: number
+    impression_count?: number
   }
 }
 
@@ -18,6 +20,12 @@ export type XUser = {
   id: string
   username: string
   name?: string
+  public_metrics?: {
+    followers_count: number
+    following_count: number
+    tweet_count: number
+    listed_count: number
+  }
 }
 
 type XTimelineResponse = {
@@ -67,7 +75,7 @@ export async function resolveUserId(userId?: string, username?: string): Promise
   const resolvedUsername = username ?? optionalEnv('SOCIALS_X_USERNAME')
   if (resolvedUsername) {
     const result = await xFetch<XUserResponse>(`/users/by/username/${resolvedUsername}`, {
-      'user.fields': 'username,name',
+      'user.fields': 'username,name,public_metrics',
     })
     if (!result.data?.id) {
       throw new Error(`Could not resolve X user @${resolvedUsername}`)
@@ -85,7 +93,7 @@ export async function resolveUserId(userId?: string, username?: string): Promise
 
 export async function resolveUser(username: string): Promise<XUser> {
   const result = await xFetch<XUserResponse>(`/users/by/username/${username}`, {
-    'user.fields': 'username,name',
+    'user.fields': 'username,name,public_metrics',
   })
   if (!result.data?.id) {
     throw new Error(`Could not resolve X user @${username}`)
@@ -171,7 +179,13 @@ export function weeksAgo(weeks: number): Date {
   return date
 }
 
-export type SinceUnit = 'weeks' | 'months' | 'custom'
+export function daysAgo(days: number): Date {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return date
+}
+
+export type SinceUnit = 'days' | 'weeks' | 'months' | 'custom'
 
 export type ParsedSinceRange = {
   since: Date
@@ -185,9 +199,11 @@ function durationDaysSince(date: Date): number {
   return Math.max(1, (Date.now() - date.getTime()) / (24 * 60 * 60 * 1000))
 }
 
-function parseCountUnit(value: string, unit: 'weeks' | 'months'): ParsedSinceRange | null {
+function parseCountUnit(value: string, unit: 'days' | 'weeks' | 'months'): ParsedSinceRange | null {
   const patterns =
-    unit === 'weeks'
+    unit === 'days'
+      ? /^(\d+)\s*(?:d|day|days)$/i
+      : unit === 'weeks'
       ? /^(\d+)\s*(?:w|wk|week|weeks)$/i
       : /^(\d+)\s*(?:m|mo|month|months)$/i
 
@@ -197,15 +213,18 @@ function parseCountUnit(value: string, unit: 'weeks' | 'months'): ParsedSinceRan
   const amount = Number.parseInt(match[1], 10)
   if (!Number.isFinite(amount) || amount < 1) {
     throw new Error(
-      `--since must be a positive number of ${unit} (e.g. ${unit === 'weeks' ? '4w' : '6m'})`,
+      `--since must be a positive number of ${unit} (e.g. ${
+        unit === 'days' ? '7d' : unit === 'weeks' ? '4w' : '6m'
+      })`,
     )
   }
 
-  const since = unit === 'weeks' ? weeksAgo(amount) : monthsAgo(amount)
+  const since =
+    unit === 'days' ? daysAgo(amount) : unit === 'weeks' ? weeksAgo(amount) : monthsAgo(amount)
 
   return {
     since,
-    label: `${amount} ${unit === 'weeks' ? 'week' : 'month'}${amount === 1 ? '' : 's'}`,
+    label: `${amount} ${unit.slice(0, -1)}${amount === 1 ? '' : 's'}`,
     unit,
     amount,
     durationDays: durationDaysSince(since),
@@ -214,6 +233,9 @@ function parseCountUnit(value: string, unit: 'weeks' | 'months'): ParsedSinceRan
 
 export function parseSinceArg(value: string): ParsedSinceRange {
   const trimmed = value.trim()
+
+  const days = parseCountUnit(trimmed, 'days')
+  if (days) return days
 
   const weeks = parseCountUnit(trimmed, 'weeks')
   if (weeks) return weeks
@@ -239,7 +261,7 @@ export function parseSinceArg(value: string): ParsedSinceRange {
   const parsed = new Date(trimmed)
   if (Number.isNaN(parsed.getTime())) {
     throw new Error(
-      '--since must be an ISO date, a number of months (e.g. 6, 6m), or weeks (e.g. 4w)',
+      '--since must be an ISO date, days (e.g. 7d), weeks (e.g. 4w), or months (e.g. 6, 6m)',
     )
   }
 

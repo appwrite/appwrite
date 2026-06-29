@@ -20,6 +20,10 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_SCAN_OUTPUT = join(__dirname, '..', '..', '..', 'output', 'social', 'x-competitive-scan.json')
 
+function getStringOption(value: string | boolean | undefined, fallback?: string): string | undefined {
+  return typeof value === 'string' ? value : fallback
+}
+
 function formatTweet(tweet: { id: string; text: string; created_at?: string; public_metrics?: object }): string {
   const preview = tweet.text.replace(/\s+/g, ' ').trim()
   const metrics = tweet.public_metrics as
@@ -44,12 +48,12 @@ async function runPostsCommand(args: string[]): Promise<void> {
     strict: false,
   })
 
-  const limit = Number.parseInt(values.limit ?? '10', 10)
+  const limit = Number.parseInt(getStringOption(values.limit, '10')!, 10)
   if (!Number.isFinite(limit) || limit < 1) {
     throw new Error('--limit must be a positive number')
   }
 
-  const userId = await resolveUserId(values['user-id'], values.username)
+  const userId = await resolveUserId(getStringOption(values['user-id']), getStringOption(values.username))
   const posts = await fetchRecentPosts(userId, limit)
 
   if (posts.length === 0) {
@@ -76,9 +80,9 @@ async function runTimelineCommand(args: string[]): Promise<void> {
     strict: false,
   })
 
-  const sinceRange = parseSinceArg(values.since ?? '6')
-  const userId = await resolveUserId(values['user-id'], values.username)
-  const username = values.username ?? userId
+  const sinceRange = parseSinceArg(getStringOption(values.since, '6')!)
+  const userId = await resolveUserId(getStringOption(values['user-id']), getStringOption(values.username))
+  const username = getStringOption(values.username) ?? userId
 
   process.stderr.write(
     `Fetching @${username} tweets since ${sinceRange.since.toISOString()} (${sinceRange.label})...\n`,
@@ -92,8 +96,9 @@ async function runTimelineCommand(args: string[]): Promise<void> {
     },
   })
 
-  if (values.output) {
-    await mkdir(dirname(values.output), { recursive: true })
+  const output = getStringOption(values.output)
+  if (output) {
+    await mkdir(dirname(output), { recursive: true })
     const payload = {
       username,
       userId,
@@ -102,8 +107,8 @@ async function runTimelineCommand(args: string[]): Promise<void> {
       tweetCount: tweets.length,
       tweets,
     }
-    await writeFile(values.output, JSON.stringify(payload, null, 2))
-    console.log(`Wrote ${tweets.length} tweets to ${values.output}`)
+    await writeFile(output, JSON.stringify(payload, null, 2))
+    console.log(`Wrote ${tweets.length} tweets to ${output}`)
     return
   }
 
@@ -126,16 +131,18 @@ async function runScanCommand(args: string[]): Promise<void> {
     strict: false,
   })
 
-  const sinceRange = parseSinceArg(values.since ?? '6')
-  const outputPath = values.output ?? DEFAULT_SCAN_OUTPUT
+  const sinceRange = parseSinceArg(getStringOption(values.since, '6')!)
+  const outputPath = getStringOption(values.output, DEFAULT_SCAN_OUTPUT)!
+  const usernameOption = getStringOption(values.username)
+  const accountsOption = getStringOption(values.accounts)
 
-  const accountList = values.username
+  const accountList = usernameOption
     ? (() => {
-        const username = values.username!.trim().replace(/^@/, '')
+        const username = usernameOption.trim().replace(/^@/, '')
         return [{ username, label: username, isAppwrite: username.toLowerCase() === 'appwrite' }]
       })()
-    : values.accounts
-      ? values.accounts.split(',').map((entry) => {
+    : accountsOption
+      ? accountsOption.split(',').map((entry) => {
           const username = entry.trim().replace(/^@/, '')
           return { username, label: username, isAppwrite: username.toLowerCase() === 'appwrite' }
         })
@@ -173,6 +180,7 @@ async function runScanCommand(args: string[]): Promise<void> {
         isAppwrite: account.isAppwrite,
         userId: user.id,
         name: user.name,
+        public_metrics: user.public_metrics,
         fetchedAt: new Date().toISOString(),
         since: sinceRange.since.toISOString(),
         tweetCount: tweets.length,

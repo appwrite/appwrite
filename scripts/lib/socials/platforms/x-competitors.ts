@@ -18,6 +18,12 @@ export type AccountTimelineExport = {
   isAppwrite: boolean
   userId: string
   name?: string
+  public_metrics?: {
+    followers_count: number
+    following_count: number
+    tweet_count: number
+    listed_count: number
+  }
   fetchedAt: string
   since: string
   tweetCount: number
@@ -30,6 +36,8 @@ export type AccountTimelineExport = {
       reply_count: number
       like_count: number
       quote_count: number
+      bookmark_count?: number
+      impression_count?: number
     }
   }>
 }
@@ -38,7 +46,7 @@ export type CompetitiveScanExport = {
   scannedAt: string
   since: string
   sinceLabel: string
-  sinceUnit: 'weeks' | 'months' | 'custom'
+  sinceUnit: 'days' | 'weeks' | 'months' | 'custom'
   sinceAmount?: number
   durationDays: number
   accounts: AccountTimelineExport[]
