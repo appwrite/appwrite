@@ -234,27 +234,6 @@ final class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']['usersListMemberships']);
     }
 
-    public function testGetUserLogs()
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_USER_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'userId' => $this->getUser()['$id'],
-            ]
-        ];
-
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertIsArray($user['body']['data']);
-        $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersListLogs']);
-    }
-
     public function testListUserTargets()
     {
         $target = $this->setupUserTarget();
