@@ -63,8 +63,8 @@ services:
     image: appwrite-dev
     healthcheck:
       test: ["CMD", "doctor"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 15s
       retries: 12
     ports:
       - 9501:80
