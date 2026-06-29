@@ -51,7 +51,6 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Indexes\Create as C
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Indexes\Delete as DeleteColumnIndex;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Indexes\Get as GetColumnIndex;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Indexes\XList as ListColumnIndexes;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Logs\XList as ListTableLogs;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Bulk\Delete as DeleteRows;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Bulk\Update as UpdateRows;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Bulk\Upsert as UpsertRows;
@@ -60,12 +59,10 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Column\Increme
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Create as CreateRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Delete as DeleteRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Get as GetRow;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Logs\XList as ListRowLogs;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Update as UpdateRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Upsert as UpsertRow;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\XList as ListRows;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Update as UpdateTable;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Usage\Get as GetTableUsage;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\XList as ListTables;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Delete as DeleteTransaction;
@@ -74,8 +71,6 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Operations\Cr
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\Update as UpdateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Update as UpdateTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Usage\Get as GetTablesDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Usage\XList as ListTablesDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\XList as ListTablesDatabase;
 use Utopia\Platform\Service;
 
@@ -107,8 +102,6 @@ class TablesDB extends Base
         $service->addAction(UpdateTablesDatabase::getName(), new UpdateTablesDatabase());
         $service->addAction(DeleteTablesDatabase::getName(), new DeleteTablesDatabase());
         $service->addAction(ListTablesDatabase::getName(), new ListTablesDatabase());
-        $service->addAction(GetTablesDatabaseUsage::getName(), new GetTablesDatabaseUsage());
-        $service->addAction(ListTablesDatabaseUsage::getName(), new ListTablesDatabaseUsage());
     }
 
     private function registerTableActions(Service $service): void
@@ -118,8 +111,6 @@ class TablesDB extends Base
         $service->addAction(UpdateTable::getName(), new UpdateTable());
         $service->addAction(DeleteTable::getName(), new DeleteTable());
         $service->addAction(ListTables::getName(), new ListTables());
-        $service->addAction(ListTableLogs::getName(), new ListTableLogs());
-        $service->addAction(GetTableUsage::getName(), new GetTableUsage());
     }
 
     private function registerColumnActions(Service $service): void
@@ -221,7 +212,6 @@ class TablesDB extends Base
         $service->addAction(DeleteRow::getName(), new DeleteRow());
         $service->addAction(DeleteRows::getName(), new DeleteRows());
         $service->addAction(ListRows::getName(), new ListRows());
-        $service->addAction(ListRowLogs::getName(), new ListRowLogs());
         $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
         $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
     }
