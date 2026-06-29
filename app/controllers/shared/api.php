@@ -226,7 +226,7 @@ Http::init()
                     default => ACTOR_TYPE_KEY_ORGANIZATION,
                 });
 
-                if ($apiKey->getType() === API_KEY_STANDARD) {
+                if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
                     $userClone
                         ->setAttribute('$id', $dbKey->getId())
                         ->setAttribute('$sequence', $dbKey->getSequence());
