@@ -262,6 +262,13 @@ Http::init()
                     API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
                     default => ACTOR_TYPE_KEY_ORGANIZATION,
                 });
+
+                if ($apiKey->getType() === API_KEY_STANDARD) {
+                    $userClone
+                        ->setAttribute('$id', $dbKey->getId())
+                        ->setAttribute('$sequence', $dbKey->getSequence());
+                }
+
                 $auditContext->user = $userClone;
             }
 
