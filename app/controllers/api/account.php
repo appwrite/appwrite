@@ -178,7 +178,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             ->setAttribute('providerRefreshToken', $identity->getAttribute('providerRefreshToken'))
             ->setAttribute('providerAccessToken', $identity->getAttribute('providerAccessToken'))
             ->setAttribute('providerAccessTokenExpiry', $identity->getAttribute('providerAccessTokenExpiry'))
-            ->setAttribute('factors', \array_merge($secret->getAttribute('factors', []), ['oauth2']));
+            ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
     }
 
     $authorization->addRole(Role::user($user->getId())->toString());
