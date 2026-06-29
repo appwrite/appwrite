@@ -34,6 +34,11 @@ import {
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
+import {
+  formatUsageChartXAxisLabel,
+  OVERVIEW_USAGE_CHART_X_AXIS_MAX_TICKS,
+  resolveUsageChartXAxisInterval,
+} from '@/lib/usage/chart-axis'
 import type { DateRange } from 'react-day-picker'
 
 const STORAGE_SERIES = [
@@ -175,6 +180,31 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   const showChartSkeleton = isLoading
   const showEmptyState = !isLoading && chartData.length === 0
   const activeChartData = showChartSkeleton ? skeletonChartData : chartData
+  const { from: rangeFrom, to: rangeTo } = useMemo(
+    () => resolveUsageDateBounds(dateRange),
+    [dateRange],
+  )
+  const xAxisInterval = useMemo(
+    () =>
+      resolveUsageChartXAxisInterval(
+        activeChartData.length,
+        OVERVIEW_USAGE_CHART_X_AXIS_MAX_TICKS,
+      ),
+    [activeChartData.length],
+  )
+  const xAxisTickFormatter = useMemo(
+    () => (_value: string, index: number) => {
+      const point = activeChartData[index]
+      if (!point?.day) return ''
+      return formatUsageChartXAxisLabel(
+        point.day,
+        chartInterval,
+        rangeFrom,
+        rangeTo,
+      )
+    },
+    [activeChartData, chartInterval, rangeFrom, rangeTo],
+  )
   const axisMax = useMemo(
     () =>
       activeChartData.reduce(
@@ -297,10 +327,9 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                       tickLine={false}
                       tick={{ fill: 'currentColor', fontSize: 10 }}
                       dy={10}
-                      interval="preserveStartEnd"
-                      tickFormatter={(value, index) =>
-                        index % 5 === 0 ? value : ''
-                      }
+                      interval={xAxisInterval}
+                      minTickGap={32}
+                      tickFormatter={xAxisTickFormatter}
                     />
                     <YAxis
                       axisLine={false}

@@ -68,6 +68,7 @@ import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
+import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
   injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,
@@ -268,6 +269,17 @@ function isFileEligibleForPreloading(relativePath: string): boolean {
   return true
 }
 
+/** Thread pages are SSR-only; skip stale prerender HTML under dist/client/threads. */
+function isAccidentalThreadStaticHtml(relativePath: string): boolean {
+  const normalized = relativePath.split(/[/\\]/).join('/')
+  if (!normalized.startsWith('threads/') || !normalized.endsWith('.html')) {
+    return false
+  }
+
+  const routePath = `/${normalized.replace(/\.html$/, '')}`
+  return isThreadsRoutePath(routePath)
+}
+
 /**
  * Check if a MIME type is compressible
  */
@@ -383,6 +395,10 @@ async function initializeStaticRoutes(
   try {
     const glob = createCompositeGlobPattern()
     for await (const relativePath of glob.scan({ cwd: clientDirectory })) {
+      if (isAccidentalThreadStaticHtml(relativePath)) {
+        continue
+      }
+
       const filepath = path.join(clientDirectory, relativePath)
       const route = `/${relativePath.split(path.sep).join(path.posix.sep)}`
 

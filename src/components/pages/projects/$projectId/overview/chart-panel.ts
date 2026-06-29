@@ -5,13 +5,13 @@ export const OVERVIEW_CHART_HEIGHT = 240
 export const USAGE_CHART_Y_AXIS_WIDTH = 56
 
 /** Header block above chart/breakdown body — fixed so tabs do not shift vertically. */
-export const OVERVIEW_CHART_PANEL_HEADER_MIN_HEIGHT = 56
+export const OVERVIEW_CHART_PANEL_HEADER_MIN_HEIGHT = 32
 
 /** Desktop row height when the breakdown column is visible (padding + header + list). */
-export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_WITH_BREAKDOWN = 388
+export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_WITH_BREAKDOWN = 348
 
 /** Desktop row height for chart-only layout (padding + header + chart). */
-export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_CHART_ONLY = 352
+export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_CHART_ONLY = 312
 
 import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 
@@ -46,8 +46,8 @@ export function overviewChartContentRowClassName(
   withBreakdown = true,
 ): string {
   return withBreakdown
-    ? 'flex min-h-[740px] min-w-0 flex-col @[700px]:h-[388px] @[700px]:min-h-[388px] @[700px]:max-h-[388px] @[700px]:flex-row @[700px]:items-stretch'
-    : 'flex min-h-[352px] min-w-0 flex-col @[700px]:h-[352px] @[700px]:min-h-[352px] @[700px]:max-h-[352px] @[700px]:flex-row @[700px]:items-stretch'
+    ? 'flex min-h-[660px] min-w-0 flex-col @[700px]:h-[348px] @[700px]:min-h-[348px] @[700px]:max-h-[348px] @[700px]:flex-row @[700px]:items-stretch'
+    : 'flex min-h-[312px] min-w-0 flex-col @[700px]:h-[312px] @[700px]:min-h-[312px] @[700px]:max-h-[312px] @[700px]:flex-row @[700px]:items-stretch'
 }
 
 /** @deprecated Use overviewChartContentRowClassName(withBreakdown) */
@@ -56,14 +56,14 @@ export const overviewChartContentRowClass =
 
 /** Left chart column — grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
-  'flex h-full w-full min-w-0 flex-col border-b border-border p-5 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-r'
+  'flex h-full w-full min-w-0 flex-col border-b border-border px-5 pb-5 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-r'
 
 /** Right breakdown column (top endpoints / consumers). */
 export const overviewBreakdownColumnClass =
-  'flex h-full min-h-0 w-full min-w-0 flex-col p-5 @[700px]:w-[400px] @[700px]:shrink-0'
+  'flex h-full min-h-0 w-full min-w-0 flex-col px-5 pb-5 pt-3 @[700px]:w-[400px] @[700px]:shrink-0'
 
 export const overviewChartPanelHeaderClass =
-  'mb-4 flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2'
+  'mb-2 flex min-h-8 shrink-0 flex-wrap items-start justify-between gap-x-3 gap-y-2'
 
 /** Legend rows, links, and other header actions — full width below the title on narrow containers. */
 export const overviewChartPanelHeaderActionsClass =

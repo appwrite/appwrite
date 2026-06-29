@@ -3,6 +3,9 @@
  *
  * Kept out of vite.config.ts so Appwrite's TanStackStart::getAdapter() scan
  * (vite.config.ts only) does not see `prerender` keys and classify the site as static.
+ *
+ * Threads (/threads/*) are intentionally excluded: they stay SSR with pagination
+ * at runtime instead of ~14k prerendered HTML pages bloating the artifact.
  */
 import {
   getAllMarketingPrerenderPaths,

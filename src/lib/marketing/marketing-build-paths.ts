@@ -13,11 +13,13 @@ import {
   getIntegrationPrerenderPaths,
   isIntegrationPrerenderPath,
 } from '../integrations/prerender-paths'
+import { isThreadsRoutePath } from '../threads/prerender-paths'
 import { MARKETING_PAGE_PATHS } from './marketing-page-paths'
 import {
   getSitesPrerenderScope,
   sitesPrerenderIncludesBlogPosts,
   sitesPrerenderIncludesChangelogEntries,
+  sitesPrerenderIncludesThreads,
 } from './sites-prerender-scope'
 
 export const MARKETING_PRERENDER_PATHS = MARKETING_PAGE_PATHS
@@ -49,6 +51,11 @@ export function getAllMarketingPrerenderPaths(
 
 export function isMarketingPrerenderPath(path: string): boolean {
   const normalized = path.replace(/\/+$/, '') || '/'
+
+  if (isThreadsRoutePath(normalized)) {
+    return sitesPrerenderIncludesThreads()
+  }
+
   if ((MARKETING_PRERENDER_PATHS as readonly string[]).includes(normalized)) {
     return true
   }

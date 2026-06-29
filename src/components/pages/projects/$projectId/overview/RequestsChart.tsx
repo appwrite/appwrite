@@ -37,6 +37,11 @@ import {
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
+import {
+  formatUsageChartXAxisLabel,
+  OVERVIEW_USAGE_CHART_X_AXIS_MAX_TICKS,
+  resolveUsageChartXAxisInterval,
+} from '@/lib/usage/chart-axis'
 
 type MetricType = OverviewChartTabId
 
@@ -282,6 +287,31 @@ export const RequestsChart = memo(function RequestsChart({
         ? (value: number) => String(value)
         : (value: number) => formatCompactBytes(value, { compact: true }))
   const activeChartData = showChartSkeleton ? skeletonChartData : chartData
+  const { from: rangeFrom, to: rangeTo } = useMemo(
+    () => resolveUsageDateBounds(dateRange),
+    [dateRange],
+  )
+  const xAxisInterval = useMemo(
+    () =>
+      resolveUsageChartXAxisInterval(
+        activeChartData.length,
+        OVERVIEW_USAGE_CHART_X_AXIS_MAX_TICKS,
+      ),
+    [activeChartData.length],
+  )
+  const xAxisTickFormatter = useMemo(
+    () => (_value: string, index: number) => {
+      const point = activeChartData[index]
+      if (!point?.day) return ''
+      return formatUsageChartXAxisLabel(
+        point.day,
+        chartInterval,
+        rangeFrom,
+        rangeTo,
+      )
+    },
+    [activeChartData, chartInterval, rangeFrom, rangeTo],
+  )
   const bandwidthAxisMax = useMemo(() => {
     if (activeChartData.length === 0) return 0
     if (metric === 'bandwidth') {
@@ -470,11 +500,9 @@ export const RequestsChart = memo(function RequestsChart({
                       fontSize: 10,
                     }}
                     dy={10}
-                    interval="preserveStartEnd"
-                    tickFormatter={(value, index) => {
-                      if (index % 5 === 0) return value
-                      return ''
-                    }}
+                    interval={xAxisInterval}
+                    minTickGap={32}
+                    tickFormatter={xAxisTickFormatter}
                   />
                   <YAxis
                     axisLine={false}
