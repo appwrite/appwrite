@@ -917,6 +917,16 @@ class Builds extends Action
                     Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
                     throw new BuildException('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                } elseif ($adapter === 'static' && empty($resource->getAttribute('fallbackFile', '')) && ! empty($detection->getFallbackFile())) {
+                    // Adapter was pre-selected as static (e.g. the "Other" framework only exposes a
+                    // static adapter), so the auto-detection above is skipped. Without a fallback file
+                    // and without an index.html, the static server 404s on every path. Backfill the
+                    // detected fallback file so a single static page (e.g. abc.html) is served at '/'.
+                    $detectedFallback = $detection->getFallbackFile();
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document(['fallbackFile' => $detectedFallback]));
+
+                    $deployment->setAttribute('fallbackFile', $detectedFallback);
+                    Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                 }
             }
 

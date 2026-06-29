@@ -2521,6 +2521,52 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    /**
+     * Regression test for https://github.com/appwrite/appwrite/issues/12715
+     *
+     * A static site that contains a single, non-index HTML file (e.g. "main.html")
+     * and has its "static" adapter pre-selected - as the Console does for the
+     * "Other" framework, which only exposes a static adapter - must still be served
+     * at "/", instead of returning a 404. The build worker is expected to backfill
+     * the detected fallback file even when the adapter was already set.
+     */
+    public function testServeStaticSinglePageWithStaticAdapter(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Static single page site',
+            'siteId' => ID::unique(),
+            'adapter' => 'static',
+            'outputDirectory' => './',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => true,
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        // The package has no index.html, only main.html. The build worker must
+        // detect and persist it as the fallback file so it can be served at "/".
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('main.html', $site['body']['fallbackFile']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Main page', (string) $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testPreviewDomain(): void
     {
         $siteId = $this->setupSite([
