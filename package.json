@@ -30,7 +30,8 @@
     "generate:public-icon-manifest": "bun run scripts/generate-public-icon-manifest.ts",
     "generate:routes": "tsr generate",
     "generate:sitemap": "bun run scripts/generate-sitemap.ts",
-    "generate:specs": "bun run scripts/generate-specs.ts"
+    "generate:specs": "bun run scripts/generate-specs.ts",
+    "socials": "bun run scripts/socials.ts"
   },
   "dependencies": {
     "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9aa74d1",
