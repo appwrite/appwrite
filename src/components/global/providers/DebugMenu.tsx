@@ -108,6 +108,29 @@ import {
 } from '@/lib/debug-menu-position'
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
+
+function DebugMenuBrandMark({ className }: { className?: string }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn('pointer-events-none h-6 w-6 shrink-0', className)}
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M24.4429 16.4322V21.9096H10.7519C6.76318 21.9096 3.28044 19.7067 1.4171 16.4322C1.14622 15.9561 0.909137 15.4567 0.710264 14.9383C0.319864 13.9225 0.0744552 12.8325 0 11.6952V10.2143C0.0161646 9.96089 0.0416361 9.70942 0.0749451 9.46095C0.143032 8.95105 0.245898 8.45211 0.381093 7.96711C1.66006 3.36909 5.81877 0 10.7519 0C15.6851 0 19.8433 3.36909 21.1223 7.96711H15.2682C14.3072 6.4683 12.6437 5.4774 10.7519 5.4774C8.86017 5.4774 7.19668 6.4683 6.23562 7.96711C5.9427 8.42274 5.71542 8.92516 5.56651 9.46095C5.43425 9.93599 5.36371 10.4369 5.36371 10.9548C5.36371 12.5248 6.01324 13.94 7.05463 14.9383C8.01961 15.865 9.32061 16.4322 10.7519 16.4322H24.4429Z"
+      />
+      <path
+        fill="currentColor"
+        d="M24.4429 9.46094V14.9383H14.4492C15.4906 13.94 16.1401 12.5248 16.1401 10.9548C16.1401 10.4369 16.0696 9.93598 15.9373 9.46094H24.4429Z"
+      />
+    </svg>
+  )
+}
 interface DebugAction {
   label: string
   onClick: () => void
@@ -226,24 +249,24 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10',
+        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
         item.disabled && 'opacity-50',
         item.rowClassName,
       )}
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-          <div className="text-[13px] font-medium text-[#E5DEFF]">
+          <div className="text-[13px] font-medium text-foreground">
             {item.label}
           </div>
           {item.defaultValue !== undefined && (
-            <span className="text-[11px] font-normal text-[#9B87F5]/70">
+            <span className="text-[11px] font-normal text-[var(--network-globe-edge)]/70">
               {formatFeatureFlagDefaultLabel(item.defaultValue)}
             </span>
           )}
         </div>
         {item.description && (
-          <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+          <div className="mt-0.5 text-[11px] text-[var(--network-globe-edge)]/80">
             {item.description}
           </div>
         )}
@@ -255,7 +278,7 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
               <button
                 type="button"
                 onClick={() => item.onResetToDefault?.()}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-[#9B87F5]/80 transition-colors hover:bg-[#9B87F5]/20 hover:text-[#E5DEFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--network-globe-edge)]/80 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
                 aria-label={`Reset ${item.label} to default`}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -304,16 +327,16 @@ function renderDebugSubmenuItemRow(
         }
       }}
       disabled={item.disabled}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
         item.disabled
           ? 'cursor-not-allowed opacity-50'
           : item.active
-            ? 'bg-[#9B87F5]/25 text-white'
-            : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
+            ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+            : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'
       } ${item.rowClassName ?? ''}`}
     >
       {item.icon && (
-        <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
+        <span className="flex-shrink-0 text-[var(--network-globe-edge)]">{item.icon}</span>
       )}
       <span className="flex-1">
         <span className="block font-medium">{item.label}</span>
@@ -324,12 +347,12 @@ function renderDebugSubmenuItemRow(
         )}
       </span>
       {item.badge !== undefined && (
-        <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
+        <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
           {item.badge}
         </span>
       )}
       {hasNestedSubmenu && (
-        <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
+        <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
       )}
     </button>
   )
@@ -524,24 +547,24 @@ function ConsoleProfileComparisonTable({
 
   return (
     <div className="space-y-3">
-      <p className="px-1 text-[11px] leading-relaxed text-[#9B87F5]/90">
+      <p className="px-1 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/90">
         Canonical defaults from{' '}
-        <code className="rounded bg-black/30 px-1 py-0.5 text-[10px]">
+        <code className="rounded bg-muted/50 px-1 py-0.5 text-[10px]">
           CONSOLE_PROFILES
         </code>
         . Debug feature overrides are not reflected here.
       </p>
-      <div className="overflow-x-auto rounded-lg border border-[#9B87F5]/20">
+      <div className="overflow-x-auto rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))]">
         <table className="w-full border-collapse text-left text-[11px]">
           <thead>
-            <TableRow className="border-b border-[#9B87F5]/20 bg-black/20">
+            <TableRow className="border-b border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40">
               <TableHead className="min-w-[140px]">Feature</TableHead>
               {PROFILE_IDS.map((id) => (
                 <TableHead
                   key={id}
                   className={cn(
                     'w-[88px] text-center font-semibold uppercase tracking-wider',
-                    id === activeProfileId && 'bg-[#9B87F5]/15 text-[#E5DEFF]',
+                    id === activeProfileId && 'bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] text-foreground',
                   )}
                 >
                   {CONSOLE_PROFILES[id].label}
@@ -553,9 +576,9 @@ function ConsoleProfileComparisonTable({
             {featureKeys.map((key) => (
               <TableRow
                 key={key}
-                className="border-b border-[#9B87F5]/10 last:border-0"
+                className="border-b border-[color-mix(in_srgb,var(--network-globe-edge)_10%,var(--border))] last:border-0"
               >
-                <TableCell className="text-[#E5DEFF]/95">
+                <TableCell className="text-foreground/95">
                   {CONSOLE_PROFILE_FEATURE_LABELS[key]}
                 </TableCell>
                 {PROFILE_IDS.map((id) => {
@@ -565,7 +588,7 @@ function ConsoleProfileComparisonTable({
                       key={id}
                       className={cn(
                         'text-center',
-                        id === activeProfileId && 'bg-[#9B87F5]/10',
+                        id === activeProfileId && 'bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
                       )}
                     >
                       {on ? (
@@ -575,7 +598,7 @@ function ConsoleProfileComparisonTable({
                         />
                       ) : (
                         <Minus
-                          className="mx-auto h-3.5 w-3.5 text-[#9B87F5]/35"
+                          className="mx-auto h-3.5 w-3.5 text-[var(--network-globe-edge)]/35"
                           aria-label="Off"
                         />
                       )}
@@ -592,14 +615,14 @@ function ConsoleProfileComparisonTable({
 }
 
 function TableRow({ className, ...props }: ComponentProps<'tr'>) {
-  return <tr className={cn('hover:bg-[#9B87F5]/5', className)} {...props} />
+  return <tr className={cn('hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_5%,transparent)]', className)} {...props} />
 }
 
 function TableHead({ className, ...props }: ComponentProps<'th'>) {
   return (
     <th
       className={cn(
-        'px-2 py-2 text-[10px] font-semibold text-[#9B87F5]/90',
+        'px-2 py-2 text-[10px] font-semibold text-[var(--network-globe-edge)]/90',
         className,
       )}
       {...props}
@@ -610,7 +633,7 @@ function TableHead({ className, ...props }: ComponentProps<'th'>) {
 function TableCell({ className, ...props }: ComponentProps<'td'>) {
   return (
     <td
-      className={cn('px-2 py-1.5 align-middle text-[#E5DEFF]', className)}
+      className={cn('px-2 py-1.5 align-middle text-foreground', className)}
       {...props}
     />
   )
@@ -973,7 +996,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description: getLowPowerDecisionDescription(initLowPowerDecision),
         icon: <Sparkles className="h-3 w-3" />,
         disabled: true,
-        rowClassName: 'mt-2 border-t border-[#9B87F5]/15 pt-3',
+        rowClassName: 'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_15%,var(--border))] pt-3',
       },
       {
         label: 'Jool animation gate',
@@ -1514,7 +1537,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <RotateCcw className="h-3 w-3" />,
-                rowClassName: 'mt-2 border-t border-[#9B87F5]/20 pt-2',
+                rowClassName: 'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
               },
             ],
           },
@@ -1693,7 +1716,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             <PopoverTrigger asChild>
               <button
                 className={cn(
-                  'flex h-11 w-11 select-none items-center justify-center rounded-xl border border-violet-500/30 bg-violet-600 text-white shadow-md transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  'relative flex h-11 w-11 select-none items-center justify-center overflow-hidden rounded-xl bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,var(--background))] shadow-sm transition-colors',
+                  'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--background))]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   isDragging ? 'cursor-grabbing touch-none' : 'cursor-grab',
                 )}
                 aria-label="Debug menu"
@@ -1704,13 +1729,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 onClick={handleDragClick}
                 onDragStart={(event) => event.preventDefault()}
               >
-                <img
-                  src="/icons/appwrite-white.svg"
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  className="pointer-events-none h-6 w-6"
-                />
+                <DebugMenuBrandMark className="relative z-10 text-foreground" />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
@@ -1724,7 +1743,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           sideOffset={8}
           collisionPadding={DEBUG_MENU_EDGE_OFFSET_PX}
           className={cn(
-            'z-[10060] flex max-h-[min(85dvh,var(--radix-popper-available-height,100dvh))] flex-col overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
+            'z-[10060] flex max-h-[min(85dvh,var(--radix-popper-available-height,100dvh))] flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-popover p-0 shadow-xl',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
@@ -1738,7 +1757,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             event.stopPropagation()
           }}
         >
-          <div className="shrink-0 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 backdrop-blur-sm">
+          <div className="shrink-0 border-b border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-popover/95 backdrop-blur-sm">
             <div className="px-4 py-3">
               <div className="flex items-center gap-2">
                 {currentSubmenu && (
@@ -1746,13 +1765,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     onClick={() =>
                       setActiveSubmenu(currentSubmenu.parentSubmenuKey)
                     }
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[#9B87F5]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
                     aria-label="Back"
                   >
-                    <ChevronLeft className="h-4 w-4 text-[#9B87F5]" />
+                    <ChevronLeft className="h-4 w-4 text-[var(--network-globe-edge)]" />
                   </button>
                 )}
-                <span className="text-[13px] font-semibold text-[#E5DEFF]">
+                <span className="text-[13px] font-semibold text-foreground">
                   {currentSubmenu ? currentSubmenu.title : 'Debug'}
                 </span>
               </div>
@@ -1760,7 +1779,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             {isFeatureFlagsSubmenu ? (
               <div className="px-4 pb-3">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9B87F5]/60" />
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
                   <Input
                     autoFocus
                     value={featureFlagsSearch}
@@ -1768,13 +1787,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       setFeatureFlagsSearch(event.target.value)
                     }
                     placeholder="Search flags…"
-                    className="h-8 border-[#9B87F5]/25 bg-black/20 pl-8 pr-8 text-[12px] text-[#E5DEFF] placeholder:text-[#9B87F5]/50"
+                    className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 pl-8 pr-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
                   />
                   {featureFlagsSearch ? (
                     <button
                       type="button"
                       onClick={() => setFeatureFlagsSearch('')}
-                      className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[#9B87F5]/70 transition-colors hover:bg-[#9B87F5]/15 hover:text-[#E5DEFF]"
+                      className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
                       aria-label="Clear search"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -1811,7 +1830,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   filteredFeatureFlagItems.every(
                     (item) => item.label === 'Reset all feature flags',
                   ) ? (
-                    <p className="px-3 py-2 text-[11px] text-[#9B87F5]/70">
+                    <p className="px-3 py-2 text-[11px] text-[var(--network-globe-edge)]/70">
                       No matching flags
                     </p>
                   ) : null}
@@ -1821,7 +1840,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           {group.category ? (
                             <div
                               className={cn(
-                                'px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[#9B87F5]/80',
+                                'px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--network-globe-edge)]/80',
                                 groupIndex === 0 ? 'pt-0' : 'pt-3',
                               )}
                             >
@@ -1855,8 +1874,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 {sections.map((section) => (
                   <div key={section.title}>
                     <div className="mb-2 flex items-center gap-2 px-1">
-                      <span className="text-[#9B87F5]">{section.icon}</span>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9B87F5]/80">
+                      <span className="text-[var(--network-globe-edge)]">{section.icon}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--network-globe-edge)]/80">
                         {section.title}
                       </span>
                     </div>
@@ -1886,14 +1905,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 item.onClick()
                               }
                             }}
-                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
+                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
                               item.active
-                                ? 'bg-[#9B87F5]/25 text-white'
-                                : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
+                                ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+                                : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'
                             }`}
                           >
                             {item.icon && (
-                              <span className="flex-shrink-0 text-[#9B87F5]">
+                              <span className="flex-shrink-0 text-[var(--network-globe-edge)]">
                                 {item.icon}
                               </span>
                             )}
@@ -1901,12 +1920,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               {item.label}
                             </span>
                             {item.badge !== undefined && (
-                              <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
+                              <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">
                                 {item.badge}
                               </span>
                             )}
                             {hasSubmenu && (
-                              <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
+                              <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
                             )}
                           </button>
                         )

@@ -69,9 +69,9 @@ export const educationSteps = [
     title: 'Start from our docs',
     description:
       'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.',
-    href: 'https://appwrite.io/docs',
+    href: '/docs',
     label: 'Go to Appwrite Docs',
-    external: true,
+    external: false,
   },
 ] as const
 
@@ -79,7 +79,7 @@ export const educationCommunity = {
   title: 'Get help from the open source community',
   description:
     'Join a growing community of developers and students who use Appwrite to build their products. Gain access to a wealth of knowledge, support, and shared experiences needed to grow and advance your tech career.',
-  discordUrl: 'https://appwrite.io/discord',
+  discordUrl: '/discord',
 } as const
 
 export const educationFaqItems: EducationFaqItem[] = [

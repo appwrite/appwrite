@@ -112,6 +112,7 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { Browser } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useHashScroll } from '@/lib/hooks/useHashScroll'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 // Browser Icon Component with Device Badge
 function BrowserIcon({
@@ -830,15 +831,10 @@ function UserImpersonationCapabilityCard({
           outgoing requests so the API treats each call like it came from the
           impersonated user - permissions, data access, and limits follow that
           identity.{' '}
-          <a
-            href="https://appwrite.io/docs/products/auth/impersonation"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral inline-flex items-center gap-1"
-          >
+          <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/impersonation">
             Documentation
             <ExternalLink className="h-3 w-3 shrink-0" />
-          </a>
+          </DocsRouteLink>
         </p>
         <Alert
           variant="default"
@@ -1649,15 +1645,10 @@ function UpdateMFASection({
           <p className="text-[13px] text-muted-foreground mt-2">
             Enhance the user&apos;s account security by requiring a second
             sign-in method.{' '}
-            <a
-              href="https://appwrite.io/docs/products/auth/mfa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral inline-flex items-center gap-1"
-            >
+            <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/mfa">
               Documentation
               <ExternalLink className="h-3 w-3 shrink-0" />
-            </a>
+            </DocsRouteLink>
           </p>
         </div>
         <div className="border-t border-border" />
@@ -2315,14 +2306,9 @@ function CreateUserMembershipDialog({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
                   Roles are used to manage access permissions.{' '}
-                  <a
-                    href="https://appwrite.io/docs/advanced/platform/permissions"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link-neutral"
-                  >
+                  <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
                     Learn more about permissions
-                  </a>
+                  </DocsRouteLink>
                 </AlertDescription>
               </Alert>
             </div>

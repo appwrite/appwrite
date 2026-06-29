@@ -4,6 +4,13 @@ import { useRouter, useLocation, useMatches } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
+import {
+  INITIAL_LOADER_SHELL_GATE,
+  projectRouteRequiresProjectSelectorGate,
+  resetInitialLoaderShellGate,
+  setInitialLoaderShellGate,
+} from '@/lib/initial-loader/shell-gates'
+import { useInitialLoaderShellGatesReady } from '@/hooks/use-initial-loader-shell-gates'
 
 /**
  * True when any `['account','console', ...]` query is in error with HTTP 403.
@@ -48,6 +55,7 @@ export function useInitialLoader() {
   const location = useLocation()
   const matches = useMatches()
   const isConsoleAccount403 = useConsoleAccountQueryForbidden403()
+  const shellGatesReady = useInitialLoaderShellGatesReady(location.pathname)
 
   // Track all active queries and mutations (including Appwrite calls)
   const isFetching = useIsFetching({
@@ -113,6 +121,20 @@ export function useInitialLoader() {
   const prevRouterStatusRef = useRef(router.state.status)
   const prevPathnameRef = useRef(location.pathname)
   const prevForbidden403Ref = useRef(isConsoleAccount403)
+  const prevShellGatesReadyRef = useRef(shellGatesReady)
+  const prevPathnameForShellGateRef = useRef(location.pathname)
+
+  // Reset the project-selector gate when entering a project route (not on first paint).
+  useEffect(() => {
+    if (prevPathnameForShellGateRef.current === location.pathname) return
+    prevPathnameForShellGateRef.current = location.pathname
+
+    if (projectRouteRequiresProjectSelectorGate(location.pathname)) {
+      setInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector, false)
+      return
+    }
+    resetInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector)
+  }, [location.pathname])
 
   useEffect(() => {
     // If initial load has already completed, never show loader again
@@ -159,6 +181,8 @@ export function useInitialLoader() {
     const mutatingChanged = prevIsMutatingRef.current !== isMutating
     const forbidden403Changed =
       prevForbidden403Ref.current !== isConsoleAccount403
+    const shellGatesReadyChanged =
+      prevShellGatesReadyRef.current !== shellGatesReady
 
     // If nothing relevant changed, skip processing
     if (
@@ -166,7 +190,8 @@ export function useInitialLoader() {
       !pathnameChanged &&
       !fetchingChanged &&
       !mutatingChanged &&
-      !forbidden403Changed
+      !forbidden403Changed &&
+      !shellGatesReadyChanged
     ) {
       return
     }
@@ -177,6 +202,7 @@ export function useInitialLoader() {
     prevRouterStatusRef.current = router.state.status
     prevPathnameRef.current = location.pathname
     prevForbidden403Ref.current = isConsoleAccount403
+    prevShellGatesReadyRef.current = shellGatesReady
 
     // Clear any existing timeouts
     if (timeoutRef.current) {
@@ -200,6 +226,7 @@ export function useInitialLoader() {
     const shouldHideLoader =
       (location.pathname !== '/' || isConsoleAccount403) &&
       !currentHasActiveRequests &&
+      shellGatesReady &&
       wasLoadingRef.current
 
     if (shouldShowLoadingState && !wasLoadingRef.current) {
@@ -254,6 +281,7 @@ export function useInitialLoader() {
     isFetching,
     isMutating,
     isConsoleAccount403,
+    shellGatesReady,
   ])
 
   return { isLoading, isAuthRoute, skipStaticLoader }

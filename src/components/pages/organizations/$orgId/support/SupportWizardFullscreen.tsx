@@ -37,6 +37,7 @@ import {
 import { cn } from '@/lib/utils'
 import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const SUBJECT_MAX = 128
 
@@ -45,7 +46,7 @@ const MESSAGE_PLACEHOLDER =
   'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.'
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
-const SUPPORT_DISCORD_URL = 'https://appwrite.io/discord'
+const SUPPORT_DISCORD_URL = '/discord'
 const SUPPORT_GITHUB_ISSUES_URL =
   'https://github.com/appwrite/appwrite/issues/new/choose'
 const MESSAGE_MAX = 4096
@@ -288,16 +289,11 @@ export function SupportWizardFullscreen() {
               <span>Status</span>
               <ExternalLink className="h-3 w-3 ml-auto shrink-0 text-muted-foreground" />
             </a>
-            <a
-              href="https://appwrite.io/docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
-            >
+            <DocsRouteLink className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors" href="/docs">
               <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span>Docs</span>
               <ExternalLink className="h-3 w-3 ml-auto shrink-0 text-muted-foreground" />
-            </a>
+            </DocsRouteLink>
             <a
               href={SUPPORT_DISCORD_URL}
               target="_blank"

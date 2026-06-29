@@ -44,8 +44,8 @@ export function DebugMenuInitTicketPanel() {
     <div className="space-y-4 px-1 py-1" aria-label="Init ticket mock">
       <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-medium text-[#E5DEFF]">Mock ticket type</p>
-          <p className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+          <p className="text-[13px] font-medium text-foreground">Mock ticket type</p>
+          <p className="mt-0.5 text-[11px] text-[var(--network-globe-edge)]/80">
             {mockEnabled
               ? formatInitMockTicketType(selectedType)
               : 'Use account rules on /init'}
@@ -75,20 +75,20 @@ export function DebugMenuInitTicketPanel() {
                 className={cn(
                   'flex w-full flex-col rounded-lg border px-3 py-2.5 text-left transition-colors',
                   active
-                    ? 'border-[#9B87F5]/60 bg-[#9B87F5]/15'
-                    : 'border-[#9B87F5]/20 hover:bg-[#9B87F5]/10',
+                    ? 'border-[color-mix(in_srgb,var(--network-globe-edge)_60%,var(--border))] bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)]'
+                    : 'border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
                 )}
               >
-                <span className="text-[13px] font-medium text-[#E5DEFF]">
+                <span className="text-[13px] font-medium text-foreground">
                   {option.label}
                 </span>
-                <span className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+                <span className="mt-0.5 text-[11px] text-[var(--network-globe-edge)]/80">
                   {option.description}
                 </span>
               </button>
             )
           })}
-          <p className="pt-1 text-[11px] leading-relaxed text-[#9B87F5]/80">
+          <p className="pt-1 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
             Overrides gold, silver, and standard rules while enabled. Sign in on
             /init to preview the ticket.
           </p>

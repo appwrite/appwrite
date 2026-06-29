@@ -10,9 +10,10 @@ import {
   useUpdateDenyDisposableEmailPolicy,
   useUpdateDenyCorporateEmailPolicy,
 } from '@/lib/react-query/hooks/auth'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const EMAIL_POLICIES_DOCS_URL =
-  'https://appwrite.io/docs/products/auth/email-policies'
+  '/docs/products/auth/email-policies'
 
 type EmailPolicyCardProps = {
   currentEnabled: boolean
@@ -126,14 +127,9 @@ export function DenyFreeEmailCard({
           Yahoo, and Outlook. Useful when seats should tie to a work
           organization. Applies at sign-up and email change only - not to existing
           sessions.{' '}
-          <a
-            href={EMAIL_POLICIES_DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <DocsRouteLink className="link-neutral" href={EMAIL_POLICIES_DOCS_URL}>
             Learn more
-          </a>
+          </DocsRouteLink>
           .
         </>
       }

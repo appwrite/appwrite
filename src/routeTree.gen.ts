@@ -20,6 +20,7 @@ import { Route as EnterpriseRouteImport } from './routes/enterprise'
 import { Route as EducationRouteImport } from './routes/education'
 import { Route as DomainsRouteImport } from './routes/domains'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as CompanyRouteImport } from './routes/company'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -374,6 +375,11 @@ const DomainsRoute = DomainsRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscordRoute = DiscordRouteImport.update({
+  id: '/discord',
+  path: '/discord',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiesRoute = CookiesRouteImport.update({
@@ -2273,6 +2279,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
@@ -2583,6 +2590,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/discord': typeof DiscordRoute
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
   '/enterprise': typeof EnterpriseRoute
@@ -2858,6 +2866,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/company': typeof CompanyRoute
   '/cookies': typeof CookiesRoute
+  '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/domains': typeof DomainsRouteWithChildren
   '/education': typeof EducationRoute
@@ -3170,6 +3179,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/company'
     | '/cookies'
+    | '/discord'
     | '/docs'
     | '/domains'
     | '/education'
@@ -3480,6 +3490,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/company'
     | '/cookies'
+    | '/discord'
     | '/domains'
     | '/education'
     | '/enterprise'
@@ -3754,6 +3765,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/company'
     | '/cookies'
+    | '/discord'
     | '/docs'
     | '/domains'
     | '/education'
@@ -4068,6 +4080,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   CompanyRoute: typeof CompanyRoute
   CookiesRoute: typeof CookiesRoute
+  DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DomainsRoute: typeof DomainsRouteWithChildren
   EducationRoute: typeof EducationRoute
@@ -4178,6 +4191,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discord': {
+      id: '/discord'
+      path: '/discord'
+      fullPath: '/discord'
+      preLoaderRoute: typeof DiscordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookies': {
@@ -7705,6 +7725,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   CompanyRoute: CompanyRoute,
   CookiesRoute: CookiesRoute,
+  DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DomainsRoute: DomainsRouteWithChildren,
   EducationRoute: EducationRoute,

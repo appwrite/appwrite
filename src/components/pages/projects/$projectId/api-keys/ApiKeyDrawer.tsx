@@ -10,6 +10,7 @@ import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface ApiKeyDrawerProps {
   open: boolean
@@ -445,14 +446,9 @@ export function ApiKeyDrawer({
                     />
                     <p className="text-[12px] text-muted-foreground">
                       Select the scopes this API key will have access to.{' '}
-                      <a
-                        href="https://appwrite.io/docs/advanced/platform/api-keys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link-neutral"
-                      >
+                      <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/api-keys">
                         Learn more about API key scopes
-                      </a>
+                      </DocsRouteLink>
                       .
                     </p>
                   </div>

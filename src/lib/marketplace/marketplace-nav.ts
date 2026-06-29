@@ -107,7 +107,7 @@ export const MARKETPLACE_SIDEBAR_LINKS: MarketplaceLinkItem[] = [
     id: 'docs',
     label: 'Documentation',
     icon: BookOpen,
-    href: 'https://appwrite.io/docs',
+    href: '/docs',
     external: true,
   },
   {

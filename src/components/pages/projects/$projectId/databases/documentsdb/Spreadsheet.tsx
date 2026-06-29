@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { copyToClipboard } from '@/lib/utils/context-menu'
+import { copyToClipboard, openInNewWindow } from '@/lib/utils/context-menu'
 import {
   Plus,
   Key,
@@ -170,6 +170,9 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { getDocsPageUrl } from '@/lib/marketing/urls'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 
@@ -2775,6 +2778,7 @@ export function RowsSpreadsheet({
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
   const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const { features } = useConsoleProfile()
   const hideSampleData = true
   const hideSequenceColumn = true
   const useInlineDocumentPane = true
@@ -3877,7 +3881,9 @@ export function RowsSpreadsheet({
     }
 
     const handleDocumentation = () => {
-      window.open('https://appwrite.io/docs/products/databases', '_blank')
+      openInNewWindow(
+        getDocsPageUrl('/docs/products/databases', features.marketing),
+      )
     }
 
     const handleOpenSampleDataModal = () => {
@@ -5114,14 +5120,9 @@ export function TableSecurity({ table }: SpreadsheetProps) {
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
               Choose who can access your tables and rows.{' '}
-              <a
-                href="https://appwrite.io/docs/products/databases/permissions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-neutral"
-              >
+              <DocsRouteLink className="link-neutral" href="/docs/products/databases/permissions">
                 Learn more
-              </a>
+              </DocsRouteLink>
               .
             </p>
           </div>

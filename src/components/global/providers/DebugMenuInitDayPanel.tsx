@@ -51,8 +51,8 @@ export function DebugMenuInitDayPanel() {
     <div className="space-y-4 px-1 py-1" aria-label="Init current day">
       <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-medium text-[#E5DEFF]">Mock current day</p>
-          <p className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+          <p className="text-[13px] font-medium text-foreground">Mock current day</p>
+          <p className="mt-0.5 text-[11px] text-[var(--network-globe-edge)]/80">
             {mockEnabled
               ? formatInitMockCurrentDay(selectedDay)
               : 'Use the real calendar date on /init'}
@@ -69,9 +69,9 @@ export function DebugMenuInitDayPanel() {
 
       {mockEnabled ? (
         <div className="space-y-3 rounded-lg px-3 pb-3">
-          <div className="flex items-center justify-between text-[11px] text-[#9B87F5]/80">
+          <div className="flex items-center justify-between text-[11px] text-[var(--network-globe-edge)]/80">
             <span>Before</span>
-            <span className="font-medium text-[#E5DEFF]">
+            <span className="font-medium text-foreground">
               {mockDaySliderLabel(selectedDay)}
             </span>
             <span>Banner off</span>
@@ -86,11 +86,11 @@ export function DebugMenuInitDayPanel() {
             }}
             aria-label="Mock Init current day"
           />
-          <div className="flex justify-between text-[10px] text-[#9B87F5]/60">
+          <div className="flex justify-between text-[10px] text-[var(--network-globe-edge)]/60">
             <span>Day 1</span>
             <span>Day {INIT_LAUNCH_WEEK_DAY_COUNT}</span>
           </div>
-          <p className="text-[11px] leading-relaxed text-[#9B87F5]/80">
+          <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
             {mockDayPreviewCopy(selectedDay)}
           </p>
         </div>

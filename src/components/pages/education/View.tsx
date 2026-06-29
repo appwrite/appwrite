@@ -12,6 +12,7 @@ import {
   marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Badge } from '@/components/ui/badge'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import {
   educationCommunity,
@@ -128,13 +129,9 @@ export function View() {
                 description={educationCommunity.description}
               />
               <Button variant="outline" className="mt-6" asChild>
-                <a
-                  href={educationCommunity.discordUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <MarketingSiteLink href={educationCommunity.discordUrl}>
                   Join Discord
-                </a>
+                </MarketingSiteLink>
               </Button>
             </div>
             <CommunitySupportChat />

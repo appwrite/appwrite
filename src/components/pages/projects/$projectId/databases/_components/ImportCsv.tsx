@@ -42,8 +42,9 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { formatBytes } from '@/lib/utils/mock-data'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
-const STORAGE_DOCS_URL = 'https://appwrite.io/docs/products/storage'
+const STORAGE_DOCS_URL = '/docs/products/storage'
 
 /** Fixed modal size to prevent layout shifts when switching sources */
 const MODAL_WIDTH = 1100
@@ -593,13 +594,9 @@ export function ImportCsv({
                             </p>
                             <div className="flex gap-2">
                               <Button variant="outline" size="sm" asChild>
-                                <a
-                                  href={STORAGE_DOCS_URL}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
+                                <DocsRouteLink href={STORAGE_DOCS_URL}>
                                   Documentation
-                                </a>
+                                </DocsRouteLink>
                               </Button>
                               <Button
                                 size="sm"

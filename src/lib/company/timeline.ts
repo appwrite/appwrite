@@ -101,7 +101,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'docs',
         label: 'Getting started',
-        href: 'https://appwrite.io/docs',
+        href: '/docs',
         kind: 'docs',
       },
     ],
@@ -223,7 +223,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'cloud',
         label: 'Appwrite Cloud',
-        href: 'https://appwrite.io/docs/advanced/platform/cloud',
+        href: '/docs/advanced/platform/cloud',
         kind: 'docs',
       },
     ],
@@ -283,7 +283,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'docs',
         label: 'Messaging docs',
-        href: 'https://appwrite.io/docs/products/messaging',
+        href: '/docs/products/messaging',
         kind: 'docs',
       },
     ],
@@ -305,7 +305,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'startups',
         label: 'Apply to the program',
-        href: 'https://appwrite.io/startups',
+        href: '/startups',
         kind: 'product',
       },
     ],
@@ -327,7 +327,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'discord',
         label: 'Join the community',
-        href: 'https://appwrite.io/discord',
+        href: '/discord',
         kind: 'product',
       },
     ],
@@ -353,7 +353,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'docs',
         label: 'Sites docs',
-        href: 'https://appwrite.io/docs/products/sites',
+        href: '/docs/products/sites',
         kind: 'docs',
       },
     ],
@@ -375,7 +375,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'cloud-ga',
         label: 'Cloud GA',
-        href: 'https://appwrite.io/cloud-ga',
+        href: '/blog/post/product-update-august-2025',
         kind: 'product',
       },
     ],
@@ -419,7 +419,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
       {
         id: 'docs',
         label: 'Presences docs',
-        href: 'https://appwrite.io/docs/apis/realtime/presences',
+        href: '/docs/apis/realtime/presences',
         kind: 'docs',
       },
     ],

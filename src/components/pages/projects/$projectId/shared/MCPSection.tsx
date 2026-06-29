@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { getMCPIDEs } from '@/lib/config/ide'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 export interface MCPSectionProps {
   /** When true, render without the outer card (e.g. inside a modal tab) */
@@ -20,14 +21,10 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
     <p className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}>
       Appwrite offers two MCP servers that allow LLMs to interact with
       Appwrite's API and documentation. Deploy with a single click or view the{' '}
-      <a
-        href="https://appwrite.io/docs/tooling/mcp"
-        target="_blank"
-        rel="noreferrer"
-        className="text-foreground underline hover:no-underline"
-      >
+      <DocsRouteLink rel="noreferrer"
+        className="text-foreground underline hover:no-underline" href="/docs/tooling/mcp">
         docs
-      </a>{' '}
+      </DocsRouteLink>{' '}
       for instructions.
     </p>
   )
@@ -36,12 +33,8 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
     <>
       {/* MCP Server Types */}
       <div className="grid gap-3 sm:grid-cols-2 mb-4">
-        <a
-          href="https://appwrite.io/docs/tooling/mcp/api"
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50 hover:border-border cursor-pointer"
-        >
+        <DocsRouteLink rel="noreferrer"
+          className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50 hover:border-border cursor-pointer" href="/docs/tooling/mcp/api">
           <div className="flex items-start gap-2">
             <Code className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
@@ -55,14 +48,10 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
               <span className="text-[12px] text-foreground">Learn more →</span>
             </div>
           </div>
-        </a>
+        </DocsRouteLink>
 
-        <a
-          href="https://appwrite.io/docs/tooling/mcp/docs"
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50 hover:border-border cursor-pointer"
-        >
+        <DocsRouteLink rel="noreferrer"
+          className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50 hover:border-border cursor-pointer" href="/docs/tooling/mcp/docs">
           <div className="flex items-start gap-2">
             <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
@@ -76,7 +65,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
               <span className="text-[12px] text-foreground">Learn more →</span>
             </div>
           </div>
-        </a>
+        </DocsRouteLink>
       </div>
 
       {/* Integration Buttons */}

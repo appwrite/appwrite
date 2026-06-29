@@ -30,6 +30,7 @@ import { getApiEndpoint, getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
@@ -39,12 +40,12 @@ import {
 } from '@/components/global/shared/CodeBlock'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 
-const APPWRITE_DOCS_URL = 'https://appwrite.io/docs'
+const APPWRITE_DOCS_URL = '/docs'
 const APPWRITE_CLI_INSTALL_URL =
-  'https://appwrite.io/docs/tooling/command-line/installation'
+  '/docs/tooling/command-line/installation'
 const APPWRITE_CLI_DOCS_URL =
-  'https://appwrite.io/docs/tooling/command-line/commands'
-const APPWRITE_SKILLS_DOCS_URL = 'https://appwrite.io/docs/tooling/skills'
+  '/docs/tooling/command-line/commands'
+const APPWRITE_SKILLS_DOCS_URL = '/docs/tooling/skills'
 const APPWRITE_AGENT_SKILLS_REPO = 'https://github.com/appwrite/agent-skills'
 
 function GitHubIcon({ className }: { className?: string }) {
@@ -1650,28 +1651,24 @@ export function ConnectProject({
                           <Key className="h-4 w-4" />
                           View API keys
                         </Button>
-                        <a
+                        <DocsRouteLink
                           href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                         >
                           Server setup guide
                           <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
+                        </DocsRouteLink>
                       </div>
                     </div>
                   </div>
                 )}
-                <a
+                <DocsRouteLink
                   href={APPWRITE_DOCS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                 >
                   Read the docs
                   <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                </DocsRouteLink>
               </div>
               {/* Right: File-based code examples */}
               <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
@@ -1820,15 +1817,13 @@ export function ConnectProject({
                     </>
                   )}
                 </div>
-                <a
+                <DocsRouteLink
                   href={APPWRITE_CLI_INSTALL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                 >
                   Full installation guide
                   <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                </DocsRouteLink>
               </div>
               <div className="space-y-3">
                 <h4 className="text-[13px] font-semibold text-foreground">
@@ -1887,15 +1882,13 @@ export function ConnectProject({
                   . Create API keys in your project settings.
                 </p>
               </div>
-              <a
+              <DocsRouteLink
                 href={APPWRITE_CLI_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
               >
                 CLI commands
                 <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              </DocsRouteLink>
             </div>
           </TabsContent>
           <TabsContent
@@ -1941,15 +1934,13 @@ export function ConnectProject({
                   - pick what you use during setup.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <a
+                  <DocsRouteLink
                     href={APPWRITE_SKILLS_DOCS_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                   >
                     Docs
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  </DocsRouteLink>
                 </div>
               </div>
               {/* Right (main): install command */}

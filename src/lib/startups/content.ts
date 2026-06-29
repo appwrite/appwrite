@@ -238,7 +238,7 @@ export const startupsApplySteps: StartupsApplyStep[] = [
     title: 'Get onboarded',
     description:
       'If accepted, we activate your program benefits and share next steps to build on Appwrite Cloud.',
-    href: 'https://appwrite.io/docs',
+    href: '/docs',
     label: 'Go to Appwrite Docs',
     external: true,
   },

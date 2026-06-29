@@ -1,35 +1,36 @@
 'use client'
 
 import { Link, useLocation } from '@tanstack/react-router'
-import type { MouseEvent, ReactNode } from 'react'
+import type { ComponentProps, MouseEvent, ReactNode } from 'react'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
 import type { DocsPreviewView } from '@/lib/docs/docs-preview-menu'
 import { useDocsPreviewNavigation } from '@/lib/docs/docs-preview-navigation'
-import { getDocsPageUrl } from '@/lib/marketing/urls'
+import { getDocsPageUrl, splitHrefHash } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 
-type DocsRouteLinkProps = {
+type DocsRouteLinkProps = Omit<ComponentProps<'a'>, 'href' | 'children'> & {
   href: string
   children: ReactNode
-  className?: string
-  onClick?: () => void
   /** Preview pane view when opened from the console (defaults to article). */
   previewView?: DocsPreviewView
 }
 
 export function docsHrefToRoute(href: string) {
-  if (href === '/docs' || href === '/docs/') {
-    return { to: '/docs' as const, params: undefined }
+  const { pathname, hash } = splitHrefHash(href)
+
+  if (pathname === '/docs' || pathname === '/docs/') {
+    return { to: '/docs' as const, params: undefined, hash: hash || undefined }
   }
 
-  if (href.startsWith('/docs/')) {
+  if (pathname.startsWith('/docs/')) {
     return {
       to: '/docs/$' as const,
-      params: { _splat: href.slice('/docs/'.length) },
+      params: { _splat: pathname.slice('/docs/'.length) },
+      hash: hash || undefined,
     }
   }
 
@@ -42,6 +43,7 @@ export function DocsRouteLink({
   className,
   onClick,
   previewView = 'article',
+  ...props
 }: DocsRouteLinkProps) {
   const location = useLocation()
   const { features } = useConsoleProfile()
@@ -58,12 +60,17 @@ export function DocsRouteLink({
     const handleExternalClick = (event: MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault()
       event.stopPropagation()
-      onClick?.()
+      onClick?.(event)
       openInNewWindow(externalUrl)
     }
 
     return (
-      <a href={externalUrl} className={className} onClick={handleExternalClick}>
+      <a
+        {...props}
+        href={externalUrl}
+        className={className}
+        onClick={handleExternalClick}
+      >
         {children}
       </a>
     )
@@ -73,7 +80,7 @@ export function DocsRouteLink({
     const handlePreviewClick = (event: MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault()
       event.stopPropagation()
-      onClick?.()
+      onClick?.(event)
       if (previewNav) {
         previewNav.navigateToSlug(previewSlug, previewView)
         return
@@ -82,7 +89,7 @@ export function DocsRouteLink({
     }
 
     return (
-      <a href={href} className={className} onClick={handlePreviewClick}>
+      <a {...props} href={href} className={className} onClick={handlePreviewClick}>
         {children}
       </a>
     )
@@ -90,7 +97,7 @@ export function DocsRouteLink({
 
   if (!route) {
     return (
-      <a href={href} className={className} onClick={onClick}>
+      <a {...props} href={href} className={className} onClick={onClick}>
         {children}
       </a>
     )
@@ -98,7 +105,13 @@ export function DocsRouteLink({
 
   if (!route.params) {
     return (
-      <Link to={route.to} className={className} onClick={onClick}>
+      <Link
+        {...props}
+        to={route.to}
+        hash={route.hash}
+        className={className}
+        onClick={onClick}
+      >
         {children}
       </Link>
     )
@@ -106,8 +119,10 @@ export function DocsRouteLink({
 
   return (
     <Link
+      {...props}
       to={route.to}
       params={route.params}
+      hash={route.hash}
       className={cn(className)}
       onClick={onClick}
     >

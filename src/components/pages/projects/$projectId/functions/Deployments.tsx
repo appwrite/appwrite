@@ -113,6 +113,7 @@ import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -945,15 +946,13 @@ export function View() {
                               content is delivered over TLS for secure,
                               encrypted connections.
                             </p>
-                            <a
-                              href="https://appwrite.io/docs/products/network/cdn"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <DocsRouteLink
+                              href="/docs/products/network/cdn"
                               className="link-neutral text-[11px] mt-1.5 inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Learn more →
-                            </a>
+                            </DocsRouteLink>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -992,15 +991,13 @@ export function View() {
                               access to your functions and maintaining high
                               availability even during high traffic loads.
                             </p>
-                            <a
-                              href="https://appwrite.io/docs/products/network"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <DocsRouteLink
+                              href="/docs/products/network"
                               className="link-neutral text-[11px] mt-1.5 inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Learn more →
-                            </a>
+                            </DocsRouteLink>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

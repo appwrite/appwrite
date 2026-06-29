@@ -11,6 +11,7 @@ import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { PermissionsEditor } from '@/components/pages/projects/$projectId/auth/PermissionsEditor'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
@@ -146,14 +147,9 @@ export function View() {
                 Select scopes to grant the dynamic key generated temporarily for
                 your function. It is best practice to allow only necessary
                 permissions.{' '}
-                <a
-                  href="https://appwrite.io/docs/advanced/platform/api-keys#scopes"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-neutral"
-                >
+                <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/api-keys#scopes">
                   Learn more
-                </a>
+                </DocsRouteLink>
               </p>
             </div>
             <div className="border-t border-border" />

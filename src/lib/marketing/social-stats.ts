@@ -21,7 +21,7 @@ export const MARKETING_SOCIAL_STATS = {
   },
   discord: {
     stat: '23K+',
-    link: 'https://appwrite.io/discord',
+    link: '/discord',
   },
   twitter: {
     stat: '127K+',

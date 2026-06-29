@@ -7,6 +7,7 @@ import {
   enterpriseSecuritySection,
 } from '@/lib/enterprise/content'
 import { cn } from '@/lib/utils'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 type SecurityComplianceSectionProps = {
   onContactSales?: () => void
@@ -16,14 +17,10 @@ function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
       <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
-        <a
-          href="https://appwrite.io/docs/advanced/security"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <DocsRouteLink href="/docs/advanced/security">
           Security docs
           <ArrowRight className="ml-1.5 size-3.5" aria-hidden />
-        </a>
+        </DocsRouteLink>
       </Button>
       {onContactSales ? (
         <Button

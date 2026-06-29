@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { X, Plus } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { DOCS_LINK } from '@/lib/events-editor'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface EventSelectorProps {
   projectId?: string | null
@@ -45,14 +46,9 @@ export function EventSelector({
         <p className="text-[13px] text-muted-foreground mb-2">
           Set the events that will trigger your webhook. Maximum {maxEvents}{' '}
           events allowed.{' '}
-          <a
-            href={DOCS_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <DocsRouteLink className="link-neutral" href={DOCS_LINK}>
             Learn more
-          </a>
+          </DocsRouteLink>
         </p>
         {selectedEvents.length > 0 ? (
           <div className="flex flex-wrap gap-2">

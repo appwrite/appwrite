@@ -15,8 +15,10 @@ import {
   getBlogPageUrl,
   getDocsPageUrl,
   getMarketingPageUrl,
+  getProductPageUrl,
   isBlogPageExternal,
   isMarketingPageExternal,
+  isProductPageExternal,
 } from '@/lib/marketing/urls'
 import {
   FOOTER_CONTAINER,
@@ -68,6 +70,18 @@ function blogFooterLink(
   }
 }
 
+function productFooterLink(
+  label: string,
+  path: string,
+  marketing: boolean,
+): FooterLink {
+  return {
+    label,
+    href: getProductPageUrl(path, marketing),
+    external: isProductPageExternal(marketing),
+  }
+}
+
 function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGroup[] {
   return [
   {
@@ -93,38 +107,14 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
   {
     title: 'Products',
     links: [
-      {
-        label: 'Auth',
-        href: marketing ? '/products/auth' : 'https://appwrite.io/products/auth',
-        external: !marketing,
-      },
-      {
-        label: 'Databases',
-        href: marketing ? '/products/databases' : 'https://appwrite.io/products/databases',
-        external: !marketing,
-      },
-      {
-        label: 'Storage',
-        href: marketing ? '/products/storage' : 'https://appwrite.io/products/storage',
-        external: !marketing,
-      },
-      {
-        label: 'Functions',
-        href: marketing ? '/products/functions' : 'https://appwrite.io/products/functions',
-        external: !marketing,
-      },
-      {
-        label: 'Messaging',
-        href: marketing ? '/products/messaging' : 'https://appwrite.io/products/messaging',
-        external: !marketing,
-      },
-      { label: 'Realtime', href: 'https://appwrite.io/products/realtime', external: true },
-      {
-        label: 'Hosting',
-        href: marketing ? '/products/sites' : 'https://appwrite.io/products/sites',
-        external: !marketing,
-      },
-      { label: 'Network', href: 'https://appwrite.io/products/network', external: true },
+      productFooterLink('Auth', '/products/auth', marketing),
+      productFooterLink('Databases', '/products/databases', marketing),
+      productFooterLink('Storage', '/products/storage', marketing),
+      productFooterLink('Functions', '/products/functions', marketing),
+      productFooterLink('Messaging', '/products/messaging', marketing),
+      docsFooterLink('Realtime', '/docs/apis/realtime', marketing),
+      productFooterLink('Hosting', '/products/sites', marketing),
+      docsFooterLink('Network', '/docs/products/network', marketing),
     ],
   },
   {
@@ -138,7 +128,7 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
       },
       { label: 'Integrations', href: getMarketingPageUrl('/integrations', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Community', href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
-      { label: 'Init', href: 'https://appwrite.io/init', external: true },
+      { label: 'Init', href: '/init', external: false },
       { label: 'Threads', href: getMarketingPageUrl('/threads', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Changelog', href: getMarketingPageUrl('/changelog', marketing), external: isMarketingPageExternal(marketing) },
       { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects', external: true },
@@ -185,9 +175,13 @@ function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGro
         href: getMarketingPageUrl('/pricing', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      { label: 'Careers', href: 'https://appwrite.io/careers', external: true },
+      { label: 'Careers', href: 'https://appwrite.careers', external: true },
       { label: 'Store', href: 'https://store.appwrite.io/', external: true },
-      { label: 'Contact us', href: 'https://appwrite.io/contact-us', external: true },
+      {
+        label: 'Contact us',
+        href: getMarketingPageUrl('/enterprise', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
       {
         label: 'Assets',
         href: getMarketingPageUrl('/assets', marketing),
@@ -300,7 +294,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
     },
     {
       label: 'Discord',
-      href: 'https://appwrite.io/discord',
+      href: '/discord',
       icon: '/icons/discord-simple.svg',
     },
     {

@@ -71,6 +71,8 @@ import {
   resolveBillingPlanRecord,
 } from '@/lib/utils/plan-filter'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 /**
  * ChangePlanWizardFullscreen Component
@@ -1362,14 +1364,9 @@ export function ChangePlanWizardFullscreen() {
           <>
             <p className="text-[13px] text-muted-foreground mb-4">
               For more details on our plans, visit our{' '}
-              <a
-                href="https://appwrite.io/pricing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-foreground"
-              >
+              <MarketingSiteLink className="underline hover:text-foreground" href="/pricing">
                 pricing page
-              </a>
+              </MarketingSiteLink>
               .
             </p>
             {plansLoading ? (
@@ -1495,14 +1492,9 @@ export function ChangePlanWizardFullscreen() {
                 'the end of your billing period'}
               . You will lose access to premium features and organization
               members beyond the free limit will be removed.
-              <a
-                href="https://appwrite.io/docs/migration"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-1 underline"
-              >
+              <DocsRouteLink className="ml-1 underline" href="/docs/migration">
                 Learn more about migration
-              </a>
+              </DocsRouteLink>
             </WarningAlert>
           )}
 

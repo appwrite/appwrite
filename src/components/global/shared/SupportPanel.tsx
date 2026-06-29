@@ -21,6 +21,7 @@ import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getSupportHoursInLocalTime } from '@/lib/support'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
@@ -194,7 +195,9 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
             <p className="text-xs text-muted-foreground">
               {hasContactSupportOptions
                 ? 'Get help from our support team'
-                : 'Community and enterprise resources'}
+                : isCloud
+                  ? 'Community and enterprise resources'
+                  : 'Community and enterprise resources for self-hosting'}
             </p>
           </div>
         </div>
@@ -285,15 +288,10 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
             <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           </a>
 
-          <a
-            href="https://appwrite.io/discord"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#5865F2]/10">
+          <MarketingSiteLink className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted" href="/discord">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <svg
-                className="h-4 w-4 text-[#5865F2]"
+                className="h-4 w-4"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
@@ -307,7 +305,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
               </p>
             </div>
             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-          </a>
+          </MarketingSiteLink>
 
           <a
             href="https://github.com/appwrite/appwrite/issues/new/choose"

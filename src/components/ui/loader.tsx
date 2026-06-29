@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils'
 function LoaderBrandMark() {
   return (
     <div className="inline-flex items-end gap-1.5">
-      <AppwriteWordmark className="h-10" />
-      <span className="pb-0.5 text-sm font-extralight tracking-tight text-muted-foreground">
+      <AppwriteWordmark className="h-8" />
+      <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
         / 2.0
       </span>
     </div>

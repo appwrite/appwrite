@@ -34,6 +34,7 @@ import {
 import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 function getWebhookSecret(webhook: Models.Webhook | null | undefined) {
   if (!webhook) return ''
@@ -466,15 +467,10 @@ export function WebhookDrawer({
                       <p className="mt-2 text-[13px] text-muted-foreground">
                         Used to validate incoming webhook payloads with the
                         X-Appwrite-Webhook-Signature header.{' '}
-                        <a
-                          href="https://appwrite.io/docs/advanced/platform/webhooks#verification"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="link-neutral inline-flex items-center gap-1"
->
+                        <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/advanced/platform/webhooks#verification">
                           Learn more
                           <ExternalLink className="h-3 w-3 shrink-0" />
-                        </a>
+                        </DocsRouteLink>
                       </p>
                     </div>
                     <div className="border-t border-border" />

@@ -18,6 +18,7 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
@@ -177,14 +178,9 @@ export function View() {
           <h3 className="text-[15px] font-semibold text-foreground">Events</h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             Events that trigger this function (maximum 100).{' '}
-            <a
-              href={EVENTS_DOCS_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral"
-            >
+            <DocsRouteLink className="link-neutral" href={EVENTS_DOCS_LINK}>
               Learn more
-            </a>
+            </DocsRouteLink>
           </p>
         </div>
         <div className="border-t border-border" />

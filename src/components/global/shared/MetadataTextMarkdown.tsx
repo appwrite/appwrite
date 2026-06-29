@@ -4,6 +4,7 @@ import type { Components } from 'react-markdown'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
 const INLINE_CODE_CLASS =
@@ -20,7 +21,7 @@ function isExternalDomainLink(href?: string): boolean {
     return false
   }
 
-  if (href.startsWith('/docs')) {
+  if (parseDocsPagePath(href)) {
     return false
   }
 
@@ -44,7 +45,7 @@ function isExternalDomainLink(href?: string): boolean {
 const METADATA_MARKDOWN_COMPONENTS: Components = {
   p: ({ children }) => <>{children}</>,
   a: ({ href, children, ...props }) => {
-    if (href?.startsWith('/docs')) {
+    if (href && parseDocsPagePath(href)) {
       return (
         <DocsRouteLink
           href={href}

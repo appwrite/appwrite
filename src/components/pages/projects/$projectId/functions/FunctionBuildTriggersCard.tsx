@@ -9,7 +9,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { BuildTriggersCard } from '../shared/BuildTriggersCard'
 
 const FUNCTIONS_BUILD_TRIGGERS_DOCS =
-  'https://appwrite.io/docs/products/functions/deploy-from-git#build-triggers'
+  '/docs/products/functions/deploy-from-git#build-triggers'
 
 interface FunctionBuildTriggersCardProps {
   func: Models.Function

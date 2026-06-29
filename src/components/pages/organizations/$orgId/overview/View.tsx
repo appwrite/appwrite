@@ -310,6 +310,7 @@ function EmptyMemberAvatarSlot({
 }
 
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface OrgOverviewProps {
   tab?: 'projects' | 'marketplace' | 'domains' | 'settings'
@@ -3022,15 +3023,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     className="h-9 w-full justify-between text-[13px] font-normal"
                                     asChild
                                   >
-                                    <a
-                                      href="https://appwrite.io/docs/advanced/platform/api-keys"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5"
-                                    >
+                                    <DocsRouteLink className="inline-flex items-center gap-1.5" href="/docs/advanced/platform/api-keys">
                                       Docs
                                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                    </a>
+                                    </DocsRouteLink>
                                   </Button>
                                 </div>
                               </div>

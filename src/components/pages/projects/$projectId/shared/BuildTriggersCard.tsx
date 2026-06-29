@@ -27,6 +27,7 @@ import {
   type TriggerResourceKind,
   type TriggerValidationIssue,
 } from '@/lib/git-build-triggers'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface BuildTriggersCardProps {
   kind: TriggerResourceKind
@@ -215,14 +216,9 @@ export function BuildTriggersCard({
         <p className="text-[13px] text-muted-foreground mt-2">
           Limit which pushes trigger deployments. Use globs; prefix with{' '}
           <span className="font-mono">!</span> to exclude.{' '}
-          <a
-            href={docsLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <DocsRouteLink href={docsLink} className="link-neutral">
             Learn more
-          </a>
+          </DocsRouteLink>
         </p>
       </div>
       <div className="border-t border-border" />

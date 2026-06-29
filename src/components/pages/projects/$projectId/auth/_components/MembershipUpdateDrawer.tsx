@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner'
 import { Plus, X, Trash2, ChevronRight } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 export interface MembershipUpdateDrawerProps {
   open: boolean
@@ -296,14 +297,9 @@ export function MembershipUpdateDrawer({
                     )}
                     <p className="text-[12px] text-muted-foreground">
                       Roles are used to manage access permissions.{' '}
-                      <a
-                        href="https://appwrite.io/docs/advanced/platform/permissions"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link-neutral"
-                      >
+                      <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
                         Learn more about permissions
-                      </a>
+                      </DocsRouteLink>
                     </p>
                   </div>
 

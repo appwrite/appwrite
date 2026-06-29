@@ -304,34 +304,34 @@ export function DebugMenuSeedResourcesPanel() {
 
   return (
     <div className="flex flex-col gap-3 px-1" aria-label="Seed resources">
-      <p className="text-[11px] leading-relaxed text-[#9B87F5]/90">
+      <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/90">
         Create test resources directly in the current context. Amount is capped
         at {MAX_AMOUNT} per click.
       </p>
 
-      <div className="rounded-lg border border-[#9B87F5]/20 bg-black/20 p-3">
-        <p className="mb-2 text-[10px] uppercase tracking-wider text-[#9B87F5]/75">
+      <div className="rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 p-3">
+        <p className="mb-2 text-[10px] uppercase tracking-wider text-[var(--network-globe-edge)]/75">
           Context
         </p>
-        <p className="break-all text-[11px] text-[#E5DEFF]/90">
+        <p className="break-all text-[11px] text-foreground/90">
           {contextLabel}
         </p>
       </div>
 
       <div className="grid grid-cols-[1fr_120px] gap-2">
         <label className="space-y-1">
-          <span className="text-[11px] font-medium text-[#E5DEFF]">
+          <span className="text-[11px] font-medium text-foreground">
             Name prefix
           </span>
           <Input
             value={prefix}
             onChange={(event) => setPrefix(event.target.value)}
             disabled={busyKind !== null}
-            className="h-8 border-[#9B87F5]/25 bg-black/20 text-[12px] text-[#E5DEFF]"
+            className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 text-[12px] text-foreground"
           />
         </label>
         <label className="space-y-1">
-          <span className="text-[11px] font-medium text-[#E5DEFF]">Amount</span>
+          <span className="text-[11px] font-medium text-foreground">Amount</span>
           <Input
             type="number"
             min={1}
@@ -339,7 +339,7 @@ export function DebugMenuSeedResourcesPanel() {
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             disabled={busyKind !== null}
-            className="h-8 border-[#9B87F5]/25 bg-black/20 text-[12px] text-[#E5DEFF]"
+            className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 text-[12px] text-foreground"
           />
         </label>
       </div>
@@ -358,15 +358,15 @@ export function DebugMenuSeedResourcesPanel() {
           return (
             <div
               key={card.kind}
-              className="rounded-lg border border-[#9B87F5]/20 bg-black/20 p-3"
+              className="rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 p-3"
             >
               <div className="mb-3 flex items-start gap-2">
-                <span className="mt-0.5 text-[#9B87F5]">{card.icon}</span>
+                <span className="mt-0.5 text-[var(--network-globe-edge)]">{card.icon}</span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-[13px] font-medium text-[#E5DEFF]">
+                  <h3 className="text-[13px] font-medium text-foreground">
                     {card.title}
                   </h3>
-                  <p className="mt-1 text-[11px] leading-relaxed text-[#9B87F5]/80">
+                  <p className="mt-1 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
                     {card.disabled ? card.disabledReason : card.description}
                   </p>
                 </div>
@@ -376,9 +376,9 @@ export function DebugMenuSeedResourcesPanel() {
                 <div className="mb-3 space-y-1.5">
                   <Progress
                     value={cardProgress}
-                    className="h-1.5 bg-[#9B87F5]/20"
+                    className="h-1.5 bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)]"
                   />
-                  <p className="text-[10px] text-[#9B87F5]/80">
+                  <p className="text-[10px] text-[var(--network-globe-edge)]/80">
                     {progress.created} created, {progress.failed} failed of{' '}
                     {progress.total}
                   </p>

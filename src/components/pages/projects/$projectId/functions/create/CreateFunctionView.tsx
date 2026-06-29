@@ -54,6 +54,7 @@ import {
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -672,14 +673,9 @@ export function CreateFunctionView() {
             deploy from URL
           </Link>
           , or using the CLI.{' '}
-          <a
-            href="https://appwrite.io/docs/functions"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <DocsRouteLink className="link-neutral" href="/docs/functions">
             Learn more
-          </a>
+          </DocsRouteLink>
         </p>
       </div>
     </WizardLayout>

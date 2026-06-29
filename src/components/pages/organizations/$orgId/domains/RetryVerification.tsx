@@ -18,6 +18,7 @@ import {
 import { Copy, Check, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface RetryVerificationProps {
   open: boolean
@@ -100,15 +101,10 @@ export function RetryVerification({
               </Table>
             </div>
             <p className="text-[13px] text-muted-foreground">
-              <a
-                href="https://appwrite.io/docs/domains"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 link-neutral"
-              >
+              <DocsRouteLink className="inline-flex items-center gap-1 link-neutral" href="/docs/domains">
                 Learn more about DNS settings
                 <ExternalLink className="h-3 w-3" />
-              </a>
+              </DocsRouteLink>
             </p>
           </div>
         </div>

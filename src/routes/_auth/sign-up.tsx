@@ -27,6 +27,7 @@ import {
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -219,23 +220,13 @@ function SignUpPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
-          <a
-            href="https://appwrite.io/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/terms">
             Terms of Service
-          </a>{' '}
+          </MarketingSiteLink>{' '}
           and{' '}
-          <a
-            href="https://appwrite.io/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/privacy">
             Privacy Policy
-          </a>
+          </MarketingSiteLink>
           .
         </p>
         <div className="mt-10 md:mt-16 flex justify-center">

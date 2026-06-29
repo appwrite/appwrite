@@ -53,6 +53,7 @@ import {
   type ConnectRepositoryValue,
 } from '@/components/global/shared/ConnectRepositorySection'
 import { VCSDetectionType, ID } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 // Fade-in image component
 function FadeImage({
@@ -690,14 +691,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             Want to use your own domain? After deployment, you can connect a
             custom domain via CNAME record or let Appwrite manage your DNS.{' '}
-            <a
-              href="https://appwrite.io/docs/products/sites/domains"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral font-medium"
-            >
+            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
               Learn more →
-            </a>
+            </DocsRouteLink>
           </p>
         </div>
       </div>

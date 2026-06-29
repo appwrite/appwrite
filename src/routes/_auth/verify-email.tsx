@@ -16,6 +16,7 @@ import {
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { useRouter } from '@tanstack/react-router'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 function isValidRelativeRedirect(url: string): boolean {
   try {
@@ -151,23 +152,13 @@ function VerifyEmailPage() {
           <VerifyEmail status="confirming" />
           <p className="mt-6 text-center text-xs text-muted-foreground">
             By continuing, you agree to our{' '}
-            <a
-              href="https://appwrite.io/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral"
-            >
+            <MarketingSiteLink className="link-neutral" href="/terms">
               Terms of Service
-            </a>{' '}
+            </MarketingSiteLink>{' '}
             and{' '}
-            <a
-              href="https://appwrite.io/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral"
-            >
+            <MarketingSiteLink className="link-neutral" href="/privacy">
               Privacy Policy
-            </a>
+            </MarketingSiteLink>
             .
           </p>
           <div className="mt-10 md:mt-16 flex justify-center">
@@ -188,23 +179,13 @@ function VerifyEmailPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By continuing, you agree to our{' '}
-          <a
-            href="https://appwrite.io/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/terms">
             Terms of Service
-          </a>{' '}
+          </MarketingSiteLink>{' '}
           and{' '}
-          <a
-            href="https://appwrite.io/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral"
-          >
+          <MarketingSiteLink className="link-neutral" href="/privacy">
             Privacy Policy
-          </a>
+          </MarketingSiteLink>
           .
         </p>
         <div className="mt-10 md:mt-16 flex justify-center">

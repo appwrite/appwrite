@@ -11,6 +11,7 @@ import {
   productVisuals,
 } from '@/lib/assets/brand-data'
 import { cn } from '@/lib/utils'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 const assetCardClassName =
   'overflow-hidden rounded-xl border border-border bg-card/50'
@@ -351,14 +352,9 @@ export function View() {
               <p className="text-[14px] leading-7 text-muted-foreground">
                 Should you require further assistance or have specific needs beyond
                 what&apos;s presented on this page, please don&apos;t hesitate to{' '}
-                <a
-                  href="https://appwrite.io/contact-us"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-neutral"
-                >
+                <MarketingSiteLink className="link-neutral" href="/enterprise">
                   contact us
-                </a>
+                </MarketingSiteLink>
                 .
               </p>
             </section>

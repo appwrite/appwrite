@@ -46,6 +46,7 @@ import { useProject } from '@/lib/react-query/hooks'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 // Helper function to mask secret (compact hint of prefix / suffix)
 function maskSecret(secret: string): string {
@@ -383,14 +384,9 @@ export function FileSecurity({
         )}
       >
         Choose who can access this file.{' '}
-        <a
-          href="https://appwrite.io/docs/permissions"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-neutral"
-        >
+        <DocsRouteLink className="link-neutral" href="/docs/permissions">
           Learn more
-        </a>
+        </DocsRouteLink>
         .
       </p>
     )
@@ -424,14 +420,9 @@ export function FileSecurity({
         configuring bucket or file permissions. They work around browser
         restrictions on third-party cookies and can be set to expire on a
         specific date or work indefinitely.{' '}
-        <a
-          href="https://appwrite.io/docs/products/storage/file-tokens"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-neutral"
-        >
+        <DocsRouteLink className="link-neutral" href="/docs/products/storage/file-tokens">
           Learn more
-        </a>
+        </DocsRouteLink>
         .
       </p>
     )

@@ -241,7 +241,7 @@ export const organizations: Organization[] = [
     $id: '507f191e810c19729de860eb',
     name: 'Appwrite',
     slug: 'appwrite',
-    avatar: 'https://appwrite.io/images/favicon.png',
+    avatar: '/logo.svg',
     plan: 'custom',
     members: 45,
   },

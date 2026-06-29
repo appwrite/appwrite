@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { PermissionsEditor } from '../../auth/PermissionsEditor'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 export function BucketSecurity() {
   const { projectId, bucketId } = useParams({
@@ -121,14 +122,9 @@ export function BucketSecurity() {
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
               Choose who can access your bucket and files.{' '}
-              <a
-                href="https://appwrite.io/docs/permissions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-neutral"
->
+              <DocsRouteLink className="link-neutral" href="/docs/permissions">
                 Learn more
-              </a>
+              </DocsRouteLink>
               .
             </p>
           </div>

@@ -15,7 +15,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ExternalLink, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -46,9 +47,9 @@ export interface CreateGitDeploymentModalProps {
 }
 
 const FUNCTIONS_DEPLOY_DOCS =
-  'https://appwrite.io/docs/products/functions/deployments#create-deployment'
+  '/docs/products/functions/deployments#create-deployment'
 const SITES_DEPLOY_DOCS =
-  'https://appwrite.io/docs/products/sites/deployments#create-deployment'
+  '/docs/products/sites/deployments#create-deployment'
 
 export function CreateGitDeploymentModal({
   open,
@@ -332,14 +333,12 @@ export function CreateGitDeploymentModal({
                   Activate deployment after build
                 </Label>
               </div>
-              <a
+              <DocsRouteLink
                 href={docsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 link-neutral text-[12px]"
               >
                 Deployment docs <ExternalLink className="h-3 w-3" />
-              </a>
+              </DocsRouteLink>
             </>
           )}
         </div>

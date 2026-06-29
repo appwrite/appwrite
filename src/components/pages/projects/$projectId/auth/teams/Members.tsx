@@ -38,6 +38,7 @@ import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
 import { Plus, Trash2, X, Info, Loader2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const DEFAULT_PAGE_SIZE = 25
 
@@ -572,14 +573,9 @@ function CreateMembershipDialog({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
                   Roles are used to manage access permissions.{' '}
-                  <a
-                    href="https://appwrite.io/docs/advanced/platform/permissions"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link-neutral"
-                  >
+                  <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
                     Learn more about permissions
-                  </a>
+                  </DocsRouteLink>
                 </AlertDescription>
               </Alert>
             </div>

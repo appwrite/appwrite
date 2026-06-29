@@ -5,7 +5,7 @@ import {
 } from '@/lib/events-editor/events-model'
 
 export const REALTIME_CHANNELS_DOCS_LINK =
-  'https://appwrite.io/docs/apis/realtime/subscribe'
+  '/docs/apis/realtime/subscribe'
 
 /**
  * Build a Realtime channel string from event builder selection.

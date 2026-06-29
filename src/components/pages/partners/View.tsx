@@ -8,6 +8,7 @@ import {
   MarketingStatGrid,
   marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { CARD_LINK_HINT_CLASS } from '@/lib/link-styles'
 import { cn } from '@/lib/utils'
@@ -50,9 +51,9 @@ export function View() {
           <a href={`#${PARTNERS_FORM_ID}`}>Become a Partner</a>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={partnersHero.catalogUrl} target="_blank" rel="noopener noreferrer">
+          <MarketingSiteLink href={partnersHero.catalogUrl}>
             Find a Partner
-          </a>
+          </MarketingSiteLink>
         </Button>
       </MarketingHeroSection>
 

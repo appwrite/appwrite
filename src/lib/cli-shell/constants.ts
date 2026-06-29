@@ -11,7 +11,7 @@ import {
 import type { CliShellLine } from './types'
 
 export const CLI_DOCS_URL =
-  'https://appwrite.io/docs/tooling/command-line/commands'
+  '/docs/tooling/command-line/commands'
 
 /** Working directory for Appwrite CLI project context inside almostnode VFS. */
 export const CLI_PROJECT_CWD = '/project'

@@ -53,6 +53,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 // GitHub Circle Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -670,15 +671,10 @@ function TemplateEditor({
               HTTP header. Templates are automatically selected based on the
               user's locale.
             </p>
-            <a
-              href="https://appwrite.io/docs/advanced/platform/message-templates"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral inline-flex items-center gap-1 text-xs"
-            >
+            <DocsRouteLink className="link-neutral inline-flex items-center gap-1 text-xs" href="/docs/advanced/platform/message-templates">
               Learn more about message templates
               <ExternalLink className="h-3 w-3" />
-            </a>
+            </DocsRouteLink>
           </div>
         </div>
       </div>

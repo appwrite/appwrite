@@ -22,7 +22,7 @@ export const partnersHero = {
   title: 'Boost businesses with Appwrite',
   description:
     'Join the Appwrite Partners program and grow your business. Deliver powerful solutions to clients, increase revenue, and expand your reach.',
-  catalogUrl: 'https://appwrite.io/partners/catalog',
+  catalogUrl: '/partners',
 } as const
 
 export const partnerBenefits: PartnerBenefit[] = [
@@ -95,7 +95,7 @@ export const partnerWays = [
     title: 'Experts',
     description:
       'For agencies, consultancies, freelancers, and integrators who want to provide a scalable backend solution for their clients. Partner with Appwrite to provide a highly custom solution with the newest technology.',
-    href: 'https://appwrite.io/partners/catalog',
+    href: '/partners',
     label: 'Find a Partner',
   },
   {

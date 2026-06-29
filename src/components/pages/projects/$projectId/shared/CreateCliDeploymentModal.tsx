@@ -19,6 +19,7 @@ import {
   CodeBlock,
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 export type CreateCliDeploymentResourceType = 'function' | 'site'
 
@@ -42,9 +43,9 @@ export interface CreateCliDeploymentModalProps {
 }
 
 const CLI_INSTALL_URL =
-  'https://appwrite.io/docs/tooling/command-line/installation#install-with-npm'
+  '/docs/tooling/command-line/installation#install-with-npm'
 const CLI_LOGIN_URL =
-  'https://appwrite.io/docs/tooling/command-line/installation#login'
+  '/docs/tooling/command-line/installation#login'
 
 function buildCommands(
   resourceType: CreateCliDeploymentResourceType,
@@ -246,23 +247,13 @@ export function CreateCliDeploymentModal({
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
             <p>
               If it&apos;s your first time using the CLI, remember to{' '}
-              <a
-                href={CLI_INSTALL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-neutral"
-              >
+              <DocsRouteLink className="link-neutral" href={CLI_INSTALL_URL}>
                 install the CLI
-              </a>{' '}
+              </DocsRouteLink>{' '}
               and{' '}
-              <a
-                href={CLI_LOGIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-neutral"
-              >
+              <DocsRouteLink className="link-neutral" href={CLI_LOGIN_URL}>
                 log in to your account
-              </a>{' '}
+              </DocsRouteLink>{' '}
               before running the deployment command.
             </p>
           </div>

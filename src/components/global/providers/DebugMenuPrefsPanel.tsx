@@ -116,20 +116,20 @@ function PrefsSearchBar({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9B87F5]/60" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
         <Input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
           placeholder="Search keys or values…"
-          className="h-8 border-[#9B87F5]/25 bg-black/20 pl-8 pr-8 text-[12px] text-[#E5DEFF] placeholder:text-[#9B87F5]/50"
+          className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 pl-8 pr-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
         />
         {value && (
           <button
             type="button"
             onClick={() => onChange('')}
             disabled={disabled}
-            className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[#9B87F5]/70 transition-colors hover:bg-[#9B87F5]/15 hover:text-[#E5DEFF] disabled:opacity-50"
+            className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground disabled:opacity-50"
             aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
@@ -137,25 +137,25 @@ function PrefsSearchBar({
         )}
       </div>
       {trimmed ? (
-        <div className="max-h-[min(24dvh,160px)] overflow-y-auto rounded-lg border border-[#9B87F5]/20 bg-black/20">
+        <div className="max-h-[min(24dvh,160px)] overflow-y-auto rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40">
           {matches.length === 0 ? (
-            <p className="px-2.5 py-2 text-[11px] text-[#9B87F5]/70">
+            <p className="px-2.5 py-2 text-[11px] text-[var(--network-globe-edge)]/70">
               No matching keys
             </p>
           ) : (
-            <ul className="divide-y divide-[#9B87F5]/10">
+            <ul className="divide-y divide-[color-mix(in_srgb,var(--network-globe-edge)_10%,var(--border))]">
               {matches.map(({ key, preview }) => (
                 <li key={key}>
                   <button
                     type="button"
                     onClick={() => onSelectKey(key)}
                     disabled={disabled}
-                    className="flex w-full flex-col gap-0.5 px-2.5 py-2 text-left transition-colors hover:bg-[#9B87F5]/10 disabled:opacity-50"
+                    className="flex w-full flex-col gap-0.5 px-2.5 py-2 text-left transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)] disabled:opacity-50"
                   >
-                    <code className="truncate text-[11px] text-[#E5DEFF]">
+                    <code className="truncate text-[11px] text-foreground">
                       {key}
                     </code>
-                    <span className="truncate text-[10px] text-[#9B87F5]/75">
+                    <span className="truncate text-[10px] text-[var(--network-globe-edge)]/75">
                       {preview}
                     </span>
                   </button>
@@ -170,13 +170,13 @@ function PrefsSearchBar({
 }
 
 const tabListClass =
-  'grid h-9 w-full grid-cols-2 gap-0 rounded-lg border border-[#9B87F5]/25 bg-black/30 p-[3px] text-[#9B87F5]/90'
+  'grid h-9 w-full grid-cols-2 gap-0 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/50 p-[3px] text-[var(--network-globe-edge)]/90'
 
 const tabTriggerClass =
-  'rounded-md border border-transparent px-2 py-1 text-[12px] font-medium text-[#E5DEFF]/85 transition-colors hover:text-[#E5DEFF] data-[state=active]:border-[#9B87F5]/35 data-[state=active]:bg-[#9B87F5]/20 data-[state=active]:text-[#E5DEFF] data-[state=inactive]:text-[#9B87F5]/75'
+  'rounded-md border border-transparent px-2 py-1 text-[12px] font-medium text-foreground/85 transition-colors hover:text-foreground data-[state=active]:border-[color-mix(in_srgb,var(--network-globe-edge)_35%,var(--border))] data-[state=active]:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] data-[state=active]:text-foreground data-[state=inactive]:text-[var(--network-globe-edge)]/75'
 
 const editorShellClass =
-  'min-h-[min(42dvh,320px)] flex-1 overflow-hidden rounded-lg border border-[#9B87F5]/25 bg-black/20'
+  'min-h-[min(42dvh,320px)] flex-1 overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40'
 
 export function DebugMenuPrefsPanel() {
   const queryClient = useQueryClient()
@@ -552,9 +552,9 @@ export function DebugMenuPrefsPanel() {
 
   return (
     <div className="flex flex-col gap-3 px-1" aria-label="User and team preferences">
-      <p className="text-[11px] leading-relaxed text-[#9B87F5]/90">
+      <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/90">
         Edits call the Console API directly. Use{' '}
-        <span className="font-medium text-[#E5DEFF]">Apply</span> after editing
+        <span className="font-medium text-foreground">Apply</span> after editing
         JSON, or the helpers below. Team scope uses the organization in the URL
         when present, otherwise the current project&apos;s team.
       </p>
@@ -564,22 +564,22 @@ export function DebugMenuPrefsPanel() {
           <TabsTrigger value="account" className={tabTriggerClass}>
             Account prefs
             {accountLoading && (
-              <Loader2 className="ml-1 h-3 w-3 shrink-0 animate-spin text-[#9B87F5]" />
+              <Loader2 className="ml-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
             )}
           </TabsTrigger>
           <TabsTrigger value="team" className={tabTriggerClass}>
             Team prefs
             {resolvedTeamId && teamLoading && (
-              <Loader2 className="ml-1 h-3 w-3 shrink-0 animate-spin text-[#9B87F5]" />
+              <Loader2 className="ml-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
             )}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="account" className="mt-0 flex flex-col gap-2">
           {accountIdLabel && (
-            <p className="text-[10px] text-[#9B87F5]/75">
+            <p className="text-[10px] text-[var(--network-globe-edge)]/75">
               User{' '}
-              <code className="rounded bg-black/30 px-1 text-[#E5DEFF]/90">
+              <code className="rounded bg-muted/50 px-1 text-foreground/90">
                 {accountIdLabel}
               </code>
             </p>
@@ -675,15 +675,15 @@ export function DebugMenuPrefsPanel() {
 
         <TabsContent value="team" className="mt-0 flex flex-col gap-2">
           {!resolvedTeamId ? (
-            <p className="text-[11px] text-[#9B87F5]/80">
+            <p className="text-[11px] text-[var(--network-globe-edge)]/80">
               No team in context. Open an organization or a project route to
               load team preferences.
             </p>
           ) : (
             <>
-              <p className="text-[10px] text-[#9B87F5]/75">
+              <p className="text-[10px] text-[var(--network-globe-edge)]/75">
                 Team{' '}
-                <code className="rounded bg-black/30 px-1 text-[#E5DEFF]/90">
+                <code className="rounded bg-muted/50 px-1 text-foreground/90">
                   {resolvedTeamId}
                 </code>
                 {teamSource ? ` · ${teamSource}` : null}

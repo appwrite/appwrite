@@ -58,6 +58,7 @@ import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -645,14 +646,9 @@ export function RepositoryConfigView({
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             Want to use your own domain? After deployment, you can connect a
             custom domain via CNAME record or let Appwrite manage your DNS.{' '}
-            <a
-              href="https://appwrite.io/docs/products/sites/domains"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-neutral font-medium"
-            >
+            <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
               Learn more →
-            </a>
+            </DocsRouteLink>
           </p>
         </div>
       </div>

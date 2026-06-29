@@ -17,9 +17,10 @@ import {
 } from '@/components/ui/table'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const DNS_PROVIDERS_LINK =
-  'https://appwrite.io/docs/advanced/platform/custom-domains'
+  '/docs/advanced/platform/custom-domains'
 
 interface VerifyDomainContentProps {
   rule: Models.ProxyRule
@@ -409,15 +410,10 @@ export function VerifyDomainContent({
       <div className={noCard ? '' : `${padX} ${padY}`}>
         <p className="text-[13px] text-muted-foreground">
           A list of domain providers and their DNS settings is available{' '}
-          <a
-            href={DNS_PROVIDERS_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-0.5 font-medium text-foreground underline hover:no-underline"
-          >
+          <DocsRouteLink className="inline-flex items-center gap-0.5 font-medium text-foreground underline hover:no-underline" href={DNS_PROVIDERS_LINK}>
             here
             <ExternalLink className="h-3 w-3 shrink-0" />
-          </a>
+          </DocsRouteLink>
           .
         </p>
       </div>

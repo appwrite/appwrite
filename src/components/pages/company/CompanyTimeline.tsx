@@ -18,7 +18,17 @@ import {
 } from '@/lib/company/timeline-scroll'
 import { cn } from '@/lib/utils'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
-import { parseBlogPagePath } from '@/lib/marketing/urls'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import {
+  getSiteLinkInternalPath,
+  isSiteLinkExternal,
+  parseBlogPagePath,
+  parseDocsPagePath,
+  parseMarketingSitePagePath,
+  resolveSiteLinkUrl,
+} from '@/lib/marketing/urls'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   ArrowUpRight,
   BookOpen,
@@ -45,8 +55,49 @@ const LINK_KIND_META: Record<
   youtube: { iconSrc: '/icons/youtube.svg', typeLabel: 'YouTube' },
 }
 
+function MilestoneLinkContent({
+  link,
+  typeLabel,
+  icon: Icon,
+  iconSrc,
+}: {
+  link: CompanyTimelineLink
+  typeLabel: string
+  icon?: LucideIcon
+  iconSrc?: string
+}) {
+  return (
+    <>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        {iconSrc ? (
+          <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
+        ) : Icon ? (
+          <Icon className="size-3.5" aria-hidden />
+        ) : null}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {typeLabel}
+        </span>
+        <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
+          {link.label}
+        </span>
+      </span>
+      <ArrowUpRight
+        className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+        aria-hidden
+      />
+    </>
+  )
+}
+
 function MilestoneLinks({ links }: { links: readonly CompanyTimelineLink[] }) {
+  const { features } = useConsoleProfile()
+
   if (links.length === 0) return null
+
+  const linkClassName =
+    'group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-accent/30'
 
   return (
     <ul className="mt-3 overflow-hidden rounded-lg border border-border">
@@ -56,55 +107,46 @@ function MilestoneLinks({ links }: { links: readonly CompanyTimelineLink[] }) {
         return (
           <li key={link.id} className="border-b border-border last:border-b-0">
             {parseBlogPagePath(link.href) ? (
-              <BlogPageAnchor
-                href={link.href}
-                className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-accent/30"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  {iconSrc ? (
-                    <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
-                  ) : Icon ? (
-                    <Icon className="size-3.5" aria-hidden />
-                  ) : null}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {typeLabel}
-                  </span>
-                  <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
-                    {link.label}
-                  </span>
-                </span>
-                <ArrowUpRight
-                  className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-                  aria-hidden
+              <BlogPageAnchor href={link.href} className={linkClassName}>
+                <MilestoneLinkContent
+                  link={link}
+                  typeLabel={typeLabel}
+                  icon={Icon}
+                  iconSrc={iconSrc}
                 />
               </BlogPageAnchor>
+            ) : parseDocsPagePath(link.href) ? (
+              <DocsRouteLink href={link.href} className={linkClassName}>
+                <MilestoneLinkContent
+                  link={link}
+                  typeLabel={typeLabel}
+                  icon={Icon}
+                  iconSrc={iconSrc}
+                />
+              </DocsRouteLink>
+            ) : parseMarketingSitePagePath(link.href) ||
+              getSiteLinkInternalPath(link.href) ? (
+              <MarketingSiteLink href={link.href} className={linkClassName}>
+                <MilestoneLinkContent
+                  link={link}
+                  typeLabel={typeLabel}
+                  icon={Icon}
+                  iconSrc={iconSrc}
+                />
+              </MarketingSiteLink>
             ) : (
               <a
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-accent/30"
+                href={resolveSiteLinkUrl(link.href, features.marketing)}
+                {...(isSiteLinkExternal(link.href, features.marketing)
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+                className={linkClassName}
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  {iconSrc ? (
-                    <img src={iconSrc} alt="" className="size-3.5" aria-hidden />
-                  ) : Icon ? (
-                    <Icon className="size-3.5" aria-hidden />
-                  ) : null}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {typeLabel}
-                  </span>
-                  <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
-                    {link.label}
-                  </span>
-                </span>
-                <ArrowUpRight
-                  className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-                  aria-hidden
+                <MilestoneLinkContent
+                  link={link}
+                  typeLabel={typeLabel}
+                  icon={Icon}
+                  iconSrc={iconSrc}
                 />
               </a>
             )}

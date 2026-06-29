@@ -4,23 +4,17 @@ import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { resolveFenceCodeLanguage } from '@/lib/code-language'
 import {
   DOCS_PROSE_DETAIL_CLASSES,
   DOCS_PROSE_WRAPPER_CLASS,
 } from '@/lib/docs/prose-typography'
+import { parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
-const APPWRITE_DOCS_ORIGIN = 'https://appwrite.io'
-
 function normalizeApiDescriptionMarkdown(content: string): string {
-  return content
-    .replace(/\r\n/g, '\n')
-    .trim()
-    .replace(
-      /(\]\()\/(docs\/[^)]+)(\))/g,
-      `$1${APPWRITE_DOCS_ORIGIN}/$2$3`,
-    )
+  return content.replace(/\r\n/g, '\n').trim()
 }
 
 function isExternalDomainLink(href?: string): boolean {
@@ -31,6 +25,10 @@ function isExternalDomainLink(href?: string): boolean {
     href.startsWith('tel:') ||
     href.startsWith('#')
   ) {
+    return false
+  }
+
+  if (parseDocsPagePath(href)) {
     return false
   }
 
@@ -57,6 +55,8 @@ type MethodDescriptionMarkdownProps = {
   /** `docs` renders like a docs article; `card` is the bordered explorer panel (default). */
   variant?: 'card' | 'docs'
 }
+
+const LINK_CLASS = 'link-neutral'
 
 const CARD_WRAPPER_CLASS = cn(
   'rounded-lg border border-border bg-muted/25 px-4 py-3.5',
@@ -98,6 +98,14 @@ export function MethodDescriptionMarkdown({
         remarkPlugins={[remarkGfm]}
         components={{
           a({ href, children, ...props }) {
+            if (href && parseDocsPagePath(href)) {
+              return (
+                <DocsRouteLink href={href} className={LINK_CLASS}>
+                  {children}
+                </DocsRouteLink>
+              )
+            }
+
             const openInNewWindow = isExternalDomainLink(href)
 
             return (
@@ -105,6 +113,7 @@ export function MethodDescriptionMarkdown({
                 href={href}
                 target={openInNewWindow ? '_blank' : undefined}
                 rel={openInNewWindow ? 'noopener noreferrer' : undefined}
+                className={LINK_CLASS}
                 {...props}
               >
                 {children}

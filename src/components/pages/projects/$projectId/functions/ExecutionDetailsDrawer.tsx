@@ -47,6 +47,7 @@ import {
 import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import { generateExecutionAIFixPrompt } from '@/lib/execution-ai-fix-prompt'
 import type { ExecutionRowContextMenuVariant } from '@/components/global/shared/ExecutionRowContextMenu'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 interface ExecutionDetailsDrawerProps {
   open: boolean
@@ -805,14 +806,9 @@ export function ExecutionDetailsDrawer({
                               </div>
                               <p className="text-[12px] text-muted-foreground mt-4">
                                 Missing headers?{' '}
-                                <a
-                                  href="https://appwrite.io/docs"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link-neutral"
-                                >
+                                <DocsRouteLink className="link-neutral" href="/docs">
                                   Check the docs
-                                </a>{' '}
+                                </DocsRouteLink>{' '}
                                 to see the supported data and how to log it.
                               </p>
                             </>
@@ -875,14 +871,9 @@ export function ExecutionDetailsDrawer({
                                 Logging is disabled for this function. Enable
                                 logging in settings to view execution logs.
                               </p>
-                              <a
-                                href="https://appwrite.io/docs"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="link-neutral text-[12px]"
-                              >
+                              <DocsRouteLink className="link-neutral text-[12px]" href="/docs">
                                 Learn more →
-                              </a>
+                              </DocsRouteLink>
                             </div>
                           ) : execution.logs ? (
                             <div className="rounded-lg border border-border bg-card p-4">
@@ -951,14 +942,9 @@ export function ExecutionDetailsDrawer({
                                 Logging is disabled for this function. Enable
                                 logging in settings to view execution errors.
                               </p>
-                              <a
-                                href="https://appwrite.io/docs"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="link-neutral text-[12px]"
-                              >
+                              <DocsRouteLink className="link-neutral text-[12px]" href="/docs">
                                 Learn more →
-                              </a>
+                              </DocsRouteLink>
                             </div>
                           ) : execution.errors ? (
                             <div className="rounded-lg border border-border bg-card p-4">
@@ -1054,14 +1040,9 @@ export function ExecutionDetailsDrawer({
                               </div>
                               <p className="text-[12px] text-muted-foreground mt-4">
                                 Missing headers?{' '}
-                                <a
-                                  href="https://appwrite.io/docs"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link-neutral"
-                                >
+                                <DocsRouteLink className="link-neutral" href="/docs">
                                   Check the docs
-                                </a>{' '}
+                                </DocsRouteLink>{' '}
                                 to see the supported data and how to log it.
                               </p>
                             </>
@@ -1131,14 +1112,9 @@ export function ExecutionDetailsDrawer({
                                   context.log()
                                 </code>
                                 .{' '}
-                                <a
-                                  href="https://appwrite.io/docs"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link-neutral"
-                                >
+                                <DocsRouteLink className="link-neutral" href="/docs">
                                   Learn more
-                                </a>
+                                </DocsRouteLink>
                                 .
                               </p>
                             </div>

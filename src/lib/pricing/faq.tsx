@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 
 export type FaqItem = {
   question: string
@@ -15,23 +18,16 @@ export const pricingFaqItems: readonly FaqItem[] = [
     answer: (
       <>
         Appwrite currently supports{' '}
-        <a
+        <DocsRouteLink
           className={linkClassName}
-          href="https://appwrite.io/docs/advanced/billing/payments#payment-methods"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/docs/advanced/billing/payments#payment-methods"
         >
           credit and debit card payments
-        </a>
+        </DocsRouteLink>
         . We are actively working on adding support for more methods. Please{' '}
-        <a
-          className={linkClassName}
-          href="https://appwrite.io/contact-us"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <MarketingSiteLink className={linkClassName} href={CONTACT_ENTERPRISE_URL}>
           contact us
-        </a>{' '}
+        </MarketingSiteLink>{' '}
         in case this is an issue for you.
       </>
     ),
@@ -45,23 +41,19 @@ export const pricingFaqItems: readonly FaqItem[] = [
         comparison below. We will also send you email reminders when you hit 75%
         and 100% of your resource limits. To avoid unexpected payments, you can
         set up a{' '}
-        <a
+        <DocsRouteLink
           className={linkClassName}
-          href="https://appwrite.io/docs/advanced/billing/pro#budget-cap"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/docs/advanced/billing/pro#budget-cap"
         >
           budget cap
-        </a>{' '}
+        </DocsRouteLink>{' '}
         on your organization.{' '}
-        <a
+        <DocsRouteLink
           className={linkClassName}
-          href="https://appwrite.io/docs/advanced/billing/pro#reaching-resource-limits"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/docs/advanced/billing/pro#reaching-resource-limits"
         >
           Learn more in our docs
-        </a>
+        </DocsRouteLink>
         .
       </>
     ),
@@ -74,14 +66,12 @@ export const pricingFaqItems: readonly FaqItem[] = [
         read-only mode. You need to upgrade to Pro, remove resources that exceed
         their limit, or wait for the next billing cycle, which resets usage
         limits.{' '}
-        <a
+        <DocsRouteLink
           className={linkClassName}
-          href="https://appwrite.io/docs/advanced/billing/pro#reaching-resource-limits"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/docs/advanced/billing/pro#reaching-resource-limits"
         >
           Learn more in our docs
-        </a>
+        </DocsRouteLink>
         .
       </>
     ),
@@ -125,14 +115,9 @@ export const pricingFaqItems: readonly FaqItem[] = [
       <>
         Are you a founder looking to build with Appwrite? Learn more about our
         Startups program on our Startups{' '}
-        <a
-          className={linkClassName}
-          href="https://appwrite.io/startups"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <MarketingSiteLink className={linkClassName} href="/startups">
           landing page
-        </a>
+        </MarketingSiteLink>
         .
       </>
     ),
@@ -165,14 +150,9 @@ export const pricingFaqItems: readonly FaqItem[] = [
       <>
         Yes, you can sign a BAA with Appwrite. Learn more about our security and
         compliance in our{' '}
-        <a
-          className={linkClassName}
-          href="https://appwrite.io/docs/advanced/security"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <DocsRouteLink className={linkClassName} href="/docs/advanced/security">
           documentation
-        </a>
+        </DocsRouteLink>
         .
       </>
     ),

@@ -20,6 +20,7 @@ import {
 } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
@@ -384,14 +385,10 @@ export function PlanSelection({
             className="text-[13px] text-muted-foreground"
             asChild
 >
-            <a
-              href="https://appwrite.io/pricing"
-              target="_blank"
-              rel="noopener noreferrer"
->
+            <MarketingSiteLink href="/pricing">
               View detailed pricing
               <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-            </a>
+            </MarketingSiteLink>
           </Button>
         </div>
       )}

@@ -46,6 +46,7 @@ import {
   type TimeUnit,
   type TimeUnitPair,
 } from '@/lib/utils/time-unit-converter'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const SESSION_LENGTH_UNITS: TimeUnit[] = [
   'weeks',
@@ -1226,14 +1227,9 @@ export function MockPhoneNumbersCard({
               Generate <strong>fictional</strong> numbers to simulate phone
               verification when testing demo accounts for submitting your
               application to the App Store or Google Play.{' '}
-              <a
-                href="https://appwrite.io/docs/products/auth/security#mock-phone-numbers"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-neutral"
-              >
+              <DocsRouteLink className="link-neutral" href="/docs/products/auth/security#mock-phone-numbers">
                 Learn more
-              </a>
+              </DocsRouteLink>
               .
             </p>
           </div>
@@ -1497,14 +1493,9 @@ export function PrivacyCard({
               Many apps do not need other members to see names, emails, or MFA
               status - private fields stay hidden without affecting auth or team
               features.{' '}
-              <a
-                href="https://appwrite.io/docs/products/auth/security#memberships-privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-neutral"
-              >
+              <DocsRouteLink className="link-neutral" href="/docs/products/auth/security#memberships-privacy">
                 Learn more
-              </a>
+              </DocsRouteLink>
               .
             </p>
           </div>

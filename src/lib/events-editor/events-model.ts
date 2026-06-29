@@ -324,4 +324,4 @@ export function getActionsForSelection(
   return getActions(sel.service)
 }
 
-export const DOCS_LINK = 'https://appwrite.io/docs/advanced/platform/events'
+export const DOCS_LINK = '/docs/advanced/platform/events'

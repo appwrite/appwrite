@@ -101,6 +101,7 @@ import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -917,15 +918,13 @@ export function SiteDeploymentsView() {
                                   optimization. All content is delivered over
                                   TLS for secure, encrypted connections.
                                 </p>
-                                <a
-                                  href="https://appwrite.io/docs/products/network/cdn"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link-neutral text-[11px] mt-1.5 inline-block"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Learn more →
-                                </a>
+                                  <DocsRouteLink
+                                    href="/docs/products/network/cdn"
+                                    className="link-neutral text-[11px] mt-1.5 inline-block"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Learn more →
+                                  </DocsRouteLink>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -965,15 +964,13 @@ export function SiteDeploymentsView() {
                                   maintaining high availability even during high
                                   traffic loads.
                                 </p>
-                                <a
-                                  href="https://appwrite.io/docs/products/network"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link-neutral text-[11px] mt-1.5 inline-block"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Learn more →
-                                </a>
+                                  <DocsRouteLink
+                                    href="/docs/products/network"
+                                    className="link-neutral text-[11px] mt-1.5 inline-block"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Learn more →
+                                  </DocsRouteLink>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>

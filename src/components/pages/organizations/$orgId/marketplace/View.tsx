@@ -21,6 +21,9 @@ import {
   useOrganizationApps,
   useOrganizations,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getDocsPageUrl } from '@/lib/marketing/urls'
+import { openInNewWindow } from '@/lib/utils/context-menu'
 import { MarketplaceAppCard } from './_components/MarketplaceAppCard'
 import { CreateMarketplaceApp } from './_components/CreateMarketplaceApp'
 import type { CreateMarketplaceAppInput } from './_components/CreateMarketplaceApp'
@@ -50,6 +53,7 @@ function filterApps(apps: MarketplaceApp[], query: string): MarketplaceApp[] {
 export function View() {
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
   const { organizations } = useOrganizations()
 
   const teamNamesById = useMemo(
@@ -178,7 +182,7 @@ export function View() {
       return
     }
     if (link.action === 'publisher-guidelines') {
-      window.open('https://appwrite.io/docs', '_blank', 'noopener,noreferrer')
+      openInNewWindow(getDocsPageUrl('/docs', features.marketing))
     }
   }
 

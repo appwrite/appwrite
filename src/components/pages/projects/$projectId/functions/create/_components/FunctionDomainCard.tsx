@@ -11,11 +11,12 @@ import { DomainInput } from '@/components/global/shared/DomainInput'
 import { useFunctionWizard } from '../WizardContext'
 import { Network, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const FUNCTION_DOMAINS_URL =
-  'https://appwrite.io/docs/products/functions/domains'
-const NETWORK_EDGES_URL = 'https://appwrite.io/docs/products/network/edges'
-const NETWORK_REGIONS_URL = 'https://appwrite.io/docs/products/network/regions'
+  '/docs/products/functions/domains'
+const NETWORK_EDGES_URL = '/docs/products/network/edges'
+const NETWORK_REGIONS_URL = '/docs/products/network/regions'
 
 export interface FunctionDomainCardProps {
   domain: string
@@ -59,23 +60,13 @@ export function FunctionDomainCard({
         <p className="text-[12px] text-muted-foreground mt-1">
           Pick where your function runs. Both support custom domains after
           deployment.{' '}
-          <a
-            href={NETWORK_REGIONS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral font-medium"
-          >
+          <DocsRouteLink className="link-neutral font-medium" href={NETWORK_REGIONS_URL}>
             Region
-          </a>
+          </DocsRouteLink>
           {' · '}
-          <a
-            href={NETWORK_EDGES_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral font-medium"
-          >
+          <DocsRouteLink className="link-neutral font-medium" href={NETWORK_EDGES_URL}>
             Edge
-          </a>
+          </DocsRouteLink>
         </p>
       </div>
       <div className="border-t border-border" />
@@ -137,14 +128,9 @@ export function FunctionDomainCard({
       <div className="px-6 py-4 border-t border-border bg-muted/20">
         <p className="text-[11px] text-muted-foreground">
           Custom domain can be added in function settings.{' '}
-          <a
-            href={FUNCTION_DOMAINS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-neutral font-medium"
-          >
+          <DocsRouteLink className="link-neutral font-medium" href={FUNCTION_DOMAINS_URL}>
             Learn more
-          </a>
+          </DocsRouteLink>
         </p>
       </div>
     </div>

@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { DOCS_PROSE_LINK_CLASS } from '@/lib/docs/prose-link'
 import { DocsRouteLink } from '../DocsRouteLink'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 const FAQ_LINK_CLASS = DOCS_PROSE_LINK_CLASS
 
@@ -155,23 +156,13 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     answer: (
       <>
         Ask the community on{' '}
-        <a
-          href="https://appwrite.io/discord"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={FAQ_LINK_CLASS}
-        >
+        <MarketingSiteLink className={FAQ_LINK_CLASS} href="/discord">
           Discord
-        </a>
+        </MarketingSiteLink>
         , check{' '}
-        <a
-          href="https://appwrite.io/support"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={FAQ_LINK_CLASS}
-        >
+        <MarketingSiteLink href="/enterprise" className={FAQ_LINK_CLASS}>
           support
-        </a>{' '}
+        </MarketingSiteLink>{' '}
         for product help options, and use{' '}
         <a
           href="https://github.com/appwrite/appwrite/issues"

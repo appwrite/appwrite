@@ -46,6 +46,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import { GitInstallationContextMenu } from './GitInstallationContextMenu'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -243,13 +244,9 @@ export function GitConfigurationCard({
                 className="h-auto p-0 text-[13px] font-medium underline"
                 asChild
               >
-                <a
-                  href="https://appwrite.io/docs/advanced/self-hosting/configuration/version-control"
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <DocsRouteLink href="/docs/advanced/self-hosting/configuration/version-control">
                   Learn more
-                </a>
+                </DocsRouteLink>
               </Button>
             </AlertDescription>
           </Alert>

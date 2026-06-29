@@ -8,7 +8,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { BuildTriggersCard } from '../../shared/BuildTriggersCard'
 
 const SITES_BUILD_TRIGGERS_DOCS =
-  'https://appwrite.io/docs/products/sites/deploy-from-git#build-triggers'
+  '/docs/products/sites/deploy-from-git#build-triggers'
 
 interface SiteBuildTriggersCardProps {
   projectId: string | null | undefined

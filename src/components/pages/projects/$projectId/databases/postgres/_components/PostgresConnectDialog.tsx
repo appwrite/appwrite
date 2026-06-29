@@ -54,8 +54,9 @@ import {
 } from '@/components/ui/tooltip'
 import type { Models } from '@appwrite.io/console'
 import { PostgresCopyableField } from './PostgresCopyableField'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
-const POSTGRES_DOCS_URL = 'https://appwrite.io/docs/products/databases'
+const POSTGRES_DOCS_URL = '/docs/products/databases'
 const CONNECT_TAB_CONTENT_HEIGHT = 'h-[400px]'
 const DRIZZLE_SNIPPET_FILES: {
   id: PostgresDrizzleSnippetPart
@@ -663,14 +664,10 @@ export function PostgresConnectDialog({
               className="h-9 gap-1.5 text-[13px]"
               asChild
             >
-              <a
-                href={POSTGRES_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <DocsRouteLink href={POSTGRES_DOCS_URL}>
                 Docs
                 <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-              </a>
+              </DocsRouteLink>
             </Button>
             <Button
               type="button"

@@ -82,9 +82,24 @@ export function isBlogPageExternal(marketingEnabled: boolean): boolean {
 }
 
 function normalizeDocsPath(path: string): string {
-  const withoutHash = path.split('#')[0] ?? '/docs'
+  const withoutHash = path.split('#')[0]?.split('?')[0] ?? '/docs'
   const normalized = withoutHash.replace(/\/+$/, '') || '/docs'
   return normalized === '' ? '/docs' : normalized
+}
+
+/** Splits a path or URL into pathname and hash fragment (without `#`). */
+export function splitHrefHash(href: string): { pathname: string; hash: string } {
+  const trimmed = href.trim()
+  const hashIndex = trimmed.indexOf('#')
+  if (hashIndex < 0) return { pathname: trimmed, hash: '' }
+  return {
+    pathname: trimmed.slice(0, hashIndex),
+    hash: trimmed.slice(hashIndex + 1),
+  }
+}
+
+function appendHrefHash(url: string, hash: string): string {
+  return hash ? `${url}#${hash}` : url
 }
 
 /** Returns a `/docs…` path when `href` points at Appwrite docs, otherwise null. */
@@ -109,10 +124,12 @@ export function parseDocsPagePath(href: string): string | null {
  * is enabled, or to the production appwrite.io URL when marketing routes are disabled.
  */
 export function getDocsPageUrl(path: string, marketingEnabled: boolean): string {
-  const docsPath = parseDocsPagePath(path)
+  const { pathname, hash } = splitHrefHash(path)
+  const docsPath = parseDocsPagePath(pathname)
   if (!docsPath) return path
 
-  return marketingEnabled ? docsPath : `${MARKETING_SITE_ORIGIN}${docsPath}`
+  const base = marketingEnabled ? docsPath : `${MARKETING_SITE_ORIGIN}${docsPath}`
+  return appendHrefHash(base, hash)
 }
 
 export function isDocsPageExternal(marketingEnabled: boolean): boolean {
@@ -178,8 +195,7 @@ export function parseMarketingSitePagePath(href: string): string | null {
  * Resolves docs, blog, product, and marketing page links based on the active profile.
  */
 export function resolveSiteLinkUrl(href: string, marketingEnabled: boolean): string {
-  const docsPath = parseDocsPagePath(href)
-  if (docsPath) return getDocsPageUrl(docsPath, marketingEnabled)
+  if (parseDocsPagePath(href)) return getDocsPageUrl(href, marketingEnabled)
 
   const blogPath = parseBlogPagePath(href)
   if (blogPath) return getBlogPageUrl(blogPath, marketingEnabled)
@@ -208,21 +224,22 @@ export function isSiteLinkExternal(href: string, marketingEnabled: boolean): boo
 
 /** Relative in-app path for TanStack Router when the link is internal. */
 export function getSiteLinkInternalPath(href: string): string | null {
-  const docsPath = parseDocsPagePath(href)
-  if (docsPath) return docsPath
+  const { pathname, hash } = splitHrefHash(href)
 
-  const blogPath = parseBlogPagePath(href)
-  if (blogPath) return blogPath
+  const docsPath = parseDocsPagePath(pathname)
+  if (docsPath) return appendHrefHash(docsPath, hash)
 
-  const productPath = parseProductPagePath(href)
-  if (productPath) return productPath
+  const blogPath = parseBlogPagePath(pathname)
+  if (blogPath) return appendHrefHash(blogPath, hash)
 
-  const marketingPath = parseMarketingSitePagePath(href)
-  if (marketingPath) return marketingPath
+  const productPath = parseProductPagePath(pathname)
+  if (productPath) return appendHrefHash(productPath, hash)
 
-  const trimmed = href.trim()
-  if (trimmed.startsWith('/')) {
-    return trimmed.split('#')[0] ?? trimmed
+  const marketingPath = parseMarketingSitePagePath(pathname)
+  if (marketingPath) return appendHrefHash(marketingPath, hash)
+
+  if (pathname.startsWith('/')) {
+    return appendHrefHash(pathname.split('?')[0] ?? pathname, hash)
   }
 
   return null

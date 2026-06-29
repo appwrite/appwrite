@@ -14,7 +14,7 @@ type Entity = {
   vy?: number
 }
 
-const APPWRITE_LOGO_SRC = 'https://appwrite.io/images/logos/logo.svg'
+const APPWRITE_LOGO_SRC = '/logo.svg'
 
 const LIGHTNING_SVG = encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 11 14 9 22 19 10 11 10 13 2"/></svg>`,

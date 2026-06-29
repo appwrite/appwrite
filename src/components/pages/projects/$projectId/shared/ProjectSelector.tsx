@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { ChevronDown, Check, Pin, Plus, Search, X } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -46,8 +46,89 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
+import {
+  INITIAL_LOADER_SHELL_GATE,
+  resetInitialLoaderShellGate,
+  setInitialLoaderShellGate,
+} from '@/lib/initial-loader/shell-gates'
 
 const TEAM_PROJECTS_PREFETCH_STALE_MS = 5 * 60 * 1000
+
+function stubTeamFromProject(project: Pick<Project, 'teamId'>): Team {
+  return {
+    $id: project.teamId,
+    name: '',
+    color: '',
+    members: 0,
+    orgId: project.teamId,
+  }
+}
+
+function ProjectSelectorTriggerSkeleton({
+  className,
+  isMobile,
+  supportsMultiTenancy,
+  isCloud,
+}: {
+  className?: string
+  isMobile?: boolean
+  supportsMultiTenancy: boolean
+  isCloud: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'flex max-w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5',
+        isMobile
+          ? 'h-auto w-full border border-border bg-background px-2.5 py-2'
+          : 'h-9',
+        className,
+      )}
+      aria-hidden
+    >
+      <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-muted" />
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="h-4 w-32 max-w-full animate-pulse rounded bg-muted" />
+        {supportsMultiTenancy && isMobile ? (
+          <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+        ) : null}
+      </div>
+      {isCloud ? (
+        <div className="h-5 w-[4.25rem] shrink-0 animate-pulse rounded border bg-muted" />
+      ) : null}
+      <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
+    </div>
+  )
+}
+
+function ProjectSelectorPlanBadgeSlot({
+  isCloud,
+  org,
+  billingStress,
+}: {
+  isCloud: boolean
+  org: Organization | null
+  billingStress: boolean
+}) {
+  if (!isCloud) return null
+  if (org) {
+    return (
+      <ProjectSelectorPlanBadge
+        plan={org.plan}
+        billingStress={billingStress}
+        upcomingDowngrade={!!org.billingPlanDowngrade}
+      />
+    )
+  }
+  return (
+    <span
+      aria-hidden
+      className="invisible shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium capitalize"
+    >
+      Enterprise
+    </span>
+  )
+}
 
 function getProjectsInfiniteNextPageParam(
   lastPage: { total?: number; projects?: unknown[] | null },
@@ -94,7 +175,7 @@ export function ProjectSelector({
   const { project: currentProject, isLoading: currentProjectLoading } =
     useProject(projectId)
 
-  const { data: routeFailedInvoicePresence } =
+  const { data: routeFailedInvoicePresence, isLoading: invoicePresenceLoading } =
     useOrganizationFailedInvoicePresence(
       projectId ? currentProject?.teamId : undefined,
     )
@@ -126,27 +207,23 @@ export function ProjectSelector({
   const [teamSearch, setTeamSearch] = useState('')
 
   // Sync UI with prefetched route data on first paint (state starts null; effects run after paint)
-  const resolvedProject = selectedProject ?? currentProject ?? null
+  const resolvedProject = useMemo(() => {
+    const candidate = selectedProject ?? currentProject ?? null
+    if (!candidate || !projectId) return null
+    if (candidate.$id !== projectId) {
+      return currentProject?.$id === projectId ? currentProject : null
+    }
+    return candidate
+  }, [selectedProject, currentProject, projectId])
+
   const resolvedTeam = useMemo(() => {
     const fromSelection = selectedTeam ?? initialTeam
     if (fromSelection) return fromSelection
-    // Self-hosted has no org/team UI; use project teamId so the header can render without orgs fetch
-    if (!supportsMultiTenancy && currentProject?.teamId) {
-      return {
-        $id: currentProject.teamId,
-        name: '',
-        color: '',
-        members: 0,
-        orgId: currentProject.teamId,
-      } satisfies Team
+    if (resolvedProject?.teamId) {
+      return stubTeamFromProject(resolvedProject)
     }
     return null
-  }, [
-    selectedTeam,
-    initialTeam,
-    supportsMultiTenancy,
-    currentProject?.teamId,
-  ])
+  }, [selectedTeam, initialTeam, resolvedProject?.teamId])
 
   // Note: Infinite query automatically resets when team or search changes
 
@@ -350,6 +427,8 @@ export function ProjectSelector({
     )
   }, [currentProjectTeam, organizations])
 
+  const orgDisplayName = currentProjectTeam?.name || resolvedTeam?.name || ''
+
   const lastFullProjectsCountRef = useRef(0)
   if (!projectSearchActive && resolvedTeam?.$id) {
     lastFullProjectsCountRef.current = pinnedIds.length + (infiniteTotal ?? 0)
@@ -467,26 +546,65 @@ export function ProjectSelector({
     supportsMultiTenancy,
   ])
 
-  // Show loading state if data is not ready (self-hosted only needs the current project)
-  const isProjectSelectorLoading = supportsMultiTenancy
-    ? orgsLoading ||
-      currentProjectLoading ||
-      !resolvedProject ||
-      !resolvedTeam
-    : currentProjectLoading || !resolvedProject
+  // Only skeleton when the current project is not available yet (orgs can hydrate after first paint)
+  const isProjectSelectorLoading = !resolvedProject && currentProjectLoading
+
+  const isProjectSelectorShellReady = useMemo(() => {
+    if (!projectId) return true
+    if (!resolvedProject || resolvedProject.$id !== projectId) return false
+    if (currentProjectLoading) return false
+    if (invoicePresenceLoading) return false
+
+    if (supportsMultiTenancy) {
+      if (orgsLoading) return false
+      if (!currentProjectTeam?.name) return false
+      if (isCloud && !currentProjectOrg) return false
+    }
+
+    return true
+  }, [
+    projectId,
+    resolvedProject,
+    currentProjectLoading,
+    invoicePresenceLoading,
+    supportsMultiTenancy,
+    orgsLoading,
+    currentProjectTeam?.name,
+    isCloud,
+    currentProjectOrg,
+  ])
+
+  useLayoutEffect(() => {
+    if (!projectId) {
+      resetInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector)
+      return
+    }
+
+    setInitialLoaderShellGate(
+      INITIAL_LOADER_SHELL_GATE.projectSelector,
+      isProjectSelectorShellReady,
+    )
+  }, [projectId, isProjectSelectorShellReady])
+
+  useEffect(() => {
+    return () => {
+      resetInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector)
+    }
+  }, [])
 
   if (isProjectSelectorLoading) {
     return (
-      <div
-        className={cn(
-          'flex items-center gap-2 rounded-md px-2 py-1.5',
-          className,
-        )}
-      >
-        <div className="h-4 w-4 animate-pulse rounded bg-muted" />
-        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-      </div>
+      <ProjectSelectorTriggerSkeleton
+        className={className}
+        isMobile={isMobile}
+        supportsMultiTenancy={supportsMultiTenancy}
+        isCloud={isCloud}
+      />
     )
+  }
+
+  if (!resolvedProject || !resolvedTeam) {
+    return null
   }
 
   if (collapsed) {
@@ -574,25 +692,23 @@ export function ProjectSelector({
                 )}
               </p>
             </div>
-            {supportsMultiTenancy && (
+            {supportsMultiTenancy ? (
               <p
-                className="truncate text-[11px] text-muted-foreground"
-                title={currentProjectTeam?.name || resolvedTeam.name}
-              >
-                {truncateMiddle(
-                  currentProjectTeam?.name || resolvedTeam.name,
-                  30,
+                className={cn(
+                  'truncate text-[11px] text-muted-foreground',
+                  !orgDisplayName && 'invisible',
                 )}
+                title={orgDisplayName || undefined}
+              >
+                {truncateMiddle(orgDisplayName || 'Organization', 30)}
               </p>
-            )}
+            ) : null}
           </div>
-          {isCloud && currentProjectOrg && (
-            <ProjectSelectorPlanBadge
-              plan={currentProjectOrg.plan}
-              billingStress={!!billingFailureTeamId}
-              upcomingDowngrade={!!currentProjectOrg.billingPlanDowngrade}
-            />
-          )}
+          <ProjectSelectorPlanBadgeSlot
+            isCloud={isCloud}
+            org={currentProjectOrg}
+            billingStress={!!billingFailureTeamId}
+          />
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </button>
 
@@ -670,19 +786,18 @@ export function ProjectSelector({
               <p
                 className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
                 title={
-                  supportsMultiTenancy
-                    ? `${currentProjectTeam?.name || resolvedTeam.name} / ${
-                        resolvedProject.name
-                      }`
+                  supportsMultiTenancy && orgDisplayName
+                    ? `${orgDisplayName} / ${resolvedProject.name}`
                     : resolvedProject.name
                 }
               >
                 {supportsMultiTenancy ? (
                   <>
-                    {truncateMiddle(
-                      currentProjectTeam?.name || resolvedTeam.name,
-                      20,
-                    )}{' '}
+                    <span
+                      className={cn('shrink-0', !orgDisplayName && 'invisible')}
+                    >
+                      {truncateMiddle(orgDisplayName || 'Organization', 20)}
+                    </span>{' '}
                     /{' '}
                     {formatProjectNameForDisplay(
                       resolvedProject.name,
@@ -696,13 +811,11 @@ export function ProjectSelector({
                   )
                 )}
               </p>
-              {isCloud && currentProjectOrg && (
-                <ProjectSelectorPlanBadge
-                  plan={currentProjectOrg.plan}
-                  billingStress={!!billingFailureTeamId}
-                  upcomingDowngrade={!!currentProjectOrg.billingPlanDowngrade}
-                />
-              )}
+              <ProjectSelectorPlanBadgeSlot
+                isCloud={isCloud}
+                org={currentProjectOrg}
+                billingStress={!!billingFailureTeamId}
+              />
             </div>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           </button>
