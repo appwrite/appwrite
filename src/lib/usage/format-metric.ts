@@ -62,23 +62,15 @@ export function formatCompactBytes(
 
 const BYTE_AXIS_SHORT_UNITS: Record<ByteUnit, string> = {
   B: 'B',
-  KB: 'K',
-  MB: 'M',
-  GB: 'G',
-  TB: 'T',
-}
-
-function shortenByteUnitLabel(label: string): string {
-  return label
-    .replace(/TB$/, 'T')
-    .replace(/GB$/, 'G')
-    .replace(/MB$/, 'M')
-    .replace(/KB$/, 'K')
+  KB: 'KB',
+  MB: 'MB',
+  GB: 'GB',
+  TB: 'TB',
 }
 
 /**
  * Y-axis tick formatter that keeps every tick in the same unit (based on chart max)
- * so labels stay ordered and readable, e.g. `0M`, `500K` → `0.5M`, `1M`, `2.8M`.
+ * so labels stay ordered and readable, e.g. `0MB`, `500KB`, `1.2MB`, `2.4MB`.
  */
 export function createCompactBytesAxisTickFormatter(referenceBytes: number) {
   const unitIndex =
@@ -107,10 +99,10 @@ export function createCompactBytesAxisTickFormatter(referenceBytes: number) {
   }
 }
 
-/** Short Y-axis labels: `12.5M`, `1.2G`, `800K`. */
+/** Short Y-axis labels: `12.5MB`, `1.2GB`, `800KB`. */
 export function formatCompactBytesAxis(bytes: number): string {
   const label = formatCompactBytes(bytes, { compact: true })
-  return shortenByteUnitLabel(label).replace(/(\d)\.0(?=[KMGTPB]$)/, '$1')
+  return label.replace(/(\d)\.0(?=[KMGTP]B$)/, '$1')
 }
 
 export interface FormatCompactCountOptions {

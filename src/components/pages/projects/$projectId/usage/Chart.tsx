@@ -5,12 +5,13 @@ import {
   getChartSeriesMax,
 } from '@/lib/usage/format-metric'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
+import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import {
   Area,
   AreaChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
 } from 'recharts'
 import { usageData } from '@/lib/utils/mock-data'
@@ -57,7 +58,7 @@ export function UsageChart({ className }: UsageChartProps) {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={usageData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              margin={USAGE_CHART_MARGIN}
             >
               <defs>
                 <linearGradient
@@ -97,17 +98,7 @@ export function UsageChart({ className }: UsageChartProps) {
                   />
                 </linearGradient>
               </defs>
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                dy={10}
-                interval="preserveStartEnd"
-              />
+              <SeriesChartXAxis pointCount={usageData.length} />
               <YAxis
                 axisLine={false}
                 tickLine={false}

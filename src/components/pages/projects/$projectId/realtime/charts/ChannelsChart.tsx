@@ -4,7 +4,6 @@ import {
   AreaChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
   CartesianGrid,
 } from 'recharts'
@@ -24,6 +23,8 @@ import {
 } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
+import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 
 interface ChannelsDataPoint {
   timestamp: string
@@ -234,7 +235,7 @@ export function RealtimeChannelsChart({
           >
             <AreaChart
               data={chartData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              margin={USAGE_CHART_MARGIN}
             >
               <defs>
                 <linearGradient
@@ -253,17 +254,7 @@ export function RealtimeChannelsChart({
                 stroke="hsl(var(--border))"
                 vertical={false}
               />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                dy={10}
-                interval="preserveStartEnd"
-              />
+              <SeriesChartXAxis pointCount={chartData.length} />
               <YAxis
                 axisLine={false}
                 tickLine={false}

@@ -7,10 +7,9 @@ import {
   AreaChart,
   CartesianGrid,
   ResponsiveContainer,
-  XAxis,
   YAxis,
 } from 'recharts'
-import { Badge } from '@/components/ui/badge'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import {
   Table,
   TableBody,
@@ -177,15 +176,7 @@ function TrafficUsageChart({
             stroke="hsl(var(--border))"
             vertical={false}
           />
-          <XAxis
-            dataKey="date"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: 'currentColor', fontSize: 10 }}
-            dy={10}
-            interval="preserveStartEnd"
-            minTickGap={24}
-          />
+          <SeriesChartXAxis pointCount={chartData.length} />
           <YAxis
             axisLine={false}
             tickLine={false}

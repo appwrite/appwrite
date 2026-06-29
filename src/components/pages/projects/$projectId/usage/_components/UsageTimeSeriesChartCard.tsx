@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
 } from 'recharts'
 import { AlertCircle } from 'lucide-react'
@@ -20,6 +19,9 @@ import {
   USAGE_CHART_Y_AXIS_WIDTH,
   overviewChartPanelErrorClass,
 } from '../../overview/chart-panel'
+import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
+import { UsageChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { useOptionalUsageFilters } from '../usage-filters-context'
 import {
   createUsageChartAxisTickFormatter,
   getChartSeriesMax,
@@ -108,6 +110,7 @@ export function UsageTimeSeriesChartCard({
   className,
   docsHref,
 }: UsageTimeSeriesChartCardProps) {
+  const usageFilters = useOptionalUsageFilters()
   const chartData = useMemo(
     () =>
       chartPoints.map((point) => ({
@@ -213,7 +216,7 @@ export function UsageTimeSeriesChartCard({
             <ResponsiveContainer width="100%" height="100%" debounce={150}>
               <AreaChart
                 data={chartData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                margin={USAGE_CHART_MARGIN}
               >
                 <defs>
                   <linearGradient
@@ -240,16 +243,10 @@ export function UsageTimeSeriesChartCard({
                   stroke="hsl(var(--border))"
                   vertical={false}
                 />
-                <XAxis
-                  dataKey="date"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fill: 'currentColor',
-                    fontSize: 10,
-                  }}
-                  dy={10}
-                  interval="preserveStartEnd"
+                <UsageChartXAxis
+                  points={chartPoints}
+                  dateRange={usageFilters?.dateRange}
+                  chartInterval={usageFilters?.chartInterval}
                 />
                 <YAxis
                   axisLine={false}

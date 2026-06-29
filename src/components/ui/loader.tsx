@@ -6,8 +6,16 @@ import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { cn } from '@/lib/utils'
 
-// Layout width: wordmark viewBox 132×24 + gap-1.5 + " / 2.0" text
-const CONTENT_MIN_WIDTH = 132 + 6 + 32
+function LoaderBrandMark() {
+  return (
+    <div className="inline-flex items-end gap-1.5">
+      <AppwriteWordmark className="h-10" />
+      <span className="pb-0.5 text-sm font-extralight tracking-tight text-muted-foreground">
+        / 2.0
+      </span>
+    </div>
+  )
+}
 
 export type FullscreenLoaderStatusBanner = {
   /** Main title (inherits container text color). */
@@ -133,15 +141,7 @@ export function FullscreenLoader({
               )
             })()}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div
-              className="flex items-center gap-1.5 min-h-6"
-              style={{ minWidth: CONTENT_MIN_WIDTH }}
-            >
-              <AppwriteWordmark />
-              <span className="text-xs font-extralight tracking-tight text-muted-foreground">
-                / 2.0
-              </span>
-            </div>
+            <LoaderBrandMark />
           </div>
           {showSpinner && !statusBanner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">

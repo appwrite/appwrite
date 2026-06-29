@@ -13,12 +13,13 @@ import {
 import { cn } from '@/lib/utils'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
+import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import {
   Area,
   AreaChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
   Legend,
 } from 'recharts'
@@ -342,7 +343,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
           </p>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={chartData}>
+          <AreaChart data={chartData} margin={USAGE_CHART_MARGIN}>
             <defs>
               <linearGradient id="colorBlocked" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
@@ -357,11 +358,11 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
                 <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis
+            <SeriesChartXAxis
+              pointCount={chartData.length}
               dataKey="time"
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-              axisLine={false}
-              tickLine={false}
+              dy={10}
             />
             <YAxis
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}

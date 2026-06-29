@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useMemo } from 'react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import type { OverviewStorageChartPoint } from '@/lib/usage/storage-usage'
@@ -11,6 +11,7 @@ import {
   OVERVIEW_CHART_HEIGHT,
   OVERVIEW_STORAGE_ERROR,
   USAGE_CHART_Y_AXIS_WIDTH,
+  USAGE_CHART_MARGIN,
   overviewChartPanelBodyClass,
   overviewChartPanelChartAreaClass,
   overviewChartPanelChartFillClass,
@@ -34,11 +35,7 @@ import {
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import {
-  formatUsageChartXAxisLabel,
-  OVERVIEW_USAGE_CHART_X_AXIS_MAX_TICKS,
-  resolveUsageChartXAxisInterval,
-} from '@/lib/usage/chart-axis'
+import { UsageChartXAxis } from '@/components/global/shared/ChartXAxis'
 import type { DateRange } from 'react-day-picker'
 
 const STORAGE_SERIES = [
@@ -180,30 +177,9 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   const showChartSkeleton = isLoading
   const showEmptyState = !isLoading && chartData.length === 0
   const activeChartData = showChartSkeleton ? skeletonChartData : chartData
-  const { from: rangeFrom, to: rangeTo } = useMemo(
-    () => resolveUsageDateBounds(dateRange),
-    [dateRange],
-  )
-  const xAxisInterval = useMemo(
-    () =>
-      resolveUsageChartXAxisInterval(
-        activeChartData.length,
-        OVERVIEW_USAGE_CHART_X_AXIS_MAX_TICKS,
-      ),
-    [activeChartData.length],
-  )
-  const xAxisTickFormatter = useMemo(
-    () => (_value: string, index: number) => {
-      const point = activeChartData[index]
-      if (!point?.day) return ''
-      return formatUsageChartXAxisLabel(
-        point.day,
-        chartInterval,
-        rangeFrom,
-        rangeTo,
-      )
-    },
-    [activeChartData, chartInterval, rangeFrom, rangeTo],
+  const resolvedChartInterval = useMemo(
+    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
+    [chartInterval, dateRange],
   )
   const axisMax = useMemo(
     () =>
@@ -275,7 +251,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                 >
                   <AreaChart
                     data={activeChartData}
-                    margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+                    margin={USAGE_CHART_MARGIN}
                   >
                     <defs>
                       {showChartSkeleton ? (
@@ -321,15 +297,11 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                         ))
                       )}
                     </defs>
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: 'currentColor', fontSize: 10 }}
-                      dy={10}
-                      interval={xAxisInterval}
-                      minTickGap={32}
-                      tickFormatter={xAxisTickFormatter}
+                    <UsageChartXAxis
+                      points={activeChartData}
+                      dateRange={dateRange}
+                      chartInterval={resolvedChartInterval}
+                      variant="overview"
                     />
                     <YAxis
                       axisLine={false}

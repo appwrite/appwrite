@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
 } from 'recharts'
 import { AlertCircle } from 'lucide-react'
@@ -17,12 +16,16 @@ import { createCompactBytesAxisTickFormatter } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   resolveBandwidthDualChartDisplay,
+  resolveBandwidthStackedYAxisDomain,
   type BandwidthDualChartPoint,
 } from '@/lib/usage/bandwidth-events'
 import {
   OVERVIEW_CHART_HEIGHT,
   USAGE_CHART_Y_AXIS_WIDTH,
 } from '../../overview/chart-panel'
+import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
+import { UsageChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { useUsageFilters } from '../usage-filters-context'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -99,6 +102,7 @@ export function InboundOutboundUsageChartCard({
   formatValue,
   onRetry,
 }: InboundOutboundUsageChartCardProps) {
+  const { dateRange, chartInterval } = useUsageFilters()
   const chartData = useMemo(
     () =>
       dualChartPoints.map((point) => ({
@@ -125,6 +129,13 @@ export function InboundOutboundUsageChartCard({
   const yAxisTickFormatter = useMemo(
     () => createCompactBytesAxisTickFormatter(bandwidthAxisMax),
     [bandwidthAxisMax],
+  )
+  const bandwidthYAxisDomain = useMemo(
+    () =>
+      showDualSeries
+        ? resolveBandwidthStackedYAxisDomain(bandwidthAxisMax)
+        : undefined,
+    [showDualSeries, bandwidthAxisMax],
   )
 
   return (
@@ -219,7 +230,7 @@ export function InboundOutboundUsageChartCard({
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                margin={USAGE_CHART_MARGIN}
               >
                 <defs>
                   <linearGradient
@@ -256,19 +267,17 @@ export function InboundOutboundUsageChartCard({
                   stroke="hsl(var(--border))"
                   vertical={false}
                 />
-                <XAxis
-                  dataKey="date"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'currentColor', fontSize: 10 }}
-                  dy={10}
-                  interval="preserveStartEnd"
+                <UsageChartXAxis
+                  points={dualChartPoints}
+                  dateRange={dateRange}
+                  chartInterval={chartInterval}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'currentColor', fontSize: 10 }}
                   tickFormatter={yAxisTickFormatter}
+                  domain={bandwidthYAxisDomain}
                   dx={-5}
                   width={USAGE_CHART_Y_AXIS_WIDTH}
                 />
@@ -297,6 +306,12 @@ export function InboundOutboundUsageChartCard({
                               {formatValue(data.outbound)}{' '}
                               <span className="font-normal text-muted-foreground">
                                 outbound
+                              </span>
+                            </p>
+                            <p className="border-t border-border pt-1 text-[13px] font-medium text-foreground">
+                              {formatValue(data.inbound + data.outbound)}{' '}
+                              <span className="font-normal text-muted-foreground">
+                                total
                               </span>
                             </p>
                           </div>

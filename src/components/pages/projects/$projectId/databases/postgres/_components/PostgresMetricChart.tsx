@@ -7,7 +7,6 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
 } from 'recharts'
 import { Info } from 'lucide-react'
@@ -20,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 
 export type PostgresMetricSeriesPoint = {
   timestamp: number
@@ -315,17 +315,15 @@ export function PostgresMetricChart({
                   stroke="hsl(var(--border))"
                   vertical={false}
                 />
-                <XAxis
+                <SeriesChartXAxis
+                  pointCount={chartData.length}
                   dataKey="time"
-                  axisLine={false}
-                  tickLine={false}
                   tick={{
                     fill: 'currentColor',
                     fontSize: 10,
                     className: 'tabular-nums',
                   }}
                   dy={8}
-                  interval="preserveStartEnd"
                 />
                 <YAxis
                   axisLine={false}

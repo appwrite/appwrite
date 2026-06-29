@@ -31,3 +31,7 @@ export function useUsageFilters(): UsageFiltersContextValue {
   }
   return context
 }
+
+export function useOptionalUsageFilters(): UsageFiltersContextValue | null {
+  return useContext(UsageFiltersContext)
+}

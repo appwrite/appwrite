@@ -26,6 +26,8 @@ import {
   getChartSeriesMax,
 } from '@/lib/usage/format-metric'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
+import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import { Button } from '@/components/ui/button'
 import { DateRangePicker } from './DateRangePicker'
 import { ComparisonSelector, type ComparisonType } from './ComparisonSelector'
@@ -34,7 +36,6 @@ import {
   AreaChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
   BarChart,
   Bar,
@@ -1018,7 +1019,7 @@ export function WebsiteAnalyticsDetail({
                       >
                         <AreaChart
                           data={chartData}
-                          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                          margin={USAGE_CHART_MARGIN}
                         >
                           <defs>
                             <linearGradient
@@ -1040,19 +1041,11 @@ export function WebsiteAnalyticsDetail({
                               />
                             </linearGradient>
                           </defs>
-                          <XAxis
-                            dataKey="date"
-                            axisLine={false}
-                            tickLine={false}
+                          <SeriesChartXAxis
+                            pointCount={chartData.length}
                             tick={{
                               fill: 'currentColor',
                               fontSize: 12,
-                            }}
-                            dy={10}
-                            interval="preserveStartEnd"
-                            tickFormatter={(value, index) => {
-                              if (index % 5 === 0) return value
-                              return ''
                             }}
                           />
                           <YAxis
@@ -2146,16 +2139,16 @@ export function WebsiteAnalyticsDetail({
                             data={peakHours}
                             margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
                           >
-                            <XAxis
+                            <SeriesChartXAxis
+                              pointCount={peakHours.length}
                               dataKey="label"
-                              axisLine={false}
-                              tickLine={false}
+                              maxTicks={6}
                               tick={{
                                 fill: 'currentColor',
                                 fontSize: 9,
                               }}
-                              interval={3}
                               height={20}
+                              padding={{ left: 4, right: 4 }}
                             />
                             <YAxis
                               axisLine={false}

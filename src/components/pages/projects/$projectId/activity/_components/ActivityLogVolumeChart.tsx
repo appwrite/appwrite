@@ -19,7 +19,6 @@ import {
   Customized,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
 } from 'recharts'
 import { cn } from '@/lib/utils'
@@ -27,6 +26,7 @@ import {
   createCompactCountAxisTickFormatter,
 } from '@/lib/usage/format-metric'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -707,21 +707,9 @@ export function ActivityLogVolumeChart({
                     setTooltipPointer(null)
                   }}
                 >
-                  <XAxis
+                  <SeriesChartXAxis
+                    pointCount={chartData.length}
                     dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{
-                      fill: 'currentColor',
-                      fontSize: 10,
-                    }}
-                    dy={10}
-                    interval="preserveStartEnd"
-                    minTickGap={12}
-                    tickFormatter={(value, index) => {
-                      if (index % 5 === 0) return value
-                      return ''
-                    }}
                   />
                   <YAxis
                     axisLine={false}

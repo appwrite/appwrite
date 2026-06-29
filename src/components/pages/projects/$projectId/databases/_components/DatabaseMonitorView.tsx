@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
   YAxis,
 } from 'recharts'
 import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
@@ -18,6 +17,7 @@ import {
   getEffectiveDatabaseSpecIdForMonitoring,
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
+import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 
 type MonitorSection = { id: string; label: string }
 
@@ -211,17 +211,14 @@ function MonitorChart({
                 stroke="hsl(var(--border))"
                 vertical={false}
               />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
+              <SeriesChartXAxis
+                pointCount={chartData.length}
                 tick={{
                   fill: 'currentColor',
                   fontSize: 10,
                   className: 'tabular-nums',
                 }}
                 dy={8}
-                interval="preserveStartEnd"
               />
               <YAxis
                 axisLine={false}

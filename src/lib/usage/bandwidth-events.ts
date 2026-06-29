@@ -72,7 +72,7 @@ type BandwidthDualChartDisplayPoint = {
   total?: number
 }
 
-/** Dual inbound/outbound series only when there is non-zero usage (flat zero line uses total). */
+/** Stacked dual series: scale Y-axis to combined inbound + outbound height. */
 export function resolveBandwidthDualChartDisplay(
   points: readonly BandwidthDualChartDisplayPoint[],
 ): { showDualSeries: boolean; axisMax: number } {
@@ -80,19 +80,27 @@ export function resolveBandwidthDualChartDisplay(
     (point) =>
       typeof point.inbound === 'number' && typeof point.outbound === 'number',
   )
-  const dualMax = hasDualFields
+  const stackedMax = hasDualFields
     ? points.reduce(
         (max, point) =>
           Math.max(max, (point.inbound ?? 0) + (point.outbound ?? 0)),
         0,
       )
     : 0
-  const showDualSeries = hasDualFields && dualMax > 0
+  const showDualSeries = hasDualFields && stackedMax > 0
   const axisMax = showDualSeries
-    ? dualMax
+    ? stackedMax
     : points.reduce((max, point) => Math.max(max, point.total ?? 0), 0)
 
   return { showDualSeries, axisMax }
+}
+
+/** Y-axis domain for stacked inbound + outbound — pins scale to combined peak. */
+export function resolveBandwidthStackedYAxisDomain(
+  axisMax: number,
+): [number, number] | undefined {
+  if (!Number.isFinite(axisMax) || axisMax <= 0) return undefined
+  return [0, axisMax]
 }
 
 export function mergeBandwidthDualChartPoints(
