@@ -2157,6 +2157,67 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 
+    public function testSessionAlertWithLocaleHeader(): void
+    {
+        $email = uniqid() . 'session-alert-locale@appwrite.io';
+        $password = 'password123';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/session-alerts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'alerts' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? '',
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Locale Session Alert Tester',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'es',
+            'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringNotContainsString('{{emails.sessionAlert.', $lastEmail['subject']);
+        $this->assertStringNotContainsString('{{emails.sessionAlert.', $lastEmail['text']);
+        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']);
+        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']);
+    }
+
     public function testCreateOAuth2AccountSession(): void
     {
         // Just ensure we have a session set up

@@ -110,6 +110,56 @@
         "reference": ""
     },
     {
+        "term": "emails.sessionAlert.subject",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.preview",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.hello",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.body",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.listDevice",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.listIpAddress",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.listCountry",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.footer",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.thanks",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sessionAlert.signature",
+        "comment": "These strings are used in the session alert templates.",
+        "reference": ""
+    },
+    {
         "term": "locale.country.unknown",
         "comment": "This string is used as the country name in case of a missing [ country_code => country_name ] mapping.",
         "reference": ""

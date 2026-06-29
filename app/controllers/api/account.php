@@ -84,7 +84,6 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)

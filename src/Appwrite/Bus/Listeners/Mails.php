@@ -62,6 +62,15 @@ class Mails extends Listener
         }
 
         $locale->setDefault($event->locale);
+        $translate = static function (string $key) use ($locale): string {
+            $value = $locale->getText($key);
+
+            if (\preg_match('/^\{\{(.+)\}\}$/', $value, $matches) === 1) {
+                return $locale->getText($matches[1], $value);
+            }
+
+            return $value;
+        };
 
         $session = new Document($event->session);
         $smtp = $project->getAttribute('smtp', []);
@@ -76,19 +85,19 @@ class Mails extends Listener
             $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->fallback] ?? [];
         $isBranded = $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE;
 
-        $subject = $customTemplate['subject'] ?? $locale->getText('emails.sessionAlert.subject');
-        $preview = $locale->getText('emails.sessionAlert.preview');
+        $subject = $customTemplate['subject'] ?? $translate('emails.sessionAlert.subject');
+        $preview = $translate('emails.sessionAlert.preview');
 
         $body = empty($customTemplate['message'])
             ? Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-session-alert.tpl')
-                ->setParam('{{hello}}', $locale->getText('emails.sessionAlert.hello'))
-                ->setParam('{{body}}', $locale->getText('emails.sessionAlert.body'))
-                ->setParam('{{listDevice}}', $locale->getText('emails.sessionAlert.listDevice'))
-                ->setParam('{{listIpAddress}}', $locale->getText('emails.sessionAlert.listIpAddress'))
-                ->setParam('{{listCountry}}', $locale->getText('emails.sessionAlert.listCountry'))
-                ->setParam('{{footer}}', $locale->getText('emails.sessionAlert.footer'))
-                ->setParam('{{thanks}}', $locale->getText('emails.sessionAlert.thanks'))
-                ->setParam('{{signature}}', $locale->getText('emails.sessionAlert.signature'))
+                ->setParam('{{hello}}', $translate('emails.sessionAlert.hello'))
+                ->setParam('{{body}}', $translate('emails.sessionAlert.body'))
+                ->setParam('{{listDevice}}', $translate('emails.sessionAlert.listDevice'))
+                ->setParam('{{listIpAddress}}', $translate('emails.sessionAlert.listIpAddress'))
+                ->setParam('{{listCountry}}', $translate('emails.sessionAlert.listCountry'))
+                ->setParam('{{footer}}', $translate('emails.sessionAlert.footer'))
+                ->setParam('{{thanks}}', $translate('emails.sessionAlert.thanks'))
+                ->setParam('{{signature}}', $translate('emails.sessionAlert.signature'))
                 ->render()
             : $customTemplate['message'];
 
