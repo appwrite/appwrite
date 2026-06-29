@@ -302,11 +302,11 @@ $callbackBase = $this->getParam('callbackBase', '');
             btnText.style.display = 'none';
             btnSpinner.style.display = 'inline-block';
 
-            const teamId = "<?php echo htmlspecialchars($teamId); ?>";
-            const membershipId = "<?php echo htmlspecialchars($membershipId); ?>";
-            const userId = "<?php echo htmlspecialchars($userId); ?>";
-            const secret = "<?php echo htmlspecialchars($secret); ?>";
-            const redirectUrl = "<?php echo htmlspecialchars($redirectUrl); ?>";
+            const teamId = <?php echo json_encode($teamId); ?>;
+            const membershipId = <?php echo json_encode($membershipId); ?>;
+            const userId = <?php echo json_encode($userId); ?>;
+            const secret = <?php echo json_encode($secret); ?>;
+            const redirectUrl = <?php echo json_encode($redirectUrl); ?>;
 
             try {
                 const response = await fetch(`/v1/teams/${teamId}/memberships/${membershipId}/status`, {
