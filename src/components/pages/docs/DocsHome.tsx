@@ -45,7 +45,7 @@ function DocsHomeSection({
 
   return (
     <section className={cn('border-b border-border', sectionPaddingY, className)}>
-      <div className={cn('mx-auto w-full max-w-7xl', docsContentPaddingX)}>
+      <div className={cn('mx-auto w-full max-w-6xl', docsContentPaddingX)}>
         <DocsHomeSectionHeading
           title={title}
           description={description}

@@ -197,7 +197,7 @@ export function DocsHubFaq({ variant = 'page' }: DocsHubFaqProps) {
 
   return (
     <section className={sectionPaddingY}>
-      <div className={cn('mx-auto w-full max-w-7xl', docsContentPaddingX)}>
+      <div className={cn('mx-auto w-full max-w-6xl', docsContentPaddingX)}>
         <div className="grid gap-8 @[900px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] @[900px]:gap-12">
           <DocsHomeSectionHeading
             title="Common questions"

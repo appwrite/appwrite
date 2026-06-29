@@ -2,15 +2,17 @@
  * Onboarding checklist: shared query for sidebar progress + onboarding page.
  */
 
-import { useQuery, queryOptions } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import {
   fetchProjectOnboardingSnapshot,
+  skipOnboardingSteps,
   computeOnboardingProgress,
-  buildOnboardingStepDoneMap,
+  buildOnboardingStepStateMap,
   getAtomicOnboardingStepCount,
   ONBOARDING_CONNECT,
   ONBOARDING_PRODUCT_CATEGORIES,
+  type OnboardingStepState,
   type ProjectOnboardingSnapshot,
 } from '@/lib/onboarding/project-onboarding'
 
@@ -19,10 +21,10 @@ export function onboardingSnapshotQueryOptions(projectId: string | null | undefi
     queryKey: ['onboarding', 'snapshot', 'project', projectId],
     queryFn: () => fetchProjectOnboardingSnapshot(projectId!),
     enabled: !!projectId,
-    staleTime: Infinity,
+    staleTime: 30 * 1000,
     retry: false,
     refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -47,15 +49,15 @@ export function useOnboardingProgressFromSnapshot(
   }, [snapshot])
 }
 
-function emptyStepDoneMap(): Map<string, boolean> {
-  const map = new Map<string, boolean>()
+function emptyStepStateMap(): Map<string, OnboardingStepState> {
+  const map = new Map<string, OnboardingStepState>()
   for (const step of ONBOARDING_CONNECT) {
-    map.set(step.id, false)
+    map.set(step.id, 'pending')
   }
   for (const cat of ONBOARDING_PRODUCT_CATEGORIES) {
     for (const group of cat.groups) {
       for (const sub of group.subSteps) {
-        map.set(sub.id, false)
+        map.set(sub.id, 'pending')
       }
     }
   }
@@ -65,8 +67,22 @@ function emptyStepDoneMap(): Map<string, boolean> {
 export function useOnboardingStepStates(snapshot: ProjectOnboardingSnapshot | undefined) {
   return useMemo(() => {
     if (!snapshot) {
-      return emptyStepDoneMap()
+      return emptyStepStateMap()
     }
-    return buildOnboardingStepDoneMap(snapshot)
+    return buildOnboardingStepStateMap(snapshot)
   }, [snapshot])
+}
+
+export function useSkipOnboardingStep(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (sdkKeys: readonly string[]) =>
+      skipOnboardingSteps(projectId!, sdkKeys),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['onboarding', 'snapshot', 'project', projectId],
+      })
+    },
+  })
 }

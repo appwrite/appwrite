@@ -1,9 +1,81 @@
 /**
  * Project onboarding checklist: connect steps + per-product sub-steps.
  * Products are grouped under Build and Deploy (sidebar-aligned).
+ *
+ * Stage completion is driven by `sdk.forConsole.projects.listStages` (SDK method
+ * keys from Appwrite `app/config/onboarding.php`). A UI step is done when at least
+ * one of its `sdkKeys` is `completed` or `skipped`.
  */
 
+import { sdk } from '@/lib/appwrite/sdk'
+import type { Models } from '@appwrite.io/console'
+
 export type ProductNavCategoryId = 'build' | 'deploy'
+
+/** SDK method keys tracked for registering an app platform. */
+export const ONBOARDING_PLATFORM_SDK_KEYS = [
+  'project.createWebPlatform',
+  'project.createAndroidPlatform',
+  'project.createApplePlatform',
+  'project.createWindowsPlatform',
+  'project.createLinuxPlatform',
+] as const
+
+/** SDK method keys tracked for creating a database (any DB API). */
+export const ONBOARDING_DATABASE_SDK_KEYS = [
+  'tablesDB.create',
+  'documentsDB.create',
+  'databases.create',
+] as const
+
+/** SDK method keys tracked for schema + first row/document. */
+export const ONBOARDING_DATABASE_SCHEMA_SDK_KEYS = [
+  'tablesDB.createTable',
+  'tablesDB.createRow',
+  'documentsDB.createCollection',
+  'documentsDB.createDocument',
+  'databases.createCollection',
+  'databases.createDocument',
+] as const
+
+/** SDK method keys tracked for function deployments. */
+export const ONBOARDING_FUNCTION_DEPLOY_SDK_KEYS = [
+  'functions.createDeployment',
+  'functions.createTemplateDeployment',
+  'functions.createVcsDeployment',
+  'functions.updateFunctionDeployment',
+] as const
+
+/** SDK method keys tracked for messaging providers. */
+export const ONBOARDING_MESSAGING_PROVIDER_SDK_KEYS = [
+  'messaging.createMailgunProvider',
+  'messaging.createSendgridProvider',
+  'messaging.createSesProvider',
+  'messaging.createResendProvider',
+  'messaging.createSmtpProvider',
+  'messaging.createSMTPProvider',
+  'messaging.createMsg91Provider',
+  'messaging.createTelesignProvider',
+  'messaging.createTextmagicProvider',
+  'messaging.createTwilioProvider',
+  'messaging.createVonageProvider',
+  'messaging.createFcmProvider',
+  'messaging.createFCMProvider',
+  'messaging.createApnsProvider',
+  'messaging.createAPNSProvider',
+] as const
+
+/** SDK method keys tracked for site deployments. */
+export const ONBOARDING_SITE_DEPLOY_SDK_KEYS = [
+  'sites.createDeployment',
+  'sites.createTemplateDeployment',
+  'sites.createVcsDeployment',
+  'sites.updateSiteDeployment',
+] as const
+
+export type OnboardingStageStatus = 'pending' | 'completed' | 'skipped'
+
+export type OnboardingStepState = 'pending' | 'completed' | 'skipped'
 
 export type ProductGroupId =
   | 'auth'
@@ -24,9 +96,12 @@ export interface OnboardingSubStepDef {
   /** Button label when complete; UI defaults to "Open" if omitted */
   ctaDone?: string
   to: string
+  /** Route params for dynamic segments (e.g. storage bucket placeholder). */
+  params?: Record<string, string>
   /** Shown when debug mode is on */
   debug: string
-  isDone: (snapshot: ProjectOnboardingSnapshot) => boolean
+  /** SDK method keys; step is done when any key is completed or skipped. */
+  sdkKeys: readonly string[]
   /**
    * When false, step is listed for navigation but excluded from global % / sidebar ring.
    */
@@ -41,7 +116,8 @@ export interface OnboardingConnectStepDef {
   ctaDone?: string
   to: string
   debug: string
-  isDone: (snapshot: ProjectOnboardingSnapshot) => boolean
+  /** SDK method keys; step is done when any key is completed or skipped. */
+  sdkKeys: readonly string[]
 }
 
 export interface OnboardingProductGroupDef {
@@ -67,8 +143,8 @@ export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
     cta: 'Add platform',
     ctaDone: 'Manage apps',
     to: '/projects/$projectId/apps',
-    debug: 'Done when `listPlatforms` total (or platforms length) > 0.',
-    isDone: (s) => s.platformTotal > 0,
+    debug: `Done when any of: ${ONBOARDING_PLATFORM_SDK_KEYS.join(', ')}.`,
+    sdkKeys: ONBOARDING_PLATFORM_SDK_KEYS,
   },
   {
     id: 'apiKey',
@@ -77,8 +153,8 @@ export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
     cta: 'Add API key',
     ctaDone: 'Manage keys',
     to: '/projects/$projectId/api-keys',
-    debug: 'Done when `listKeys` returns at least one key.',
-    isDone: (s) => s.apiKeyCount > 0,
+    debug: 'Done when `project.createKey` is completed or skipped.',
+    sdkKeys: ['project.createKey'],
   },
 ]
 
@@ -95,8 +171,9 @@ const GROUP_AUTH: OnboardingProductGroupDef = {
       cta: 'Add user',
       ctaDone: 'Manage users',
       to: '/projects/$projectId/auth',
-      debug: 'Done when `users.list` total > 0.',
-      isDone: (s) => s.userTotal > 0,
+      debug:
+        'Done when any of `users.create`, `account.create`, or `account.createAnonymousSession` is completed or skipped.',
+      sdkKeys: ['users.create', 'account.create', 'account.createAnonymousSession'],
     },
     {
       id: 'auth-teams',
@@ -105,8 +182,8 @@ const GROUP_AUTH: OnboardingProductGroupDef = {
       cta: 'Create team',
       ctaDone: 'Manage teams',
       to: '/projects/$projectId/auth',
-      debug: 'Done when `teams.list` total > 0.',
-      isDone: (s) => s.teamTotal > 0,
+      debug: 'Done when `teams.create` is completed or skipped.',
+      sdkKeys: ['teams.create'],
     },
   ],
 }
@@ -124,9 +201,8 @@ const GROUP_DATABASE: OnboardingProductGroupDef = {
       cta: 'Create database',
       ctaDone: 'Open databases',
       to: '/projects/$projectId/databases',
-      debug:
-        'Done when merged tables + documents + vector DB list total > 0.',
-      isDone: (s) => s.databaseTotal > 0,
+      debug: `Done when any of: ${ONBOARDING_DATABASE_SDK_KEYS.join(', ')}.`,
+      sdkKeys: ONBOARDING_DATABASE_SDK_KEYS,
     },
     {
       id: 'db-schema',
@@ -135,9 +211,8 @@ const GROUP_DATABASE: OnboardingProductGroupDef = {
       cta: 'Set up schema',
       ctaDone: 'Open databases',
       to: '/projects/$projectId/databases',
-      debug:
-        'Same snapshot as database row until row-level counts are wired.',
-      isDone: (s) => s.databaseTotal > 0,
+      debug: `Done when any of: ${ONBOARDING_DATABASE_SCHEMA_SDK_KEYS.join(', ')}.`,
+      sdkKeys: ONBOARDING_DATABASE_SCHEMA_SDK_KEYS,
     },
   ],
 }
@@ -156,8 +231,8 @@ const GROUP_STORAGE: OnboardingProductGroupDef = {
       ctaDone: 'Manage buckets',
       to: '/projects/$projectId/storage/$bucketId',
       params: { bucketId: '-' },
-      debug: 'Done when `storage.listBuckets` total > 0.',
-      isDone: (s) => s.bucketTotal > 0,
+      debug: 'Done when `storage.createBucket` is completed or skipped.',
+      sdkKeys: ['storage.createBucket'],
     },
     {
       id: 'st-files',
@@ -167,8 +242,8 @@ const GROUP_STORAGE: OnboardingProductGroupDef = {
       ctaDone: 'Open storage',
       to: '/projects/$projectId/storage/$bucketId',
       params: { bucketId: '-' },
-      debug: 'Same check as bucket until per-bucket file totals are used.',
-      isDone: (s) => s.bucketTotal > 0,
+      debug: 'Done when `storage.createFile` is completed or skipped.',
+      sdkKeys: ['storage.createFile'],
     },
   ],
 }
@@ -186,8 +261,8 @@ const GROUP_FUNCTION: OnboardingProductGroupDef = {
       cta: 'Create function',
       ctaDone: 'Manage functions',
       to: '/projects/$projectId/functions',
-      debug: 'Done when `functions.list` total > 0.',
-      isDone: (s) => s.functionTotal > 0,
+      debug: 'Done when `functions.create` is completed or skipped.',
+      sdkKeys: ['functions.create'],
     },
     {
       id: 'fn-deploy',
@@ -196,9 +271,8 @@ const GROUP_FUNCTION: OnboardingProductGroupDef = {
       cta: 'Open deployments',
       ctaDone: 'View function',
       to: '/projects/$projectId/functions',
-      debug:
-        'Same check as function until deployment-specific totals are used.',
-      isDone: (s) => s.functionTotal > 0,
+      debug: `Done when any of: ${ONBOARDING_FUNCTION_DEPLOY_SDK_KEYS.join(', ')}.`,
+      sdkKeys: ONBOARDING_FUNCTION_DEPLOY_SDK_KEYS,
     },
   ],
 }
@@ -216,8 +290,8 @@ const GROUP_MESSAGING: OnboardingProductGroupDef = {
       cta: 'Create topic',
       ctaDone: 'Manage topics',
       to: '/projects/$projectId/messaging',
-      debug: 'Done when `messaging.listTopics` total > 0.',
-      isDone: (s) => s.topicTotal > 0,
+      debug: 'Done when `messaging.createTopic` is completed or skipped.',
+      sdkKeys: ['messaging.createTopic'],
     },
     {
       id: 'msg-provider',
@@ -226,8 +300,8 @@ const GROUP_MESSAGING: OnboardingProductGroupDef = {
       cta: 'Add provider',
       ctaDone: 'Manage providers',
       to: '/projects/$projectId/messaging',
-      debug: 'Done when `messaging.listProviders` total > 0.',
-      isDone: (s) => s.providerTotal > 0,
+      debug: `Done when any messaging provider create method is completed or skipped.`,
+      sdkKeys: ONBOARDING_MESSAGING_PROVIDER_SDK_KEYS,
     },
   ],
 }
@@ -245,8 +319,8 @@ const GROUP_SITE: OnboardingProductGroupDef = {
       cta: 'Create site',
       ctaDone: 'Manage sites',
       to: '/projects/$projectId/sites',
-      debug: 'Done when `sites.list` total > 0.',
-      isDone: (s) => s.siteTotal > 0,
+      debug: 'Done when `sites.create` is completed or skipped.',
+      sdkKeys: ['sites.create'],
     },
     {
       id: 'site-pipeline',
@@ -255,8 +329,8 @@ const GROUP_SITE: OnboardingProductGroupDef = {
       cta: 'Open deployments',
       ctaDone: 'View site',
       to: '/projects/$projectId/sites',
-      debug: 'Same check as site until deploy-specific totals are used.',
-      isDone: (s) => s.siteTotal > 0,
+      debug: `Done when any of: ${ONBOARDING_SITE_DEPLOY_SDK_KEYS.join(', ')}.`,
+      sdkKeys: ONBOARDING_SITE_DEPLOY_SDK_KEYS,
     },
   ],
 }
@@ -308,64 +382,110 @@ export function getAtomicOnboardingStepCount(): number {
 }
 
 export interface ProjectOnboardingSnapshot {
-  platformTotal: number
-  apiKeyCount: number
-  userTotal: number
-  teamTotal: number
-  databaseTotal: number
-  bucketTotal: number
-  functionTotal: number
-  topicTotal: number
-  providerTotal: number
-  siteTotal: number
+  /** SDK method key → stage status from `projects.listStages`. */
+  stagesBySdk: Record<string, OnboardingStageStatus | string>
 }
 
-/**
- * Mocked onboarding snapshot.
- *
- * The previous implementation fired one `list` call per resource type
- * (`users`, `teams`, `databases`, `buckets`, `functions`, `topics`,
- * `providers`, `sites`) with `limit=1` purely to read the `total` field -
- * which produced a burst of API calls on every project page (and again on
- * every window focus). That has been removed pending a proper aggregated
- * endpoint that returns all of these counts in a single call.
- *
- * For now we return zeros so the checklist renders in its initial state.
- * `projectId` is intentionally unused - kept on the signature so the
- * eventual real implementation slots in without touching callers.
- */
-export async function fetchProjectOnboardingSnapshot(
-  _projectId: string,
-): Promise<ProjectOnboardingSnapshot> {
-  return {
-    platformTotal: 0,
-    apiKeyCount: 0,
-    userTotal: 0,
-    teamTotal: 0,
-    databaseTotal: 0,
-    bucketTotal: 0,
-    functionTotal: 0,
-    topicTotal: 0,
-    providerTotal: 0,
-    siteTotal: 0,
-  }
+function stageStatusFulfillsStep(status: string | undefined): boolean {
+  return status === 'completed' || status === 'skipped'
 }
 
-export function buildOnboardingStepDoneMap(
+export function getOnboardingStepState(
   snapshot: ProjectOnboardingSnapshot,
-): Map<string, boolean> {
-  const map = new Map<string, boolean>()
+  sdkKeys: readonly string[],
+): OnboardingStepState {
+  let hasCompleted = false
+  let hasSkipped = false
+  for (const key of sdkKeys) {
+    const status = snapshot.stagesBySdk[key]
+    if (status === 'completed') hasCompleted = true
+    else if (status === 'skipped') hasSkipped = true
+  }
+  if (hasCompleted) return 'completed'
+  if (hasSkipped) return 'skipped'
+  return 'pending'
+}
+
+export function isOnboardingStepDone(
+  snapshot: ProjectOnboardingSnapshot,
+  sdkKeys: readonly string[],
+): boolean {
+  return sdkKeys.some((key) =>
+    stageStatusFulfillsStep(snapshot.stagesBySdk[key]),
+  )
+}
+
+function stagesToSnapshot(stages: Models.Stage[]): ProjectOnboardingSnapshot {
+  const stagesBySdk: Record<string, OnboardingStageStatus | string> = {}
+  for (const stage of stages) {
+    if (stage.sdk) {
+      stagesBySdk[stage.sdk] = stage.status
+    }
+  }
+  return { stagesBySdk }
+}
+
+export async function fetchProjectOnboardingSnapshot(
+  projectId: string,
+): Promise<ProjectOnboardingSnapshot> {
+  const response = await sdk.forConsole.projects.listStages({ projectId })
+  return stagesToSnapshot(response.stages ?? [])
+}
+
+export async function skipOnboardingSteps(
+  projectId: string,
+  sdkKeys: readonly string[],
+): Promise<void> {
+  await Promise.all(
+    sdkKeys.map((stageId) =>
+      sdk.forConsole.projects.updateStage({
+        projectId,
+        stageId,
+        skip: true,
+      }),
+    ),
+  )
+}
+
+export function buildOnboardingStepStateMap(
+  snapshot: ProjectOnboardingSnapshot,
+): Map<string, OnboardingStepState> {
+  const map = new Map<string, OnboardingStepState>()
   for (const step of ONBOARDING_CONNECT) {
-    map.set(step.id, step.isDone(snapshot))
+    map.set(step.id, getOnboardingStepState(snapshot, step.sdkKeys))
   }
   for (const cat of ONBOARDING_PRODUCT_CATEGORIES) {
     for (const group of cat.groups) {
       for (const sub of group.subSteps) {
-        map.set(sub.id, sub.isDone(snapshot))
+        map.set(sub.id, getOnboardingStepState(snapshot, sub.sdkKeys))
       }
     }
   }
   return map
+}
+
+/** @deprecated Prefer {@link buildOnboardingStepStateMap} for UI that distinguishes skipped. */
+export function buildOnboardingStepDoneMap(
+  snapshot: ProjectOnboardingSnapshot,
+): Map<string, boolean> {
+  const map = new Map<string, boolean>()
+  for (const [id, state] of buildOnboardingStepStateMap(snapshot)) {
+    map.set(id, state !== 'pending')
+  }
+  return map
+}
+
+export function getOnboardingGroupState(
+  subStepIds: readonly string[],
+  stepStates: Map<string, OnboardingStepState>,
+): OnboardingStepState {
+  if (subStepIds.length === 0) return 'pending'
+  const states = subStepIds.map((id) => stepStates.get(id) ?? 'pending')
+  if (states.some((s) => s === 'pending')) return 'pending'
+  if (states.every((s) => s === 'skipped')) return 'skipped'
+  if (states.every((s) => s === 'completed')) return 'completed'
+  if (states.some((s) => s === 'completed')) return 'completed'
+  return 'skipped'
 }
 
 export type OnboardingProductBreakdownRow = {
@@ -384,7 +504,7 @@ export function computeOnboardingProductBreakdown(
   snapshot: ProjectOnboardingSnapshot,
 ): OnboardingProductBreakdownRow[] {
   const connectCompleted = ONBOARDING_CONNECT.filter((step) =>
-    step.isDone(snapshot),
+    isOnboardingStepDone(snapshot, step.sdkKeys),
   ).length
 
   const rows: OnboardingProductBreakdownRow[] = [
@@ -403,7 +523,7 @@ export function computeOnboardingProductBreakdown(
       for (const sub of group.subSteps) {
         if (!subStepCountsTowardProgress(sub)) continue
         total += 1
-        if (sub.isDone(snapshot)) completed += 1
+        if (isOnboardingStepDone(snapshot, sub.sdkKeys)) completed += 1
       }
       rows.push({
         id: group.id,
@@ -427,7 +547,7 @@ export function computeOnboardingProgress(snapshot: ProjectOnboardingSnapshot): 
 
   for (const step of ONBOARDING_CONNECT) {
     total += 1
-    if (step.isDone(snapshot)) completed += 1
+    if (isOnboardingStepDone(snapshot, step.sdkKeys)) completed += 1
   }
 
   for (const cat of ONBOARDING_PRODUCT_CATEGORIES) {
@@ -435,7 +555,7 @@ export function computeOnboardingProgress(snapshot: ProjectOnboardingSnapshot): 
       for (const sub of group.subSteps) {
         if (!subStepCountsTowardProgress(sub)) continue
         total += 1
-        if (sub.isDone(snapshot)) completed += 1
+        if (isOnboardingStepDone(snapshot, sub.sdkKeys)) completed += 1
       }
     }
   }

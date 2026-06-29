@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { Check, ChevronDown, ChevronRight, Lock } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Lock, Minus } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,12 +22,16 @@ import {
   useOnboardingProgressFromSnapshot,
   useOnboardingStepStates,
   useProjectOnboardingSnapshot,
+  useSkipOnboardingStep,
 } from '@/lib/react-query/hooks/onboarding'
 import {
   computeOnboardingProductBreakdown,
+  getOnboardingGroupState,
+  isOnboardingStepDone,
   ONBOARDING_CONNECT,
   ONBOARDING_PRODUCT_CATEGORIES,
   subStepCountsTowardProgress,
+  type OnboardingStepState,
   type OnboardingProductBreakdownRow,
   type OnboardingConnectStepDef,
   type OnboardingSubStepDef,
@@ -51,21 +55,17 @@ const CONNECT_SECTION = {
 const CARD_SHELL =
   'rounded-xl border border-border bg-card/50 overflow-hidden'
 
+/** Shared horizontal rhythm for checklist rows (connect, category headers, sub-steps). */
+const ONBOARDING_ROW_X = 'px-4 sm:px-5'
+const ONBOARDING_ICON_COL = 'flex w-7 shrink-0 justify-center'
+const ONBOARDING_ICON_GAP = 'gap-3'
+
 /** viewBox units - SVG scales with container (mobile vs desktop ring size). */
 const RING_VB = 120
 const RING_STROKE = 8
 
 const EMPTY_SNAPSHOT: ProjectOnboardingSnapshot = {
-  platformTotal: 0,
-  apiKeyCount: 0,
-  userTotal: 0,
-  teamTotal: 0,
-  databaseTotal: 0,
-  bucketTotal: 0,
-  functionTotal: 0,
-  topicTotal: 0,
-  providerTotal: 0,
-  siteTotal: 0,
+  stagesBySdk: {},
 }
 
 function OnboardingProductBreakdown({
@@ -365,8 +365,8 @@ type ViewProps = {
   initialData?: { snapshot: ProjectOnboardingSnapshot }
 }
 
-function StepStatusIcon({ done }: { done: boolean }) {
-  if (done) {
+function StepStatusIcon({ state }: { state: OnboardingStepState }) {
+  if (state === 'completed') {
     return (
       <span
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10"
@@ -376,12 +376,44 @@ function StepStatusIcon({ done }: { done: boolean }) {
       </span>
     )
   }
+  if (state === 'skipped') {
+    return (
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/30"
+        title="Skipped"
+        aria-hidden
+      >
+        <Minus className="h-3.5 w-3.5 text-muted-foreground" />
+      </span>
+    )
+  }
   return (
     <span
       className="h-7 w-7 shrink-0 rounded-full border-2 border-muted-foreground/20 bg-transparent"
       aria-hidden
     />
   )
+}
+
+/** Accordion group header: lock, completion ring, skipped, or empty ring on the left. */
+function GroupStatusIcon({
+  locked,
+  state,
+}: {
+  locked: boolean
+  state: OnboardingStepState
+}) {
+  if (locked) {
+    return (
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40"
+        aria-hidden
+      >
+        <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+      </span>
+    )
+  }
+  return <StepStatusIcon state={state} />
 }
 
 /** Shown when a row is navigable but not part of the global progress denominator. */
@@ -402,31 +434,56 @@ function StepStatusNotTrackedIcon() {
 function SubStepRow({
   step,
   projectId,
-  done,
+  state,
   countsTowardProgress,
   isDebugModeOpen,
+  onSkip,
+  skipPending,
 }: {
   step: OnboardingStepRow
   projectId: string
-  done: boolean
+  state: OnboardingStepState
   countsTowardProgress: boolean
   isDebugModeOpen: boolean
+  onSkip?: () => void
+  skipPending?: boolean
 }) {
-  const ctaLabel = done ? (step.ctaDone ?? 'Open') : step.cta
+  const fulfilled = state !== 'pending'
+  const ctaLabel = fulfilled ? (step.ctaDone ?? 'Open') : step.cta
 
   return (
-    <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-stretch sm:gap-3">
-      <div className="flex min-w-0 flex-1 gap-3">
-        <div className="flex shrink-0 items-start pt-0.5 sm:items-center sm:self-stretch sm:pt-0">
+    <div
+      className={cn(
+        'flex flex-col gap-3 py-3 sm:flex-row sm:items-stretch sm:gap-3',
+        ONBOARDING_ROW_X,
+      )}
+    >
+      <div className={cn('flex min-w-0 flex-1', ONBOARDING_ICON_GAP)}>
+        <div
+          className={cn(
+            ONBOARDING_ICON_COL,
+            'items-start pt-0.5 sm:items-center sm:self-stretch sm:pt-0',
+          )}
+        >
           {countsTowardProgress ? (
-            <StepStatusIcon done={done} />
+            <StepStatusIcon state={state} />
           ) : (
             <StepStatusNotTrackedIcon />
           )}
         </div>
         <div className="min-w-0 flex-1 space-y-0.5">
-          <span className="text-[13px] font-medium text-foreground block">
+          <span
+            className={cn(
+              'text-[13px] font-medium block',
+              state === 'skipped'
+                ? 'text-muted-foreground'
+                : 'text-foreground',
+            )}
+          >
             {step.label}
+            {state === 'skipped' ? (
+              <span className="sr-only"> (skipped)</span>
+            ) : null}
           </span>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
             {step.hint}
@@ -438,13 +495,25 @@ function SubStepRow({
           )}
         </div>
       </div>
-      <div className="flex w-full shrink-0 sm:w-auto sm:items-center sm:self-center sm:pl-0 pl-10">
+      <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto sm:self-center sm:pl-0">
+        {!fulfilled && onSkip ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 shrink-0 px-2 text-[12px] font-normal text-muted-foreground hover:text-foreground"
+            disabled={skipPending}
+            onClick={onSkip}
+          >
+            Skip
+          </Button>
+        ) : null}
         <Button
           variant="outline"
           size="sm"
           className={cn(
-            'h-9 w-full gap-1.5 px-3 text-[12px] font-medium sm:h-8 sm:w-auto sm:max-w-[11rem]',
-            done
+            'h-9 min-w-0 flex-1 gap-1.5 px-3 text-[12px] font-medium sm:h-8 sm:w-auto sm:max-w-[11rem] sm:flex-none',
+            fulfilled
               ? 'text-muted-foreground'
               : 'border-[color-mix(in_srgb,var(--brand-cta)_40%,var(--border))] bg-background text-[var(--brand-cta)] hover:bg-[color-mix(in_srgb,var(--brand-cta)_10%,transparent)] hover:text-[var(--brand-cta)]',
           )}
@@ -452,7 +521,10 @@ function SubStepRow({
         >
           <Link
             to={step.to}
-            params={{ projectId }}
+            params={{
+              projectId,
+              ...('params' in step ? step.params : undefined),
+            }}
             className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:justify-start"
             title={ctaLabel}
           >
@@ -472,6 +544,7 @@ export function View({ initialData }: ViewProps = {}) {
   const snapshot = snapshotFromHook ?? initialData?.snapshot
   const { isDebugModeOpen } = useDebugMode()
   const { unlockOnboardingLocks } = useDebugOverrides()
+  const skipStepMutation = useSkipOnboardingStep(projectId)
 
   const { progress, completedSteps, totalSteps } =
     useOnboardingProgressFromSnapshot(snapshot)
@@ -480,7 +553,9 @@ export function View({ initialData }: ViewProps = {}) {
   const connectComplete =
     unlockOnboardingLocks ||
     (!!snapshot &&
-      ONBOARDING_CONNECT.every((step) => step.isDone(snapshot)))
+      ONBOARDING_CONNECT.every((step) =>
+        isOnboardingStepDone(snapshot, step.sdkKeys),
+      ))
 
   const showSkeleton = isLoading && !snapshot
 
@@ -527,15 +602,17 @@ export function View({ initialData }: ViewProps = {}) {
           </div>
           <ul className="divide-y divide-border">
             {ONBOARDING_CONNECT.map((step) => {
-              const done = stepStates.get(step.id) ?? false
+              const state = stepStates.get(step.id) ?? 'pending'
               return (
                 <li key={step.id}>
                   <SubStepRow
                     step={step}
                     projectId={projectId}
-                    done={done}
+                    state={state}
                     countsTowardProgress
                     isDebugModeOpen={isDebugModeOpen}
+                    onSkip={() => skipStepMutation.mutate(step.sdkKeys)}
+                    skipPending={skipStepMutation.isPending}
                   />
                 </li>
               )
@@ -594,12 +671,15 @@ export function View({ initialData }: ViewProps = {}) {
                   const trackedSubs = subs.filter((s) =>
                     subStepCountsTowardProgress(s),
                   )
+                  const trackedSubIds = trackedSubs.map((s) => s.id)
                   const doneInGroup = trackedSubs.filter(
-                    (s) => stepStates.get(s.id) ?? false,
+                    (s) => (stepStates.get(s.id) ?? 'pending') !== 'pending',
                   ).length
                   const trackedTotal = trackedSubs.length
-                  const allDone =
-                    trackedTotal > 0 && doneInGroup === trackedTotal
+                  const groupState = getOnboardingGroupState(
+                    trackedSubIds,
+                    stepStates,
+                  )
                   const locked = !connectComplete
 
                   const item = (
@@ -615,51 +695,45 @@ export function View({ initialData }: ViewProps = {}) {
                     >
                       <AccordionTrigger
                         className={cn(
-                          'items-stretch px-4 py-4 sm:px-5 hover:no-underline [&>svg]:shrink-0 [&>svg]:self-center',
+                          'items-start py-4 hover:no-underline',
+                          ONBOARDING_ROW_X,
+                          '[&>svg]:mt-1.5 [&>svg]:shrink-0',
                           locked
                             ? 'cursor-not-allowed'
                             : 'cursor-pointer',
                         )}
                       >
-                        <div className="flex w-full min-w-0 items-stretch justify-between gap-4 pr-2 text-left">
-                          <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-                            <span className="flex flex-wrap items-baseline gap-2 min-w-0">
-                              <span className="text-[15px] font-semibold tracking-tight text-foreground leading-snug">
-                                {group.label}
-                              </span>
-                              {group.comingSoon ? (
-                                <Badge
-                                  variant="info"
-                                  className="text-[10px] shrink-0"
-                                >
-                                  Soon
-                                </Badge>
-                              ) : null}
-                            </span>
-                            <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-4 m-0">
-                              {group.description}
-                            </p>
+                        <div
+                          className={cn(
+                            'flex min-w-0 flex-1 items-start',
+                            ONBOARDING_ICON_GAP,
+                          )}
+                        >
+                          <div className={cn(ONBOARDING_ICON_COL, 'pt-0.5')}>
+                            <GroupStatusIcon locked={locked} state={groupState} />
                           </div>
-                          <div className="flex shrink-0 items-stretch gap-2">
+                          <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                              <span className="flex flex-wrap items-baseline gap-2 min-w-0">
+                                <span className="text-[15px] font-semibold tracking-tight text-foreground leading-snug">
+                                  {group.label}
+                                </span>
+                                {group.comingSoon ? (
+                                  <Badge
+                                    variant="info"
+                                    className="text-[10px] shrink-0"
+                                  >
+                                    Soon
+                                  </Badge>
+                                ) : null}
+                              </span>
+                              <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-4 m-0">
+                                {group.description}
+                              </p>
+                            </div>
                             {trackedTotal > 0 ? (
-                              <span className="flex items-center text-[11px] font-medium text-muted-foreground tabular-nums">
+                              <span className="flex shrink-0 items-center pt-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
                                 {doneInGroup}/{trackedTotal}
-                              </span>
-                            ) : null}
-                            {locked ? (
-                              <span className="flex shrink-0 items-center self-stretch">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted/40">
-                                  <Lock
-                                    className="h-3 w-3 text-muted-foreground"
-                                    aria-hidden
-                                  />
-                                </span>
-                              </span>
-                            ) : allDone ? (
-                              <span className="flex shrink-0 items-center self-stretch">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
-                                  <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                                </span>
                               </span>
                             ) : null}
                           </div>
@@ -668,17 +742,19 @@ export function View({ initialData }: ViewProps = {}) {
                       <AccordionContent className="border-t border-border bg-muted/5 pb-0">
                         <ul className="divide-y divide-border">
                           {subs.map((sub) => {
-                            const done = stepStates.get(sub.id) ?? false
+                            const state = stepStates.get(sub.id) ?? 'pending'
                             return (
                               <li key={sub.id}>
                                 <SubStepRow
                                   step={sub}
                                   projectId={projectId}
-                                  done={done}
+                                  state={state}
                                   countsTowardProgress={subStepCountsTowardProgress(
                                     sub,
                                   )}
                                   isDebugModeOpen={isDebugModeOpen}
+                                  onSkip={() => skipStepMutation.mutate(sub.sdkKeys)}
+                                  skipPending={skipStepMutation.isPending}
                                 />
                               </li>
                             )

@@ -109,7 +109,7 @@ export function DocsAiSection({ variant = 'page' }: DocsAiSectionProps) {
         aria-hidden
       />
 
-      <div className={cn('relative mx-auto w-full max-w-7xl', docsContentPaddingX)}>
+      <div className={cn('relative mx-auto w-full max-w-6xl', docsContentPaddingX)}>
         <DocsHomeSectionHeading title="Build faster with AI" variant={variant} />
         <p className="mt-3 max-w-3xl text-[13px] leading-6 text-muted-foreground @[480px]:text-[14px] @[480px]:leading-7">
           Wire up MCP so models can reach your Appwrite project and docs, install{' '}

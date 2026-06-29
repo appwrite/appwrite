@@ -35,7 +35,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c77f704",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9aa74d1",
     "@appwrite.io/specs": "github:appwrite/specs",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -109,7 +109,6 @@
     "node-appwrite": "^20.2.1",
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
-    "sharp": "^0.34.5",
     "react": "19.1.1",
     "react-day-picker": "^9.11.0",
     "react-dom": "19.1.1",
@@ -120,6 +119,7 @@
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "resolve.exports": "^2.0.3",
+    "sharp": "^0.34.5",
     "sonner": "^2.0.7",
     "sprintf-js": "^1.1.3",
     "sql-formatter": "^15.8.1",
