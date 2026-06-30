@@ -257,8 +257,16 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
                 $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
-                    $sessionExists = true;
+                if (!empty($jwtSessionId)) {
+                    $session = $user->find('$id', $jwtSessionId, 'sessions');
+                    if (!empty($session) &&
+                        (
+                            !$session->isSet('expire') ||
+                            DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
+                        )
+                    ) {
+                        $sessionExists = true;
+                    }
                 }
 
                 $membershipExists = false;
