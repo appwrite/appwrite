@@ -32,6 +32,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
+use Utopia\Detector\Detection\Rendering as RenderingDetection;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
@@ -1393,6 +1394,7 @@ class Builds extends Action
             $detector->addInput($file);
         }
 
+        /** @var RenderingDetection $result */
         $result = $detector
             ->addOption(new SSR())
             ->addOption(new XStatic())
