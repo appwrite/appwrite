@@ -1326,7 +1326,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 30s
+      start_period: 60s
   postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
