@@ -17,6 +17,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
+use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
@@ -757,6 +758,14 @@ class Builds extends Action
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
                         $err = new BuildException(type: AppwriteException::BUILD_TIMEOUT, previous: $error);
+                    } catch (ExecutorException $error) {
+                        $span?->set('build.runtime.error_type', $error::class);
+                        $span?->set('build.runtime.error_message', $error->getMessage());
+                        $span?->set('build.runtime.executor_error_type', $error->getType());
+
+                        $err = $error->getType() === ExecutorException::BUILD_FAILED
+                            ? new BuildException($error->getMessage(), previous: $error)
+                            : $error;
                     } catch (\Throwable $error) {
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
