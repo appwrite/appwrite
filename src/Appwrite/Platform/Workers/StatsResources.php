@@ -162,7 +162,7 @@ class StatsResources extends Action
             $usersMAU = $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last30Days)
             ]);
-            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
+            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d H:i:00');
             $usersDAU = $dbForProject->count('users', [
                 Query::greaterThanEqual('accessedAt', $last24Hours)
             ]);
