@@ -151,7 +151,7 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
         ],
       },
       {
-        label: 'Journeys',
+        label: 'Guides',
         items: [
           {
             label: 'Register a domain',

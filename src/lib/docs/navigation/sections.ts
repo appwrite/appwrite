@@ -505,7 +505,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Provisioning",
@@ -728,7 +728,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Email and password login",
@@ -941,7 +941,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Pagination",
@@ -1050,7 +1050,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Templates",
@@ -1172,7 +1172,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Send push notifications",
@@ -1333,7 +1333,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Templates",
@@ -1406,7 +1406,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "Upload and download",
@@ -1665,7 +1665,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           ],
         },
         {
-          label: "Journeys",
+          label: "Guides",
           items: [
             {
               label: "AI in Functions",

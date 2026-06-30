@@ -712,7 +712,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "partners/organizations/members",
     "title": "Members and roles",
-    "description": "Manage organization members and roles from your partner platform using the Console Organizations and Teams APIs.",
+    "description": "Manage organization members and roles from your partner platform using the Console Organization and Teams APIs.",
     "layout": "article",
     "readingTimeMinutes": 1
   },

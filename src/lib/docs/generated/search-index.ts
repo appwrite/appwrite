@@ -1146,7 +1146,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "partners/organizations/members",
     "title": "Members and roles",
-    "description": "Manage organization members and roles from your partner platform using the Console Organizations and Teams APIs.",
+    "description": "Manage organization members and roles from your partner platform using the Console Organization and Teams APIs.",
     "excerpt": "Partner platforms often invite customer admins to an Appwrite organization or sync membership from an existing identity provider. Organization roles Appwrite organizations use roles such as owner, developer, and analyst to control Console access. Your platform should assign the minimum role required for each member. When you proxy Console access, enforce the same role boundaries in your product UI. Invite members Use organization membership APIs to invite users by email. Invited users receive Appwrite Console access according to the role…",
     "breadcrumbs": [
       "Organization",
@@ -1501,7 +1501,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Anonymous sessions allow you to implement **guest** users. Guest users let you store user information like items in their cart or theme preferences before they create an account. This reduces the friction for your users to get started with your app. **If a user later creates an account**, their information will be inherited by the newly created account. Create anonymous session Create an anonymous session with Create Anonymous Session method. Attaching an account Anonymous users cannot sign back in. If…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Anonymous login"
     ]
   },
@@ -1512,7 +1512,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "One of the first things your application needs to do when starting up is to check if the user is authenticated. This is an important step in creating a great user experience, as it determines whether to show login screens or protected content. Check auth with The recommended approach for checking authentication status is to use the method when your application starts: Missing scope error When a user is not authenticated and you call , you might see an error…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Auth status check"
     ]
   },
@@ -1523,7 +1523,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Tokens are short-lived secrets created by an Appwrite Server SDK that can be exchanged for session by a Client SDK to log in users. You may already be familiar with tokens if you checked out Magic URL login, Email OTP login or Phone (SMS) login. Custom token allows you to use Server SDK to generate tokens for your own implementations. This allows you to code your own authentication methods using Appwrite Functions or your own backend. You could implement username…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Custom token login"
     ]
   },
@@ -1534,7 +1534,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Email OTP (one-time password) authentication lets users create accounts using their email address and log in using a 6 digit code delivered to their email inbox. This method is similar to Magic URL login, but can provide better user experience in some scenarios. Email OTP sends an email with a 6 digit code that user needs to enter into the app, while Magic URL delivers a clickable button or a link to user's inbox. Both allow passwordless login flows with…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Email OTP login"
     ]
   },
@@ -1545,7 +1545,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You can use the…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Email and password login"
     ]
   },
@@ -1589,7 +1589,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can extend Appwrite's APIs by building backend apps using Server SDKs. To secure your backend app's APIs, client apps must prove their identity against your backend app before accessing sensitive information. You can secure these APIs and enforce access permissions in your backend app by using JWT authentication. If you are already authenticated on your client-side app and need your backend app to **act on behalf of the user**, this guide will walk you through the process. Proof of…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "JWT login"
     ]
   },
@@ -1611,7 +1611,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Magic URL is a password-less way to authenticate users. When a user logs in by providing their email, they will receive an email with a \"magic\" link that contains a secret used to log in the user. The user can simply click the link to be logged in. Send email Initialize the log in process with the Create Magic URL Token route. If the email has never been used, a **new account is created** using the provided , then the…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Magic URL login"
     ]
   },
@@ -1622,7 +1622,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Multi-factor authentication (MFA) greatly increases the security of your apps by adding additional layers of protection. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite Authentication lets you easily implement MFA in your apps, letting you build more securely and quickly. This page covers MFA for your app's end-users. If you are looking for MFA on your Appwrite Console account, please refer to the Console MFA page. Appwrite currently allows two…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Multi-factor authentication"
     ]
   },
@@ -1633,7 +1633,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Teams provides an effective way to implement multi-tenancy in your applications. Create a team for each tenant to handle multi-tenant apps with built-in data isolation. Learn more about Teams What is multi-tenancy? Multi-tenancy is a design pattern where a single instance of software serves multiple user groups (tenants). With Appwrite Teams, you can: - Create a team for each tenant in your application - Control access to resources using team-based permissions - Define different roles within each tenant -…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Multi-tenancy"
     ]
   },
@@ -1644,7 +1644,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "OAuth authentication allows users to log in using accounts from other popular services. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable. When using OAuth to authenticate, the authentication request is initiated from the client application. The user is then redirected to an OAuth 2 provider to complete the authentication step, and finally, the…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "OAuth2 login"
     ]
   },
@@ -1655,7 +1655,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "OTPs are billed per message, with rates varying by country. See the phone OTP rates for more information. Phone authentication lets users create accounts using their phone numbers and log in through SMS messages. Create and use mock phone numbers to initiate a phone authentication process without an actual phone number. Send SMS message Phone authentication is done using a two-step authentication process. When using phone authentication, the authentication request is initiated from the client application and an SMS message…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Phone (SMS) login"
     ]
   },
@@ -1710,7 +1710,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Server-side rendering (SSR) is fully supported with Appwrite. You can use Appwrite with many SSR-oriented frameworks, such as Next.js, SvelteKit, Nuxt, Gatsby, Remix, and more. SSR is a technique where the server renders a web page and sending the fully rendered page to the client's web browser. This is in contrast to client-side rendering (CSR), where the client's web browser renders the page using JavaScript. This guide will walk you through the process of implementing an SSR application with Appwrite.…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "SSR login"
     ]
   },
@@ -1721,7 +1721,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite provides two approaches for adding members to teams: client-side email invites and server-side custom flows. Each approach serves different use cases and offers unique benefits. Invite client-side Client-side email invites are perfect for implementing user-to-user invitations, allowing your users to invite others to join their teams, organizations, or shared resources. When creating a membership, Appwrite: 1. Creates a new user account if one doesn't exist for the email address 2. Sends an automated email invitation to the user 3.…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "Team invites"
     ]
   },
@@ -1765,7 +1765,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…",
     "breadcrumbs": [
       "Auth",
-      "Journeys",
+      "Guides",
       "User verification"
     ]
   },
@@ -1897,7 +1897,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "AI suggestions generate columns and indexes for your tables based on the table name, existing database structure, and optional context you provide. This feature analyzes your database to recommend appropriate schema designs that follow best practices. Navigate to **Databases** in the Appwrite Console, select your database, and click **Create table**. Enter a descriptive table name. AI suggestions will use this name to generate relevant columns and indexes. In the table creation dialog, enable **AI suggestions**. Optionally, provide additional context about…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "AI suggestions"
     ]
   },
@@ -1908,7 +1908,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full row. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work with , , and columns. Use columns when your counters or accumulators may exceed the 32-bit integer range. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Atomic numeric operations"
     ]
   },
@@ -1930,7 +1930,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Databases supports bulk operations for rows, allowing you to create, update, or delete multiple rows in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Bulk operations"
     ]
   },
@@ -1941,7 +1941,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite's CSV Export feature allows you to export rows from a table to a CSV file. This is especially useful for reporting, sharing data with non-technical team members, creating custom backups, or handing off datasets to analytics tools. This feature is available in both Appwrite Cloud and the self-hosted version. Export configuration Before exporting, you can configure several options to control the output format and contents. These settings ensure you get exactly the data you need in the format your…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "CSV exports"
     ]
   },
@@ -1952,7 +1952,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite's CSV Import feature allows you to create multiple rows in a table by uploading a single CSV file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. This feature is available in both Appwrite Cloud and the self-hosted version. Prepare your table To get started, create a table in your database and define its columns. Your CSV file must match the structure of this table. All required columns must be present in…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "CSV imports"
     ]
   },
@@ -2117,7 +2117,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Offline synchronization (or offline sync) is a mechanism that allows apps to store and update data locally when a user is offline (i.e., loses internet connectivity), and then synchronize that data with an Appwrite database once the user is back online. This capability is crucial for building resilient and responsive applications, especially in environments with unreliable or intermittent internet connectivity. Suppose you are driving from one city to another and lose internet connectivitity while passing through a rural area, locally-downloaded…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Offline sync"
     ]
   },
@@ -2150,7 +2150,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing rows into pages containing rows.…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Pagination"
     ]
   },
@@ -2227,7 +2227,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Timestamp overrides"
     ]
   },
@@ -2238,7 +2238,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and tables. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported row, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Transactions"
     ]
   },
@@ -2249,7 +2249,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database tables and columns. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each table. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
     "breadcrumbs": [
       "Databases",
-      "Journeys",
+      "Guides",
       "Type generation"
     ]
   },
@@ -2271,7 +2271,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can reassign a domain to a different Appwrite organization from the domain **Settings** tab. The domain keeps its DNS zone and registration state. Only which organization owns the domain in the Console changes. **Change organization** updates which Appwrite organization manages the domain. It does not move registration to or from Appwrite at the registry. For that, use Transfer a domain. Before you change organization - You must be a member of both the source and destination organizations. - The…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Change organization"
     ]
   },
@@ -2282,7 +2282,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Custom domains on Appwrite work in two layers: 1. **Organization domain** (apex zone, for example ) proves your organization controls the name and can host its DNS zone. 2. **Product domain** (any hostname, for example or ) is a proxy rule that routes HTTPS traffic to a Site, Function, or project API. This guide walks through apex vs subdomain setup, what to configure in each product, and how organization **Domains** fits together with project-level **Add domain** flows. Before you connect…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Connect to products"
     ]
   },
@@ -2293,7 +2293,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Deleting a domain removes it from your organization and deletes all DNS records Appwrite hosted for that zone. This action cannot be undone. This guide covers single and bulk delete and what happens for Appwrite-registered versus external domains. Before you delete - Update or remove product connections (Sites, Functions, API custom domains) that use the hostname. - For **external domains**, plan nameserver changes at your registrar if DNS should continue elsewhere. Deleting in Appwrite does not cancel registration at your…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Delete a domain"
     ]
   },
@@ -2315,7 +2315,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "If you already registered a domain elsewhere, you can add it to Appwrite and delegate DNS without transferring registration. The Console shows an external registrar for these domains. Appwrite manages DNS once nameservers are verified. This guide walks you through adding the domain, updating nameservers, and restoring DNS records. Add a domain 1. Open **Domains** in your organization. 2. Click **Add domain**. 3. Enter the domain name without a protocol (for example or ). 4. Click **Add domain** to create…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Add external domain"
     ]
   },
@@ -2326,7 +2326,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You manage DNS records for verified organization domains from the domain **Records** tab. This guide covers day-to-day record operations, zone import, and email provider presets. For record types and locked entries, see DNS records. Open the records table 1. Open **Organization** > **Domains**. 2. Select a verified domain. 3. Open the **DNS Records** tab. The table lists all records in the zone, including locked records Appwrite created for network routing. Use search filters to narrow by type, name, or value.…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Manage DNS records"
     ]
   },
@@ -2370,7 +2370,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can register domain names directly from the Appwrite Console. Appwrite is the registrar for these domains: registration, renewal, and billing run through your organization. This guide walks you through search, checkout, and payment. Search 1. In your organization, open **Domains**. 2. Click **Buy domain**. 3. Enter a name in the search field. The wizard shows suggestions across many TLDs (for example , , , ). Prices load as results appear. Each result indicates whether the name is available, the…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Register a domain"
     ]
   },
@@ -2403,7 +2403,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can transfer domain registration **into** Appwrite from another registrar and **out** to another registrar when the domain is registered with Appwrite. This guide covers transfer in, transfer status, and transfer out. To reassign a domain between Appwrite organizations without changing registrar, see Change organization. Transfer in Use transfer in when you want Appwrite to become the registrar for a domain you already own elsewhere. Before you start - Unlock the domain at your current registrar. - Request an **authorization…",
     "breadcrumbs": [
       "Domains",
-      "Journeys",
+      "Guides",
       "Transfer a domain"
     ]
   },
@@ -2425,7 +2425,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Functions are mini-applications in Appwrite with their own endpoints. Each function can have many deployments, which can be thought of as versions of the mini-application. Appwrite Functions can be automatically deployed from Git repositories, so you can track changes to your function's code naturally as a part of you development workflow. Create deployment The recommended way to manage your Appwrite Function deployments is to use a version control system, like Git. This offers simple versioning and collaboration that will…",
     "breadcrumbs": [
       "Functions",
-      "Journeys",
+      "Guides",
       "Deploy from Git"
     ]
   },
@@ -2436,7 +2436,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Functions are mini-applications in Appwrite with their own endpoints. Each function can have many deployments, which can be thought of as versions of the mini-application. While we recommend you create deployments through automatic Git deployments, you can also create deployments manually or through the Appwrite CLI. CLI Configure CLI deployments If you need to target a different project, API endpoint, change the path or entry point of your function, or update any of the other configuration options, you can…",
     "breadcrumbs": [
       "Functions",
-      "Journeys",
+      "Guides",
       "Deploy manually"
     ]
   },
@@ -2458,7 +2458,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Functions offer a familiar interface if you've developed REST endpoints. Each function is handled following a request and response pattern. Lifecycle There is a clear lifecycle for all Appwrite Functions, from beginning to end. Here's everything that happens during a function execution. 1. The function is invoked. 1. The active deployment's executor will handle the request. 1. The Executor passes in request information like headers, body or path through the object of your exported function. 1. The runtime executes…",
     "breadcrumbs": [
       "Functions",
-      "Journeys",
+      "Guides",
       "Develop"
     ]
   },
@@ -2469,7 +2469,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Develop your Appwrite functions locally to make code changes without redeploying your function on every code change and hot reload your code for faster testing. Setup We use Docker to replicate the production environment for the local deployment of functions. These can be executed locally with the CLI command, which requires initializing a project with an file and having local code to run the function locally. The CLI also supports various other CLI commands. 1. Install the Docker CLI 2.…",
     "breadcrumbs": [
       "Functions",
-      "Journeys",
+      "Guides",
       "Develop locally"
     ]
   },
@@ -2512,7 +2512,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will…",
     "breadcrumbs": [
       "Functions",
-      "Journeys",
+      "Guides",
       "Execute"
     ]
   },
@@ -2567,7 +2567,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite provides a variety of Function Templates to help you jump start your function development. You can use Appwrite Function Templates as examples or boilerplates to add new functionality to your Appwrite project. Find templates You can find all available templates by navigating to the Appwrite Console, under your project > **Functions** > **Templates**. You can filter functions by searching, filter by use case, or filter by runtime. Click **Create function** to create a function from a template. Create with…",
     "breadcrumbs": [
       "Functions",
-      "Journeys",
+      "Guides",
       "Templates"
     ]
   },
@@ -2655,7 +2655,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring in…",
     "breadcrumbs": [
       "Messaging",
-      "Journeys",
+      "Guides",
       "Send email messages"
     ]
   },
@@ -2666,7 +2666,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging. The push notification APIs for Apple and Android devices can only be accessed through these services. You must configure these services before you can send your first…",
     "breadcrumbs": [
       "Messaging",
-      "Journeys",
+      "Guides",
       "Send push notifications"
     ]
   },
@@ -2677,7 +2677,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more details…",
     "breadcrumbs": [
       "Messaging",
-      "Journeys",
+      "Guides",
       "Send SMS messages"
     ]
   },
@@ -2919,7 +2919,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. While we recommend you create deployments through automatic Git deployments, you can also create deployments via the Appwrite CLI. CLI Configure CLI deployments If you need to target a different project, API endpoint, change the path or entry point of your site, or update any of the other configuration…",
     "breadcrumbs": [
       "Sites",
-      "Journeys",
+      "Guides",
       "Deploy from CLI"
     ]
   },
@@ -2930,7 +2930,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. With Appwrite Sites, you can seamlessly deploy updates from Git repositories, enabling you to track changes to your web app as part of your development workflow. This versioning approach ensures that your site stays up-to-date and your deployment process is fully integrated with your source control, streamlining collaboration and…",
     "breadcrumbs": [
       "Sites",
-      "Journeys",
+      "Guides",
       "Deploy from Git"
     ]
   },
@@ -2941,7 +2941,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Sites allows you to host and deploy websites directly within the Appwrite platform. Each site can have many deployments, which can be thought of as versions of the web application. While we recommend you create deployments through automatic Git deployments, you can also create deployments manually by uploading the source code to the Appwrite Console. Manual Deployment You can upload your sites to be deployed using the Appwrite Console. The example below shows a skeleton SvelteKit app. First, create…",
     "breadcrumbs": [
       "Sites",
-      "Journeys",
+      "Guides",
       "Deploy manually"
     ]
   },
@@ -2963,7 +2963,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Rendering strategies Appwrite allows you to host both statically-generated and server-rendered websites. Static sites are websites that are pre-built and served as-is to clients. They do not execute server-side code on each request. They are ideal for use-cases such as Single Page Applications (SPAs), documentation sites, personal blogs, and portfolio websites. Server-side rendered (SSR) sites generate content dynamically on the server and send fully rendered pages for each request. They are ideal for use-cases with substantial dynamic content or server-side…",
     "breadcrumbs": [
       "Sites",
-      "Journeys",
+      "Guides",
       "Develop"
     ]
   },
@@ -3227,7 +3227,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite provides a variety of Site Templates to help you jump-start your web app development. Find templates You can find all available templates by navigating to the Appwrite Console under your project > **Sites** > **Templates**. You can filter sites by searching, filter by use case, or filter by framework. Click **Create site** to create a site from a template. Create with templates The create site wizard for templates will include the following steps: Configure site details Pick a display…",
     "breadcrumbs": [
       "Sites",
-      "Journeys",
+      "Guides",
       "Templates"
     ]
   },
@@ -3271,7 +3271,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite provides utilities to manipulate images for previewing images in your apps. Appwrite Storage's preview endpoint let you manipulate resolution, add borders and the border-radius, add background-color, set the opacity for the image, and get the image in the appropriate output format. You can manipulate images resolution to display appropriately on responsive websites. You can also adjust the image border, background color, and border-radius to match the theming of your application. The Appwrite Storage also allows you to change the…",
     "breadcrumbs": [
       "Storage",
-      "Journeys",
+      "Guides",
       "Image transformations"
     ]
   },
@@ -3304,7 +3304,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "You can upload and download files both programmatically using SDKs or through the Appwrite Console. Create file After you create a bucket or have navigated to bucket details, you can access the **Files** tab so you can upload, view, delete and update files in the bucket using the Appwrite project's dashboard. You can also perform all those operations from Appwrite's client SDK, server SDKs, and REST APIs as long as you have the proper permission. When you are in the…",
     "breadcrumbs": [
       "Storage",
-      "Journeys",
+      "Guides",
       "Upload and download"
     ]
   },
@@ -3740,7 +3740,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
     "breadcrumbs": [
       "AI",
-      "Journeys",
+      "Guides",
       "AI in Functions"
     ]
   },
@@ -3816,7 +3816,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "AI agents that maintain conversation history across sessions provide more contextual and personalized responses. By storing LLM responses in Appwrite Databases and subscribing to changes through Realtime, you can build chat applications where multiple clients receive updates instantly. Architecture 1. **Store messages**: Save user messages and LLM responses in an Appwrite table 2. **Subscribe to changes**: Use Realtime to listen for new messages 3. **Maintain context**: Load conversation history to provide context to the LLM Set up the messages table…",
     "breadcrumbs": [
       "AI",
-      "Journeys",
+      "Guides",
       "Persistent agents with Realtime"
     ]
   },
@@ -4145,7 +4145,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Vector databases store high-dimensional vectors (embeddings) that represent text, images, or other data. They enable semantic search, where results are based on meaning rather than exact keyword matches. This makes them essential for AI applications like recommendation systems, search engines, and retrieval-augmented generation (RAG). Embeddings are numerical representations of data that capture semantic meaning. Text with similar meanings will have embeddings that are close together in vector space. Appwrite integrates with vector databases through Functions, allowing you to index your…",
     "breadcrumbs": [
       "AI",
-      "Journeys",
+      "Guides",
       "Vector DB and embeddings"
     ]
   },

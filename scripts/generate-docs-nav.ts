@@ -316,6 +316,14 @@ async function main() {
 
   sections.sort((a, b) => a.prefix.localeCompare(b.prefix))
 
+  for (const section of sections) {
+    for (const node of section.navigation) {
+      if ('label' in node && node.label === 'Journeys') {
+        node.label = 'Guides'
+      }
+    }
+  }
+
   const fileContent = `import type { DocsNavParent, DocsNavTree } from '../types'
 
 export type DocsSectionNavConfig = {

@@ -51,7 +51,7 @@ Registration, transfer, and renewal costs billed through your organization.
 {% /cards_item %}
 {% /cards %}
 
-# Journeys {% #journeys %}
+# Guides {% #guides %}
 
 Step-by-step guides for common domain tasks in the Console.
 

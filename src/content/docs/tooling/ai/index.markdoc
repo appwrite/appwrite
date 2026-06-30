@@ -135,7 +135,7 @@ Open-source benchmark evaluating how well AI models understand Appwrite's APIs a
 {% /cards_item %}
 {% /cards %}
 
-# Journeys {% #journeys %}
+# Guides {% #guides %}
 
 Guides for building AI-powered features on top of Appwrite, from running models in Functions to building full agent pipelines.
 
