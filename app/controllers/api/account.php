@@ -163,6 +163,24 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $detector->getDevice()
     ));
 
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
+        $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
+            Query::equal('provider', [$oauthProvider]),
+            Query::equal('userInternalId', [$user->getSequence()]),
+        ]));
+
+        if ($identity->isEmpty()) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $session
+            ->setAttribute('providerUid', $identity->getAttribute('providerUid'))
+            ->setAttribute('providerRefreshToken', $identity->getAttribute('providerRefreshToken'))
+            ->setAttribute('providerAccessToken', $identity->getAttribute('providerAccessToken'))
+            ->setAttribute('providerAccessTokenExpiry', $identity->getAttribute('providerAccessTokenExpiry'))
+            ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
+    }
+
     $authorization->addRole(Role::user($user->getId())->toString());
 
     $session = $dbForProject->createDocument('sessions', $session
