@@ -191,6 +191,8 @@ class Create extends Base
             'runtimeSpecification' => $runtimeSpecification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
+            'vars' => null,
+            'varsProject' => null,
         ]);
 
         try {

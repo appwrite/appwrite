@@ -36,6 +36,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
+use Appwrite\Utopia\Database\Validator\Queries\Types;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
@@ -60,10 +61,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -381,6 +379,8 @@ Http::post('/v1/account')
                 'tokens' => null,
                 'memberships' => null,
                 'authenticators' => null,
+                'challenges' => null,
+                'targets' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
                 'emailCanonical' => $emailMetadata['emailCanonical'],
@@ -1110,6 +1110,8 @@ Http::post('/v1/account/sessions/anonymous')
             'tokens' => null,
             'memberships' => null,
             'authenticators' => null,
+            'challenges' => null,
+            'targets' => null,
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
@@ -1732,6 +1734,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'tokens' => null,
                         'memberships' => null,
                         'authenticators' => null,
+                        'challenges' => null,
+                        'targets' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                         'emailCanonical' => $emailMetadata['emailCanonical'],
@@ -2236,6 +2240,8 @@ Http::post('/v1/account/tokens/magic-url')
                 'tokens' => null,
                 'memberships' => null,
                 'authenticators' => null,
+                'challenges' => null,
+                'targets' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
                 'emailCanonical' => $emailMetadata['emailCanonical'],
@@ -2559,6 +2565,9 @@ Http::post('/v1/account/tokens/email')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
+                'authenticators' => null,
+                'challenges' => null,
+                'targets' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
                 'emailCanonical' => $emailMetadata['emailCanonical'],
@@ -2958,6 +2967,9 @@ Http::post('/v1/account/tokens/phone')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
+                'authenticators' => null,
+                'challenges' => null,
+                'targets' => null,
                 'search' => implode(' ', [$userId, $phone]),
                 'accessedAt' => DateTime::now(),
                 'emailCanonical' => null,
@@ -3181,7 +3193,7 @@ Http::get('/v1/account/logs')
         ],
         contentType: ContentType::JSON,
     ))
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Types([Query::TYPE_LIMIT, Query::TYPE_OFFSET]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
