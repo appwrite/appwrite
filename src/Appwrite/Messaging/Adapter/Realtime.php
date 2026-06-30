@@ -114,7 +114,7 @@ class Realtime extends MessagingAdapter
 
         if (!empty($channels)) {
             if (empty($queryGroup)) {
-                $strings[] = Query::select(['*'])->toString();
+                $strings[] = Query::select('*')->toString();
             } else {
                 foreach ($queryGroup as $query) {
                     $strings[] = $query->toString();
@@ -734,7 +734,7 @@ class Realtime extends MessagingAdapter
                 }
                 $subscriptions[0]['channels'][] = $channel;
                 if (empty($subscriptions[0]['queries'])) {
-                    $subscriptions[0]['queries'] = [Query::select(['*'])];
+                    $subscriptions[0]['queries'] = [Query::select('*')];
                 }
 
                 continue;

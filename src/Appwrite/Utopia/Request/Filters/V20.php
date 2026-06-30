@@ -99,8 +99,16 @@ class V20 extends Filter
                 fn ($query) => $query->getMethod() !== Query::TYPE_SELECT
             );
 
-            // Add wildcard + relationship(s) selects
-            $parsed[] = Query::select($selects);
+            // Add individual select queries (one per field) so downstream
+            // consumers using getAttribute() work correctly with both old and
+            // new query formats.
+            foreach ($selects as $select) {
+                $parsed[] = Query::parseQuery([
+                    'method' => Query::TYPE_SELECT,
+                    'attribute' => $select,
+                    'values' => [$select],
+                ]);
+            }
         }
 
         $resolvedQueries = [];

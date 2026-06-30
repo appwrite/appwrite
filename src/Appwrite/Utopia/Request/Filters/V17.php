@@ -68,7 +68,20 @@ class V17 extends Filter
         foreach ($content['queries'] as $query) {
             try {
                 $query = $this->parseQuery($query);
-                $parsed[] = \json_encode(\array_filter($query->toArray()));
+                $queryArray = \array_filter($query->toArray());
+
+                if ($query->getMethod() === Query::TYPE_SELECT) {
+                    foreach ($query->getValues() as $field) {
+                        $single = \array_filter(Query::parseQuery([
+                            'method' => Query::TYPE_SELECT,
+                            'attribute' => $field,
+                            'values' => [$field],
+                        ])->toArray());
+                        $parsed[] = \json_encode($single);
+                    }
+                } else {
+                    $parsed[] = \json_encode($queryArray);
+                }
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
@@ -242,29 +255,58 @@ class V17 extends Filter
             case Query::TYPE_ENDS_WITH:
                 $attribute = $parsedParams[0] ?? '';
                 if (count($parsedParams) < 2) {
-                    return new Query($method, $attribute);
+                    return Query::parseQuery([
+                        'method' => $method,
+                        'attribute' => $attribute,
+                    ]);
                 }
-                return new Query($method, $attribute, \is_array($parsedParams[1]) ? $parsedParams[1] : [$parsedParams[1]]);
+
+                return Query::parseQuery([
+                    'method' => $method,
+                    'attribute' => $attribute,
+                    'values' => \is_array($parsedParams[1]) ? $parsedParams[1] : [$parsedParams[1]],
+                ]);
 
             case Query::TYPE_BETWEEN:
-                return new Query($method, $parsedParams[0], [$parsedParams[1], $parsedParams[2]]);
+                return Query::parseQuery([
+                    'method' => $method,
+                    'attribute' => $parsedParams[0],
+                    'values' => [$parsedParams[1], $parsedParams[2]],
+                ]);
+
+
             case Query::TYPE_SELECT:
-                return new Query($method, values: $parsedParams[0]);
+                return Query::parseQuery([
+                    'method' => $method,
+                    'values' => $parsedParams[0],
+                ]);
+
             case Query::TYPE_ORDER_ASC:
             case Query::TYPE_ORDER_DESC:
-                return new Query($method, $parsedParams[0] ?? '');
+                return Query::parseQuery([
+                    'method' => $method,
+                    'attribute' => $parsedParams[0] ?? '',
+                ]);
 
             case Query::TYPE_LIMIT:
             case Query::TYPE_OFFSET:
             case Query::TYPE_CURSOR_AFTER:
             case Query::TYPE_CURSOR_BEFORE:
                 if (count($parsedParams) > 0) {
-                    return new Query($method, values: [$parsedParams[0]]);
+                    return Query::parseQuery([
+                        'method' => $method,
+                        'values' => [$parsedParams[0]],
+                    ]);
                 }
-                return new Query($method);
+
+                return Query::parseQuery([
+                    'method' => $method,
+                ]);
 
             default:
-                return new Query($method);
+                return Query::parseQuery([
+                    'method' => $method,
+                ]);
         }
     }
 
