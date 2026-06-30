@@ -913,19 +913,46 @@ class Builds extends Action
             $deployment->setAttribute('buildLogs', $logs);
 
             $adapter = null;
-            if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
-                $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
-
+            if ($resource->getCollection() === 'sites') {
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
-                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document(['adapter' => $detection->getName(), 'fallbackFile' => $detection->getFallbackFile() ?? '']));
+                    if (!empty($detectionLogs)) {
+                        $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
+                        $adapter = $detection->getName();
+                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document(['adapter' => $adapter, 'fallbackFile' => $detection->getFallbackFile() ?? '']));
 
-                    $deployment->setAttribute('adapter', $detection->getName());
-                    $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                    Span::add('build.adapter', $deployment->getAttribute('adapter'));
-                    Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
-                } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new BuildException('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                        $deployment->setAttribute('adapter', $adapter);
+                        $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
+                        Span::add('build.adapter', $adapter);
+                        Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
+                    }
+                } else {
+                    $deployment->setAttribute('adapter', $adapter);
+                    Span::add('build.adapter', $adapter);
+
+                    if (!empty($detectionLogs)) {
+                        $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
+                        if ($adapter === 'ssr' && $detection->getName() === 'static') {
+                            throw new BuildException('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                        }
+
+                        if ($adapter === 'static') {
+                            $detectedFallback = $detection->getFallbackFile() ?? '';
+                            if (!empty($detectedFallback)) {
+                                if ($resource->getAttribute('fallbackFile', '') !== $detectedFallback) {
+                                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document(['fallbackFile' => $detectedFallback]));
+                                }
+                                $deployment->setAttribute('fallbackFile', $detectedFallback);
+                                Span::add('build.fallback_file', $detectedFallback);
+                            } else {
+                                $deployment->setAttribute('fallbackFile', $resource->getAttribute('fallbackFile', ''));
+                            }
+                        }
+                    } else {
+                        if ($adapter === 'static') {
+                            $deployment->setAttribute('fallbackFile', $resource->getAttribute('fallbackFile', ''));
+                        }
+                    }
                 }
             }
 
