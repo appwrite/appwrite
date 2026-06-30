@@ -72,7 +72,7 @@ return [
     ],
     "project.oauth2.write" => [
         "description" =>
-            "Access to update project\'s OAUth2 configuration.",
+            "Access to update project\'s OAuth2 configuration.",
         "category" => "Project",
     ],
     "templates.read" => [
@@ -103,7 +103,7 @@ return [
     ],
     "oauth2.write" => [
         "description" =>
-            "Access to update project\'s OAuth2 configuration. Use 'project.oauth2.read' instead.",
+            "Access to update project\'s OAuth2 configuration. Use 'project.oauth2.write' instead.",
         "category" => "Project",
         'deprecated' => true,
     ],
