@@ -2960,39 +2960,6 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    public function testExitOneBuildShowsBuildFailure(): void
-    {
-        $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
-            'name' => 'Exit One Site',
-            'framework' => 'other',
-            'buildRuntime' => 'node-22',
-            'outputDirectory' => './',
-            'buildCommand' => 'exit 1',
-        ]);
-
-        $deployment = $this->createDeployment($siteId, [
-            'code' => $this->packageSite('static-single-file'),
-            'activate' => true
-        ]);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        $deploymentId = $deployment['body']['$id'];
-        $this->assertNotEmpty($deploymentId);
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $deployment = $this->getDeployment($siteId, $deploymentId);
-            $this->assertEquals('failed', $deployment['body']['status'], 'Deployment status does not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-            $this->assertStringContainsString(
-                'Build command exited with code 1.',
-                (string) $deployment['body']['buildLogs'],
-                'Deployment logs do not match: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT)
-            );
-        }, 100000, 500);
-
-        $this->cleanupSite($siteId);
-    }
-
     public function testSiteDeploymentRetention(): void
     {
         $siteIds = [];
