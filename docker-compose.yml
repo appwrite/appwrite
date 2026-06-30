@@ -1238,7 +1238,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.25.1
+    image: openruntimes/executor:0.25.2
     restart: unless-stopped
     networks:
       - appwrite
