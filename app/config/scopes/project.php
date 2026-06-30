@@ -65,6 +65,16 @@ return [
             "Access to update project\'s policies",
         "category" => "Project",
     ],
+    "project.oauth2.read" => [
+        "description" =>
+            "Access to read project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
+    "project.oauth2.write" => [
+        "description" =>
+            "Access to update project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
     "templates.read" => [
         "description" =>
             "Access to read project\'s templates",
@@ -87,13 +97,15 @@ return [
     ],
     "oauth2.read" => [
         "description" =>
-            "Access to read project\'s OAuth2 configuration",
+            "Access to read project\'s OAuth2 configuration. Use 'project.oauth2.read' instead.",
         "category" => "Project",
+        'deprecated' => true,
     ],
     "oauth2.write" => [
         "description" =>
-            "Access to update project\'s OAuth2 configuration",
+            "Access to update project\'s OAuth2 configuration. Use 'project.oauth2.write' instead.",
         "category" => "Project",
+        'deprecated' => true,
     ],
 
     // Auth
