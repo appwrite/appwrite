@@ -283,7 +283,16 @@ class Create extends Action
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations, $authorization) {
+        // Tracks every nested relationship child that will be created implicitly
+        // by utopia-php/database during the root createDocuments() call.
+        // utopia wraps that work in silent(), which suppresses EVENT_DOCUMENT_CREATE
+        // for the children. After the root insert finishes we replay the
+        // documents.*.create event for each entry here so Functions, Webhooks,
+        // and Realtime fire exactly as they would for a direct child create.
+        // Shape: [ ['collection' => Document, 'documentId' => string], ... ]
+        $nestedCreates = [];
+
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations, $authorization, &$nestedCreates) {
             $operations++;
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -345,6 +354,15 @@ class Create extends Action
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
+
+                            // Record this child for post-create event replay.
+                            // We capture both the related Collection document
+                            // (needed for sequence + attribute schema) and the
+                            // child's $id (assigned moments earlier).
+                            $nestedCreates[] = [
+                                'collection' => $relatedCollection,
+                                'documentId' => $relation->getId(),
+                            ];
                         } else {
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
@@ -480,6 +498,23 @@ class Create extends Action
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
+
+        // Replay create events for any rows that were inserted implicitly
+        // through a relationship attribute. Must run BEFORE we configure the
+        // root event below: triggerRelationshipCreates() calls reset() on the
+        // events queue once it's done, and the root event is set up next.
+        $this->triggerRelationshipCreates(
+            $nestedCreates,
+            $database,
+            $dbForDatabases,
+            $dbForProject,
+            $queueForEvents,
+            $queueForRealtime,
+            $publisherForFunctions,
+            $queueForWebhooks,
+            $eventProcessor,
+            $authorization,
+        );
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
