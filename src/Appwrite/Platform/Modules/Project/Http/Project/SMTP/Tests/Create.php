@@ -39,7 +39,7 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/smtp/tests')
             ->httpAlias('/v1/projects/:projectId/smtp/tests')
-            ->desc('Create project SMTP test')
+            ->desc('Create SMTP test')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('sdk', new Method(

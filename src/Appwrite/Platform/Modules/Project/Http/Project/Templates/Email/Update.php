@@ -36,7 +36,7 @@ class Update extends Action
             ->setHttpPath('/v1/project/templates/email')
             ->httpAlias('/v1/projects/:projectId/templates/email')
             ->httpAlias('/v1/projects/:projectId/templates/email/:templateId/:locale')
-            ->desc('Update project email template')
+            ->desc('Update email template')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.write')
             ->label('event', 'templates.[templateId].update')

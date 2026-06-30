@@ -71,7 +71,7 @@ class Get extends DatabasesAction
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/databases/:databaseId/usage')
-            ->desc('Get database usage stats')
+            ->desc('Get usage stats')
             ->groups(['api', 'database', 'usage'])
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)

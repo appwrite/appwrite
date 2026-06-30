@@ -32,7 +32,7 @@ class Delete extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/project/keys/:keyId')
             ->httpAlias('/v1/projects/:projectId/keys/:keyId')
-            ->desc('Delete project key')
+            ->desc('Delete key')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.write')
             ->label('event', 'keys.[keyId].delete')

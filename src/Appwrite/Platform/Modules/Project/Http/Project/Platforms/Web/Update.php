@@ -33,7 +33,7 @@ class Update extends Action
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/project/platforms/web/:platformId')
             ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
-            ->desc('Update project web platform')
+            ->desc('Update web platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].update')

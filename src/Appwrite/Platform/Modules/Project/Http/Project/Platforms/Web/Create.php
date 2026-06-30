@@ -41,7 +41,7 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/platforms/web')
             ->httpAlias('/v1/projects/:projectId/platforms')
-            ->desc('Create project web platform')
+            ->desc('Create web platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].create')

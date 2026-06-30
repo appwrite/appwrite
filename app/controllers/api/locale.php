@@ -71,7 +71,7 @@ Http::get('/v1/locale')
     });
 
 Http::get('/v1/locale/codes')
-    ->desc('List locale codes')
+    ->desc('List codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk', new Method(

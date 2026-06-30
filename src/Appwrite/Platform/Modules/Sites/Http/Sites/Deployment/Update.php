@@ -31,7 +31,7 @@ class Update extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/sites/:siteId/deployment')
-            ->desc('Update site\'s deployment')
+            ->desc('Update deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)

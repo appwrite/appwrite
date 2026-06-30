@@ -14,7 +14,7 @@ use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
 Http::get('/v1/project/usage')
-    ->desc('Get project usage stats')
+    ->desc('Get usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk', new Method(

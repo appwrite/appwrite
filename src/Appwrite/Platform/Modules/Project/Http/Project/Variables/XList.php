@@ -32,7 +32,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/variables')
-            ->desc('List project variables')
+            ->desc('List variables')
             ->groups(['api', 'project'])
             ->label('scope', 'project.read')
             ->label('sdk', new Method(

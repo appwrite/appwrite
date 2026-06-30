@@ -33,7 +33,7 @@ class Get extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/:functionId/usage')
-            ->desc('Get function usage')
+            ->desc('Get usage')
             ->groups(['api', 'functions', 'usage'])
             ->label('scope', 'functions.read')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)

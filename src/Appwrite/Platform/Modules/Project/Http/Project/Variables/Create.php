@@ -32,7 +32,7 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/variables')
-            ->desc('Create project variable')
+            ->desc('Create variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'variables.[variableId].create')

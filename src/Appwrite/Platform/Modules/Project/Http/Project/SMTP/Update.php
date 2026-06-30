@@ -39,7 +39,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/project/smtp')
             ->httpAlias('/v1/projects/:projectId/smtp')
-            ->desc('Update project SMTP configuration')
+            ->desc('Update SMTP configuration')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             // ->label('event', 'project.smtp.update')

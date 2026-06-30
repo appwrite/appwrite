@@ -40,7 +40,7 @@ class Create extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/keys')
             ->httpAlias('/v1/projects/:projectId/keys')
-            ->desc('Create project key')
+            ->desc('Create key')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.write')
             ->label('event', 'keys.[keyId].create')

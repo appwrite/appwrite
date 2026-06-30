@@ -29,7 +29,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/policies/:policyId')
-            ->desc('Get project policy')
+            ->desc('Get policy')
             ->groups(['api', 'project'])
             ->label('scope', ['policies.read', 'project.policies.read'])
             ->label('sdk', new Method(

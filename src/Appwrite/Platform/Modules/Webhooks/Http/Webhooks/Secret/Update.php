@@ -32,7 +32,7 @@ class Update extends Action
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/webhooks/:webhookId/secret')
             ->httpAlias('/v1/projects/:projectId/webhooks/:webhookId/signature')
-            ->desc('Update webhook secret key')
+            ->desc('Update secret key')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
             ->label('event', 'webhooks.[webhookId].update')

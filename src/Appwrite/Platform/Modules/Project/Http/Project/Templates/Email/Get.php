@@ -30,7 +30,7 @@ class Get extends Action
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/templates/email/:templateId')
             ->httpAlias('/v1/projects/:projectId/templates/email/:templateId/:locale')
-            ->desc('Get project email template')
+            ->desc('Get email template')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.read')
             ->label('sdk', new Method(

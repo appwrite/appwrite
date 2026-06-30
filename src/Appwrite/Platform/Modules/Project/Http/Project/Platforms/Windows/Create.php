@@ -33,7 +33,7 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/platforms/windows')
-            ->desc('Create project Windows platform')
+            ->desc('Create Windows platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].create')

@@ -31,7 +31,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/templates/email')
-            ->desc('List project email templates')
+            ->desc('List email templates')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.read')
             ->label('sdk', new Method(

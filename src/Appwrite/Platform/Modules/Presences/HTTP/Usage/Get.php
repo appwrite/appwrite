@@ -29,7 +29,7 @@ class Get extends PlatformAction
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/presences/usage')
-            ->desc('Get presence usage')
+            ->desc('Get usage')
             ->groups(['api', 'presences', 'usage'])
             ->label('scope', 'presences.read')
             ->label('sdk', new Method(

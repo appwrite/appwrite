@@ -30,7 +30,7 @@ class Get extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/keys/:keyId')
             ->httpAlias('/v1/projects/:projectId/keys/:keyId')
-            ->desc('Get project key')
+            ->desc('Get key')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.read')
             ->label('sdk', new Method(

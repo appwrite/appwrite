@@ -305,7 +305,7 @@ Http::post('/v1/users')
     });
 
 Http::post('/v1/users/bcrypt')
-    ->desc('Create user with bcrypt password')
+    ->desc('Create with bcrypt password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -344,7 +344,7 @@ Http::post('/v1/users/bcrypt')
     });
 
 Http::post('/v1/users/md5')
-    ->desc('Create user with MD5 password')
+    ->desc('Create with MD5 password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -382,7 +382,7 @@ Http::post('/v1/users/md5')
     });
 
 Http::post('/v1/users/argon2')
-    ->desc('Create user with Argon2 password')
+    ->desc('Create with Argon2 password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -420,7 +420,7 @@ Http::post('/v1/users/argon2')
     });
 
 Http::post('/v1/users/sha')
-    ->desc('Create user with SHA password')
+    ->desc('Create with SHA password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -462,7 +462,7 @@ Http::post('/v1/users/sha')
     });
 
 Http::post('/v1/users/phpass')
-    ->desc('Create user with PHPass password')
+    ->desc('Create with PHPass password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -500,7 +500,7 @@ Http::post('/v1/users/phpass')
     });
 
 Http::post('/v1/users/scrypt')
-    ->desc('Create user with Scrypt password')
+    ->desc('Create with Scrypt password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -549,7 +549,7 @@ Http::post('/v1/users/scrypt')
     });
 
 Http::post('/v1/users/scrypt-modified')
-    ->desc('Create user with Scrypt modified password')
+    ->desc('Create with Scrypt modified password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
@@ -594,7 +594,7 @@ Http::post('/v1/users/scrypt-modified')
     });
 
 Http::post('/v1/users/:userId/targets')
-    ->desc('Create user target')
+    ->desc('Create target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
@@ -825,7 +825,7 @@ Http::get('/v1/users/:userId')
     });
 
 Http::get('/v1/users/:userId/prefs')
-    ->desc('Get user preferences')
+    ->desc('Get preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -858,7 +858,7 @@ Http::get('/v1/users/:userId/prefs')
     });
 
 Http::get('/v1/users/:userId/targets/:targetId')
-    ->desc('Get user target')
+    ->desc('Get target')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -896,7 +896,7 @@ Http::get('/v1/users/:userId/targets/:targetId')
     });
 
 Http::get('/v1/users/:userId/sessions')
-    ->desc('List user sessions')
+    ->desc('List sessions')
     ->groups(['api', 'users'])
     ->label('scope', ['users.read', 'sessions.read'])
     ->label('sdk', new Method(
@@ -940,7 +940,7 @@ Http::get('/v1/users/:userId/sessions')
     });
 
 Http::get('/v1/users/:userId/memberships')
-    ->desc('List user memberships')
+    ->desc('List memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -995,7 +995,7 @@ Http::get('/v1/users/:userId/memberships')
     });
 
 Http::get('/v1/users/:userId/logs')
-    ->desc('List user logs')
+    ->desc('List logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -1084,7 +1084,7 @@ Http::get('/v1/users/:userId/logs')
     });
 
 Http::get('/v1/users/:userId/targets')
-    ->desc('List user targets')
+    ->desc('List targets')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(
@@ -1208,7 +1208,7 @@ Http::get('/v1/users/identities')
     });
 
 Http::patch('/v1/users/:userId/status')
-    ->desc('Update user status')
+    ->desc('Update status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'users.write')
@@ -1250,7 +1250,7 @@ Http::patch('/v1/users/:userId/status')
     });
 
 Http::put('/v1/users/:userId/labels')
-    ->desc('Update user labels')
+    ->desc('Update labels')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.labels')
     ->label('scope', 'users.write')
@@ -1293,7 +1293,7 @@ Http::put('/v1/users/:userId/labels')
     });
 
 Http::patch('/v1/users/:userId/impersonator')
-    ->desc('Update user impersonator capability')
+    ->desc('Update impersonator capability')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.impersonator')
     ->label('scope', 'users.write')
@@ -1811,7 +1811,7 @@ Http::patch('/v1/users/:userId/verification')
     });
 
 Http::patch('/v1/users/:userId/prefs')
-    ->desc('Update user preferences')
+    ->desc('Update preferences')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
@@ -1850,7 +1850,7 @@ Http::patch('/v1/users/:userId/prefs')
     });
 
 Http::patch('/v1/users/:userId/targets/:targetId')
-    ->desc('Update user target')
+    ->desc('Update target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
@@ -2513,7 +2513,7 @@ Http::post('/v1/users/:userId/tokens')
     });
 
 Http::delete('/v1/users/:userId/sessions/:sessionId')
-    ->desc('Delete user session')
+    ->desc('Delete session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', ['users.write', 'sessions.write'])
@@ -2564,7 +2564,7 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
     });
 
 Http::delete('/v1/users/:userId/sessions')
-    ->desc('Delete user sessions')
+    ->desc('Delete sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.delete')
     ->label('scope', ['users.write', 'sessions.write'])
@@ -2668,7 +2668,7 @@ Http::delete('/v1/users/:userId')
     });
 
 Http::delete('/v1/users/:userId/targets/:targetId')
-    ->desc('Delete user target')
+    ->desc('Delete target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.delete')
     ->label('audits.resource', 'target/{request.$targetId}')
@@ -2771,7 +2771,7 @@ Http::delete('/v1/users/identities/:identityId')
     });
 
 Http::post('/v1/users/:userId/jwts')
-    ->desc('Create user JWT')
+    ->desc('Create JWT')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
@@ -2828,7 +2828,7 @@ Http::post('/v1/users/:userId/jwts')
     });
 
 Http::get('/v1/users/usage')
-    ->desc('Get users usage stats')
+    ->desc('Get usage stats')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk', new Method(

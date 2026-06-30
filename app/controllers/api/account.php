@@ -3137,7 +3137,7 @@ Http::post('/v1/account/jwts')
     });
 
 Http::get('/v1/account/prefs')
-    ->desc('Get account preferences')
+    ->desc('Get preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk', new Method(

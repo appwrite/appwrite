@@ -26,7 +26,7 @@ class Get extends DatabaseUsageGet
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/tablesdb/:databaseId/usage')
-            ->desc('Get TablesDB usage stats')
+            ->desc('Get usage stats')
             ->groups(['api', 'database', 'usage'])
             ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)

@@ -54,7 +54,7 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/teams/:teamId/memberships')
-            ->desc('Create team membership')
+            ->desc('Create membership')
             ->groups(['api', 'teams', 'auth'])
             ->label('event', 'teams.[teamId].memberships.[membershipId].create')
             ->label('scope', 'teams.write')

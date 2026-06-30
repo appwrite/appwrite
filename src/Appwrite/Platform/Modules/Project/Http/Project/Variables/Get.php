@@ -26,7 +26,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/variables/:variableId')
-            ->desc('Get project variable')
+            ->desc('Get variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.read')
             ->label('sdk', new Method(

@@ -33,7 +33,7 @@ class Update extends Action
             ->setHttpPath('/v1/project/services/:serviceId')
             ->httpAlias('/v1/project/services/:serviceId/status')
             ->httpAlias('/v1/projects/:projectId/service')
-            ->desc('Update project service')
+            ->desc('Update service')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'services.[serviceId].update')

@@ -35,7 +35,7 @@ class XList extends Base
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/keys')
             ->httpAlias('/v1/projects/:projectId/keys')
-            ->desc('List project keys')
+            ->desc('List keys')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.read')
             ->label('sdk', new Method(

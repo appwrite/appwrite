@@ -32,7 +32,7 @@ class XList extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/usage')
-            ->desc('Get sites usage')
+            ->desc('Get usage')
             ->groups(['api', 'sites', 'usage'])
             ->label('scope', 'sites.read')
             ->label('resourceType', RESOURCE_TYPE_SITES)

@@ -31,7 +31,7 @@ class Update extends Action
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/project/variables/:variableId')
-            ->desc('Update project variable')
+            ->desc('Update variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'variables.[variableId].update')
