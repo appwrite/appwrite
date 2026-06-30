@@ -514,6 +514,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $register->set('telemetry.connectionCounter', fn () => $telemetry->createUpDownCounter('realtime.server.open_connections'));
     $register->set('telemetry.connectionCreatedCounter', fn () => $telemetry->createCounter('realtime.server.connection.created'));
     $register->set('telemetry.messageSentCounter', fn () => $telemetry->createCounter('realtime.server.message.sent'));
+    $register->set('telemetry.pubsubReconnectionCounter', fn () => $telemetry->createCounter('realtime.server.pubsub.reconnection.attempt'));
     $register->set('telemetry.deliveryDelayHistogram', fn () => $telemetry->createHistogram(
         name: 'realtime.server.delivery_delay',
         unit: 'ms',
@@ -847,6 +848,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
+            $register->get('telemetry.pubsubReconnectionCounter')->add(1);
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         }
