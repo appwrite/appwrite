@@ -691,6 +691,7 @@ abstract class Action extends DatabasesAction
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collection->getId());
+        $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
         $queueForEvents
             ->setContext('database', $db)
