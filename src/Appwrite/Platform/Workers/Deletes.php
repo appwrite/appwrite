@@ -484,19 +484,13 @@ class Deletes extends Action
             );
         };
 
-        $this->listByGroup(
-            'functions',
-            [],
-            $dbForProject,
-            $removalCallback
-        );
+        foreach (['functions', 'sites'] as $group) {
+            if ($dbForProject->getCollection($group)->isEmpty()) {
+                continue;
+            }
 
-        $this->listByGroup(
-            'sites',
-            [],
-            $dbForProject,
-            $removalCallback
-        );
+            $this->listByGroup($group, [], $dbForProject, $removalCallback);
+        }
     }
 
     /**
