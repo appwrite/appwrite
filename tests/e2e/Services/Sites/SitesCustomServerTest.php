@@ -2564,6 +2564,23 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Main page', (string) $response['body']);
 
+        // Re-deployment must keep serving correctly: the fallback file should stay
+        // synced on the site and the new deployment, not regress to a 404.
+        $redeploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => true,
+        ]);
+        $this->assertNotEmpty($redeploymentId);
+        $this->assertNotEquals($deploymentId, $redeploymentId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals('main.html', $site['body']['fallbackFile']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Main page', (string) $response['body']);
+
         $this->cleanupSite($siteId);
     }
 
