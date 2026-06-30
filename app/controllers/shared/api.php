@@ -955,7 +955,21 @@ Http::shutdown()
              */
             $pattern = $route->getLabel('audits.payload', true);
             if (! empty($pattern)) {
-                $auditContext->payload = $responsePayload;
+                $pattern = $route->getLabel('audits.payload.allowList', []);
+                if(empty($pattern)) {
+                    $auditContext->payload = $responsePayload;
+                } else {
+                    $auditContextPayload = [];
+                    
+                    foreach ($pattern as $key) {
+                        if (isset($responsePayload[$key])) {
+                            $auditContextPayload[$key] = $responsePayload[$key];
+                        }
+                    }
+                    
+                    $auditContext->payload = $auditContextPayload;
+                }
+                
             }
 
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
