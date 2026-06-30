@@ -354,6 +354,19 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
+        $targetUser = $user;
+        $impersonatorUser = new Document();
+        if (!$user->isEmpty() && $user->getAttribute('impersonatorUserId')) {
+            $impersonatorUser = new Document([
+                '$id' => $user->getAttribute('impersonatorUserId'),
+                '$sequence' => $user->getAttribute('impersonatorUserInternalId', 0),
+                'name' => $user->getAttribute('impersonatorUserName', ''),
+                'email' => $user->getAttribute('impersonatorUserEmail', ''),
+                'accessedAt' => $user->getAttribute('impersonatorAccessedAt', 0),
+                'type' => $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER,
+            ]);
+        }
+
         // Intentional: impersonators get users.read so they can discover a target user
         // before impersonation starts, and keep that access while impersonating.
         if (
@@ -368,7 +381,8 @@ Http::init()
         }
 
         $authorization->addRole($role);
-        foreach ($user->getRoles($authorization) as $authRole) {
+        $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
+        foreach ($rolesSource->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
         }
 

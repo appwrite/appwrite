@@ -35,7 +35,7 @@ class CapturingSchedulesResponse extends Response
     }
 }
 
-class SchedulesTest extends TestCase
+final class SchedulesTest extends TestCase
 {
     private Authorization $authorization;
     private Database $database;
