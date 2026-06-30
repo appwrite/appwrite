@@ -4,7 +4,6 @@ namespace Appwrite\Docker;
 
 use Appwrite\Docker\Compose\Service;
 use Exception;
-use Spyc;
 
 class Compose
 {
@@ -15,8 +14,7 @@ class Compose
 
     public function __construct(string $data)
     {
-        $compose = \function_exists('yaml_parse') ? \yaml_parse($data) : Spyc::YAMLLoadString($data);
-        $this->compose = \is_array($compose) ? $compose : [];
+        $this->compose = yaml_parse($data);
 
         $this->compose['services'] = (isset($this->compose['services']) && is_array($this->compose['services']))
             ? $this->compose['services'] : [];

@@ -8,7 +8,6 @@ enum ContentType: string
     case JSON = 'application/json';
     case IMAGE = 'image/*';
     case IMAGE_PNG = 'image/png';
-    case IMAGE_SVG = 'image/svg+xml';
     case MULTIPART = 'multipart/form-data';
     case HTML = 'text/html';
     case TEXT = 'text/plain';

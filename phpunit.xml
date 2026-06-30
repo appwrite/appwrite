@@ -37,7 +37,6 @@
             <directory>./tests/e2e/Services/ProjectWebhooks</directory>
             <directory>./tests/e2e/Services/Messaging</directory>
             <directory>./tests/e2e/Services/Migrations</directory>
-            <directory>./tests/e2e/Services/Notifications</directory>
             <directory>./tests/e2e/Services/Project</directory>
             <directory>./tests/e2e/Services/Advisor</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>

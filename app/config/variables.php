@@ -80,15 +80,6 @@ return [
                 'filter' => 'token'
             ],
             [
-                'name' => '_APP_NOTIFICATIONS_TRACKING_SECRET',
-                'description' => 'Secret key used to sign notification logo tracking tokens. This must be the same value for API containers and notification workers. Change it from the default value before running in production.',
-                'introduction' => '1.9.0',
-                'default' => 'your-secret-key',
-                'required' => true,
-                'question' => '',
-                'filter' => 'token'
-            ],
-            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
