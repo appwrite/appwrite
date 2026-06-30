@@ -106,6 +106,7 @@ class Generator
             }
 
             $this->rewriteDependencies($service);
+            $this->rewriteRelativeBindMounts($service);
             $this->rewriteLocalVolumes($name, $service);
         }
         unset($service);
@@ -242,6 +243,25 @@ class Generator
                 $service['depends_on'][$selected] = $selector['condition'];
             }
         }
+    }
+
+    /**
+     * @param array<string, mixed> $service
+     */
+    private function rewriteRelativeBindMounts(array &$service): void
+    {
+        if ($this->params['version'] !== 'local' || empty($this->params['hostPath']) || empty($service['volumes'])) {
+            return;
+        }
+
+        foreach ($service['volumes'] as &$volume) {
+            if (!\is_string($volume) || !\str_starts_with($volume, './')) {
+                continue;
+            }
+
+            $volume = $this->params['hostPath'] . '/' . \substr($volume, 2);
+        }
+        unset($volume);
     }
 
     /**

@@ -77,6 +77,20 @@ final class GeneratorTest extends TestCase
         $this->assertSame('/tmp/appwrite:/usr/src/code:rw', $compose['services']['appwrite']['volumes'][0]);
     }
 
+    public function testRewritesLocalRelativeBindMountsToHostPath(): void
+    {
+        $compose = $this->render([
+            'version' => 'local',
+            'hostPath' => '/tmp/appwrite',
+            'database' => 'mongodb',
+        ]);
+
+        $this->assertContains('/tmp/appwrite/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertContains('/tmp/appwrite/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertNotContains('./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro', $compose['services']['mongodb']['volumes']);
+        $this->assertNotContains('./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro', $compose['services']['mongodb']['volumes']);
+    }
+
     public function testDoesNotAddDatabaseDependencyWithoutPlaceholder(): void
     {
         $compose = $this->render([
