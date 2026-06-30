@@ -54,11 +54,6 @@ class Service
         return substr($image, ((int)strpos($image, ':')) + 1);
     }
 
-    public function getEntrypoint(): string
-    {
-        return (isset($this->service['entrypoint'])) ? $this->service['entrypoint'] : '';
-    }
-
     /**
      * @return Env
      */

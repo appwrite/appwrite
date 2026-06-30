@@ -325,7 +325,6 @@ class Create extends Base
                     'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'projectInternalId' => $project->getSequence(),
                     'schedule' => $scheduledAt,
                     'data' => $data,
                     'active' => true,

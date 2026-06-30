@@ -2,8 +2,6 @@
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
-use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
@@ -19,7 +17,6 @@ use Utopia\DI\Container;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
-use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
@@ -147,16 +144,6 @@ return function (Container $container): void {
     $container->set('queueForWebhooks', function (Publisher $publisher) {
         return new Webhook($publisher);
     }, ['publisher']);
-
-    $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(
-        $publisher,
-        new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
-    ), ['publisher']);
-
-    $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
-        $publisher,
-        new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
-    ), ['publisher']);
 
     $container->set('queueForRealtime', function () {
         return new Realtime();

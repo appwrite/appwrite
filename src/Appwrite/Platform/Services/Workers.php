@@ -10,7 +10,6 @@ use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Migrations;
-use Appwrite\Platform\Workers\Notifications;
 use Appwrite\Platform\Workers\StatsResources;
 use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Platform\Workers\Webhooks;
@@ -29,7 +28,6 @@ class Workers extends Service
             ->addAction(Functions::getName(), new Functions())
             ->addAction(Mails::getName(), new Mails())
             ->addAction(Messaging::getName(), new Messaging())
-            ->addAction(Notifications::getName(), new Notifications())
             ->addAction(Webhooks::getName(), new Webhooks())
             ->addAction(StatsUsage::getName(), new StatsUsage())
             ->addAction(Migrations::getName(), new Migrations())

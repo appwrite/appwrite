@@ -78,7 +78,6 @@ class Update extends Action
             'teamInternalId' => $team->getSequence(),
             '$permissions' => $permissions,
         ]));
-        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),
