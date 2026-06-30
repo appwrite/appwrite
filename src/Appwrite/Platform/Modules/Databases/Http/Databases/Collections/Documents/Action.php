@@ -69,6 +69,22 @@ abstract class Action extends DatabasesAction
         return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_READS;
     }
 
+    protected function getDatabasesOperationReadCachedMetric(): ?string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return METRIC_DATABASES_OPERATIONS_READS_CACHED;
+        }
+        return null;
+    }
+
+    protected function getDatabasesIdOperationReadCachedMetric(): ?string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return METRIC_DATABASE_ID_OPERATIONS_READS_CACHED;
+        }
+        return null;
+    }
+
     protected function getDatabasesOperationWriteMetric(): string
     {
         if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {

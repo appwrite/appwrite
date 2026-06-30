@@ -329,6 +329,8 @@ const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collec
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
 const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
 const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_READS_CACHED  = 'databases.operations.reads.cached';
+const METRIC_DATABASE_ID_OPERATIONS_READS_CACHED = '{databaseInternalId}.databases.operations.reads.cached';
 const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
 const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
 

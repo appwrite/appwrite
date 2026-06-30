@@ -455,6 +455,7 @@ class Migrations extends Action
             'projectId' => $project->getId(),
             'disabledMetrics' => [
                 METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_READS_CACHED,
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
                 METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
