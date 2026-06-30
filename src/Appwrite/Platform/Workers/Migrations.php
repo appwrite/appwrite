@@ -321,6 +321,14 @@ class Migrations extends Action
         $options = $migration->getAttribute('options', []);
         $credentials = $migration->getAttribute('credentials');
 
+        if (isset($options['filename']) && \in_array($destination, [DestinationCSV::getName(), DestinationJSON::getName()])) {
+            $ext = $destination === DestinationJSON::getName() ? '.json' : '.csv';
+            if (\str_ends_with(\strtolower($options['filename']), $ext)) {
+                $options['filename'] = \substr($options['filename'], 0, -\strlen($ext));
+                $migration->setAttribute('options', $options);
+            }
+        }
+
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
@@ -497,7 +505,8 @@ class Migrations extends Action
 
         $host = System::getEnv('_APP_MIGRATION_HOST');
         if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
+            Console::warning('_APP_MIGRATION_HOST is not set, falling back to "appwrite"');
+            $host = 'appwrite';
         }
 
         $endpoint = 'http://' . $host . '/v1';
@@ -754,7 +763,11 @@ class Migrations extends Action
         }
 
         $extension = $migration->getAttribute('destination') === DestinationJSON::getName() ? '.json' : '.csv';
-        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . $extension);
+        $filename = $this->sanitizeFilename($filename);
+        if (!\str_ends_with($filename, $extension)) {
+            $filename .= $extension;
+        }
+        $path = $this->deviceForFiles->getPath($bucketId . '/' . $filename);
         $size = $this->deviceForFiles->getFileSize($path);
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
