@@ -312,6 +312,9 @@ jobs:
           for attempt in 1 2 3; do
             if docker compose pull --quiet --ignore-buildable; then
               break
+            elif [ "$attempt" -eq 3 ]; then
+              echo "::error::docker compose pull failed after 3 attempts; aborting"
+              exit 1
             fi
             echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
             sleep 15
