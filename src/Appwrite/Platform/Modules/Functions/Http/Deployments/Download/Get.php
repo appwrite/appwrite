@@ -101,12 +101,6 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $response
-            ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
-
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeaderLine('range');
 
@@ -115,25 +109,43 @@ class Get extends Action
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
+            // Workaround: the framework's parseRange() rejects single-byte
+            // ranges like "bytes=0-0" (where start == end).  Fall back to
+            // manual parsing so valid RFC 7233 requests are honoured.
+            if ($unit === null && \preg_match('/^(\w+)=(\d+)-(\d+)$/', $rangeHeader, $m)) {
+                $unit = $m[1];
+                $start = (int) $m[2];
+                $end = (int) $m[3];
+            }
+
             if ($end === null) {
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            if ($unit !== 'bytes' || $start > $end || $end >= $size) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
             $response
-                ->addHeader('Accept-Ranges', 'bytes')
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
-                ->addHeader('Content-Length', $end - $start + 1)
+                ->addHeader('Content-Length', (string) ($end - $start + 1))
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
+        }
 
+        $response
+            ->setContentType('application/gzip')
+            ->addHeader('Accept-Ranges', 'bytes')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+
+        if (!empty($rangeHeader)) {
             $response->send($device->read($path, $start, ($end - $start + 1)));
             return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
+            $response->addHeader('Content-Length', (string) $size);
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $device->read(
