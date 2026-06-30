@@ -85,6 +85,8 @@ class Document extends Any
 
         if (!$document->isEmpty()) {
             $document->setAttribute('$sequence', (string)$document->getAttribute('$sequence', ''));
+            $document->setAttribute('$createdAt', (string)$document->getAttribute('$createdAt', ''));
+            $document->setAttribute('$updatedAt', (string)$document->getAttribute('$updatedAt', ''));
         }
 
         foreach ($document->getAttributes() as $attribute) {
