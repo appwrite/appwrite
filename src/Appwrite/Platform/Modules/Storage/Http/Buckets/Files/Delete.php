@@ -42,7 +42,7 @@ class Delete extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].delete')
             ->label('audits.event', 'file.delete')
             ->label('audits.resource', 'file/{request.fileId}')
-            ->label('usage.resource', 'file/{request.fileId}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)

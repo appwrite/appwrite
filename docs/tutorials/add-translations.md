@@ -149,13 +149,13 @@ First of all, we need to start a local instance of Appwrite. Thanks to Docker, t
 docker compose up -d
 ```
 
-If this is your first time running Appwrite, it may take up to a few minutes to download all images and start all containers. Once everything is started, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.
+If this is your first time running Appwrite, it may take up to a few minutes to download all images and start all containers. Once everything is started, you should see Appwrite running on `http://localhost:9520`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.
 
 If you are lost in the Appwrite dashboard, check out our [Article about Appwrite's dashboard](https://dev.to/appwrite/30daysofappwrite-appwrite-dashboard-15cc).
 
 Now, let's send the request. We will be editing headers of the request, so you will need a tool to do that, such as Postman or Insomnia.
 
-First, let's see English translations. Let's set request type to `GET`, URL to `https://localhost/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
+First, let's see English translations. Let's set request type to `GET`, URL to `https://localhost:9521/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
 
 ![English test](images/test-en.png)
 

@@ -40,7 +40,6 @@ class Update extends Action
             ->label('event', 'users.[userId].sessions.[sessionId].create')
             ->label('audits.event', 'challenges.update')
             ->label('audits.resource', 'user/{response.userId}')
-            ->label('usage.resource', 'user/{response.userId}')
             ->label('audits.userId', '{response.userId}')
             ->label('sdk', [
                 new Method(

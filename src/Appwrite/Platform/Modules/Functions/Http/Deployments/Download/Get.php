@@ -36,6 +36,7 @@ class Get extends Action
             ->groups(['api', 'functions'])
             ->desc('Get deployment download')
             ->label('scope', 'functions.read')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
