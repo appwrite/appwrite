@@ -4001,6 +4001,570 @@ Http::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
+Http::post('/v1/account/recovery/email')
+    ->desc('Create password recovery (OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].create')
+    ->label('audits.event', 'recovery.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'createEmailRecovery',
+        description: '/docs/references/account/create-email-recovery.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+    ->param('email', '', new EmailValidator(), 'User email.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('locale')
+    ->inject('queueForMails')
+    ->inject('queueForEvents')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->action(function (string $email, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
+
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
+        }
+
+        $email = \strtolower($email);
+
+        $profile = $dbForProject->findOne('users', [
+            Query::equal('email', [$email]),
+        ]);
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        if (false === $profile->getAttribute('status')) { // Account is blocked
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
+        $tokenSecret = $proofForCode->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+
+        $recovery = new Document([
+            '$id' => ID::unique(),
+            'userId' => $profile->getId(),
+            'userInternalId' => $profile->getSequence(),
+            'type' => TOKEN_TYPE_OTP_RECOVERY,
+            'secret' => $proofForCode->hash($tokenSecret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $recovery = $dbForProject->createDocument('tokens', $recovery
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($profile->getId())),
+                Permission::update(Role::user($profile->getId())),
+                Permission::delete(Role::user($profile->getId())),
+            ]));
+
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $projectName = $project->isEmpty()
+            ? 'Console'
+            : $project->getAttribute('name', '[APP-NAME]');
+
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
+        $heading = $locale->getText("emails.otpRecovery.heading");
+        $subject = $locale->getText("emails.otpRecovery.subject");
+        $preview = $locale->getText("emails.otpRecovery.preview");
+        $customTemplate =
+            $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->default] ??
+            $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->fallback] ?? [];
+        $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+        $validator = new FileName();
+        if (!$validator->isValid($smtpBaseTemplate)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+        }
+
+        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+        $message
+            ->setParam('{{hello}}', $locale->getText("emails.otpRecovery.hello"))
+            ->setParam('{{description}}', $locale->getText("emails.otpRecovery.description"))
+            ->setParam('{{clientInfo}}', $locale->getText("emails.otpRecovery.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.otpRecovery.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.otpRecovery.signature"))
+            ->setParam('{{securityPhrase}}', '');
+        $body = $message->render();
+
+        $smtp = $project->getAttribute('smtp', []);
+        $smtpEnabled = $smtp['enabled'] ?? false;
+
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $replyToEmail = '';
+        $replyToName = '';
+
+        if ($smtpEnabled) {
+            if (!empty($smtp['senderEmail'])) {
+                $senderEmail = $smtp['senderEmail'];
+            }
+            if (!empty($smtp['senderName'])) {
+                $senderName = $smtp['senderName'];
+            }
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
+            }
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
+            }
+
+            $queueForMails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $queueForMails
+                ->setSmtpReplyToEmail($replyToEmail)
+                ->setSmtpReplyToName($replyToName)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
+        }
+
+        $emailVariables = [
+            'heading' => $heading,
+            'direction' => $locale->getText('settings.direction'),
+            // {{user}}, {{project}} and {{otp}} are required in default and custom templates
+            'user' => $profile->getAttribute('name'),
+            'project' => $projectName,
+            'otp' => $tokenSecret,
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
+        ];
+
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $emailVariables = array_merge($emailVariables, [
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
+            ]);
+        }
+
+        $queueForMails
+            ->setRecipient($profile->getAttribute('email', ''))
+            ->setName($profile->getAttribute('name', ''))
+            ->setBody($body)
+            ->setBodyTemplate($bodyTemplate)
+            ->appendVariables($emailVariables)
+            ->setSubject($subject)
+            ->setPreview($preview);
+
+        if ($project->getId() === 'console' || $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
+
+        $recovery->setAttribute('secret', $tokenSecret);
+
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recovery->getId())
+            ->setUser($profile)
+            ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($recovery, Response::MODEL_TOKEN);
+    });
+
+Http::put('/v1/account/recovery/email')
+    ->desc('Update password recovery (OTP confirmation)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].update')
+    ->label('audits.event', 'recovery.update')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'updateEmailRecovery',
+        description: '/docs/references/account/update-email-recovery.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('secret', '', new Text(6), 'Valid OTP code sent to the user\'s email.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('hooks')
+    ->inject('proofForPassword')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+        /** @var Appwrite\Utopia\Database\Documents\User $profile */
+        $profile = $dbForProject->getDocument('users', $userId);
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_OTP_RECOVERY, $secret, $proofForCode);
+
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $newPassword = $proofForPassword->hash($password);
+
+        $hash = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $history = $profile->getAttribute('passwordHistory', []);
+
+        if ($historyLimit > 0) {
+            $validator = new PasswordHistory($history, $hash);
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
+            }
+
+            $history[] = $newPassword;
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
+
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
+            [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                'emailVerification' => true,
+            ]
+        ));
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+
+        /**
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recoveryDocument->getId())
+            ->setPayload($response->showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
+    });
+
+Http::post('/v1/account/recovery/phone')
+    ->desc('Create password recovery (Phone OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].create')
+    ->label('audits.event', 'recovery.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'createPhoneRecovery',
+        description: '/docs/references/account/create-phone-recovery.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
+    ->param('phone', '', new Phone(), 'User phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('locale')
+    ->inject('queueForMessaging')
+    ->inject('queueForEvents')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->action(function (string $phone, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Messaging $queueForMessaging, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
+
+        if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+        }
+
+        $profile = $dbForProject->findOne('users', [
+            Query::equal('phone', [$phone]),
+        ]);
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        if (false === $profile->getAttribute('status')) { // Account is blocked
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
+        $secret = null;
+        $sendSMS = true;
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $phone) {
+                $secret = $mockNumber['otp'];
+                $sendSMS = false;
+                break;
+            }
+        }
+
+        $secret ??= $proofForCode->generate();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+
+        $recovery = new Document([
+            '$id' => ID::unique(),
+            'userId' => $profile->getId(),
+            'userInternalId' => $profile->getSequence(),
+            'type' => TOKEN_TYPE_PHONE_RECOVERY,
+            'secret' => $proofForCode->hash($secret),
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $recovery = $dbForProject->createDocument('tokens', $recovery
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($profile->getId())),
+                Permission::update(Role::user($profile->getId())),
+                Permission::delete(Role::user($profile->getId())),
+            ]));
+
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        if ($sendSMS) {
+            $projectName = $project->isEmpty()
+                ? 'Console'
+                : $project->getAttribute('name', '[APP-NAME]');
+            if ($project->getId() === 'console') {
+                $projectName = $platform['platformName'];
+            }
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+            $messageContent = Template::fromString($locale->getText("sms.recovery.body"));
+            $messageContent
+                ->setParam('{{project}}', $projectName)
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+            $message = $message->render();
+
+            $messageDoc = new Document([
+                '$id' => $recovery->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
+            $queueForMessaging
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$phone])
+                ->setProviderType(MESSAGE_TYPE_SMS);
+
+            $queueForMessaging->trigger();
+        }
+
+        $recovery->setAttribute('secret', $secret);
+
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recovery->getId())
+            ->setUser($profile)
+            ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($recovery, Response::MODEL_TOKEN);
+    });
+
+Http::put('/v1/account/recovery/phone')
+    ->desc('Update password recovery (Phone OTP confirmation)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('event', 'users.[userId].recovery.[tokenId].update')
+    ->label('audits.event', 'recovery.update')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'recovery',
+        name: 'updatePhoneRecovery',
+        description: '/docs/references/account/update-phone-recovery.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('secret', '', new Text(6), 'Valid OTP code sent to the user\'s phone.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('hooks')
+    ->inject('proofForPassword')
+    ->inject('proofForCode')
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+        /** @var Appwrite\Utopia\Database\Documents\User $profile */
+        $profile = $dbForProject->getDocument('users', $userId);
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_PHONE_RECOVERY, $secret, $proofForCode);
+
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $newPassword = $proofForPassword->hash($password);
+
+        $hash = ProofsPassword::createHash($profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $history = $profile->getAttribute('passwordHistory', []);
+
+        if ($historyLimit > 0) {
+            $validator = new PasswordHistory($history, $hash);
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
+            }
+
+            $history[] = $newPassword;
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
+
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
+            [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                'phoneVerification' => true,
+            ]
+        ));
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+
+        /**
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $queueForEvents
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recoveryDocument->getId())
+            ->setPayload($response->showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
+    });
+
 Http::post('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Create email verification')
