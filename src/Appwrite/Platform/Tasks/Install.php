@@ -1393,7 +1393,20 @@ class Install extends Action
         if ($suffix !== '' && $suffix[0] !== '/') {
             $suffix = '/' . $suffix;
         }
-        return dirname(__DIR__, 4) . $suffix;
+
+        $roots = [
+            dirname(__DIR__, 4),
+            '/usr/local/share/appwrite',
+        ];
+
+        foreach ($roots as $root) {
+            $path = $root . $suffix;
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return $roots[0] . $suffix;
     }
 
     protected function applyLocalPaths(bool $isLocalInstall, bool $force = false): void
