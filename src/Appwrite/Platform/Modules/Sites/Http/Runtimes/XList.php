@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Functions\Http\Runtimes;
+namespace Appwrite\Platform\Modules\Sites\Http\Runtimes;
 
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Runtimes\Runtime;
@@ -27,13 +27,13 @@ class XList extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/functions/runtimes')
-            ->groups(['api'])
+            ->setHttpPath('/v1/sites/runtimes')
+            ->groups(['api', 'sites'])
             ->desc('List runtimes')
             ->label('scope', 'public')
-            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
-                namespace: 'functions',
+                namespace: 'sites',
                 group: 'runtimes',
                 name: 'listRuntimes',
                 description: <<<EOT
@@ -55,7 +55,7 @@ class XList extends Base
     {
         $runtimes = Config::getParam('runtimes');
 
-        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_RUNTIMES', '')));
 
         $allowed = [];
         foreach ($runtimes as $id => $runtime) {
@@ -63,7 +63,7 @@ class XList extends Base
                 continue;
             }
 
-            if (!\in_array(Runtime::SERVICE_FUNCTIONS, $runtime['services'] ?? [Runtime::SERVICE_FUNCTIONS], true)) {
+            if (!\in_array(Runtime::SERVICE_SITES, $runtime['services'] ?? [Runtime::SERVICE_FUNCTIONS], true)) {
                 continue;
             }
 

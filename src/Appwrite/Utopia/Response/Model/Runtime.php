@@ -59,6 +59,13 @@ class Runtime extends Model
                 'example' => 'amd64',
                 'array' => true,
             ])
+            ->addRule('services', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of services the runtime is available for. Possible values are `functions` and `sites`.',
+                'default' => ['functions'],
+                'example' => 'functions',
+                'array' => true,
+            ])
         ;
     }
 

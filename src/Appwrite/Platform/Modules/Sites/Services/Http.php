@@ -15,6 +15,7 @@ use Appwrite\Platform\Modules\Sites\Http\Frameworks\XList as ListFrameworks;
 use Appwrite\Platform\Modules\Sites\Http\Logs\Delete as DeleteLog;
 use Appwrite\Platform\Modules\Sites\Http\Logs\Get as GetLog;
 use Appwrite\Platform\Modules\Sites\Http\Logs\XList as ListLogs;
+use Appwrite\Platform\Modules\Sites\Http\Runtimes\XList as ListRuntimes;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Create as CreateSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Delete as DeleteSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\Deployment\Update as UpdateSiteDeployment;
@@ -48,6 +49,8 @@ class Http extends Service
         // Frameworks
         $this->addAction(ListFrameworks::getName(), new ListFrameworks());
 
+        // Runtimes
+        $this->addAction(ListRuntimes::getName(), new ListRuntimes());
 
         // Deployments
         $this->addAction(CreateDeployment::getName(), new CreateDeployment());

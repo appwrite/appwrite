@@ -1935,6 +1935,35 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
+    public function testGetRuntimes(): void
+    {
+        $runtimes = $this->client->call(Client::METHOD_GET, '/sites/runtimes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $runtimes['headers']['status-code']);
+        $this->assertGreaterThan(0, $runtimes['body']['total']);
+
+        $runtime = $runtimes['body']['runtimes'][0];
+
+        $this->assertArrayHasKey('$id', $runtime);
+        $this->assertArrayHasKey('name', $runtime);
+        $this->assertArrayHasKey('key', $runtime);
+        $this->assertArrayHasKey('version', $runtime);
+        $this->assertArrayHasKey('logo', $runtime);
+        $this->assertArrayHasKey('image', $runtime);
+        $this->assertArrayHasKey('base', $runtime);
+        $this->assertArrayHasKey('supports', $runtime);
+        $this->assertArrayHasKey('services', $runtime);
+        $this->assertIsArray($runtime['services']);
+
+        // Every runtime in the sites list must support the sites service
+        foreach ($runtimes['body']['runtimes'] as $item) {
+            $this->assertContains('sites', $item['services'], "Runtime {$item['$id']} should not appear in sites list");
+        }
+    }
+
     public function testSiteStatic(): void
     {
         $siteId = $this->setupSite([

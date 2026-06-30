@@ -2295,7 +2295,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testGetRuntimes()
+    public function testGetRuntimes(): void
     {
         $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', array_merge([
             'content-type' => 'application/json',
@@ -2315,6 +2315,13 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('image', $runtime);
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
+        $this->assertArrayHasKey('services', $runtime);
+        $this->assertIsArray($runtime['services']);
+
+        // Every runtime in the functions list must support the functions service
+        foreach ($runtimes['body']['runtimes'] as $item) {
+            $this->assertContains('functions', $item['services'], "Runtime {$item['$id']} should not appear in functions list");
+        }
     }
 
 
