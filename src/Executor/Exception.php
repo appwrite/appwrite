@@ -6,7 +6,6 @@ class Exception extends \Exception
 {
     public const string GENERAL_UNKNOWN = 'general_unknown';
     public const string BUILD_FAILED = 'build_failed';
-    public const string RUNTIME_FAILED = 'runtime_failed';
 
     public function __construct(
         string $message = '',

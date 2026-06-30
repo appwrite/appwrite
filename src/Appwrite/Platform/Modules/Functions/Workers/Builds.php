@@ -763,7 +763,7 @@ class Builds extends Action
                         $span?->set('build.runtime.error_message', $error->getMessage());
                         $span?->set('build.runtime.executor_error_type', $error->getType());
 
-                        $err = \in_array($error->getType(), [ExecutorException::BUILD_FAILED, ExecutorException::RUNTIME_FAILED], true)
+                        $err = $error->getType() === ExecutorException::BUILD_FAILED
                             ? new BuildException($error->getMessage(), previous: $error)
                             : $error;
                     } catch (\Throwable $error) {
