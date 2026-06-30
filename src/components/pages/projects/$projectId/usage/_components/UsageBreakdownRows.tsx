@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Flag } from '@appwrite.io/console'
 import { ChevronRight, Globe } from 'lucide-react'
+import { HostnameFaviconIcon } from '@/components/global/shared/HostnameFaviconIcon'
 import { cn, truncateMiddle } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
@@ -111,16 +112,6 @@ export function formatBreakdownLabel(
   return label
 }
 
-export function normalizeHostnameForFavicon(hostname: string): string | null {
-  const trimmed = hostname.trim()
-  if (!trimmed || trimmed === 'Unknown') return null
-
-  const withoutScheme = trimmed.replace(/^https?:\/\//i, '').split('/')[0] ?? ''
-  if (!withoutScheme.includes('.')) return null
-
-  return withoutScheme
-}
-
 function CountryFlagIcon({ countryCode }: { countryCode: string }) {
   const [failed, setFailed] = useState(false)
   const normalizedCode = countryCode.trim().toLowerCase()
@@ -154,40 +145,6 @@ function CountryFlagIcon({ countryCode }: { countryCode: string }) {
         src={flagUrl}
         alt=""
         className="h-full w-full object-cover"
-        onError={() => setFailed(true)}
-      />
-    </div>
-  )
-}
-
-function HostnameFaviconIcon({ hostname }: { hostname: string }) {
-  const [failed, setFailed] = useState(false)
-  const normalizedHostname = normalizeHostnameForFavicon(hostname)
-
-  if (!normalizedHostname || failed) {
-    return (
-      <div
-        className={cn(
-          breakdownLeadingIconFrameClass,
-          'border-transparent bg-transparent',
-        )}
-      >
-        <Globe
-          className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-          aria-hidden
-        />
-      </div>
-    )
-  }
-
-  return (
-    <div className={breakdownLeadingIconFrameClass} aria-hidden>
-      <img
-        src={sdk.forConsole.avatars.getFavicon({
-          url: `https://${normalizedHostname}`,
-        })}
-        alt=""
-        className="h-full w-full object-contain p-0.5"
         onError={() => setFailed(true)}
       />
     </div>
@@ -324,8 +281,7 @@ export function UsageBreakdownRow({
     showCountryFlags && countryLookups
       ? resolveCountryCode(item.label, countryLookups)
       : null
-  const showFavicon =
-    showHostnameFavicons && normalizeHostnameForFavicon(item.label) !== null
+  const showFavicon = showHostnameFavicons
   const databaseRoute =
     databaseResource && projectId
       ? getDatabaseBreakdownResourceRoute(projectId, databaseResource)

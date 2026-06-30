@@ -5,6 +5,7 @@ import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { HostnameFaviconIcon } from '@/components/global/shared/HostnameFaviconIcon'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import {
@@ -216,24 +217,6 @@ function ActivityBrowserIcon({ code }: { code: string }) {
         })}
         alt=""
         className={AVATAR_SERVICE_IMG}
-        onError={() => setFailed(true)}
-      />
-    </div>
-  )
-}
-
-function ActivityHostnameFavicon({ hostname }: { hostname: string }) {
-  const [failed, setFailed] = useState(false)
-  const h = hostname.trim()
-  if (!h || failed || !h.includes('.')) {
-    return <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-  }
-  return (
-    <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
-      <img
-        src={sdk.forConsole.avatars.getFavicon({ url: `https://${h}` })}
-        alt=""
-        className="h-full w-full object-contain p-0.5"
         onError={() => setFailed(true)}
       />
     </div>
@@ -495,7 +478,7 @@ export function ActivityLogDrawer({
                   </DetailField>
                   <DetailField label="Hostname">
                     <div className="flex items-center gap-2">
-                      <ActivityHostnameFavicon hostname={event.hostname} />
+                      <HostnameFaviconIcon hostname={event.hostname} size="md" />
                       <p className="min-w-0 break-all font-mono text-[12px] text-muted-foreground">
                         {formatValue(event.hostname)}
                       </p>
