@@ -42,6 +42,7 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
+use Utopia\Database\Validator\Authorization;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
@@ -78,6 +79,7 @@ class Builds extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -103,7 +105,8 @@ class Builds extends Action
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ): void {
         $payload = $message->getPayload();
 
@@ -1537,7 +1540,7 @@ class Builds extends Action
                     $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
                     $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
                 } finally {
-                    $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId));
                 }
             }
         } catch (\Throwable $th) {
