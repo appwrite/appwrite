@@ -279,6 +279,148 @@ trait OAuth2Base
         $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
+    public function testUpdateOAuth2OidcPromptAndMaxAge(): void
+    {
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-prompt-client',
+            'clientSecret' => 'oidc-prompt-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'prompt' => ['login', 'consent'],
+            'maxAge' => 3600,
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['login', 'consent'], $response['body']['prompt']);
+        $this->assertSame(3600, $response['body']['maxAge']);
+
+        $get = $this->client->call(Client::METHOD_GET, '/project/oauth2/oidc', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            ...$this->getHeaders(),
+        ]);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame(['login', 'consent'], $get['body']['prompt']);
+        $this->assertSame(3600, $get['body']['maxAge']);
+        $this->assertSame('', $get['body']['clientSecret']);
+
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPartialPreservesPromptAndMaxAge(): void
+    {
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-seed-client',
+            'clientSecret' => 'oidc-seed-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'prompt' => ['select_account'],
+            'maxAge' => 120,
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-rotated-client',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('oidc-rotated-client', $response['body']['clientId']);
+        $this->assertSame(['select_account'], $response['body']['prompt']);
+        $this->assertSame(120, $response['body']['maxAge']);
+
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPromptNoneAloneRejected(): void
+    {
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-prompt-none',
+            'clientSecret' => 'oidc-prompt-none-secret',
+            'prompt' => ['none', 'consent'],
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdateOAuth2OidcMaxAgeNegativeRejected(): void
+    {
+        $response = $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-maxage-negative',
+            'clientSecret' => 'oidc-maxage-negative-secret',
+            'maxAge' => -1,
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateOAuth2OidcMaxAgeClearViaNull(): void
+    {
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-maxage-clear',
+            'clientSecret' => 'oidc-maxage-clear-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'maxAge' => 3600,
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'maxAge' => null,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['maxAge']);
+
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'maxAge' => null,
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcPromptClearViaNull(): void
+    {
+        $this->updateOAuth2('oidc', [
+            'clientId' => 'oidc-prompt-clear',
+            'clientSecret' => 'oidc-prompt-clear-secret',
+            'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
+            'prompt' => ['login', 'consent'],
+            'enabled' => false,
+        ]);
+
+        $response = $this->updateOAuth2('oidc', [
+            'prompt' => null,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame([], $response['body']['prompt']);
+
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
+    }
+
     public function testUpdateOAuth2OktaRoundTrip(): void
     {
         $update = $this->updateOAuth2('okta', [
