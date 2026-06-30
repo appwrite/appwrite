@@ -1,12 +1,13 @@
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
 import {
   FORM_FIELD_TYPE_PILL_CLASS,
+  getFormFieldTypeBadgeVariant,
   getOpenApiTypeBadgeVariant,
+  API_EXPLORER_PILL_CLASS,
   type FormFieldTypeBadgeVariant,
 } from '@/lib/api-explorer/form-field-type-badge'
 import { normalizeOpenApiPrimitiveType } from '@/lib/api-explorer/request-form'
 import type { ApiReferencePropertyTypeKind } from '@/lib/docs/references/types'
-import { cn } from '@/lib/utils'
 
 export type ReferenceTypeBadgeVariant = FormFieldTypeBadgeVariant
 
@@ -37,9 +38,10 @@ export const REFERENCE_RESIZE_HANDLE_CLASS =
   'relative z-[45] w-[0.5px] bg-border before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100 after:w-2 after:left-1/2 after:-translate-x-1/2'
 
 export { getHttpMethodBadgeVariant as getHttpMethodVariant } from '@/lib/http-method-badge'
+export { getHttpMethodAccentClasses } from '@/lib/http-method-badge'
 
 /** Status pills in API references: tinted fill without an outline. */
-export const REFERENCE_PILL_CLASS = 'border-0 shadow-none'
+export const REFERENCE_PILL_CLASS = API_EXPLORER_PILL_CLASS
 
 /** Type and status pills in reference tables. */
 export const REFERENCE_TYPE_PILL_CLASS = FORM_FIELD_TYPE_PILL_CLASS
@@ -48,41 +50,6 @@ export {
   getFormFieldTypeBadgeVariant,
   getOpenApiTypeBadgeVariant,
 } from '@/lib/api-explorer/form-field-type-badge'
-
-/** Subtle method-colored accents for endpoint boxes and nav selection. */
-export function getHttpMethodAccentClasses(method: string): {
-  endpointBox: string
-  methodText: string
-} {
-  switch (method.toLowerCase()) {
-    case 'get':
-      return {
-        endpointBox: 'bg-blue-500/[0.06]',
-        methodText: 'text-blue-600 dark:text-blue-400',
-      }
-    case 'post':
-      return {
-        endpointBox: 'bg-emerald-500/[0.06]',
-        methodText: 'text-emerald-600 dark:text-emerald-400',
-      }
-    case 'put':
-    case 'patch':
-      return {
-        endpointBox: 'bg-amber-500/[0.06]',
-        methodText: 'text-amber-600 dark:text-amber-400',
-      }
-    case 'delete':
-      return {
-        endpointBox: 'bg-red-500/[0.06]',
-        methodText: 'text-red-600 dark:text-red-400',
-      }
-    default:
-      return {
-        endpointBox: 'bg-muted/40',
-        methodText: 'text-foreground',
-      }
-  }
-}
 
 export { getHttpStatusCodeBadgeVariant as getResponseStatusVariant } from '@/lib/http-status-code'
 

@@ -4,20 +4,17 @@ import { LegalPolicyView } from '@/components/pages/legal/View'
 import baaContent from '@/content/legal/baa.md?raw'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/baa')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
-    meta: [
-      { title: pageTitle('Business Associate Agreement') },
-      {
-        name: 'description',
-        content:
-          "Appwrite's HIPAA Business Associate Agreement (BAA) governing how protected health information is handled for eligible plans.",
-      },
-    ],
+    meta: getMarketingPageMetaTags({
+      pageName: 'Business Associate Agreement',
+      description:
+        "Appwrite's HIPAA Business Associate Agreement (BAA) governing how protected health information is handled for eligible plans.",
+    }),
   }),
   loader: async ({ context }) => {
     await marketingPageLoader(context.queryClient)

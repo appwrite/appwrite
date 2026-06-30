@@ -4,20 +4,17 @@ import { View } from '@/components/pages/community/View'
 import { fetchCommunityGitHubIssues } from '@/lib/community/github-issues'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/community')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
-    meta: [
-      { title: pageTitle('Community') },
-      {
-        name: 'description',
-        content:
-          'Join our vibrant community of developers. Ask questions, contribute solutions, and inspire others to improve the backend development experience.',
-      },
-    ],
+    meta: getMarketingPageMetaTags({
+      pageName: 'Community',
+      description:
+        'Join our vibrant community of developers. Ask questions, contribute solutions, and inspire others to improve the backend development experience.',
+    }),
   }),
   loader: async ({ context }) => {
     await marketingPageLoader(context.queryClient)

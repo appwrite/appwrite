@@ -5,7 +5,10 @@ import { DetailView } from '@/components/pages/changelog/DetailView'
 import { getChangelogEntry } from '@/lib/changelog/content'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+
+const CHANGELOG_OG_FALLBACK_SUBTITLE =
+  "Explore Appwrite's changelog to stay on top of all the product updates and track our journey."
 
 export const Route = createFileRoute('/changelog/entry/$entry')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -20,17 +23,26 @@ export const Route = createFileRoute('/changelog/entry/$entry')({
 
     return { entry }
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: pageTitle(loaderData?.entry.title ?? 'Changelog') },
-      {
-        name: 'description',
-        content:
-          loaderData?.entry.description ??
-          "Explore Appwrite's changelog to stay on top of all the product updates and track our journey.",
-      },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const entryTitle = loaderData?.entry.title ?? 'Changelog'
+    const entryDescription = loaderData?.entry.description?.trim()
+    const ogImageSubtitle =
+      entryDescription && entryDescription !== entryTitle
+        ? entryDescription
+        : CHANGELOG_OG_FALLBACK_SUBTITLE
+
+    return {
+      meta: getMarketingPageMetaTags({
+        pageName: entryTitle,
+        description:
+          entryDescription ?? CHANGELOG_OG_FALLBACK_SUBTITLE,
+        ogImageTitle: entryTitle,
+        ogImageSubtitle,
+        ogImageEyebrow: 'Changelog',
+        ogType: 'article',
+      }),
+    }
+  },
   component: ChangelogEntryPage,
 })
 

@@ -7,7 +7,15 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { Badge } from '@/components/ui/badge'
-import { getHttpMethodBadgeVariant as getHttpMethodVariant } from '@/lib/http-method-badge'
+import {
+  getHttpMethodAccentClasses,
+  getHttpMethodBadgeVariant as getHttpMethodVariant,
+} from '@/lib/http-method-badge'
+import { getHttpStatusCodeBadgeVariant } from '@/lib/http-status-code'
+import {
+  API_EXPLORER_PILL_CLASS,
+  FORM_FIELD_TYPE_PILL_CLASS,
+} from '@/lib/api-explorer/form-field-type-badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,7 +77,6 @@ import {
   groupServicesByProduct,
   isMultipartMethod,
   downloadOpenApiSpec,
-  loadParsedApiSpec,
   buildDefaultBodyFormValues,
   buildInitialParamFormValues,
   buildMultipartFormData,
@@ -100,7 +107,6 @@ import {
   type ExecuteApiRequestResult,
   type FormValue,
   type OpenApiParameter,
-  type ParsedApiSpec,
   type RequestFormField,
 } from '@/lib/api-explorer'
 import {
@@ -116,6 +122,7 @@ import {
   useApiExplorerColumnsLayout,
   useApiExplorerExpandedProductGroup,
   useApiExplorerResponseSplitLayout,
+  useApiExplorerSpec,
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks'
 
@@ -350,9 +357,6 @@ export function ApiExplorer({
     setExpandedProductGroup,
   } = useApiExplorerExpandedProductGroup(consoleAccount)
   const initialPlatform: ApiExplorerProjectPlatform = config.platform ?? 'server'
-  const [parsedSpec, setParsedSpec] = useState<ParsedApiSpec | null>(null)
-  const [specError, setSpecError] = useState<string | null>(null)
-  const [specLoading, setSpecLoading] = useState(true)
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     initialServiceId ?? null,
   )
@@ -378,6 +382,14 @@ export function ApiExplorer({
   } = useApiExplorerAuthPersistence(config.projectId, initialPlatform)
   const activePlatform = controlledPlatform ?? internalPlatform
   const setActivePlatform = onPlatformChange ?? setInternalPlatform
+  const {
+    data: parsedSpec,
+    isLoading: specLoading,
+    error: specQueryError,
+  } = useApiExplorerSpec(activePlatform)
+  const specError = specQueryError
+    ? getErrorMessage(specQueryError) || 'Failed to load API specification'
+    : null
   const selectedOperationRef = useRef<string | undefined>(initialOperationId)
   const { features } = useConsoleProfile()
 
@@ -390,28 +402,6 @@ export function ApiExplorer({
       features.dedicatedDbsVectorsDB,
     ],
   )
-
-  useEffect(() => {
-    let cancelled = false
-    setSpecLoading(true)
-    setSpecError(null)
-
-    loadParsedApiSpec(activePlatform)
-      .then((parsed) => {
-        if (cancelled) return
-        setParsedSpec(parsed)
-        setSpecLoading(false)
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return
-        setSpecError(getErrorMessage(error) || 'Failed to load API specification')
-        setSpecLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [activePlatform])
 
   const visibleServices = useMemo(
     () =>
@@ -920,7 +910,7 @@ export function ApiExplorer({
     setSendConfirmOpen(false)
   }, [activePlatform, selectedMethod?.id])
 
-  if (specLoading) {
+  if (specLoading && !parsedSpec) {
     return (
       <div
         className={cn(
@@ -1260,7 +1250,10 @@ function MethodListPanel({
                             <div className="flex w-full min-w-0 max-w-full items-center gap-2">
                               <Badge
                                 variant={getHttpMethodVariant(method.httpMethod)}
-                                className="text-[10px] shrink-0 uppercase"
+                                className={cn(
+                                  'text-[10px] uppercase',
+                                  API_EXPLORER_PILL_CLASS,
+                                )}
                               >
                                 {method.httpMethod}
                               </Badge>
@@ -1380,7 +1373,7 @@ function MethodRequestHeader({
     <div className={cn(COLUMN_HEADER_CLASS, 'items-center gap-2.5')}>
       <Badge
         variant={getHttpMethodVariant(method.httpMethod)}
-        className="shrink-0 text-[10px] uppercase"
+        className={cn('text-[10px] uppercase', API_EXPLORER_PILL_CLASS)}
       >
         {method.httpMethod}
       </Badge>
@@ -1476,6 +1469,7 @@ function MethodDetailsCard({
 }) {
   const [copied, setCopied] = useState(false)
   const fullUrl = `${endpoint.replace(/\/$/, '')}${method.path}`
+  const methodAccent = getHttpMethodAccentClasses(method.httpMethod)
   const rateLimit = method.xAppwrite?.['rate-limit']
   const hasMetadata = rateLimit !== undefined && rateLimit > 0
 
@@ -1511,23 +1505,22 @@ function MethodDetailsCard({
               Copy
             </button>
           </div>
-          <div className="overflow-hidden rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-            <p className="flex min-w-0 items-center gap-2 font-mono text-[12px] leading-relaxed text-foreground">
-              <span
+          <div
+            className={cn(
+              'overflow-hidden rounded-lg px-3 py-2.5',
+              methodAccent.endpointBox,
+            )}
+          >
+            <p className="flex min-w-0 items-center gap-2.5 font-mono text-[12px] leading-relaxed text-foreground">
+              <Badge
+                variant={getHttpMethodVariant(method.httpMethod)}
                 className={cn(
-                  'shrink-0 font-semibold uppercase',
-                  method.httpMethod === 'get' && 'text-blue-600 dark:text-blue-400',
-                  method.httpMethod === 'post' &&
-                    'text-emerald-600 dark:text-emerald-400',
-                  (method.httpMethod === 'put' ||
-                    method.httpMethod === 'patch') &&
-                    'text-amber-600 dark:text-amber-400',
-                  method.httpMethod === 'delete' &&
-                    'text-red-600 dark:text-red-400',
+                  'shrink-0 font-mono text-[10px] uppercase',
+                  API_EXPLORER_PILL_CLASS,
                 )}
               >
                 {method.httpMethod}
-              </span>
+              </Badge>
               <span className="min-w-0 flex-1 truncate" title={fullUrl}>
                 {truncateMiddle(fullUrl, ENDPOINT_URL_DISPLAY_MAX)}
               </span>
@@ -1956,11 +1949,7 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
     [response.body],
   )
 
-  const statusVariant = response.ok
-    ? 'success'
-    : response.status >= 500
-      ? 'error'
-      : 'warning'
+  const statusVariant = getHttpStatusCodeBadgeVariant(response.status)
 
   return (
     <Tabs
@@ -1971,14 +1960,17 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="text-[12px] font-semibold text-foreground">Response</span>
-          <Badge variant={statusVariant} className="text-[10px] shrink-0">
+          <Badge
+            variant={statusVariant}
+            className={FORM_FIELD_TYPE_PILL_CLASS}
+          >
             {response.status} {response.statusText}
           </Badge>
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="inactive" className={FORM_FIELD_TYPE_PILL_CLASS}>
             {response.durationMs} ms
           </Badge>
           {response.responseContentType ? (
-            <Badge variant="secondary" className="text-[10px] shrink-0">
+            <Badge variant="inactive" className={FORM_FIELD_TYPE_PILL_CLASS}>
               {response.responseContentType}
             </Badge>
           ) : null}

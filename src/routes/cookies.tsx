@@ -4,20 +4,17 @@ import { LegalPolicyView } from '@/components/pages/legal/View'
 import cookiesContent from '@/content/legal/cookies.md?raw'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/cookies')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
-    meta: [
-      { title: pageTitle('Cookies Policy') },
-      {
-        name: 'description',
-        content:
-          'This cookie policy explains what cookies are, how we use them at Appwrite, and how you can manage and customize your preferences.',
-      },
-    ],
+    meta: getMarketingPageMetaTags({
+      pageName: 'Cookies Policy',
+      description:
+        'This cookie policy explains what cookies are, how we use them at Appwrite, and how you can manage and customize your preferences.',
+    }),
   }),
   loader: async ({ context }) => {
     await marketingPageLoader(context.queryClient)

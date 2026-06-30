@@ -7,6 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
+  API_EXPLORER_PILL_CLASS,
+} from '@/lib/api-explorer/form-field-type-badge'
+import { cn } from '@/lib/utils'
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -21,7 +25,6 @@ import { AuthRequirementDescription } from '@/components/global/shared/AuthRequi
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { useProjectUsers } from '@/lib/react-query/hooks'
-import { cn } from '@/lib/utils'
 import {
   createEphemeralApiKeyForExplorer,
   getMethodRequiredScopes,
@@ -283,7 +286,10 @@ export function ApiExplorerAuthSection({
                 <Badge
                   key={scope}
                   variant="info"
-                  className="text-[10px] shrink-0 font-mono"
+                  className={cn(
+                    'text-[10px] font-mono',
+                    API_EXPLORER_PILL_CLASS,
+                  )}
                 >
                   {scope}
                 </Badge>
@@ -409,7 +415,7 @@ export function ApiExplorerAuthSection({
                       </span>
                       <Badge
                         variant={keyCoversEndpoint ? 'success' : 'warning'}
-                        className="text-[10px] shrink-0"
+                        className={cn('text-[10px]', API_EXPLORER_PILL_CLASS)}
                       >
                         {keyCoversEndpoint ? 'Ready' : 'Missing scopes'}
                       </Badge>

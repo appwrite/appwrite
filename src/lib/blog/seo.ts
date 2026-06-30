@@ -1,5 +1,7 @@
+import { BLOG_INDEX_OG_IMAGE_PATH } from '@/lib/marketing/route-meta'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
-import { resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import type { BlogAuthor, BlogCategory, BlogFaq, BlogPost, BlogPostMeta } from './types'
 
 export type BlogSeoOptions = {
@@ -7,7 +9,7 @@ export type BlogSeoOptions = {
 }
 
 function getBlogDefaultOgImage(siteOrigin?: string): string {
-  return resolveSiteAssetUrl('/images/open-graph/blog.avif', siteOrigin)
+  return resolveSiteAssetUrl(BLOG_INDEX_OG_IMAGE_PATH, siteOrigin)
 }
 
 export function getBlogCanonicalUrl(path: string): string {
@@ -22,12 +24,23 @@ export function getBlogPageTitle(title: string): string {
   return `${title} · Appwrite`
 }
 
-export function getBlogPostOgImageUrl(post: Pick<BlogPostMeta, 'title' | 'description'>): string {
-  const params = new URLSearchParams({
-    title: post.title,
-    subtitle: 'Blog',
-  })
-  return `https://og.appwrite.global/image.png?${params.toString()}`
+export function getBlogPostOgImageUrl(
+  post: Pick<BlogPostMeta, 'title' | 'description'>,
+  siteOrigin?: string,
+): string {
+  const title = post.title.trim()
+  const description = post.description.trim()
+  const subtitle =
+    description && description !== title ? description : 'Product updates, tutorials, and stories from Appwrite.'
+
+  return buildOgImageUrl(
+    {
+      title,
+      eyebrow: 'Blog',
+      subtitle,
+    },
+    siteOrigin,
+  )
 }
 
 export function getBlogPostCoverImageUrl(
@@ -38,15 +51,19 @@ export function getBlogPostCoverImageUrl(
 }
 
 export function getBlogPostOgImage(post: BlogPostMeta, siteOrigin?: string): string {
-  return getBlogPostCoverImageUrl(post, siteOrigin) ?? getBlogPostOgImageUrl(post)
+  return (
+    getBlogPostCoverImageUrl(post, siteOrigin) ??
+    getBlogPostOgImageUrl(post, siteOrigin)
+  )
 }
 
 export function getBlogIndexMetaTags(options?: BlogSeoOptions) {
+  const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
   const title = getBlogPageTitle('Blog')
   const description =
     'Explore the Appwrite blog for product updates, engineering deep dives, tutorials, and customer stories.'
   const canonical = getBlogCanonicalUrl('/blog')
-  const ogImage = getBlogDefaultOgImage(options?.siteOrigin)
+  const ogImage = getBlogDefaultOgImage(siteOrigin)
 
   return [
     { title },
@@ -56,6 +73,8 @@ export function getBlogIndexMetaTags(options?: BlogSeoOptions) {
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: canonical },
     { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
@@ -65,10 +84,11 @@ export function getBlogIndexMetaTags(options?: BlogSeoOptions) {
 }
 
 export function getBlogPostMetaTags(post: BlogPost, options?: BlogSeoOptions) {
+  const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
   const resolvedTitle = getBlogPostTitle(post)
   const title = getBlogPageTitle(resolvedTitle)
   const canonical = getBlogCanonicalUrl(post.href)
-  const ogImage = getBlogPostOgImage(post, options?.siteOrigin)
+  const ogImage = getBlogPostOgImage(post, siteOrigin)
 
   return [
     { title },
@@ -78,6 +98,8 @@ export function getBlogPostMetaTags(post: BlogPost, options?: BlogSeoOptions) {
     { property: 'og:type', content: 'article' },
     { property: 'og:url', content: canonical },
     { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: resolvedTitle },
     { name: 'twitter:description', content: post.description },
@@ -87,9 +109,10 @@ export function getBlogPostMetaTags(post: BlogPost, options?: BlogSeoOptions) {
 }
 
 export function getBlogCategoryMetaTags(category: BlogCategory, options?: BlogSeoOptions) {
+  const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
   const title = getBlogPageTitle(category.name)
   const canonical = getBlogCanonicalUrl(category.href)
-  const ogImage = getBlogDefaultOgImage(options?.siteOrigin)
+  const ogImage = getBlogDefaultOgImage(siteOrigin)
 
   return [
     { title },
@@ -99,6 +122,8 @@ export function getBlogCategoryMetaTags(category: BlogCategory, options?: BlogSe
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: canonical },
     { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: category.description },
@@ -108,9 +133,10 @@ export function getBlogCategoryMetaTags(category: BlogCategory, options?: BlogSe
 }
 
 export function getBlogAuthorMetaTags(author: BlogAuthor, options?: BlogSeoOptions) {
+  const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
   const title = getBlogPageTitle(author.name)
   const canonical = getBlogCanonicalUrl(author.href)
-  const ogImage = getBlogDefaultOgImage(options?.siteOrigin)
+  const ogImage = getBlogDefaultOgImage(siteOrigin)
 
   return [
     { title },
@@ -120,6 +146,8 @@ export function getBlogAuthorMetaTags(author: BlogAuthor, options?: BlogSeoOptio
     { property: 'og:type', content: 'profile' },
     { property: 'og:url', content: canonical },
     { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: author.bio },

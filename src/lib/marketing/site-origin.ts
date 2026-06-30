@@ -6,10 +6,14 @@ export function getDefaultSiteOrigin(): string {
   return getSitemapSiteOrigin()
 }
 
+/** Origin for absolute SEO/asset URLs. Prefers the active request host (incl. port). */
+export function getSeoSiteOrigin(siteOrigin?: string): string {
+  return (siteOrigin ?? getRequestSiteOrigin()).replace(/\/+$/, '')
+}
+
 export function resolveSiteAssetUrl(path: string, siteOrigin?: string): string {
   if (!path.startsWith('/')) return path
-  const origin = (siteOrigin ?? getDefaultSiteOrigin()).replace(/\/+$/, '')
-  return `${origin}${path}`
+  return `${getSeoSiteOrigin(siteOrigin)}${path}`
 }
 
 export const getRequestSiteOrigin = createIsomorphicFn()

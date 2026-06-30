@@ -1,9 +1,14 @@
+import { MARKETING_HOMEPAGE_OG_IMAGE_PATH } from '@/lib/marketing/route-meta'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
+import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
 import { getAuthorDescription } from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
 
-const THREADS_OG_IMAGE = `${MARKETING_SITE_ORIGIN}/images/open-graph/website.avif`
+function getThreadsDefaultOgImage(siteOrigin?: string): string {
+  return resolveSiteAssetUrl(MARKETING_HOMEPAGE_OG_IMAGE_PATH, siteOrigin)
+}
 
 export function getThreadsCanonicalUrl(path: string): string {
   return `${MARKETING_SITE_ORIGIN}${path}`
@@ -13,19 +18,35 @@ export function getThreadsPageTitle(title: string): string {
   return `${title} · Appwrite`
 }
 
-export function getThreadOgImageUrl(title: string, description: string): string {
-  const params = new URLSearchParams({
-    title: title.slice(0, 32),
-    subtitle: description.slice(0, 64),
-  })
-  return `https://og.appwrite.global/image.png?${params.toString()}`
+export function getThreadOgImageUrl(
+  thread: Pick<DiscordThread, 'title' | 'seo_description' | 'content'>,
+  siteOrigin?: string,
+): string {
+  const title = thread.title.trim()
+  const seoDescription = thread.seo_description?.trim()
+  const content = thread.content?.trim()
+  const subtitle =
+    (seoDescription && seoDescription !== title && seoDescription) ||
+    (content && content !== title && content) ||
+    THREADS_DEFAULT_DESCRIPTION
+
+  return buildOgImageUrl(
+    {
+      title,
+      eyebrow: 'Threads',
+      subtitle,
+    },
+    siteOrigin,
+  )
 }
 
-export function getThreadsIndexMetaTags() {
+export function getThreadsIndexMetaTags(siteOrigin?: string) {
   const title = getThreadsPageTitle('Threads')
   const description =
     "Appwrite's Threads page showcases our community interactions on Discord. Join the conversation, ask questions, or assist other members with their issues."
   const canonical = getThreadsCanonicalUrl('/threads')
+  const resolvedOrigin = getSeoSiteOrigin(siteOrigin)
+  const ogImage = getThreadsDefaultOgImage(resolvedOrigin)
 
   return [
     { title },
@@ -34,13 +55,13 @@ export function getThreadsIndexMetaTags() {
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: canonical },
-    { property: 'og:image', content: THREADS_OG_IMAGE },
-    { property: 'og:image:width', content: '1200' },
-    { property: 'og:image:height', content: '630' },
+    { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: THREADS_OG_IMAGE },
+    { name: 'twitter:image', content: ogImage },
     { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
@@ -48,13 +69,12 @@ export function getThreadsIndexMetaTags() {
 export function getThreadsThreadMetaTags(
   thread: DiscordThread,
   canonicalUrl: string,
+  siteOrigin?: string,
 ) {
   const pageTitle = getThreadsPageTitle(`${thread.title} - Threads`)
   const description = thread.seo_description ?? THREADS_DEFAULT_DESCRIPTION
-  const ogImage = getThreadOgImageUrl(
-    thread.title,
-    thread.seo_description ?? THREADS_DEFAULT_DESCRIPTION,
-  )
+  const resolvedOrigin = getSeoSiteOrigin(siteOrigin)
+  const ogImage = getThreadOgImageUrl(thread, resolvedOrigin)
 
   return [
     { title: pageTitle },
@@ -64,6 +84,8 @@ export function getThreadsThreadMetaTags(
     { property: 'og:type', content: 'article' },
     { property: 'og:url', content: canonicalUrl },
     { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: pageTitle },
     { name: 'twitter:description', content: description },
@@ -75,9 +97,11 @@ export function getThreadsThreadMetaTags(
 export function getThreadsAuthorMetaTags(
   author: DiscordAuthor,
   canonicalUrl: string,
+  siteOrigin?: string,
 ) {
   const title = getThreadsPageTitle(`${author.display_name} - Threads`)
   const description = getAuthorDescription(author)
+  const ogImage = getThreadsDefaultOgImage(getSeoSiteOrigin(siteOrigin))
 
   return [
     { title },
@@ -86,11 +110,13 @@ export function getThreadsAuthorMetaTags(
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'profile' },
     { property: 'og:url', content: canonicalUrl },
-    { property: 'og:image', content: THREADS_OG_IMAGE },
+    { property: 'og:image', content: ogImage },
+    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: THREADS_OG_IMAGE },
+    { name: 'twitter:image', content: ogImage },
     { tag: 'link', rel: 'canonical', href: canonicalUrl },
   ] as const
 }

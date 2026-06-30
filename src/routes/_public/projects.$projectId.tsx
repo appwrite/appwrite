@@ -18,6 +18,7 @@ import {
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
+import { apiExplorerSpecQueryOptions } from '@/lib/react-query/hooks/api-explorer'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
@@ -152,6 +153,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
       await queryClient
         .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+        .catch(() => {})
+
+      // Warm API explorer specs in the background so Explorer opens without a loading state.
+      void queryClient
+        .prefetchQuery(apiExplorerSpecQueryOptions('server'))
+        .catch(() => {})
+      void queryClient
+        .prefetchQuery(apiExplorerSpecQueryOptions('client'))
         .catch(() => {})
 
       // Return project for first paint so paused curtain can show immediately (no layout shift)

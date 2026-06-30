@@ -3,7 +3,7 @@ import { getDocsMetaTags as buildDocsMetaTags } from './seo'
 
 export function getDocsMetaTags(
   meta: DocsPageMeta | { title: string; description: string; slug: string },
-  options?: { canonicalSlug?: string },
+  options?: { canonicalSlug?: string; siteOrigin?: string },
 ) {
   const pageMeta: DocsPageMeta = {
     slug: meta.slug,

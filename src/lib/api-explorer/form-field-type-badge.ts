@@ -12,9 +12,15 @@ export type FormFieldTypeBadgeVariant =
   | 'inactive'
   | 'secondary'
 
+/** HTTP method, scope, and meta pills: tinted fill without an outline. */
+export const API_EXPLORER_PILL_CLASS = cn(
+  'border-0 shadow-none shrink-0',
+)
+
 /** Type pills in API explorer and docs reference parameter tables. */
 export const FORM_FIELD_TYPE_PILL_CLASS = cn(
-  'border-0 shadow-none shrink-0 px-2 font-mono text-[10px]',
+  API_EXPLORER_PILL_CLASS,
+  'px-2 font-mono text-[10px]',
 )
 
 export function getOpenApiTypeBadgeVariant(

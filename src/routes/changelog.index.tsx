@@ -5,20 +5,18 @@ import { View } from '@/components/pages/changelog/View'
 import { getChangelogEntriesPage } from '@/lib/changelog/content'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/changelog/')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
-    meta: [
-      { title: pageTitle('Changelog') },
-      {
-        name: 'description',
-        content:
-          "Explore Appwrite's changelog to stay on top of all the product updates and track our journey.",
-      },
-    ],
+    meta: getMarketingPageMetaTags({
+      pageName: 'Changelog',
+      description:
+        "Explore Appwrite's changelog to stay on top of all the product updates and track our journey.",
+      ogImageEyebrow: 'Changelog',
+    }),
   }),
   loader: async ({ context }) => {
     await marketingPageLoader(context.queryClient)

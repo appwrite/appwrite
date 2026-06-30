@@ -83,6 +83,7 @@ import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_publi
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
+import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
@@ -694,6 +695,11 @@ const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
   id: '/oauth2/consent',
   path: '/oauth2/consent',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
+  id: '/_api/og/image.png',
+  path: '/og/image.png',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
   id: '/_api/generator/diagram',
@@ -2327,6 +2333,7 @@ export interface FileRoutesByFullPath {
   '/threads': typeof ThreadsIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/og/image.png': typeof ApiOgImageDotpngRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2635,6 +2642,7 @@ export interface FileRoutesByTo {
   '/threads': typeof ThreadsIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/og/image.png': typeof ApiOgImageDotpngRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -2914,6 +2922,7 @@ export interface FileRoutesById {
   '/threads/': typeof ThreadsIndexRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
@@ -3227,6 +3236,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/og/image.png'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/account/billing-addresses'
@@ -3535,6 +3545,7 @@ export interface FileRouteTypes {
     | '/threads'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/og/image.png'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/account/billing-addresses'
@@ -3813,6 +3824,7 @@ export interface FileRouteTypes {
     | '/threads/'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
+    | '/_api/og/image.png'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
     | '/_public/account/billing-addresses'
@@ -4105,6 +4117,7 @@ export interface RootRouteChildren {
   ThreadsIndexRoute: typeof ThreadsIndexRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
+  ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
   BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
   BlogPostSlugRoute: typeof BlogPostSlugRoute
@@ -4633,6 +4646,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth2/consent'
       preLoaderRoute: typeof AuthOauth2ConsentRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_api/og/image.png': {
+      id: '/_api/og/image.png'
+      path: '/og/image.png'
+      fullPath: '/og/image.png'
+      preLoaderRoute: typeof ApiOgImageDotpngRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_api/generator/diagram': {
       id: '/_api/generator/diagram'
@@ -7750,6 +7770,7 @@ const rootRouteChildren: RootRouteChildren = {
   ThreadsIndexRoute: ThreadsIndexRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
+  ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
   BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,
   BlogPostSlugRoute: BlogPostSlugRoute,

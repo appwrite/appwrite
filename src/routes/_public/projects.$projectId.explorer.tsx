@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/explorer/View'
-import { projectQueryOptions } from '@/lib/react-query/hooks'
+import {
+  apiExplorerSpecQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/explorer')({
@@ -23,7 +26,11 @@ export const Route = createFileRoute('/_public/projects/$projectId/explorer')({
 
     if (!projectId) return undefined
 
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    await Promise.all([
+      queryClient.ensureQueryData(projectQueryOptions(projectId)),
+      queryClient.ensureQueryData(apiExplorerSpecQueryOptions('server')),
+      queryClient.ensureQueryData(apiExplorerSpecQueryOptions('client')),
+    ])
 
     return undefined
   },

@@ -43,7 +43,10 @@ import { StandaloneCommandCenterScope } from '@/components/global/providers/Keyb
 import { Button } from '@/components/ui/button'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import {
+  getMarketingHomeOgImage,
+  getMarketingPageMetaTags,
+} from '@/lib/marketing/route-meta'
 
 const frameworkTools = [
   { name: 'React', icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
@@ -220,7 +223,12 @@ export const Route = createFileRoute('/home')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
-    meta: [{ title: pageTitle('Home') }],
+    meta: getMarketingPageMetaTags({
+      pageName: 'Home',
+      description:
+        'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.',
+      ogImage: getMarketingHomeOgImage(),
+    }),
     links: [
       {
         rel: 'preload',

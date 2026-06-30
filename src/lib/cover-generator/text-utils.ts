@@ -19,12 +19,28 @@ export function escapeXml(value: string): string {
     .replace(/'/g, '&apos;')
 }
 
+function splitWordToFit(word: string, maxCharsPerLine: number): string[] {
+  if (word.length <= maxCharsPerLine) return [word]
+
+  const parts: string[] = []
+  for (let index = 0; index < word.length; index += maxCharsPerLine) {
+    parts.push(word.slice(index, index + maxCharsPerLine))
+  }
+  return parts
+}
+
 export function wrapTextLines(
   text: string,
   maxCharsPerLine: number,
   maxLines: number,
 ): string[] {
-  const words = text.trim().split(/\s+/).filter(Boolean)
+  if (maxLines <= 0) return []
+
+  const words = text
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((word) => splitWordToFit(word, maxCharsPerLine))
   if (!words.length) return []
 
   const lines: string[] = []
@@ -45,12 +61,14 @@ export function wrapTextLines(
     lines.push(current)
   }
 
-  if (lines.length === maxLines && words.join(' ').length > lines.join(' ').length) {
+  const joinedLines = lines.slice(0, maxLines).join(' ')
+  const sourceText = words.join(' ')
+  if (sourceText.length > joinedLines.length) {
     const last = lines[maxLines - 1] ?? ''
     lines[maxLines - 1] =
       last.length > maxCharsPerLine - 3
-        ? `${last.slice(0, Math.max(0, maxCharsPerLine - 3)).trim()}...`
-        : `${last}...`
+        ? `${last.slice(0, Math.max(0, maxCharsPerLine - 3)).trimEnd()}...`
+        : `${last.trimEnd()}...`
   }
 
   return lines.slice(0, maxLines)

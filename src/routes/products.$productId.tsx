@@ -5,6 +5,7 @@ import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import {
   marketingSiteTemplatesQueryOptions,
   siteFrameworksQueryOptions,
@@ -26,12 +27,19 @@ export const Route = createFileRoute('/products/$productId')({
     }
 
     const content = getProductContent(params.productId)
-    const productName = PRODUCT_REGISTRY[params.productId].name
+    const product = PRODUCT_REGISTRY[params.productId]
+    const ogImageSubtitle =
+      content.metaDescription.trim() !== product.name.trim()
+        ? content.metaDescription
+        : product.tagline
+
     return {
-      meta: [
-        { title: pageTitle(productName) },
-        { name: 'description', content: content.metaDescription },
-      ],
+      meta: getMarketingPageMetaTags({
+        pageName: product.name,
+        description: content.metaDescription,
+        ogImageEyebrow: 'Products',
+        ogImageSubtitle,
+      }),
     }
   },
   loader: async ({ params, context }) => {

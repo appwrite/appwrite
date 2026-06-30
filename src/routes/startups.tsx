@@ -3,20 +3,17 @@ import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-d
 import { View } from '@/components/pages/startups/View'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
-import { pageTitle } from '@/lib/utils/page-title'
+import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/startups')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
-    meta: [
-      { title: pageTitle('Startups') },
-      {
-        name: 'description',
-        content:
-          "Get cloud credits to fulfill all your startup's backend and hosting needs. Apply for Appwrite's Startups Program today.",
-      },
-    ],
+    meta: getMarketingPageMetaTags({
+      pageName: 'Startups',
+      description:
+        "Get cloud credits to fulfill all your startup's backend and hosting needs. Apply for Appwrite's Startups Program today.",
+    }),
   }),
   loader: async ({ context }) => {
     await marketingPageLoader(context.queryClient)
