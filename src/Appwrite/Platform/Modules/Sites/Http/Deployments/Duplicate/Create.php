@@ -97,6 +97,10 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         $path = $deployment->getAttribute('sourcePath');
         if (empty($path) || !$deviceForSites->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
