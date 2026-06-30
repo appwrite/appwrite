@@ -21,9 +21,6 @@ class Event
     public const MAILS_QUEUE_NAME = 'v1-mails';
     public const MAILS_CLASS_NAME = 'MailsV1';
 
-    public const NOTIFICATIONS_QUEUE_NAME = 'v1-notifications';
-    public const NOTIFICATIONS_CLASS_NAME = 'NotificationsV1';
-
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days

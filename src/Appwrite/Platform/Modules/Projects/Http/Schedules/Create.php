@@ -132,7 +132,6 @@ class Create extends Action
             'resourceInternalId' => $resource->getSequence(),
             'resourceUpdatedAt' => DateTime::now(),
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
             'schedule' => $schedule,
             'active' => $active,
         ];

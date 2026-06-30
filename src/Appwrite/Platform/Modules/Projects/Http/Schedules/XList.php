@@ -77,10 +77,6 @@ class XList extends Action
         }
 
         $queries[] = Query::equal('projectId', [$project->getId()]);
-        $queries[] = Query::or([
-            Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::isNull('projectInternalId'),
-        ]);
 
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
@@ -94,11 +90,7 @@ class XList extends Action
             $scheduleId = $cursor->getValue();
             $cursorDocument = $dbForPlatform->getDocument('schedules', $scheduleId);
 
-            if (
-                $cursorDocument->isEmpty()
-                || $cursorDocument->getAttribute('projectId') !== $project->getId()
-                || !$this->matchesProjectInternalId($cursorDocument, $project)
-            ) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Schedule '{$scheduleId}' for the 'cursor' value not found.");
             }
 
@@ -118,14 +110,5 @@ class XList extends Action
             'schedules' => $schedules,
             'total' => $total,
         ]), Response::MODEL_SCHEDULE_LIST);
-    }
-
-    private function matchesProjectInternalId(Document $schedule, Document $project): bool
-    {
-        $projectInternalId = $schedule->getAttribute('projectInternalId');
-
-        return $projectInternalId === null
-            || $projectInternalId === ''
-            || $projectInternalId === $project->getSequence();
     }
 }
