@@ -722,6 +722,8 @@ Http::get('/v1/users')
             $queries[] = Query::search('search', $search);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -751,10 +753,10 @@ Http::get('/v1/users')
         $users = [];
         $total = 0;
 
-        $dbForProject->skipFilters(function () use ($dbForProject, $queries, $includeTotal, &$users, &$total) {
+        $dbForProject->skipFilters(function () use ($dbForProject, $queries, $filterQueries, $includeTotal, &$users, &$total) {
             try {
                 $users = $dbForProject->find('users', $queries);
-                $total = $includeTotal ? $dbForProject->count('users', $queries, APP_LIMIT_COUNT) : 0;
+                $total = $includeTotal ? $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT) : 0;
             } catch (OrderException $e) {
                 throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
             } catch (QueryException $e) {
