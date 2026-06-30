@@ -150,6 +150,7 @@ class Messaging extends Action
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
+        $emails = $message->getAttribute('data', [])['emails'] ?? [];
         $providerType = $message->getAttribute('providerType');
 
         Span::add('message.provider_type', $providerType);
@@ -186,7 +187,7 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as $page) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default) as $page) {
             /**
              * @var array<callable> $tasks
              */
@@ -337,6 +338,7 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
+     * @param array<string> $emails Raw email addresses not backed by an Appwrite user, target, or topic.
      * @return \Generator<array<string, array<string, null>>>
      * @throws \Exception
      */
@@ -345,6 +347,7 @@ class Messaging extends Action
         array $topicIds,
         array $userIds,
         array $targetIds,
+        array $emails,
         string $providerType,
         Document $default
     ): \Generator {
@@ -459,6 +462,21 @@ class Messaging extends Action
 
                 yield $this->groupTargetsByProvider($targets, $default);
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        if (\count($emails) > 0) {
+            // Raw emails are already delivery identifiers, so they bypass the targets/subscribers lookups
+            // entirely and route straight to the default provider in bounded pages. Deduplicate up front so a
+            // repeated address spanning two chunks is not delivered to more than once.
+            foreach (\array_chunk(\array_values(\array_unique($emails)), MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+                $identifiers = [];
+
+                foreach ($chunk as $email) {
+                    $identifiers[$default->getId()][$email] = null;
+                }
+
+                yield $identifiers;
+            }
         }
     }
 

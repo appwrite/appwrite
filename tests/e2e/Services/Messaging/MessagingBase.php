@@ -1802,6 +1802,125 @@ trait MessagingBase
         $this->assertEquals(MessageStatus::DRAFT, $message['status']);
     }
 
+    public function testCreateEmailToRawEmails(): void
+    {
+        $emails = [uniqid() . '@example.com', uniqid() . '@example.com'];
+
+        // Raw emails alone (no topics/users/targets) must satisfy the recipient requirement.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'emails' => $emails,
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $message = $response['body'];
+        $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+        $this->assertEquals($emails, $message['data']['emails']);
+
+        // A non-draft message addressed only to raw emails is accepted for processing.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'emails' => $emails,
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($emails, $response['body']['data']['emails']);
+
+        // Malformed email addresses are rejected before the message is created.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'emails' => ['not-an-email'],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testSendEmailToRawEmails(): void
+    {
+        if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+            $this->markTestSkipped('Email DSN not provided');
+        }
+
+        $emailDSN = new DSN(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $to = $emailDSN->getParam('to');
+        $fromName = $emailDSN->getParam('fromName');
+        $fromEmail = $emailDSN->getParam('fromEmail');
+        $apiKey = $emailDSN->getPassword();
+
+        if (empty($to) || empty($apiKey)) {
+            $this->markTestSkipped('Email provider not configured');
+        }
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Sendgrid-provider',
+            'apiKey' => $apiKey,
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Deliver straight to a raw email address with no backing user, target, or topic.
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'emails' => [$to],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $emailMessageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($emailMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
+        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+    }
+
     public function testCreateDraftPushWithImage(): void
     {
         // Create User 1

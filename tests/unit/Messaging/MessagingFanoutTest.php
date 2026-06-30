@@ -379,6 +379,100 @@ final class MessagingFanoutTest extends TestCase
         $this->assertCount(2, $identifiers);
     }
 
+    public function testStreamResolvesRawEmailsWithoutDatabaseLookups(): void
+    {
+        // Raw emails are not backed by any user/target/topic, so the stream must not touch the database at all.
+        $database = new RecordingDatabase();
+        $emails = ['raw1@example.com', 'raw2@example.com', 'raw3@example.com'];
+
+        $pages = $this->collectPages($database, emails: $emails);
+
+        $this->assertSame([], $database->findCalls, 'Raw emails must never trigger a database read');
+        $this->assertCount(1, $pages, 'A small raw-email list fits in a single page');
+
+        // Every raw email routes to the default provider as a ready-to-send identifier.
+        $providerId = $this->provider()->getId();
+        $this->assertSame([$providerId], \array_keys($pages[0]));
+        $this->assertSame($emails, \array_keys($pages[0][$providerId]));
+    }
+
+    public function testStreamPaginatesRawEmails(): void
+    {
+        // More raw emails than a single page so the chunking is exercised.
+        $count = MESSAGE_RECIPIENTS_PAGE_SIZE * 2 + 7;
+        $emails = [];
+        for ($i = 1; $i <= $count; $i++) {
+            $emails[] = "raw{$i}@example.com";
+        }
+
+        $database = new RecordingDatabase();
+        $identifiers = $this->collectStream($database, emails: $emails);
+
+        $this->assertSame([], $database->findCalls, 'Raw emails must never trigger a database read');
+        $this->assertCount($count, $identifiers);
+        for ($i = 1; $i <= $count; $i++) {
+            $this->assertArrayHasKey("raw{$i}@example.com", $identifiers);
+        }
+    }
+
+    public function testStreamDeduplicatesRawEmailsWithinPage(): void
+    {
+        $database = new RecordingDatabase();
+        $emails = ['dup@example.com', 'dup@example.com', 'unique@example.com'];
+
+        $pages = $this->collectPages($database, emails: $emails);
+
+        $providerId = $this->provider()->getId();
+        $this->assertSame(
+            ['dup@example.com', 'unique@example.com'],
+            \array_keys($pages[0][$providerId]),
+            'Duplicate raw emails within a page must collapse to one'
+        );
+    }
+
+    public function testStreamDeduplicatesRawEmailsAcrossPages(): void
+    {
+        // A duplicate address at the start and end of a list longer than one page would land in different
+        // array_chunk pages; the per-page key dedup cannot collapse it, so it must be deduplicated up front
+        // or it would be delivered to twice.
+        $emails = [];
+        for ($i = 1; $i <= MESSAGE_RECIPIENTS_PAGE_SIZE; $i++) {
+            $emails[] = "raw{$i}@example.com";
+        }
+        $emails[] = 'raw1@example.com';
+
+        $database = new RecordingDatabase();
+        $pages = $this->collectPages($database, emails: $emails);
+
+        $providerId = $this->provider()->getId();
+        $deliveries = 0;
+        foreach ($pages as $page) {
+            $deliveries += \count($page[$providerId] ?? []);
+        }
+
+        $this->assertSame(
+            MESSAGE_RECIPIENTS_PAGE_SIZE,
+            $deliveries,
+            'A duplicate raw email spanning two pages must be delivered to exactly once'
+        );
+    }
+
+    public function testStreamCombinesRawEmailsWithRegisteredRecipients(): void
+    {
+        // A direct target and a raw email together: both resolve, the target via the database and the raw email
+        // straight through, so a message can mix Appwrite-backed and pure-email recipients.
+        $directTargets = [
+            new Document(['$id' => 'dtarget1', '$sequence' => '20', 'providerId' => null, 'identifier' => 'registered@example.com', 'providerType' => MESSAGE_TYPE_EMAIL]),
+        ];
+        $database = new RecordingDatabase([], [], [], $directTargets);
+
+        $identifiers = $this->collectStream($database, targetIds: ['target-b'], emails: ['raw@example.com']);
+
+        $this->assertArrayHasKey('registered@example.com', $identifiers);
+        $this->assertArrayHasKey('raw@example.com', $identifiers);
+        $this->assertCount(2, $identifiers);
+    }
+
     /**
      * Build a topic-backed dataset: $count subscribers, each pointing at one email target. A single identifier
      * is duplicated so per-page dedup is exercised when the dataset fits in one page.
@@ -423,11 +517,12 @@ final class MessagingFanoutTest extends TestCase
         RecordingDatabase $database,
         array $topicIds = [],
         array $userIds = [],
-        array $targetIds = []
+        array $targetIds = [],
+        array $emails = []
     ): array {
         $identifiers = [];
 
-        foreach ($this->collectPages($database, $topicIds, $userIds, $targetIds) as $page) {
+        foreach ($this->collectPages($database, $topicIds, $userIds, $targetIds, $emails) as $page) {
             foreach ($page as $perProvider) {
                 foreach ($perProvider as $identifier => $_) {
                     $identifiers[$identifier] = null;
@@ -442,13 +537,15 @@ final class MessagingFanoutTest extends TestCase
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
+     * @param array<string> $emails
      * @return array<array<string, array<string, null>>>
      */
     private function collectPages(
         RecordingDatabase $database,
         array $topicIds = [],
         array $userIds = [],
-        array $targetIds = []
+        array $targetIds = [],
+        array $emails = []
     ): array {
         $method = new \ReflectionMethod(Messaging::class, 'streamRecipients');
         $worker = new TestableMessaging();
@@ -460,6 +557,7 @@ final class MessagingFanoutTest extends TestCase
             $topicIds,
             $userIds,
             $targetIds,
+            $emails,
             MESSAGE_TYPE_EMAIL,
             $this->provider()
         );
