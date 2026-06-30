@@ -947,7 +947,7 @@ class Migrations extends Action
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name', $user->getAttribute('email')),
             subject: $subject,
-            template: MAIL_TEMPLATE_DATA_EXPORT,
+            template: 'data-export',
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $emailBody,
             preview: $preview,

@@ -51,6 +51,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
 
 use function Swoole\Coroutine\batch;
 
@@ -58,7 +59,7 @@ class Messaging extends Action
 {
     private ?SMSAdapter $adapter = null;
 
-    private Telemetry $telemetry;
+    private ?Counter $sendCounter = null;
 
     public static function getName(): string
     {
@@ -104,7 +105,7 @@ class Messaging extends Action
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
 
-        $this->telemetry = $telemetry;
+        $this->sendCounter = $telemetry->createCounter('worker.messaging.send');
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -550,6 +551,24 @@ class Messaging extends Action
 
         $failed = $recipients - $delivered;
 
+        if ($delivered > 0) {
+            $this->sendCounter?->add($delivered, [
+                'type' => $provider->getAttribute('type'),
+                'provider' => $provider->getAttribute('provider'),
+                'origin' => MESSAGE_SEND_TYPE_EXTERNAL,
+                'result' => 'success',
+            ]);
+        }
+
+        if ($failed > 0) {
+            $this->sendCounter?->add($failed, [
+                'type' => $provider->getAttribute('type'),
+                'provider' => $provider->getAttribute('provider'),
+                'origin' => MESSAGE_SEND_TYPE_EXTERNAL,
+                'result' => 'failure',
+            ]);
+        }
+
         $usage = new UsageContext();
         $usage
             ->addMetric(METRIC_MESSAGES, $recipients)
@@ -829,7 +848,27 @@ class Messaging extends Action
         // webhooks can be attributed back to the originating project.
         $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
-        $this->adapter->send($sms);
+        $provider = \strtolower($this->adapter->getName());
+
+        try {
+            $this->adapter->send($sms);
+        } catch (\Throwable $error) {
+            $this->sendCounter?->add(\count($recipients), [
+                'type' => MESSAGE_TYPE_SMS,
+                'provider' => $provider,
+                'origin' => MESSAGE_SEND_TYPE_INTERNAL,
+                'result' => 'failure',
+            ]);
+
+            throw $error;
+        }
+
+        $this->sendCounter?->add(\count($recipients), [
+            'type' => MESSAGE_TYPE_SMS,
+            'provider' => $provider,
+            'origin' => MESSAGE_SEND_TYPE_INTERNAL,
+            'result' => 'success',
+        ]);
     }
 
 
