@@ -50,6 +50,7 @@ class Delete extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('publisherForDeletes')
             ->inject('project')
@@ -59,6 +60,7 @@ class Delete extends Action
     public function action(
         string $installationId,
         Response $response,
+        Document $project,
         Database $dbForPlatform,
         DeletePublisher $publisherForDeletes,
         Document $project,
@@ -66,6 +68,10 @@ class Delete extends Action
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
