@@ -306,7 +306,19 @@ jobs:
       - name: Load and Start Appwrite
         timeout-minutes: 5
         run: |
-          docker compose pull --quiet --ignore-buildable
+          # Docker Hub registry timeouts are a common transient CI failure
+          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+          # keep `up` single-shot so genuine container health failures still surface.
+          for attempt in 1 2 3; do
+            if docker compose pull --quiet --ignore-buildable; then
+              break
+            elif [ "$attempt" -eq 3 ]; then
+              echo "::error::docker compose pull failed after 3 attempts; aborting"
+              exit 1
+            fi
+            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+            sleep 15
+          done
           docker compose up -d --quiet-pull --wait
 
       - name: Environment Variables
@@ -353,7 +365,19 @@ jobs:
       - name: Load and Start Appwrite
         timeout-minutes: 5
         run: |
-          docker compose pull --quiet --ignore-buildable
+          # Docker Hub registry timeouts are a common transient CI failure
+          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+          # keep `up` single-shot so genuine container health failures still surface.
+          for attempt in 1 2 3; do
+            if docker compose pull --quiet --ignore-buildable; then
+              break
+            elif [ "$attempt" -eq 3 ]; then
+              echo "::error::docker compose pull failed after 3 attempts; aborting"
+              exit 1
+            fi
+            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+            sleep 15
+          done
           docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
@@ -443,7 +467,19 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          docker compose pull --quiet --ignore-buildable
+          # Docker Hub registry timeouts are a common transient CI failure
+          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+          # keep `up` single-shot so genuine container health failures still surface.
+          for attempt in 1 2 3; do
+            if docker compose pull --quiet --ignore-buildable; then
+              break
+            elif [ "$attempt" -eq 3 ]; then
+              echo "::error::docker compose pull failed after 3 attempts; aborting"
+              exit 1
+            fi
+            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+            sleep 15
+          done
           docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
@@ -526,7 +562,19 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          docker compose pull --quiet --ignore-buildable
+          # Docker Hub registry timeouts are a common transient CI failure
+          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+          # keep `up` single-shot so genuine container health failures still surface.
+          for attempt in 1 2 3; do
+            if docker compose pull --quiet --ignore-buildable; then
+              break
+            elif [ "$attempt" -eq 3 ]; then
+              echo "::error::docker compose pull failed after 3 attempts; aborting"
+              exit 1
+            fi
+            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+            sleep 15
+          done
           docker compose up -d --quiet-pull --wait
 
       - name: Run tests
@@ -584,7 +632,19 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          docker compose pull --quiet --ignore-buildable
+          # Docker Hub registry timeouts are a common transient CI failure
+          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+          # keep `up` single-shot so genuine container health failures still surface.
+          for attempt in 1 2 3; do
+            if docker compose pull --quiet --ignore-buildable; then
+              break
+            elif [ "$attempt" -eq 3 ]; then
+              echo "::error::docker compose pull failed after 3 attempts; aborting"
+              exit 1
+            fi
+            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+            sleep 15
+          done
           docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes

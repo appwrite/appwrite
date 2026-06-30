@@ -34,7 +34,7 @@ class XList extends Action
             ->setHttpPath('/v1/project/oauth2')
             ->desc('List project OAuth2 providers')
             ->groups(['api', 'project'])
-            ->label('scope', 'oauth2.read')
+            ->label('scope', ['oauth2.read', 'project.oauth2.read'])
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',
