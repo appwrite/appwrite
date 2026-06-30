@@ -21,6 +21,8 @@ class ScheduleFunctions extends ScheduleBase
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
 
+    private ?float $lastEnqueueUpdate = null;
+
     public static function getName(): string
     {
         return 'schedule-functions';
@@ -41,11 +43,13 @@ class ScheduleFunctions extends ScheduleBase
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
-        // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
-        // the time frame. Previously this used $this->lastEnqueueUpdate as a property
-        // but enabling the assignment broke scheduling, so the diff stays 0.
-        $enqueueDiff = 0;
-        $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
+        // Widen the look-ahead window by how much the cycle ran late so that
+        // schedules cannot fall into the gap between two consecutive windows.
+        // Using max(0, ...) ensures an early wake-up never shrinks the window.
+        $elapsed = $this->lastEnqueueUpdate === null ? 0.0 : $timerStart - $this->lastEnqueueUpdate;
+        $enqueueDiff = max(0.0, $elapsed - static::ENQUEUE_TIMER);
+        $this->lastEnqueueUpdate = $timerStart;
+        $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER + (int)ceil($enqueueDiff));
 
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
 
