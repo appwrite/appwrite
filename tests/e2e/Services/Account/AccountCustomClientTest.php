@@ -3343,6 +3343,75 @@ final class AccountCustomClientTest extends Scope
             }
         );
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'phone' => $number,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame($userId, $response['body']['userId']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'phone' => '+1' . \random_int(1000000000, 9999999999),
+        ]);
+
+        $this->assertSame(409, $response['headers']['status-code']);
+        $this->assertSame('user_already_exists', $response['body']['type']);
+
+        $phone = '+1' . \random_int(1000000000, 9999999999);
+        $responses = $this->createPhoneTokensConcurrently($phone, [
+            ID::unique(),
+            ID::unique(),
+            ID::unique(),
+            ID::unique(),
+        ]);
+        $successfulUserIds = [];
+
+        foreach ($responses as $response) {
+            $body = (string) (\is_array($response['body']) ? \json_encode($response['body']) : $response['body']);
+
+            $this->assertNotSame(500, $response['status']);
+            $this->assertStringNotContainsString('Duplicate', $body);
+            $this->assertStringNotContainsString('Document with the requested unique attributes already exists', $body);
+
+            if ($response['status'] === 201) {
+                $this->assertIsArray($response['body']);
+                $this->assertArrayHasKey('userId', $response['body']);
+                $successfulUserIds[] = $response['body']['userId'];
+                continue;
+            }
+
+            $this->assertSame(409, $response['status']);
+            $this->assertIsArray($response['body']);
+            $this->assertSame('user_already_exists', $response['body']['type']);
+        }
+
+        $this->assertGreaterThan(1, \count($successfulUserIds));
+        $this->assertCount(1, \array_unique($successfulUserIds));
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::equal('phone', [$phone])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertSame($successfulUserIds[0], $response['body']['users'][0]['$id']);
+
         /**
          * Test for FAILURE
          */
@@ -4079,6 +4148,106 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
+
+        $targetId = $response['body']['$id'];
+        $targetUserId = $response['body']['userId'];
+        $expectedIdentifier = $response['body']['identifier'];
+        $expectedExpired = $response['body']['expired'];
+
+        $duplicateIdentifier = 'test-identifier-' . ID::unique();
+        $duplicate = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => $duplicateIdentifier,
+        ]);
+
+        $this->assertSame(201, $duplicate['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/'. $response['body']['$id'] .'/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => $duplicateIdentifier,
+        ]);
+
+        $this->assertSame(409, $response['headers']['status-code']);
+        $this->assertSame('user_target_already_exists', $response['body']['type']);
+
+        $target = $this->client->call(Client::METHOD_GET, '/users/' . $targetUserId . '/targets/' . $targetId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $target['headers']['status-code']);
+        $this->assertSame($targetId, $target['body']['$id']);
+        $this->assertSame($expectedIdentifier, $target['body']['identifier']);
+        $this->assertSame($expectedExpired, $target['body']['expired']);
+    }
+
+    /**
+     * @param list<string> $userIds
+     * @return list<array{status: int, body: array|string}>
+     */
+    private function createPhoneTokensConcurrently(string $phone, array $userIds): array
+    {
+        $multi = \curl_multi_init();
+        $this->assertNotFalse($multi);
+
+        $handles = [];
+        $headers = [
+            'origin: http://localhost',
+            'content-type: application/json',
+            'x-appwrite-project: ' . $this->getProject()['$id'],
+            'x-sdk-version: appwrite:php:v1.0.7',
+        ];
+
+        foreach ($userIds as $userId) {
+            $handle = \curl_init($this->client->getEndpoint() . '/account/tokens/phone');
+            $this->assertNotFalse($handle);
+
+            \curl_setopt($handle, CURLOPT_CUSTOMREQUEST, Client::METHOD_POST);
+            \curl_setopt($handle, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($handle, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
+            \curl_setopt($handle, CURLOPT_HTTPHEADER, $headers);
+            \curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 0);
+            \curl_setopt($handle, CURLOPT_TIMEOUT, 15);
+            \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode([
+                'userId' => $userId,
+                'phone' => $phone,
+            ]));
+
+            \curl_multi_add_handle($multi, $handle);
+            $handles[] = $handle;
+        }
+
+        do {
+            $status = \curl_multi_exec($multi, $running);
+
+            if ($running > 0 && \curl_multi_select($multi, 1.0) === -1) {
+                \usleep(1000);
+            }
+        } while ($running > 0 && $status === CURLM_OK);
+
+        $responses = [];
+        foreach ($handles as $handle) {
+            $body = \curl_multi_getcontent($handle);
+            $decoded = \json_decode($body, true);
+
+            $responses[] = [
+                'status' => \curl_getinfo($handle, CURLINFO_HTTP_CODE),
+                'body' => \is_array($decoded) ? $decoded : $body,
+            ];
+
+            \curl_multi_remove_handle($multi, $handle);
+            \curl_close($handle);
+        }
+
+        \curl_multi_close($multi);
+
+        return $responses;
     }
 
     public function testMFARecoveryCodeChallenge(): void

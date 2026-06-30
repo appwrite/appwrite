@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseServer
@@ -246,6 +248,157 @@ trait TeamsBaseServer
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateTeamMembershipConcurrentDuplicate(): void
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Concurrent Membership Team',
+        ]);
+
+        $this->assertSame(201, $team['headers']['status-code']);
+
+        $userId = ID::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'email' => uniqid() . 'parallel@localhost.test',
+            'password' => 'password',
+            'name' => 'Parallel User',
+        ]);
+
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $requests = 8;
+        $responses = $this->createMembershipsConcurrently($team['body']['$id'], $userId, $requests);
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+
+        foreach ($responses as $response) {
+            $status = $response['headers']['status-code'];
+            $body = is_string($response['body'])
+                ? $response['body']
+                : json_encode($response['body'], JSON_THROW_ON_ERROR);
+
+            $this->assertNotSame(500, $status);
+            $this->assertContains($status, [201, 409]);
+            $this->assertStringNotContainsString('Duplicate', $body);
+            $this->assertStringNotContainsString('Document with the requested unique attributes already exists', $body);
+
+            if ($status === 409) {
+                $this->assertIsArray($response['body']);
+                $this->assertSame('membership_already_confirmed', $response['body']['type'] ?? null);
+            }
+        }
+
+        sort($statuses);
+
+        $this->assertSame(array_merge([201], array_fill(0, $requests - 1, 409)), $statuses);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('userId', [$userId])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $this->assertSame(1, $memberships['body']['total']);
+        $this->assertCount(1, $memberships['body']['memberships']);
+
+        $team = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertSame(200, $team['headers']['status-code']);
+        $this->assertSame(1, $team['body']['total']);
+    }
+
+    private function createMembershipsConcurrently(string $teamId, string $userId, int $requests): array
+    {
+        $multi = curl_multi_init();
+        $handles = [];
+        $headers = [];
+        $responses = [];
+        $payload = json_encode([
+            'userId' => $userId,
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ], JSON_THROW_ON_ERROR);
+        $requestHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $formattedHeaders = [];
+
+        foreach ($requestHeaders as $key => $value) {
+            $formattedHeaders[] = $key . ': ' . $value;
+        }
+
+        for ($index = 0; $index < $requests; $index++) {
+            $handle = curl_init($this->client->getEndpoint() . '/teams/' . $teamId . '/memberships');
+
+            curl_setopt($handle, CURLOPT_CUSTOMREQUEST, Client::METHOD_POST);
+            curl_setopt($handle, CURLOPT_HEADERFUNCTION, function (\CurlHandle $handle, string $header) use (&$headers, $index): int {
+                $length = strlen($header);
+                $parts = explode(':', $header, 2);
+
+                if (count($parts) === 2) {
+                    $headers[$index][strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+
+                return $length;
+            });
+            curl_setopt($handle, CURLOPT_HTTPHEADER, $formattedHeaders);
+            curl_setopt($handle, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($handle, CURLOPT_TIMEOUT, 15);
+
+            curl_multi_add_handle($multi, $handle);
+            $handles[$index] = $handle;
+        }
+
+        do {
+            $status = curl_multi_exec($multi, $running);
+
+            if ($running > 0) {
+                curl_multi_select($multi);
+            }
+        } while ($running > 0 && $status === CURLM_OK);
+
+        foreach ($handles as $index => $handle) {
+            $body = curl_multi_getcontent($handle);
+            $headers[$index]['status-code'] = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+
+            if (is_string($body) && str_contains($headers[$index]['content-type'] ?? '', 'application/json')) {
+                $decoded = json_decode($body, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $body = $decoded;
+                }
+            }
+
+            $responses[$index] = [
+                'headers' => $headers[$index],
+                'body' => $body,
+            ];
+
+            curl_multi_remove_handle($multi, $handle);
+            curl_close($handle);
+        }
+
+        curl_multi_close($multi);
+        ksort($responses);
+
+        return array_values($responses);
     }
 
     public function testUpdateMembershipRoles(): void
