@@ -451,9 +451,13 @@ class Mapper
                 'email' => static::model("{$prefix}Email"),
                 'url' => static::model("{$prefix}Url"),
                 'ip' => static::model("{$prefix}Ip"),
+                APP_DATABASE_ATTRIBUTE_ENUM => static::model("{$prefix}Enum"),
                 default => static::model("{$prefix}String"),
             },
-            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
+
+            // Map type='enum' (legacy outer-match) to Enum model. Originally deferred as a breaking change;
+            // now applied. Existing GraphQL clients expecting String for enum fields will break.
+            'enum' => static::model("{$prefix}Enum"),
             'integer' => static::model("{$prefix}Integer"),
             'double' => static::model("{$prefix}Float"),
             'boolean' => static::model("{$prefix}Boolean"),
