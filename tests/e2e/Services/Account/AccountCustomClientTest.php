@@ -1039,6 +1039,115 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testGetAccountSessionsWithCurrentOnly(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Create a fresh account
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Create first session
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session1Id = $response['body']['$id'];
+        $session1 = $response['cookies']['a_session_' . $projectId];
+
+        // Create second session
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session2Id = $response['body']['$id'];
+        $session2 = $response['cookies']['a_session_' . $projectId];
+
+        // Test 1: Without currentOnly, should return all 2 sessions
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session2,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['sessions']);
+
+        // Test 2: With currentOnly=true, should return only the current session (session2)
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session2,
+        ]), [
+            'currentOnly' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($session2Id, $response['body']['sessions'][0]['$id']);
+        $this->assertEquals(true, $response['body']['sessions'][0]['current']);
+
+        // Test 3: With currentOnly=false (explicit), should return all 2 sessions
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session2,
+        ]), [
+            'currentOnly' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['sessions']);
+
+        // Test 4: Switch to session1, test currentOnly=true returns session1
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session1,
+        ]), [
+            'currentOnly' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($session1Id, $response['body']['sessions'][0]['$id']);
+        $this->assertEquals(true, $response['body']['sessions'][0]['current']);
+    }
+
     public function testGetAccountLogs(): void
     {
         // Use fresh account for predictable log count

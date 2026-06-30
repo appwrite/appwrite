@@ -443,4 +443,109 @@ trait AccountBase
 
         $this->assertEquals($session['headers']['status-code'], 429);
     }
+
+    public function testUpdateAccountEmailWithTrimming(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $cleanEmail1 = uniqid() . 'trimtest1@localhost.test';
+        $emailWithLeadingSpaces = '  ' . $cleanEmail1;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'email' => $emailWithLeadingSpaces,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($cleanEmail1, $response['body']['email']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $cleanEmail1,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $cleanEmail2 = uniqid() . 'trimtest2@localhost.test';
+        $emailWithTrailingSpaces = $cleanEmail2 . '  ';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'email' => $emailWithTrailingSpaces,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($cleanEmail2, $response['body']['email']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $cleanEmail2,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $cleanEmail3 = uniqid() . 'trimtest3@localhost.test';
+        $emailWithBothSpaces = '  ' . $cleanEmail3 . '  ';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'email' => $emailWithBothSpaces,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($cleanEmail3, $response['body']['email']);
+    }
 }

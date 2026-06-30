@@ -538,30 +538,38 @@ Http::get('/v1/account/sessions')
         ],
         contentType: ContentType::JSON,
     ))
+    ->param('currentOnly', false, new Boolean(), 'Set to true to return only the current session.', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (bool $currentOnly, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
 
         $sessions = $user->getAttribute('sessions', []);
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
+        $result = [];
         foreach ($sessions as $key => $session) {/** @var Document $session */
+            $isCurrent = ($current == $session->getId()) ? true : false;
+            
+            if ($currentOnly && !$isCurrent) {
+                continue;
+            }
+
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
-            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('current', $isCurrent);
             $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
-            $sessions[$key] = $session;
+            $result[] = $session;
         }
 
         $response->dynamic(new Document([
-            'sessions' => $sessions,
-            'total' => count($sessions),
+            'sessions' => $result,
+            'total' => count($result),
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -3416,7 +3424,7 @@ Http::patch('/v1/account/email')
 
         $oldEmail = $user->getAttribute('email');
 
-        $email = \strtolower($email);
+        $email = \strtolower(\trim($email));
 
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
