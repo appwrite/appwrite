@@ -9,7 +9,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
-use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
@@ -203,8 +202,20 @@ class Create extends Action
             }
 
             $adapter = new AdapterDatabase($dbForProject);
-            $audit = new Audit($adapter);
-            $audit->setup();
+            try {
+                $indexDocs = array_filter(
+                    $adapter->getIndexDocuments(),
+                    fn ($doc) => $doc->getAttribute('type') !== Database::INDEX_FULLTEXT
+                        || $dbForProject->getAdapter()->getSupportForFulltextIndex()
+                );
+                $dbForProject->createCollection(
+                    $adapter->getCollectionName(),
+                    $adapter->getAttributeDocuments(),
+                    $indexDocs,
+                );
+            } catch (Duplicate) {
+                // Audit collection already exists
+            }
 
             if ($create) {
                 /** @var array $collections */
