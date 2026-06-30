@@ -222,8 +222,9 @@ class Generator
                     }
                 ));
 
-                if ($hasSelectedDependency && !\in_array($selected, $dependsOn, true)) {
-                    $dependsOn[] = $selected;
+                if ($hasSelectedDependency) {
+                    $dependsOn = \array_fill_keys($dependsOn, ['condition' => 'service_started']);
+                    $dependsOn[$selected] = $selector['condition'];
                 }
 
                 $service['depends_on'] = $dependsOn;

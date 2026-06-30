@@ -98,8 +98,8 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['appwrite'], $compose['services']['traefik']['depends_on']);
-        $this->assertContains('postgresql', $compose['services']['appwrite']['depends_on']);
-        $this->assertNotContains('${_APP_DB_HOST:-mongodb}', $compose['services']['appwrite']['depends_on']);
+        $this->assertArrayHasKey('postgresql', $compose['services']['appwrite']['depends_on']);
+        $this->assertArrayNotHasKey('${_APP_DB_HOST:-mongodb}', $compose['services']['appwrite']['depends_on']);
     }
 
     public function testKeepsLongCommandsReadable(): void
