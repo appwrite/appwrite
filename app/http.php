@@ -103,7 +103,7 @@ function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null)
                     return $i;
                 }
             }
-            return rand(0, $totalWorkers - 1);
+            return random_int(0, $totalWorkers - 1);
         }
 
         $riskyWorkersPercent = intval(System::getEnv('_APP_RISKY_WORKERS_PERCENT', 80)) / 100; // Decimal form 0 to 1
@@ -151,7 +151,7 @@ function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null)
             }
 
             // If no idle workers, give to random risky worker
-            $worker = rand($riskyWorkers, $totalWorkers - 1);
+            $worker = random_int($riskyWorkers, $totalWorkers - 1);
             Console::warning("swoole_dispatch: Risky branch: did not find a idle worker, picking random worker {$worker}");
             return $worker;
         }
@@ -166,7 +166,7 @@ function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null)
 
         // If no idle worker found, give to random safe worker
         // We avoid risky workers here, as it could be in work - not idle. Thats exactly when they are risky.
-        $worker = rand(0, $riskyWorkers - 1);
+        $worker = random_int(0, $riskyWorkers - 1);
         Console::warning("swoole_dispatch: Non-risky branch: did not find a idle worker, picking random worker {$worker}");
         return $worker;
     };

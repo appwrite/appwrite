@@ -112,7 +112,7 @@ class Webhooks extends Action
         }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
-        $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signature = base64_encode(hash_hmac('sha256', $url . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));
@@ -145,7 +145,7 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 
         if (!$webhook->getAttribute('security', true)) {
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
 
