@@ -1424,15 +1424,22 @@ class Builds extends Action
         $files = \array_map(\trim(...), $files);
         $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
 
+        Console::info('[Detection] Framework: ' . $framework);
+        Console::info('[Detection] Files: ' . \implode(', ', $files));
+
         $detector = new Rendering($framework);
         foreach ($files as $file) {
             $detector->addInput($file);
         }
 
-        return $detector
+        $result = $detector
             ->addOption(new SSR())
             ->addOption(new XStatic())
             ->detect();
+
+        Console::info('[Detection] Result: ' . $result->getName());
+
+        return $result;
     }
 
     /**
