@@ -73,7 +73,9 @@ trait Deployment
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                 if ($project->isEmpty()) {
-                    throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
+                    Console::warning("Repository {$repositoryId} references non-existent project {$projectId}, cleaning up");
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repositoryId));
+                    continue;
                 }
 
                 $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
