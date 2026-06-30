@@ -471,7 +471,11 @@ function failResponse(response, message) {
 }
 
 function cookieHeader(response) {
-    return response.headers['Set-Cookie'] || response.headers['set-cookie'] || '';
+    const cookie = response.headers['Set-Cookie'] || response.headers['set-cookie'];
+    if (Array.isArray(cookie)) {
+        return cookie.join('; ');
+    }
+    return cookie || '';
 }
 
 function projectHeaders(projectId) {
