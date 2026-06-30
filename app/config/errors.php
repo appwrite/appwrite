@@ -462,7 +462,7 @@ return [
     ],
     Exception::AVATAR_NOT_FOUND => [
         'name' => Exception::AVATAR_NOT_FOUND,
-        'description' => 'The request avatar could not be found.',
+        'description' => 'The requested avatar could not be found.',
         'code' => 404,
     ],
     Exception::AVATAR_IMAGE_NOT_FOUND => [
