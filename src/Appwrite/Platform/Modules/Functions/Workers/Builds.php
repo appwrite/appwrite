@@ -923,12 +923,9 @@ class Builds extends Action
 
                         $deployment->setAttribute('adapter', $adapter);
                         $deployment->setAttribute('fallbackFile', $detection->getFallbackFile() ?? '');
-                        Span::add('build.adapter', $adapter);
-                        Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                     }
                 } else {
                     $deployment->setAttribute('adapter', $adapter);
-                    Span::add('build.adapter', $adapter);
 
                     if (!empty($detectionLogs)) {
                         $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
@@ -943,7 +940,6 @@ class Builds extends Action
                                     $resource = $dbForProject->updateDocument('sites', $resource->getId(), new Document(['fallbackFile' => $detectedFallback]));
                                 }
                                 $deployment->setAttribute('fallbackFile', $detectedFallback);
-                                Span::add('build.fallback_file', $detectedFallback);
                             } else {
                                 $deployment->setAttribute('fallbackFile', $resource->getAttribute('fallbackFile', ''));
                             }
@@ -953,6 +949,13 @@ class Builds extends Action
                             $deployment->setAttribute('fallbackFile', $resource->getAttribute('fallbackFile', ''));
                         }
                     }
+                }
+
+                if ($deployment->getAttribute('adapter') !== null) {
+                    Span::add('build.adapter', $deployment->getAttribute('adapter'));
+                }
+                if ($deployment->getAttribute('fallbackFile') !== null) {
+                    Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                 }
             }
 
