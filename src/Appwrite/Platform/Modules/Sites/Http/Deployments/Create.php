@@ -164,7 +164,7 @@ class Create extends Action
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Only gzip compressed files (.tar.gz) are accepted for site deployments.');
         }
 
         $contentRange = $request->getHeaderLine('content-range');
