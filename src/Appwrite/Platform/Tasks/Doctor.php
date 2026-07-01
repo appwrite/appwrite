@@ -8,6 +8,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -45,37 +46,37 @@ class Doctor extends Action
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
 \_/\_/(__)  (__)  (_/\_)(__\_)(__) (__) (____)(_)(__)\__/ ");
 
-        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . System::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
+        Console::log("\n".'👩‍⚕️ Running '.APP_NAME.' Doctor for version '.System::getEnv('_APP_VERSION', 'UNKNOWN').' ...'."\n");
 
         Console::log('[Settings]');
 
         $domain = new Domain(System::getEnv('_APP_DOMAIN'));
-        if (!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 Hostname is not valid (' . $domain->get() . ')');
+        if (! $domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 Hostname is not valid ('.$domain->get().')');
         } else {
-            Console::log('🟢 Hostname is valid (' . $domain->get() . ')');
+            Console::log('🟢 Hostname is valid ('.$domain->get().')');
         }
 
         $domain = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
-        if (!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 CNAME record target is not valid (' . $domain->get() . ')');
+        if (! $domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 CNAME record target is not valid ('.$domain->get().')');
         } else {
-            Console::log('🟢 CNAME record target is valid (' . $domain->get() . ')');
+            Console::log('🟢 CNAME record target is valid ('.$domain->get().')');
         }
 
         $ipv4 = new IP(IP::V4);
         $targetA = \explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', ''))[0];
-        if (!$ipv4->isValid($targetA)) {
-            Console::log('🔴 A record target is not valid (' . $targetA . ')');
+        if (! $ipv4->isValid($targetA)) {
+            Console::log('🔴 A record target is not valid ('.$targetA.')');
         } else {
-            Console::log('🟢 A record target is valid (' . $targetA . ')');
+            Console::log('🟢 A record target is valid ('.$targetA.')');
         }
 
         $ipv6 = new IP(IP::V6);
-        if (!$ipv6->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'))) {
-            Console::log('🔴 AAAA record target is not valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
+        if (! $ipv6->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'))) {
+            Console::log('🔴 AAAA record target is not valid ('.System::getEnv('_APP_DOMAIN_TARGET_AAAA').')');
         } else {
-            Console::log('🟢 AAAA record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
+            Console::log('🟢 AAAA record target is valid ('.System::getEnv('_APP_DOMAIN_TARGET_AAAA').')');
         }
 
         if (System::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
@@ -90,7 +91,7 @@ class Doctor extends Action
             Console::log('🟢 App environment is set for production');
         }
 
-        if ('enabled' !== System::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'disabled') !== 'enabled') {
             Console::log('🔴 Abuse protection is disabled');
         } else {
             Console::log('🟢 Abuse protection is enabled');
@@ -110,13 +111,13 @@ class Doctor extends Action
             Console::log('🟢 Console access limits are enabled');
         }
 
-        if ('enabled' !== System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
+        if (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') !== 'enabled') {
             Console::log('🔴 HTTPS force option is disabled');
         } else {
             Console::log('🟢 HTTPS force option is enabled');
         }
 
-        if ('enabled' !== System::getEnv('_APP_OPTIONS_ROUTER_FORCE_HTTPS', 'disabled')) {
+        if (System::getEnv('_APP_OPTIONS_ROUTER_FORCE_HTTPS', 'disabled') !== 'enabled') {
             Console::log('🔴 HTTPS force option is disabled for function/site domains');
         } else {
             Console::log('🟢 HTTPS force option is enabled for function/site domains');
@@ -129,10 +130,10 @@ class Doctor extends Action
 
             $providerName = $loggingProvider->getScheme();
 
-            if (empty($providerName) || !Logger::hasProvider($providerName)) {
+            if (empty($providerName) || ! Logger::hasProvider($providerName)) {
                 Console::log('🔴 Logging adapter is disabled');
             } else {
-                Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+                Console::log('🟢 Logging adapter is enabled ('.$providerName.')');
             }
         } catch (\Throwable) {
             Console::log('🔴 Logging adapter is misconfigured');
@@ -140,7 +141,7 @@ class Doctor extends Action
 
         \usleep(200 * 1000); // Sleep for 0.2 seconds
 
-        Console::log("\n" . '[Connectivity]');
+        Console::log("\n".'[Connectivity]');
 
         /** @var Group $pools */
         $pools = $register->get('pools');
@@ -154,14 +155,15 @@ class Doctor extends Action
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
+                    $adapter->setAuthorization(new Authorization);
 
                     if ($adapter->ping()) {
-                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
+                        Console::success('🟢 '.str_pad("{$key}({$database})", 50, '.').'connected');
                     } else {
-                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
+                        Console::error('🔴 '.str_pad("{$key}({$database})", 47, '.').'disconnected');
                     }
                 } catch (\Throwable) {
-                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
+                    Console::error('🔴 '.str_pad("{$key}.({$database})", 47, '.').'disconnected');
                 }
             }
         }
@@ -178,19 +180,19 @@ class Doctor extends Action
         foreach ($configs as $key => $config) {
             foreach ($config as $pool) {
                 try {
-                    $adapter = match($key) {
+                    $adapter = match ($key) {
                         'Cache' => new CachePool($pools->get($pool)),
                         'Queue' => new BrokerPool($pools->get($pool)),
                         'PubSub' => new PubSubPool($pools->get($pool)),
                     };
 
                     if ($adapter->ping()) {
-                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
+                        Console::success('🟢 '.str_pad("{$key}({$pool})", 50, '.').'connected');
                     } else {
-                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                        Console::error('🔴 '.str_pad("{$key}({$pool})", 47, '.').'disconnected');
                     }
                 } catch (\Throwable) {
-                    Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                    Console::error('🔴 '.str_pad("{$key}({$pool})", 47, '.').'disconnected');
                 }
             }
         }
@@ -203,12 +205,12 @@ class Doctor extends Action
                 );
 
                 if ((@$antivirus->ping())) {
-                    Console::success('🟢 ' . str_pad("Antivirus", 50, '.') . 'connected');
+                    Console::success('🟢 '.str_pad('Antivirus', 50, '.').'connected');
                 } else {
-                    Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
+                    Console::error('🔴 '.str_pad('Antivirus', 47, '.').'disconnected');
                 }
             } catch (\Throwable) {
-                Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
+                Console::error('🔴 '.str_pad('Antivirus', 47, '.').'disconnected');
             }
         }
 
@@ -220,14 +222,14 @@ class Doctor extends Action
                 to: ['demo@example.com'],
                 subject: 'Test SMTP Connection',
                 content: 'Hello World',
-                fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')),
+                fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')),
                 fromEmail: System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
             );
 
             $smtp->send($emailMessage);
-            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+            Console::success('🟢 '.str_pad('SMTP', 50, '.').'connected');
         } catch (\Throwable) {
-            Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
+            Console::error('🔴 '.str_pad('SMTP', 47, '.').'disconnected');
         }
 
         \usleep(200 * 1000); // Sleep for 0.2 seconds
@@ -240,21 +242,21 @@ class Doctor extends Action
                 'Uploads' => APP_STORAGE_UPLOADS,
                 'Cache' => APP_STORAGE_CACHE,
                 'Config' => APP_STORAGE_CONFIG,
-                'Certs' => APP_STORAGE_CERTIFICATES
+                'Certs' => APP_STORAGE_CERTIFICATES,
             ] as $key => $volume
         ) {
             $device = new Local($volume);
 
             if (\is_readable($device->getRoot())) {
-                Console::success('🟢 ' . $key . ' Volume is readable');
+                Console::success('🟢 '.$key.' Volume is readable');
             } else {
-                Console::error('🔴 ' . $key . ' Volume is unreadable');
+                Console::error('🔴 '.$key.' Volume is unreadable');
             }
 
             if (\is_writable($device->getRoot())) {
-                Console::success('🟢 ' . $key . ' Volume is writeable');
+                Console::success('🟢 '.$key.' Volume is writeable');
             } else {
-                Console::error('🔴 ' . $key . ' Volume is unwriteable');
+                Console::error('🔴 '.$key.' Volume is unwriteable');
             }
         }
 
@@ -268,7 +270,7 @@ class Doctor extends Action
                 'Uploads' => APP_STORAGE_UPLOADS,
                 'Cache' => APP_STORAGE_CACHE,
                 'Config' => APP_STORAGE_CONFIG,
-                'Certs' => APP_STORAGE_CERTIFICATES
+                'Certs' => APP_STORAGE_CERTIFICATES,
             ] as $key => $volume
         ) {
             $device = new Local($volume);
@@ -276,32 +278,32 @@ class Doctor extends Action
             $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
             / $device->getPartitionTotalSpace()) * 100;
 
-            $message = $key . ' Volume has ' . Storage::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
+            $message = $key.' Volume has '.Storage::human($device->getPartitionFreeSpace()).' free space ('.\round($percentage, 2).'% used)';
 
             if ($percentage < 80) {
-                Console::success('🟢 ' . $message);
+                Console::success('🟢 '.$message);
             } else {
-                Console::error('🔴 ' . $message);
+                Console::error('🔴 '.$message);
             }
         }
 
         try {
             if (Http::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
+                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost').'/version'), true);
 
                 if ($version && isset($version['version'])) {
                     if (\version_compare($version['version'], System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
-                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
+                        Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
                     } else {
-                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
+                        Console::info('A new version ('.$version['version'].') is available! 🥳'."\n");
                     }
                 } else {
-                    Console::error('Failed to check for a newer version' . "\n");
+                    Console::error('Failed to check for a newer version'."\n");
                 }
             }
         } catch (\Throwable) {
-            Console::error('Failed to check for a newer version' . "\n");
+            Console::error('Failed to check for a newer version'."\n");
         }
     }
 }

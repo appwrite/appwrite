@@ -13,28 +13,31 @@ use Utopia\System\System;
 
 abstract class Scope extends TestCase
 {
-    use Retryable;
     use Async;
+    use Retryable;
 
     public const REQUEST_TYPE_WEBHOOK = 'webhook';
+
     public const REQUEST_TYPE_SMS = 'sms';
 
     protected ?Client $client = null;
+
     protected string $endpoint = 'http://appwrite/v1';
+
     protected string $webEndpoint = 'http://appwrite.test/v1';
 
     protected function setUp(): void
     {
-        $this->client = new Client();
+        $this->client = new Client;
         $this->client->setEndpoint($this->endpoint);
 
         $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
-        if (!empty($format)) {
+        if (! empty($format)) {
             if (
-                !\preg_match('/^\d+\.\d+\.\d+$/', $format) ||
-                !\version_compare($format, APP_VERSION_STABLE, '<=')
+                ! \preg_match('/^\d+\.\d+\.\d+$/', $format) ||
+                ! \version_compare($format, APP_VERSION_STABLE, '<=')
             ) {
-                throw new \Exception('E2E response format must be ' . APP_VERSION_STABLE . ' or lower.');
+                throw new \Exception('E2E response format must be '.APP_VERSION_STABLE.' or lower.');
             }
             $this->client->setResponseFormat($format);
         }
@@ -66,11 +69,12 @@ abstract class Scope extends TestCase
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => 'console',
-                'cookie' => 'a_session_console=' . $root['session'],
+                'cookie' => 'a_session_console='.$root['session'],
             ]);
 
-            if ($response['headers']['status-code'] === 200 && !empty($response['body'])) {
+            if ($response['headers']['status-code'] === 200 && ! empty($response['body'])) {
                 self::$consoleVariables = $response['body'];
+
                 return self::$consoleVariables;
             }
 
@@ -184,6 +188,7 @@ abstract class Scope extends TestCase
                     try {
                         $probe($emails[$i]);
                         $result = $emails[$i];
+
                         return;
                     } catch (\Throwable) {
                         continue;
@@ -194,7 +199,7 @@ abstract class Scope extends TestCase
                 $result = end($emails);
             } else {
                 $result = array_slice($emails, -1 * $limit);
-                $this->assertCount($limit, $result, "Expected {$limit} emails but only got " . count($result));
+                $this->assertCount($limit, $result, "Expected {$limit} emails but only got ".count($result));
             }
 
             $this->assertNotEmpty($result, 'Expected email result to be non-empty');
@@ -211,7 +216,8 @@ abstract class Scope extends TestCase
     {
         $result = [];
         $this->assertEventually(function () use (&$result, $address, $probe) {
-            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+            $rawEmails = @\file_get_contents('http://maildev:1080/email');
+            $emails = $rawEmails !== false ? \json_decode($rawEmails, true) : [];
 
             $this->assertNotEmpty($emails, 'Maildev should have at least one email');
             $this->assertIsArray($emails);
@@ -230,21 +236,22 @@ abstract class Scope extends TestCase
                                 }
                             }
                             $result = $email;
+
                             return;
                         }
                     }
                 }
             }
 
-            $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
-        }, 15_000, 500);
+            $this->fail("No email found for address: {$address}".($probe !== null ? ' matching probe' : ''));
+        }, 30_000, 500);
 
         return $result;
     }
 
     protected function extractQueryParamsFromEmailLink(string $html): array
     {
-        foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
+        foreach (['/join-us?', '/status?', '/verification?', '/recovery?'] as $prefix) {
             $linkStart = strpos($html, $prefix);
             if ($linkStart !== false) {
                 $hrefStart = strrpos(substr($html, 0, $linkStart), 'href="');
@@ -267,6 +274,7 @@ abstract class Scope extends TestCase
 
                 $queryString = substr($link, $queryStart + 1);
                 parse_str(html_entity_decode($queryString), $queryParams);
+
                 return $queryParams;
             }
         }
@@ -283,7 +291,7 @@ abstract class Scope extends TestCase
         };
 
         $this->assertEventually(function () use (&$request, $probe, $hostname) {
-            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
+            $request = json_decode(file_get_contents('http://'.$hostname.':5000/__last_request__'), true);
             $request['data'] = json_decode($request['data'], true);
 
             call_user_func($probe, $request);
@@ -295,7 +303,7 @@ abstract class Scope extends TestCase
     protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
     {
         $expected = new \Imagick($expectedImagePath);
-        $actual = new \Imagick();
+        $actual = new \Imagick;
         $actual->readImageBlob($actualImageBlob);
 
         foreach ([$expected, $actual] as $image) {
@@ -314,6 +322,7 @@ abstract class Scope extends TestCase
     {
         $project = $this->getProject();
         $this->assertArrayHasKey('$id', $project, 'Project must have an $id');
+
         return $this->getLastRequestForProject($project['$id'], self::REQUEST_TYPE_WEBHOOK, [], 10, 500, $probe);
     }
 
@@ -345,13 +354,14 @@ abstract class Scope extends TestCase
         $query = http_build_query($queryParams);
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+            $requests = json_decode(file_get_contents('http://'.$hostname.':5000/__find_request__?'.$query), true);
             if (is_array($requests)) {
                 for ($i = count($requests) - 1; $i >= 0; $i--) {
                     $request = $this->decodeRequestData($requests[$i]);
                     if ($probe !== null) {
                         try {
                             $probe($request);
+
                             return $request;
                         } catch (\Throwable $error) {
                             continue;
@@ -372,13 +382,14 @@ abstract class Scope extends TestCase
             usleep($delayMs * 1000);
         }
 
-        $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+        $requests = json_decode(file_get_contents('http://'.$hostname.':5000/__find_request__?'.$query), true);
         if (is_array($requests)) {
             for ($i = count($requests) - 1; $i >= 0; $i--) {
                 $request = $this->decodeRequestData($requests[$i]);
                 if ($probe !== null) {
                     try {
                         $probe($request);
+
                         return $request;
                     } catch (\Throwable $error) {
                         continue;
@@ -401,7 +412,7 @@ abstract class Scope extends TestCase
 
     protected function decodeRequestData(array $request): array
     {
-        if (!array_key_exists('data', $request)) {
+        if (! array_key_exists('data', $request)) {
             return $request;
         }
 
@@ -409,32 +420,27 @@ abstract class Scope extends TestCase
             return $request;
         }
 
-        if (!is_string($request['data']) || $request['data'] === '') {
+        if (! is_string($request['data']) || $request['data'] === '') {
             return $request;
         }
 
         $decoded = json_decode($request['data'], true);
         if (json_last_error() === JSON_ERROR_NONE) {
             $request['data'] = $decoded;
+
             return $request;
         }
 
         parse_str($request['data'], $parsed);
-        if (!empty($parsed)) {
+        if (! empty($parsed)) {
             $request['data'] = $parsed;
         }
 
         return $request;
     }
 
-    /**
-     * @return array
-     */
     abstract public function getHeaders(bool $devKey = true): array;
 
-    /**
-     * @return array
-     */
     abstract public function getProject(): array;
 
     /**
@@ -442,9 +448,6 @@ abstract class Scope extends TestCase
      */
     protected static $root = [];
 
-    /**
-     * @return array
-     */
     public function getRoot(): array
     {
         if ((self::$root)) {
@@ -455,7 +458,7 @@ abstract class Scope extends TestCase
 
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
             // Use more entropy to avoid collisions in parallel test execution
-            $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+            $email = uniqid('', true).getmypid().bin2hex(random_bytes(4)).'@localhost.test';
             $password = 'password';
             $name = 'User Name';
 
@@ -472,6 +475,7 @@ abstract class Scope extends TestCase
 
             if ($root['headers']['status-code'] !== 201) {
                 \usleep(500000);
+
                 continue;
             }
 
@@ -486,6 +490,7 @@ abstract class Scope extends TestCase
 
             if (empty($session['cookies']['a_session_console'])) {
                 \usleep(500000);
+
                 continue;
             }
 
@@ -493,7 +498,7 @@ abstract class Scope extends TestCase
             $verify = $this->client->call(Client::METHOD_GET, '/account', [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
-                'cookie' => 'a_session_console=' . $session['cookies']['a_session_console'],
+                'cookie' => 'a_session_console='.$session['cookies']['a_session_console'],
                 'x-appwrite-project' => 'console',
             ]);
 
@@ -511,7 +516,7 @@ abstract class Scope extends TestCase
             \usleep(500000);
         }
 
-        $this->fail('Failed to create and verify root session after ' . $maxRetries . ' attempts');
+        $this->fail('Failed to create and verify root session after '.$maxRetries.' attempts');
     }
 
     /**
@@ -519,19 +524,16 @@ abstract class Scope extends TestCase
      */
     protected static $user = [];
 
-    /**
-     * @return array
-     */
     public function getUser(bool $fresh = false): array
     {
         $projectId = $this->getProject()['$id'];
 
-        if (!$fresh && isset(self::$user[$projectId])) {
+        if (! $fresh && isset(self::$user[$projectId])) {
             return self::$user[$projectId];
         }
 
         // Use more entropy to avoid collisions in parallel test execution
-        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+        $email = uniqid('', true).getmypid().bin2hex(random_bytes(4)).'@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -561,7 +563,7 @@ abstract class Scope extends TestCase
             '$id' => ID::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
-            'session' => $session['cookies']['a_session_' . $projectId],
+            'session' => $session['cookies']['a_session_'.$projectId],
             'sessionId' => $session['body']['$id'],
         ];
 

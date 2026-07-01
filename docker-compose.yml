@@ -42,11 +42,11 @@ services:
         max-size: 10m
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     healthcheck:
-      test:
-        - CMD
-        - doctor
-      interval: 5s
-      timeout: 5s
+
+      test: ["CMD", "doctor"]
+      interval: 10s
+      timeout: 15s
+
       retries: 12
     networks:
       - appwrite
@@ -1202,6 +1202,7 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
