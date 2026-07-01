@@ -2,7 +2,10 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { CreateDatabaseWizardView } from '@/components/pages/projects/$projectId/databases/create/CreateDatabaseWizardView'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
+import {
+  databaseSpecificationsQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -16,6 +19,8 @@ export const Route = createFileRoute(
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
+
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
     await queryClient.ensureQueryData(
       databaseSpecificationsQueryOptions(projectId),

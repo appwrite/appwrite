@@ -12,8 +12,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useProjectDatabase } from '@/lib/react-query/hooks'
+import { useProjectDatabase, useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  getDedicatedDatabaseRegionUnavailableDescription,
+  projectSupportsDedicatedDatabaseCompute,
+} from '@/lib/databases/dedicated-database-regions'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
 import {
   getEffectiveDatabaseSpecIdForMonitoring,
@@ -48,7 +52,10 @@ export function DatabaseMonitorHeaderActions({
   showSpecActions,
 }: DatabaseMonitorHeaderActionsProps) {
   const { database } = useProjectDatabase(projectId, databaseId)
+  const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
+  const supportsDedicatedDatabaseCompute =
+    projectSupportsDedicatedDatabaseCompute(project?.region)
   const databaseType =
     (database as { databaseType?: ApiDatabaseType } | null)?.databaseType ??
     ApiDatabaseType.Tablesdb
@@ -58,11 +65,16 @@ export function DatabaseMonitorHeaderActions({
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
   const specLabel = spec?.label ?? specId
 
-  const showUpgradeCta =
+  const wouldShowUpgrade =
     showSpecActions &&
     (features.dedicatedDbsTablesDB ||
       !serverless ||
       databaseType !== ApiDatabaseType.Tablesdb)
+
+  const showUpgradeCta =
+    wouldShowUpgrade && supportsDedicatedDatabaseCompute
+  const showUpgradeComingSoon =
+    wouldShowUpgrade && !supportsDedicatedDatabaseCompute
 
   return (
     <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 @[560px]:gap-3">
@@ -90,6 +102,26 @@ export function DatabaseMonitorHeaderActions({
               {serverless ? 'Upgrade' : 'Change spec'}
             </Link>
           </Button>
+        ) : showUpgradeComingSoon ? (
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="hidden @[560px]:inline-flex">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 px-2 text-[12px]"
+                    disabled
+                  >
+                    {serverless ? 'Upgrade' : 'Change spec'}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-[12px]">
+                {getDedicatedDatabaseRegionUnavailableDescription()}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ) : null}
       </div>
 

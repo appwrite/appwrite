@@ -32,10 +32,15 @@ import {
   ResourceCard,
   RESOURCE_CARD_GRID_CLASSNAME,
 } from '../../shared/ResourceCard'
+import {
+  DedicatedDatabaseRegionUnavailableBadge,
+  DedicatedDatabaseRegionUnavailableCard,
+} from './DedicatedDatabaseRegionUnavailableCard'
 
 type DedicatedDatabasesSectionProps = {
   projectId: string
   viewMode: 'list' | 'grid'
+  regionSupported?: boolean
 }
 
 function formatEngineLabel(engine: string): string {
@@ -142,7 +147,37 @@ function DedicatedDatabaseCard({
 export function DedicatedDatabasesSection({
   projectId,
   viewMode,
+  regionSupported = true,
 }: DedicatedDatabasesSectionProps) {
+  if (!regionSupported) {
+    return (
+      <section className="mt-10">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <h2 className="text-[15px] font-semibold text-foreground">
+            Dedicated databases
+          </h2>
+          <DedicatedDatabaseRegionUnavailableBadge />
+          <p className="w-full text-[13px] text-muted-foreground">
+            Always-on compute databases managed by the Compute service.
+          </p>
+        </div>
+        <DedicatedDatabaseRegionUnavailableCard icon={Cpu} />
+      </section>
+    )
+  }
+
+  return (
+    <DedicatedDatabasesSectionContent
+      projectId={projectId}
+      viewMode={viewMode}
+    />
+  )
+}
+
+function DedicatedDatabasesSectionContent({
+  projectId,
+  viewMode,
+}: Omit<DedicatedDatabasesSectionProps, 'regionSupported'>) {
   const {
     databases,
     isLoading,

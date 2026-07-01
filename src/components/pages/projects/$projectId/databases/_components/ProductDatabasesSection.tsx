@@ -32,6 +32,10 @@ import {
   RESOURCE_CARD_GRID_CLASSNAME,
 } from '../../shared/ResourceCard'
 import { DatabaseContextMenu } from './DatabaseContextMenu'
+import {
+  DedicatedDatabaseRegionUnavailableBadge,
+  DedicatedDatabaseRegionUnavailableCard,
+} from './DedicatedDatabaseRegionUnavailableCard'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -54,6 +58,7 @@ type ProductDatabasesSectionProps = {
   title: string
   description: string
   viewMode: 'list' | 'grid'
+  regionSupported?: boolean
 }
 
 function sectionIcon(backend: ApiDatabaseType.Documentsdb | ApiDatabaseType.Vectorsdb) {
@@ -83,7 +88,44 @@ export function ProductDatabasesSection({
   title,
   description,
   viewMode,
+  regionSupported = true,
 }: ProductDatabasesSectionProps) {
+  const Icon = sectionIcon(backend)
+
+  if (!regionSupported) {
+    return (
+      <section className="mt-10">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
+          <Badge variant="info" className="text-[10px] shrink-0">
+            Beta
+          </Badge>
+          <DedicatedDatabaseRegionUnavailableBadge />
+          <p className="w-full text-[13px] text-muted-foreground">{description}</p>
+        </div>
+        <DedicatedDatabaseRegionUnavailableCard icon={Icon} />
+      </section>
+    )
+  }
+
+  return (
+    <ProductDatabasesSectionContent
+      projectId={projectId}
+      backend={backend}
+      title={title}
+      description={description}
+      viewMode={viewMode}
+    />
+  )
+}
+
+function ProductDatabasesSectionContent({
+  projectId,
+  backend,
+  title,
+  description,
+  viewMode,
+}: Omit<ProductDatabasesSectionProps, 'regionSupported'>) {
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)

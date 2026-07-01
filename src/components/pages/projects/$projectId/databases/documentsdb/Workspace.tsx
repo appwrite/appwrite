@@ -171,7 +171,6 @@ export function Workspace({
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
-  const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const showDesktopTableSidebar = useMediaMinWidth(1024)
 
   // Sidebar tables list: search, pagination, order (API-backed)
@@ -318,6 +317,7 @@ export function Workspace({
   })
 
   const { project } = useProject(projectId)
+  const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { access } = useOrganizationScopes(project?.teamId)
   const showTableSecuritySettings = canShowTableSecuritySettings(

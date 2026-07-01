@@ -65,6 +65,11 @@ import {
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  getDedicatedDatabaseRegionUnavailableDescription,
+  projectSupportsDedicatedDatabaseCompute,
+} from '@/lib/databases/dedicated-database-regions'
+import { DedicatedDatabaseRegionUnavailableBadge } from '../_components/DedicatedDatabaseRegionUnavailableCard'
+import {
   SERVERLESS_DATABASE_SPEC_ID,
   TABLE_DB_SPEC_OPTIONS,
   hasLockedDatabaseSpecifications,
@@ -490,6 +495,8 @@ export function Overview({
   }
 
   const { project } = useProject(projectId)
+  const supportsDedicatedDatabaseCompute =
+    projectSupportsDedicatedDatabaseCompute(project?.region)
   const { access } = useOrganizationScopes(project?.teamId)
   const showDbSecuritySettings = canShowDatabaseSecuritySettings(
     access,
@@ -1528,7 +1535,8 @@ export function Overview({
                 </div>
               </div>
 
-              {features.dedicatedDbsVectorsDB && (
+              {features.dedicatedDbsVectorsDB &&
+                (supportsDedicatedDatabaseCompute ? (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
@@ -1633,7 +1641,21 @@ export function Overview({
                     )}
                   </div>
                 </div>
-              )}
+                ) : (
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden opacity-80">
+                  <div className="px-6 py-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        Specification
+                      </h3>
+                      <DedicatedDatabaseRegionUnavailableBadge />
+                    </div>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      {getDedicatedDatabaseRegionUnavailableDescription()}
+                    </p>
+                  </div>
+                </div>
+                ))}
 
               {/* Delete Database */}
               <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">

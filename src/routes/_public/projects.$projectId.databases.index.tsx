@@ -9,6 +9,7 @@ import {
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
 import { DatabaseType } from '@appwrite.io/console'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -49,6 +50,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       )
 
       const profileFeatures = getActiveProfileFeatures()
+      const supportsDedicatedDatabaseCompute =
+        projectSupportsDedicatedDatabaseCompute(projectData?.region)
 
       await Promise.all([
         queryClient.ensureQueryData(
@@ -71,7 +74,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             undefined,
           ),
         ),
-        profileFeatures.dedicatedDbsDocumentsDB
+        profileFeatures.dedicatedDbsDocumentsDB &&
+        supportsDedicatedDatabaseCompute
           ? queryClient.ensureQueryData(
               productDatabasesQueryOptions(
                 projectId,
@@ -81,7 +85,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               ),
             )
           : Promise.resolve(),
-        profileFeatures.dedicatedDbsVectorsDB
+        profileFeatures.dedicatedDbsVectorsDB &&
+        supportsDedicatedDatabaseCompute
           ? queryClient.ensureQueryData(
               productDatabasesQueryOptions(
                 projectId,
@@ -91,7 +96,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               ),
             )
           : Promise.resolve(),
-        profileFeatures.dedicatedDbsSupport
+        profileFeatures.dedicatedDbsSupport &&
+        supportsDedicatedDatabaseCompute
           ? queryClient.ensureQueryData(
               dedicatedDatabasesQueryOptions(projectId),
             )

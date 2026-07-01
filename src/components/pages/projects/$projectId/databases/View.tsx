@@ -65,6 +65,7 @@ import {
 } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { getDatabaseServiceLucideIcon } from '@/lib/databases/database-service-icons'
+import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
 
 const TABLESDB_LIST_ICON =
   getDatabaseServiceLucideIcon('tablesdb') ?? Database
@@ -151,6 +152,9 @@ export function View() {
     limit?: number
   }
   const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const supportsDedicatedDatabaseCompute =
+    projectSupportsDedicatedDatabaseCompute(project?.region)
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const queryClient = useQueryClient()
   const databaseDeepLink = (
@@ -409,9 +413,6 @@ export function View() {
 
   // Paginated data - databases are already paginated by the API
   const paginatedDatabases = apiDatabases
-
-  // Get project to get teamId for organization plan
-  const { project } = useProject(projectId)
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -1134,6 +1135,7 @@ export function View() {
             title="DocumentsDB"
             description="Document-based databases with flexible schemas and dedicated compute."
             viewMode={viewMode}
+            regionSupported={supportsDedicatedDatabaseCompute}
           />
         ) : null}
 
@@ -1144,6 +1146,7 @@ export function View() {
             title="VectorsDB"
             description="Vector databases for embeddings, semantic search, and AI workloads."
             viewMode={viewMode}
+            regionSupported={supportsDedicatedDatabaseCompute}
           />
         ) : null}
 
@@ -1151,6 +1154,7 @@ export function View() {
           <DedicatedDatabasesSection
             projectId={projectId}
             viewMode={viewMode}
+            regionSupported={supportsDedicatedDatabaseCompute}
           />
         ) : null}
 

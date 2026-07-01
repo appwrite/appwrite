@@ -65,6 +65,10 @@ import {
   formatDedicatedDatabaseCreateError,
 } from '@/lib/dedicated-database-id'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
+import {
+  getDedicatedDatabaseRegionUnavailableDescription,
+  projectSupportsDedicatedDatabaseCompute,
+} from '@/lib/databases/dedicated-database-regions'
 
 export type DatabaseTypeOption =
   | 'TablesDB'
@@ -79,6 +83,10 @@ type DbTypeChoice = {
   description: string
   icon: 'table' | 'braces' | 'layers' | 'elephant' | 'dolphin'
   comingSoon?: boolean
+}
+
+type DbTypeOptionMeta = DbTypeChoice & {
+  comingSoonMessage?: string
 }
 
 const DB_TYPE_GROUPS: {
@@ -169,6 +177,8 @@ export function CreateDatabaseWizardView() {
   const { track } = useAnalytics()
   const { project } = useProject(pid)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const supportsDedicatedDatabaseCompute =
+    projectSupportsDedicatedDatabaseCompute(project?.region)
 
   const { data: specificationsData, isLoading: specificationsLoading } =
     useQuery(databaseSpecificationsQueryOptions(pid))
@@ -200,26 +210,63 @@ export function CreateDatabaseWizardView() {
   const usesDedicatedCompute =
     isDocumentsDB || isVectorsDB || isNativeDb
 
-  const dbTypeOptions = useMemo(
-    () =>
-      DB_TYPE_OPTIONS.map((opt) => ({
-        ...opt,
-        comingSoon:
-          opt.id === 'Postgres'
-            ? !features.nativeDbsPostgres
-            : opt.id === 'MySQL'
-              ? !features.nativeDbsMySQL
-              : opt.comingSoon,
-      })),
-    [features.nativeDbsPostgres, features.nativeDbsMySQL],
-  )
+  const regionUnavailableMessage =
+    getDedicatedDatabaseRegionUnavailableDescription()
+
+  const dbTypeOptions = useMemo((): DbTypeOptionMeta[] => {
+    return DB_TYPE_OPTIONS.map((opt) => {
+      if (opt.id === 'Postgres') {
+        if (!features.nativeDbsPostgres) {
+          return { ...opt, comingSoon: true }
+        }
+        if (!supportsDedicatedDatabaseCompute) {
+          return {
+            ...opt,
+            comingSoon: true,
+            comingSoonMessage: regionUnavailableMessage,
+          }
+        }
+        return { ...opt, comingSoon: false }
+      }
+      if (opt.id === 'MySQL') {
+        if (!features.nativeDbsMySQL) {
+          return { ...opt, comingSoon: true }
+        }
+        if (!supportsDedicatedDatabaseCompute) {
+          return {
+            ...opt,
+            comingSoon: true,
+            comingSoonMessage: regionUnavailableMessage,
+          }
+        }
+        return { ...opt, comingSoon: false }
+      }
+      if (opt.id === 'DocumentsDB' || opt.id === 'VectorsDB') {
+        if (!supportsDedicatedDatabaseCompute) {
+          return {
+            ...opt,
+            comingSoon: true,
+            comingSoonMessage: regionUnavailableMessage,
+          }
+        }
+        return { ...opt, comingSoon: opt.comingSoon }
+      }
+      return { ...opt, comingSoon: opt.comingSoon }
+    })
+  }, [
+    features.nativeDbsPostgres,
+    features.nativeDbsMySQL,
+    supportsDedicatedDatabaseCompute,
+    regionUnavailableMessage,
+  ])
 
   /** Show specs section for native DBs and Documents/Vectors (always dedicated compute). */
   const showSpecsForType =
-    isDocumentsDB ||
-    isVectorsDB ||
-    (isTablesDB && features.dedicatedDbsTablesDB) ||
-    isNativeDb
+    supportsDedicatedDatabaseCompute &&
+    (isDocumentsDB ||
+      isVectorsDB ||
+      (isTablesDB && features.dedicatedDbsTablesDB) ||
+      isNativeDb)
 
   const selectableSpecs = useMemo(() => {
     if (isNativeDb || isDocumentsDB || isVectorsDB) {
@@ -601,7 +648,10 @@ export function CreateDatabaseWizardView() {
                     {group.title}
                   </h3>
                   <p className="text-[12px] leading-5 text-muted-foreground">
-                    {group.description}
+                    {group.title === 'Native databases' &&
+                    !supportsDedicatedDatabaseCompute
+                      ? regionUnavailableMessage
+                      : group.description}
                   </p>
                 </div>
                 <div className="space-y-4">
@@ -662,7 +712,7 @@ export function CreateDatabaseWizardView() {
                           )}
                         </span>
                         <p className="text-[12px] leading-5 text-muted-foreground">
-                          {opt.description}
+                          {optionMeta.comingSoonMessage ?? opt.description}
                         </p>
                       </div>
                     </button>
