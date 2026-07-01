@@ -1209,7 +1209,7 @@ services:
     environment:
       - GEO_SECRET=$_APP_GEO_SECRET
     healthcheck:
-      test: "php -r \"exit(json_decode(file_get_contents('http://localhost/v1/health'))->status === 'ok' ? 0 : 1);\""
+      test: 'php -r "exit(json_decode(file_get_contents(''http://localhost/v1/health''))->status === ''ok'' ? 0 : 1);"'
       interval: 10s
       timeout: 5s
       retries: 3
