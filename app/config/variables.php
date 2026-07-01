@@ -17,6 +17,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EDITION',
+                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'. Self-hosted deployments do not consume the audit, usage and stats-resources queues, so their producers are disabled for this edition.',
+                'introduction' => '',
+                'default' => 'self-hosted',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCALE',
                 'description' => 'Set your Appwrite\'s locale. By default, the locale is set to \'en\'.',
                 'introduction' => '',
