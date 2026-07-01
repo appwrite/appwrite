@@ -56,7 +56,7 @@ Tasks/               -- CLI task implementations
 HTTP endpoint nesting reflects the URL path. Sub-resources get subdirectories. For example, within the Functions module:
 `Http/Deployments/Template/Create.php` -> `POST /v1/functions/:functionId/deployments/template`
 
-File names in Http directories must only be `Get.php`, `Create.php`, `Update.php`, `Delete.php`, or `XList.php`. For non-CRUD operations, model the endpoint as a property update. For example, updating a team membership status lives at `Teams/Http/Memberships/Status/Update.php` (`PATCH /v1/teams/:teamId/memberships/:membershipId/status`).
+File names in Http directories must only be `Get.php`, `Create.php`, `Update.php`, `Delete.php`, or `XList.php`. For non-CRUD operations, model the endpoint as a property update. For example, updating a team membership status lives at `Teams/Http/Memberships/Status/Update.php` (`PATCH /v1/teams/:teamId/memberships/:membershipId/status`). RPC-style action names (`verifyDomain`, `blockUser`) are not permitted -- see [Naming conventions](#naming-conventions).
 
 Register new modules in `src/Appwrite/Platform/Appwrite.php`. Detailed module guide: `src/Appwrite/Platform/AGENTS.md`.
 
@@ -125,6 +125,7 @@ Follow PSR-12/PSR-4 defaults unless noted below. These principles apply everywhe
 2. **Prefer single words.** Use one word when an existing term is unambiguous in context. Reserve compound or concatenated names for cases where no single word communicates the meaning without ambiguity.
 3. **Do not repeat enclosing context.** Parent namespaces already establish scope -- HTTP path segments, directory layout, module name, class namespace, route prefix, or container/module registration. Local names must not restate that context.
 4. **Prefer established terms.** When several names are equally clear, choose the one that matches conventions already used in the same module, service, or layer. Consistency across the codebase outweighs local preference.
+5. **REST verbs only on the HTTP surface.** Routes, action files, `getName()` identifiers, and SDK method names must map to standard REST operations: `create`, `get`, `list`, `update`, `delete`. Do not introduce imperative or RPC-style verbs (`verify`, `block`, `send`, `confirm`). Express the behavior as a resource or property and apply a REST verb to it.
 
 When in doubt, match the nearest existing module that follows these rules. Legacy code may not conform -- **do not copy outdated patterns by default**. If existing code in the area you are editing violates these principles, call it out in review or in your change description rather than extending the inconsistency. New code should follow this document; opportunistic clean-up of nearby naming is welcome when scope allows.
 
@@ -137,8 +138,32 @@ When in doubt, match the nearest existing module that follows these rules. Legac
 | `Modules/Project/Http/Project/Platforms/Android/` | `createProjectAndroidPlatform` | `create` |
 | SDK label with `namespace: 'teams'` | `name: 'createTeam'` | `name: 'create'` |
 | Handler injected with `$project` | `$projectDocument`, `$currentProject` | `$project` |
+| Domain verification flow | `verifyDomain`, `Verify.php` | `createVerification`, `updateVerification` (`Verification/Create.php`, `Verification/Update.php`) |
+| User verification flow | `verifyUser` | `createVerification`, `updateVerification` |
+| Session expiry change | `expireSession`, `logoutSession` | `updateSession` (`PATCH .../sessions/:sessionId`) |
 
 Add qualifiers only when they disambiguate: `createStringColumn` (type-specific), `:deploymentId` (multiple IDs in one route), `publisherForBuilds` (several publishers in one handler).
+
+### REST-only HTTP and SDK operations
+
+HTTP routes and generated SDK methods **strictly follow REST**. The operation is always one of five verbs applied to a **noun** (resource or property) -- never a custom action verb.
+
+| REST verb | HTTP method | Action file | SDK `name` | Example route |
+|-----------|-------------|-------------|------------|---------------|
+| `create` | `POST` | `Create.php` | `create` | `POST /v1/account/verifications` |
+| `get` | `GET` | `Get.php` | `get` | `GET /v1/teams/:teamId` |
+| `list` | `GET` | `XList.php` | `list` | `GET /v1/teams` |
+| `update` | `PATCH` / `PUT` | `Update.php` | `update` | `PATCH /v1/account/sessions/:sessionId` |
+| `delete` | `DELETE` | `Delete.php` | `delete` | `DELETE /v1/teams/:teamId` |
+
+**Allowed** -- verb + resource/property noun: `createVerification`, `updateVerification`, `updateSession`, `updateStatus`, `createDeployment`.
+
+**Not allowed** -- custom imperative verbs: `verifyDomain`, `verifyUser`, `blockUser`, `sendEmail`, `confirmPhone`. Refactor these into a resource or property under a REST verb:
+
+- `verifyDomain` → `createVerification` or `updateVerification` on a `verification` sub-resource (`POST` / `PATCH .../domains/:domainId/verification`)
+- `blockUser` → `updateStatus` on a `status` property (`PATCH .../users/:userId/status`)
+
+The URL path, directory nesting, action class, `getName()`, and SDK `Method` label must all describe the **same** REST operation. Reject proposals that add new action file names, route segments, or SDK methods outside this set.
 
 ### PHP code
 
@@ -160,19 +185,19 @@ Add qualifiers only when they disambiguate: `createStringColumn` (type-specific)
 
 `getName()` values are registered identifiers -- keep them stable.
 
-- **HTTP actions**: camelCase `{verb}` or `{verb}{Qualifier}` -- use the shortest form that remains unique within the module. Prefer `create`, `list`, `get`, `update`, `delete`; add a qualifier only when needed (`createStringColumn`, `createTemplateDeployment`).
+- **HTTP actions**: camelCase `{restVerb}` or `{restVerb}{Resource}` where `{restVerb}` is one of `create`, `get`, `list`, `update`, `delete`. Examples: `createVerification`, `updateSession`, `updateStatus`. Never use RPC verbs (`verifyDomain`, `blockUser`). Add a resource qualifier when the verb alone is ambiguous within the module (`createStringColumn`, `createTemplateDeployment`).
 - **Workers**: lowercase plural noun -- `functions`, `executions`, `messaging`.
 - **Tasks**: lowercase, matching the bin script -- check siblings in `src/Appwrite/Platform/Tasks/`.
 
 ### HTTP API
 
-- **Paths**: lowercase, **kebab-case** where needed, plural resources -- `/v1/teams/:teamId/memberships`.
+- **Paths**: lowercase, **kebab-case** where needed, plural resources -- `/v1/teams/:teamId/memberships`. Paths name **resources and properties**, not actions.
 - **Route params**: camelCase with `Id` suffix when multiple IDs appear in one handler -- `:teamId`, `:deploymentId`. Omit the resource prefix when a segment already identifies it and only one ID is in scope.
 - **Request/response JSON**: camelCase (`teamId`, `documentSecurity`). System fields keep Appwrite prefixes (`$id`, `$createdAt`).
 - **Scopes**: `{resource}.{read\|write}` (`teams.write`, `documents.read`); special scopes (`account`, `public`).
 - **Events**: dot-separated path with bracketed placeholders -- `teams.[teamId].create`. Each segment adds hierarchy; do not repeat a parent segment in a child label.
 - **Audit labels**: `audits.event` as `{resource}.{action}`; `audits.resource` as `{type}/{id}`.
-- **SDK `Method` labels**: `namespace` and `group` carry service context (usually lowercase plural); `name` is the operation verb only (`create`, `list`, `get`).
+- **SDK `Method` labels**: `namespace` and `group` carry service context (usually lowercase plural); `name` must be a REST verb only (`create`, `get`, `list`, `update`, `delete`) -- never `verify`, `block`, or other RPC verbs.
 
 ### Database and documents
 
