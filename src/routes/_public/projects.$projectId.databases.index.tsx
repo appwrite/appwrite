@@ -4,10 +4,12 @@ import { View } from '@/components/pages/projects/$projectId/databases/View'
 import {
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
+  productDatabasesQueryOptions,
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { DatabaseType } from '@appwrite.io/console'
 import {
   GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
@@ -46,17 +48,20 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
         projectQueryOptions(projectId),
       )
 
+      const profileFeatures = getActiveProfileFeatures()
+
       await Promise.all([
         queryClient.ensureQueryData(
-          databasesQueryOptions(
+          productDatabasesQueryOptions(
             projectId,
+            DatabaseType.Tablesdb,
             page - 1,
             limit,
             search ?? undefined,
             filterQueries,
           ),
         ),
-        // Prefetch total count (no search/filters) for plan limit check so PlanLimitWarning has data on first paint and avoids layout shift
+        // Merged total across product APIs for plan limit check
         queryClient.ensureQueryData(
           databasesQueryOptions(
             projectId,
@@ -66,7 +71,27 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             undefined,
           ),
         ),
-        getActiveProfileFeatures().dedicatedDbsSupport
+        profileFeatures.dedicatedDbsDocumentsDB
+          ? queryClient.ensureQueryData(
+              productDatabasesQueryOptions(
+                projectId,
+                DatabaseType.Documentsdb,
+                0,
+                GRID_DEFAULT_PAGE_SIZE,
+              ),
+            )
+          : Promise.resolve(),
+        profileFeatures.dedicatedDbsVectorsDB
+          ? queryClient.ensureQueryData(
+              productDatabasesQueryOptions(
+                projectId,
+                DatabaseType.Vectorsdb,
+                0,
+                GRID_DEFAULT_PAGE_SIZE,
+              ),
+            )
+          : Promise.resolve(),
+        profileFeatures.dedicatedDbsSupport
           ? queryClient.ensureQueryData(
               dedicatedDatabasesQueryOptions(projectId),
             )

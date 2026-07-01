@@ -5,12 +5,18 @@ import {
   PolicySidebarSection,
   policySidebarLinkClassName,
 } from '@/components/pages/legal/PolicySidebarNav'
+import { PRICING_DATABASE_ANCHOR_ID } from '@/lib/pricing/dedicated-databases'
 import { comparisonPageSections } from '@/lib/pricing/comparison-sections'
 import { scrollToComparisonSection } from '@/lib/pricing/comparison-scroll'
 import { cn } from '@/lib/utils'
 
+const pricingPageSections = [
+  { id: PRICING_DATABASE_ANCHOR_ID, label: 'Database pricing' },
+  ...comparisonPageSections,
+] as const
+
 export function CompareToc({ className }: { className?: string }) {
-  const [activeId, setActiveId] = useState(comparisonPageSections[0]?.id ?? '')
+  const [activeId, setActiveId] = useState(pricingPageSections[0]?.id ?? '')
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -30,7 +36,7 @@ export function CompareToc({ className }: { className?: string }) {
       },
     )
 
-    for (const section of comparisonPageSections) {
+    for (const section of pricingPageSections) {
       const element = document.getElementById(section.id)
       if (element) observer.observe(element)
     }
@@ -55,7 +61,7 @@ export function CompareToc({ className }: { className?: string }) {
     >
       <PolicySidebarSection title="On this page" ariaLabel="Compare plans sections">
         <ul className="space-y-0.5">
-          {comparisonPageSections.map((section) => (
+          {pricingPageSections.map((section) => (
             <li key={section.id} className="min-w-0">
               <a
                 href={`#${section.id}`}

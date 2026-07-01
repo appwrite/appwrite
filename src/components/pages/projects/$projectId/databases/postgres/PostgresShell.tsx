@@ -9,7 +9,7 @@ import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { parsePostgresShellRouteState, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
 import { PostgresConnectDialogProvider } from './_components/PostgresConnectDialogContext'
 import { PostgresDatabaseHeader } from './_components/PostgresDatabaseHeader'
-import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
+import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
 
 export type PostgresShellProps = {
@@ -102,11 +102,12 @@ function PostgresShellLayout({
   const mainPanel = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {!showDesktopSidebar ? (
-        <PostgresSidebarDatabaseBar
+        <NativeSidebarDatabaseBar
           projectId={projectId}
           databaseId={databaseId}
           databaseName={database.name}
           databaseSpecification={database.specification}
+          nativeEngine="postgres"
         />
       ) : null}
       {databaseTab && databaseTab !== 'sql' ? (

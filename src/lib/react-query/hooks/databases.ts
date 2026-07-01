@@ -17,10 +17,9 @@ import { Query, ID, DatabaseType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import {
-  getDedicatedDatabaseIdError,
-  resolveDedicatedDatabaseId,
-} from '@/lib/dedicated-database-id'
+import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
+import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
+import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import {
   databaseRouteKindFromApiType,
   type DatabaseRouteKind,
@@ -498,6 +497,50 @@ export async function fetchProjectDatabases(
   }
 }
 
+/**
+ * Fetch paginated databases for a single product API (TablesDB, DocumentsDB, or VectorsDB).
+ */
+export async function fetchProjectProductDatabases(
+  projectId: string,
+  backend: DatabaseType,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  filterQueries?: string[],
+) {
+  if (!projectId) {
+    return { databases: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const searchArg = search?.trim() || undefined
+  const queries = [
+    ...(filterQueries ?? []),
+    ...(searchArg ? [Query.search('name', searchArg)] : []),
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+
+  let response: Models.DatabaseList
+  if (backend === DatabaseType.Documentsdb) {
+    response = await projectSdk.documentsDB.list({ queries })
+  } else if (backend === DatabaseType.Vectorsdb) {
+    response = await projectSdk.vectorsDB.list({ queries })
+  } else {
+    response = await projectSdk.tablesDB.list({ queries })
+  }
+
+  const databases = (response.databases ?? []).map((db) =>
+    normalizeProductDatabase(db, backend),
+  )
+
+  return {
+    databases,
+    total: response.total ?? databases.length,
+  }
+}
+
 /** Fetch up to 7 databases by ID in three list calls (Documents, Vectors, Tables). */
 export async function fetchProjectDatabasesByIds(
   projectId: string,
@@ -596,7 +639,7 @@ export async function fetchProjectDatabase(
 /**
  * Options for creating Appwrite product databases (TablesDB, DocumentsDB, VectorsDB).
  * DocumentsDB and VectorsDB always provision dedicated compute first; TablesDB uses
- * dedicated compute when `specification` is set and not `shared`.
+ * dedicated compute when `specification` is set and not serverless (`shared` slug).
  */
 export type CreateProjectDatabaseOptions = {
   specification?: string
@@ -611,6 +654,14 @@ function computeApiForDatabaseType(backend: DatabaseType): string {
   return 'tablesdb'
 }
 
+function dedicatedComputeEngineForProductBackend(
+  backend: DatabaseType,
+): 'mongodb' | 'postgres' | undefined {
+  if (backend === DatabaseType.Documentsdb) return 'mongodb'
+  if (backend === DatabaseType.Vectorsdb) return 'postgres'
+  return undefined
+}
+
 function requiresDedicatedCompute(backend: DatabaseType): boolean {
   return (
     backend === DatabaseType.Documentsdb ||
@@ -623,7 +674,7 @@ async function resolveDedicatedSpecification(
   region?: string | null,
   explicit?: string,
 ): Promise<string> {
-  if (explicit && explicit !== 'shared') return explicit
+  if (explicit && explicit !== SERVERLESS_DATABASE_SPEC_ID) return explicit
 
   const projectSdk = sdk.forProject(
     projectId,
@@ -717,57 +768,42 @@ export function productRouteKindQueryOptions(
   })
 }
 
-function isDedicatedComputeReady(dedicated: Models.DedicatedDatabase): boolean {
-  const status = String(dedicated.status ?? '').toLowerCase()
-  const containerStatus = String(dedicated.containerStatus ?? '').toLowerCase()
-  if (status === 'failed') {
-    throw new Error('Dedicated database provisioning failed')
+function getProductDatabaseIdError(id: string): string | null {
+  const trimmed = id.trim()
+  if (!trimmed) return null
+  if (trimmed.length > 36) {
+    return 'Database ID must be 36 characters or less.'
   }
-  return (
-    status === 'ready' &&
-    (containerStatus === '' ||
-      containerStatus === 'active' ||
-      containerStatus === 'ready')
-  )
+  if (!/^[a-zA-Z0-9_]/.test(trimmed)) {
+    return 'Database ID cannot start with a special character.'
+  }
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(trimmed)) {
+    return 'Database ID must be alphanumeric, underscore, hyphen, or period.'
+  }
+  return null
 }
 
-/**
- * Poll product and compute together so we return as soon as the product DB exists
- * or compute is ready (whichever comes first), instead of blocking on compute ready
- * then polling product separately.
- */
-async function waitForDedicatedProductDatabase(
+function resolveProductDatabaseId(customId?: string | null): string {
+  const trimmed = customId?.trim()
+  return trimmed && trimmed !== '' ? trimmed : ID.unique()
+}
+
+async function waitForProductDatabaseAfterExistsConflict(
   projectSdk: ReturnType<typeof sdk.forProject>,
   backend: DatabaseType,
-  dedicatedId: string,
-): Promise<{ product: Models.Database | null; computeReady: boolean }> {
-  const maxAttempts = 60
-  let intervalMs = 800
-
+  databaseId: string,
+  maxAttempts = 8,
+): Promise<Models.Database | null> {
+  let intervalMs = 400
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const product = await getProductDatabase(projectSdk, backend, dedicatedId)
-    if (product) {
-      return { product, computeReady: true }
+    const existing = await getProductDatabase(projectSdk, backend, databaseId)
+    if (existing) return existing
+    if (attempt < maxAttempts - 1) {
+      await sleep(intervalMs)
+      intervalMs = Math.min(Math.round(intervalMs * 1.5), 2000)
     }
-
-    try {
-      const dedicated = await projectSdk.compute.getDatabase({
-        databaseId: dedicatedId,
-      })
-      if (isDedicatedComputeReady(dedicated)) {
-        return { product: null, computeReady: true }
-      }
-    } catch {
-      // Compute record may lag behind create; keep polling product.
-    }
-
-    await sleep(intervalMs)
-    intervalMs = Math.min(Math.round(intervalMs * 1.25), 4000)
   }
-
-  throw new Error(
-    'Dedicated database is still provisioning. Try again in a few minutes.',
-  )
+  return null
 }
 
 function isDedicatedDatabaseNotFoundError(error: unknown): boolean {
@@ -825,7 +861,7 @@ async function createProductDatabaseWithRetry(
     name: string
     dedicatedDatabaseId: string
   },
-  maxAttempts = 10,
+  maxAttempts = 20,
 ): Promise<Models.Database> {
   let lastError: unknown
   let intervalMs = 1200
@@ -835,7 +871,7 @@ async function createProductDatabaseWithRetry(
     } catch (error) {
       lastError = error
       if (isDatabaseAlreadyExistsError(error)) {
-        const existing = await getProductDatabase(
+        const existing = await waitForProductDatabaseAfterExistsConflict(
           projectSdk,
           backend,
           params.databaseId,
@@ -875,13 +911,14 @@ async function provisionDedicatedCompute(
     backupPitr: pitrEnabled,
   }
 
+  const engine = dedicatedComputeEngineForProductBackend(backend)
   const createParams =
-    backend === DatabaseType.Documentsdb ||
-    backend === DatabaseType.Vectorsdb
+    engine != null
       ? {
           ...sharedPayload,
-          engine: 'mongodb',
-          backend: 'edge',
+          engine,
+          ...(engine === 'mongodb' ? { backend: 'edge' as const } : {}),
+          api: computeApiForDatabaseType(backend),
         }
       : {
           ...sharedPayload,
@@ -901,8 +938,8 @@ async function provisionDedicatedCompute(
 /**
  * Create a new database in a project.
  * DocumentsDB and VectorsDB provision dedicated compute first, then register the
- * product database with `dedicatedDatabaseId`. TablesDB uses the shared pool unless
- * a dedicated specification is provided.
+ * product database with its own ID and `dedicatedDatabaseId` pointing at compute.
+ * TablesDB uses the serverless pool unless a dedicated specification is provided.
  *
  * @param projectId - The project ID
  * @param data - { databaseId?: string; name: string }
@@ -928,16 +965,13 @@ export async function createProjectDatabase(
 
   const useDedicated =
     requiresDedicatedCompute(backend) ||
-    (options?.specification != null && options.specification !== 'shared')
+    (options?.specification != null &&
+      options.specification !== SERVERLESS_DATABASE_SPEC_ID)
 
-  const databaseId = useDedicated
-    ? resolveDedicatedDatabaseId(data.databaseId)
-    : data.databaseId && data.databaseId.trim() !== ''
-      ? data.databaseId.trim()
-      : ID.unique()
+  const productDatabaseId = resolveProductDatabaseId(data.databaseId)
 
-  if (useDedicated && data.databaseId?.trim()) {
-    const idError = getDedicatedDatabaseIdError(data.databaseId)
+  if (data.databaseId?.trim()) {
+    const idError = getProductDatabaseIdError(data.databaseId)
     if (idError) {
       throw new Error(idError)
     }
@@ -953,41 +987,32 @@ export async function createProjectDatabase(
     )
     const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
     const pitrEnabled = options?.pitrEnabled === true
+    const computeDatabaseId = ID.unique()
 
     const dedicated = await provisionDedicatedCompute(projectSdk, {
-      databaseId,
+      databaseId: computeDatabaseId,
       name,
       specification,
       backend,
       haReplicaCount,
       pitrEnabled,
     })
-    const dedicatedId = dedicated.$id || databaseId
-
-    const { product: existingProduct } = await waitForDedicatedProductDatabase(
-      projectSdk,
-      backend,
-      dedicatedId,
-    )
-    if (existingProduct) {
-      seedDatabaseModelCache(projectId, dedicatedId, existingProduct, backend)
-      return normalizeProductDatabase(existingProduct, backend)
-    }
+    const dedicatedComputeId = dedicated.$id || computeDatabaseId
 
     const created = await createProductDatabaseWithRetry(projectSdk, backend, {
-      databaseId: dedicatedId,
+      databaseId: productDatabaseId,
       name,
-      dedicatedDatabaseId: dedicatedId,
+      dedicatedDatabaseId: dedicatedComputeId,
     })
-    seedDatabaseModelCache(projectId, dedicatedId, created, backend)
+    seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
     return normalizeProductDatabase(created, backend)
   }
 
   const created = await createProductDatabase(projectSdk, backend, {
-    databaseId,
+    databaseId: productDatabaseId,
     name,
   })
-  seedDatabaseModelCache(projectId, databaseId, created, backend)
+  seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
   return normalizeProductDatabase(created, backend)
 }
 
@@ -1041,7 +1066,7 @@ export async function deleteProjectDatabase(
   return await projectSdk.tablesDB.delete({ databaseId })
 }
 
-export type NativeDatabaseEngine = 'postgres' | 'mysql'
+export type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 
 /**
  * Create a native Postgres or MySQL database via the Compute service.
@@ -3113,6 +3138,107 @@ export function databasesQueryOptions(
 }
 
 /**
+ * Query options for a single product database list (TablesDB, DocumentsDB, or VectorsDB).
+ */
+export function productDatabasesQueryOptions(
+  projectId: string | null | undefined,
+  backend: DatabaseType,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  filterQueries?: string[],
+) {
+  return queryOptions({
+    queryKey: [
+      'databases',
+      'project',
+      projectId,
+      backend,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ],
+    queryFn: () =>
+      fetchProjectProductDatabases(
+        projectId!,
+        backend,
+        page,
+        limit,
+        search,
+        filterQueries,
+      ),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function mapProjectDatabaseListItems(
+  databasesData: { databases?: Models.Database[] } | undefined,
+  limit: number,
+) {
+  const databases = (databasesData?.databases ?? []).map((db: unknown) => {
+    const d = db as Record<string, unknown>
+    const tables = (d.collections as unknown[] | undefined)?.length || 0
+    const rows = (d.documents as number | undefined) || 0
+    const backupPolicies =
+      d.backupPolicies || d.backups || d.policies || d.backup || []
+    const backupPoliciesArray = Array.isArray(backupPolicies)
+      ? backupPolicies
+      : backupPolicies
+        ? [backupPolicies]
+        : []
+    const backupPolicyCount = backupPoliciesArray.length
+    const hasBackupPolicy =
+      backupPolicyCount > 0 ||
+      d.backupEnabled === true ||
+      d.backupPolicyEnabled === true
+    const backupPolicy = backupPoliciesArray[0] || null
+
+    return {
+      $id: d.$id as string,
+      name: (d.name as string) || 'Unnamed Database',
+      tables,
+      rows,
+      enabled: d.enabled !== false,
+      createdAt: (d.$createdAt as string) || new Date().toISOString(),
+      updatedAt:
+        (d.$updatedAt as string) ||
+        (d.$createdAt as string) ||
+        new Date().toISOString(),
+      hasBackupPolicy,
+      backupPolicy,
+      backupPolicyCount,
+      databaseType: (d as unknown as Models.Database).type,
+    } as Database & {
+      enabled: boolean
+      createdAt: string
+      updatedAt: string
+      hasBackupPolicy: boolean
+      backupPolicy: unknown
+      backupPolicyCount: number
+      databaseType?: DatabaseType
+    }
+  })
+
+  const totalPages = databasesData?.total
+    ? Math.ceil(databasesData.total / limit)
+    : 0
+
+  return {
+    databases,
+    total: databasesData?.total || 0,
+    totalPages,
+  }
+}
+
+/**
  * Query options for fetching paginated tables for a database
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -3510,68 +3636,61 @@ export function useProjectDatabases(
     databasesQueryOptions(projectId, page, limit, search, filterQueries),
   )
 
-  // Map databases to our Database type
-  const databases = useMemo(() => {
-    if (!databasesData?.databases) return []
-
-    return databasesData.databases.map((db: unknown) => {
-      const d = db as Record<string, unknown>
-      // Get table count and row count if available
-      // These might need to be fetched separately or calculated
-      const tables = (d.collections as unknown[] | undefined)?.length || 0
-      const rows = (d.documents as number | undefined) || 0
-
-      // Check for backup policies - check multiple possible field names
-      const backupPolicies =
-        d.backupPolicies || d.backups || d.policies || d.backup || []
-      const backupPoliciesArray = Array.isArray(backupPolicies)
-        ? backupPolicies
-        : backupPolicies
-          ? [backupPolicies]
-          : []
-      const backupPolicyCount = backupPoliciesArray.length
-      const hasBackupPolicy =
-        backupPolicyCount > 0 ||
-        d.backupEnabled === true ||
-        d.backupPolicyEnabled === true
-      const backupPolicy = backupPoliciesArray[0] || null
-
-      return {
-        $id: d.$id as string,
-        name: (d.name as string) || 'Unnamed Database',
-        tables,
-        rows,
-        enabled: d.enabled !== false, // Default to true if not specified
-        createdAt: (d.$createdAt as string) || new Date().toISOString(),
-        updatedAt:
-          (d.$updatedAt as string) ||
-          (d.$createdAt as string) ||
-          new Date().toISOString(),
-        hasBackupPolicy,
-        backupPolicy,
-        backupPolicyCount,
-        databaseType: (d as unknown as Models.Database).type,
-      } as Database & {
-        enabled: boolean
-        createdAt: string
-        updatedAt: string
-        hasBackupPolicy: boolean
-        backupPolicy: unknown
-        backupPolicyCount: number
-        databaseType?: DatabaseType
-      }
-    })
-  }, [databasesData])
-
-  const totalPages = useMemo(() => {
-    if (!databasesData?.total) return 0
-    return Math.ceil(databasesData.total / limit)
-  }, [databasesData?.total, limit])
+  const mapped = useMemo(
+    () => mapProjectDatabaseListItems(databasesData, limit),
+    [databasesData, limit],
+  )
 
   return {
-    databases,
-    total: databasesData?.total || 0,
-    totalPages,
+    databases: mapped.databases,
+    total: mapped.total,
+    totalPages: mapped.totalPages,
+    isLoading,
+    isFetching,
+    isFetched,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch paginated databases for a single product API.
+ */
+export function useProjectProductDatabases(
+  projectId: string | null | undefined,
+  backend: DatabaseType,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  filterQueries?: string[],
+) {
+  const {
+    data: databasesData,
+    isLoading,
+    isFetching,
+    isFetched,
+    error,
+    refetch,
+  } = useQuery(
+    productDatabasesQueryOptions(
+      projectId,
+      backend,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ),
+  )
+
+  const mapped = useMemo(
+    () => mapProjectDatabaseListItems(databasesData, limit),
+    [databasesData, limit],
+  )
+
+  return {
+    databases: mapped.databases,
+    total: mapped.total,
+    totalPages: mapped.totalPages,
     isLoading,
     isFetching,
     isFetched,

@@ -189,22 +189,23 @@ export const comparisonTables: ComparisonTable[] = [
                     enterprise: 'Custom'
                 },
                 {
-                    title: 'Encrypted attributes support',
+                    title: 'Data encryption',
                     free: '-',
-                    pro: 'True',
-                    enterprise: 'True'
+                    pro: true,
+                    enterprise: true
                 },
                 {
-                    title: 'Bulk API documents',
-                    free: '100',
-                    pro: '1000',
+                    title: 'Bulk operations',
+                    free: '100 rows / request',
+                    pro: '1,000 rows / request',
                     enterprise: 'Custom'
                 },
                 {
                     title: 'Dedicated databases',
                     free: '-',
-                    pro: 'Coming soon',
-                    enterprise: 'Coming soon'
+                    pro: 'Compute tiers from $10/mo',
+                    enterprise: 'Custom',
+                    info: 'Fixed monthly compute tiers with reserved CPU, memory, and connections. See Database pricing for tier details and add-ons.'
                 }
             ]
         },

@@ -1,4 +1,5 @@
 import { resetConsoleShellDocumentScroll } from '@/lib/utils'
+import { PRICING_DATABASE_ANCHOR_ID } from './dedicated-databases'
 import { comparisonPageSections } from './comparison-sections'
 
 export const PRICING_COMPARE_ANCHOR_ID = 'compare'
@@ -9,6 +10,7 @@ export const COMPARISON_SECTION_SCROLL_OFFSET_PX = 112
 export function isPricingHashTarget(hash: string): boolean {
   if (!hash) return false
   if (hash === PRICING_COMPARE_ANCHOR_ID) return true
+  if (hash === PRICING_DATABASE_ANCHOR_ID) return true
   return comparisonPageSections.some((section) => section.id === hash)
 }
 

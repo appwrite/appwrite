@@ -28,7 +28,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
-  useProjectDatabases,
+  useProjectProductDatabases,
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
@@ -49,6 +49,7 @@ import { TableContextMenu } from './_components/TableContextMenu'
 import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
 import { DatabaseBackupsNavLink } from './_components/DatabaseBackupsNavLink'
 import { DedicatedDatabasesSection } from './_components/DedicatedDatabasesSection'
+import { ProductDatabasesSection } from './_components/ProductDatabasesSection'
 
 import {
   canCreateDatabase,
@@ -63,6 +64,10 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getDatabaseServiceLucideIcon } from '@/lib/databases/database-service-icons'
+
+const TABLESDB_LIST_ICON =
+  getDatabaseServiceLucideIcon('tablesdb') ?? Database
 
 /** Database list item: API may return extra backup/createdAt fields */
 type DatabaseWithBackup = Models.Database & {
@@ -329,8 +334,9 @@ export function View() {
     isLoading: databasesLoading,
     isFetching: databasesFetching,
     isFetched: databasesFetched,
-  } = useProjectDatabases(
+  } = useProjectProductDatabases(
     projectId,
+    ApiDatabaseType.Tablesdb,
     requestedPage - 1,
     urlLimit,
     urlSearch ?? undefined,
@@ -344,8 +350,9 @@ export function View() {
     isFetching: displayedDatabasesFetching,
     error: displayedDatabasesError,
     refetch: refetchDisplayedDatabases,
-  } = useProjectDatabases(
+  } = useProjectProductDatabases(
     projectId,
+    ApiDatabaseType.Tablesdb,
     displayedPage - 1,
     urlLimit,
     displayedSearch ?? undefined,
@@ -735,6 +742,13 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="mb-4">
+          <h2 className="text-[15px] font-semibold text-foreground">TablesDB</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Serverless and dedicated TablesDB databases for structured app data.
+          </p>
+        </div>
+
         {databasesListErrorMessage && paginatedDatabases.length > 0 ? (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
@@ -872,6 +886,7 @@ export function View() {
                               className="block group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
+                                <TABLESDB_LIST_ICON className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                                 <div className="flex-1 min-w-0">
                                   <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
                                     {db.name}
@@ -988,7 +1003,7 @@ export function View() {
             </>
           ) : (
             <EmptyState
-              icon={Database}
+              icon={TABLESDB_LIST_ICON}
               title={
                 urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'
               }
@@ -1033,7 +1048,7 @@ export function View() {
                       <ResourceCard
                         title={db.name}
                         resourceId={db.$id}
-                        icon={Database}
+                        icon={TABLESDB_LIST_ICON}
                         iconColor="bg-muted text-muted-foreground"
                         status={db.enabled === false ? 'error' : undefined}
                         statusLabel={
@@ -1080,7 +1095,7 @@ export function View() {
               {paginatedDatabases.length === 0 && (
                 <div className="col-span-full">
                   <EmptyState
-                    icon={Database}
+                    icon={TABLESDB_LIST_ICON}
                     title={
                       urlSearch || filterMap.size > 0
                         ? undefined
@@ -1111,6 +1126,26 @@ export function View() {
             )}
           </>
         )}
+
+        {features.dedicatedDbsDocumentsDB && projectId ? (
+          <ProductDatabasesSection
+            projectId={projectId}
+            backend={ApiDatabaseType.Documentsdb}
+            title="DocumentsDB"
+            description="Document-based databases with flexible schemas and dedicated compute."
+            viewMode={viewMode}
+          />
+        ) : null}
+
+        {features.dedicatedDbsVectorsDB && projectId ? (
+          <ProductDatabasesSection
+            projectId={projectId}
+            backend={ApiDatabaseType.Vectorsdb}
+            title="VectorsDB"
+            description="Vector databases for embeddings, semantic search, and AI workloads."
+            viewMode={viewMode}
+          />
+        ) : null}
 
         {features.dedicatedDbsSupport && projectId ? (
           <DedicatedDatabasesSection
@@ -1407,7 +1442,7 @@ export function DatabaseDetailLayout({
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-[13px]">Upgrade database specs</span>
                 <span className="text-[11px] text-muted-foreground/80">
-                  Shared
+                  Serverless
                 </span>
               </span>
             </Link>
@@ -1627,7 +1662,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-[13px]">Upgrade database specs</span>
                 <span className="text-[11px] text-muted-foreground/80">
-                  Shared
+                  Serverless
                 </span>
               </span>
             </Link>

@@ -1,4 +1,5 @@
 import { CONTACT_ENTERPRISE_URL } from './constants'
+import { DATABASE_COMPUTE_CREDITS_NOTE } from '@/lib/database-create-pricing'
 import type { PricingPlan } from './types'
 
 export const pricingPlans: readonly PricingPlan[] = [
@@ -31,6 +32,7 @@ export const pricingPlans: readonly PricingPlan[] = [
     priceSuffix: '/month',
     description:
       'For production applications that need powerful functionality and resources to scale.',
+    callout: DATABASE_COMPUTE_CREDITS_NOTE,
     featuresIntro: 'Dedicated resources per project:',
     features: [
       '2TB bandwidth',

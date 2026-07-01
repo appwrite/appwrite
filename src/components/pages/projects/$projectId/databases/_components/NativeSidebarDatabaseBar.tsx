@@ -1,21 +1,24 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useSwitchResourceInPlace } from '@/components/global/shared/ResourceTitleSwitcher'
-import { PostgresDatabaseSelector } from './PostgresDatabaseSelector'
+import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
+import { DatabaseSelector } from './DatabaseSelector'
 
-type PostgresSidebarDatabaseBarProps = {
+type NativeSidebarDatabaseBarProps = {
   projectId: string
   databaseId: string
   databaseName: string
   databaseSpecification?: string | null
+  nativeEngine: NativeDatabaseEngine
 }
 
-export function PostgresSidebarDatabaseBar({
+export function NativeSidebarDatabaseBar({
   projectId,
   databaseId,
   databaseName,
   databaseSpecification,
-}: PostgresSidebarDatabaseBarProps) {
+  nativeEngine,
+}: NativeSidebarDatabaseBarProps) {
   const switchResource = useSwitchResourceInPlace()
 
   return (
@@ -34,8 +37,10 @@ export function PostgresSidebarDatabaseBar({
         </span>
       </div>
       <div className="flex min-w-0 flex-col gap-2 px-2 py-2">
-        <PostgresDatabaseSelector
+        <DatabaseSelector
           projectId={projectId}
+          mode="native"
+          nativeEngine={nativeEngine}
           value={databaseId}
           selectedName={databaseName}
           selectedSpecification={databaseSpecification}

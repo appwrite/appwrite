@@ -116,6 +116,12 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
           </p>
         </div>
 
+        {plan.callout ? (
+          <p className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[13px] leading-5 text-foreground">
+            {plan.callout}
+          </p>
+        ) : null}
+
         <p
           className={cn(
             'leading-5 text-muted-foreground',

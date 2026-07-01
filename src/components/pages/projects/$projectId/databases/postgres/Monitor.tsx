@@ -297,7 +297,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
   const maxConnections = useMemo(() => {
     const fromSpec = currentSpec?.connections
-    if (fromSpec && fromSpec !== '—' && fromSpec !== 'Shared') {
+    if (fromSpec && fromSpec !== '—' && fromSpec !== 'Serverless') {
       const parsed = Number.parseInt(fromSpec, 10)
       if (Number.isFinite(parsed) && parsed > 0) return parsed
     }

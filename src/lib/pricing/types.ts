@@ -30,6 +30,8 @@ export type PricingPlan = {
   featuresIntro?: string
   features: readonly string[]
   footnote?: string
+  /** Short highlight shown under the price (above the fold). */
+  callout?: string
   cta: string
   ctaVariant: 'brandCta' | 'outline'
   href: string

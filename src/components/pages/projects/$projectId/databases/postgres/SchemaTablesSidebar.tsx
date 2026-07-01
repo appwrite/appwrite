@@ -44,7 +44,7 @@ import {
 import { PostgresHistorySidebarPanel } from './_components/PostgresHistorySidebarPanel'
 import { PostgresQueriesSidebarPanel } from './_components/PostgresQueriesSidebarPanel'
 import { PostgresSchemaSelector } from './_components/PostgresSchemaSelector'
-import { PostgresSidebarDatabaseBar } from './_components/PostgresSidebarDatabaseBar'
+import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
 import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 
@@ -188,11 +188,12 @@ export function SchemaTablesSidebar({
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col bg-muted/20">
-      <PostgresSidebarDatabaseBar
+      <NativeSidebarDatabaseBar
         projectId={projectId}
         databaseId={databaseId}
         databaseName={databaseName}
         databaseSpecification={databaseSpecification}
+        nativeEngine="postgres"
       />
       <PostgresSegmentedToggle
         variant="bar"

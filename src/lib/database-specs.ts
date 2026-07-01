@@ -1,5 +1,5 @@
 /**
- * Shared database tier/spec options for create wizard and upgrade specs page.
+ * Database tier/spec options for create wizard and upgrade specs page.
  * Aligned with Supabase-style compute add-ons.
  */
 
@@ -21,14 +21,16 @@ export type SpecOption = {
   comingSoon?: boolean
 }
 
+export const SERVERLESS_DATABASE_SPEC_ID = 'shared' as const
+
 export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
   {
-    id: 'shared',
-    label: 'Shared',
-    cpu: 'Shared',
-    memory: 'Shared',
-    storage: 'Shared',
-    connections: 'Shared',
+    id: SERVERLESS_DATABASE_SPEC_ID,
+    label: 'Serverless',
+    cpu: 'Serverless',
+    memory: 'Serverless',
+    storage: 'Serverless',
+    connections: 'Serverless',
     price: 'Pay as you go (disk + DB ops)',
   },
   {
@@ -104,11 +106,11 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
 ]
 
 /** Default tier for Tables DB until the API exposes `spec` on the database model. */
-export const DEFAULT_TABLES_MONITOR_SPEC_ID = 'shared' as const
+export const DEFAULT_TABLES_MONITOR_SPEC_ID = SERVERLESS_DATABASE_SPEC_ID
 
 /**
  * Effective spec id for monitor / capacity UI. Pass `apiSpecId` when the backend adds it.
- * Documents and vectors databases are modeled as dedicated compute (no shared tier).
+ * Documents and vectors databases are modeled as dedicated compute (no serverless tier).
  */
 export function getEffectiveDatabaseSpecIdForMonitoring(
   databaseType: DatabaseType,
@@ -119,7 +121,7 @@ export function getEffectiveDatabaseSpecIdForMonitoring(
   return 'micro'
 }
 
-/** Serverless here means Tables DB on the shared tier (pay-per-operation, no fixed CPU/RAM). */
+/** Serverless means Tables DB on the pay-per-operation tier (no fixed CPU/RAM). */
 export function isServerlessDatabaseMonitoring(
   databaseType: DatabaseType,
   specId: string,
@@ -131,6 +133,32 @@ export function isServerlessDatabaseMonitoring(
 
 export function getSpecOptionById(specId: string): SpecOption | undefined {
   return TABLE_DB_SPEC_OPTIONS.find((s) => s.id === specId)
+}
+
+/** Human-readable CPU/memory label for a dedicated database specification slug. */
+export function resolveDatabaseSpecSummary(
+  specs: SpecOption[],
+  specSlug: string | null | undefined,
+): string | null {
+  const slug = specSlug?.trim()
+  if (!slug) return null
+
+  const spec =
+    specs.find((item) => item.id === slug) ?? getSpecOptionById(slug)
+  if (!spec) return slug
+
+  const { cpu, memory } = spec
+  if (
+    spec.id === SERVERLESS_DATABASE_SPEC_ID ||
+    (cpu === 'Serverless' && memory === 'Serverless')
+  ) {
+    return 'Serverless'
+  }
+  if (cpu === '—' && memory === '—') return null
+  if (cpu === '—') return memory !== '—' ? memory : null
+  if (memory === '—') return cpu
+
+  return `${cpu} · ${memory}`
 }
 
 export function formatDedicatedSpecCpu(millicores: number): string {
@@ -194,7 +222,9 @@ export function mapDedicatedDatabaseSpecifications(
 export function parseDatabaseMaxConnections(
   connections: string | null | undefined,
 ): number | null {
-  if (!connections || connections === '—' || connections === 'Shared') return null
+  if (!connections || connections === '—' || connections === 'Serverless') {
+    return null
+  }
   const parsed = Number.parseInt(connections, 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }

@@ -46,6 +46,7 @@ import {
 } from '@/lib/database-routes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  SERVERLESS_DATABASE_SPEC_ID,
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
   getDefaultEnabledSpecId,
   hasLockedDatabaseSpecifications,
@@ -225,9 +226,11 @@ export function CreateDatabaseWizardView() {
       return apiSpecOptions
     }
     if (isTablesDB) {
-      const shared = SPEC_OPTIONS.find((s) => s.id === 'shared')
+      const serverlessSpec = SPEC_OPTIONS.find(
+        (s) => s.id === SERVERLESS_DATABASE_SPEC_ID,
+      )
       return [
-        ...(shared ? [{ ...shared, comingSoon: false }] : []),
+        ...(serverlessSpec ? [{ ...serverlessSpec, comingSoon: false }] : []),
         ...apiSpecOptions.map((spec) => ({ ...spec, comingSoon: true })),
       ]
     }
@@ -277,7 +280,7 @@ export function CreateDatabaseWizardView() {
 
   useEffect(() => {
     if (!dbType || !showSpecsForType || specificationsLoading) return
-    if (dbType === 'TablesDB' && specId === 'shared') return
+    if (dbType === 'TablesDB' && specId === SERVERLESS_DATABASE_SPEC_ID) return
     if (
       specId &&
       selectableSpecs.some((spec) => spec.id === specId && !spec.comingSoon)
@@ -304,7 +307,7 @@ export function CreateDatabaseWizardView() {
   const handleDbTypeSelect = (option: DbTypeChoice) => {
     setDbType(option.id)
     if (option.id === 'TablesDB') {
-      setSpecId('shared')
+      setSpecId(SERVERLESS_DATABASE_SPEC_ID)
     } else if (option.id === 'DocumentsDB' || option.id === 'VectorsDB') {
       setSpecId(getDefaultEnabledSpecId(apiSpecOptions))
     } else {
@@ -439,11 +442,6 @@ export function CreateDatabaseWizardView() {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) newErrors.name = 'Name is required'
     if (isNativeDatabaseType(dbType)) {
-      const dedicatedIdError = databaseId?.trim()
-        ? getDedicatedDatabaseIdError(databaseId)
-        : null
-      if (dedicatedIdError) newErrors.databaseId = dedicatedIdError
-    } else if (isDocumentsDB || isVectorsDB) {
       const dedicatedIdError = databaseId?.trim()
         ? getDedicatedDatabaseIdError(databaseId)
         : null

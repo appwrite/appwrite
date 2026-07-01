@@ -65,6 +65,7 @@ import {
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  SERVERLESS_DATABASE_SPEC_ID,
   TABLE_DB_SPEC_OPTIONS,
   hasLockedDatabaseSpecifications,
 } from '@/lib/database-specs'
@@ -145,7 +146,7 @@ export interface OverviewProps {
   }
 }
 
-const CURRENT_TIER_ID = 'shared'
+const CURRENT_TIER_ID = SERVERLESS_DATABASE_SPEC_ID
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 
@@ -1533,7 +1534,7 @@ export function Overview({
                       Specification
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      Current tier: Shared. Dedicated tiers are coming soon.
+                      Current tier: Serverless. Dedicated tiers are coming soon.
                     </p>
                   </div>
                   <div className="border-t border-border" />

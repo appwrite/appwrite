@@ -117,11 +117,13 @@ import {
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
+import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
 
 function isPostgresEngine(engine: string | undefined): boolean {
-  const normalized = engine?.toLowerCase() ?? ''
-  return normalized === 'postgres' || normalized === 'postgresql'
+  return matchesNativeEngine(engine, 'postgres')
 }
+
+export { isPostgresEngine }
 
 async function fetchPostgresDatabaseFromList(
   projectId: string,
@@ -153,8 +155,6 @@ export async function fetchPostgresDatabase(
     return null
   }
 }
-
-export { isPostgresEngine }
 
 export async function executePostgresDatabaseSql(
   projectId: string,

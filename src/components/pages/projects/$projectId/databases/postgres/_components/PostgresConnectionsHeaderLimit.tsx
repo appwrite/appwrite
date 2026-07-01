@@ -65,7 +65,7 @@ export function PostgresConnectionsHeaderLimit({
   }, [clientConnectionCount, maxConnections])
 
   const connectionsLimitLabel = currentSpec?.connections?.trim()
-  const isSharedLimit = connectionsLimitLabel === 'Shared'
+  const isServerlessLimit = connectionsLimitLabel === 'Serverless'
 
   if (!connectionsLimitLabel || connectionsLimitLabel === '—') {
     return null
@@ -78,8 +78,8 @@ export function PostgresConnectionsHeaderLimit({
       ? isLoading
         ? `This compute tier allows up to ${maxConnections} client connections.`
         : `${clientConnectionCount} of ${maxConnections} client connections are in use on this tier.`
-      : isSharedLimit
-        ? 'This database uses a shared connection pool. There is no fixed per-instance limit.'
+      : isServerlessLimit
+        ? 'This database uses a serverless connection pool. There is no fixed per-instance limit.'
         : `Connection limit for this compute tier: ${connectionsLimitLabel}.`
 
   const inlineLabel =
@@ -87,7 +87,7 @@ export function PostgresConnectionsHeaderLimit({
       ? isLoading
         ? `— / ${maxConnections.toLocaleString()}`
         : `${clientConnectionCount.toLocaleString()} / ${maxConnections.toLocaleString()}`
-      : isSharedLimit
+      : isServerlessLimit
         ? isLoading
           ? '—'
           : clientConnectionCount.toLocaleString()

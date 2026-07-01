@@ -23,8 +23,8 @@ type PlanUsageEntry = {
 
 type PlanUsageMap = Record<string, PlanUsageEntry | undefined>
 
-const DEFAULT_HA_REPLICA_RATE = 0.5
-const DEFAULT_PITR_RATE = 0.2
+export const DEFAULT_HA_REPLICA_RATE = 0.5
+export const DEFAULT_PITR_RATE = 0.2
 
 /** Resolve HA replica and PITR pricing multipliers from org plan (preferred) or API spec pricing. */
 export function getDedicatedDatabaseCreatePricing(
@@ -74,7 +74,7 @@ export function calculateDedicatedDatabaseMonthlyCost(params: {
 }
 
 export const DATABASE_COMPUTE_CREDITS_NOTE =
-  'Each project includes $10 of compute credits for database usage every month.'
+  '$10 of compute credits for database usage included every month.'
 
 export function formatDedicatedMonthlyPrice(amountUsd: number): string {
   const rounded =
