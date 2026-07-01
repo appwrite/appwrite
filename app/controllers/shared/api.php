@@ -16,6 +16,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Locking\Lock;
 use Appwrite\Locking\PlatformDBLock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -61,10 +62,11 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
+    ->inject('lock')
     ->inject('platformDBLock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, PlatformDBLock $platformDBLock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, PlatformDBLock $platformDBLock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -210,15 +212,17 @@ Http::init()
                 }
 
                 if (! $updates->isEmpty()) {
-                    $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+                    $lock->run('keys', $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
-                    if (! empty($apiKey->getProjectId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-                    } elseif (! empty($apiKey->getUserId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
-                    } elseif (! empty($apiKey->getTeamId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
-                    }
+                        if (! empty($apiKey->getProjectId())) {
+                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+                        } elseif (! empty($apiKey->getUserId())) {
+                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                        } elseif (! empty($apiKey->getTeamId())) {
+                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                        }
+                    });
                 }
 
                 $userClone = clone $user;
