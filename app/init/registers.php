@@ -238,7 +238,6 @@ $register->set('pools', function () {
             'dsns' => System::getEnv('_APP_CONNECTIONS_LOCKS', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
-            'size' => max(1, (int) System::getEnv('_APP_POOL_SIZE_LOCK', 10)),
         ],
     ];
 
@@ -252,6 +251,12 @@ $register->set('pools', function () {
     // job may hold a connection, so pools must cover the coroutine count.
     $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
 
+    // Scale the lock pool per-worker like every other pool. _APP_POOL_SIZE_LOCK
+    // overrides the per-worker size; without it the lock pool tracks $poolSize
+    // so a many-worker host doesn't open size * workerCount lock connections.
+    $connections['lock']['size'] = max(1, (int) System::getEnv('_APP_POOL_SIZE_LOCK', $poolSize));
+
+    $lockPool = null;
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
         $multiple = $connection['multiple'];
@@ -389,11 +394,8 @@ $register->set('pools', function () {
                 }
             });
 
-            if ($type === 'cache' || $type === 'lock') {
-                $pool
-                    ->setRetryAttempts(1)
-                    ->setReconnectAttempts(1)
-                    ->setSynchronizationTimeout(1);
+            if ($type === 'lock') {
+                $lockPool = $pool;
             }
 
             $group->add($pool);
@@ -407,6 +409,11 @@ $register->set('pools', function () {
 
     $group->setReconnectAttempts($reconnectAttempts);
     $group->setReconnectSleep($reconnectSleep);
+
+    // Apply lock-only fail-fast tuning after the group-wide defaults, which
+    // iterate every pool and would otherwise overwrite reconnectAttempts. Kept
+    // off the shared cache pool so its blip tolerance is unchanged.
+    $lockPool?->setRetryAttempts(1)->setReconnectAttempts(1)->setSynchronizationTimeout(1);
 
     return $group;
 });

@@ -383,6 +383,106 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'projects:p1:accessedAt', $this->heldLocks);
     }
 
+    public function test_platform_db_lock_try_run_uses_collection_key(): void
+    {
+        $dbForPlatform = $this->createMock(Database::class);
+        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
+
+        $called = false;
+        $platformDBLock->tryRun('keys', 'k1', function () use (&$called): void {
+            $called = true;
+        });
+
+        $this->assertTrue($called);
+        $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
+    }
+
+    public function test_platform_db_lock_try_run_skips_on_contention(): void
+    {
+        $this->heldLocks[self::KEY_PREFIX.'keys:k1'] = true;
+
+        $dbForPlatform = $this->createMock(Database::class);
+        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
+
+        $called = false;
+        $platformDBLock->tryRun('keys', 'k1', function () use (&$called): void {
+            $called = true;
+        });
+
+        $this->assertFalse($called);
+    }
+
+    public function test_platform_db_lock_updates_document_under_document_key(): void
+    {
+        $updates = new Document(['accessedAt' => 'now', 'sdks' => ['php']]);
+
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('updateDocument')
+            ->with('keys', 'k1', $updates)
+            ->willReturn(new Document(['$id' => 'k1']));
+
+        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
+
+        $this->assertSame(
+            'k1',
+            $platformDBLock->tryUpdateDocument('keys', 'k1', $updates)?->getId()
+        );
+        // Document-level lock has no attribute suffix and is released after the write.
+        $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
+    }
+
+    public function test_platform_db_lock_skips_document_update_on_contention(): void
+    {
+        $this->heldLocks[self::KEY_PREFIX.'keys:k1'] = true;
+
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform
+            ->expects($this->never())
+            ->method('updateDocument');
+
+        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
+
+        $this->assertNull($platformDBLock->tryUpdateDocument('keys', 'k1', new Document(['accessedAt' => 'now'])));
+    }
+
+    public function test_pool_checkout_exception_runs_callback_unlocked(): void
+    {
+        // Pool::pop() throws a bare \Exception on exhaustion, before the lock is
+        // acquired. The wrapper must fail open and run the callback unlocked.
+        $lock = new Lock(
+            fn (string $key, int $ttl, \Closure $callback): mixed => throw new \Exception('Pool \'lock\' is empty'),
+            new NoTelemetry(),
+            $this->log,
+            null,
+            $this->project,
+        );
+
+        $called = false;
+        $lock->run('keys', 'k1', function () use (&$called) {
+            $called = true;
+        });
+
+        $this->assertTrue($called);
+    }
+
+    public function test_non_pool_exception_is_not_swallowed(): void
+    {
+        // Only the literal \Exception (pool exhaustion) is treated as fail-open;
+        // any subclass thrown while entering the lock must keep propagating.
+        $lock = new Lock(
+            fn (string $key, int $ttl, \Closure $callback): mixed => throw new \RuntimeException('unexpected'),
+            new NoTelemetry(),
+            $this->log,
+            null,
+            $this->project,
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $lock->run('keys', 'k1', fn () => null);
+    }
+
     public function test_platform_db_lock_skips_routed_project_update_on_contention(): void
     {
         $lock = new Lock(

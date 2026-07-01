@@ -152,6 +152,19 @@ final class Lock
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
+        } catch (\Exception $e) {
+            // Pool::pop() throws a bare \Exception (not \RedisException) when it
+            // can't hand out a connection within the retry/sync-timeout budget.
+            // That happens before the callback runs, so fail open. Match the
+            // literal class only: business exceptions (Appwrite\Extend\Exception,
+            // etc.) also extend \Exception and must keep propagating.
+            if (get_class($e) !== \Exception::class) {
+                throw $e;
+            }
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+            return $fn();
         }
     }
 
