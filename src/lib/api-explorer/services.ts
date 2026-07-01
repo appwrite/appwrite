@@ -41,7 +41,31 @@ export const API_SERVICE_ORDER = [
   'advisor',
   'documentsDB',
   'vectorsDB',
+  'postgresql',
+  'mysql',
 ] as const
+
+/** Console-only SDK services — never shown in the explorer or API reference nav. */
+export const INTERNAL_API_SERVICES = ['mongo'] as const
+
+/** Database API services shown only when a matching console profile feature is enabled. */
+export const FEATURE_GATED_DATABASE_API_SERVICES = [
+  'documentsDB',
+  'vectorsDB',
+  'postgresql',
+  'mysql',
+] as const
+
+export type FeatureGatedDatabaseApiService =
+  (typeof FEATURE_GATED_DATABASE_API_SERVICES)[number]
+
+export type DatabaseApiServiceFeatures = Pick<
+  ConsoleProfileFeatures,
+  | 'dedicatedDbsDocumentsDB'
+  | 'dedicatedDbsVectorsDB'
+  | 'nativeDbsPostgres'
+  | 'nativeDbsMySQL'
+>
 
 /**
  * Appwrite product groupings for the explorer services panel.
@@ -57,7 +81,13 @@ export const API_EXPLORER_PRODUCT_GROUPS: ApiExplorerProductGroupDefinition[] =
     {
       id: 'databases',
       label: 'Databases',
-      services: ['tablesDB', 'documentsDB', 'vectorsDB'],
+      services: [
+        'tablesDB',
+        'documentsDB',
+        'vectorsDB',
+        'postgresql',
+        'mysql',
+      ],
     },
     {
       id: 'sites',
@@ -93,7 +123,7 @@ export const API_EXPLORER_PRODUCT_GROUPS: ApiExplorerProductGroupDefinition[] =
 
 /**
  * Base services visible in the project-scoped explorer.
- * {@link documentsDB} and {@link vectorsDB} are appended when their feature flags are on.
+ * {@link FEATURE_GATED_DATABASE_API_SERVICES} are appended when their feature flags are on.
  */
 export const PROJECT_API_EXPLORER_BASE_ALLOWED_SERVICES: readonly string[] = [
   'account',
@@ -113,16 +143,46 @@ export const PROJECT_API_EXPLORER_BASE_ALLOWED_SERVICES: readonly string[] = [
   'presences',
 ]
 
+export function getFeatureGatedDatabaseApiServices(
+  features: DatabaseApiServiceFeatures = getActiveProfileFeatures(),
+): FeatureGatedDatabaseApiService[] {
+  const services: FeatureGatedDatabaseApiService[] = []
+  if (features.dedicatedDbsDocumentsDB) services.push('documentsDB')
+  if (features.dedicatedDbsVectorsDB) services.push('vectorsDB')
+  if (features.nativeDbsPostgres) services.push('postgresql')
+  if (features.nativeDbsMySQL) services.push('mysql')
+  return services
+}
+
+export function isInternalApiService(serviceId: string): boolean {
+  return (INTERNAL_API_SERVICES as readonly string[]).includes(serviceId)
+}
+
+export function isFeatureGatedDatabaseApiService(
+  serviceId: string,
+): serviceId is FeatureGatedDatabaseApiService {
+  return (FEATURE_GATED_DATABASE_API_SERVICES as readonly string[]).includes(
+    serviceId,
+  )
+}
+
+/** Whether a service should appear in the explorer or API reference nav for the active profile. */
+export function isDatabaseApiServiceVisible(
+  serviceId: string,
+  features: DatabaseApiServiceFeatures = getActiveProfileFeatures(),
+): boolean {
+  if (isInternalApiService(serviceId)) return false
+  if (!isFeatureGatedDatabaseApiService(serviceId)) return true
+  return getFeatureGatedDatabaseApiServices(features).includes(serviceId)
+}
+
 export function getProjectApiExplorerAllowedServices(
-  features: Pick<
-    ConsoleProfileFeatures,
-    'dedicatedDbsDocumentsDB' | 'dedicatedDbsVectorsDB'
-  > = getActiveProfileFeatures(),
+  features: DatabaseApiServiceFeatures = getActiveProfileFeatures(),
 ): string[] {
-  const allowed = [...PROJECT_API_EXPLORER_BASE_ALLOWED_SERVICES]
-  if (features.dedicatedDbsDocumentsDB) allowed.push('documentsDB')
-  if (features.dedicatedDbsVectorsDB) allowed.push('vectorsDB')
-  return allowed
+  return [
+    ...PROJECT_API_EXPLORER_BASE_ALLOWED_SERVICES,
+    ...getFeatureGatedDatabaseApiServices(features),
+  ]
 }
 
 export const API_SERVICE_LABELS: Record<string, string> = {
@@ -154,6 +214,8 @@ export const API_SERVICE_LABELS: Record<string, string> = {
   advisor: 'Advisor',
   documentsDB: 'DocumentsDB',
   vectorsDB: 'VectorsDB',
+  postgresql: 'PostgreSQL',
+  mysql: 'MySQL',
 }
 
 export function filterAllowedServices(
@@ -163,7 +225,10 @@ export function filterAllowedServices(
   const allowed = new Set(
     allowedServices ?? getProjectApiExplorerAllowedServices(),
   )
-  return services.filter((service) => allowed.has(service.id))
+  return services.filter(
+    (service) =>
+      allowed.has(service.id) && !isInternalApiService(service.id),
+  )
 }
 
 export function groupServicesByProduct(

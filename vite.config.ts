@@ -160,7 +160,7 @@ export default defineConfig(async () => {
         'use-sync-external-store',
         'use-sync-external-store/shim/with-selector.js',
         'sprintf-js/src/sprintf.js',
-        // Pre-bundle so json-bigint gets a default export shim and Compute API stays in sync
+        // Pre-bundle so json-bigint gets a default export shim and the console SDK stays in sync
         // with the installed @appwrite.io/console version. Clear node_modules/.vite after SDK bumps.
         '@appwrite.io/console',
         'json-bigint',

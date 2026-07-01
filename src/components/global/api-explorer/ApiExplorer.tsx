@@ -400,6 +400,8 @@ export function ApiExplorer({
       config.allowedServices,
       features.dedicatedDbsDocumentsDB,
       features.dedicatedDbsVectorsDB,
+      features.nativeDbsPostgres,
+      features.nativeDbsMySQL,
     ],
   )
 
@@ -1137,6 +1139,7 @@ function MethodListPanel({
 }: MethodListPanelProps) {
   const selectedMethodRef = useRef<HTMLButtonElement | null>(null)
   const [searchValue, setSearchValue] = useState('')
+  const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([])
 
   useEffect(() => {
     setSearchValue('')
@@ -1159,12 +1162,71 @@ function MethodListPanel({
       .filter((group) => group.methods.length > 0)
   }, [resourceGroups, searchValue])
 
+  const collapsibleGroupIds = useMemo(
+    () =>
+      filteredGroups
+        .filter((group) => group.label)
+        .map((group) => group.id || '__ungrouped__'),
+    [filteredGroups],
+  )
+
+  const collapsibleGroupIdsKey = collapsibleGroupIds.join('\0')
+
+  // Expand all groups only when the service or search filter changes — not when
+  // selecting a method (parent re-renders must not reset manual collapse state).
+  useEffect(() => {
+    setExpandedGroupIds(collapsibleGroupIds)
+  }, [service?.id, searchValue, collapsibleGroupIdsKey])
+
   useEffect(() => {
     selectedMethodRef.current?.scrollIntoView({
       block: 'nearest',
       inline: 'nearest',
     })
   }, [service?.id, selectedMethodId, filteredGroups])
+
+  const renderMethodList = (methods: ApiExplorerMethod[]) => (
+    <ul className="space-y-0.5">
+      {methods.map((method) => {
+        const isActive = method.id === selectedMethodId
+        return (
+          <li key={method.id}>
+            <button
+              ref={
+                isActive
+                  ? (node) => {
+                      selectedMethodRef.current = node
+                    }
+                  : undefined
+              }
+              type="button"
+              onClick={() => onSelectMethod(method)}
+              className={apiNavMethodItemClassName(isActive)}
+            >
+              <span className="min-w-0 truncate text-[13px] font-medium">
+                {method.summary}
+              </span>
+              <div className="flex w-full min-w-0 max-w-full items-center gap-2">
+                <Badge
+                  variant={getHttpMethodVariant(method.httpMethod)}
+                  className={cn(
+                    'text-[10px] uppercase',
+                    API_EXPLORER_PILL_CLASS,
+                  )}
+                >
+                  {method.httpMethod}
+                </Badge>
+                <StartTruncatedText
+                  text={method.path}
+                  className="min-w-0 flex-1 font-mono text-[11px] text-muted-foreground"
+                />
+              </div>
+            </button>
+          </li>
+        )
+      })}
+    </ul>
+  )
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
@@ -1220,55 +1282,46 @@ function MethodListPanel({
               No methods match your search.
             </p>
           ) : (
-            filteredGroups.map((group) => (
-              <div key={group.id || 'default'} className="space-y-1.5">
-                  {group.label ? (
-                    <p className="px-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                      {group.label}
-                    </p>
-                  ) : null}
-                  <ul className="space-y-0.5">
-                    {group.methods.map((method) => {
-                      const isActive = method.id === selectedMethodId
+            <>
+              {filteredGroups
+                .filter((group) => !group.label)
+                .map((group) => (
+                  <div key={group.id || 'default'}>{renderMethodList(group.methods)}</div>
+                ))}
+              {filteredGroups.some((group) => group.label) ? (
+                <Accordion
+                  type="multiple"
+                  value={expandedGroupIds}
+                  onValueChange={setExpandedGroupIds}
+                  className="w-full space-y-1"
+                >
+                  {filteredGroups
+                    .filter((group) => group.label)
+                    .map((group) => {
+                      const groupKey = group.id || '__ungrouped__'
                       return (
-                        <li key={method.id}>
-                          <button
-                            ref={
-                              isActive
-                                ? (node) => {
-                                    selectedMethodRef.current = node
-                                  }
-                                : undefined
-                            }
-                            type="button"
-                            onClick={() => onSelectMethod(method)}
-                            className={apiNavMethodItemClassName(isActive)}
-                          >
-                            <span className="min-w-0 truncate text-[13px] font-medium">
-                              {method.summary}
+                        <AccordionItem
+                          key={groupKey}
+                          value={groupKey}
+                          className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
+                        >
+                          <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
+                            <span className="min-w-0 flex-1 truncate text-left">
+                              {group.label}
                             </span>
-                            <div className="flex w-full min-w-0 max-w-full items-center gap-2">
-                              <Badge
-                                variant={getHttpMethodVariant(method.httpMethod)}
-                                className={cn(
-                                  'text-[10px] uppercase',
-                                  API_EXPLORER_PILL_CLASS,
-                                )}
-                              >
-                                {method.httpMethod}
-                              </Badge>
-                              <StartTruncatedText
-                                text={method.path}
-                                className="min-w-0 flex-1 font-mono text-[11px] text-muted-foreground"
-                              />
-                            </div>
-                          </button>
-                        </li>
+                            <span className="shrink-0 text-[10px] font-medium normal-case tracking-normal text-muted-foreground/60">
+                              {group.methods.length}
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-2 pt-0">
+                            {renderMethodList(group.methods)}
+                          </AccordionContent>
+                        </AccordionItem>
                       )
                     })}
-                  </ul>
-                </div>
-              ))
+                </Accordion>
+              ) : null}
+            </>
           )}
         </div>
       </div>

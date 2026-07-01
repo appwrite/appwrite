@@ -38,6 +38,7 @@ import { getApiReferencePlatformForMode } from '@/lib/docs/references/api-refere
 import { useApiReferenceUiPrefs } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { loadReferenceNavServiceCountsFn } from '@/server/functions/api-reference'
 import type { DocsNavParent } from '@/lib/docs/types'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   DOCS_NAV_SCROLL_CLASS,
   DOCS_SECTION_HEADER_CLASS,
@@ -166,6 +167,8 @@ function ApiReferenceSectionSubnavShell({
     versionFromPath,
   ])
 
+  const { features } = useConsoleProfile()
+
   const { data: serviceCounts, isLoading } = useQuery({
     queryKey: ['api-reference-nav-services', version, platformMode],
     queryFn: () => fetchReferenceNavServiceCounts(version, platformMode),
@@ -175,9 +178,22 @@ function ApiReferenceSectionSubnavShell({
   const navProductGroups = useMemo(
     () =>
       serviceCounts
-        ? buildReferenceNavProductGroups(version, platform, serviceCounts)
+        ? buildReferenceNavProductGroups(
+            version,
+            platform,
+            serviceCounts,
+            features,
+          )
         : [],
-    [serviceCounts, version, platform],
+    [
+      serviceCounts,
+      version,
+      platform,
+      features.dedicatedDbsDocumentsDB,
+      features.dedicatedDbsVectorsDB,
+      features.nativeDbsPostgres,
+      features.nativeDbsMySQL,
+    ],
   )
 
   const handlePlatformModeChange = async (nextMode: ApiExplorerProjectPlatform) => {
@@ -188,7 +204,12 @@ function ApiReferenceSectionSubnavShell({
     if (!parsedPath?.service) return
 
     const nextCounts = await fetchReferenceNavServiceCounts(version, nextMode)
-    const nextGroups = buildReferenceNavProductGroups(version, nextPlatform, nextCounts)
+    const nextGroups = buildReferenceNavProductGroups(
+      version,
+      nextPlatform,
+      nextCounts,
+      features,
+    )
     const nextServices = nextGroups.flatMap((group) => group.services)
 
     const keepService = nextServices.some(

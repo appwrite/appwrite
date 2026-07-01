@@ -158,7 +158,7 @@ export function DedicatedDatabasesSection({
           </h2>
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">
-            Always-on compute databases managed by the Compute service.
+            Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.
           </p>
         </div>
         <DedicatedDatabaseRegionUnavailableCard icon={Cpu} />
@@ -215,7 +215,7 @@ function DedicatedDatabasesSectionContent({
           Dedicated databases
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          Always-on compute databases managed by the Compute service.
+          Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.
         </p>
       </div>
 

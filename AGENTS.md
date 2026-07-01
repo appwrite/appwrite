@@ -542,8 +542,10 @@ Use the status-style badge variants so all badges share the same design (tinted 
 
 **Project SDK** (`sdk.forProject(projectId)`):
 
-- `tablesDB` - Table-based databases (new) → `services/tables-db.ts`
-- `databases` - Document-based databases (legacy) → `services/databases.ts`
+- `tablesDB` - Table-based databases → `services/tables-db.ts`
+- `documentsDB` - Document-based databases → `services/documents-db.ts`
+- `vectorsDB` - Vector databases → `services/vectors-db.ts`
+- `postgresql`, `mysql`, `mongo` - Dedicated database engines (replaced the removed `compute` service) → `services/postgresql.ts`, `services/mysql.ts`, `services/mongo.ts`. Route calls by engine via `dedicatedEngineService()` in `@/lib/databases/dedicated-engine`.
 - `functions` - Functions, deployments, executions, variables → `services/functions.ts`
 - `storage` - Buckets, files, previews → `services/storage.ts`
 - `users` - User management, identities, sessions, MFA → `services/users.ts`

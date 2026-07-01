@@ -1074,7 +1074,7 @@ export async function deleteProjectDatabase(
 export type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 
 /**
- * Create a native Postgres or MySQL database via the Compute service.
+ * Create a native Postgres or MySQL database via the engine-specific SDK service.
  */
 export async function createNativeDatabase(
   projectId: string,

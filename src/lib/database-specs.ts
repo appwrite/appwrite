@@ -195,7 +195,7 @@ export function formatDedicatedSpecPrice(priceUsd: number): string {
   return formatDedicatedMonthlyPrice(Math.max(0, priceUsd))
 }
 
-/** Map Compute API specification to wizard table rows. */
+/** Map dedicated-database API specification to wizard table rows. */
 export function dedicatedDatabaseSpecificationToSpecOption(
   spec: Models.DedicatedDatabaseSpecification,
 ): SpecOption {

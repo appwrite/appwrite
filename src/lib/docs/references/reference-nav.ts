@@ -1,4 +1,9 @@
-import { compareServices, getServiceLabel } from '@/lib/api-explorer/services'
+import {
+  compareServices,
+  getServiceLabel,
+  isDatabaseApiServiceVisible,
+  type DatabaseApiServiceFeatures,
+} from '@/lib/api-explorer/services'
 import {
   getDefaultReferencePlatform,
   getReferencePlatformForMode,
@@ -98,19 +103,25 @@ export function buildReferenceNavServices(
   version: ReferenceVersion,
   platform: ReferencePlatform,
   serviceCounts: Map<ReferenceService, number>,
+  features?: DatabaseApiServiceFeatures,
 ): ReferenceNavService[] {
   const services: ReferenceNavService[] = []
   const assigned = new Set<ReferenceService>()
 
   for (const serviceId of API_REFERENCE_NAV_SERVICE_ORDER) {
     if (!serviceCounts.has(serviceId)) continue
+    if (!isDatabaseApiServiceVisible(serviceId, features)) continue
     assigned.add(serviceId)
     services.push(toReferenceNavService(version, platform, serviceId, serviceCounts))
   }
 
   const remaining = Array.from(serviceCounts.keys())
     .filter((serviceId): serviceId is ReferenceService => {
-      return isReferenceService(serviceId) && !assigned.has(serviceId)
+      return (
+        isReferenceService(serviceId) &&
+        !assigned.has(serviceId) &&
+        isDatabaseApiServiceVisible(serviceId, features)
+      )
     })
     .sort(compareServices)
     .map((serviceId) =>
@@ -125,8 +136,14 @@ export function buildReferenceNavProductGroups(
   version: ReferenceVersion,
   platform: ReferencePlatform,
   serviceCounts: Map<ReferenceService, number>,
+  features?: DatabaseApiServiceFeatures,
 ): ReferenceNavProductGroup[] {
-  const allServices = buildReferenceNavServices(version, platform, serviceCounts)
+  const allServices = buildReferenceNavServices(
+    version,
+    platform,
+    serviceCounts,
+    features,
+  )
   const serviceById = new Map(allServices.map((service) => [service.id, service]))
   const assigned = new Set<ReferenceService>()
   const groups: ReferenceNavProductGroup[] = []

@@ -16,6 +16,10 @@ export const API_REFERENCE_NAV_SERVICE_ORDER = [
   'teams',
   'databases',
   'tablesDB',
+  'documentsDB',
+  'vectorsDB',
+  'postgresql',
+  'mysql',
   'sites',
   'storage',
   'functions',
@@ -38,7 +42,14 @@ export const API_REFERENCE_PRODUCT_GROUPS: ApiReferenceProductGroupDefinition[] 
     {
       id: 'databases',
       label: 'Databases',
-      services: ['databases', 'tablesDB'],
+      services: [
+        'databases',
+        'tablesDB',
+        'documentsDB',
+        'vectorsDB',
+        'postgresql',
+        'mysql',
+      ],
     },
     {
       id: 'sites',

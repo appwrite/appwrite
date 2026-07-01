@@ -211,7 +211,7 @@ function productDatabaseDeepLink(
 }
 
 /**
- * Resolve the console home link for a dedicated compute database row.
+ * Resolve the console home link for a dedicated database row.
  * Postgres uses the native postgres route tree; product APIs use tablesdb /
  * documentsdb / vectorsdb. When compute omits `api` (e.g. legacy mongodb edge
  * for DocumentsDB), pass the resolved product route kind if known.

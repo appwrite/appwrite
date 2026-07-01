@@ -61,9 +61,9 @@ export type ConsoleProfileFeatures = {
   dedicatedDbsDocumentsDB: boolean
   /** Dedicated DBs support for Vectors DB. */
   dedicatedDbsVectorsDB: boolean
-  /** Native Postgres databases via Compute service. */
+  /** Native Postgres databases via the `postgresql` SDK service. */
   nativeDbsPostgres: boolean
-  /** Native MySQL databases via Compute service. */
+  /** Native MySQL databases via the `mysql` SDK service. */
   nativeDbsMySQL: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
