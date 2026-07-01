@@ -52,7 +52,6 @@ final class Lock
     public function __construct(
         Closure $useLock,
         Telemetry $telemetry,
-        private readonly Log $log,
         private readonly ?Logger $logger,
         Document $project,
     ) {
@@ -63,33 +62,16 @@ final class Lock
         $this->projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
     }
 
-    /**
-     * Try-once lock around an arbitrary callback for a platform document.
-     * Idempotent metadata writes should not make HTTP requests wait behind
-     * another pod doing the same update.
-     */
     public function run(string $collection, string $id, Closure $fn): void
     {
         $this->tryWithKey($this->key($collection, $id), $fn, target: $collection);
     }
 
-    /**
-     * Distributed lock around a platform document that returns the callback result.
-     */
     public function runOrFail(string $collection, string $id, Closure $fn): mixed
     {
         return $this->execute($this->key($collection, $id), $collection, $fn);
     }
 
-    /**
-     * Generic lock primitive with full control over key, TTL, contention
-     * behavior, and wait timeout. Escape hatch for non-platform keys (cache,
-     * queue, edge) and for unusual TTL/timeout requirements.
-     *
-     * Caller may pass `target` for telemetry; otherwise it's extracted by
-     * position from the key (best-effort for keys following the standard
-     * `lock:platform:{project}:{target}:...` shape).
-     */
     public function withKey(
         string $key,
         Closure $fn,
@@ -107,10 +89,6 @@ final class Lock
         );
     }
 
-    /**
-     * Try-once lock around a callback. On contention, skip the callback and
-     * return null; this is for best-effort timestamp/access metadata writes.
-     */
     public function tryWithKey(
         string $key,
         Closure $fn,
@@ -153,11 +131,8 @@ final class Lock
 
             return $fn();
         } catch (\Exception $e) {
-            // Pool::pop() throws a bare \Exception (not \RedisException) when it
-            // can't hand out a connection within the retry/sync-timeout budget.
-            // That happens before the callback runs, so fail open. Match the
-            // literal class only: business exceptions (Appwrite\Extend\Exception,
-            // etc.) also extend \Exception and must keep propagating.
+            // Pool exhaustion throws a bare \Exception before lock acquisition.
+            // Only that exact class is fail-open; subclasses must propagate.
             if (get_class($e) !== \Exception::class) {
                 throw $e;
             }
@@ -196,7 +171,6 @@ final class Lock
                 return null;
             }
             $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
-            // No custom message: the lock key embeds collection and document ID.
             throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
         }
 
@@ -217,11 +191,6 @@ final class Lock
         }
     }
 
-    /**
-     * Best-effort target extraction for telemetry. Assumes the standard
-     * `lock:platform:{project}:{target}:...` shape. For non-platform keys
-     * passed via withKey(), callers should pass `target` explicitly.
-     */
     private static function inferTargetFromKey(string $key): string
     {
         $parts = explode(':', $key, 5);
@@ -229,19 +198,11 @@ final class Lock
         return $parts[3] ?? 'unknown';
     }
 
-    /**
-     * Shared platform lock key builder. Exposed so higher-level decorators can
-     * keep the platform key shape centralized while adding narrower scopes.
-     */
     public function key(string $collection, string $id, ?string $attribute = null): string
     {
         return self::buildKey($this->projectInternalId, $collection, $id, $attribute);
     }
 
-    /**
-     * Build a key for a project document that was resolved after this request
-     * lock was constructed, such as router/custom-domain resolution.
-     */
     public function keyForProject(Document $project, string $collection, string $id, ?string $attribute = null): string
     {
         $sequence = $project->getSequence();
@@ -258,8 +219,7 @@ final class Lock
     }
 
     /**
-     * Rate-limited to one push per REPORT_RATE_LIMIT_SECONDS per (action, target)
-     * so a sustained backend outage doesn't flood Sentry across the pod fleet.
+     * Rate-limit backend/release reports so outages don't flood Sentry.
      */
     private function reportError(string $action, string $key, string $target, Throwable $e): void
     {
@@ -276,26 +236,27 @@ final class Lock
         }
         self::$lastReportAt[$bucket] = $now;
 
-        $this->log->setNamespace('http');
-        $this->log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $this->log->setVersion(APP_VERSION_STABLE);
-        $this->log->setType(Log::TYPE_WARNING);
-        $this->log->setMessage('Distributed lock '.$action.': '.$e->getMessage());
-        $this->log->setAction("lock.{$action}");
-        $this->log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
+        $log = new Log();
+        $log->setNamespace('http');
+        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $log->setVersion(APP_VERSION_STABLE);
+        $log->setType(Log::TYPE_WARNING);
+        $log->setMessage('Distributed lock '.$action.': '.$e->getMessage());
+        $log->setAction("lock.{$action}");
+        $log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
             ? Log::ENVIRONMENT_PRODUCTION
             : Log::ENVIRONMENT_STAGING);
-        $this->log->addTag('lock.target', $target);
-        $this->log->addTag('lock.project', $this->projectInternalId);
+        $log->addTag('lock.target', $target);
+        $log->addTag('lock.project', $this->projectInternalId);
         // Strip trailing document ID to keep aggregator cardinality bounded.
-        $this->log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
-        $this->log->addTag('code', $e->getCode());
-        $this->log->addExtra('file', $e->getFile());
-        $this->log->addExtra('line', $e->getLine());
-        $this->log->addExtra('trace', $e->getTraceAsString());
+        $log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
+        $log->addTag('code', $e->getCode());
+        $log->addExtra('file', $e->getFile());
+        $log->addExtra('line', $e->getLine());
+        $log->addExtra('trace', $e->getTraceAsString());
 
         try {
-            $this->logger->addLog($this->log);
+            $this->logger->addLog($log);
         } catch (Throwable) {
         }
     }

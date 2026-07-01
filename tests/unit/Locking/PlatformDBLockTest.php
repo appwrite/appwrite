@@ -13,7 +13,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Lock\Lock as UtopiaLock;
-use Utopia\Logger\Log;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 final class PlatformDBLockTest extends TestCase
@@ -22,8 +21,6 @@ final class PlatformDBLockTest extends TestCase
      * @var array<string, bool>
      */
     private array $heldLocks = [];
-
-    private Log $log;
 
     private const PROJECT_SEQUENCE = '42';
 
@@ -34,7 +31,6 @@ final class PlatformDBLockTest extends TestCase
         Config::setParam('errors', require __DIR__.'/../../../app/config/errors.php');
 
         $this->heldLocks = [];
-        $this->log = new Log();
     }
 
     private function makeLock(?Document $project = null): Lock
@@ -42,7 +38,6 @@ final class PlatformDBLockTest extends TestCase
         return new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new PlatformDBLockMemoryLock($key, $this->heldLocks)),
             new NoTelemetry(),
-            $this->log,
             null,
             $project ?? new Document([
                 '$id' => 'test-project',

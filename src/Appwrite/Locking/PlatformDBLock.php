@@ -51,11 +51,6 @@ final class PlatformDBLock
         );
     }
 
-    /**
-     * Document-level counterpart to tryUpdateAttribute() for sparse updates
-     * that change several fields at once. Locks at the document key (no
-     * attribute suffix) so the whole update is mutually exclusive.
-     */
     public function tryUpdateDocument(
         string $collection,
         string $id,

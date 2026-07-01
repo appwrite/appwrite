@@ -69,17 +69,16 @@ return function (Container $context): void {
 
     $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
 
-    $context->set('lock', function (Group $pools, Telemetry $telemetry, Log $log, ?Logger $logger, Document $project): Lock {
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
         return new Lock(
             fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
                 fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
             ),
             $telemetry,
-            $log,
             $logger,
             $project
         );
-    }, ['pools', 'telemetry', 'log', 'logger', 'project']);
+    }, ['pools', 'telemetry', 'logger', 'project']);
 
     $context->set('platformDBLock', fn (Lock $lock, Database $dbForPlatform, Authorization $authorization): PlatformDBLock => new PlatformDBLock(
         $lock,

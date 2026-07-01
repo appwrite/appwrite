@@ -11,11 +11,17 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Lock\Lock as UtopiaLock;
+use Utopia\Logger\Adapter as LoggerAdapter;
 use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 if (! \class_exists(\RedisException::class)) {
     \class_alias(LockingRedisException::class, 'RedisException');
+}
+
+if (! \defined('APP_VERSION_STABLE')) {
+    \define('APP_VERSION_STABLE', 'test');
 }
 
 final class LockTest extends TestCase
@@ -27,12 +33,6 @@ final class LockTest extends TestCase
 
     private Document $project;
 
-    private Log $log;
-
-    /**
-     * Project sequence used for every test; lock keys are scoped under it
-     * so cleanup is bounded.
-     */
     private const PROJECT_SEQUENCE = '42';
 
     private const KEY_PREFIX = 'lock:platform:'.self::PROJECT_SEQUENCE.':';
@@ -46,7 +46,6 @@ final class LockTest extends TestCase
             '$id' => 'test-project',
             '$sequence' => self::PROJECT_SEQUENCE,
         ]);
-        $this->log = new Log();
     }
 
     private function makeLock(): Lock
@@ -54,7 +53,6 @@ final class LockTest extends TestCase
         return new Lock(
             $this->withLock(),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -91,7 +89,6 @@ final class LockTest extends TestCase
                 }));
             },
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -132,7 +129,6 @@ final class LockTest extends TestCase
                 }));
             },
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -148,7 +144,6 @@ final class LockTest extends TestCase
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingAcquireLock(new \RedisException('redis unavailable'))),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -161,12 +156,32 @@ final class LockTest extends TestCase
         $this->assertTrue($called);
     }
 
+    public function testBackendErrorReportDoesNotMutateRequestLog(): void
+    {
+        $requestLog = new Log();
+        $adapter = new RecordingLoggerAdapter();
+        $logger = new Logger($adapter);
+
+        $lock = new Lock(
+            fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingAcquireLock(new \RedisException('redis unavailable'))),
+            new NoTelemetry(),
+            $logger,
+            $this->project,
+        );
+
+        $lock->run('keys', 'k1', fn () => null);
+
+        $this->assertCount(1, $adapter->logs);
+        $this->assertNotSame($requestLog, $adapter->logs[0]);
+        $this->assertSame([], $requestLog->getTags());
+        $this->assertSame([], $requestLog->getExtra());
+    }
+
     public function testRunOrFailBackendErrorRunsCallbackUnlocked(): void
     {
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingAcquireLock(new \RedisException('redis unavailable'))),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -184,7 +199,6 @@ final class LockTest extends TestCase
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => throw new \RedisException('pool unavailable'),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -210,7 +224,6 @@ final class LockTest extends TestCase
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingReleaseLock(new MemoryLock($key, $this->heldLocks), new \RedisException('release failed'))),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -307,7 +320,6 @@ final class LockTest extends TestCase
         $lock = new Lock(
             $this->withLock(),
             new NoTelemetry(),
-            $this->log,
             null,
             $emptyProject,
         );
@@ -330,7 +342,6 @@ final class LockTest extends TestCase
         $lock = new Lock(
             $this->withLock(),
             new NoTelemetry(),
-            $this->log,
             null,
             new Document(),
         );
@@ -348,12 +359,9 @@ final class LockTest extends TestCase
 
     public function testPoolCheckoutExceptionRunsCallbackUnlocked(): void
     {
-        // Pool::pop() throws a bare \Exception on exhaustion, before the lock is
-        // acquired. The wrapper must fail open and run the callback unlocked.
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => throw new \Exception('Pool \'lock\' is empty'),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -368,12 +376,9 @@ final class LockTest extends TestCase
 
     public function testNonPoolExceptionIsNotSwallowed(): void
     {
-        // Only the literal \Exception (pool exhaustion) is treated as fail-open;
-        // any subclass thrown while entering the lock must keep propagating.
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => throw new \RuntimeException('unexpected'),
             new NoTelemetry(),
-            $this->log,
             null,
             $this->project,
         );
@@ -544,4 +549,44 @@ final class ThrowingReleaseLock implements UtopiaLock
 
 final class LockingRedisException extends \Exception
 {
+}
+
+final class RecordingLoggerAdapter extends LoggerAdapter
+{
+    /**
+     * @var list<Log>
+     */
+    public array $logs = [];
+
+    public static function getName(): string
+    {
+        return 'recording';
+    }
+
+    public function push(Log $log): int
+    {
+        $this->logs[] = $log;
+
+        return 200;
+    }
+
+    public function getSupportedTypes(): array
+    {
+        return [
+            Log::TYPE_WARNING,
+        ];
+    }
+
+    public function getSupportedEnvironments(): array
+    {
+        return [
+            Log::ENVIRONMENT_PRODUCTION,
+            Log::ENVIRONMENT_STAGING,
+        ];
+    }
+
+    public function getSupportedBreadcrumbTypes(): array
+    {
+        return [];
+    }
 }
