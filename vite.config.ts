@@ -11,7 +11,12 @@ import {
   almostnodeBuildPlugin,
   ensureAlmostnodePatchCache,
 } from './src/lib/cli-shell/vite-almostnode-plugin'
-import { getTanstackStartSitesOptions } from './vite.sites-config'
+import {
+  getAllMarketingPrerenderPaths,
+  getSitesPrerenderBuildSummary,
+  isMarketingPrerenderPath,
+} from './src/lib/marketing/marketing-build-paths'
+import { getSitesPrerenderConcurrency } from './src/lib/marketing/sites-prerender-scope'
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -45,6 +50,27 @@ const decimalJsShim = path.resolve(
   'src/lib/shims/decimal-js.ts',
 )
 const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
+
+function getTanstackStartSitesOptions() {
+  const prerenderConcurrency = getSitesPrerenderConcurrency()
+  console.log(
+    `[sites] ${getSitesPrerenderBuildSummary()} concurrency=${String(prerenderConcurrency)}`,
+  )
+
+  return {
+    prerender: {
+      enabled: true,
+      crawlLinks: false,
+      concurrency: prerenderConcurrency,
+      failOnError: true,
+      filter: ({ path }: { path: string }) => isMarketingPrerenderPath(path),
+    },
+    pages: getAllMarketingPrerenderPaths().map((path) => ({
+      path,
+      prerender: { enabled: true },
+    })),
+  }
+}
 
 export default defineConfig(async () => {
   const isSitesBuild = process.env.FOR_SITES === 'true'

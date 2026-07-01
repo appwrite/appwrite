@@ -142,7 +142,6 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `generate:docs-exports` | `llms.txt` / `llms-full.txt` only |
 | `generate:docs-nav` | Docs section navigation only |
 | `generate:github-stars` | GitHub star count JSON |
-| `generate:icons` | Favicon and apple-touch-icon from logo |
 | `generate:public-icon-manifest` | Public icon picker manifest |
 | `generate:routes` | TanStack Router types |
 | `generate:sitemap` | Sitemap files |
