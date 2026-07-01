@@ -1,7 +1,5 @@
-allowBuilds:
-  '@mongodb-js/zstd': false
-  '@sentry/cli': false
-  '@swc/core': false
-  esbuild: true
-  node-liblzma: false
-  sharp: true
+packages:
+  - '.'
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
