@@ -14,6 +14,8 @@ import {
   MessageSquare,
   Globe,
   Settings,
+  Pin,
+  PinOff,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -60,6 +62,11 @@ interface ProjectContextMenuProps {
   showSettingsTab: boolean
   canDeleteProject: boolean
   onProjectDeleted?: (projectId: string) => Promise<void> | void
+  canPinProjects?: boolean
+  isPinned?: boolean
+  canPinMore?: boolean
+  onPinProject?: (projectId: string) => void
+  isPinPending?: boolean
   children: React.ReactNode
 }
 
@@ -68,6 +75,11 @@ export function ProjectContextMenu({
   showSettingsTab,
   canDeleteProject,
   onProjectDeleted,
+  canPinProjects = false,
+  isPinned = false,
+  canPinMore = false,
+  onPinProject,
+  isPinPending = false,
   children,
 }: ProjectContextMenuProps) {
   const navigate = useNavigate()
@@ -196,6 +208,18 @@ export function ProjectContextMenu({
               Settings
             </ContextMenuItem>
           )}
+          {canPinProjects && (isPinned || canPinMore) ? (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                disabled={isPinPending}
+                onSelect={() => onPinProject?.(project.$id)}
+              >
+                <ContextMenuIcon icon={isPinned ? PinOff : Pin} />
+                {isPinned ? 'Unpin' : 'Pin'}
+              </ContextMenuItem>
+            </>
+          ) : null}
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

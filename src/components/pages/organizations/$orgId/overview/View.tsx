@@ -2437,6 +2437,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       projectPlatformsById={
                                         projectPlatformsById
                                       }
+                                      canPinProjects={canPinProjectsResult}
+                                      pinnedIds={pinnedIds}
+                                      onPinProject={handlePinProject}
+                                      isPinPending={
+                                        updateTeamPrefsMutation.isPending
+                                      }
                                     />
                                   ) : (
                                   <div className={RESOURCE_CARD_GRID_CLASSNAME}>
@@ -2466,6 +2472,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           canDeleteProject={canManageProjects}
                                           onProjectDeleted={
                                             handleProjectDeleted
+                                          }
+                                          canPinProjects={canPinProjectsResult}
+                                          isPinned
+                                          onPinProject={handlePinProject}
+                                          isPinPending={
+                                            updateTeamPrefsMutation.isPending
                                           }
                                         >
                                           <div
@@ -2675,6 +2687,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         projectPlatformsById={
                                           projectPlatformsById
                                         }
+                                        canPinProjects={canPinProjectsResult}
+                                        pinnedIds={pinnedIds}
+                                        onPinProject={handlePinProject}
+                                        isPinPending={
+                                          updateTeamPrefsMutation.isPending
+                                        }
                                       />
                                     ) : (
                                     <div
@@ -2693,6 +2711,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             canDeleteProject={canManageProjects}
                                             onProjectDeleted={
                                               handleProjectDeleted
+                                            }
+                                            canPinProjects={canPinProjectsResult}
+                                            isPinned={false}
+                                            canPinMore={canPin}
+                                            onPinProject={handlePinProject}
+                                            isPinPending={
+                                              updateTeamPrefsMutation.isPending
                                             }
                                           >
                                             <div

@@ -1,7 +1,15 @@
+import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { PauseCircle } from '@/lib/icons'
+import { PauseCircle, Pin, PinOff } from '@/lib/icons'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -26,6 +34,7 @@ import {
   ProjectListPlatformAvatars,
 } from './ProjectListPlatformAvatars'
 import { ProjectListTableRequestsCell } from './ProjectListRequestsChart'
+import { MAX_PINNED_PROJECTS } from '@/lib/team-prefs-keys'
 
 function getProjectListRegionLabel(project: ProjectListItem): string | null {
   if (!project.region || project.region === 'unknown') return null
@@ -42,6 +51,10 @@ type ProjectsListTableProps = {
   showUsageCharts?: boolean
   projectRequestsUsageById: Map<string, ProjectListRequestsUsageEntry>
   projectPlatformsById: Map<string, ProjectListPlatformsEntry>
+  canPinProjects?: boolean
+  pinnedIds?: string[]
+  onPinProject?: (projectId: string) => void
+  isPinPending?: boolean
 }
 
 function getProjectColumnWidth(
@@ -92,10 +105,16 @@ export function ProjectsListTable({
   showUsageCharts = false,
   projectRequestsUsageById,
   projectPlatformsById,
+  canPinProjects = false,
+  pinnedIds = [],
+  onPinProject,
+  isPinPending = false,
 }: ProjectsListTableProps) {
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const showRegionColumn = features.multiRegion
+  const pinnedSet = useMemo(() => new Set(pinnedIds), [pinnedIds])
+  const canPinMore = pinnedIds.length < MAX_PINNED_PROJECTS
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -133,6 +152,9 @@ export function ProjectsListTable({
           {projects.map((project) => {
             const regionLabel = getProjectListRegionLabel(project)
             const platformsEntry = projectPlatformsById.get(project.$id)
+            const isPinned = pinnedSet.has(project.$id)
+            const showPinControl =
+              canPinProjects && onPinProject && (isPinned || canPinMore)
 
             return (
               <ProjectContextMenu
@@ -141,6 +163,11 @@ export function ProjectsListTable({
                 showSettingsTab={showProjectSettingsTab}
                 canDeleteProject={canDeleteProject}
                 onProjectDeleted={onProjectDeleted}
+                canPinProjects={canPinProjects}
+                isPinned={isPinned}
+                canPinMore={canPinMore}
+                onPinProject={onPinProject}
+                isPinPending={isPinPending}
               >
                 <TableRow
                   className="cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30"
@@ -211,8 +238,35 @@ export function ProjectsListTable({
                     className={cn(listTableCellClassName, 'text-right')}
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <div className="flex h-full items-center justify-end">
+                    <div className="flex h-full items-center justify-end gap-1">
                       <ProjectListIdentities project={project} />
+                      {showPinControl ? (
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 rounded-md"
+                                aria-label={
+                                  isPinned ? 'Unpin project' : 'Pin project'
+                                }
+                                onClick={() => onPinProject(project.$id)}
+                                disabled={isPinPending}
+                              >
+                                {isPinned ? (
+                                  <PinOff className="h-4 w-4" />
+                                ) : (
+                                  <Pin className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{isPinned ? 'Unpin project' : 'Pin project'}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>
