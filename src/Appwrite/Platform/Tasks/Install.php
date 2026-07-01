@@ -547,6 +547,10 @@ class Install extends Action
             $version = 'local';
         }
 
+        if (!$isLocalInstall && $this->hostPath === '') {
+            $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
+        }
+
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
         $enableAssistant = trim($assistantKey) !== '';
         $enabledRuntimes = \array_unique(\array_filter(\array_map(
@@ -1386,6 +1390,61 @@ class Install extends Action
 
         $cwd = getcwd();
         return $cwd !== false ? $cwd : '.';
+    }
+
+    protected function detectInstallerHostPath(string $containerPath): ?string
+    {
+        if (!file_exists('/.dockerenv') && !file_exists('/run/.containerenv')) {
+            return null;
+        }
+
+        $containerId = trim((string) @file_get_contents('/etc/hostname'));
+        if ($containerId === '') {
+            return null;
+        }
+
+        $command = \implode(' ', \array_map(\escapeshellarg(...), [
+            'docker',
+            'inspect',
+            '--format',
+            '{{ json .Mounts }}',
+            $containerId,
+        ]));
+        $output = [];
+        @\exec($command . ' 2>/dev/null', $output, $exitCode);
+        if ($exitCode !== 0 || empty($output)) {
+            return null;
+        }
+
+        $mounts = \json_decode(\implode("\n", $output), true);
+        if (!\is_array($mounts)) {
+            return null;
+        }
+
+        $containerPath = \rtrim($containerPath, '/');
+        foreach ($mounts as $mount) {
+            if (!\is_array($mount)) {
+                continue;
+            }
+            $source = $mount['Source'] ?? null;
+            $destination = $mount['Destination'] ?? null;
+            if (!\is_string($source) || !\is_string($destination) || $source === '' || $destination === '') {
+                continue;
+            }
+
+            $destination = \rtrim($destination, '/');
+            $hostPath = match (true) {
+                $destination === $containerPath => \rtrim($source, '/'),
+                \str_starts_with($containerPath . '/', $destination . '/') => \rtrim($source, '/') . \substr($containerPath, \strlen($destination)),
+                default => null,
+            };
+
+            if ($hostPath !== null) {
+                return $hostPath;
+            }
+        }
+
+        return null;
     }
 
     protected function buildFromProjectPath(string $suffix): string
