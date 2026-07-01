@@ -51,6 +51,7 @@ class Create extends Action
             ->desc('Create deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
+            ->label('limit', ['usage:storage', 'usage:GBHours'])
             ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')

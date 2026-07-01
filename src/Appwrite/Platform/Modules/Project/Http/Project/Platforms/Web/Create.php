@@ -44,6 +44,7 @@ class Create extends Action
             ->desc('Create project web platform')
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.write')
+            ->label('limit', 'count:platforms')
             ->label('event', 'platforms.[platformId].create')
             ->label('audits.event', 'project.platform.create')
             ->label('audits.resource', 'project.platform/{response.$id}')

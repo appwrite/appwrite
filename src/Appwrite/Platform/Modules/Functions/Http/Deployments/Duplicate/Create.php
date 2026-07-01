@@ -37,6 +37,7 @@ class Create extends Action
             ->desc('Create duplicate deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
+            ->label('limit', 'usage:GBHours')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
