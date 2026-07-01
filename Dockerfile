@@ -45,6 +45,12 @@ COPY ./dev /usr/src/code/dev
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
+# Add Installer Templates
+COPY ./app/views/install /usr/local/share/appwrite/app/views/install
+COPY ./docker-compose.yml /usr/local/share/appwrite/docker-compose.yml
+COPY ./mongo-init.js /usr/local/share/appwrite/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/local/share/appwrite/mongo-entrypoint.sh
+
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/imports && \
@@ -92,7 +98,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
-    chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-webhooks && \
     chmod +x /usr/local/bin/stats-resources

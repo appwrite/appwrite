@@ -276,7 +276,6 @@ class Create extends Base
                 'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
                 'schedule'  => $function->getAttribute('schedule'),
                 'active' => false,
             ]))
