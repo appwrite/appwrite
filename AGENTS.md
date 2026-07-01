@@ -13,7 +13,7 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 | `composer format` | Auto-format code (Pint, PSR-12) |
 | `composer format <file>` | Format a specific file |
 | `composer lint <file>` | Check formatting of a file |
-| `composer analyze` | Static analysis (PHPStan level 3) |
+| `composer analyze` | Static analysis (PHPStan level 4) |
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
@@ -25,7 +25,7 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 - MongoDB (default), MariaDB, MySQL, PostgreSQL (adapters via utopia-php/database)
 - Redis (cache, queue, pub/sub)
 - Docker + Traefik (reverse proxy)
-- PHPUnit 12, Pint (PSR-12), PHPStan level 3
+- PHPUnit 12, Pint (PSR-12), PHPStan level 4, Rector
 
 ## Project layout
 
