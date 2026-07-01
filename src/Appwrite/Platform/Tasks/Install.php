@@ -27,6 +27,7 @@ class Install extends Action
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 1;
+    private const int DOCKER_COMPOSE_UP_TIMEOUT_SECONDS = 600;
     private const int PROC_CLOSE_TIMEOUT_SECONDS = 60;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
@@ -1248,11 +1249,17 @@ class Install extends Action
         }
 
         stream_set_blocking($pipes[1], false);
-        $deadline = time() + self::PROC_CLOSE_TIMEOUT_SECONDS;
+        $deadline = time() + self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS;
         $buffer = '';
+        $timedOut = false;
 
-        while (time() < $deadline) {
+        while (true) {
             $status = proc_get_status($process);
+            if (time() >= $deadline && $status['running']) {
+                $timedOut = true;
+                $output[] = 'Docker Compose did not finish starting containers within ' . self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS . ' seconds.';
+                break;
+            }
 
             $read = [$pipes[1]];
             $write = null;
@@ -1301,7 +1308,17 @@ class Install extends Action
 
         fclose($pipes[1]);
 
-        $exit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        if ($timedOut) {
+            proc_terminate($process, SIGTERM);
+            usleep(500_000);
+
+            if (proc_get_status($process)['running']) {
+                proc_terminate($process, SIGKILL);
+            }
+        }
+
+        $closeExit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        $exit = $timedOut ? 124 : $closeExit;
 
         return ['output' => $output, 'exit' => $exit];
     }
