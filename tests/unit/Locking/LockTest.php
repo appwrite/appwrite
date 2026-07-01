@@ -85,7 +85,9 @@ final class LockTest extends TestCase
             function (string $key, int $lockTtl, \Closure $callback) use (&$ttl, &$timeout): mixed {
                 $ttl = $lockTtl;
 
-                return $callback(new InspectingLock(new MemoryLock($key, $this->heldLocks), $timeout));
+                return $callback(new InspectingLock(new MemoryLock($key, $this->heldLocks), function (float $acquireTimeout) use (&$timeout): void {
+                    $timeout = $acquireTimeout;
+                }));
             },
             new NoTelemetry(),
             $this->log,
@@ -96,7 +98,7 @@ final class LockTest extends TestCase
         $lock->run('keys', 'k1', fn () => null);
 
         $this->assertSame(5, $ttl);
-        $this->assertSame(0.0, $timeout);
+        $this->assertEqualsWithDelta(0.0, $timeout, PHP_FLOAT_EPSILON);
     }
 
     public function test_run_skips_on_contention(): void
@@ -124,7 +126,9 @@ final class LockTest extends TestCase
             function (string $key, int $lockTtl, \Closure $callback) use (&$ttl, &$timeout): mixed {
                 $ttl = $lockTtl;
 
-                return $callback(new InspectingLock(new MemoryLock($key, $this->heldLocks), $timeout));
+                return $callback(new InspectingLock(new MemoryLock($key, $this->heldLocks), function (float $acquireTimeout) use (&$timeout): void {
+                    $timeout = $acquireTimeout;
+                }));
             },
             new NoTelemetry(),
             $this->log,
@@ -135,7 +139,7 @@ final class LockTest extends TestCase
         $lock->runOrFail('keys', 'k1', fn () => null);
 
         $this->assertSame(10, $ttl);
-        $this->assertSame(3.0, $timeout);
+        $this->assertEqualsWithDelta(3.0, $timeout, PHP_FLOAT_EPSILON);
     }
 
     public function test_best_effort_backend_error_runs_callback_unlocked(): void
@@ -370,7 +374,10 @@ final class LockTest extends TestCase
             ->with(
                 'projects',
                 'p1',
-                $this->callback(fn (Document $document): bool => $document->getAttribute('accessedAt') === 'now')
+                $this->callback(function (Document $document): bool {
+                    $this->assertSame('now', $document->getAttribute('accessedAt'));
+                    return true;
+                })
             )
             ->willReturn(new Document(['$id' => 'p1']));
 
@@ -385,7 +392,7 @@ final class LockTest extends TestCase
 
     public function test_platform_db_lock_try_run_uses_collection_key(): void
     {
-        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform = $this->createStub(Database::class);
         $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
 
         $called = false;
@@ -401,7 +408,7 @@ final class LockTest extends TestCase
     {
         $this->heldLocks[self::KEY_PREFIX.'keys:k1'] = true;
 
-        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform = $this->createStub(Database::class);
         $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
 
         $called = false;
@@ -444,7 +451,7 @@ final class LockTest extends TestCase
 
         $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
 
-        $this->assertNull($platformDBLock->tryUpdateDocument('keys', 'k1', new Document(['accessedAt' => 'now'])));
+        $this->assertNotInstanceOf(\Utopia\Database\Document::class, $platformDBLock->tryUpdateDocument('keys', 'k1', new Document(['accessedAt' => 'now'])));
     }
 
     public function test_pool_checkout_exception_runs_callback_unlocked(): void
@@ -507,7 +514,7 @@ final class LockTest extends TestCase
 
         $platformDBLock = new PlatformDBLock($lock, $dbForPlatform, new Authorization());
 
-        $this->assertNull($platformDBLock->tryUpdateAttribute(
+        $this->assertNotInstanceOf(\Utopia\Database\Document::class, $platformDBLock->tryUpdateAttribute(
             'projects',
             'routed-project',
             'accessedAt',
@@ -575,13 +582,13 @@ final class InspectingLock implements UtopiaLock
 {
     public function __construct(
         private readonly UtopiaLock $lock,
-        private ?float &$timeout,
+        private readonly \Closure $inspectTimeout,
     ) {
     }
 
     public function acquire(float $timeout = 0.0): bool
     {
-        $this->timeout = $timeout;
+        ($this->inspectTimeout)($timeout);
 
         return $this->lock->acquire($timeout);
     }
