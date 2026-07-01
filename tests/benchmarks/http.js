@@ -279,7 +279,6 @@ function accountFlow(ctx) {
     requireSession(ctx, 'accountFlow');
 
     api('GET', '/account', null, ctx.sessionHeaders, [200], 'account.get');
-    api('GET', '/account/logs', null, ctx.sessionHeaders, [200], 'account.logs.list');
     api('PATCH', '/account/prefs', { prefs: { benchmark: true, runId: ctx.runId } }, ctx.sessionHeaders, [200], 'account.prefs.update');
     api('PATCH', '/account/name', { name: 'Benchmark User Updated' }, ctx.sessionHeaders, [200], 'account.name.update');
 }

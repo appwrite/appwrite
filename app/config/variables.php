@@ -17,6 +17,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EDITION',
+                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'. Self-hosted deployments do not consume the audit, usage and stats-resources queues, so their producers are disabled for this edition.',
+                'introduction' => '',
+                'default' => 'self-hosted',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCALE',
                 'description' => 'Set your Appwrite\'s locale. By default, the locale is set to \'en\'.',
                 'introduction' => '',
@@ -269,15 +278,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container to reduce resource usage.',
-                'introduction' => '0.7.0',
-                'default' => 'enabled',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_LOGGING_PROVIDER',
                 'description' => 'Deprecated since 1.6.0, use `_APP_LOGGING_CONFIG` with DSN value instead. This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
@@ -291,33 +291,6 @@ return [
                 'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
                 'introduction' => '0.12.0',
                 'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
-                'introduction' => '1.1.0',
-                'default' => '30',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
-                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
-                'introduction' => '1.0.0',
-                'default' => '30',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_USAGE_DATABASE_INTERVAL',
-                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
-                'introduction' => '1.0.0',
-                'default' => '900',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

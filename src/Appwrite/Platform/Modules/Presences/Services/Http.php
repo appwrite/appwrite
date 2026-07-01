@@ -6,7 +6,6 @@ use Appwrite\Platform\Modules\Presences\HTTP\Delete as DeletePresence;
 use Appwrite\Platform\Modules\Presences\HTTP\Get as GetPresence;
 use Appwrite\Platform\Modules\Presences\HTTP\Update as UpdatePresence;
 use Appwrite\Platform\Modules\Presences\HTTP\Upsert as UpsertPresence;
-use Appwrite\Platform\Modules\Presences\HTTP\Usage\Get as GetUsage;
 use Appwrite\Platform\Modules\Presences\HTTP\XList as ListPresences;
 use Utopia\Platform\Service;
 
@@ -18,7 +17,6 @@ class Http extends Service
 
         $this
             ->addAction(UpsertPresence::getName(), new UpsertPresence())
-            ->addAction(GetUsage::getName(), new GetUsage())
             ->addAction(GetPresence::getName(), new GetPresence())
             ->addAction(ListPresences::getName(), new ListPresences())
             ->addAction(UpdatePresence::getName(), new UpdatePresence())

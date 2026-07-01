@@ -14,8 +14,6 @@ use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
-use Utopia\Audit\Adapter\SQL;
-use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -69,10 +67,8 @@ class Deletes extends Action
             ->inject('executor')
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
-            ->inject('auditRetention')
             ->inject('log')
             ->inject('publisherForDeletes')
-            ->inject('getAudit')
             ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
@@ -97,10 +93,8 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
-        string $auditRetention,
         Log $log,
         DeletePublisher $publisherForDeletes,
-        callable $getAudit,
         UsagePublisher $publisherForUsage,
     ): void {
         $payload = $message->getPayload();
@@ -177,11 +171,6 @@ class Deletes extends Action
                     );
                 }
                 break;
-            case DELETE_TYPE_AUDIT:
-                if (!$project->isEmpty()) {
-                    $this->deleteAuditLogs($project, $getAudit, $auditRetention);
-                }
-                break;
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForPlatform, $datetime);
                 break;
@@ -218,7 +207,6 @@ class Deletes extends Action
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
-                $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
@@ -822,7 +810,6 @@ class Deletes extends Action
 
             $projectCollectionIds = [
                 ...\array_keys(Config::getParam('collections', [])['projects']),
-                SQL::COLLECTION,
                 AbuseDatabase::COLLECTION,
             ];
 
@@ -1212,28 +1199,6 @@ class Deletes extends Action
             Query::orderDesc('timestamp'),
             Query::orderAsc(),
         ], $dbForPlatform);
-    }
-
-    /**
-     * @param Document $project
-     * @param callable $getAudit
-     * @param string $auditRetention
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
-    {
-        Console::info('Delete audit logs');
-
-        $projectId = $project->getId();
-        /** @var Audit $audit */
-        $audit = $getAudit($project);
-
-        try {
-            $audit->cleanup(new \DateTime($auditRetention));
-        } catch (Throwable $th) {
-            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $th->getMessage());
-        }
     }
 
     /**
