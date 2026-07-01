@@ -3,7 +3,8 @@ name: "Release"
 on:
   push:
     tags:
-      - '*.*.*'
+      - '[0-9]*.[0-9]*.[0-9]*'
+      - '!cl-*'
 
 jobs:
   tests:
