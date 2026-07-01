@@ -17,7 +17,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
   applyFaviconHref,
-  FAVICON_MAP,
+  applyFaviconVariant,
   getDefaultFaviconVariant,
 } from '@/lib/favicon'
 import {
@@ -195,7 +195,7 @@ function LegacyThemeFavicon() {
     }
 
     const variant = getDefaultFaviconVariant()
-    applyFaviconHref(FAVICON_MAP[variant], { cacheBust: false })
+    applyFaviconVariant(variant, { cacheBust: false })
   }, [theme, resolvedTheme])
 
   return null

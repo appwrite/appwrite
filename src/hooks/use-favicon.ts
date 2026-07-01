@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
 import {
-  applyFaviconHref,
+  applyFaviconVariant,
   FAVICON_MAP,
+  variantFromPathname,
   type FaviconVariant,
 } from '@/lib/favicon'
 
@@ -15,13 +16,12 @@ export function useFavicon() {
   const setFavicon = useCallback((variant: FaviconVariant) => {
     if (typeof window === 'undefined') return
 
-    const faviconPath = FAVICON_MAP[variant]
-    if (!faviconPath) {
+    if (!FAVICON_MAP[variant]) {
       console.warn(`Unknown favicon variant: ${variant}`)
       return
     }
 
-    applyFaviconHref(faviconPath)
+    applyFaviconVariant(variant)
   }, [])
 
   const getCurrentFavicon = useCallback((): FaviconVariant | null => {
@@ -40,13 +40,7 @@ export function useFavicon() {
       pathname = currentPath
     }
 
-    for (const [variant, path] of Object.entries(FAVICON_MAP)) {
-      if (pathname.endsWith(path)) {
-        return variant as FaviconVariant
-      }
-    }
-
-    return null
+    return variantFromPathname(pathname)
   }, [])
 
   return {
