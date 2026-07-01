@@ -57,7 +57,7 @@ class Create extends CreateDocumentAction
             ->label('sdk', [
                 new Method(
                     namespace: 'vectorsDB',
-                    group: $this->getSdkGroup(),
+                    group: 'embeddings',
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
                     description: '/docs/references/vectorsdb/create-document.md',
