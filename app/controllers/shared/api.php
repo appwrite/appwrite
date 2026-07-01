@@ -209,7 +209,11 @@ Http::init()
                     }
                 }
 
-                if (! $updates->isEmpty() && $platformDBLock->tryUpdateDocument('keys', $dbKey->getId(), $updates) instanceof Document) {
+                $updatedKey = $updates->isEmpty()
+                    ? null
+                    : $platformDBLock->tryUpdateDocument('keys', $dbKey->getId(), $updates);
+
+                if ($updatedKey instanceof Document) {
                     if (! empty($apiKey->getProjectId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
                     } elseif (! empty($apiKey->getUserId())) {
