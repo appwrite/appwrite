@@ -22,7 +22,7 @@ readonly class Usage extends Base
      */
     public function enqueue(UsageMessage $message): string|bool
     {
-        if (System::getEnv('_APP_EDITION', '') === 'self-hosted') {
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             return false;
         }
 
