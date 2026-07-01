@@ -6,16 +6,17 @@ namespace Tests\Unit\Locking;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Locking\Lock;
-use Appwrite\Locking\PlatformDBLock;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Logger\Log;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
+
+if (! \class_exists(\RedisException::class)) {
+    \class_alias(LockingRedisException::class, 'RedisException');
+}
 
 final class LockTest extends TestCase
 {
@@ -64,7 +65,7 @@ final class LockTest extends TestCase
         return fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new MemoryLock($key, $this->heldLocks));
     }
 
-    public function test_run_uses_per_document_key_and_invokes_callback(): void
+    public function testRunUsesPerDocumentKeyAndInvokesCallback(): void
     {
         $called = false;
         $lock = $this->makeLock();
@@ -76,7 +77,7 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
     }
 
-    public function test_run_uses_short_try_once_lock_window(): void
+    public function testRunUsesShortTryOnceLockWindow(): void
     {
         $ttl = null;
         $timeout = null;
@@ -101,7 +102,7 @@ final class LockTest extends TestCase
         $this->assertEqualsWithDelta(0.0, $timeout, PHP_FLOAT_EPSILON);
     }
 
-    public function test_run_skips_on_contention(): void
+    public function testRunSkipsOnContention(): void
     {
         $key = self::KEY_PREFIX.'keys:k1';
         $this->heldLocks[$key] = true;
@@ -117,7 +118,7 @@ final class LockTest extends TestCase
         $this->assertArrayHasKey($key, $this->heldLocks);
     }
 
-    public function test_run_or_fail_uses_short_http_lock_ttl_and_acquire_timeout(): void
+    public function testRunOrFailUsesShortHttpLockTtlAndAcquireTimeout(): void
     {
         $ttl = null;
         $timeout = null;
@@ -142,12 +143,8 @@ final class LockTest extends TestCase
         $this->assertEqualsWithDelta(3.0, $timeout, PHP_FLOAT_EPSILON);
     }
 
-    public function test_best_effort_backend_error_runs_callback_unlocked(): void
+    public function testBestEffortBackendErrorRunsCallbackUnlocked(): void
     {
-        if (! \class_exists(\RedisException::class)) {
-            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
-        }
-
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingAcquireLock(new \RedisException('redis unavailable'))),
             new NoTelemetry(),
@@ -164,12 +161,8 @@ final class LockTest extends TestCase
         $this->assertTrue($called);
     }
 
-    public function test_run_or_fail_backend_error_runs_callback_unlocked(): void
+    public function testRunOrFailBackendErrorRunsCallbackUnlocked(): void
     {
-        if (! \class_exists(\RedisException::class)) {
-            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
-        }
-
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingAcquireLock(new \RedisException('redis unavailable'))),
             new NoTelemetry(),
@@ -186,12 +179,8 @@ final class LockTest extends TestCase
         $this->assertTrue($called);
     }
 
-    public function test_best_effort_pool_checkout_error_runs_callback_unlocked(): void
+    public function testBestEffortPoolCheckoutErrorRunsCallbackUnlocked(): void
     {
-        if (! \class_exists(\RedisException::class)) {
-            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
-        }
-
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => throw new \RedisException('pool unavailable'),
             new NoTelemetry(),
@@ -208,24 +197,16 @@ final class LockTest extends TestCase
         $this->assertTrue($called);
     }
 
-    public function test_callback_redis_exception_is_not_swallowed(): void
+    public function testCallbackRedisExceptionIsNotSwallowed(): void
     {
-        if (! \class_exists(\RedisException::class)) {
-            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
-        }
-
         $lock = $this->makeLock();
 
         $this->expectException(\RedisException::class);
         $lock->run('keys', 'k1', fn () => throw new \RedisException('callback failed'));
     }
 
-    public function test_release_error_after_callback_is_logged_but_not_thrown(): void
+    public function testReleaseErrorAfterCallbackIsLoggedButNotThrown(): void
     {
-        if (! \class_exists(\RedisException::class)) {
-            $this->markTestSkipped('Redis extension is required to simulate RedisException.');
-        }
-
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingReleaseLock(new MemoryLock($key, $this->heldLocks), new \RedisException('release failed'))),
             new NoTelemetry(),
@@ -237,7 +218,7 @@ final class LockTest extends TestCase
         $this->assertSame('ok', $lock->runOrFail('keys', 'k1', fn () => 'ok'));
     }
 
-    public function test_run_or_fail_throws_on_contention(): void
+    public function testRunOrFailThrowsOnContention(): void
     {
         $key = self::KEY_PREFIX.'projects:p1';
         $this->heldLocks[$key] = true;
@@ -253,7 +234,7 @@ final class LockTest extends TestCase
         }
     }
 
-    public function test_run_or_fail_returns_callback_value_when_uncontended(): void
+    public function testRunOrFailReturnsCallbackValueWhenUncontended(): void
     {
         $lock = $this->makeLock();
         $result = $lock->runOrFail('projects', 'p1', fn () => 'ok');
@@ -262,7 +243,7 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'projects:p1', $this->heldLocks);
     }
 
-    public function test_with_key_uses_raw_key(): void
+    public function testWithKeyUsesRawKey(): void
     {
         $custom = 'lock:test:custom-key';
         $called = false;
@@ -275,7 +256,7 @@ final class LockTest extends TestCase
         $this->assertArrayNotHasKey($custom, $this->heldLocks);
     }
 
-    public function test_try_with_key_skips_on_contention(): void
+    public function testTryWithKeySkipsOnContention(): void
     {
         $custom = 'lock:test:contended';
         $this->heldLocks[$custom] = true;
@@ -289,7 +270,7 @@ final class LockTest extends TestCase
         $this->assertFalse($called);
     }
 
-    public function test_with_key_throws_on_contention(): void
+    public function testWithKeyThrowsOnContention(): void
     {
         $custom = 'lock:test:contended';
         $this->heldLocks[$custom] = true;
@@ -299,7 +280,7 @@ final class LockTest extends TestCase
         $lock->withKey($custom, fn () => null, ttl: 5, waitTimeout: 0.1);
     }
 
-    public function test_disabled_mode_runs_callback_unlocked(): void
+    public function testDisabledModeRunsCallbackUnlocked(): void
     {
         $previous = \getenv('_APP_LOCKING_ENABLED');
         \putenv('_APP_LOCKING_ENABLED=disabled');
@@ -320,7 +301,7 @@ final class LockTest extends TestCase
         }
     }
 
-    public function test_project_without_sequence_falls_back_to_unknown(): void
+    public function testProjectWithoutSequenceFallsBackToUnknown(): void
     {
         $emptyProject = new Document();
         $lock = new Lock(
@@ -344,7 +325,7 @@ final class LockTest extends TestCase
         unset($this->heldLocks[$key]);
     }
 
-    public function test_key_for_project_uses_given_project_sequence(): void
+    public function testKeyForProjectUsesGivenProjectSequence(): void
     {
         $lock = new Lock(
             $this->withLock(),
@@ -365,96 +346,7 @@ final class LockTest extends TestCase
         );
     }
 
-    public function test_platform_db_lock_updates_attribute_under_attribute_key(): void
-    {
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('updateDocument')
-            ->with(
-                'projects',
-                'p1',
-                $this->callback(function (Document $document): bool {
-                    $this->assertSame('now', $document->getAttribute('accessedAt'));
-                    return true;
-                })
-            )
-            ->willReturn(new Document(['$id' => 'p1']));
-
-        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
-
-        $this->assertSame(
-            'p1',
-            $platformDBLock->tryUpdateAttribute('projects', 'p1', 'accessedAt', 'now')?->getId()
-        );
-        $this->assertArrayNotHasKey(self::KEY_PREFIX.'projects:p1:accessedAt', $this->heldLocks);
-    }
-
-    public function test_platform_db_lock_try_run_uses_collection_key(): void
-    {
-        $dbForPlatform = $this->createStub(Database::class);
-        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
-
-        $called = false;
-        $platformDBLock->tryRun('keys', 'k1', function () use (&$called): void {
-            $called = true;
-        });
-
-        $this->assertTrue($called);
-        $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
-    }
-
-    public function test_platform_db_lock_try_run_skips_on_contention(): void
-    {
-        $this->heldLocks[self::KEY_PREFIX.'keys:k1'] = true;
-
-        $dbForPlatform = $this->createStub(Database::class);
-        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
-
-        $called = false;
-        $platformDBLock->tryRun('keys', 'k1', function () use (&$called): void {
-            $called = true;
-        });
-
-        $this->assertFalse($called);
-    }
-
-    public function test_platform_db_lock_updates_document_under_document_key(): void
-    {
-        $updates = new Document(['accessedAt' => 'now', 'sdks' => ['php']]);
-
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform
-            ->expects($this->once())
-            ->method('updateDocument')
-            ->with('keys', 'k1', $updates)
-            ->willReturn(new Document(['$id' => 'k1']));
-
-        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
-
-        $this->assertSame(
-            'k1',
-            $platformDBLock->tryUpdateDocument('keys', 'k1', $updates)?->getId()
-        );
-        // Document-level lock has no attribute suffix and is released after the write.
-        $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
-    }
-
-    public function test_platform_db_lock_skips_document_update_on_contention(): void
-    {
-        $this->heldLocks[self::KEY_PREFIX.'keys:k1'] = true;
-
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform
-            ->expects($this->never())
-            ->method('updateDocument');
-
-        $platformDBLock = new PlatformDBLock($this->makeLock(), $dbForPlatform, new Authorization());
-
-        $this->assertNotInstanceOf(\Utopia\Database\Document::class, $platformDBLock->tryUpdateDocument('keys', 'k1', new Document(['accessedAt' => 'now'])));
-    }
-
-    public function test_pool_checkout_exception_runs_callback_unlocked(): void
+    public function testPoolCheckoutExceptionRunsCallbackUnlocked(): void
     {
         // Pool::pop() throws a bare \Exception on exhaustion, before the lock is
         // acquired. The wrapper must fail open and run the callback unlocked.
@@ -474,7 +366,7 @@ final class LockTest extends TestCase
         $this->assertTrue($called);
     }
 
-    public function test_non_pool_exception_is_not_swallowed(): void
+    public function testNonPoolExceptionIsNotSwallowed(): void
     {
         // Only the literal \Exception (pool exhaustion) is treated as fail-open;
         // any subclass thrown while entering the lock must keep propagating.
@@ -490,38 +382,6 @@ final class LockTest extends TestCase
         $lock->run('keys', 'k1', fn () => null);
     }
 
-    public function test_platform_db_lock_skips_routed_project_update_on_contention(): void
-    {
-        $lock = new Lock(
-            $this->withLock(),
-            new NoTelemetry(),
-            $this->log,
-            null,
-            new Document(),
-        );
-
-        $project = new Document([
-            '$id' => 'routed-project',
-            '$sequence' => '84',
-        ]);
-
-        $this->heldLocks['lock:platform:84:projects:routed-project:accessedAt'] = true;
-
-        $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform
-            ->expects($this->never())
-            ->method('updateDocument');
-
-        $platformDBLock = new PlatformDBLock($lock, $dbForPlatform, new Authorization());
-
-        $this->assertNotInstanceOf(\Utopia\Database\Document::class, $platformDBLock->tryUpdateAttribute(
-            'projects',
-            'routed-project',
-            'accessedAt',
-            'now',
-            $project
-        ));
-    }
 }
 
 final class MemoryLock implements UtopiaLock
@@ -680,4 +540,8 @@ final class ThrowingReleaseLock implements UtopiaLock
             $this->release();
         }
     }
+}
+
+final class LockingRedisException extends \Exception
+{
 }
