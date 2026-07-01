@@ -1,0 +1,277 @@
+<?php
+
+namespace Appwrite\Locking;
+
+use Appwrite\Extend\Exception;
+use Closure;
+use Throwable;
+use Utopia\Console;
+use Utopia\Database\Document;
+use Utopia\Lock\Lock as UtopiaLock;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
+use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+
+final class Lock
+{
+    private const FAIL_TTL_SECONDS = 10;
+
+    private const FAIL_WAIT_SECONDS = 3.0;
+
+    private const SKIP_TTL_SECONDS = 5;
+
+    private const SKIP_WAIT_SECONDS = 0.0;
+
+    private const REPORT_RATE_LIMIT_SECONDS = 60;
+
+    private const OUTCOME_ACQUIRED = 'acquired';
+
+    private const OUTCOME_SKIPPED = 'skipped';
+
+    private const OUTCOME_CONTENDED = 'contended';
+
+    private const OUTCOME_BACKEND_ERROR = 'backend_error';
+
+    private const OUTCOME_RELEASE_ERROR = 'release_error';
+
+    private readonly bool $enabled;
+
+    private readonly mixed $attempts;
+
+    private readonly string $projectInternalId;
+
+    /** @var array<string,int> */
+    private static array $lastReportAt = [];
+
+    /**
+     * @var Closure(string, int, Closure(UtopiaLock): mixed): mixed
+     */
+    private readonly Closure $useLock;
+
+    public function __construct(
+        Closure $useLock,
+        Telemetry $telemetry,
+        private readonly ?Logger $logger,
+        Document $project,
+    ) {
+        $this->useLock = $useLock;
+        $this->enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
+        $this->attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
+        $sequence = $project->getSequence();
+        $this->projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+    }
+
+    public function run(string $collection, string $id, Closure $fn): void
+    {
+        $this->tryWithKey($this->key($collection, $id), $fn, target: $collection);
+    }
+
+    public function runOrFail(string $collection, string $id, Closure $fn): mixed
+    {
+        return $this->execute($this->key($collection, $id), $collection, $fn);
+    }
+
+    public function withKey(
+        string $key,
+        Closure $fn,
+        int $ttl = self::FAIL_TTL_SECONDS,
+        float $waitTimeout = self::FAIL_WAIT_SECONDS,
+        ?string $target = null,
+    ): mixed {
+        return $this->execute(
+            $key,
+            $target ?? self::inferTargetFromKey($key),
+            $fn,
+            ttl: $ttl,
+            waitTimeout: $waitTimeout,
+            skipOnContention: false,
+        );
+    }
+
+    public function tryWithKey(
+        string $key,
+        Closure $fn,
+        int $ttl = self::SKIP_TTL_SECONDS,
+        ?string $target = null,
+    ): mixed {
+        return $this->execute(
+            $key,
+            $target ?? self::inferTargetFromKey($key),
+            $fn,
+            ttl: $ttl,
+            waitTimeout: self::SKIP_WAIT_SECONDS,
+            skipOnContention: true,
+        );
+    }
+
+    private function execute(
+        string $key,
+        string $target,
+        Closure $fn,
+        int $ttl = self::FAIL_TTL_SECONDS,
+        float $waitTimeout = self::FAIL_WAIT_SECONDS,
+        bool $skipOnContention = false,
+    ): mixed {
+        if (! $this->enabled) {
+            return $fn();
+        }
+
+        $labels = ['target' => $target, 'project' => $this->projectInternalId];
+
+        try {
+            return ($this->useLock)($key, $ttl, function (UtopiaLock $lock) use ($fn, $key, $labels, $skipOnContention, $target, $waitTimeout): mixed {
+                return $this->executeWithLock($lock, $key, $target, $labels, $fn, $waitTimeout, $skipOnContention);
+            });
+        } catch (CallbackRedisException $e) {
+            throw $e->getRedisException();
+        } catch (\RedisException $e) {
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+            return $fn();
+        } catch (\Exception $e) {
+            // Pool exhaustion throws a bare \Exception before lock acquisition.
+            // Only that exact class is fail-open; subclasses must propagate.
+            if (get_class($e) !== \Exception::class) {
+                throw $e;
+            }
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+            return $fn();
+        }
+    }
+
+    /**
+     * @param array{target: string, project: string} $labels
+     */
+    private function executeWithLock(
+        UtopiaLock $lock,
+        string $key,
+        string $target,
+        array $labels,
+        Closure $fn,
+        float $waitTimeout,
+        bool $skipOnContention,
+    ): mixed {
+        try {
+            $acquired = $lock->acquire($waitTimeout);
+        } catch (\RedisException $e) {
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
+
+            return $fn();
+        }
+
+        if (! $acquired) {
+            if ($skipOnContention) {
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
+
+                return null;
+            }
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
+            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+        }
+
+        $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
+        try {
+            try {
+                return $fn();
+            } catch (\RedisException $e) {
+                throw new CallbackRedisException($e);
+            }
+        } finally {
+            try {
+                $lock->release();
+            } catch (Throwable $e) {
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
+                $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
+            }
+        }
+    }
+
+    private static function inferTargetFromKey(string $key): string
+    {
+        $parts = explode(':', $key, 5);
+
+        return $parts[3] ?? 'unknown';
+    }
+
+    public function key(string $collection, string $id, ?string $attribute = null): string
+    {
+        return self::buildKey($this->projectInternalId, $collection, $id, $attribute);
+    }
+
+    public function keyForProject(Document $project, string $collection, string $id, ?string $attribute = null): string
+    {
+        $sequence = $project->getSequence();
+        $projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+
+        return self::buildKey($projectInternalId, $collection, $id, $attribute);
+    }
+
+    private static function buildKey(string $projectInternalId, string $collection, string $id, ?string $attribute = null): string
+    {
+        $key = "lock:platform:{$projectInternalId}:{$collection}:{$id}";
+
+        return $attribute === null ? $key : "{$key}:{$attribute}";
+    }
+
+    /**
+     * Rate-limit backend/release reports so outages don't flood Sentry.
+     */
+    private function reportError(string $action, string $key, string $target, Throwable $e): void
+    {
+        Console::warning("Lock {$action} for {$key}: {$e->getMessage()}");
+
+        if ($this->logger === null) {
+            return;
+        }
+
+        $bucket = $action.':'.$target;
+        $now = time();
+        if ((self::$lastReportAt[$bucket] ?? 0) + self::REPORT_RATE_LIMIT_SECONDS > $now) {
+            return;
+        }
+        self::$lastReportAt[$bucket] = $now;
+
+        $log = new Log();
+        $log->setNamespace('http');
+        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $log->setVersion(APP_VERSION_STABLE);
+        $log->setType(Log::TYPE_WARNING);
+        $log->setMessage('Distributed lock '.$action.': '.$e->getMessage());
+        $log->setAction("lock.{$action}");
+        $log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
+            ? Log::ENVIRONMENT_PRODUCTION
+            : Log::ENVIRONMENT_STAGING);
+        $log->addTag('lock.target', $target);
+        $log->addTag('lock.project', $this->projectInternalId);
+        // Strip trailing document ID to keep aggregator cardinality bounded.
+        $log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
+        $log->addTag('code', $e->getCode());
+        $log->addExtra('file', $e->getFile());
+        $log->addExtra('line', $e->getLine());
+        $log->addExtra('trace', $e->getTraceAsString());
+
+        try {
+            $this->logger->addLog($log);
+        } catch (Throwable) {
+        }
+    }
+}
+
+final class CallbackRedisException extends \RuntimeException
+{
+    public function __construct(\RedisException $previous)
+    {
+        parent::__construct($previous->getMessage(), $previous->getCode(), $previous);
+    }
+
+    public function getRedisException(): \RedisException
+    {
+        /** @var \RedisException */
+        return parent::getPrevious();
+    }
+}
