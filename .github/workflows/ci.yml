@@ -213,6 +213,7 @@ jobs:
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 15 },
               { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 15 },
