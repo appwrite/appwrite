@@ -471,9 +471,9 @@ return [
             ],
             [
                 'name' => '_APP_POOL_SIZE_LOCK',
-                'description' => 'Maximum number of connections in the distributed lock connection pool. By default, set to 10.',
+                'description' => 'Maximum number of connections in the distributed lock connection pool. By default, this follows the per-worker pool size calculated from _APP_CONNECTIONS_MAX, _APP_POOL_CLIENTS, worker count, and _APP_WORKER_MAX_COROUTINES.',
                 'introduction' => '1.9.3',
-                'default' => '10',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

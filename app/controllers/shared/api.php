@@ -163,22 +163,31 @@ Http::init()
             // For standard keys, update last accessed time
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
+                $ownerCollection = '';
+                $ownerId = '';
+                $keySecret = $request->getHeaderLine('x-appwrite-key', '');
                 if (! empty($apiKey->getProjectId())) {
+                    $ownerCollection = 'projects';
+                    $ownerId = $project->getId();
                     $dbKey = $project->find(
                         key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
+                        find: $keySecret,
                         subject: 'keys'
                     );
                 } elseif (! empty($apiKey->getUserId())) {
+                    $ownerCollection = 'users';
+                    $ownerId = $user->getId();
                     $dbKey = $user->find(
                         key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
+                        find: $keySecret,
                         subject: 'keys'
                     );
                 } elseif (! empty($apiKey->getTeamId())) {
+                    $ownerCollection = 'teams';
+                    $ownerId = $team->getId();
                     $dbKey = $team->find(
                         key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
+                        find: $keySecret,
                         subject: 'keys'
                     );
                 }
@@ -187,39 +196,53 @@ Http::init()
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
-                $updates = new Document();
-
-                $accessedAt = $dbKey->getAttribute('accessedAt', 0);
-
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                    $updates->setAttribute('accessedAt', DateTime::now());
-                }
-
-                $sdkValidator = new WhiteList($servers, true);
                 $sdk = $request->getHeaderLine('x-sdk-name', 'UNKNOWN');
+                $sdkValidator = new WhiteList($servers, true);
+                $buildKeyUpdates = function (Document $key) use ($sdk, $sdkValidator): Document {
+                    $updates = new Document();
 
-                if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
-                    $sdks = $dbKey->getAttribute('sdks', []);
-
-                    if (! in_array($sdk, $sdks)) {
-                        $sdks[] = $sdk;
-
-                        $updates->setAttribute('sdks', $sdks);
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $key->getAttribute('accessedAt', 0)) {
                         $updates->setAttribute('accessedAt', DateTime::now());
                     }
-                }
+
+                    if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+                        $sdks = $key->getAttribute('sdks', []);
+
+                        if (! in_array($sdk, $sdks)) {
+                            $sdks[] = $sdk;
+
+                            $updates->setAttribute('sdks', $sdks);
+                            $updates->setAttribute('accessedAt', DateTime::now());
+                        }
+                    }
+
+                    return $updates;
+                };
+
+                $updates = $buildKeyUpdates($dbKey);
 
                 if (! $updates->isEmpty()) {
-                    $platformDBLock->tryRun('keys', $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+                    $platformDBLock->tryRun('keys', $dbKey->getId(), function () use ($dbForPlatform, $ownerCollection, $ownerId, $keySecret, $buildKeyUpdates) {
+                        $currentOwner = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument($ownerCollection, $ownerId));
+                        $currentDbKey = $currentOwner->find(
+                            key: 'secret',
+                            find: $keySecret,
+                            subject: 'keys'
+                        );
 
-                        if (! empty($apiKey->getProjectId())) {
-                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-                        } elseif (! empty($apiKey->getUserId())) {
-                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
-                        } elseif (! empty($apiKey->getTeamId())) {
-                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                        if (! $currentDbKey) {
+                            return;
                         }
+
+                        $updates = $buildKeyUpdates($currentDbKey);
+
+                        if ($updates->isEmpty()) {
+                            return;
+                        }
+
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $currentDbKey->getId(), $updates));
+
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument($ownerCollection, $ownerId));
                     });
                 }
 
