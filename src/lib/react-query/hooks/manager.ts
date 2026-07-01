@@ -26,6 +26,7 @@ import {
 import type {
   Models,
   BlockResourceType,
+  BlockMode,
   Region,
   CacheTarget,
   CacheDatabase,
@@ -75,6 +76,11 @@ export type CreateBlockParams = {
   projectId: string
   resourceType: BlockResourceType
   resourceId?: string
+  /**
+   * Block mode. `full` blocks reads and writes; `readonly` blocks writes only
+   * (database-specific). Omitted defaults to `full` server-side.
+   */
+  mode?: BlockMode
   reason?: string
   expiredAt?: string
 }
@@ -92,6 +98,7 @@ export function useCreateBlock(
         projectId: params.projectId,
         resourceType: params.resourceType,
         resourceId: params.resourceId?.trim() || undefined,
+        mode: params.mode,
         reason: params.reason?.trim() || undefined,
         expiredAt: params.expiredAt?.trim() || undefined,
       })

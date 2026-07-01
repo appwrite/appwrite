@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { DedicatedDatabaseQueryExplanation } from '@/lib/databases/dedicated-engine'
 
 export type PostgresQueryPlanNodeVariant =
   | 'index'
@@ -101,7 +101,7 @@ function looksLikeTextExplainPlan(raw: string): boolean {
 }
 
 function resolveExplainPayload(
-  explanation: Models.DedicatedDatabaseQueryExplanation,
+  explanation: DedicatedDatabaseQueryExplanation,
 ): unknown | null {
   const structured = extractJsonPlanRoots(explanation.plan)
   if (structured.length > 0) {
@@ -392,7 +392,7 @@ function parseJsonPlanNode(raw: Record<string, unknown>): PostgresQueryPlanNode 
 }
 
 function normalizePlanInput(
-  plan: Models.DedicatedDatabaseQueryExplanation['plan'] | unknown,
+  plan: DedicatedDatabaseQueryExplanation['plan'] | unknown,
 ): Record<string, unknown>[] {
   if (!plan) return []
 
@@ -426,7 +426,7 @@ function normalizePlanInput(
 }
 
 function extractJsonPlanRoots(
-  plan: Models.DedicatedDatabaseQueryExplanation['plan'] | unknown,
+  plan: DedicatedDatabaseQueryExplanation['plan'] | unknown,
 ): PostgresQueryPlanNode[] {
   const roots: PostgresQueryPlanNode[] = []
 
@@ -445,7 +445,7 @@ function extractJsonPlanRoots(
 }
 
 function formatRawPlanForDisplay(
-  explanation: Models.DedicatedDatabaseQueryExplanation,
+  explanation: DedicatedDatabaseQueryExplanation,
 ): string {
   const payload = resolveExplainPayload(explanation)
   if (payload != null) {
@@ -465,7 +465,7 @@ function formatRawPlanForDisplay(
 }
 
 export function normalizePostgresQueryPlan(
-  explanation: Models.DedicatedDatabaseQueryExplanation,
+  explanation: DedicatedDatabaseQueryExplanation,
 ): PostgresQueryPlanNode[] {
   planNodeId = 0
 
@@ -491,7 +491,7 @@ export function normalizePostgresQueryPlan(
 }
 
 export function formatPostgresQueryPlanRaw(
-  explanation: Models.DedicatedDatabaseQueryExplanation,
+  explanation: DedicatedDatabaseQueryExplanation,
 ): string {
   return formatRawPlanForDisplay(explanation)
 }

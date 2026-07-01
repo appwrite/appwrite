@@ -8,6 +8,7 @@ import {
   ShieldOff,
   X,
 } from 'lucide-react'
+import { BlockMode } from '@appwrite.io/console'
 import type { Models, BlockResourceType } from '@appwrite.io/console'
 import { useBlocks, useDeleteBlock } from '@/lib/react-query/hooks/manager'
 import {
@@ -29,6 +30,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
 
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const [onlyExpiring, setOnlyExpiring] = useState(false)
+  const [onlyReadonly, setOnlyReadonly] = useState(false)
   const [search, setSearch] = useState('')
   const [pendingDelete, setPendingDelete] = useState<{
     resourceType: string
@@ -46,13 +48,14 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
         return false
       }
       if (onlyExpiring && !b.expiredAt) return false
+      if (onlyReadonly && b.mode !== BlockMode.Readonly) return false
       if (s) {
         const hay = `${b.resourceId ?? ''} ${b.reason ?? ''}`.toLowerCase()
         if (!hay.includes(s)) return false
       }
       return true
     })
-  }, [blocks, selectedTypes, onlyExpiring, search])
+  }, [blocks, selectedTypes, onlyExpiring, onlyReadonly, search])
 
   const handleDelete = (b: Models.Block) => {
     if (!projectId) return
@@ -78,7 +81,8 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
     )
   }
 
-  const activeFilterCount = selectedTypes.size + (onlyExpiring ? 1 : 0)
+  const activeFilterCount =
+    selectedTypes.size + (onlyExpiring ? 1 : 0) + (onlyReadonly ? 1 : 0)
 
   return (
     <section className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -168,28 +172,40 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
                   )
                 })}
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+              <div className="mt-3 space-y-2 border-t border-border pt-3">
+                <div className="flex items-center justify-between">
+                  <label className="flex cursor-pointer items-center gap-2 text-[12px] text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={onlyExpiring}
+                      onChange={(e) => setOnlyExpiring(e.target.checked)}
+                      className="h-3.5 w-3.5"
+                    />
+                    Has expiry
+                  </label>
+                  {activeFilterCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTypes(new Set())
+                        setOnlyExpiring(false)
+                        setOnlyReadonly(false)
+                      }}
+                      className="text-[12px] text-muted-foreground hover:text-foreground"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
                 <label className="flex cursor-pointer items-center gap-2 text-[12px] text-foreground">
                   <input
                     type="checkbox"
-                    checked={onlyExpiring}
-                    onChange={(e) => setOnlyExpiring(e.target.checked)}
+                    checked={onlyReadonly}
+                    onChange={(e) => setOnlyReadonly(e.target.checked)}
                     className="h-3.5 w-3.5"
                   />
-                  Has expiry
+                  Read-only only
                 </label>
-                {activeFilterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedTypes(new Set())
-                      setOnlyExpiring(false)
-                    }}
-                    className="text-[12px] text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </button>
-                )}
               </div>
             </PopoverContent>
           </Popover>

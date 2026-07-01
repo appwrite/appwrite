@@ -20,6 +20,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
+import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import {
   databaseRouteKindFromApiType,
   type DatabaseRouteKind,
@@ -673,6 +674,7 @@ async function resolveDedicatedSpecification(
   projectId: string,
   region?: string | null,
   explicit?: string,
+  engine?: string,
 ): Promise<string> {
   if (explicit && explicit !== SERVERLESS_DATABASE_SPEC_ID) return explicit
 
@@ -682,7 +684,8 @@ async function resolveDedicatedSpecification(
       ? region.trim()
       : undefined,
   )
-  const response = await projectSdk.compute.listDatabaseSpecifications()
+  const response =
+    await dedicatedEngineService(projectSdk, engine).listSpecifications()
   const specs = mapDedicatedDatabaseSpecifications(response.specifications)
   const defaultId = getDefaultEnabledSpecId(specs)
   if (!defaultId) {
@@ -925,13 +928,14 @@ async function provisionDedicatedCompute(
           api: computeApiForDatabaseType(backend),
         }
 
+  const engineService = dedicatedEngineService(projectSdk, engine ?? undefined)
   try {
-    return await projectSdk.compute.createDatabase(createParams)
+    return await engineService.create(createParams)
   } catch (error) {
     if (!isDatabaseAlreadyExistsError(error)) {
       throw error
     }
-    return await projectSdk.compute.getDatabase({ databaseId })
+    return await engineService.get({ databaseId })
   }
 }
 
@@ -984,6 +988,7 @@ export async function createProjectDatabase(
       projectId,
       region,
       options?.specification,
+      dedicatedComputeEngineForProductBackend(backend),
     )
     const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
     const pitrEnabled = options?.pitrEnabled === true
@@ -1108,12 +1113,11 @@ export async function createNativeDatabase(
   const haReplicaCount = Math.max(0, data.haReplicaCount ?? 0)
   const pitrEnabled = data.pitrEnabled === true
 
-  return await projectSdk.compute.createDatabase({
+  return await dedicatedEngineService(projectSdk, data.engine).create({
     databaseId,
     name: data.name.trim(),
     engine: data.engine,
     specification: data.specification.trim(),
-    type: 'dedicated',
     replicas: haReplicaCount,
     backupEnabled: pitrEnabled,
     backupPitr: pitrEnabled,
@@ -1125,9 +1129,11 @@ export async function fetchDatabaseSpecifications(projectId: string) {
     return { specifications: [], total: 0, pricing: null }
   }
 
-  const response = await sdk
-    .forProject(projectId)
-    .compute.listDatabaseSpecifications()
+  // Compute tiers are shared across engines; postgres is the representative set.
+  const response = await dedicatedEngineService(
+    sdk.forProject(projectId),
+    'postgres',
+  ).listSpecifications()
 
   return {
     specifications: response.specifications ?? [],
@@ -1163,17 +1169,52 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }
   }
 
-  const response = await sdk.forProject(projectId).compute.listDatabases({
-    queries: [
-      Query.orderDesc('$createdAt'),
-      Query.limit(MERGED_DATABASE_LIST_LIMIT),
-    ],
-  })
+  // The SDK split dedicated databases into per-engine services, so list each
+  // engine and merge.
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(MERGED_DATABASE_LIST_LIMIT),
+  ]
+  const results = await Promise.allSettled([
+    projectSdk.postgresql.list({ queries }),
+    projectSdk.mysql.list({ queries }),
+    projectSdk.mongo.list({ queries }),
+  ])
 
-  return {
-    databases: response.databases ?? [],
-    total: response.total ?? response.databases?.length ?? 0,
+  const fulfilled = results.filter(
+    (r): r is PromiseFulfilledResult<Models.DedicatedDatabaseList> =>
+      r.status === 'fulfilled',
+  )
+
+  // A 404 means the project doesn't use that engine (expected). Any other
+  // rejection (auth, 5xx, timeout) is a real failure we must not silently drop.
+  const realErrors = results.filter(
+    (r): r is PromiseRejectedResult =>
+      r.status === 'rejected' && (r.reason as { code?: number })?.code !== 404,
+  )
+  for (const r of realErrors) {
+    console.warn('[dedicated-databases] engine list failed:', r.reason)
   }
+  // If nothing succeeded and a real error occurred, surface it instead of
+  // returning a misleading empty list. (All-404 legitimately means "none".)
+  if (fulfilled.length === 0 && realErrors.length > 0) {
+    throw realErrors[0].reason
+  }
+
+  const databases = fulfilled
+    .flatMap((r) => r.value.databases ?? [])
+    .sort((a, b) => (a.$createdAt < b.$createdAt ? 1 : -1))
+    .slice(0, MERGED_DATABASE_LIST_LIMIT)
+
+  // Sum each engine's server-side count so `total` stays accurate even when the
+  // merged list is capped at MERGED_DATABASE_LIST_LIMIT.
+  const total = fulfilled.reduce(
+    (sum, r) => sum + (r.value.total ?? r.value.databases?.length ?? 0),
+    0,
+  )
+
+  return { databases, total }
 }
 
 export function dedicatedDatabasesQueryOptions(

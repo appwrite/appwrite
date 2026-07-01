@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
+import type { DedicatedDatabaseQueryExplanation } from '@/lib/databases/dedicated-engine'
 import { executionResultRows, formatPostgresSql } from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -42,7 +43,7 @@ type SqlWorkbenchProps = {
   isExplaining: boolean
   error: unknown
   result: Models.DedicatedDatabaseExecution | null
-  explainResult: Models.DedicatedDatabaseQueryExplanation | null
+  explainResult: DedicatedDatabaseQueryExplanation | null
   resultKind?: 'query' | 'explain'
   account: { prefs?: Record<string, unknown> } | undefined
   teamId: string | null | undefined

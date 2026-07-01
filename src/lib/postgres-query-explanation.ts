@@ -1,5 +1,7 @@
-import type { Models } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
+import {
+  DEDICATED_FEATURE_UNAVAILABLE,
+  type DedicatedDatabaseQueryExplanation,
+} from '@/lib/databases/dedicated-engine'
 import { peelLeadingPostgresSqlComments } from '@/lib/postgres-sql'
 
 export function preparePostgresQueryForExplanation(sql: string): {
@@ -46,16 +48,12 @@ export function preparePostgresQueryForExplanation(sql: string): {
 }
 
 export async function explainPostgresDatabaseQuery(
-  projectId: string,
-  databaseId: string,
-  query: string,
-  analyze?: boolean,
-): Promise<Models.DedicatedDatabaseQueryExplanation> {
-  const prepared = preparePostgresQueryForExplanation(query)
-
-  return sdk.forProject(projectId).compute.createDatabaseQueryExplanation({
-    databaseId,
-    query: prepared.query,
-    analyze: analyze ?? prepared.analyze,
-  })
+  _projectId: string,
+  _databaseId: string,
+  _query: string,
+  _analyze?: boolean,
+): Promise<DedicatedDatabaseQueryExplanation> {
+  // The console SDK removed the query-plan endpoint. Gated until re-implemented
+  // (e.g. via `postgresql.createExecution` running `EXPLAIN (FORMAT JSON) …`).
+  throw new Error(DEDICATED_FEATURE_UNAVAILABLE)
 }

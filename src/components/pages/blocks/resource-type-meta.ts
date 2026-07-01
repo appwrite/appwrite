@@ -1,17 +1,19 @@
 import {
   Boxes,
   Database,
+  Eye,
   FolderGit2,
   Globe,
   HardDrive,
   Inbox,
   Package,
   Radio,
+  ShieldX,
   Users as UsersIcon,
   Zap,
   type LucideIcon,
 } from 'lucide-react'
-import { BlockResourceType } from '@appwrite.io/console'
+import { BlockMode, BlockResourceType } from '@appwrite.io/console'
 
 export type ResourceTypeMeta = {
   value: BlockResourceType
@@ -98,4 +100,40 @@ export function getResourceTypeMeta(value: string): ResourceTypeMeta {
       description: value,
     }
   )
+}
+
+export type BlockModeMeta = {
+  value: BlockMode
+  label: string
+  icon: LucideIcon
+  description: string
+}
+
+export const BLOCK_MODE_META: Record<BlockMode, BlockModeMeta> = {
+  [BlockMode.Full]: {
+    value: BlockMode.Full,
+    label: 'Full',
+    icon: ShieldX,
+    description: 'Blocks reads and writes',
+  },
+  [BlockMode.Readonly]: {
+    value: BlockMode.Readonly,
+    label: 'Read-only',
+    icon: Eye,
+    description: 'Blocks writes, allows reads',
+  },
+}
+
+/**
+ * Read-only mode only makes sense for databases (it blocks database writes
+ * while still allowing reads). Every other resource type is full-block only.
+ */
+export function resourceTypeSupportsReadonly(type: BlockResourceType): boolean {
+  return type === BlockResourceType.Databases
+}
+
+/** Resolve mode meta from the API's free-form `mode` string, defaulting to full. */
+export function getBlockModeMeta(mode: string | null | undefined): BlockModeMeta {
+  if (mode === BlockMode.Readonly) return BLOCK_MODE_META[BlockMode.Readonly]
+  return BLOCK_MODE_META[BlockMode.Full]
 }

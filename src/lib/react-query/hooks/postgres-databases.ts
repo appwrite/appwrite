@@ -12,6 +12,10 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  DEDICATED_FEATURE_UNAVAILABLE,
+  type DedicatedDatabaseConnectionList,
+} from '@/lib/databases/dedicated-engine'
+import {
   explainPostgresDatabaseQuery,
 } from '@/lib/postgres-query-explanation'
 import {
@@ -129,7 +133,7 @@ async function fetchPostgresDatabaseFromList(
   projectId: string,
   databaseId: string,
 ): Promise<Models.DedicatedDatabase | null> {
-  const response = await sdk.forProject(projectId).compute.listDatabases({
+  const response = await sdk.forProject(projectId).postgresql.list({
     queries: [Query.equal('$id', databaseId), Query.limit(1)],
   })
   return response.databases?.find((db) => db.$id === databaseId) ?? null
@@ -143,7 +147,7 @@ export async function fetchPostgresDatabase(
   try {
     const database = await sdk
       .forProject(projectId)
-      .compute.getDatabase({ databaseId })
+      .postgresql.get({ databaseId })
     if (database?.$id) return database
   } catch {
     /* fall back to list */
@@ -162,7 +166,7 @@ export async function executePostgresDatabaseSql(
   sql: string,
   timeoutSeconds?: number,
 ): Promise<Models.DedicatedDatabaseExecution> {
-  const execution = await sdk.forProject(projectId).compute.createDatabaseExecution({
+  const execution = await sdk.forProject(projectId).postgresql.createExecution({
     databaseId,
     sql: wrapPostgresSqlForDisplay(sql),
     timeoutSeconds,
@@ -710,19 +714,20 @@ export function postgresTableAutocompleteColumnsQueryOptions(
 }
 
 export async function fetchPostgresDatabaseConnections(
-  projectId: string,
-  databaseId: string,
-): Promise<Models.DedicatedDatabaseConnectionList> {
-  return await sdk.forProject(projectId).compute.listDatabaseConnections({
-    databaseId,
-  })
+  _projectId: string,
+  _databaseId: string,
+): Promise<DedicatedDatabaseConnectionList> {
+  // The console SDK dropped the connection-listing endpoint (getStatus now only
+  // exposes current/max counts, not a per-connection list). Gated until a
+  // replacement API exists; the query is disabled so this never runs.
+  throw new Error(DEDICATED_FEATURE_UNAVAILABLE)
 }
 
 export async function fetchPostgresDatabaseCredentials(
   projectId: string,
   databaseId: string,
 ): Promise<Models.DedicatedDatabaseCredentials> {
-  return await sdk.forProject(projectId).compute.getDatabaseCredentials({
+  return await sdk.forProject(projectId).postgresql.getCredentials({
     databaseId,
   })
 }
@@ -740,7 +745,9 @@ export function postgresDatabaseConnectionsQueryOptions(
     ],
     queryFn: () =>
       fetchPostgresDatabaseConnections(projectId!, databaseId!),
-    enabled: !!projectId && !!databaseId,
+    // Connection listing was removed from the console SDK; keep disabled until
+    // a replacement API is available (consumers fall back to an empty list).
+    enabled: false,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -778,7 +785,7 @@ export async function fetchPostgresDatabasePooler(
   databaseId: string,
 ): Promise<Models.DedicatedDatabasePooler | null> {
   try {
-    return await sdk.forProject(projectId).compute.getDatabasePooler({
+    return await sdk.forProject(projectId).postgresql.getPooler({
       databaseId,
     })
   } catch {

@@ -1,4 +1,5 @@
 import type { Models } from '@appwrite.io/console'
+import type { DedicatedDatabaseQueryExplanation } from '@/lib/databases/dedicated-engine'
 import {
   MAX_POSTGRES_QUERY_HISTORY_ENTRIES,
   MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH,
@@ -51,7 +52,7 @@ export type SqlEditorTab = {
   sql: string
   tableId?: string
   result: Models.DedicatedDatabaseExecution | null
-  explainResult: Models.DedicatedDatabaseQueryExplanation | null
+  explainResult: DedicatedDatabaseQueryExplanation | null
   error: unknown
   resultKind?: 'query' | 'explain'
 }
@@ -90,7 +91,7 @@ type PostgresSidebarContextValue = {
     result: Models.DedicatedDatabaseExecution | null,
     error?: unknown,
     resultKind?: 'query' | 'explain',
-    explainResult?: Models.DedicatedDatabaseQueryExplanation | null,
+    explainResult?: DedicatedDatabaseQueryExplanation | null,
   ) => void
 }
 
@@ -456,7 +457,7 @@ export function PostgresSidebarProvider({
       result: Models.DedicatedDatabaseExecution | null,
       error: unknown = null,
       resultKind: 'query' | 'explain' = 'query',
-      explainResult: Models.DedicatedDatabaseQueryExplanation | null = null,
+      explainResult: DedicatedDatabaseQueryExplanation | null = null,
     ) => {
       setEditorTabState((prev) => ({
         ...prev,

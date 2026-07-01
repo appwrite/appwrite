@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, ShieldAlert } from 'lucide-react'
-import { BlockResourceType } from '@appwrite.io/console'
+import { BlockMode, BlockResourceType } from '@appwrite.io/console'
 import { useBlocks, useCreateBlock } from '@/lib/react-query/hooks/manager'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import {
@@ -19,8 +19,10 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import {
+  BLOCK_MODE_META,
   ORDERED_RESOURCE_TYPES,
   RESOURCE_TYPE_META,
+  resourceTypeSupportsReadonly,
 } from './resource-type-meta'
 
 type Expiry =
@@ -45,10 +47,13 @@ function expiryToIso(e: Expiry): string | undefined {
 
 export function ComposeBlock({ projectId }: { projectId: string | null }) {
   const [type, setType] = useState<BlockResourceType>(BlockResourceType.Projects)
+  const [mode, setMode] = useState<BlockMode>(BlockMode.Full)
   const [resourceId, setResourceId] = useState('')
   const [reason, setReason] = useState('')
   const [expiry, setExpiry] = useState<Expiry>({ kind: 'never' })
   const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const supportsReadonly = resourceTypeSupportsReadonly(type)
 
   const createMutation = useCreateBlock()
   // Reuses the cached list query populated by BlocksList - gives us the
@@ -63,16 +68,23 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
     }
   }, [projectId])
 
+  // Read-only is database-only; drop a stale readonly selection when switching
+  // to a resource type that only supports full blocks.
+  useEffect(() => {
+    if (!supportsReadonly) setMode(BlockMode.Full)
+  }, [supportsReadonly])
+
   const payload = useMemo(() => {
     if (!projectId) return null
     return {
       projectId,
       resourceType: type,
       resourceId: resourceId.trim() || undefined,
+      mode: supportsReadonly ? mode : undefined,
       reason: reason.trim() || undefined,
       expiredAt: expiryToIso(expiry),
     }
-  }, [projectId, type, resourceId, reason, expiry])
+  }, [projectId, type, resourceId, mode, supportsReadonly, reason, expiry])
 
   const canSubmit = !!projectId && !createMutation.isPending
 
@@ -83,6 +95,7 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
         toast.success('Block created')
         setResourceId('')
         setReason('')
+        setMode(BlockMode.Full)
         setExpiry({ kind: 'never' })
         setConfirmOpen(false)
       },
@@ -143,6 +156,41 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
             })}
           </div>
         </div>
+
+        {supportsReadonly && (
+          <div className="space-y-2">
+            <Label>Block mode</Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[BlockMode.Full, BlockMode.Readonly].map((m) => {
+                const modeMeta = BLOCK_MODE_META[m]
+                const ModeIcon = modeMeta.icon
+                const active = mode === m
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    disabled={!projectId}
+                    className={cn(
+                      'flex flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors disabled:opacity-50',
+                      active
+                        ? 'border-foreground/30 bg-accent text-foreground'
+                        : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',
+                    )}
+                  >
+                    <span className="flex items-center gap-1.5 text-[12px] font-medium">
+                      <ModeIcon className="h-3.5 w-3.5 shrink-0" />
+                      {modeMeta.label}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {modeMeta.description}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -268,10 +316,10 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
                 in{' '}
                 <span
                   className="font-medium text-foreground"
-                  title={meta?.projectName || projectId}
+                  title={meta?.projectName || projectId || ''}
                 >
                   {formatProjectNameForDisplay(
-                    meta?.projectName || projectId,
+                    meta?.projectName || projectId || '',
                   )}
                 </span>
                 {meta?.organizationName && (

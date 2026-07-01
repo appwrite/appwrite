@@ -16,7 +16,8 @@ import {
   TooltipContent,
   TooltipTrigger} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { getResourceTypeMeta } from './resource-type-meta'
+import { getBlockModeMeta, getResourceTypeMeta } from './resource-type-meta'
+import { BlockMode } from '@appwrite.io/console'
 
 function formatRelative(iso?: string | null) {
   if (!iso) return null
@@ -56,6 +57,9 @@ export function BlockCard({
   const created = formatRelative(block.$createdAt)
   const until = block.expiredAt ? formatUntil(block.expiredAt) : null
   const isExpired = until === 'expired'
+  const isReadonly = block.mode === BlockMode.Readonly
+  const modeMeta = getBlockModeMeta(block.mode)
+  const ModeIcon = modeMeta.icon
 
   return (
     <div
@@ -84,6 +88,16 @@ export function BlockCard({
             </Badge>
           ) : (
             <CopyableId id={block.resourceId} size="sm" maxWidth={240} />
+          )}
+          {isReadonly && (
+            <Badge
+              variant="outline"
+              className="h-5 gap-1 px-1.5 text-[11px] font-normal text-amber-600 border-amber-500/40 dark:text-amber-400"
+              title={modeMeta.description}
+            >
+              <ModeIcon className="h-3 w-3" />
+              {modeMeta.label}
+            </Badge>
           )}
         </div>
 

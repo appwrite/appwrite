@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { Models } from '@appwrite.io/console'
+import type { DedicatedDatabaseQueryExplanation } from '@/lib/databases/dedicated-engine'
 import { Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -16,7 +16,7 @@ import { PostgresQueryResultsMeta } from './PostgresQueryResultsMeta'
 import { SqlWorkbenchPanelEmptyState } from './SqlWorkbenchPanelEmptyState'
 
 type PostgresQueryPlanViewProps = {
-  explanation: Models.DedicatedDatabaseQueryExplanation | null
+  explanation: DedicatedDatabaseQueryExplanation | null
   isLoading?: boolean
   loadingLabel?: string
   className?: string
