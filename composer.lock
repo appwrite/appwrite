@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "17128527d9ef62968ea12eb43a81fdfb",
+    "content-hash": "82f09213dd7f55ec3ff3eb2478b95aaa",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3676,16 +3676,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "6.1.0",
+            "version": "dev-fix/defer-cache-purge-until-outermost-commit",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "18120ddf0bc656fc448e6c9407d2f16371d6f0a6"
+                "reference": "664736bc2cef0a517d2a160d362cb91acecf62e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/18120ddf0bc656fc448e6c9407d2f16371d6f0a6",
-                "reference": "18120ddf0bc656fc448e6c9407d2f16371d6f0a6",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/664736bc2cef0a517d2a160d362cb91acecf62e3",
+                "reference": "664736bc2cef0a517d2a160d362cb91acecf62e3",
                 "shasum": ""
             },
             "require": {
@@ -3716,7 +3716,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3729,10 +3760,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/6.1.0"
+                "source": "https://github.com/utopia-php/database/tree/fix/defer-cache-purge-until-outermost-commit",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-06-23T11:28:30+00:00"
+            "time": "2026-07-01T05:43:21+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8354,9 +8385,17 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix/defer-cache-purge-until-outermost-commit",
+            "alias": "6.1.0",
+            "alias_normalized": "6.1.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/database": 20,
         "utopia-php/http": 5,
         "utopia-php/platform": 5
     },
