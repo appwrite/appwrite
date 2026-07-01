@@ -89,7 +89,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/queue-count-failed && \
     chmod +x /usr/local/bin/queue-count-processing && \
     chmod +x /usr/local/bin/queue-count-success && \
-    chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-screenshots && \
     chmod +x /usr/local/bin/worker-certificates && \
@@ -100,10 +99,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-migrations && \
-    chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-stats-usage && \
-    chmod +x /usr/local/bin/stats-resources && \
-    chmod +x /usr/local/bin/worker-stats-resources
+    chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
