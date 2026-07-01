@@ -1,8 +1,9 @@
 name: "Release"
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*.*.*'
 
 jobs:
   tests:
