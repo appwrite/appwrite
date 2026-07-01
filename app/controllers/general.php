@@ -988,7 +988,7 @@ Http::init()
  * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
  */
 Http::init()
-    ->groups(['api', 'web'])
+    ->groups(['api', 'web', 'graphql'])
     ->inject('request')
     ->inject('response')
     ->inject('cors')

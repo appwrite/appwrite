@@ -37,6 +37,7 @@ class XList extends Action
             ->groups(['api', 'tokens'])
             ->label('scope', 'tokens.read')
             ->label('usage.metric', 'tokens.requests.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('sdk', new Method(
                 namespace: 'tokens',
                 group: 'files',

@@ -39,10 +39,19 @@ class Cron extends Validator
         }
 
         try {
+            \set_error_handler(static function (int $severity, string $message): bool {
+                if (($severity & E_WARNING) === E_WARNING) {
+                    throw new \RuntimeException($message);
+                }
+
+                return false;
+            });
             (new CronExpression($value))->getNextRunDate();
             return true;
         } catch (\RuntimeException) {
             return false;
+        } finally {
+            \restore_error_handler();
         }
     }
 
