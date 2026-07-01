@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Avatars\Http\Cards\Cloud\OG\Get as GetCloudCardOG;
 use Appwrite\Platform\Modules\Avatars\Http\CreditCards\Get as GetCreditCard;
 use Appwrite\Platform\Modules\Avatars\Http\Favicon\Get as GetFavicon;
 use Appwrite\Platform\Modules\Avatars\Http\Flags\Get as GetFlag;
+use Appwrite\Platform\Modules\Avatars\Http\Human\Get as GetHuman;
 use Appwrite\Platform\Modules\Avatars\Http\Image\Get as GetImage;
 use Appwrite\Platform\Modules\Avatars\Http\Initials\Get as GetInitials;
 use Appwrite\Platform\Modules\Avatars\Http\QR\Get as GetQR;
@@ -28,6 +29,7 @@ class Http extends Service
         $this->addAction(GetFavicon::getName(), new GetFavicon());
         $this->addAction(GetQR::getName(), new GetQR());
         $this->addAction(GetInitials::getName(), new GetInitials());
+        $this->addAction(GetHuman::getName(), new GetHuman());
         $this->addAction(GetScreenshot::getName(), new GetScreenshot());
         $this->addAction(GetCloudCard::getName(), new GetCloudCard());
         $this->addAction(GetCloudCardBack::getName(), new GetCloudCardBack());

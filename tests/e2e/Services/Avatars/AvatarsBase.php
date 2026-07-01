@@ -279,6 +279,112 @@ trait AvatarsBase
         return [];
     }
 
+    public function testGetHuman(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'github' => 'appwrite',
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
+
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'github' => 'appwrite',
+                'width' => 200,
+                'height' => 200,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
+
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'github' => 'appwrite',
+                'emailHash' => '00000000000000000000000000000000',
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'github' => '-invalid',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'emailHash' => 'not-a-valid-hash',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'not-an-email',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'test@test.com',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'emailHash' => '00000000000000000000000000000000',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/human', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'github' => 'appwrite',
+            'width' => 2001,
+            'height' => 200,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
+    }
+
     public function testGetFavicon(): array
     {
         /**

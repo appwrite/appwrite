@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Avatars\Avatars;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -27,6 +28,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Fetch\Client;
 use Utopia\Lock\Distributed;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -343,6 +345,8 @@ $container->set('servers', function () {
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
 $container->set('gitHub', fn (Cache $cache) => new VcsGitHub($cache), ['cache']);
+
+$container->set('avatars', fn () => Avatars::withDefaults(new Client()), []);
 
 $container->set('plan', fn () => []);
 

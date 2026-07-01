@@ -25,6 +25,7 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
+            "Utopia\\Avatars\\": "src/Utopia/Avatars",
             "Utopia\\Bus\\": "src/Utopia/Bus"
         }
     },
