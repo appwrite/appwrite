@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { XAxis, type XAxisProps } from 'recharts'
+import { XAxis, YAxis, type XAxisProps, type YAxisProps } from 'recharts'
+import { USAGE_CHART_Y_AXIS_WIDTH } from '@/lib/usage/chart-layout'
 import type { DateRange } from 'react-day-picker'
 import {
   CHART_X_AXIS_DEFAULT_DY,
@@ -95,6 +96,42 @@ type SeriesChartXAxisProps = {
   height?: number
   padding?: XAxisProps['padding']
   formatLabel?: (value: string, index: number) => string
+}
+
+type UsageChartYAxisProps = {
+  tickFormatter?: (value: number) => string
+  domain?: YAxisProps['domain']
+  width?: number
+  tick?: YAxisProps['tick']
+}
+
+/** Shared Y-axis for usage/overview time-series charts. */
+export function UsageChartYAxis({
+  tickFormatter,
+  domain,
+  width = USAGE_CHART_Y_AXIS_WIDTH,
+  tick,
+}: UsageChartYAxisProps) {
+  const tickProps =
+    typeof tick === 'object' && tick != null && !Array.isArray(tick)
+      ? tick
+      : {}
+
+  return (
+    <YAxis
+      axisLine={false}
+      tickLine={false}
+      width={width}
+      domain={domain}
+      tickFormatter={tickFormatter}
+      tick={{
+        fill: 'currentColor',
+        fontSize: 10,
+        textAnchor: 'end',
+        ...tickProps,
+      }}
+    />
+  )
 }
 
 export function SeriesChartXAxis({

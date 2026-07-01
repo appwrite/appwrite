@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  YAxis,
 } from 'recharts'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -39,10 +38,13 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_HEIGHT,
   OVERVIEW_REQUESTS_ERROR,
-  USAGE_CHART_Y_AXIS_WIDTH,
 } from '../overview/chart-panel'
-import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
-import { UsageChartXAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  USAGE_CHART_MARGIN,
+  USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
+} from '@/lib/usage/chart-layout'
+import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import {
@@ -86,7 +88,10 @@ function ChartSkeleton() {
 function UsageRequestsChartArea({ children }: { children: ReactNode }) {
   return (
     <div
-      className="relative w-full shrink-0 text-muted-foreground"
+      className={cn(
+        'relative w-full shrink-0 text-muted-foreground',
+        FORCE_LTR_CLASS,
+      )}
       style={{ height: OVERVIEW_CHART_HEIGHT }}
     >
       {children}
@@ -216,7 +221,7 @@ function RequestsChartCard({
           </UsageRequestsChartArea>
         ) : (
           <UsageRequestsChartArea>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
               <AreaChart
                 data={chartData}
                 margin={USAGE_CHART_MARGIN}
@@ -251,17 +256,7 @@ function RequestsChartCard({
                   dateRange={dateRange}
                   chartInterval={chartInterval}
                 />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fill: 'currentColor',
-                    fontSize: 10,
-                  }}
-                  tickFormatter={yAxisTickFormatter}
-                  dx={-5}
-                  width={USAGE_CHART_Y_AXIS_WIDTH}
-                />
+                <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null

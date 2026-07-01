@@ -4,13 +4,18 @@ import {
   createCompactCountAxisTickFormatter,
   getChartSeriesMax,
 } from '@/lib/usage/format-metric'
-import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
+import { OVERVIEW_CHART_HEIGHT } from '../overview/chart-panel'
+import {
+  USAGE_CHART_MARGIN,
+  USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
+} from '@/lib/usage/chart-layout'
+import { SeriesChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
   Area,
   AreaChart,
   ResponsiveContainer,
   Tooltip,
-  YAxis,
   CartesianGrid,
 } from 'recharts'
 import { format } from 'date-fns'
@@ -21,9 +26,6 @@ import {
   getUsagePercentage,
   getUsageStatus,
 } from './data'
-import { OVERVIEW_CHART_HEIGHT } from '../overview/chart-panel'
-import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
-import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import { Progress } from '@/components/ui/progress'
 
 interface UsageMetricChartProps {
@@ -134,10 +136,10 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
       {/* Chart */}
       <div className="p-4">
         <div
-          className="text-muted-foreground"
+          className={cn('text-muted-foreground', FORCE_LTR_CLASS)}
           style={{ height: OVERVIEW_CHART_HEIGHT }}
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
             <AreaChart
               data={chartData}
               margin={USAGE_CHART_MARGIN}
@@ -160,17 +162,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
                 vertical={false}
               />
               <SeriesChartXAxis pointCount={chartData.length} />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                tickFormatter={yAxisTickFormatter}
-                dx={-5}
-                width={USAGE_CHART_Y_AXIS_WIDTH}
-              />
+              <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload || !payload.length) return null

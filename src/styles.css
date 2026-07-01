@@ -53,6 +53,21 @@ html[dir='rtl'] textarea.font-mono {
   unicode-bidi: isolate;
 }
 
+/* Sonner uses physical offsets; anchor our toaster stack to inline end. */
+html .toaster-at-inline-end[data-sonner-toaster] {
+  right: auto !important;
+  left: auto !important;
+  inset-inline-end: 1rem !important;
+  inset-inline-start: auto !important;
+}
+
+html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
+  right: auto !important;
+  left: auto !important;
+  inset-inline-end: 0 !important;
+  inset-inline-start: auto !important;
+}
+
 ::selection {
   color: hsl(0 0% 0%);
   -webkit-text-fill-color: hsl(0 0% 0%);

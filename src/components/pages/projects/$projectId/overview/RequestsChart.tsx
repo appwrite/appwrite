@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import type { OverviewChartTabId } from '@/lib/overview-chart-tabs'
@@ -7,7 +7,6 @@ import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_CHART_HEIGHT,
-  USAGE_CHART_Y_AXIS_WIDTH,
   USAGE_CHART_MARGIN,
   overviewChartPanelBodyClass,
   overviewChartPanelChartAreaClass,
@@ -41,7 +40,8 @@ import {
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { UsageChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 
 type MetricType = OverviewChartTabId
 
@@ -385,10 +385,8 @@ export const RequestsChart = memo(function RequestsChart({
             {renderChart ? (
               <div className={overviewChartPanelChartFillClass}>
                 <ResponsiveContainer
-                  width="100%"
-                  height="100%"
+                  {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
                   minHeight={OVERVIEW_CHART_HEIGHT}
-                  debounce={150}
                 >
                 <AreaChart
                   data={activeChartData}
@@ -480,17 +478,9 @@ export const RequestsChart = memo(function RequestsChart({
                     chartInterval={resolvedChartInterval}
                     variant="overview"
                   />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{
-                      fill: 'currentColor',
-                      fontSize: 10,
-                    }}
+                  <UsageChartYAxis
                     tickFormatter={yAxisTickFormatter}
                     domain={bandwidthYAxisDomain}
-                    dx={-5}
-                    width={USAGE_CHART_Y_AXIS_WIDTH}
                   />
                   {!isSkeleton ? (
                     <Tooltip content={tooltipContent} cursor={false} />

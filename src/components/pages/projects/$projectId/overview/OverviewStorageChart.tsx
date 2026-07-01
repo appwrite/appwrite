@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useMemo } from 'react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import type { OverviewStorageChartPoint } from '@/lib/usage/storage-usage'
@@ -10,7 +10,6 @@ import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
 import {
   OVERVIEW_CHART_HEIGHT,
   OVERVIEW_STORAGE_ERROR,
-  USAGE_CHART_Y_AXIS_WIDTH,
   USAGE_CHART_MARGIN,
   overviewChartPanelBodyClass,
   overviewChartPanelChartAreaClass,
@@ -35,7 +34,8 @@ import {
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { UsageChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import type { DateRange } from 'react-day-picker'
 
 const STORAGE_SERIES = [
@@ -244,10 +244,8 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
             {renderChart ? (
               <div className={overviewChartPanelChartFillClass}>
                 <ResponsiveContainer
-                  width="100%"
-                  height="100%"
+                  {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
                   minHeight={OVERVIEW_CHART_HEIGHT}
-                  debounce={150}
                 >
                   <AreaChart
                     data={activeChartData}
@@ -303,14 +301,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                       chartInterval={resolvedChartInterval}
                       variant="overview"
                     />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: 'currentColor', fontSize: 10 }}
-                      tickFormatter={yAxisTickFormatter}
-                      dx={-5}
-                      width={USAGE_CHART_Y_AXIS_WIDTH}
-                    />
+                    <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
                     <Tooltip content={<StorageTooltip />} />
                     {showChartSkeleton ? (
                       <Area

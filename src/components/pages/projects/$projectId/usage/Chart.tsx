@@ -4,15 +4,14 @@ import {
   createCompactCountAxisTickFormatter,
   getChartSeriesMax,
 } from '@/lib/usage/format-metric'
-import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
-import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
-import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { USAGE_CHART_MARGIN, USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { SeriesChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
   Area,
   AreaChart,
   ResponsiveContainer,
   Tooltip,
-  YAxis,
 } from 'recharts'
 import { usageData } from '@/lib/utils/mock-data'
 
@@ -54,8 +53,8 @@ export function UsageChart({ className }: UsageChartProps) {
       </div>
 
       <div className="p-2 sm:p-4">
-        <div className="h-[200px] text-muted-foreground">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className={cn('h-[200px] text-muted-foreground', FORCE_LTR_CLASS)}>
+          <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
             <AreaChart
               data={usageData}
               margin={USAGE_CHART_MARGIN}
@@ -99,17 +98,7 @@ export function UsageChart({ className }: UsageChartProps) {
                 </linearGradient>
               </defs>
               <SeriesChartXAxis pointCount={usageData.length} />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fill: 'currentColor',
-                  fontSize: 10,
-                }}
-                tickFormatter={yAxisTickFormatter}
-                dx={-5}
-                width={USAGE_CHART_Y_AXIS_WIDTH}
-              />
+              <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'hsl(var(--popover))',
