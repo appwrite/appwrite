@@ -1,7 +1,8 @@
 import {
+  CLI_APPWRITE_CLI_DIST_TAG,
   CLI_APPWRITE_CLI_PACKAGE,
-  CLI_APPWRITE_CLI_VERSION,
 } from './constants'
+import { resolveAppwriteCliVersion } from './install-appwrite-cli'
 import { resetAllCliShellBootstraps } from './bootstrap-state'
 import {
   clearAllCliModulesCaches,
@@ -20,7 +21,7 @@ export type CliTerminalCacheSummary = {
 
 export function getCliTerminalCacheSummary(): CliTerminalCacheSummary {
   return {
-    version: CLI_APPWRITE_CLI_VERSION,
+    version: CLI_APPWRITE_CLI_DIST_TAG,
     packageName: CLI_APPWRITE_CLI_PACKAGE,
     indexedDb: 'console-cli-shell',
     cache: null,
@@ -28,9 +29,13 @@ export function getCliTerminalCacheSummary(): CliTerminalCacheSummary {
 }
 
 export async function loadCliTerminalCacheSummary(): Promise<CliTerminalCacheSummary> {
-  const cache = await readCliModulesCacheMeta(CLI_APPWRITE_CLI_VERSION)
+  const version = await resolveAppwriteCliVersion().catch(
+    () => CLI_APPWRITE_CLI_DIST_TAG,
+  )
+  const cache = await readCliModulesCacheMeta(version)
   return {
     ...getCliTerminalCacheSummary(),
+    version,
     cache,
   }
 }

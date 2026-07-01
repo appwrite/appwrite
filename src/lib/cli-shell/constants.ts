@@ -19,8 +19,8 @@ export const CLI_PROJECT_CWD = '/project'
 /** Resolved path to the Appwrite CLI binary in the almostnode VFS. */
 export const CLI_APPWRITE_BIN = '/node_modules/.bin/appwrite'
 
-/** Pinned Appwrite CLI version installed in the browser runtime. */
-export const CLI_APPWRITE_CLI_VERSION = '22.1.2'
+/** npm dist-tag used when installing the browser Appwrite CLI. */
+export const CLI_APPWRITE_CLI_DIST_TAG = 'latest'
 
 /** npm package name for the Appwrite CLI. */
 export const CLI_APPWRITE_CLI_PACKAGE = 'appwrite-cli'

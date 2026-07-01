@@ -9,8 +9,8 @@ import * as path from '@almostnode-internal/path'
 import type { CliShellContainer } from './types'
 import {
   CLI_APPWRITE_BIN,
+  CLI_APPWRITE_CLI_DIST_TAG,
   CLI_APPWRITE_CLI_PACKAGE,
-  CLI_APPWRITE_CLI_VERSION,
 } from './constants'
 import { resolveDependencies, type ResolvedPackage } from './npm-resolver'
 
@@ -168,22 +168,47 @@ async function installResolvedPackages(
   onProgress?.(`Installed ${resolved.size} packages`)
 }
 
+export async function resolveAppwriteCliVersion(
+  distTag: string = CLI_APPWRITE_CLI_DIST_TAG,
+): Promise<string> {
+  const registry = new Registry()
+  const manifest = await registry.getPackageManifest(CLI_APPWRITE_CLI_PACKAGE)
+  const version =
+    manifest['dist-tags']?.[distTag] ?? manifest['dist-tags']?.latest
+
+  if (!version) {
+    throw new Error(
+      `Could not resolve ${CLI_APPWRITE_CLI_PACKAGE}@${distTag} from npm.`,
+    )
+  }
+
+  return version
+}
+
 export async function installAppwriteCliPackage(
   vfs: CliShellContainer['vfs'],
   onProgress?: (message: string) => void,
   cwd = '/',
-): Promise<void> {
+  versionRange: string = CLI_APPWRITE_CLI_DIST_TAG,
+): Promise<string> {
   const registry = new Registry()
 
   onProgress?.(
-    `Resolving ${CLI_APPWRITE_CLI_PACKAGE}@${CLI_APPWRITE_CLI_VERSION}...`,
+    `Resolving ${CLI_APPWRITE_CLI_PACKAGE}@${versionRange}...`,
   )
 
   const resolved = await resolveDependencies(
     CLI_APPWRITE_CLI_PACKAGE,
-    CLI_APPWRITE_CLI_VERSION,
+    versionRange,
     { registry, onProgress },
   )
 
   await installResolvedPackages(vfs, cwd, resolved, onProgress)
+
+  const installedVersion = resolved.get(CLI_APPWRITE_CLI_PACKAGE)?.version
+  if (!installedVersion) {
+    throw new Error(`${CLI_APPWRITE_CLI_PACKAGE} was not installed.`)
+  }
+
+  return installedVersion
 }

@@ -471,7 +471,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
                 'flex min-h-0 flex-1 flex-col overflow-hidden',
                 visiblePaneSessionIds.length > 1
                   ? 'px-0'
-                  : 'px-4 pt-3 sm:px-6',
+                  : 'px-4 pt-3 pb-3 sm:px-6',
                 terminalSearchOpen &&
                   visiblePaneSessionIds.length <= 1 &&
                   'pt-0',

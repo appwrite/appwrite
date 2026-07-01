@@ -1811,7 +1811,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 
 .cli-terminal .xterm-rows {
   padding-top: 0;
-  padding-bottom: 0;
+  padding-bottom: 6px;
 }
 
 .cli-terminal .xterm-helper-textarea {

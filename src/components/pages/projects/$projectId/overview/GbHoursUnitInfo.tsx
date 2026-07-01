@@ -10,27 +10,44 @@ import {
 interface GbHoursUnitInfoProps {
   className?: string
   iconClassName?: string
+  /** Use a span trigger when rendered inside another button (e.g. overview tabs). */
+  nested?: boolean
 }
 
 export function GbHoursUnitInfo({
   className,
   iconClassName,
+  nested = false,
 }: GbHoursUnitInfoProps) {
+  const triggerClassName = cn(
+    'inline-flex shrink-0 text-muted-foreground transition-colors hover:text-foreground',
+    className,
+  )
+
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex shrink-0 text-muted-foreground transition-colors hover:text-foreground',
-            className,
-          )}
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-          aria-label="About GBH"
-        >
-          <Info className={cn('h-3 w-3', iconClassName)} />
-        </button>
+        {nested ? (
+          <span
+            className={triggerClassName}
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            aria-label="About GBH"
+            role="img"
+          >
+            <Info className={cn('h-3 w-3', iconClassName)} />
+          </span>
+        ) : (
+          <button
+            type="button"
+            className={triggerClassName}
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            aria-label="About GBH"
+          >
+            <Info className={cn('h-3 w-3', iconClassName)} />
+          </button>
+        )}
       </TooltipTrigger>
       <TooltipContent
         side="top"

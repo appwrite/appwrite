@@ -1410,7 +1410,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : 'Command failed.'
-        writeStderrLine(message, { sessionId: targetSessionId })
+        if (!message.startsWith('Process exited with code')) {
+          writeStderrLine(message, { sessionId: targetSessionId })
+        }
       } finally {
         stdoutLinkifier.flush(getOutputApi())
         if (shouldWriteCliStderr(stdoutAccum, stderrAccum)) {

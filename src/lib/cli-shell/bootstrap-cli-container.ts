@@ -1,5 +1,5 @@
 import type { CliShellContainer, CliShellRuntimeConfig } from './types'
-import { CLI_APPWRITE_CLI_VERSION, CLI_PROJECT_CWD } from './constants'
+import { CLI_PROJECT_CWD } from './constants'
 import {
   buildAppwriteConfigJson,
   buildCliPrefsJson,
@@ -10,6 +10,7 @@ import {
   ensureAppwriteBinStub,
   installAppwriteCliPackage,
   isAppwriteCliPackageInstalled,
+  resolveAppwriteCliVersion,
 } from './install-appwrite-cli'
 import {
   clearCliModulesCache,
@@ -20,9 +21,9 @@ import {
 async function installCliPackages(
   vfs: CliShellContainer['vfs'],
   onProgress?: BootstrapCliProgress,
-): Promise<void> {
+): Promise<string> {
   let lastNpmProgressAt = 0
-  await installAppwriteCliPackage(vfs, (message) => {
+  const installedVersion = await installAppwriteCliPackage(vfs, (message) => {
     const formatted = formatNpmBootstrapProgress(message)
     if (!formatted) return
     const now = Date.now()
@@ -31,7 +32,8 @@ async function installCliPackages(
     onProgress?.(formatted)
   }, '/')
 
-  void persistCliModulesCache(vfs, CLI_APPWRITE_CLI_VERSION).catch(() => {})
+  void persistCliModulesCache(vfs, installedVersion).catch(() => {})
+  return installedVersion
 }
 
 /** Keep bootstrap status readable; npm emits very chatty progress lines. */
@@ -142,9 +144,10 @@ export async function bootstrapCliRuntime(
   writeProjectFiles(vfs, config)
 
   onProgress?.('Preparing Appwrite CLI...')
+  const latestCliVersion = await resolveAppwriteCliVersion()
   const restoredFromCache = await restoreCliModulesFromCache(
     vfs,
-    CLI_APPWRITE_CLI_VERSION,
+    latestCliVersion,
   )
 
   let cliReady =
@@ -153,17 +156,22 @@ export async function bootstrapCliRuntime(
     ensureAppwriteBinStub(vfs)
 
   if (cliReady) {
-    onProgress?.('Loaded cached Appwrite CLI.')
+    onProgress?.(`Loaded cached Appwrite CLI ${latestCliVersion}.`)
   } else {
     if (restoredFromCache) {
-      onProgress?.('Refreshing cached Appwrite CLI...')
-      await clearCliModulesCache(CLI_APPWRITE_CLI_VERSION)
+      onProgress?.(`Updating Appwrite CLI to ${latestCliVersion}...`)
+      await clearCliModulesCache(latestCliVersion)
     } else {
-      onProgress?.('Downloading Appwrite CLI (first run may take a minute)...')
+      onProgress?.(
+        `Downloading Appwrite CLI ${latestCliVersion} (first run may take a minute)...`,
+      )
     }
 
-    await installCliPackages(vfs, onProgress)
+    const installedVersion = await installCliPackages(vfs, onProgress)
     cliReady = isAppwriteCliPackageInstalled(vfs) && ensureAppwriteBinStub(vfs)
+    if (cliReady && installedVersion !== latestCliVersion) {
+      onProgress?.(`Installed Appwrite CLI ${installedVersion}.`)
+    }
   }
 
   if (!cliReady) {

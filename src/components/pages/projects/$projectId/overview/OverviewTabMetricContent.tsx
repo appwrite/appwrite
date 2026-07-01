@@ -98,7 +98,7 @@ export function OverviewTabMetricContent({
         }
       />
       {tabId === 'gbhours' ? (
-        <GbHoursUnitInfo className="self-center" />
+        <GbHoursUnitInfo className="self-center" nested />
       ) : null}
       <div className={OVERVIEW_TAB_CHANGE_GROUP_CLASS}>
         {showChange ? (
