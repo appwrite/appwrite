@@ -27,6 +27,7 @@ class Install extends Action
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 1;
+    private const int DOCKER_COMPOSE_UP_TIMEOUT_SECONDS = 600;
     private const int PROC_CLOSE_TIMEOUT_SECONDS = 60;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
@@ -545,6 +546,10 @@ class Install extends Action
         $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
         if ($isLocalInstall) {
             $version = 'local';
+        }
+
+        if (!$isLocalInstall && $this->hostPath === '') {
+            $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
@@ -1244,11 +1249,17 @@ class Install extends Action
         }
 
         stream_set_blocking($pipes[1], false);
-        $deadline = time() + self::PROC_CLOSE_TIMEOUT_SECONDS;
+        $deadline = time() + self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS;
         $buffer = '';
+        $timedOut = false;
 
-        while (time() < $deadline) {
+        while (true) {
             $status = proc_get_status($process);
+            if (time() >= $deadline && $status['running']) {
+                $timedOut = true;
+                $output[] = 'Docker Compose did not finish starting containers within ' . self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS . ' seconds.';
+                break;
+            }
 
             $read = [$pipes[1]];
             $write = null;
@@ -1297,7 +1308,17 @@ class Install extends Action
 
         fclose($pipes[1]);
 
-        $exit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        if ($timedOut) {
+            proc_terminate($process, SIGTERM);
+            usleep(500_000);
+
+            if (proc_get_status($process)['running']) {
+                proc_terminate($process, SIGKILL);
+            }
+        }
+
+        $closeExit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        $exit = $timedOut ? 124 : $closeExit;
 
         return ['output' => $output, 'exit' => $exit];
     }
@@ -1386,6 +1407,61 @@ class Install extends Action
 
         $cwd = getcwd();
         return $cwd !== false ? $cwd : '.';
+    }
+
+    protected function detectInstallerHostPath(string $containerPath): ?string
+    {
+        if (!file_exists('/.dockerenv') && !file_exists('/run/.containerenv')) {
+            return null;
+        }
+
+        $containerId = trim((string) @file_get_contents('/etc/hostname'));
+        if ($containerId === '') {
+            return null;
+        }
+
+        $command = \implode(' ', \array_map(\escapeshellarg(...), [
+            'docker',
+            'inspect',
+            '--format',
+            '{{ json .Mounts }}',
+            $containerId,
+        ]));
+        $output = [];
+        @\exec($command . ' 2>/dev/null', $output, $exitCode);
+        if ($exitCode !== 0 || empty($output)) {
+            return null;
+        }
+
+        $mounts = \json_decode(\implode("\n", $output), true);
+        if (!\is_array($mounts)) {
+            return null;
+        }
+
+        $containerPath = \rtrim($containerPath, '/');
+        foreach ($mounts as $mount) {
+            if (!\is_array($mount)) {
+                continue;
+            }
+            $source = $mount['Source'] ?? null;
+            $destination = $mount['Destination'] ?? null;
+            if (!\is_string($source) || !\is_string($destination) || $source === '' || $destination === '') {
+                continue;
+            }
+
+            $destination = \rtrim($destination, '/');
+            $hostPath = match (true) {
+                $destination === $containerPath => \rtrim($source, '/'),
+                \str_starts_with($containerPath . '/', $destination . '/') => \rtrim($source, '/') . \substr($containerPath, \strlen($destination)),
+                default => null,
+            };
+
+            if ($hostPath !== null) {
+                return $hostPath;
+            }
+        }
+
+        return null;
     }
 
     protected function buildFromProjectPath(string $suffix): string
