@@ -1872,7 +1872,7 @@ return [
                 '$id' => ID::custom('buildLogs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000,
+                'size' => APP_LOG_LENGTH_LIMIT,
                 'signed' => true,
                 'required' => false,
                 'default' => '',
