@@ -60,7 +60,7 @@ class Create extends CreateDocumentAction
                     group: 'embeddings',
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
-                    description: '/docs/references/vectorsdb/create-document.md',
+                    description: '/docs/references/vectorsdb/create-text-embeddings.md',
                     auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
