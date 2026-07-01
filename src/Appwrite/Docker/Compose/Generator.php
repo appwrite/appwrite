@@ -36,6 +36,11 @@ class Generator
         ],
     ];
 
+    private const array HOST_PATH_REWRITABLE_BINDS = [
+        './mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro',
+        './mongo-entrypoint.sh:/mongo-entrypoint.sh:ro',
+    ];
+
     private const array PARAM_DEFAULTS = [
         'version' => 'latest',
         'database' => 'mongodb',
@@ -251,12 +256,16 @@ class Generator
      */
     private function rewriteRelativeBindMounts(array &$service): void
     {
-        if ($this->params['version'] !== 'local' || empty($this->params['hostPath']) || empty($service['volumes'])) {
+        if (empty($this->params['hostPath']) || empty($service['volumes'])) {
             return;
         }
 
         foreach ($service['volumes'] as &$volume) {
             if (!\is_string($volume) || !\str_starts_with($volume, './')) {
+                continue;
+            }
+
+            if ($this->params['version'] !== 'local' && !\in_array($volume, self::HOST_PATH_REWRITABLE_BINDS, true)) {
                 continue;
             }
 
