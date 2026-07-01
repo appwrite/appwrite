@@ -46,7 +46,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PREFERENCES,
+                        model: Response::MODEL_TEAM,
                     )
                 ]
             ))
@@ -78,6 +78,6 @@ class Update extends Action
 
         $queueForEvents->setParam('teamId', $team->getId());
 
-        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
+        $response->dynamic($team, Response::MODEL_TEAM);
     }
 }
