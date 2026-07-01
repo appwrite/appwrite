@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
@@ -60,18 +61,19 @@ class Update extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('name', $name)
-            ->setAttribute('description', $description)
-            ->setAttribute('logo', $logo)
-            ->setAttribute('url', $url)
-            ->setAttribute('legalName', $legalName)
-            ->setAttribute('legalCountry', $legalCountry)
-            ->setAttribute('legalState', $legalState)
-            ->setAttribute('legalCity', $legalCity)
-            ->setAttribute('legalAddress', $legalAddress)
-            ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name])));
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'name' => $name,
+            'description' => $description,
+            'logo' => $logo,
+            'url' => $url,
+            'legalName' => $legalName,
+            'legalCountry' => $legalCountry,
+            'legalState' => $legalState,
+            'legalCity' => $legalCity,
+            'legalAddress' => $legalAddress,
+            'legalTaxId' => $legalTaxId,
+            'search' => implode(' ', [$projectId, $name]),
+        ]));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

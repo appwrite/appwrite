@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -107,17 +108,18 @@ class Update extends Action
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
 
-        $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
-            ->setAttribute('name', $name)
-            ->setAttribute('$permissions', $permissions)
-            ->setAttribute('maximumFileSize', $maximumFileSize)
-            ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-            ->setAttribute('fileSecurity', $fileSecurity)
-            ->setAttribute('enabled', $enabled)
-            ->setAttribute('encryption', $encryption)
-            ->setAttribute('compression', $compression)
-            ->setAttribute('antivirus', $antivirus)
-            ->setAttribute('transformations', $transformations));
+        $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), new Document([
+            'name' => $name,
+            '$permissions' => $permissions,
+            'maximumFileSize' => $maximumFileSize,
+            'allowedFileExtensions' => $allowedFileExtensions,
+            'fileSecurity' => $fileSecurity,
+            'enabled' => $enabled,
+            'encryption' => $encryption,
+            'compression' => $compression,
+            'antivirus' => $antivirus,
+            'transformations' => $transformations,
+        ]));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
