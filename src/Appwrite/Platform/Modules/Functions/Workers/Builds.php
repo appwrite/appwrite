@@ -53,6 +53,26 @@ class Builds extends Action
     }
 
     /**
+     * Truncate build logs to the length allowed by the deployments "buildLogs"
+     * attribute. Large site builds (heavy prerender/bundle output) can exceed
+     * it, which makes persisting the deployment throw a Structure exception and
+     * report the build as failed even though it actually succeeded. Keep the
+     * tail — it holds the build result and any error — mirroring how execution
+     * logs are trimmed elsewhere in this codebase.
+     */
+    private function truncateBuildLogs(string $logs): string
+    {
+        $limit = APP_LOG_LENGTH_LIMIT;
+        if (\strlen($logs) <= $limit) {
+            return $logs;
+        }
+
+        $warning = "[WARNING] Logs truncated. The output exceeded {$limit} characters.\n";
+
+        return $warning . \substr($logs, -($limit - \strlen($warning)));
+    }
+
+    /**
      * @throws Exception
      */
     public function __construct()
@@ -852,9 +872,9 @@ class Builds extends Action
                                     }
 
                                     if ($affected) {
-                                        $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
+                                        $deployment = $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($currentLogs));
                                         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                                            'buildLogs' => $currentLogs,
+                                            'buildLogs' => $this->truncateBuildLogs($currentLogs),
                                         ]));
 
                                         $queueForRealtime
@@ -910,7 +930,7 @@ class Builds extends Action
 
             ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
 
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
@@ -946,7 +966,7 @@ class Builds extends Action
             $logs = $deployment->getAttribute('buildLogs', '');
             $date = \date('H:i:s');
             $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
 
             /** Update the status */
             $endTime = DateTime::now();
@@ -1200,12 +1220,12 @@ class Builds extends Action
             Span::add('deployment.status', 'failed');
             Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            $deployment->setAttribute('buildLogs', $message);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($message));
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                 'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
                 'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'status' => 'failed',
-                'buildLogs' => $message,
+                'buildLogs' => $this->truncateBuildLogs($message),
             ]));
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
@@ -1563,7 +1583,7 @@ class Builds extends Action
             $date = \date('H:i:s');
             $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Git action failed. Deployment will continue. [0m\n";
 
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
             ]));
@@ -1635,7 +1655,7 @@ class Builds extends Action
                 $date = \date('H:i:s');
                 $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
 
-                $deployment->setAttribute('buildLogs', $logs);
+                $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'buildLogs' => $deployment->getAttribute('buildLogs'),
                 ]));
