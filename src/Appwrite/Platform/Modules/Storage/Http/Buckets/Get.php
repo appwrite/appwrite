@@ -32,6 +32,7 @@ class Get extends Action
             ->desc('Get bucket')
             ->groups(['api', 'storage'])
             ->label('scope', 'buckets.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('sdk', new Method(
                 namespace: 'storage',

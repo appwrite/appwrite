@@ -46,7 +46,6 @@ class Create extends Action
             ->groups(['api', 'organization'])
             ->label('audits.event', 'projects.create')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('usage.resource', 'project/{response.$id}')
             ->label('scope', 'projects.write')
             ->label('sdk', new Method(
                 namespace: 'organization',

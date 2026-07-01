@@ -35,7 +35,6 @@ class Update extends Action
             // ->label('event', 'project.labels.update')
             ->label('audits.event', 'project.labels.update')
             ->label('audits.resource', 'project.labels/{response.$id}')
-            ->label('usage.resource', 'project.labels/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,

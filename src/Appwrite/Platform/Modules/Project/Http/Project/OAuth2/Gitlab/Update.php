@@ -97,11 +97,10 @@ class Update extends Base
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
-            ->label('scope', 'oauth2.write')
+            ->label('scope', ['oauth2.write', 'project.oauth2.write'])
             ->label('event', 'oauth2.[providerId].update')
             ->label('audits.event', 'project.oauth2.[providerId].update')
             ->label('audits.resource', 'project.oauth2/{response.$id}')
-            ->label('usage.resource', 'project.oauth2/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',

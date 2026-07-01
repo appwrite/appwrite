@@ -62,7 +62,7 @@ class Create extends Action
             ->label('audits.event', 'file.create')
             ->label('event', 'buckets.[bucketId].files.[fileId].create')
             ->label('audits.resource', 'file/{response.$id}')
-            ->label('usage.resource', 'file/{response.$id}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)

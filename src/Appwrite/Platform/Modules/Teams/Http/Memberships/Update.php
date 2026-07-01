@@ -40,7 +40,6 @@ class Update extends Action
             ->label('scope', 'teams.write')
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
-            ->label('usage.resource', 'team/{request.teamId}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',

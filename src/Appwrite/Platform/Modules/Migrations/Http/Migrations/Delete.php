@@ -34,7 +34,6 @@ class Delete extends Action
             ->label('event', 'migrations.[migrationId].delete')
             ->label('audits.event', 'migrationId.delete')
             ->label('audits.resource', 'migrations/{request.migrationId}')
-            ->label('usage.resource', 'migrations/{request.migrationId}')
             ->label('sdk', new Method(
                 namespace: 'migrations',
                 group: null,

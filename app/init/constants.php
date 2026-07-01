@@ -173,6 +173,12 @@ const ACTOR_TYPE_KEY_ACCOUNT = 'keyAccount';
 const ACTOR_TYPE_KEY_ORGANIZATION = 'keyOrganization';
 
 /**
+ * Project onboarding stage status (stored per SDK method key under project.onboarding JSON).
+ */
+const ONBOARDING_STATUS_COMPLETED = 'completed';
+const ONBOARDING_STATUS_SKIPPED = 'skipped';
+
+/**
  * MFA
  */
 const MFA_RECENT_DURATION = 1800; // 30 mins
@@ -288,6 +294,7 @@ const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+const API_KEY_OAUTH2 = 'oauth2';
 
 // Realtime
 const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';

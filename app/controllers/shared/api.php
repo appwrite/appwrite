@@ -18,11 +18,13 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Throwable;
 use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
@@ -42,47 +44,6 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
-
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project) {
-    preg_match_all('/{(.*?)}/', $label, $matches);
-    foreach ($matches[1] as $pos => $match) {
-        $find = $matches[0][$pos];
-        $parts = explode('.', $match);
-
-        if (count($parts) !== 2) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
-        }
-
-        $namespace = $parts[0];
-        $replace = $parts[1];
-
-        $params = match ($namespace) {
-            'user' => (array) $user,
-            'project' => $project->getArrayCopy(),
-            'request' => $requestParams,
-            default => $responsePayload,
-        };
-
-        if (array_key_exists($replace, $params)) {
-            $replacement = $params[$replace];
-            // Convert to string if it's not already a string
-            if (! is_string($replacement)) {
-                if (is_array($replacement)) {
-                    $replacement = json_encode($replacement);
-                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
-                    $replacement = (string) $replacement;
-                } elseif (is_scalar($replacement)) {
-                    $replacement = (string) $replacement;
-                } else {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
-                }
-            }
-            $label = \str_replace($find, $replacement, $label);
-        }
-    }
-
-    return $label;
-};
 
 Http::init()
     ->groups(['api'])
@@ -264,6 +225,13 @@ Http::init()
                     API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
                     default => ACTOR_TYPE_KEY_ORGANIZATION,
                 });
+
+                if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
+                    $userClone
+                        ->setAttribute('$id', $dbKey->getId())
+                        ->setAttribute('$sequence', $dbKey->getSequence());
+                }
+
                 $auditContext->user = $userClone;
             }
 
@@ -299,7 +267,8 @@ Http::init()
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
-            $memberships = $user->getAttribute('memberships', []);
+            $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
+            $memberships = $membershipSource->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
@@ -368,6 +337,17 @@ Http::init()
             $authorization->addRole($authRole);
         }
 
+        $isAdminProjectRequest = ! $user->isEmpty()
+            && $project->getId() !== 'console'
+            && $mode === APP_MODE_ADMIN;
+        $isOAuthAdminKey = ! empty($apiKey)
+            && $apiKey->getType() === API_KEY_OAUTH2
+            && $apiKey->getRole() === User::ROLE_OWNER;
+
+        if ($isAdminProjectRequest && $isOAuthAdminKey) {
+            $authorization->setDefaultStatus(false);
+        }
+
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
             $dbForProject->setMetadata('user', $targetUser->getId());
             $dbForPlatform->setMetadata('user', $targetUser->getId());
@@ -378,7 +358,7 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+        if ($isAdminProjectRequest && (empty($apiKey) || $isOAuthAdminKey)) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
@@ -922,12 +902,18 @@ Http::shutdown()
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
         if (! empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $params, $targetUser, $project);
+            $renderer = new Renderer(new Document([
+                'user' => (array) $targetUser,
+                'project' => $project,
+                'request' => $params,
+                'response' => $responsePayload,
+            ]));
+            $resource = $renderer->render($pattern);
             if (! empty($resource) && $resource !== $pattern) {
                 $auditContext->resource = $resource;
             }
@@ -986,7 +972,7 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1016,11 +1002,18 @@ Http::shutdown()
             $resourcePattern = $route->getLabel('cache.resource', null);
             $resourceTypePattern = $route->getLabel('cache.resourceType', null);
 
+            $renderer = new Renderer(new Document([
+                'user' => (array) $user,
+                'project' => $project,
+                'request' => $requestParams,
+                'response' => $data,
+            ]));
+
             try {
                 $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'resource' => empty($resourcePattern) ? null : $parseLabel($resourcePattern, $data, $requestParams, $user, $project),
-                    'resourceType' => empty($resourceTypePattern) ? null : $parseLabel($resourceTypePattern, $data, $requestParams, $user, $project),
+                    'resource' => empty($resourcePattern) ? null : $renderer->render($resourcePattern),
+                    'resourceType' => empty($resourceTypePattern) ? null : $renderer->render($resourceTypePattern),
                     'mimeType' => $response->getContentType(),
                     'accessedAt' => $now,
                     'signature' => $signature,
@@ -1097,6 +1090,95 @@ Http::shutdown()
             );
 
             $publisherForUsage->enqueue($message);
+        }
+    });
+
+Http::shutdown()
+    ->groups(['api'])
+    ->inject('route')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->inject('apiKey')
+    ->inject('mode')
+    ->action(function (Route $route, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode) {
+        /**
+         * Persist completed onboarding stage after usage shutdown so a schema/write failure here
+         * cannot suppress RequestCompleted or usage metrics on the same request.
+         */
+        $statusCode = $response->getStatusCode();
+        if ($statusCode < 200 || $statusCode >= 300 || $project->getId() === 'console') {
+            return;
+        }
+
+        $sdkLabel = $route->getLabel('sdk', false);
+        if ($sdkLabel === false || $sdkLabel === null) {
+            return;
+        }
+
+        /** @var array<string, true> $onboarding */
+        $onboarding = Config::getParam('onboarding', []);
+        if ($onboarding === []) {
+            return;
+        }
+
+        $method = null;
+        if ($sdkLabel instanceof Method) {
+            $key = $sdkLabel->getNamespace() . '.' . $sdkLabel->getMethodName();
+            if (isset($onboarding[$key])) {
+                $method = $key;
+            }
+        } elseif (\is_array($sdkLabel)) {
+            foreach ($sdkLabel as $sdkMethod) {
+                if (! $sdkMethod instanceof Method) {
+                    continue;
+                }
+                $key = $sdkMethod->getNamespace() . '.' . $sdkMethod->getMethodName();
+                if (isset($onboarding[$key])) {
+                    $method = $key;
+                    break;
+                }
+            }
+        }
+
+        if ($method === null) {
+            return;
+        }
+
+        $byMethod = $project->getAttribute('onboarding', []);
+        $status = \is_array($byMethod) ? ($byMethod[$method]['status'] ?? null) : null;
+        if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+            return;
+        }
+
+        if (! \is_array($byMethod)) {
+            $byMethod = [];
+        }
+
+        $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
+            ? match ($apiKey->getType()) {
+                API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                API_KEY_ORGANIZATION => ACTOR_TYPE_KEY_ORGANIZATION,
+                API_KEY_STANDARD, API_KEY_EPHEMERAL => ACTOR_TYPE_KEY_PROJECT,
+                default => ACTOR_TYPE_KEY_PROJECT,
+            }
+        : (! $user->isEmpty()
+            ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
+            : ACTOR_TYPE_GUEST);
+        $byMethod[$method] = [
+            'status' => ONBOARDING_STATUS_COMPLETED,
+            'at' => DateTime::now(),
+            'actorType' => $actorType,
+        ];
+
+        try {
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'onboarding' => $byMethod,
+            ])));
+        } catch (Throwable) {
+            // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
         }
     });
 

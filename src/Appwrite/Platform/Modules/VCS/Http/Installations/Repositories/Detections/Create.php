@@ -152,6 +152,7 @@ class Create extends Action
                 $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
+                // Continue detection without package.json
             }
 
             $output = new Document([
@@ -159,7 +160,6 @@ class Create extends Action
                 'installCommand' => '',
                 'buildCommand' => '',
                 'outputDirectory' => '',
-                'adapter' => '',
             ]);
 
             $detector = new Framework($packager);
@@ -190,43 +190,19 @@ class Create extends Action
                 $output->setAttribute('installCommand', $framework->getInstallCommand());
                 $output->setAttribute('buildCommand', $framework->getBuildCommand());
                 $output->setAttribute('outputDirectory', $framework->getOutputDirectory());
-                $frameworkName = $framework->getName();
-
-                $configContent = '';
-                foreach ($framework->getConfigFiles() as $configFile) {
-                    if (!\in_array($configFile, $files, true)) {
-                        continue;
-                    }
-                    try {
-                        $configPath = \rtrim($providerRootDirectory, '/') . '/' . $configFile;
-                        $configResponse = $github->getRepositoryContent($owner, $repositoryName, $configPath);
-                        $configContent = $configResponse['content'] ?? '';
-                        if (!empty($configContent)) {
-                            break;
-                        }
-                    } catch (FileNotFound $e) {
-                    }
-                }
-
-                $detectedAdapter = !empty($configContent) ? $framework->getAdapter($configContent) : '';
+                $framework = $framework->getName();
             } else {
-                $frameworkName = 'other';
-                $detectedAdapter = '';
+                $framework = 'other';
+                $output->setAttribute('installCommand', '');
+                $output->setAttribute('buildCommand', '');
+                $output->setAttribute('outputDirectory', '');
             }
 
             $frameworks = Config::getParam('frameworks');
-            if (!\in_array($frameworkName, \array_keys($frameworks), true)) {
-                $frameworkName = 'other';
+            if (!\in_array($framework, \array_keys($frameworks), true)) {
+                $framework = 'other';
             }
-            $output->setAttribute('framework', $frameworkName);
-
-            $frameworkConfig = $frameworks[$frameworkName] ?? [];
-            if (!empty($frameworkConfig['adapters'])) {
-                $adapter = (!empty($detectedAdapter) && isset($frameworkConfig['adapters'][$detectedAdapter]))
-                    ? $detectedAdapter
-                    : \array_key_first($frameworkConfig['adapters']);
-                $output->setAttribute('adapter', $adapter);
-            }
+            $output->setAttribute('framework', $framework);
         } else {
             $output = new Document([
                 'runtime' => '',
@@ -337,5 +313,4 @@ class Create extends Action
 
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     }
-
 }

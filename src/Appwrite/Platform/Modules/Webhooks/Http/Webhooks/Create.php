@@ -47,7 +47,6 @@ class Create extends Action
             ->label('event', 'webhooks.[webhookId].create')
             ->label('audits.event', 'webhook.create')
             ->label('audits.resource', 'webhook/{response.$id}')
-            ->label('usage.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,

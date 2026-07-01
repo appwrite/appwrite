@@ -39,7 +39,6 @@ class Create extends Action
             ->label('event', 'platforms.[platformId].create')
             ->label('audits.event', 'project.platform.create')
             ->label('audits.resource', 'project.platform/{response.$id}')
-            ->label('usage.resource', 'project.platform/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',

@@ -61,7 +61,6 @@ class Create extends Action
             ->label('auth.type', 'invites')
             ->label('audits.event', 'membership.create')
             ->label('audits.resource', 'team/{request.teamId}')
-            ->label('usage.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
             ->label('sdk', new Method(
                 namespace: 'teams',

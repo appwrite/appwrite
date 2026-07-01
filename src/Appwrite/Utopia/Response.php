@@ -252,6 +252,8 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_STAGE = 'stage';
+    public const MODEL_STAGE_LIST = 'stageList';
     public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
     public const MODEL_PROJECT_SERVICE = 'projectService';
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
