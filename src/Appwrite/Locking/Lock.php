@@ -35,6 +35,8 @@ final class Lock
 
     private const OUTCOME_RELEASE_ERROR = 'release_error';
 
+    private const OUTCOME_DISABLED = 'disabled';
+
     private readonly bool $enabled;
 
     private readonly mixed $attempts;
@@ -136,6 +138,8 @@ final class Lock
         bool $skipOnContention = false,
     ): mixed {
         if (! $this->enabled) {
+            $this->logTest(self::OUTCOME_DISABLED, $key, $target);
+
             return $fn();
         }
 
@@ -149,6 +153,7 @@ final class Lock
             throw $e->getRedisException();
         } catch (\RedisException $e) {
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->logTest(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
@@ -162,6 +167,7 @@ final class Lock
                 throw $e;
             }
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->logTest(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
@@ -184,6 +190,7 @@ final class Lock
             $acquired = $lock->acquire($waitTimeout);
         } catch (\RedisException $e) {
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->logTest(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
@@ -192,15 +199,18 @@ final class Lock
         if (! $acquired) {
             if ($skipOnContention) {
                 $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
+                $this->logTest(self::OUTCOME_SKIPPED, $key, $target);
 
                 return null;
             }
             $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
+            $this->logTest(self::OUTCOME_CONTENDED, $key, $target);
             // No custom message: the lock key embeds collection and document ID.
             throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
         }
 
         $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
+        $this->logTest(self::OUTCOME_ACQUIRED, $key, $target);
         try {
             try {
                 return $fn();
@@ -212,6 +222,7 @@ final class Lock
                 $lock->release();
             } catch (Throwable $e) {
                 $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
+                $this->logTest(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
                 $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
             }
         }
@@ -255,6 +266,21 @@ final class Lock
         $key = "lock:platform:{$projectInternalId}:{$collection}:{$id}";
 
         return $attribute === null ? $key : "{$key}:{$attribute}";
+    }
+
+    private function logTest(string $outcome, string $key, string $target, ?Throwable $e = null): void
+    {
+        $message = '[dist-lock-test] lock '
+            .$outcome
+            .' target='.$target
+            .' project='.$this->projectInternalId
+            .' keyPattern='.preg_replace('/:[^:]+$/', ':*', $key);
+
+        if ($e !== null) {
+            $message .= ' exception='.get_class($e).' message='.$e->getMessage();
+        }
+
+        Console::info($message);
     }
 
     /**
