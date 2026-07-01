@@ -44,7 +44,6 @@ class Update extends Action
             ->label('event', 'webhooks.[webhookId].update')
             ->label('audits.event', 'webhooks.update')
             ->label('audits.resource', 'webhook/{response.$id}')
-            ->label('usage.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,

@@ -37,7 +37,6 @@ class Update extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'projects.update')
             ->label('audits.resource', 'project/{request.projectId}')
-            ->label('usage.resource', 'project/{request.projectId}')
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)

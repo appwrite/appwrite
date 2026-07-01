@@ -41,7 +41,6 @@ class Create extends Action
             ->label('event', 'rules.[ruleId].create')
             ->label('audits.event', 'rule.create')
             ->label('audits.resource', 'rule/{response.$id}')
-            ->label('usage.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',
