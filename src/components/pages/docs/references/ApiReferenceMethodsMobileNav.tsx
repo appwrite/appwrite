@@ -69,7 +69,7 @@ export function ApiReferenceMethodsMobileNav({
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="flex w-[min(100vw,320px)] flex-col p-0">
-        <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-left">
+        <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-start">
           <SheetTitle className="truncate text-[15px]">{serviceLabel}</SheetTitle>
         </SheetHeader>
         <ApiReferenceMethodsNavContent

@@ -81,7 +81,7 @@ function LogsTableHead() {
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pl-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:pl-8">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 ps-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:ps-8">
           Execution ID
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
@@ -105,7 +105,7 @@ function LogsTableHead() {
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
           Duration
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:pr-8">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pe-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:pe-8">
           Created
         </TableHead>
       </TableRow>
@@ -122,7 +122,7 @@ function LogsSkeletonRows({ rowCount }: { rowCount: number }) {
           className="pointer-events-none hover:bg-transparent"
           aria-hidden
         >
-          <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
+          <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
             <Skeleton className="h-4 w-32 max-w-full" />
           </TableCell>
           <TableCell className="min-w-0 px-4 py-3">
@@ -146,7 +146,7 @@ function LogsSkeletonRows({ rowCount }: { rowCount: number }) {
           <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-14" />
           </TableCell>
-          <TableCell className="min-w-0 px-4 py-3 pr-6 sm:pr-8">
+          <TableCell className="min-w-0 px-4 py-3 pe-6 sm:pe-8">
             <Skeleton className="h-3.5 w-[6.5rem]" />
           </TableCell>
         </TableRow>
@@ -371,7 +371,7 @@ export function LogsListView({
                         }
                       }}
                     >
-                      <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
+                      <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
                         <CopyableId
                           id={executionId}
                           size="sm"
@@ -449,7 +449,7 @@ export function LogsListView({
                           </code>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-0 px-4 py-3 pr-6 sm:pr-8">
+                      <TableCell className="min-w-0 px-4 py-3 pe-6 sm:pe-8">
                         <DateTooltip
                           date={executionData.$createdAt}
                           className="text-[12px] text-muted-foreground"

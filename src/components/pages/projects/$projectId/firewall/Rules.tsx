@@ -560,7 +560,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
       {/* Create Rule Dialog */}
       <Dialog open={creatingRule} onOpenChange={setCreatingRule}>
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Create firewall rule</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Define a new rule to protect your project from malicious requests.
@@ -808,7 +808,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         onOpenChange={(open) => !open && setEditingRule(null)}
       >
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Update firewall rule</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Modify the rule configuration and conditions.
@@ -1057,7 +1057,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         onOpenChange={(open) => !open && setDeletingRule(null)}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete firewall rule</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete "{deletingRule?.name}"? This

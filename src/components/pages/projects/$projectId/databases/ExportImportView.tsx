@@ -237,7 +237,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
                 Updated
               </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4" />
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -306,7 +306,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                       className="text-[12px] font-medium text-muted-foreground"
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-right pr-4">
+                  <TableCell className="px-4 py-3 text-end pe-4">
                     {isExport && isCompleted && downloadUrl ? (
                       <Button
                         variant="ghost"

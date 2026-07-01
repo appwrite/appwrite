@@ -427,7 +427,7 @@ export function TemplateConfigView({
               target="_blank"
               rel="noopener noreferrer"
             >
-              <GitBranch className="mr-1.5 h-4 w-4" />
+              <GitBranch className="me-1.5 h-4 w-4" />
               View source
             </a>
           </Button>
@@ -632,7 +632,7 @@ export function TemplateConfigView({
           )}
         >
           <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
-          <div className="ml-3 flex-1">
+          <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
               Connect your repository
             </span>
@@ -656,7 +656,7 @@ export function TemplateConfigView({
             id="git-later"
             className="mt-1 shrink-0"
           />
-          <div className="ml-3 flex-1">
+          <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
               Connect later
             </span>
@@ -724,7 +724,7 @@ export function TemplateConfigView({
                   <Label className="text-[13px] font-mono">
                     {variable.key}
                     {templateVar?.required && (
-                      <span className="text-destructive ml-1">*</span>
+                      <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
                   {templateVar?.secret && (

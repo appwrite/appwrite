@@ -213,7 +213,7 @@ export function MessagingCreateControls({
           <DialogContent
             className="sm:max-w-md p-0"
 >
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Create topic</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Topics group subscribers for email, SMS, or push.
@@ -306,21 +306,21 @@ export function MessagingCreateControls({
           onSelect={() => createDraftEmail.mutate()}
           disabled={busy}
 >
-          <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+          <Mail className="me-2 h-4 w-4 text-muted-foreground" />
           Email
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => createDraftSms.mutate()}
           disabled={busy}
 >
-          <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+          <Phone className="me-2 h-4 w-4 text-muted-foreground" />
           SMS
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => createDraftPush.mutate()}
           disabled={busy}
 >
-          <Bell className="mr-2 h-4 w-4 text-muted-foreground" />
+          <Bell className="me-2 h-4 w-4 text-muted-foreground" />
           Push
         </DropdownMenuItem>
       </DropdownMenuContent>

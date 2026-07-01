@@ -105,7 +105,7 @@ function BrowserIcon({
           <Activity className="h-4 w-4 text-muted-foreground" />
         </div>
         {deviceName && (
-          <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
+          <div className="absolute -bottom-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
             <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
           </div>
         )}
@@ -124,7 +124,7 @@ function BrowserIcon({
         />
       </div>
       {deviceName && (
-        <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
+        <div className="absolute -bottom-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
           <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
         </div>
       )}
@@ -321,7 +321,7 @@ export function AccountSessions() {
               onClick={handleDeleteAllClick}
               disabled={deleteAllSessionsMutation.isPending}
             >
-              <LogOut className="mr-1.5 h-4 w-4" />
+              <LogOut className="me-1.5 h-4 w-4" />
               Delete all sessions
             </Button>
           </div>
@@ -345,7 +345,7 @@ export function AccountSessions() {
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
                   Expires
                 </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -472,7 +472,7 @@ export function AccountSessions() {
                         className="text-[12px] font-medium text-foreground"
                       />
                     </TableCell>
-                    <TableCell className="px-4 py-3.5 text-right">
+                    <TableCell className="px-4 py-3.5 text-end">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -505,7 +505,7 @@ export function AccountSessions() {
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Logout from device</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {isCurrentSession
@@ -535,7 +535,7 @@ export function AccountSessions() {
       {/* Delete All Sessions Confirmation Dialog */}
       <Dialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Logout from all devices</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to logout from all devices? You will need to

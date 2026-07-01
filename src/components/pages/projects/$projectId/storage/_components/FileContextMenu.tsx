@@ -123,7 +123,7 @@ function FileDeleteDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Delete file</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Are you sure you want to delete this file? This action cannot be

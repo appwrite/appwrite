@@ -409,7 +409,7 @@ export function PostgresConnectionDrawer({
               {canCancel
                 ? renderManageButton(
                     'Cancel query',
-                    <StopCircle className="mr-1.5 h-3.5 w-3.5" />,
+                    <StopCircle className="me-1.5 h-3.5 w-3.5" />,
                     () => onCancelQuery(connection),
                     !canManageConnections,
                   )
@@ -417,7 +417,7 @@ export function PostgresConnectionDrawer({
               {canTerminate
                 ? renderManageButton(
                     'Terminate connection',
-                    <Unplug className="mr-1.5 h-3.5 w-3.5" />,
+                    <Unplug className="me-1.5 h-3.5 w-3.5" />,
                     () => onTerminateConnection(connection),
                     !canManageConnections,
                   )

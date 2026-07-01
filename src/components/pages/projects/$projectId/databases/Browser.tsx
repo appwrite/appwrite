@@ -801,7 +801,7 @@ export function Browser({}: BrowserProps) {
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
       {/* Top controls - Right side */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+      <div className="absolute top-4 end-4 z-10 flex items-center gap-2">
         {/* Zoom controls */}
         <Button
           variant="outline"
@@ -1203,7 +1203,7 @@ export function Browser({}: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        'absolute -top-1 left-0 right-0 h-2 cursor-ns-resize bg-primary/50 z-10',
+                        'absolute -top-1 start-0 end-0 h-2 cursor-ns-resize bg-primary/50 z-10',
                         resizing?.frameId === frame.id ||
                           'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
@@ -1213,7 +1213,7 @@ export function Browser({}: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        'absolute -bottom-1 left-0 right-0 h-2 cursor-ns-resize bg-primary/50 z-10',
+                        'absolute -bottom-1 start-0 end-0 h-2 cursor-ns-resize bg-primary/50 z-10',
                         resizing?.frameId === frame.id ||
                           'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
@@ -1223,7 +1223,7 @@ export function Browser({}: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        'absolute -left-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10',
+                        'absolute -start-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10',
                         resizing?.frameId === frame.id ||
                           'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
@@ -1233,7 +1233,7 @@ export function Browser({}: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        'absolute -right-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10',
+                        'absolute -end-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10',
                         resizing?.frameId === frame.id ||
                           'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}

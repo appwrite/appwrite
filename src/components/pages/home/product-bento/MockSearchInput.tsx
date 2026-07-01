@@ -27,7 +27,7 @@ export function MockSearchInput({
               {typedText}
             </span>
             <span
-              className="ml-px inline-block h-2.5 w-px shrink-0 bg-muted-foreground opacity-0 group-hover:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover:animate-none"
+              className="ms-px inline-block h-2.5 w-px shrink-0 bg-muted-foreground opacity-0 group-hover:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover:animate-none"
               style={{ animationDelay: `${cursorDelay}ms` }}
             />
           </span>

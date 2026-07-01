@@ -382,7 +382,7 @@ function FunctionLayoutContent() {
                 to="/projects/$projectId/functions"
                 params={{ projectId: projectId! }}
               >
-                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                <ArrowLeft className="me-1.5 h-4 w-4" />
                 Back to Functions
               </Link>
             </Button>
@@ -658,7 +658,7 @@ function FunctionLayoutContent() {
         {activeDeployment && (
           <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>Redeploy deployment</DialogTitle>
               </DialogHeader>
               <div className="border-t border-border" />

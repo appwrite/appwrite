@@ -411,10 +411,10 @@ export function ErrorComponent({
 
         {showTechnicalDetails ? (
           <div className="relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
-            <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
+            <div className="flex items-start gap-2 pe-8 min-w-0 w-full">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
               <div
-                className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-left"
+                className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-start"
                 style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
               >
                 {error.message || 'No error details available'}
@@ -423,7 +423,7 @@ export function ErrorComponent({
             <Button
               variant="ghost"
               size="sm"
-              className="absolute top-2 right-2 h-7 w-7 p-0 shrink-0"
+              className="absolute top-2 end-2 h-7 w-7 p-0 shrink-0"
               onClick={handleCopy}
               aria-label="Copy error details"
             >
@@ -485,7 +485,7 @@ export function ErrorComponent({
                   onClick={handleGoBack}
                   className="w-full shrink-0 sm:flex-1 min-h-9"
                 >
-                  <ArrowLeft className="mr-1.5 h-4 w-4" />
+                  <ArrowLeft className="me-1.5 h-4 w-4" />
                   Go back
                 </Button>
               ) : null}
@@ -497,7 +497,7 @@ export function ErrorComponent({
                   !canGoBack && 'sm:w-full',
                 )}
               >
-                <Home className="mr-1.5 h-4 w-4" />
+                <Home className="me-1.5 h-4 w-4" />
                 Go home
               </Button>
             </div>
@@ -509,7 +509,7 @@ export function ErrorComponent({
               onClick={handleGoHome}
               className="w-full shrink-0 sm:flex-1 min-h-9"
             >
-              <Home className="mr-1.5 h-4 w-4" />
+              <Home className="me-1.5 h-4 w-4" />
               Go home
             </Button>
             <Button

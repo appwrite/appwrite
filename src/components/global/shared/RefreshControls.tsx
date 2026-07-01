@@ -95,7 +95,7 @@ export function RefreshControls({
         size="sm"
         onClick={handleManualRefresh}
         disabled={isRefreshing}
-        className="h-9 gap-2 rounded-r-none border-r border-input px-3 text-[13px] hover:bg-accent"
+        className="h-9 gap-2 rounded-e-none border-e border-input px-3 text-[13px] hover:bg-accent"
       >
         <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
         Refresh
@@ -104,7 +104,7 @@ export function RefreshControls({
         value={refreshInterval}
         onValueChange={(value) => setRefreshInterval(value as RefreshInterval)}
       >
-        <SelectTrigger className="h-9 w-[70px] rounded-l-none border-0 border-l-0 bg-background px-3 text-[13px] shadow-none focus:ring-0 focus:ring-offset-0 hover:bg-accent">
+        <SelectTrigger className="h-9 w-[70px] rounded-s-none border-0 border-s-0 bg-background px-3 text-[13px] shadow-none focus:ring-0 focus:ring-offset-0 hover:bg-accent">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

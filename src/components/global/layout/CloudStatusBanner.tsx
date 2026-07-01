@@ -116,7 +116,7 @@ function CloudStatusBannerInner({
           </div>
           <span
             className={cn(
-              'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ml-auto',
+              'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ms-auto',
               presentation.buttonClassName,
             )}
           >

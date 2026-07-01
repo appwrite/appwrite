@@ -106,7 +106,7 @@ export function ValidateCreditModal({
         className={cn('sm:max-w-md p-0', elevatedForWizard && 'z-[9999]')}
         overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
       >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Apply coupon</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Enter a coupon code to update your estimated total. Applied credits

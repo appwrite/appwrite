@@ -227,7 +227,7 @@ export function ConnectRepositorySection({
           </div>
           <Button asChild>
             <a href={getGitHubAuthUrl}>
-              <GitHubIcon className="mr-1.5 h-4 w-4" />
+              <GitHubIcon className="me-1.5 h-4 w-4" />
               Connect to GitHub
             </a>
           </Button>

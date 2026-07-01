@@ -116,7 +116,7 @@ export function FunctionsListTable({
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Triggers
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Created
             </TableHead>
           </TableRow>
@@ -196,7 +196,7 @@ export function FunctionsListTable({
                       eventCount={func.events?.length ?? 0}
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-right">
+                  <TableCell className="px-4 py-3 text-end">
                     {func.$createdAt ? (
                       <DateTooltip
                         date={func.$createdAt}

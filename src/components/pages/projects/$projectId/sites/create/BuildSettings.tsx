@@ -135,7 +135,7 @@ export function BuildSettings({
                     disabled={disabled}
                     className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   >
-                    <RotateCcw className="mr-1 h-3 w-3" />
+                    <RotateCcw className="me-1 h-3 w-3" />
                     Reset
                   </Button>
                 )}
@@ -165,7 +165,7 @@ export function BuildSettings({
                     disabled={disabled}
                     className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   >
-                    <RotateCcw className="mr-1 h-3 w-3" />
+                    <RotateCcw className="me-1 h-3 w-3" />
                     Reset
                   </Button>
                 )}
@@ -194,7 +194,7 @@ export function BuildSettings({
                         disabled={disabled}
                         className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                       >
-                        <RotateCcw className="mr-1 h-3 w-3" />
+                        <RotateCcw className="me-1 h-3 w-3" />
                         Reset
                       </Button>
                     ) : undefined
@@ -228,7 +228,7 @@ export function BuildSettings({
                     disabled={disabled}
                     className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   >
-                    <RotateCcw className="mr-1 h-3 w-3" />
+                    <RotateCcw className="me-1 h-3 w-3" />
                     Reset
                   </Button>
                 )}

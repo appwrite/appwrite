@@ -11,7 +11,7 @@ export function ProductHeroIcon({ icon: Icon, name, className }: ProductHeroIcon
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2.5 rounded-full border border-border/80 bg-card/70 py-1.5 pl-1.5 pr-4 ring-1 ring-black/[0.03] backdrop-blur-sm dark:bg-card/40 dark:ring-white/[0.05]',
+        'inline-flex items-center gap-2.5 rounded-full border border-border/80 bg-card/70 py-1.5 ps-1.5 pe-4 ring-1 ring-black/[0.03] backdrop-blur-sm dark:bg-card/40 dark:ring-white/[0.05]',
         className,
       )}
     >

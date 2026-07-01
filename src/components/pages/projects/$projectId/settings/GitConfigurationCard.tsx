@@ -210,7 +210,7 @@ export function GitConfigurationCard({
               asChild
             >
               <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
-                <GitHubIcon className="mr-1.5 h-4 w-4" />
+                <GitHubIcon className="me-1.5 h-4 w-4" />
                 Connect to GitHub
               </a>
             </Button>
@@ -408,7 +408,7 @@ export function GitConfigurationCard({
             asChild
           >
             <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Plus className="me-1.5 h-4 w-4" />
               Add installation
             </a>
           </Button>
@@ -418,7 +418,7 @@ export function GitConfigurationCard({
       {/* Disconnect Modal */}
       <Dialog open={disconnectModalOpen} onOpenChange={setDisconnectModalOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Disconnect installation</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {affectedFunctions?.total === 0 && affectedSites?.total === 0

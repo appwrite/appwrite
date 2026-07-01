@@ -523,7 +523,7 @@ export function CronScheduleEditor({
                   disabled={disabled}
                 >
                   {getPresetDisplayLabel(preset || 'disabled')}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-0" align="start">

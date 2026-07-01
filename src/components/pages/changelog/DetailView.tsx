@@ -19,7 +19,7 @@ export function DetailView({ entry }: DetailViewProps) {
         <div className="mx-auto max-w-[42.5rem] px-4 sm:px-6">
           <Button variant="ghost" size="sm" className="h-9 px-0 text-[13px] text-muted-foreground" asChild>
             <Link to="/changelog">
-              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              <ArrowLeft className="me-1.5 h-4 w-4" />
               Back to Changelog
             </Link>
           </Button>

@@ -1492,7 +1492,7 @@ export function ChangePlanWizardFullscreen() {
                 'the end of your billing period'}
               . You will lose access to premium features and organization
               members beyond the free limit will be removed.
-              <DocsRouteLink className="ml-1 underline" href="/docs/migration">
+              <DocsRouteLink className="ms-1 underline" href="/docs/migration">
                 Learn more about migration
               </DocsRouteLink>
             </WarningAlert>

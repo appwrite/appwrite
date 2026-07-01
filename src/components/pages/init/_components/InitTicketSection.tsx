@@ -65,7 +65,7 @@ function buildShareUrl(): string {
 }
 
 const shareMenuItemClass =
-  'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent'
+  'flex w-full items-center gap-2 rounded-md px-2 py-2 text-start text-[13px] text-foreground transition-colors hover:bg-accent'
 
 interface ShareActionsProps {
   compact?: boolean
@@ -106,7 +106,7 @@ function ShareActions({
       ? 'h-8 px-2.5 text-[12px] has-[>svg]:px-2'
       : 'h-10 px-3 text-[13px] has-[>svg]:px-2.5',
   )
-  const iconSizeClass = compact ? 'mr-1 size-3.5' : 'mr-1.5 size-4'
+  const iconSizeClass = compact ? 'me-1 size-3.5' : 'me-1.5 size-4'
   const actionsAlignClass = compact ? 'justify-start' : 'justify-center'
   const primaryShareLabel =
     shareButtonLabel ?? (isRecapMode ? 'Share ticket' : 'Share and win')
@@ -413,7 +413,7 @@ export function InitTicketSection({
 
   if (collapsed) {
     sectionBody = (
-      <div className="flex items-center gap-3 py-1 pr-10 sm:gap-5 sm:py-2">
+      <div className="flex items-center gap-3 py-1 pe-10 sm:gap-5 sm:py-2">
         <InitTicketScaledFrame
           widthPx={INIT_TICKET_COLLAPSED_WIDTH_PX}
           pointerEventsNone
@@ -422,7 +422,7 @@ export function InitTicketSection({
             <InitTicketCard {...ticketCardProps} previewOnly />
           ) : null}
         </InitTicketScaledFrame>
-        <div className="min-w-0 flex-1 space-y-2 text-left">
+        <div className="min-w-0 flex-1 space-y-2 text-start">
           <h2 className="text-[14px] font-semibold leading-tight tracking-tight text-foreground sm:text-[15px]">
             {sectionTitle}
           </h2>
@@ -489,7 +489,7 @@ export function InitTicketSection({
           type="button"
           variant="outline"
           size="sm"
-          className="absolute left-0 top-0 z-20 shrink-0 text-[13px]"
+          className="absolute start-0 top-0 z-20 shrink-0 text-[13px]"
           disabled={!canExportTicketVideo || isVideoBusy}
           title={
             !canExportTicketVideo
@@ -505,13 +505,13 @@ export function InitTicketSection({
         >
           {isVideoBusy ? (
             <>
-              <Loader2 className="mr-1.5 size-4 animate-spin" />
+              <Loader2 className="me-1.5 size-4 animate-spin" />
               {isCapturingVideo ? 'Recording' : 'Processing'}{' '}
               {Math.round((videoExportProgress ?? 0) * 100)}%
             </>
           ) : (
             <>
-              <Video className="mr-1.5 size-4" />
+              <Video className="me-1.5 size-4" />
               {canExport60FpsVideo
                 ? 'Download 60fps video'
                 : 'Download ticket video'}
@@ -523,7 +523,7 @@ export function InitTicketSection({
         type="button"
         variant="outline"
         size="icon"
-        className="absolute right-0 top-0 z-20 size-8 shrink-0"
+        className="absolute end-0 top-0 z-20 size-8 shrink-0"
         onClick={() => updatePrefs({ sectionCollapsed: !collapsed })}
         aria-expanded={!collapsed}
         aria-label={

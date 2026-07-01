@@ -285,7 +285,7 @@ export function QuickDeployView({
               asChild
             >
               <a href={repoUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                <ExternalLink className="me-1.5 h-3.5 w-3.5" />
                 View on GitHub
               </a>
             </Button>

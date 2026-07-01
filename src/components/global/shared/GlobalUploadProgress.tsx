@@ -129,7 +129,7 @@ export function GlobalUploadProgress({
       onCancel={handleCancel}
       onDismiss={handleDismiss}
       embedded={embedded}
-      className={embedded ? undefined : 'bottom-4 right-4'}
+      className={embedded ? undefined : 'bottom-4 end-4'}
     />
   )
 }

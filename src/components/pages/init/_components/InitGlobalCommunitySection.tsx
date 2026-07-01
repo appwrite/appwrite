@@ -117,7 +117,7 @@ function InitCommunityGlobe({
         countries={countries}
         developerCount={developerCount}
         isLive={isLive}
-        className="absolute bottom-4 left-3 z-30 sm:bottom-5 sm:left-4"
+        className="absolute bottom-4 start-3 z-30 sm:bottom-5 sm:start-4"
       />
     </div>
   )

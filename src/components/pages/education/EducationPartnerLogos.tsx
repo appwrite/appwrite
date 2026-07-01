@@ -29,7 +29,7 @@ export function EducationPartnerLogos({ className }: EducationPartnerLogosProps)
       <img
         src={appwriteLogo}
         alt="Appwrite"
-        className={cn(LOGO_HEIGHT_CLASS, 'pr-5')}
+        className={cn(LOGO_HEIGHT_CLASS, 'pe-5')}
         loading="lazy"
       />
       <span
@@ -39,7 +39,7 @@ export function EducationPartnerLogos({ className }: EducationPartnerLogosProps)
       <img
         src={githubLogo}
         alt="GitHub"
-        className={cn(LOGO_HEIGHT_CLASS, 'pl-5')}
+        className={cn(LOGO_HEIGHT_CLASS, 'ps-5')}
         loading="lazy"
       />
     </div>

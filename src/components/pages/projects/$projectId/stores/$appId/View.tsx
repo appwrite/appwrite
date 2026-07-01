@@ -191,7 +191,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Duration
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                       Created
                     </TableHead>
                   </TableRow>
@@ -215,7 +215,7 @@ export function View({ initialData }: ViewProps = {}) {
                         <span className="text-[13px] text-foreground">
                           {build.versionName}
                         </span>
-                        <span className="ml-1 text-[12px] text-muted-foreground">
+                        <span className="ms-1 text-[12px] text-muted-foreground">
                           ({build.versionCode})
                         </span>
                       </TableCell>
@@ -227,7 +227,7 @@ export function View({ initialData }: ViewProps = {}) {
                           {formatDuration(build.buildDuration)}
                         </span>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
+                      <TableCell className="px-4 py-3 text-end">
                         <DateTooltip
                           date={build.$createdAt}
                           className="text-[12px] text-muted-foreground font-mono"
@@ -275,7 +275,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Release
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                       Submitted
                     </TableHead>
                   </TableRow>
@@ -304,7 +304,7 @@ export function View({ initialData }: ViewProps = {}) {
                           {submission.storeReleaseId || '-'}
                         </span>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
+                      <TableCell className="px-4 py-3 text-end">
                         <DateTooltip
                           date={submission.$createdAt}
                           className="text-[12px] text-muted-foreground font-mono"

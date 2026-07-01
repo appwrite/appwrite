@@ -446,7 +446,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-[13px] font-semibold text-red-500">
                       {item.count.toLocaleString()}
                     </p>
@@ -495,7 +495,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-[13px] font-semibold text-red-500">
                       {item.count.toLocaleString()}
                     </p>

@@ -853,11 +853,11 @@ export function Overview({
                   </Tooltip>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={handleCopyJSON}>
-                      <FileJson className="h-4 w-4 mr-2" />
+                      <FileJson className="h-4 w-4 me-2" />
                       Copy as JSON
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleCopyMarkdown}>
-                      <FileText className="h-4 w-4 mr-2" />
+                      <FileText className="h-4 w-4 me-2" />
                       Copy as Markdown
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -899,7 +899,7 @@ export function Overview({
                       <img
                         src="/icons/chatgpt.svg"
                         alt="ChatGPT"
-                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                        className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       ChatGPT
                     </DropdownMenuItem>
@@ -907,7 +907,7 @@ export function Overview({
                       <img
                         src="/icons/claude.svg"
                         alt="Claude"
-                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                        className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Claude
                     </DropdownMenuItem>
@@ -915,7 +915,7 @@ export function Overview({
                       <img
                         src="/icons/cursor-ai.svg"
                         alt="Cursor"
-                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                        className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Cursor
                     </DropdownMenuItem>
@@ -923,7 +923,7 @@ export function Overview({
                       <img
                         src="/icons/lovable.svg"
                         alt="Lovable"
-                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                        className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Lovable
                     </DropdownMenuItem>
@@ -1038,13 +1038,13 @@ export function Overview({
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           {dbLabels.containerSingularTitle}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                           {dbLabels.schemaPluralTitle}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                           {dbLabels.recordPluralTitle}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                           Indexes
                         </TableHead>
                       </TableRow>
@@ -1145,7 +1145,7 @@ export function Overview({
                                 databaseId,
                                 resourceId: table.$id,
                               })}
-                              className="block text-right"
+                              className="block text-end"
                             >
                               <span className="text-[12px] text-foreground font-mono">
                                 {table.columns}
@@ -1160,7 +1160,7 @@ export function Overview({
                                 databaseId,
                                 resourceId: table.$id,
                               })}
-                              className="block text-right"
+                              className="block text-end"
                             >
                               <span className="text-[12px] text-muted-foreground font-mono">
                                 {formatNumber(table.rows)}
@@ -1175,7 +1175,7 @@ export function Overview({
                                 databaseId,
                                 resourceId: table.$id,
                               })}
-                              className="block text-right"
+                              className="block text-end"
                             >
                               <span className="text-[12px] text-muted-foreground font-mono">
                                 {table.indexes}
@@ -1200,7 +1200,7 @@ export function Overview({
 
                 {/* Bulk Delete Action Bar */}
                 {selectedTables.size > 0 && (
-                  <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+                  <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                     <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                       <Badge variant="secondary" className="h-6 px-2.5">
                         {selectedTables.size}{' '}
@@ -1238,7 +1238,7 @@ export function Overview({
                   onOpenChange={setBulkDeleteDialogOpen}
                 >
                   <DialogContent className="sm:max-w-md p-0">
-                    <DialogHeader className="px-6 pt-6 text-left">
+                    <DialogHeader className="px-6 pt-6 text-start">
                       <DialogTitle>
                         Delete {dbLabels.containerPluralTitle}
                       </DialogTitle>
@@ -1489,7 +1489,7 @@ export function Overview({
                   <div className="mt-4 space-y-1">
                     <p className="text-[13px] text-muted-foreground">
                       Database ID:{' '}
-                      <span className="ml-1.5">
+                      <span className="ms-1.5">
                         <CopyableId id={database.$id} size="sm" />
                       </span>
                     </p>
@@ -1563,7 +1563,7 @@ export function Overview({
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                               Connections
                             </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[180px]">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[180px]">
                               Price
                             </TableHead>
                           </TableRow>
@@ -1613,7 +1613,7 @@ export function Overview({
                                 <TableCell className="px-4 py-3 text-[13px] tabular-nums text-muted-foreground">
                                   {spec.connections}
                                 </TableCell>
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-3 text-end">
                                   {locked ? (
                                     <span className="text-[13px] text-muted-foreground">
                                       {spec.price}
@@ -1706,7 +1706,7 @@ export function Overview({
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-left">
+                      <DialogHeader className="px-6 pt-6 text-start">
                         <DialogTitle>Delete Database</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           Are you sure you want to delete{' '}

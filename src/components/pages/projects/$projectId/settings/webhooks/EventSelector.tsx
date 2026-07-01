@@ -61,7 +61,7 @@ export function EventSelector({
                     e.stopPropagation()
                     handleRemoveEvent(event)
                   }}
-                  className="ml-1 rounded-full hover:bg-muted"
+                  className="ms-1 rounded-full hover:bg-muted"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -81,7 +81,7 @@ export function EventSelector({
         onClick={handleOpenEventDialog}
         disabled={selectedEvents.length >= maxEvents}
       >
-        <Plus className="mr-1.5 h-4 w-4" />
+        <Plus className="me-1.5 h-4 w-4" />
         Add event
       </Button>
 

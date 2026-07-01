@@ -144,12 +144,12 @@ export function ApiReferenceMethodsNavContent({
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden', className)}>
       <div className="shrink-0 border-b border-border bg-muted/20 px-2 py-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             placeholder="Search methods…"
-            className="h-8 border-border/60 bg-background pl-8 pr-8 text-[13px]"
+            className="h-8 border-border/60 bg-background ps-8 pe-8 text-[13px]"
             aria-label="Search methods"
           />
           {searchValue ? (
@@ -157,7 +157,7 @@ export function ApiReferenceMethodsNavContent({
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+              className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
               aria-label="Clear method search"
               onClick={() => setSearchValue('')}
             >

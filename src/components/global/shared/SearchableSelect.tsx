@@ -148,12 +148,12 @@ export function SearchableSelect({
           <div className="relative">
             <CommandInput
               placeholder={searchPlaceholder}
-              className={cn('h-9 text-[13px]', isFetching && 'pr-8')}
+              className={cn('h-9 text-[13px]', isFetching && 'pe-8')}
               onValueChange={onSearchChange}
             />
             <div
               className={cn(
-                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
                 isFetching ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden

@@ -119,12 +119,12 @@ function PlanNodeRow({
         <div
           className={cn(
             'relative mt-2.5 space-y-2.5',
-            depth > 0 ? 'ml-3 pl-4' : 'ml-2 pl-4',
+            depth > 0 ? 'ms-3 ps-4' : 'ms-2 ps-4',
           )}
         >
           <div
             className={cn(
-              'absolute bottom-2 left-0 top-2 w-px',
+              'absolute bottom-2 start-0 top-2 w-px',
               VARIANT_GUIDE[node.variant],
             )}
             aria-hidden

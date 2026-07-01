@@ -82,7 +82,7 @@ export function CoverPropertiesPanel({
 
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
         <AlertDialogContent className="sm:max-w-md p-0">
-          <AlertDialogHeader className="px-6 pt-6 pb-4 text-left">
+          <AlertDialogHeader className="px-6 pt-6 pb-4 text-start">
             <AlertDialogTitle>Reset template fields</AlertDialogTitle>
             <AlertDialogDescription className="mt-2 text-[13px]">
               Restore all fields for this template to their defaults. Uploaded

@@ -125,7 +125,7 @@ export function CreateTableSimilar({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>
             Duplicate structure: "{sourceTable.name ?? sourceTable.$id}"
           </DialogTitle>

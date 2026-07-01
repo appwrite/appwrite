@@ -99,7 +99,7 @@ export function AiMockTypingInput({
               {typedText}
             </span>
             <span
-              className="ml-px inline-block h-3 w-px shrink-0 bg-muted-foreground opacity-0 group-hover/visual:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover/visual:animate-none"
+              className="ms-px inline-block h-3 w-px shrink-0 bg-muted-foreground opacity-0 group-hover/visual:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover/visual:animate-none"
               style={{ animationDelay: `${cursorDelay}ms` }}
             />
           </span>
@@ -112,7 +112,7 @@ export function AiMockTypingInput({
 export function AiMcpMockVisual() {
   return (
     <div className="group/visual relative min-h-[14rem] flex-1 overflow-hidden rounded-lg border border-border bg-muted/25">
-      <div className="absolute inset-y-0 left-0 w-[38%] border-r border-border/80 bg-background/40 p-3">
+      <div className="absolute inset-y-0 start-0 w-[38%] border-e border-border/80 bg-background/40 p-3">
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, index) => (
             <div
@@ -126,10 +126,10 @@ export function AiMcpMockVisual() {
           ))}
         </div>
       </div>
-      <div className="absolute inset-y-0 right-0 flex w-[62%] flex-col justify-end p-3 sm:p-4">
+      <div className="absolute inset-y-0 end-0 flex w-[62%] flex-col justify-end p-3 sm:p-4">
         <div className="mb-auto space-y-2 pt-1">
           <div
-            className="ml-auto max-w-[92%] rounded-lg border border-border bg-background/90 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground opacity-90 group-hover/visual:animate-[ai-mock-fade-in_0.45s_ease-out] motion-reduce:group-hover/visual:animate-none sm:text-[11px]"
+            className="ms-auto max-w-[92%] rounded-lg border border-border bg-background/90 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground opacity-90 group-hover/visual:animate-[ai-mock-fade-in_0.45s_ease-out] motion-reduce:group-hover/visual:animate-none sm:text-[11px]"
             style={{ animationDelay: '80ms' }}
           >
             Create a collection for user profiles

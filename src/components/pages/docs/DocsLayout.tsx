@@ -44,7 +44,7 @@ export function DocsLayout({
           data-docs-page-shell
           className={cn(
             DOCS_CONTAINER,
-            'mx-auto w-full max-w-7xl overflow-visible pb-8 pl-8 pr-4 pt-8 @[480px]:pl-10 @[480px]:pr-6 @[480px]:pt-10 @[900px]:pl-12',
+            'mx-auto w-full max-w-7xl overflow-visible pb-8 ps-8 pe-4 pt-8 @[480px]:ps-10 @[480px]:pe-6 @[480px]:pt-10 @[900px]:ps-12',
           )}
         >
           <div

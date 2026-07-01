@@ -90,7 +90,7 @@ export function ImagePreviewGalleryDialog({
         className={cn(
           'z-[120] w-auto max-w-none gap-0 overflow-visible border-0 bg-transparent p-0 shadow-none',
           '!max-w-none sm:!max-w-none',
-          '[&_[data-slot=dialog-close]]:top-2 [&_[data-slot=dialog-close]]:right-2 sm:[&_[data-slot=dialog-close]]:-top-3 sm:[&_[data-slot=dialog-close]]:-right-3',
+          '[&_[data-slot=dialog-close]]:top-2 [&_[data-slot=dialog-close]]:end-2 sm:[&_[data-slot=dialog-close]]:-top-3 sm:[&_[data-slot=dialog-close]]:-end-3',
           '[&_[data-slot=dialog-close]]:z-20 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:size-9 [&_[data-slot=dialog-close]]:shrink-0',
           '[&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center',
           '[&_[data-slot=dialog-close]]:rounded-full [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-border/80',
@@ -116,7 +116,7 @@ export function ImagePreviewGalleryDialog({
                     type="button"
                     variant="secondary"
                     size="icon"
-                    className="absolute left-3 top-1/2 z-[1] size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-md backdrop-blur-sm"
+                    className="absolute start-3 top-1/2 z-[1] size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-md backdrop-blur-sm"
                     onClick={() => onActiveIndexChange(activeIndex - 1)}
                     aria-label="Previous image"
                   >
@@ -137,7 +137,7 @@ export function ImagePreviewGalleryDialog({
                     type="button"
                     variant="secondary"
                     size="icon"
-                    className="absolute right-3 top-1/2 z-[1] size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-md backdrop-blur-sm"
+                    className="absolute end-3 top-1/2 z-[1] size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-md backdrop-blur-sm"
                     onClick={() => onActiveIndexChange(activeIndex + 1)}
                     aria-label="Next image"
                   >

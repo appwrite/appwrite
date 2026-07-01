@@ -74,15 +74,15 @@ export function FixWithAgentDropdown({
       >
         <DropdownMenuItem onClick={() => void handleCopyPrompt()}>
           <Copy className="h-4 w-4" />
-          <span className="ml-2">Copy prompt</span>
+          <span className="ms-2">Copy prompt</span>
         </DropdownMenuItem>
         <div className="my-1 h-px bg-border" />
         {aiChatIDEs.map((ide) => (
           <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>
             <img src={ide.iconPath} alt={ide.name} className="h-4 w-4" />
-            <span className="ml-2">Prompt {ide.name}</span>
+            <span className="ms-2">Prompt {ide.name}</span>
             <ExternalLink
-              className="ml-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
+              className="ms-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
               strokeWidth={1.25}
             />
           </DropdownMenuItem>

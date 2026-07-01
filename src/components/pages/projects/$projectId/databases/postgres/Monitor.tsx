@@ -127,7 +127,7 @@ function getCacheHitTone(
 
 function monitorNavLinkClassName(isActive: boolean) {
   return cn(
-    'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[13px] font-medium transition-colors',
+    'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-start text-[13px] font-medium transition-colors',
     isActive
       ? 'bg-accent text-foreground'
       : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -586,7 +586,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
               Updated {formatDistanceToNow(lastRecordedAt, { addSuffix: true })}
             </span>
           ) : null}
-          <div className="ml-auto flex shrink-0 items-center gap-3">
+          <div className="ms-auto flex shrink-0 items-center gap-3">
             <DateRangePicker
               dateRange={dateRange}
               onDateRangeChange={(range) =>

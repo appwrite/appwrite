@@ -37,7 +37,7 @@ export function InitTicketPeek({
           'border-[color-mix(in_srgb,var(--brand-cta)_40%,var(--border))]',
           'bg-gradient-to-br from-card via-card to-[color-mix(in_srgb,var(--brand-cta)_12%,var(--card))]',
           'p-10 shadow-xl shadow-black/10 dark:shadow-black/45',
-          'before:absolute before:inset-y-16 before:-right-7 before:w-14 before:rounded-full before:border-2 before:border-border before:bg-background',
+          'before:absolute before:inset-y-16 before:-end-7 before:w-14 before:rounded-full before:border-2 before:border-border before:bg-background',
         )}
       >
         <div className="space-y-4">
@@ -61,7 +61,7 @@ export function InitTicketPeek({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute bottom-0 left-0 z-10 flex items-end overflow-visible',
+        'pointer-events-none absolute bottom-0 start-0 z-10 flex items-end overflow-visible',
         className,
       )}
     >

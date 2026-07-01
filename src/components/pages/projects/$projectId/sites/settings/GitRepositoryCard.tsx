@@ -296,7 +296,7 @@ export function GitRepositoryCard({
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl p-0">
-                <DialogHeader className="px-6 pt-6 text-left">
+                <DialogHeader className="px-6 pt-6 text-start">
                   <DialogTitle>Connect repository</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Select a GitHub installation and repository to connect to
@@ -400,12 +400,12 @@ export function GitRepositoryCard({
                         size="sm"
                         className="h-8 text-[13px] text-foreground hover:text-foreground"
                       >
-                        <X className="mr-1.5 h-4 w-4" />
+                        <X className="me-1.5 h-4 w-4" />
                         Disconnect
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-left">
+                      <DialogHeader className="px-6 pt-6 text-start">
                         <DialogTitle>Disconnect repository</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           Are you sure you want to disconnect{' '}

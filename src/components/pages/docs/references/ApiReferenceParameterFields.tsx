@@ -22,13 +22,13 @@ const REFERENCE_PARAM_NAME_CELL =
   'flex min-h-[44px] min-w-0 items-center px-4 py-2'
 
 const REFERENCE_PARAM_TYPE_CELL =
-  'flex min-h-[44px] items-center justify-center border-l border-border/50 px-3 py-2'
+  'flex min-h-[44px] items-center justify-center border-s border-border/50 px-3 py-2'
 
 const REFERENCE_PARAM_REQUIRED_CELL =
-  'flex min-h-[44px] items-center justify-center border-l border-border/50 px-3 py-2 text-center'
+  'flex min-h-[44px] items-center justify-center border-s border-border/50 px-3 py-2 text-center'
 
 const REFERENCE_PARAM_VALUE_CELL =
-  'flex min-h-[44px] min-w-0 items-center border-l border-border/50'
+  'flex min-h-[44px] min-w-0 items-center border-s border-border/50'
 
 const REFERENCE_PARAM_VALUE_INNER =
   'flex w-full items-center px-4 py-2'
@@ -112,7 +112,7 @@ const REFERENCE_RESPONSE_STATUS_CELL =
   'flex min-h-[44px] items-center px-4 py-2'
 
 const REFERENCE_RESPONSE_TYPE_CELL =
-  'flex min-h-[44px] items-center border-l border-border/50 px-4 py-2'
+  'flex min-h-[44px] items-center border-s border-border/50 px-4 py-2'
 
 const REFERENCE_RESPONSE_MODELS_SECTION =
   'space-y-4 border-b border-border/50 px-4 py-4 last:border-b-0'

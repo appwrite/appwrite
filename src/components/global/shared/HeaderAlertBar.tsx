@@ -68,7 +68,7 @@ export function HeaderAlertBar({
         </div>
       </div>
       {action ? (
-        <div className="flex w-full shrink-0 sm:ml-auto sm:w-auto">
+        <div className="flex w-full shrink-0 sm:ms-auto sm:w-auto">
           {action}
         </div>
       ) : null}

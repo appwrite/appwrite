@@ -126,7 +126,7 @@ export function View({ issues }: ViewProps) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Github className="mr-1.5 h-4 w-4" />
+            <Github className="me-1.5 h-4 w-4" />
             {MARKETING_SOCIAL_STATS.github.stat}
           </a>
         </Button>
@@ -182,7 +182,7 @@ export function View({ issues }: ViewProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Github className="mr-1.5 h-4 w-4" />
+                    <Github className="me-1.5 h-4 w-4" />
                     View all Open Issues
                   </a>
                 </Button>
@@ -215,7 +215,7 @@ export function View({ issues }: ViewProps) {
                           >
                             {issue.title}
                           </a>
-                          <span className="ml-1 text-[12px] text-muted-foreground">
+                          <span className="ms-1 text-[12px] text-muted-foreground">
                             ({issue.repository})
                           </span>
                           {issue.tags.length > 0 ? (

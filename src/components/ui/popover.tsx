@@ -4,6 +4,7 @@ import * as React from 'react'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 
 import { cn } from '@/lib/utils'
+import { usePageDirection } from '@/lib/layout/page-direction'
 
 function Popover({
   ...props
@@ -23,10 +24,13 @@ function PopoverContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  const pageDirection = usePageDirection()
+
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        dir={pageDirection}
         align={align}
         sideOffset={sideOffset}
         className={cn(

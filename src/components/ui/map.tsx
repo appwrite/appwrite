@@ -452,10 +452,10 @@ export function MapControls({
   if (!map || !isLoaded) return null
 
   const positionClasses = {
-    'top-left': 'top-2 left-2',
-    'top-right': 'top-2 right-2',
-    'bottom-left': 'bottom-2 left-2',
-    'bottom-right': 'bottom-2 right-2',
+    'top-left': 'top-2 start-2',
+    'top-right': 'top-2 end-2',
+    'bottom-left': 'bottom-2 start-2',
+    'bottom-right': 'bottom-2 end-2',
   }
 
   return (

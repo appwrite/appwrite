@@ -129,7 +129,7 @@ export function DocsImage({ src, alt = '', title }: DocsImageProps) {
               type="button"
               variant="secondary"
               size="icon"
-              className="absolute right-3 bottom-3 size-8 border border-border/80 bg-background/90 opacity-70 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 focus-visible:opacity-100"
+              className="absolute end-3 bottom-3 size-8 border border-border/80 bg-background/90 opacity-70 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 focus-visible:opacity-100"
               aria-label="Expand image"
               onClick={openPreview}
             >

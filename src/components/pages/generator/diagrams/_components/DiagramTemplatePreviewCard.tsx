@@ -47,7 +47,7 @@ export function DiagramTemplatePreviewCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'flex w-full flex-col overflow-hidden rounded-xl border border-border bg-card/40 text-left transition-colors hover:bg-accent/40',
+        'flex w-full flex-col overflow-hidden rounded-xl border border-border bg-card/40 text-start transition-colors hover:bg-accent/40',
       )}
     >
       <div
@@ -57,7 +57,7 @@ export function DiagramTemplatePreviewCard({
       >
         {displayWidth > 0 ? (
           <div
-            className="pointer-events-none absolute left-0 top-0 origin-top-left"
+            className="pointer-events-none absolute start-0 top-0 origin-top-start"
             style={{
               width: document.width,
               height: document.height,

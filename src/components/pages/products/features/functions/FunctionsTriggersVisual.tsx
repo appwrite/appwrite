@@ -49,7 +49,7 @@ function UseCaseCard({
         </span>
         <p className="text-[12px] font-medium leading-snug text-foreground">{trigger}</p>
       </div>
-      <div className="mt-2 flex items-start gap-2 pl-0.5 text-[11px] leading-5 text-muted-foreground">
+      <div className="mt-2 flex items-start gap-2 ps-0.5 text-[11px] leading-5 text-muted-foreground">
         <ArrowRight
           className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70"
           aria-hidden

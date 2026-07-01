@@ -59,7 +59,7 @@ export function EnterpriseSuccessManager({
               className="h-14 w-14 rounded-full object-cover ring-2 ring-background"
             />
             {/* Online indicator */}
-            <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-background bg-emerald-500" />
+            <div className="absolute bottom-0 end-0 h-3.5 w-3.5 rounded-full border-2 border-background bg-emerald-500" />
           </div>
 
           {/* Info */}

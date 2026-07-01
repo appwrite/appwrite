@@ -47,7 +47,7 @@ export function UploadProgress({
       className={cn(
         'w-full max-w-sm space-y-2',
         !embedded && 'fixed z-50',
-        !embedded && (className || 'bottom-4 right-4'),
+        !embedded && (className || 'bottom-4 end-4'),
         className && embedded && className,
       )}
     >

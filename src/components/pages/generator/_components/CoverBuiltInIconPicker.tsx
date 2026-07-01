@@ -251,7 +251,7 @@ export function CoverBuiltInIconPicker({
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="flex max-h-[min(85dvh,640px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{label}</DialogTitle>
             {description ? (
               <DialogDescription className="mt-2 text-[13px]">
@@ -275,7 +275,7 @@ export function CoverBuiltInIconPicker({
             </div>
 
             <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id={`${id}-search`}
                 value={query}
@@ -283,7 +283,7 @@ export function CoverBuiltInIconPicker({
                 placeholder={
                   source === 'lucide' ? 'Search Lucide icons' : 'Search brand icons'
                 }
-                className="h-9 pl-8 text-[13px]"
+                className="h-9 ps-8 text-[13px]"
               />
             </div>
 

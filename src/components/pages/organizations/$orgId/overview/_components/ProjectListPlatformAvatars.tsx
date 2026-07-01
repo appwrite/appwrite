@@ -95,14 +95,14 @@ function PlatformAvatarsLoading({
 
   return (
     <ul
-      className={cn('inline-flex items-center pl-0', className)}
+      className={cn('inline-flex items-center ps-0', className)}
       aria-label="Loading platforms"
       aria-busy
     >
       {Array.from({ length: 3 }).map((_, index) => (
         <li
           key={index}
-          className={cn('relative shrink-0', index > 0 && '-ml-2')}
+          className={cn('relative shrink-0', index > 0 && '-ms-2')}
           style={{ zIndex: index + 1 }}
           aria-hidden
         >
@@ -163,7 +163,7 @@ export function ProjectListPlatformAvatars({
   return (
     <ul
       className={cn(
-        'inline-flex items-center pl-0',
+        'inline-flex items-center ps-0',
         variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
         className,
       )}
@@ -172,7 +172,7 @@ export function ProjectListPlatformAvatars({
       {visibleItems.map((item, index) => (
         <li
           key={item.type}
-          className={cn('relative shrink-0', index > 0 && '-ml-2')}
+          className={cn('relative shrink-0', index > 0 && '-ms-2')}
           style={{ zIndex: index + 1 }}
         >
           <Tooltip>
@@ -189,7 +189,7 @@ export function ProjectListPlatformAvatars({
       ))}
       {overflowCount > 0 ? (
         <li
-          className="relative shrink-0 -ml-2"
+          className="relative shrink-0 -ms-2"
           style={{ zIndex: visibleItems.length + 1 }}
         >
           <div

@@ -79,7 +79,7 @@ export function ExplorerArrayItemInputs({
             type="button"
             variant="ghost"
             size="sm"
-            className="mr-2 h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
+            className="me-2 h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
             onClick={() => removeItem(index)}
             aria-label="Remove item"
           >
@@ -94,7 +94,7 @@ export function ExplorerArrayItemInputs({
             type="button"
             className={cn(
               REQUEST_BUILDER_HELPER_LINK,
-              'ml-3 h-8 w-auto text-muted-foreground',
+              'ms-3 h-8 w-auto text-muted-foreground',
             )}
             onClick={() => onChange([])}
           >
@@ -173,7 +173,7 @@ export function ExplorerCombinedArrayField({
               type="button"
               variant="ghost"
               size="sm"
-              className="mr-2 h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
+              className="me-2 h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
               onClick={() => removeItem(index)}
               aria-label="Remove item"
             >
@@ -192,7 +192,7 @@ export function ExplorerCombinedArrayField({
             type="button"
             className={cn(
               REQUEST_BUILDER_HELPER_LINK,
-              'ml-3 h-8 w-auto text-muted-foreground',
+              'ms-3 h-8 w-auto text-muted-foreground',
             )}
             onClick={() => onChange([])}
           >

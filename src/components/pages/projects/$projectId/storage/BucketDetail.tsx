@@ -412,10 +412,10 @@ export function BucketDetailView() {
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                               Type
                             </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                               Size
                             </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                               Created
                             </TableHead>
                           </TableRow>
@@ -563,7 +563,7 @@ export function BucketDetailView() {
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
                                   {pending ? (
-                                    <span className="text-[12px] text-muted-foreground font-mono text-right block">
+                                    <span className="text-[12px] text-muted-foreground font-mono text-end block">
                                       {formatBytes(file.sizeOriginal)}
                                     </span>
                                   ) : (
@@ -571,7 +571,7 @@ export function BucketDetailView() {
                                       to="/projects/$projectId/storage/$bucketId"
                                       params={bucketParams}
                                       search={fileSearch}
-                                      className="block text-right"
+                                      className="block text-end"
                                     >
                                       <span className="text-[12px] text-muted-foreground font-mono">
                                         {formatBytes(file.sizeOriginal)}
@@ -583,14 +583,14 @@ export function BucketDetailView() {
                                   {pending ? (
                                     <DateTooltip
                                       date={new Date(file.$createdAt)}
-                                      className="text-[12px] text-muted-foreground font-mono text-right block"
+                                      className="text-[12px] text-muted-foreground font-mono text-end block"
                                     />
                                   ) : (
                                     <Link
                                       to="/projects/$projectId/storage/$bucketId"
                                       params={bucketParams}
                                       search={fileSearch}
-                                      className="block text-right"
+                                      className="block text-end"
                                     >
                                       <DateTooltip
                                         date={new Date(file.$createdAt)}
@@ -739,7 +739,7 @@ export function BucketDetailView() {
 
                   {/* Bulk Delete Action Bar */}
                   {selectedFiles.size > 0 && (
-                    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+                    <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                       <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                         <Badge variant="secondary" className="h-6 px-2.5">
                           {selectedFiles.size} file
@@ -774,7 +774,7 @@ export function BucketDetailView() {
                     onOpenChange={setDeleteDialogOpen}
                   >
                     <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-left">
+                      <DialogHeader className="px-6 pt-6 text-start">
                         <DialogTitle>Delete Files</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           Are you sure you want to delete {selectedFiles.size}{' '}

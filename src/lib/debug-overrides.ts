@@ -30,6 +30,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   disableOverviewComputeChart: 'debug:disableOverviewComputeChart',
   /** When true, onboarding product sections are unlocked without completing Connect. */
   unlockOnboardingLocks: 'debug:unlockOnboardingLocks',
+  /** Page text direction for RTL layout testing. Default ltr. */
+  pageDirection: 'debug:pageDirection',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -49,6 +51,8 @@ export type MockCloudStatusAlert =
 export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 
 export type KeyboardLayoutOverride = 'auto' | 'macos' | 'windows'
+
+export type PageDirectionOverride = 'ltr' | 'rtl'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
@@ -91,6 +95,8 @@ export type DebugOverrides = {
   disableOverviewComputeChart: boolean
   /** When true, skip the Connect gate on the Get started onboarding page. */
   unlockOnboardingLocks: boolean
+  /** Document direction for RTL layout testing in debug mode. */
+  pageDirection: PageDirectionOverride
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -203,6 +209,11 @@ export function loadDebugOverrides(): DebugOverrides {
     unlockOnboardingLocks: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.unlockOnboardingLocks,
       false,
+    ),
+    pageDirection: readStringFromStorage(
+      DEBUG_OVERRIDE_KEYS.pageDirection,
+      ['ltr', 'rtl'] as const,
+      'ltr',
     ),
   }
 }
@@ -326,4 +337,12 @@ export function useDebugOverrides(): DebugOverrides {
 /** When false, overview usage fetchers skip dimension-based breakdown API calls. */
 export function areUsageBreakdownQueriesEnabled(): boolean {
   return !loadDebugOverrides().disableUsageBreakdownQueries
+}
+
+export function getPageDirection(): PageDirectionOverride {
+  return loadDebugOverrides().pageDirection
+}
+
+export function isPageRtl(): boolean {
+  return getPageDirection() === 'rtl'
 }

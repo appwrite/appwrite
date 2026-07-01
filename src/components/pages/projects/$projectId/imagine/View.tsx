@@ -163,7 +163,7 @@ export function View() {
               disabled={!prompt.trim() || isTyping}
               size="icon"
               className={cn(
-                'absolute bottom-0 right-0 h-8 w-8 rounded-lg transition-all',
+                'absolute bottom-0 end-0 h-8 w-8 rounded-lg transition-all',
                 prompt.trim() && !isTyping
                   ? 'bg-foreground text-background hover:bg-foreground/90'
                   : 'bg-muted text-muted-foreground',

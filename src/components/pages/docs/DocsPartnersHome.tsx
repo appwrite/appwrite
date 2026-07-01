@@ -98,7 +98,7 @@ export function DocsPartnersHome({ variant = 'page' }: DocsPartnersHomeProps) {
                     <h3 className="text-[13px] font-medium text-foreground">
                       {item.title}
                       {item.new ? (
-                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--brand-cta)]">
+                        <span className="ms-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--brand-cta)]">
                           New
                         </span>
                       ) : null}

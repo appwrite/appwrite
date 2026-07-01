@@ -99,7 +99,7 @@ function McpFeaturePanel() {
       title="MCP"
       description="Connect AI agents to your Appwrite backend. No custom integrations required."
       shade="mcp"
-      className="border-b border-border lg:border-b-0 lg:border-r"
+      className="border-b border-border lg:border-b-0 lg:border-e"
       cta={
         <AiFeatureCtaButton href="/docs/tooling/mcp" label="Learn more" />
       }
@@ -167,7 +167,7 @@ function PluginTile({
 function AiPluginsSection() {
   return (
     <div className="mt-10 grid overflow-visible pb-4 lg:mt-12 lg:grid-cols-2 lg:divide-x lg:divide-border">
-      <div className="relative py-6 lg:py-0 lg:pr-10">
+      <div className="relative py-6 lg:py-0 lg:pe-10">
         <AiTileSoftLight tone="plugins" />
         <div className="relative space-y-1.5">
           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
@@ -189,7 +189,7 @@ function AiPluginsSection() {
         </div>
       </div>
 
-      <div className="relative border-t border-border py-6 lg:border-t-0 lg:py-0 lg:pl-10">
+      <div className="relative border-t border-border py-6 lg:border-t-0 lg:py-0 lg:ps-10">
         <AiTileSoftLight tone="integrations" />
         <div className="relative space-y-1.5">
           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
@@ -228,28 +228,28 @@ function BenchmarkTable() {
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Model
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Cost/1M
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Overall
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Auth
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               TablesDB
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Functions
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Storage
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Sites
             </TableHead>
-            <TableHead className="px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Messaging
             </TableHead>
           </TableRow>
@@ -263,28 +263,28 @@ function BenchmarkTable() {
                   <span className="text-[13px] font-medium text-foreground">{row.model}</span>
                 </span>
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {row.cost}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+              <TableCell className="px-4 py-3 text-end text-[13px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                 {formatScore(row.overall)}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {formatScore(row.auth)}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {formatScore(row.tablesDb)}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {formatScore(row.functions)}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {formatScore(row.storage)}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {formatScore(row.sites)}
               </TableCell>
-              <TableCell className="px-4 py-3 text-right text-[13px] tabular-nums text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
                 {formatScore(row.messaging)}
               </TableCell>
             </TableRow>

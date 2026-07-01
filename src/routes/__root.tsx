@@ -44,6 +44,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { PageDirectionProvider } from '@/lib/layout/page-direction'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
 import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/console-project-scopes'
@@ -81,6 +82,10 @@ const THEME_SCRIPT = `(function(){
     var e = document.documentElement;
     ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties','legacy'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
+    try {
+      var pd = localStorage.getItem('debug:pageDirection');
+      e.setAttribute('dir', pd === 'rtl' ? 'rtl' : 'ltr');
+    } catch (e3) {}
   } catch (e) {}
 })()`
 
@@ -392,6 +397,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <PlausibleRouteTracker />
         <ContextualDocumentTitle />
         <ClientThemeProvider>
+          <PageDirectionProvider>
           <CookieConsentProvider>
             <NavigationHistoryProvider>
             {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
@@ -446,6 +452,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </ClientOnly>
             </NavigationHistoryProvider>
           </CookieConsentProvider>
+          </PageDirectionProvider>
         </ClientThemeProvider>
         <Scripts />
       </body>

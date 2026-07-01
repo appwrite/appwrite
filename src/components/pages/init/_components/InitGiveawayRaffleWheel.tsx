@@ -116,7 +116,7 @@ export function InitGiveawayRaffleWheel({
       style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}
     >
       <div
-        className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2"
+        className="pointer-events-none absolute start-1/2 top-0 z-20 -translate-x-1/2"
         aria-hidden
       >
         <div className="size-0 border-x-[11px] border-x-transparent border-t-[18px] border-t-[var(--brand-cta)] drop-shadow-sm" />
@@ -171,7 +171,7 @@ export function InitGiveawayRaffleWheel({
       </div>
 
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 z-10 size-11 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-card shadow-sm"
+        className="pointer-events-none absolute start-1/2 top-1/2 z-10 size-11 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-card shadow-sm"
         aria-hidden
       />
     </div>

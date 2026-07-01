@@ -83,12 +83,12 @@ function ColumnSearchBar({
   return (
     <div className="shrink-0 border-b border-border px-2 py-2">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className="h-8 border-border bg-background pl-8 text-[13px]"
+          className="h-8 border-border bg-background ps-8 text-[13px]"
         />
       </div>
     </div>
@@ -668,7 +668,7 @@ export function DowngradeResourceValidation({
                         }}
                         className={cn(
                           listRowClassName,
-                          'cursor-pointer justify-between gap-2 text-left',
+                          'cursor-pointer justify-between gap-2 text-start',
                           isActive
                             ? listRowActiveClassName
                             : listRowButtonClassName,
@@ -772,7 +772,7 @@ export function DowngradeResourceValidation({
                           className={cn(
                             listRowClassName,
                             PAGINATED_LIST_ROW_HEIGHT_CLASS,
-                            'items-center justify-between text-left shrink-0',
+                            'items-center justify-between text-start shrink-0',
                             isActive
                               ? listRowActiveClassName
                               : listRowButtonClassName,
@@ -872,7 +872,7 @@ export function DowngradeResourceValidation({
                           className={cn(
                             listRowClassName,
                             PAGINATED_LIST_ROW_HEIGHT_CLASS,
-                            'items-center justify-between gap-2 text-left shrink-0',
+                            'items-center justify-between gap-2 text-start shrink-0',
                             selected
                               ? listRowActiveClassName
                               : listRowButtonClassName,

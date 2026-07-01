@@ -1,5 +1,11 @@
 // Database product workspace (see ../Workspace.tsx router).
 import { cn } from '@/lib/utils'
+import {
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+  secondarySidebarNavLinkClassName,
+} from '@/lib/layout/secondary-sidebar-nav'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   Plus,
@@ -905,13 +911,13 @@ export function Workspace({
         <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <div className="relative min-w-0 flex-1">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder={dbLabels.searchContainersPlaceholder}
                 value={sidebarTablesSearch}
                 onChange={(e) => setSidebarTablesSearch(e.target.value)}
-                className="h-8 pl-8 pr-2 text-[13px]"
+                className="h-8 ps-8 pe-2 text-[13px]"
               />
             </div>
             <DropdownMenu>
@@ -988,7 +994,7 @@ export function Workspace({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                    className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
                     onClick={() => setCreateTableDialogOpen(true)}
                     disabled
                   >
@@ -1005,7 +1011,7 @@ export function Workspace({
             <Button
               variant="outline"
               size="sm"
-              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+              className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
               onClick={() => setCreateTableDialogOpen(true)}
             >
               <Plus className="h-4 w-4" />
@@ -1076,15 +1082,10 @@ export function Workspace({
                         databaseId,
                         resourceId: table.$id,
                       })}
-                      className={cn(
-                        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                        isTableSelected
-                          ? 'bg-accent text-foreground'
-                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                      )}
+                      className={cn(secondarySidebarNavLinkClassName(isTableSelected, 'transition-colors duration-150'), SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS)}
                     >
                       <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">
+                      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
                         {table.name}
                       </span>
                       {table.enabled === false && (
@@ -1140,10 +1141,9 @@ export function Workspace({
         <Link
           {...dbNav.visualizer(tableNavParams)}
           className={cn(
-            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-            databaseTab === 'visualizer'
-              ? 'bg-accent text-foreground'
-              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            secondarySidebarNavLinkClassName(databaseTab === 'visualizer'
+              , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
           )}
         >
           <Network className="h-3.5 w-3.5 shrink-0" />
@@ -1153,10 +1153,9 @@ export function Workspace({
           <Link
             {...dbNav.monitor(tableNavParams)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'monitor'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              secondarySidebarNavLinkClassName(databaseTab === 'monitor'
+                , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
           >
             <Activity className="h-3.5 w-3.5 shrink-0" />
@@ -1167,10 +1166,9 @@ export function Workspace({
           <Link
             {...dbNav.dbSecurity(tableNavParams)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'db-security'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              secondarySidebarNavLinkClassName(databaseTab === 'db-security'
+                , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
@@ -1181,10 +1179,9 @@ export function Workspace({
           <Link
             {...dbNav.insights(tableNavParams)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'insights'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              secondarySidebarNavLinkClassName(databaseTab === 'insights'
+                , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
           >
             <BarChart3 className="h-3.5 w-3.5 shrink-0" />
@@ -1197,10 +1194,9 @@ export function Workspace({
             databaseId={databaseId}
             {...dbNav.backups(tableNavParams)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'backups'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              secondarySidebarNavLinkClassName(databaseTab === 'backups'
+                , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
             labelClassName="flex-1"
           />
@@ -1208,10 +1204,9 @@ export function Workspace({
         <Link
           {...dbNav.exportImport(tableNavParams)}
           className={cn(
-            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-            databaseTab === 'export-import'
-              ? 'bg-accent text-foreground'
-              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            secondarySidebarNavLinkClassName(databaseTab === 'export-import'
+              , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
           )}
         >
           <Download className="h-3.5 w-3.5 shrink-0" />
@@ -1221,10 +1216,9 @@ export function Workspace({
           <Link
             {...dbNav.dbSettings(tableNavParams)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'settings'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              secondarySidebarNavLinkClassName(databaseTab === 'settings'
+                , 'transition-colors duration-150'),
+            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
             )}
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />

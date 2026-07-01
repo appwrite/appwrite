@@ -86,7 +86,7 @@ function CompareCategoryTable({
         </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className={cn(compareStickyHeadClassName, 'text-left')}>
+            <TableHead className={cn(compareStickyHeadClassName, 'text-start')}>
               Feature
             </TableHead>
             {PRICING_PLAN_COLUMNS.map((column) => (
@@ -128,7 +128,7 @@ function CompareCategoryTable({
             )}
           >
             <ComparisonRowLabel title={row.title} info={row.info} />
-            <div className="shrink-0 text-right">
+            <div className="shrink-0 text-end">
               <ComparisonCellValue value={row[mobilePlan]} />
             </div>
           </div>

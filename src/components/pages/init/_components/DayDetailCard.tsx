@@ -40,7 +40,7 @@ function VideoThumbnail({
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_srgb,var(--brand-cta)_12%,transparent),transparent_55%)]" />
         <span className="relative flex size-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm">
-          <Play className="ml-0.5 size-4 fill-current" aria-hidden />
+          <Play className="ms-0.5 size-4 fill-current" aria-hidden />
         </span>
       </div>
       <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -87,7 +87,7 @@ function DayVisual({ day }: { day: LaunchEventDay }) {
       <div className="relative flex size-24 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--brand-cta)_25%,var(--border))] bg-background/60 shadow-sm backdrop-blur-sm">
         <Icon className="size-10 text-muted-foreground" />
       </div>
-      <div className="absolute right-[18%] top-[28%] size-3 rounded-full bg-[var(--brand-cta)] shadow-[0_0_12px_color-mix(in_srgb,var(--brand-cta)_60%,transparent)]" />
+      <div className="absolute end-[18%] top-[28%] size-3 rounded-full bg-[var(--brand-cta)] shadow-[0_0_12px_color-mix(in_srgb,var(--brand-cta)_60%,transparent)]" />
     </div>
   )
 }
@@ -215,7 +215,7 @@ export function DayDetailCard({
       </header>
 
       <div className="grid lg:grid-cols-2">
-        <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-r">
+        <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
           <div>
             <DayTitle title={day.title} />
             <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">

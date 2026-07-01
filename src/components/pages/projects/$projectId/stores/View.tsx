@@ -119,7 +119,7 @@ export function View() {
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Identifier
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                       Updated
                     </TableHead>
                   </TableRow>
@@ -164,7 +164,7 @@ export function View() {
                             '-'}
                         </span>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
+                      <TableCell className="px-4 py-3 text-end">
                         <DateTooltip
                           date={app.$updatedAt}
                           className="text-[12px] text-muted-foreground font-mono"

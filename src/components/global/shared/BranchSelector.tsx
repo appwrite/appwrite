@@ -135,7 +135,7 @@ export function BranchSelector({
           <TooltipTrigger asChild>
             <button
               type="button"
-              className="inline-flex ml-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              className="inline-flex ms-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
               aria-label="More info"
             >
               <Info className="h-3.5 w-3.5" />
@@ -251,11 +251,11 @@ export function BranchSelector({
                 placeholder="Find a branch..."
                 value={search}
                 onValueChange={setSearch}
-                className={cn('h-9 text-[13px]', isLoadingList && 'pr-8')}
+                className={cn('h-9 text-[13px]', isLoadingList && 'pe-8')}
               />
               <div
                 className={cn(
-                  'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                  'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
                   isLoadingList ? 'opacity-100' : 'opacity-0',
                 )}
                 aria-hidden

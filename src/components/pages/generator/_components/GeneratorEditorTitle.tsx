@@ -89,7 +89,7 @@ export function GeneratorEditorTitle({
           onClick={() => setIsEditing(true)}
           onDoubleClick={() => setIsEditing(true)}
           className={cn(
-            'flex min-w-0 max-w-full items-center gap-1.5 rounded-sm text-left',
+            'flex min-w-0 max-w-full items-center gap-1.5 rounded-sm text-start',
             'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             isSaving && 'opacity-60',
           )}

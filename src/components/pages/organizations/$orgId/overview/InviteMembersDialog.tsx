@@ -241,7 +241,7 @@ export function InviteMembersDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Invite organization members to your organization. They'll receive an
@@ -301,7 +301,7 @@ export function InviteMembersDialog({
                   {/* Email Input */}
                   <div className="flex-1 space-y-1.5">
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Mail className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type="email"
                         placeholder="email@example.com"
@@ -313,7 +313,7 @@ export function InviteMembersDialog({
                           setTouchedFields((prev) => new Set(prev).add(index))
                         }}
                         className={cn(
-                          'h-9 pl-10 text-[13px]',
+                          'h-9 ps-10 text-[13px]',
                           showEmailError
                             ? 'border-red-500/50 focus:border-red-500/50'
                             : '',
@@ -406,7 +406,7 @@ export function InviteMembersDialog({
               className="mt-3 h-9 text-[13px]"
               onClick={handleAddInvite}
             >
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Plus className="me-1.5 h-4 w-4" />
               Add another member
             </Button>
           )}

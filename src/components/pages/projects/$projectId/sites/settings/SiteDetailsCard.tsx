@@ -19,7 +19,7 @@ export function SiteDetailsCard({ site }: SiteDetailsCardProps) {
       <div className="px-6 py-4 space-y-1">
         <p className="text-[13px] text-muted-foreground">
           Site ID:{' '}
-          <span className="ml-1.5">
+          <span className="ms-1.5">
             <CopyableId id={site.$id} size="sm" />
           </span>
         </p>

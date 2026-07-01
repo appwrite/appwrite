@@ -305,7 +305,7 @@ export function CreateSiteView() {
               </p>
               <Button size="sm" asChild>
                 <a href={getGitHubAuthUrl}>
-                  <GitHubIcon className="mr-1.5 h-3.5 w-3.5" />
+                  <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
                   Connect GitHub
                 </a>
               </Button>
@@ -364,12 +364,12 @@ export function CreateSiteView() {
                 </Select>
 
                 <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Search className="absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <Input
                     value={repoSearch}
                     onChange={(e) => setRepoSearch(e.target.value)}
                     placeholder="Search..."
-                    className="h-9 pl-9 text-[13px]"
+                    className="h-9 ps-9 text-[13px]"
                   />
                 </div>
 

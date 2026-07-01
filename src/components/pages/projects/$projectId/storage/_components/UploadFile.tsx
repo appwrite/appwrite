@@ -189,7 +189,7 @@ export function UploadFile({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="min-w-0 sm:max-w-md p-0 max-h-[85dvh] overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>
             {files.length > 1 ? 'Create files' : 'Create file'}
           </DialogTitle>
@@ -257,19 +257,19 @@ export function UploadFile({
                 </label>
               </div>
               {files.length > 0 && (
-                <div className="min-w-0 space-y-2 max-h-40 overflow-x-hidden overflow-y-auto pr-1">
+                <div className="min-w-0 space-y-2 max-h-40 overflow-x-hidden overflow-y-auto pe-1">
                   {files.map((selectedFile, index) => (
                     <div
                       key={`${selectedFile.name}-${selectedFile.size}-${index}`}
                       className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-2"
                     >
                       <span
-                        className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-[12px] font-medium leading-snug text-foreground"
+                        className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-start text-[12px] font-medium leading-snug text-foreground"
                         title={selectedFile.name}
                       >
                         {selectedFile.name}
                       </span>
-                      <span className="shrink-0 whitespace-nowrap text-right text-[12px] text-muted-foreground tabular-nums">
+                      <span className="shrink-0 whitespace-nowrap text-end text-[12px] text-muted-foreground tabular-nums">
                         {formatFileSize(selectedFile.size)}
                       </span>
                       <Button

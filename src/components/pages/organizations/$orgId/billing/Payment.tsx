@@ -32,7 +32,7 @@ export function PaymentModal({
         className={cn('sm:max-w-md p-0', elevatedForWizard && 'z-[9999]')}
         overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
       >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add payment method</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Enter your card details to add a new payment method.

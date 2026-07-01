@@ -27,7 +27,7 @@ export function OnlineUserReactionBadge({
   return (
     <motion.span
       key={animationKey}
-      className="reaction-badge relative ml-auto inline-flex size-5 shrink-0 items-center justify-center text-muted-foreground"
+      className="reaction-badge relative ms-auto inline-flex size-5 shrink-0 items-center justify-center text-muted-foreground"
       initial={reduceMotion ? false : { scale: 0, opacity: 0, rotate: -28, y: 3 }}
       animate={
         reduceMotion

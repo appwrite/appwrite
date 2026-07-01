@@ -51,7 +51,7 @@ export function DiagramElementsPanel({
               className="h-8 text-[12px]"
               onClick={() => onAddNode(item.kind)}
             >
-              <Plus className="mr-1.5 size-3.5" />
+              <Plus className="me-1.5 size-3.5" />
               {item.label}
             </Button>
           ))}
@@ -80,7 +80,7 @@ export function DiagramElementsPanel({
                 className="h-9 justify-start text-[12px]"
                 onClick={() => onAddNode(item.kind)}
               >
-                <Icon className="mr-1.5 size-3.5" />
+                <Icon className="me-1.5 size-3.5" />
                 Add {item.label.toLowerCase()}
               </Button>
             )

@@ -1309,7 +1309,7 @@ export function View({ initialData }: ViewProps = {}) {
                     </DropdownMenuSub>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="ml-auto">
+                <div className="ms-auto">
                   <Button
                     variant="brandCta"
                     onClick={() => setCreateRecordDialogOpen(true)}
@@ -1364,7 +1364,7 @@ export function View({ initialData }: ViewProps = {}) {
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                             Comment
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4"></TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1540,7 +1540,7 @@ export function View({ initialData }: ViewProps = {}) {
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell className="px-4 py-3 text-right pr-4">
+                              <TableCell className="px-4 py-3 text-end pe-4">
                                 {record.lock ? (
                                   <div className="flex justify-end">
                                     <Button
@@ -1628,7 +1628,7 @@ export function View({ initialData }: ViewProps = {}) {
 
                   {/* Bulk Delete DNS Records Action Bar */}
                   {selectedRecords.size > 0 && (
-                    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+                    <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                       <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                         <Badge variant="secondary" className="h-6 px-2.5">
                           {selectedRecords.size} record
@@ -1663,7 +1663,7 @@ export function View({ initialData }: ViewProps = {}) {
                     onOpenChange={setBulkDeleteRecordsDialogOpen}
                   >
                     <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-left">
+                      <DialogHeader className="px-6 pt-6 text-start">
                         <DialogTitle>Delete DNS records</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           Are you sure you want to delete {selectedRecords.size}{' '}
@@ -1863,7 +1863,7 @@ export function View({ initialData }: ViewProps = {}) {
                   onOpenChange={setTransferDialogOpen}
                 >
                   <DialogContent className="sm:max-w-md p-0">
-                    <DialogHeader className="px-6 pt-6 text-left">
+                    <DialogHeader className="px-6 pt-6 text-start">
                       <DialogTitle>Change organization</DialogTitle>
                       <DialogDescription className="text-[13px] mt-2">
                         Are you sure you want to move{' '}
@@ -1942,7 +1942,7 @@ export function View({ initialData }: ViewProps = {}) {
                     }}
                   >
                     <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                      <DialogHeader className="px-6 pt-6 pb-4 text-start">
                         <DialogTitle>
                           {registrarTransferAuthCode
                             ? 'Your transfer code'
@@ -2089,7 +2089,7 @@ export function View({ initialData }: ViewProps = {}) {
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md p-0">
-                        <DialogHeader className="px-6 pt-6 text-left">
+                        <DialogHeader className="px-6 pt-6 text-start">
                           <DialogTitle>Delete Domain</DialogTitle>
                           <DialogDescription className="text-[13px] mt-2">
                             Are you sure you want to delete{' '}

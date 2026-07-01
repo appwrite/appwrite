@@ -55,7 +55,7 @@ export function SiteTemplateCard({
       type={interactive ? 'button' : undefined}
       onClick={interactive ? onSelect : undefined}
       className={cn(
-        'group/template flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition-all',
+        'group/template flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-start transition-all',
         isCompact ? 'h-[176px]' : 'h-[180px]',
         interactive && 'cursor-pointer hover:border-border/80',
         className,
@@ -84,7 +84,7 @@ export function SiteTemplateCard({
       </div>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         {screenshotUrl ? (
-          <div className="absolute -right-4 left-8 top-4 aspect-video -rotate-3 transition-transform duration-300 group-hover/visual:-rotate-2 group-hover/template:-rotate-2 motion-reduce:transform-none">
+          <div className="absolute -end-4 start-8 top-4 aspect-video -rotate-3 transition-transform duration-300 group-hover/visual:-rotate-2 group-hover/template:-rotate-2 motion-reduce:transform-none">
             <div className="relative h-full w-full overflow-hidden rounded-lg bg-muted/30 ring-1 ring-border">
               <TemplateScreenshot
                 src={screenshotUrl}
@@ -94,7 +94,7 @@ export function SiteTemplateCard({
             </div>
           </div>
         ) : (
-          <div className="absolute -right-4 left-8 top-4 flex aspect-video -rotate-3 items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
+          <div className="absolute -end-4 start-8 top-4 flex aspect-video -rotate-3 items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
             <LayoutTemplate className="size-8 text-muted-foreground/30" aria-hidden />
           </div>
         )}

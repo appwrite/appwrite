@@ -1794,7 +1794,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     <PopoverTrigger asChild>
                       <button
                         type="button"
-                        className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
+                        className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
                         <InitialsAvatar name={selectedOrg.name} size="sm" />
                         <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
@@ -1832,7 +1832,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             key={org.$id}
                             onClick={() => handleSelectOrg(org)}
                             className={cn(
-                              'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
+                              'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-accent',
                               selectedOrg.$id === org.$id && 'bg-accent',
                             )}
                           >
@@ -1883,7 +1883,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     </PopoverContent>
                   </Popover>
                 ) : (
-                  <div className="flex h-8 max-h-8 min-h-8 min-w-0 items-center gap-2 px-2 -ml-2">
+                  <div className="flex h-8 max-h-8 min-h-8 min-w-0 items-center gap-2 px-2 -ms-2">
                     <InitialsAvatar name={selectedOrg.name} size="sm" />
                     <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
                       {selectedOrg.name}
@@ -1892,7 +1892,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 )
               ) : orgId ? (
                 <div
-                  className="flex h-8 max-h-8 min-h-8 min-w-[200px] items-center gap-2 overflow-hidden px-2 -ml-2"
+                  className="flex h-8 max-h-8 min-h-8 min-w-[200px] items-center gap-2 overflow-hidden px-2 -ms-2"
                   aria-hidden
                 >
                   <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-muted" />
@@ -2078,7 +2078,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   >
                     {tab.label}
                     {activeTab === tab.id && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                      <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-foreground" />
                     )}
                   </Link>
                 ))
@@ -2297,12 +2297,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {/* Toolbar: Search + Filters + Create */}
                         <div className="mb-4 flex items-center gap-3">
                           <div className="relative min-w-0 flex-1 sm:max-w-xs">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               placeholder="Search projects..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                              className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                             />
                           </div>
 
@@ -2311,7 +2311,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             onViewModeChange={setProjectsViewMode}
                           />
 
-                          <div className="ml-auto flex shrink-0 items-center gap-2">
+                          <div className="ms-auto flex shrink-0 items-center gap-2">
                           {(() => {
                             if (!canCreateProject(access, features)) {
                               return (
@@ -2523,7 +2523,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 'block min-w-0',
                                                 (canReorderPinned ||
                                                   canPinProjectsResult) &&
-                                                  'pr-10',
+                                                  'pe-10',
                                               )}
                                             >
                                               <ProjectListCardMain
@@ -2562,7 +2562,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               canPinProjectsResult) && (
                                               <div
                                                 className={cn(
-                                                  'absolute right-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
+                                                  'absolute end-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
                                                   isDragActive &&
                                                     'pointer-events-auto opacity-100',
                                                 )}
@@ -2736,7 +2736,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   'block min-w-0',
                                                   canPin &&
                                                     canPinProjectsResult &&
-                                                    'pr-10',
+                                                    'pe-10',
                                                 )}
                                               >
                                                 <ProjectListCardMain
@@ -2772,7 +2772,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 }
                                               />
                                               {canPin && canPinProjectsResult && (
-                                                <div className="absolute right-2 top-2 z-10 flex shrink-0 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+                                                <div className="absolute end-2 top-2 z-10 flex shrink-0 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                                                       <TooltipProvider
                                                         delayDuration={0}
                                                       >
@@ -3068,7 +3068,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             node: (
                               <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
                                 <p className="text-[12px] text-muted-foreground">
-                                  <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
+                                  <Info className="mb-0.5 me-2 inline-block h-4 w-4 align-middle" />
                                   Organization-level keys will be manageable
                                   here once available. Meanwhile, use project
                                   keys for server-side access.
@@ -3102,21 +3102,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {/* Toolbar: Search + Invite */}
                             <div className="mb-4 flex items-center gap-3">
                               <div className="relative w-64">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                   placeholder="Search members..."
                                   value={membershipsSearchQuery}
                                   onChange={(e) =>
                                     setMembershipsSearchQuery(e.target.value)
                                   }
-                                  className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                                  className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                                 />
                               </div>
 
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="ml-auto inline-flex">
+                                    <span className="ms-auto inline-flex">
                                       <Button
                                         variant="brandCta"
                                         className="h-9 gap-2 text-[13px] font-medium"
@@ -3168,7 +3168,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             MFA
                                           </TableHead>
                                         )}
-                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end hidden sm:table-cell">
                                           Joined
                                         </TableHead>
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
@@ -3314,7 +3314,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               </TableCell>
                                             )}
                                             <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                              <div className="text-right">
+                                              <div className="text-end">
                                                 {member.status === 'pending' ? (
                                                   <span className="text-[12px] text-muted-foreground/70 italic">
                                                     Invited
@@ -3719,7 +3719,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </Button>
                                           </DialogTrigger>
                                           <DialogContent className="sm:max-w-md p-0">
-                                            <DialogHeader className="px-6 pt-6 text-left">
+                                            <DialogHeader className="px-6 pt-6 text-start">
                                               <DialogTitle>
                                                 Delete organization
                                               </DialogTitle>
@@ -3936,7 +3936,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Update Role</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Update the role for{' '}
@@ -4067,7 +4067,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>
               {selectedMember?.status === 'pending'
                 ? 'Cancel Invitation'

@@ -71,7 +71,7 @@ export function RetryDomainDialog({
       <DialogContent
         className="sm:max-w-4xl p-0"
 >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Retry verification</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Retry domain verification for {rule.domain}

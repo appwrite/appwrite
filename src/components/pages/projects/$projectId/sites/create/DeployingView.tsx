@@ -273,7 +273,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
                     <FrameworkIcon framework={site.framework} size="md" />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+                  <div className="absolute -bottom-1 -end-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
                     <GitHubIcon className="h-3 w-3 text-muted-foreground" />
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
                     Framework
                   </dt>
-                  <dd className="text-[12px] font-medium text-foreground truncate text-right">
+                  <dd className="text-[12px] font-medium text-foreground truncate text-end">
                     {frameworkInfo.name}
                   </dd>
                 </div>
@@ -321,7 +321,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
                     Source
                   </dt>
-                  <dd className="text-[12px] font-mono text-foreground truncate text-right">
+                  <dd className="text-[12px] font-mono text-foreground truncate text-end">
                     {repository.organization}/{repository.name}
                   </dd>
                 </div>
@@ -331,7 +331,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
                     Branch
                   </dt>
-                  <dd className="text-[12px] font-mono text-foreground truncate text-right">
+                  <dd className="text-[12px] font-mono text-foreground truncate text-end">
                     {site.providerBranch}
                   </dd>
                 </div>
@@ -342,7 +342,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
                       Deployed
                     </dt>
-                    <dd className="text-[12px] font-medium text-foreground text-right">
+                    <dd className="text-[12px] font-medium text-foreground text-end">
                       <DateTooltip date={deployment.$createdAt} />
                     </dd>
                   </div>
@@ -352,7 +352,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                       <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
                         Size
                       </dt>
-                      <dd className="text-[12px] font-medium text-foreground text-right">
+                      <dd className="text-[12px] font-medium text-foreground text-end">
                         {formatSize(
                           (deployment.buildSize ?? 0) +
                             (deployment.sourceSize ?? 0),
@@ -488,7 +488,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <ExternalLink className="mr-1.5 h-4 w-4" />
+                          <ExternalLink className="me-1.5 h-4 w-4" />
                           Visit site
                         </a>
                       </Button>
@@ -553,7 +553,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                         toast.success('URL copied to clipboard')
                       }
                     }}
-                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-start w-full"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                       <Share2 className="h-5 w-5" />
@@ -576,7 +576,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                       }
                       setQrDialogOpen(true)
                     }}
-                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-start w-full"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                       <Smartphone className="h-5 w-5" />
@@ -603,7 +603,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
           className="z-[10000] sm:max-w-md p-0"
           overlayClassName="z-[9999]"
         >
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>View on mobile</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Scan this QR code to open your site on a mobile device
@@ -642,7 +642,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
           className="z-[10000] sm:max-w-md p-0"
           overlayClassName="z-[9999]"
         >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Cancel build</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Stop the current deployment? You can deploy again later.

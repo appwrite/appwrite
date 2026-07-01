@@ -137,7 +137,7 @@ export function DiagramPropertiesPanel({
             className="h-8 text-[12px]"
             onClick={() => onRemoveNodes(selectedNodeIds)}
           >
-            <Trash2 className="mr-1.5 size-3.5" />
+            <Trash2 className="me-1.5 size-3.5" />
             Delete {selectedNodeCount} elements
           </Button>
         </div>
@@ -188,7 +188,7 @@ export function DiagramPropertiesPanel({
                       type="button"
                       onClick={() => onSelectEdge(edge.id)}
                       className={cn(
-                        'flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-left text-[12px] transition-colors hover:bg-accent/40',
+                        'flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-start text-[12px] transition-colors hover:bg-accent/40',
                         selection.type === 'edge' &&
                           selection.id === edge.id &&
                           'border-[var(--brand-cta)]/40 bg-[var(--brand-cta)]/5',
@@ -219,7 +219,7 @@ export function DiagramPropertiesPanel({
             className="h-8 text-[12px]"
             onClick={() => onRemoveNode(selectedNode.id)}
           >
-            <Trash2 className="mr-1.5 size-3.5" />
+            <Trash2 className="me-1.5 size-3.5" />
             Delete node
           </Button>
         </div>
@@ -390,7 +390,7 @@ export function DiagramPropertiesPanel({
             className="h-8 text-[12px]"
             onClick={() => onRemoveEdge(selectedEdge.id)}
           >
-            <Trash2 className="mr-1.5 size-3.5" />
+            <Trash2 className="me-1.5 size-3.5" />
             Delete connection
           </Button>
         </div>

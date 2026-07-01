@@ -45,12 +45,12 @@ export function DocsPageHeaderActions({
             onClick={handleCopyMarkdown}
             disabled={copying}
           >
-            <Copy className="mr-1.5 size-3.5" />
+            <Copy className="me-1.5 size-3.5" />
             Copy
           </Button>
           <Button variant="outline" size="sm" className={buttonClassName} asChild>
             <a href={markdownUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-1.5 size-3.5" />
+              <ExternalLink className="me-1.5 size-3.5" />
               Raw
             </a>
           </Button>

@@ -36,9 +36,9 @@ import { cn } from '@/lib/utils'
 /** Above rows grid stickies (`z-20`–`z-40` in View.tsx), below overlays (`z-50+`). */
 const HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:w-2 after:left-1/2 after:-translate-x-1/2',
+  'after:w-2 after:start-1/2 after:-translate-x-1/2',
 )
 
 type TableViewResizableLayoutProps = {
@@ -203,7 +203,7 @@ export function TableViewResizableLayout({
       <div ref={containerRef} className={shellClassName}>
         <div className="flex h-full min-h-0 min-w-0 flex-1">
           <div
-            className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-background"
+            className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-e border-border bg-background"
             style={{ width: sidebarWidthPx }}
           >
             {sidebar}
@@ -230,7 +230,7 @@ export function TableViewResizableLayout({
           maxSize={panelLayout.firstMaxPercent}
           className="min-w-0"
         >
-          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-background">
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-e border-border bg-background">
             {sidebar}
           </div>
         </ResizablePanel>

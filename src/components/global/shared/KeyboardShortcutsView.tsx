@@ -161,7 +161,7 @@ export function KeyboardShortcutsView({
         >
           ← Back
         </button>
-        <h2 className="flex-1 pl-3 text-[14px] font-medium text-foreground">
+        <h2 className="flex-1 ps-3 text-[14px] font-medium text-foreground">
           Keyboard shortcuts
         </h2>
         {isMobile && (
@@ -200,7 +200,7 @@ export function KeyboardShortcutsView({
                         onClick={() => setSelectedId(shortcut.id)}
                         onFocus={() => setSelectedId(shortcut.id)}
                         className={cn(
-                          'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0',
+                          'flex w-full items-center gap-3 rounded-md px-3 py-2 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0',
                           isSelected
                             ? 'bg-primary/10 ring-1 ring-inset ring-primary/25'
                             : 'hover:bg-primary/5',

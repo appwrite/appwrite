@@ -128,7 +128,7 @@ const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
 ] as const
 
 const ACCOUNT_MENU_ITEM_CLASS =
-  'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
+  'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-start text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
 
 function MarketingNavLabel({
   label,
@@ -142,7 +142,7 @@ function MarketingNavLabel({
       {label}
       {showNewIndicator ? (
         <span
-          className="absolute -right-1.5 -top-1 size-1.5 rounded-full bg-[var(--brand-cta)]"
+          className="absolute -end-1.5 -top-1 size-1.5 rounded-full bg-[var(--brand-cta)]"
           aria-hidden
         />
       ) : null}
@@ -163,7 +163,7 @@ function MarketingNavLink({
     <a
       href={item.href}
       className={cn(
-        'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+        'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
         className,
       )}
       {...(item.href === '/changelog' && showChangelogBadge
@@ -189,7 +189,7 @@ function MarketingMobileNavLink({
     <SheetClose asChild>
       <a
         href={item.href}
-        className="link-unstyled flex h-10 items-center justify-between rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         {...(item.href === '/changelog' && showChangelogBadge
           ? { 'aria-label': 'Changelog, new updates' }
           : {})}
@@ -378,8 +378,8 @@ export function ConsoleHeader({
       <header
         className={cn(
           'relative flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 overflow-visible @[640px]:gap-2 border-b border-border bg-background',
-          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[1000px]:pr-6',
-          !showMarketingNav && '@[1024px]:pl-0',
+          'ps-3 pe-3 @[640px]:ps-4 @[640px]:pe-4 @[1000px]:pe-6',
+          !showMarketingNav && '@[1024px]:ps-0',
           className,
         )}
       >
@@ -410,12 +410,12 @@ export function ConsoleHeader({
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] p-0">
                 <SheetHeader className="border-b border-border px-4 py-4">
-                  <SheetTitle className="text-left">
+                  <SheetTitle className="text-start">
                     <AppwriteWordmark className="h-5" aria-label="Appwrite" />
                   </SheetTitle>
                 </SheetHeader>
                 <nav
-                  className="flex flex-col p-2"
+                  className="flex flex-col p-2 text-start"
                   aria-label="Website navigation"
                 >
                   {marketingNavItems.map((item) =>
@@ -502,7 +502,7 @@ export function ConsoleHeader({
                 <>
                   {/* Desktop: 60px logo column, border continues from nav */}
                   <div
-                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border @[1024px]:flex"
+                    className="hidden h-14 shrink-0 items-center justify-center border-e border-border @[1024px]:flex"
                     style={{ width: logoColumnWidth }}
                   >
                     {logoLink()}
@@ -529,7 +529,7 @@ export function ConsoleHeader({
 
           {showMarketingLinks ? (
             <nav
-              className="ml-2 hidden min-w-0 items-center gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ml-0 @[1536px]:-translate-x-1/2"
+              className="ms-2 hidden min-w-0 items-center justify-start gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ms-0 @[1536px]:-translate-x-1/2"
               aria-label="Website navigation"
             >
               {marketingNavItems.map((item) =>
@@ -948,11 +948,11 @@ export function ConsoleHeader({
               className="pointer-events-auto flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent"
             >
               <Search className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate text-left">
+              <span className="min-w-0 flex-1 truncate text-start">
                 {centerSearchPlaceholder}
               </span>
               {searchModKey ? (
-                <span className="ml-auto flex shrink-0 items-center gap-1">
+                <span className="ms-auto flex shrink-0 items-center gap-1">
                   <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
                     {searchModKey}
                   </kbd>
@@ -1027,7 +1027,7 @@ export function ConsoleHeader({
                     <Search className="h-3.5 w-3.5 shrink-0" />
                     <span className="hidden @[850px]:inline">Search...</span>
                     {searchModKey ? (
-                      <kbd className="ml-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
+                      <kbd className="ms-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
                         {searchModKey}K
                       </kbd>
                     ) : null}
@@ -1123,7 +1123,7 @@ export function ConsoleHeader({
                       size="sm"
                       className="shrink-0"
                     />
-                    <div className="hidden text-left @[800px]:block min-w-0">
+                    <div className="hidden text-start @[800px]:block min-w-0">
                       <p className="text-[13px] font-medium text-foreground truncate">
                         {displayName}
                       </p>
@@ -1136,7 +1136,7 @@ export function ConsoleHeader({
                   align="end"
                   className="w-64 border-border bg-popover p-1"
                 >
-                  <div className="px-3 py-3">
+                  <div className="px-3 py-3 text-start">
                     <p className="text-[13px] font-medium text-foreground">
                       {displayName}
                     </p>
@@ -1187,7 +1187,7 @@ export function ConsoleHeader({
                   <DropdownMenuSeparator className="my-1 bg-border" />
 
                   {/* Account Details */}
-                  <div className="px-3 py-2 space-y-4">
+                  <div className="px-3 py-2 space-y-4 text-start">
                     {/* Member Since */}
                     {account?.registration && (
                       <div>

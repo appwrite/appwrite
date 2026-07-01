@@ -264,7 +264,7 @@ export interface BuildLogsViewProps {
    */
   trailingPadding?: boolean
   /**
-   * When set, replaces default horizontal padding on each row (use `pl-0 pr-0` when a parent
+   * When set, replaces default horizontal padding on each row (use `ps-0 pe-0` when a parent
    * supplies symmetric `px-*` so the scrollbar sits on the pane edge).
    */
   lineHorizontalPaddingClass?: string
@@ -313,7 +313,7 @@ export function BuildLogsView({
 
     const rowPadding =
       lineHorizontalPaddingClass ??
-      `pl-4 sm:pl-6 ${trailingPadding ? 'pr-4 sm:pr-6' : 'pr-0'}`
+      `ps-4 sm:ps-6 ${trailingPadding ? 'pe-4 sm:pe-6' : 'pe-0'}`
 
     const gridStyle: React.CSSProperties = {
       gridTemplateColumns: `${lineNumberWidth} minmax(0, 1fr)`,
@@ -326,8 +326,8 @@ export function BuildLogsView({
         style={gridStyle}
         aria-hidden
       >
-        <div className="border-r border-border/50 pr-2" />
-        <div className="pl-1" />
+        <div className="border-e border-border/50 pe-2" />
+        <div className="ps-1" />
       </div>
     )
 
@@ -367,7 +367,7 @@ export function BuildLogsView({
                   }
                 : undefined
             }
-            className={`flex select-none items-start justify-end border-r border-border/50 pr-2 font-mono tabular-nums transition-colors ${fontSizeClass} ${
+            className={`flex select-none items-start justify-end border-e border-border/50 pe-2 font-mono tabular-nums transition-colors ${fontSizeClass} ${
               isSelected
                 ? 'text-yellow-600 dark:text-yellow-400 font-semibold'
                 : 'text-muted-foreground'
@@ -381,7 +381,7 @@ export function BuildLogsView({
             {originalLineNumber}
           </div>
           <div
-            className={`min-w-0 break-all pl-1 font-mono ${fontSizeClass}`}
+            className={`min-w-0 break-all ps-1 font-mono ${fontSizeClass}`}
           >
             {parsedLine}
           </div>
@@ -416,7 +416,7 @@ export function BuildLogsView({
             ? 'px-0'
             : trailingPadding
               ? 'px-4 sm:px-6'
-              : 'pl-4 sm:pl-6 pr-0'
+              : 'ps-4 sm:ps-6 pe-0'
         } ${className}`}
       >
         {emptyMessage}

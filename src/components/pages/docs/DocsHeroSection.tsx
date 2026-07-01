@@ -19,7 +19,7 @@ export function DocsHeroSection() {
 
       <div
         className={cn(
-          'relative z-[1] mx-auto w-full max-w-6xl pb-16 pt-12 text-left',
+          'relative z-[1] mx-auto w-full max-w-6xl pb-16 pt-12 text-start',
           docsContentPaddingX,
           '@[480px]:pb-20 @[480px]:pt-16 @[900px]:pb-24 @[900px]:pt-20',
         )}
@@ -58,7 +58,7 @@ export function DocsHeroSection() {
           <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
             <DocsRouteLink href="/docs/quick-starts">
               Get started
-              <ArrowRight className="ml-1.5 size-4" />
+              <ArrowRight className="ms-1.5 size-4" />
             </DocsRouteLink>
           </Button>
           <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
@@ -92,7 +92,7 @@ export function DocsHeroSection() {
             <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
               <DocsRouteLink href="/docs/quick-starts">
                 All quick start guides
-                <ArrowRight className="ml-1.5 size-4" />
+                <ArrowRight className="ms-1.5 size-4" />
               </DocsRouteLink>
             </Button>
           </div>

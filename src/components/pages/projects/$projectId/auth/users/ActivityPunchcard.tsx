@@ -186,13 +186,13 @@ export function ActivityPunchcard({
           <div className="flex items-center gap-6 text-[13px]">
             <div>
               <span className="text-muted-foreground">Total active days:</span>
-              <span className="ml-1.5 font-medium text-foreground">
+              <span className="ms-1.5 font-medium text-foreground">
                 {totalActiveDays}
               </span>
             </div>
             <div>
               <span className="text-muted-foreground">Total sessions:</span>
-              <span className="ml-1.5 font-medium text-foreground">
+              <span className="ms-1.5 font-medium text-foreground">
                 {sessions.length}
               </span>
             </div>
@@ -203,7 +203,7 @@ export function ActivityPunchcard({
             <div className="flex items-start">
               {/* Week day labels */}
               <div
-                className="flex flex-col pr-3 shrink-0 gap-[0.25rem]"
+                className="flex flex-col pe-3 shrink-0 gap-[0.25rem]"
                 style={{ paddingTop: '1.25rem' }}
               >
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(

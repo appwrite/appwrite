@@ -56,7 +56,7 @@ export function VariantTargetCards({ options, value, onChange, disabled }: Props
             disabled={disabled}
             onClick={() => onChange(o.value)}
             className={cn(
-              'flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors',
+              'flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/50 p-4 text-start transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               selected
                 ? 'border-primary bg-card ring-1 ring-primary/30'

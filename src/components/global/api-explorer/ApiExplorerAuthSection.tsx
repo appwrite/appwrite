@@ -124,14 +124,14 @@ function KeyInput({
         }
         readOnly={readOnly}
         placeholder={placeholder}
-        className="h-9 pr-10 font-mono text-[13px]"
+        className="h-9 pe-10 font-mono text-[13px]"
         autoComplete="off"
         spellCheck={false}
       />
       <button
         type="button"
         onClick={() => setVisible((current) => !current)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+        className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         aria-label={visible ? 'Hide API key' : 'Show API key'}
       >
         {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -533,7 +533,7 @@ export function ApiExplorerAuthSection({
                       onClick={handleGenerateEphemeralKey}
                     >
                       {isGeneratingKey ? (
-                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                        <Loader2 className="me-1.5 h-4 w-4 animate-spin" />
                       ) : null}
                       {hasActiveEphemeralKey ? 'Regenerate key' : 'Generate key'}
                     </Button>

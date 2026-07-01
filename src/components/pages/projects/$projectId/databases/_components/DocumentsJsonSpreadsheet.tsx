@@ -390,7 +390,7 @@ export function DocumentsJsonSpreadsheet({
         </>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-          <div className="flex max-h-[min(40dvh,300px)] min-h-0 w-full shrink-0 flex-col border-b border-border md:max-h-none md:w-[min(420px,42%)] md:min-w-[260px] md:border-b-0 md:border-r">
+          <div className="flex max-h-[min(40dvh,300px)] min-h-0 w-full shrink-0 flex-col border-b border-border md:max-h-none md:w-[min(420px,42%)] md:min-w-[260px] md:border-b-0 md:border-e">
             <div className="min-h-0 min-w-0 flex-1 overflow-auto">
               <Table>
               <TableHeader>
@@ -517,7 +517,7 @@ export function DocumentsJsonSpreadsheet({
       )}
 
       {selectedRows.size > 0 && canWriteRows && (
-        <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:w-auto sm:max-w-none sm:px-0">
+        <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:w-auto sm:max-w-none sm:px-0">
           <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 shadow-lg sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="info" className="h-6 px-2.5">
               {selectedRows.size} document{selectedRows.size > 1 ? 's' : ''}{' '}
@@ -547,7 +547,7 @@ export function DocumentsJsonSpreadsheet({
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete documents</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete {selectedRows.size} document

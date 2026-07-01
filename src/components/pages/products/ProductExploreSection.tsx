@@ -22,7 +22,7 @@ function ProductExploreCard({
   const Icon = product.icon
 
   const cardClassName = cn(
-    'group flex items-start gap-3 rounded-xl border p-4 text-left transition-colors',
+    'group flex items-start gap-3 rounded-xl border p-4 text-start transition-colors',
     isCurrent
       ? 'border-border bg-muted/30'
       : 'border-border bg-card/45 hover:bg-accent/15',

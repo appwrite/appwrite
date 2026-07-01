@@ -58,7 +58,7 @@ interface WizardLayoutProps {
   fullscreenInnerClassName?: string
   /**
    * When fullscreen, replaces the default horizontal padding (`px-6`) on the inner container.
-   * Use e.g. `pl-6` only when the right edge should be flush with the viewport.
+   * Use e.g. `ps-6` only when the right edge should be flush with the viewport.
    */
   fullscreenContentXClassName?: string
   /**

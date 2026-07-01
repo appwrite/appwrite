@@ -49,9 +49,9 @@ export function ApiReferenceOpenApiSpecDownloadFooter({
         className="h-9 w-full text-[13px] text-muted-foreground hover:text-foreground"
       >
         {isDownloading ? (
-          <Loader2 className="mr-1.5 size-4 animate-spin" />
+          <Loader2 className="me-1.5 size-4 animate-spin" />
         ) : (
-          <Download className="mr-1.5 size-4" />
+          <Download className="me-1.5 size-4" />
         )}
         OpenAPI spec
       </Button>

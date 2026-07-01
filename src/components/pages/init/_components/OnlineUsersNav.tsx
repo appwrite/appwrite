@@ -15,6 +15,14 @@ import { useInitPresence } from '@/lib/init/init-presence-context'
 import { parseInitReactingActivity, formatInitPresenceActivityDisplay } from '@/lib/init/reactions'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
+import {
+  SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+} from '@/lib/layout/secondary-sidebar-nav'
+import {
+  OFFCANVAS_START_CLOSED,
+  SIDEBAR_EDGE_TOGGLE_OVERFLOW,
+} from '@/lib/layout/offcanvas-classes'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
@@ -124,7 +132,7 @@ function OnlineUserTooltipDetails({
   reactionPulse?: number
 }) {
   return (
-    <div className="space-y-1 text-left">
+    <div className="space-y-1 text-start">
       <OnlineUserName
         name={name}
         activity={activity}
@@ -268,13 +276,15 @@ function OnlineUserRow({
   const row = (
     <div
       className={cn(
-        'relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-300',
+        'relative w-full rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-300',
         ONLINE_USERS_LIST_CLASS,
         isRaffleWinner
           ? cn(RAFFLE_WINNER_SURFACE_CLASS, 'text-foreground')
           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-        collapsed && !isMobile && 'justify-center px-0',
-        isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
+        collapsed && !isMobile
+          ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
+          : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+        isMobile && 'gap-x-3 px-3 py-2.5 text-[14px]',
       )}
     >
       {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
@@ -285,7 +295,7 @@ function OnlineUserRow({
         isRaffleWinner={isRaffleWinner}
       />
       {(!collapsed || isMobile) && (
-        <div className="relative z-[1] min-w-0 flex-1 text-left">
+        <div className="relative z-[1] min-w-0 flex-1 text-start">
           <OnlineUserName
             name={user.name}
             activity={user.activity}
@@ -712,7 +722,7 @@ export function OnlineUsersNav({
       >
         <aside
           className={cn(
-            'flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
+            'flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
@@ -761,7 +771,10 @@ export function OnlineUsersNav({
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            SIDEBAR_EDGE_TOGGLE_OVERFLOW,
+          )}
           aria-label={collapsed ? 'Expand online panel' : 'Collapse online panel'}
         >
           <ChevronLeft
@@ -775,9 +788,10 @@ export function OnlineUsersNav({
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
+          'fixed start-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-e border-border bg-background',
           'transition-transform duration-200 ease-out [backface-visibility:hidden]',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          '@[1024px]:hidden',
+          mobileOpen ? 'translate-x-0' : OFFCANVAS_START_CLOSED,
         )}
         role="dialog"
         aria-modal="true"

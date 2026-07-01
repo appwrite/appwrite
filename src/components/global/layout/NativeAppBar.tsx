@@ -133,7 +133,7 @@ export function NativeAppBar() {
                       key={entry.path}
                       type="button"
                       onClick={() => handleHistorySelect(entry.path)}
-                      className="flex w-full items-center px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent"
+                      className="flex w-full items-center px-3 py-2 text-start text-[13px] text-foreground transition-colors hover:bg-accent"
                     >
                       <span className="min-w-0 truncate">
                         {entry.title || entry.path || '/'}
@@ -158,8 +158,8 @@ export function NativeAppBar() {
           className="flex h-8 w-full max-w-[280px] items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate text-left">Search...</span>
-          <kbd className="ml-auto shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+          <span className="min-w-0 flex-1 truncate text-start">Search...</span>
+          <kbd className="ms-auto shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
             ⌘K
           </kbd>
         </button>

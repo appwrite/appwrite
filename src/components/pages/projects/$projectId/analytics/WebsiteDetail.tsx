@@ -539,7 +539,7 @@ function MetricTab({
     <button
       onClick={onClick}
       className={cn(
-        'relative flex min-w-[140px] flex-col gap-0.5 px-3 py-2.5 text-left transition-colors',
+        'relative flex min-w-[140px] flex-col gap-0.5 px-3 py-2.5 text-start transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isActive
           ? 'text-foreground'
@@ -580,7 +580,7 @@ function MetricTab({
         {metric.label}
       </span>
       {isActive && (
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+        <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
       )}
     </button>
   )
@@ -714,7 +714,7 @@ function MapContent({ data }: { data: LocationData[] }) {
       })}
 
       {/* Legend */}
-      <div className="absolute bottom-8 left-4 rounded-lg border border-border bg-background/95 px-3 py-2 backdrop-blur-sm">
+      <div className="absolute bottom-8 start-4 rounded-lg border border-border bg-background/95 px-3 py-2 backdrop-blur-sm">
         <div className="mb-2 text-[11px] font-semibold text-foreground">
           Visitors
         </div>
@@ -1153,7 +1153,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                                  className="absolute inset-y-0 start-0 rounded-md transition-all group-hover:opacity-80"
                                   style={{
                                     width: `${percentage}%`,
                                     backgroundColor: channel.color,
@@ -1172,7 +1172,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(channel.visitors)}
                                     </span>
                                   </div>
@@ -1202,7 +1202,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                  className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                   style={{ width: `${percentage}%` }}
                                 />
                                 <div className="relative flex flex-1 items-center gap-2">
@@ -1216,7 +1216,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(source.visitors)}
                                     </span>
                                   </div>
@@ -1249,7 +1249,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                  className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                   style={{ width: `${percentage}%` }}
                                 />
                                 <div className="relative flex flex-1 items-center gap-2">
@@ -1263,7 +1263,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(campaign.visitors)}
                                     </span>
                                   </div>
@@ -1343,7 +1343,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                  className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                   style={{ width: `${percentage}%` }}
                                 />
                                 <div className="relative flex flex-1 items-center gap-2">
@@ -1357,7 +1357,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(page.visitors)}
                                     </span>
                                   </div>
@@ -1379,12 +1379,12 @@ export function WebsiteAnalyticsDetail({
                               {showAllTopPages ? (
                                 <>
                                   Show less
-                                  <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                  <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
                                   Show more ({topPages.length - 15} more)
-                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                  <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
                             </Button>
@@ -1417,7 +1417,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                  className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                   style={{ width: `${percentage}%` }}
                                 />
                                 <div className="relative flex flex-1 items-center gap-2">
@@ -1431,7 +1431,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(page.visitors)}
                                     </span>
                                   </div>
@@ -1453,12 +1453,12 @@ export function WebsiteAnalyticsDetail({
                               {showAllEntryPages ? (
                                 <>
                                   Show less
-                                  <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                  <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
                                   Show more ({entryPages.length - 15} more)
-                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                  <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
                             </Button>
@@ -1491,7 +1491,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                  className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                   style={{ width: `${percentage}%` }}
                                 />
                                 <div className="relative flex flex-1 items-center gap-2">
@@ -1505,7 +1505,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(page.visitors)}
                                     </span>
                                   </div>
@@ -1527,12 +1527,12 @@ export function WebsiteAnalyticsDetail({
                               {showAllExitPages ? (
                                 <>
                                   Show less
-                                  <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                  <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
                                   Show more ({exitPages.length - 15} more)
-                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                  <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
                             </Button>
@@ -1625,7 +1625,7 @@ export function WebsiteAnalyticsDetail({
                                   className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                                 >
                                   <div
-                                    className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                    className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                     style={{ width: `${percentage}%` }}
                                   />
                                   <div className="relative flex flex-1 items-center gap-2">
@@ -1646,7 +1646,7 @@ export function WebsiteAnalyticsDetail({
                                         {formatNumber(location.uniqueVisitors)}{' '}
                                         unique
                                       </span>
-                                      <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                      <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                         {formatNumber(location.visitors)}
                                       </span>
                                     </div>
@@ -1668,12 +1668,12 @@ export function WebsiteAnalyticsDetail({
                                 {showAllCountries ? (
                                   <>
                                     Show less
-                                    <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                    <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
                                     Show more ({locationData.length - 15} more)
-                                    <ChevronDown className="ml-1 h-3 w-3" />
+                                    <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
                               </Button>
@@ -1703,7 +1703,7 @@ export function WebsiteAnalyticsDetail({
                                   className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                                 >
                                   <div
-                                    className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                    className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                     style={{ width: `${percentage}%` }}
                                   />
                                   <div className="relative flex flex-1 items-center gap-2">
@@ -1724,7 +1724,7 @@ export function WebsiteAnalyticsDetail({
                                         {region.country}
                                       </span>
                                     </div>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(region.visitors)}
                                     </span>
                                   </div>
@@ -1745,12 +1745,12 @@ export function WebsiteAnalyticsDetail({
                                 {showAllRegions ? (
                                   <>
                                     Show less
-                                    <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                    <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
                                     Show more ({regions.length - 15} more)
-                                    <ChevronDown className="ml-1 h-3 w-3" />
+                                    <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
                               </Button>
@@ -1778,7 +1778,7 @@ export function WebsiteAnalyticsDetail({
                                     className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                                   >
                                     <div
-                                      className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                      className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                       style={{ width: `${percentage}%` }}
                                     />
                                     <div className="relative flex flex-1 items-center gap-2">
@@ -1799,7 +1799,7 @@ export function WebsiteAnalyticsDetail({
                                           {city.country}
                                         </span>
                                       </div>
-                                      <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                      <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                         {formatNumber(city.visitors)}
                                       </span>
                                     </div>
@@ -1819,12 +1819,12 @@ export function WebsiteAnalyticsDetail({
                                 {showAllCities ? (
                                   <>
                                     Show less
-                                    <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                    <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
                                     Show more ({cities.length - 15} more)
-                                    <ChevronDown className="ml-1 h-3 w-3" />
+                                    <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
                               </Button>
@@ -1902,7 +1902,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                  className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                                   style={{ width: `${percentage}%` }}
                                 />
                                 <div className="relative flex flex-1 items-center gap-2">
@@ -1916,7 +1916,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {share}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(browser.visitors)}
                                     </span>
                                   </div>
@@ -1938,12 +1938,12 @@ export function WebsiteAnalyticsDetail({
                               {showAllBrowsers ? (
                                 <>
                                   Show less
-                                  <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                  <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
                                   Show more ({browsers.length - 15} more)
-                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                  <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
                             </Button>
@@ -1975,7 +1975,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                                  className="absolute inset-y-0 start-0 rounded-md transition-all group-hover:opacity-80"
                                   style={{
                                     width: `${barPercentage}%`,
                                     backgroundColor: os.color,
@@ -1994,7 +1994,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {percentage}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(os.visitors)}
                                     </span>
                                   </div>
@@ -2014,13 +2014,13 @@ export function WebsiteAnalyticsDetail({
                               {showAllOS ? (
                                 <>
                                   Show less
-                                  <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                  <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
                                   Show more ({operatingSystems.length - 15}{' '}
                                   more)
-                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                  <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
                             </Button>
@@ -2052,7 +2052,7 @@ export function WebsiteAnalyticsDetail({
                                 className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
                               >
                                 <div
-                                  className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                                  className="absolute inset-y-0 start-0 rounded-md transition-all group-hover:opacity-80"
                                   style={{
                                     width: `${barPercentage}%`,
                                     backgroundColor: device.color,
@@ -2073,7 +2073,7 @@ export function WebsiteAnalyticsDetail({
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                       {percentage}%
                                     </span>
-                                    <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                       {formatNumber(device.visitors)}
                                     </span>
                                   </div>
@@ -2093,12 +2093,12 @@ export function WebsiteAnalyticsDetail({
                               {showAllDevices ? (
                                 <>
                                   Show less
-                                  <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                                  <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
                                   Show more ({devices.length - 15} more)
-                                  <ChevronDown className="ml-1 h-3 w-3" />
+                                  <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
                             </Button>

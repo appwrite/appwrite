@@ -525,7 +525,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   size="sm"
                   className="h-9 text-[13px] mt-4"
                 >
-                  <Plus className="mr-1.5 h-4 w-4" />
+                  <Plus className="me-1.5 h-4 w-4" />
                   Create policy
                 </Button>
               </div>
@@ -656,7 +656,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   size="sm"
                   className="h-9 text-[13px] mt-4"
                 >
-                  <Plus className="mr-1.5 h-4 w-4" />
+                  <Plus className="me-1.5 h-4 w-4" />
                   Create manual backup
                 </Button>
               </div>
@@ -700,7 +700,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           Policy
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4"></TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -774,7 +774,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell className="px-4 py-3 text-right pr-4">
+                            <TableCell className="px-4 py-3 text-end pe-4">
                               <div className="flex justify-end">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -849,7 +849,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
       {/* Bulk Delete Action Bar */}
       {selectedBackups.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+        <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedBackups.size} backup
@@ -885,7 +885,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         onOpenChange={setBulkDeleteDialogOpen}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete backups</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}
@@ -1134,7 +1134,7 @@ function CreatePolicyDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Create backup policy</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {supportsCustomPolicies
@@ -1218,7 +1218,7 @@ function CreatePolicyDialog({
                   }}
                   disabled={!canCreateCustom}
                 >
-                  <Plus className="mr-1.5 h-4 w-4" />
+                  <Plus className="me-1.5 h-4 w-4" />
                   Add custom policy
                 </Button>
               </div>
@@ -1442,7 +1442,7 @@ function CreateManualBackupDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Create manual backup</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Manual backups are <b>retained forever</b> unless manually deleted.
@@ -1552,7 +1552,7 @@ function RestoreBackupDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-5 text-left">
+        <DialogHeader className="px-6 pt-6 pb-5 text-start">
           <DialogTitle>Restore backup</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -1764,7 +1764,7 @@ function DeletePolicyDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Delete policy</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Are you sure you want to delete the{' '}
@@ -1826,7 +1826,7 @@ function DeleteBackupDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Delete backup</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Are you sure you want to delete the backup from{' '}

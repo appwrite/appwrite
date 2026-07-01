@@ -72,7 +72,7 @@ export function ThreadTagsFilter({
             >
               More
               {selectedMoreCount > 0 ? ` (${selectedMoreCount})` : null}
-              <ChevronDown className="ml-1 h-3.5 w-3.5" />
+              <ChevronDown className="ms-1 h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="max-h-48 w-56 overflow-y-auto">

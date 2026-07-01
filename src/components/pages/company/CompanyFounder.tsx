@@ -67,7 +67,7 @@ export function CompanyFounder() {
         <PricingSectionHeading title="Founder" size="md" align="left" />
 
         <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] xl:gap-12">
-          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-start">
             <img
               src={companyFounder.image.src}
               alt={companyFounder.image.alt}
@@ -97,20 +97,20 @@ export function CompanyFounder() {
             </div>
           </div>
 
-          <figure className="min-w-0 text-center lg:text-left">
+          <figure className="min-w-0 text-center lg:text-start">
             <div className="relative mx-auto w-fit max-w-2xl lg:mx-0">
               <span
-                className="absolute right-full top-0.5 mr-3 font-aeonik-pro text-[2rem] leading-none text-muted-foreground/30 sm:top-1 sm:mr-4 sm:text-[2.25rem]"
+                className="absolute end-full top-0.5 me-3 font-aeonik-pro text-[2rem] leading-none text-muted-foreground/30 sm:top-1 sm:me-4 sm:text-[2.25rem]"
                 aria-hidden
               >
                 &ldquo;
               </span>
-              <blockquote className="text-center font-aeonik-pro text-balance text-[17px] font-normal leading-7 text-foreground sm:text-[18px] sm:leading-8 lg:text-left">
+              <blockquote className="text-center font-aeonik-pro text-balance text-[17px] font-normal leading-7 text-foreground sm:text-[18px] sm:leading-8 lg:text-start">
                 {companyFounder.quote}
               </blockquote>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-5 text-left md:grid-cols-2 md:gap-6 lg:mt-5">
+            <div className="mt-6 grid grid-cols-1 gap-5 text-start md:grid-cols-2 md:gap-6 lg:mt-5">
               <div className="space-y-4">
                 {companyFounder.bio.slice(0, 2).map((paragraph) => (
                   <p

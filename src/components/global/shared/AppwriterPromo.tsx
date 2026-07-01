@@ -23,7 +23,7 @@ export function AppwriterPromo({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'flex w-[300px] shrink-0 flex-col justify-center gap-3 border-l border-border/60 px-5 py-3',
+        'flex w-[300px] shrink-0 flex-col justify-center gap-3 border-s border-border/60 px-5 py-3',
         className,
       )}
       aria-labelledby="appwriter-promo-heading"

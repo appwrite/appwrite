@@ -382,7 +382,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         onClick={() => void createChallenge(AuthenticationFactor.Totp)}
                         disabled={disabled}
                       >
-                        <Smartphone className="mr-1.5 h-4 w-4" />
+                        <Smartphone className="me-1.5 h-4 w-4" />
                         Authenticator app
                       </Button>
                     )}
@@ -398,7 +398,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         onClick={() => void createChallenge(AuthenticationFactor.Email)}
                         disabled={disabled}
                       >
-                        <Mail className="mr-1.5 h-4 w-4" />
+                        <Mail className="me-1.5 h-4 w-4" />
                         Email
                       </Button>
                     )}
@@ -414,7 +414,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         onClick={() => void createChallenge(AuthenticationFactor.Phone)}
                         disabled={disabled}
                       >
-                        <Smartphone className="mr-1.5 h-4 w-4" />
+                        <Smartphone className="me-1.5 h-4 w-4" />
                         Phone
                       </Button>
                     )}
@@ -540,7 +540,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                     disabled={disabled || verifyMutation.isPending}
                     className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5 inline" />
+                    <ArrowLeft className="me-1.5 h-3.5 w-3.5 inline" />
                     Back to sign in
                   </button>
                 </div>

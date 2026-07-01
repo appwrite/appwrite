@@ -513,7 +513,7 @@ export function GeneratorApiDocsDrawer({
           className="h-8 text-[12px]"
           onClick={handleCopyActiveMarkdown}
         >
-          <Copy className="mr-1.5 size-3.5" />
+          <Copy className="me-1.5 size-3.5" />
           Copy markdown
         </Button>
       }

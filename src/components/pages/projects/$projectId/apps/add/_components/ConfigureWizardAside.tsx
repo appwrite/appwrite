@@ -19,7 +19,7 @@ export function ConfigureWizardAside() {
             API. Choose the kind of client you are building - you can register more apps
             later.
           </p>
-          <ul className="mt-3 list-disc space-y-1.5 pl-4 text-[12px] leading-snug text-muted-foreground">
+          <ul className="mt-3 list-disc space-y-1.5 ps-4 text-[12px] leading-snug text-muted-foreground">
             <li>
               <span className="font-medium text-foreground/90">Web</span> - allowed
               hostnames (origins)

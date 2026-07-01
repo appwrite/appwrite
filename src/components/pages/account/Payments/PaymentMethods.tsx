@@ -195,7 +195,7 @@ export function AccountPaymentMethods({
                 className="h-9 text-[13px]"
                 onClick={onAddPaymentMethod}
               >
-                <Plus className="mr-1.5 h-4 w-4" />
+                <Plus className="me-1.5 h-4 w-4" />
                 Add payment method
               </Button>
             </div>
@@ -223,7 +223,7 @@ export function AccountPaymentMethods({
               className="h-9 text-[13px]"
               onClick={onAddPaymentMethod}
             >
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Plus className="me-1.5 h-4 w-4" />
               Add payment method
             </Button>
           </div>
@@ -251,7 +251,7 @@ export function AccountPaymentMethods({
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Linked To
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]" />
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -348,9 +348,9 @@ export function AccountPaymentMethods({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ml-2"
+                                className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ms-2"
                               >
-                                <LinkIcon className="mr-1.5 h-3.5 w-3.5" />
+                                <LinkIcon className="me-1.5 h-3.5 w-3.5" />
                                 {linkedOrgs.length} organization
                                 {linkedOrgs.length > 1 ? 's' : ''}
                               </Button>
@@ -379,7 +379,7 @@ export function AccountPaymentMethods({
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
+                      <TableCell className="px-4 py-3 text-end">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <RowActionsMenuTrigger />

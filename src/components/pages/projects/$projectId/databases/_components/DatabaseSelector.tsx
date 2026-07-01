@@ -366,11 +366,11 @@ export function DatabaseSelector({
               placeholder="Search databases..."
               value={search}
               onValueChange={setSearch}
-              className={cn('h-9', isFetching && 'pr-8')}
+              className={cn('h-9', isFetching && 'pe-8')}
             />
             <div
               className={cn(
-                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
                 isFetching ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden
@@ -399,7 +399,7 @@ export function DatabaseSelector({
                       setOpen(false)
                     }}
                     className={cn(
-                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
                       item.id === value && 'bg-accent/50',
                     )}
                   >

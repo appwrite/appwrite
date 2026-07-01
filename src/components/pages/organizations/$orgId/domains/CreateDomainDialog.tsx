@@ -41,7 +41,7 @@ export function CreateDomainDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add Domain</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Enter the domain name you want to add to your organization.

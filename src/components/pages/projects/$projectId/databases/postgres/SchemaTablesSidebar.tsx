@@ -235,13 +235,13 @@ export function SchemaTablesSidebar({
               />
               <div className="flex min-w-0 shrink-0 items-center gap-2">
                 <div className="relative min-w-0 flex-1">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
                     value={tableSearch}
                     onChange={(event) => setTableSearch(event.target.value)}
                     placeholder="Search tables"
-                    className="h-8 pl-8 pr-8 text-[13px]"
+                    className="h-8 ps-8 pe-8 text-[13px]"
                     aria-label="Search tables"
                     disabled={!selectedSchema}
                   />
@@ -250,7 +250,7 @@ export function SchemaTablesSidebar({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                      className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
                       aria-label="Clear table search"
                       onClick={() => setTableSearch('')}
                     >
@@ -258,7 +258,7 @@ export function SchemaTablesSidebar({
                     </Button>
                   ) : tablesFetching ? (
                     <Loader2
-                      className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
+                      className="pointer-events-none absolute end-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
                       aria-hidden
                     />
                   ) : null}
@@ -346,7 +346,7 @@ export function SchemaTablesSidebar({
                             replace
                             preload="intent"
                             className={cn(
-                              'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors',
+                              'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5 text-start transition-colors',
                               selectedTableId === id
                                 ? 'bg-accent text-foreground'
                                 : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

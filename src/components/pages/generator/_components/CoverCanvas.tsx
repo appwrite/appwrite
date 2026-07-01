@@ -231,7 +231,7 @@ export function CoverCanvas({
                 : undefined
             }
           >
-            <Copy className="mr-1.5 size-3.5" />
+            <Copy className="me-1.5 size-3.5" />
             Copy URL
           </Button>
 
@@ -242,7 +242,7 @@ export function CoverCanvas({
             className="h-8 border-border bg-card/95 text-[12px] backdrop-blur-sm"
             onClick={onOpenImage}
           >
-            <ExternalLink className="mr-1.5 size-3.5" />
+            <ExternalLink className="me-1.5 size-3.5" />
             Open image
           </Button>
 
@@ -272,10 +272,10 @@ export function CoverCanvas({
             <Button
               type="button"
               size="sm"
-              className="relative z-[1] h-8 rounded-r-none px-3 text-[12px] shadow-sm"
+              className="relative z-[1] h-8 rounded-e-none px-3 text-[12px] shadow-sm"
               onClick={() => handleDownload(data.format, 1)}
             >
-              <Download className="mr-1.5 size-3.5" />
+              <Download className="me-1.5 size-3.5" />
               Download
             </Button>
             <DropdownMenu modal={false}>
@@ -283,7 +283,7 @@ export function CoverCanvas({
                 <Button
                   type="button"
                   size="sm"
-                  className="relative z-[2] h-8 rounded-l-none border-l border-primary-foreground/15 px-2 shadow-sm"
+                  className="relative z-[2] h-8 rounded-s-none border-s border-primary-foreground/15 px-2 shadow-sm"
                   aria-label="More download options"
                 >
                   <ChevronDown className="size-3.5" />
@@ -316,7 +316,7 @@ export function CoverCanvas({
                           onSelect={() => handleDownload(format, scale)}
                         >
                           <span className="font-medium">{scaleLabel}</span>
-                          <span className="ml-auto text-[12px] text-muted-foreground">
+                          <span className="ms-auto text-[12px] text-muted-foreground">
                             {sizeLabel}
                           </span>
                         </DropdownMenuItem>

@@ -640,7 +640,7 @@ export function CreateDatabaseWizardView() {
                 className={cn(
                   'space-y-3',
                   groupIndex > 0 &&
-                    'border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0',
+                    'border-t border-border pt-6 lg:border-s lg:border-t-0 lg:ps-6 lg:pt-0',
                 )}
               >
                 <div className="mb-6 space-y-1">
@@ -665,7 +665,7 @@ export function CreateDatabaseWizardView() {
                       onClick={() => handleDbTypeSelect(opt)}
                       data-analytics-track="manual"
                       className={cn(
-                        'flex w-full cursor-pointer items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-card/50',
+                        'flex w-full cursor-pointer items-start gap-4 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-card/50',
                         dbType === opt.id &&
                           !optionMeta.comingSoon &&
                           'border-primary ring-1 ring-primary/20 hover:border-primary',
@@ -760,7 +760,7 @@ export function CreateDatabaseWizardView() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Connections
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[140px]">
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[140px]">
                         Price
                       </TableHead>
                     </TableRow>
@@ -824,7 +824,7 @@ export function CreateDatabaseWizardView() {
                           <TableCell className="px-4 py-3.5 text-[13px] tabular-nums text-muted-foreground">
                             {spec.connections}
                           </TableCell>
-                          <TableCell className="px-4 py-3.5 text-right">
+                          <TableCell className="px-4 py-3.5 text-end">
                             {locked ? (
                               <Badge
                                 variant="inactive"
@@ -833,7 +833,7 @@ export function CreateDatabaseWizardView() {
                                 Upgrade
                               </Badge>
                             ) : (
-                              <span className="inline-block text-right text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
+                              <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
                                 {spec.price}
                               </span>
                             )}

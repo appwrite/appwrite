@@ -26,9 +26,9 @@ export function AuthorView({ author, threads, total }: AuthorViewProps) {
     <div className="relative overflow-x-hidden bg-background">
       <section className="border-b border-border py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <Button variant="ghost" size="sm" className="-ml-2 mb-6 h-8 px-2" asChild>
+          <Button variant="ghost" size="sm" className="-ms-2 mb-6 h-8 px-2" asChild>
             <Link to="/threads">
-              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              <ArrowLeft className="me-1.5 h-4 w-4" />
               Back
             </Link>
           </Button>

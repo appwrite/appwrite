@@ -44,7 +44,7 @@ export function InitScheduleCalendarButton({
           onClick={() => downloadInitScheduleItemCalendar(event, item)}
         >
           Apple & Outlook (.ics)
-          <Download className="ml-auto size-4" />
+          <Download className="ms-auto size-4" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

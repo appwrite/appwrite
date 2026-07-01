@@ -71,7 +71,7 @@ function InlineRow({
   return (
     <div className="flex items-start justify-between gap-3 text-[13px] leading-snug">
       <span className="shrink-0 text-muted-foreground">{label}</span>
-      <div className="min-w-0 text-right text-foreground">{children}</div>
+      <div className="min-w-0 text-end text-foreground">{children}</div>
     </div>
   )
 }

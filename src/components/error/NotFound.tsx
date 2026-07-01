@@ -99,7 +99,7 @@ function NotFoundContent({
               onClick={onGoBack}
               className="min-h-9 w-full shrink-0 sm:flex-1"
             >
-              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              <ArrowLeft className="me-1.5 h-4 w-4" />
               Go back
             </Button>
           ) : null}

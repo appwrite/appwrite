@@ -153,7 +153,7 @@ export function SqlTypingLine({
         </span>
         {showCursor ? (
           <span
-            className="ml-px inline-block h-[1em] w-px shrink-0 bg-muted-foreground opacity-0 group-hover:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100"
+            className="ms-px inline-block h-[1em] w-px shrink-0 bg-muted-foreground opacity-0 group-hover:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100"
             style={{ animationDelay: `${cursorDelayMs}ms` }}
             aria-hidden
           />
@@ -329,13 +329,13 @@ export function AuthMagicLinkSnippet() {
         <Syn tone="function">createMagicURLSession</Syn>
         <Syn tone="punctuation">({'{'}</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="property">email</Syn>
         <Syn tone="punctuation">: </Syn>
         <Syn tone="string">&apos;paige@acme.io&apos;</Syn>
         <Syn tone="punctuation">,</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="property">url</Syn>
         <Syn tone="punctuation">: </Syn>
         <Syn tone="string">&apos;https://acme.io/auth&apos;</Syn>
@@ -358,13 +358,13 @@ export function MessagingEmailSnippet() {
         <Syn tone="function">createEmail</Syn>
         <Syn tone="punctuation">({'{'}</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="property">subject</Syn>
         <Syn tone="punctuation">: </Syn>
         <Syn tone="string">&apos;Welcome to Acme&apos;</Syn>
         <Syn tone="punctuation">,</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="property">topics</Syn>
         <Syn tone="punctuation">: [</Syn>
         <Syn tone="string">&apos;product-updates&apos;</Syn>
@@ -387,13 +387,13 @@ export function FunctionsStripeSnippet() {
         <Syn tone="function">updateRow</Syn>
         <Syn tone="punctuation">({'{'}</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="property">plan</Syn>
         <Syn tone="punctuation">: </Syn>
         <Syn tone="string">&apos;pro&apos;</Syn>
         <Syn tone="punctuation">,</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="property">stripeCustomerId</Syn>
         <Syn tone="punctuation">: </Syn>
         <Syn tone="identifier">customer</Syn>
@@ -450,11 +450,11 @@ export function RealtimeSubscribeSnippet() {
         <Syn tone="function">subscribe</Syn>
         <Syn tone="punctuation">([</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="string">&apos;databases.*.tables.docs.rows.*.update&apos;</Syn>
         <Syn tone="punctuation">],</Syn>
       </div>
-      <div className="pl-2">
+      <div className="ps-2">
         <Syn tone="identifier">onDocChange</Syn>
         <Syn tone="punctuation">)</Syn>
       </div>

@@ -451,7 +451,7 @@ export function ProjectListRequestsChart({
   const changeBadge = !isTable ? (
     <span
       className={cn(
-        'ml-auto inline-flex h-3.5 shrink-0 items-center gap-0.5 text-[11px] font-medium leading-none tabular-nums',
+        'ms-auto inline-flex h-3.5 shrink-0 items-center gap-0.5 text-[11px] font-medium leading-none tabular-nums',
         isLoading && 'invisible',
         !isLoading &&
           showChange &&
@@ -526,7 +526,7 @@ export function ProjectListRequestsChart({
         {isLoading ? (
           <>
             {valueContent}
-            <span className="ml-auto inline-flex h-3.5 w-9 shrink-0" aria-hidden />
+            <span className="ms-auto inline-flex h-3.5 w-9 shrink-0" aria-hidden />
           </>
         ) : (
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -534,7 +534,7 @@ export function ProjectListRequestsChart({
               <>
                 {valueContent}
                 <span
-                  className="ml-auto inline-flex h-3.5 w-9 shrink-0"
+                  className="ms-auto inline-flex h-3.5 w-9 shrink-0"
                   aria-hidden
                 />
               </>

@@ -284,7 +284,7 @@ export function ApiKeysList({
         onOpenChange={(open) => !open && setViewingKeyId(null)}
       >
         <DialogContent className="sm:max-w-[600px] p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>{viewingKey?.name || 'API Key'}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Copy the full API key below. Keep it secure and never share it

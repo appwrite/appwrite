@@ -714,7 +714,7 @@ export function DeploymentDetailView({
                     )}
                   />
                   {parentResource?.framework ? (
-                    <div className="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded border border-border/60 bg-background/90">
+                    <div className="absolute bottom-1 start-1 flex h-6 w-6 items-center justify-center rounded border border-border/60 bg-background/90">
                       <FrameworkIcon
                         framework={parentResource.framework}
                         size="sm"
@@ -1705,7 +1705,7 @@ export function DeploymentDetailView({
                 {(deployment.buildDuration != null ||
                   isDeploymentInProgress(deployment.status) ||
                   statusBadge) && (
-                  <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-3 sm:ml-auto">
+                  <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-3 sm:ms-auto">
                     {(isDeploymentInProgress(deployment.status)
                       ? !isDeploymentTimeout(
                           deployment.status,
@@ -1776,7 +1776,7 @@ export function DeploymentDetailView({
       onBack={navigateToDeploymentsList}
       contentPadding={false}
       contentWrapperClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
-      fullscreenContentXClassName="pl-0 pr-0"
+      fullscreenContentXClassName="ps-0 pe-0"
       fullscreenInnerClassName="flex min-h-0 flex-1 flex-col"
       onClose={navigateToDeploymentsList}
       contentClassName="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row"
@@ -1795,7 +1795,7 @@ export function DeploymentDetailView({
                   disabled={cancelBuildMutation.isPending}
                   className="h-9 text-[13px]"
                 >
-                  <XCircle className="mr-1.5 h-4 w-4" />
+                  <XCircle className="me-1.5 h-4 w-4" />
                   Cancel
                 </Button>
               ) : (
@@ -1810,7 +1810,7 @@ export function DeploymentDetailView({
                           disabled={isActiveDeployment}
                           className="h-9 text-[13px]"
                         >
-                          <Trash2 className="mr-1.5 h-4 w-4" />
+                          <Trash2 className="me-1.5 h-4 w-4" />
                           Delete
                         </Button>
                       </span>
@@ -1832,7 +1832,7 @@ export function DeploymentDetailView({
             </div>
 
             {/* Right side - Individual buttons */}
-            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+            <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -1841,9 +1841,9 @@ export function DeploymentDetailView({
                     size="sm"
                     className="h-9 text-[13px]"
                   >
-                    <Download className="mr-1.5 h-4 w-4" />
+                    <Download className="me-1.5 h-4 w-4" />
                     Download
-                    <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                    <ChevronDown className="ms-1.5 h-3.5 w-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -1851,7 +1851,7 @@ export function DeploymentDetailView({
                   className={WIZARD_PORTAL_Z_DROPDOWN}
                 >
                   <DropdownMenuItem onClick={handleDownloadSource}>
-                    <FileCode className="mr-2 h-4 w-4" />
+                    <FileCode className="me-2 h-4 w-4" />
                     Source code
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -1863,7 +1863,7 @@ export function DeploymentDetailView({
                         : undefined
                     }
                   >
-                    <Package className="mr-2 h-4 w-4" />
+                    <Package className="me-2 h-4 w-4" />
                     Build output
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -1877,7 +1877,7 @@ export function DeploymentDetailView({
                   disabled={redeployMutation.isPending}
                   className="h-9 text-[13px]"
                 >
-                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  <RefreshCw className="me-1.5 h-4 w-4" />
                   Redeploy
                 </Button>
               )}
@@ -1905,7 +1905,7 @@ export function DeploymentDetailView({
                         }
                         className="h-9 text-[13px]"
                       >
-                        <Play className="mr-1.5 h-4 w-4" />
+                        <Play className="me-1.5 h-4 w-4" />
                         Activate
                       </Button>
                     </span>
@@ -1946,7 +1946,7 @@ export function DeploymentDetailView({
                 overlayClassName={WIZARD_DRAWER_OVERLAY_Z}
                 className={cn(WIZARD_DRAWER_CONTENT_Z, 'max-h-[85dvh]')}
               >
-                <DrawerHeader className="!text-left">
+                <DrawerHeader className="!text-start">
                   <DrawerTitle className="text-[15px] font-semibold">
                     Deployment actions
                   </DrawerTitle>
@@ -1969,7 +1969,7 @@ export function DeploymentDetailView({
                         }}
                         disabled={cancelBuildMutation.isPending}
                       >
-                        <XCircle className="mr-2 h-4 w-4" />
+                        <XCircle className="me-2 h-4 w-4" />
                         Cancel build
                       </Button>
                     )}
@@ -1993,7 +1993,7 @@ export function DeploymentDetailView({
                           : undefined
                       }
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
+                      <Trash2 className="me-2 h-4 w-4" />
                       Delete deployment
                     </Button>
                   )}
@@ -2007,7 +2007,7 @@ export function DeploymentDetailView({
                       setDeploymentActionsDrawerOpen(false)
                     }}
                   >
-                    <FileCode className="mr-2 h-4 w-4" />
+                    <FileCode className="me-2 h-4 w-4" />
                     Download source code
                   </Button>
                   <Button
@@ -2025,7 +2025,7 @@ export function DeploymentDetailView({
                         : undefined
                     }
                   >
-                    <Package className="mr-2 h-4 w-4" />
+                    <Package className="me-2 h-4 w-4" />
                     Download build output
                   </Button>
                   {onRedeploy && (
@@ -2039,7 +2039,7 @@ export function DeploymentDetailView({
                       }}
                       disabled={redeployMutation.isPending}
                     >
-                      <RefreshCw className="mr-2 h-4 w-4" />
+                      <RefreshCw className="me-2 h-4 w-4" />
                       Redeploy
                     </Button>
                   )}
@@ -2072,7 +2072,7 @@ export function DeploymentDetailView({
                             : undefined
                     }
                   >
-                    <Play className="mr-2 h-4 w-4" />
+                    <Play className="me-2 h-4 w-4" />
                     Activate
                   </Button>
                 </div>
@@ -2084,17 +2084,17 @@ export function DeploymentDetailView({
     >
       <>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:border-r lg:border-border">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:border-e lg:border-border">
             <div className="min-w-0 shrink-0 border-b border-border">
               <TooltipProvider>
-                <div className="flex min-w-0 items-center gap-2 py-3 pl-6 pr-4 sm:pr-5">
+                <div className="flex min-w-0 items-center gap-2 py-3 ps-6 pe-4 sm:pe-5">
                   <div className="relative min-w-0 flex-1">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Search logs..."
                       value={logsSearch}
                       onChange={(e) => setLogsSearch(e.target.value)}
-                      className="h-9 w-full min-w-0 pl-9 text-[13px]"
+                      className="h-9 w-full min-w-0 ps-9 text-[13px]"
                     />
                   </div>
                   <TooltipPrimitive.Root>
@@ -2139,7 +2139,7 @@ export function DeploymentDetailView({
             <div
               ref={logsContainerRef}
               tabIndex={-1}
-              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-auto pl-6 pr-4 pb-44 sm:pr-5 outline-none"
+              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-auto ps-6 pe-4 pb-44 sm:pe-5 outline-none"
             >
               <div className="min-h-full min-w-0">
                 <BuildLogsView
@@ -2149,7 +2149,7 @@ export function DeploymentDetailView({
                   onLineClick={handleLineClick}
                   lineRefs={lineRefs}
                   emptyMessage="No build logs available."
-                  lineHorizontalPaddingClass="pl-0 pr-0"
+                  lineHorizontalPaddingClass="ps-0 pe-0"
                 />
               </div>
             </div>
@@ -2162,7 +2162,7 @@ export function DeploymentDetailView({
 
         {/* Scroll controls: fixed over logs; inset from right on lg+ to clear the side panel */}
         {buildLogs && (
-          <div className="pointer-events-none fixed bottom-24 right-8 z-[101] lg:right-[calc(20rem+1.25rem)] xl:right-[calc(22rem+1.25rem)]">
+          <div className="pointer-events-none fixed bottom-24 end-8 z-[101] lg:end-[calc(20rem+1.25rem)] xl:end-[calc(22rem+1.25rem)]">
             <div className="pointer-events-auto flex flex-col gap-2">
               <TooltipProvider>
                 <TooltipPrimitive.Root>
@@ -2212,7 +2212,7 @@ export function DeploymentDetailView({
           overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
           className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
         >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Cancel build</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Stop the current deployment? You can deploy again later.
@@ -2250,7 +2250,7 @@ export function DeploymentDetailView({
           overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
           className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
         >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete deployment</DialogTitle>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -2288,7 +2288,7 @@ export function DeploymentDetailView({
             overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
             className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
           >
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Redeploy deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -2330,7 +2330,7 @@ export function DeploymentDetailView({
             overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
             className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
           >
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Activate deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />

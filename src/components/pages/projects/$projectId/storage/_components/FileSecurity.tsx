@@ -436,7 +436,7 @@ export function FileSecurity({
         className="h-8 w-fit text-[12px]"
         onClick={() => setCreateTokenDialogOpen(true)}
       >
-        <Plus className="h-3.5 w-3.5 mr-1.5" />
+        <Plus className="h-3.5 w-3.5 me-1.5" />
         Create token
       </Button>
     </div>
@@ -469,7 +469,7 @@ export function FileSecurity({
         }
         onClick={() => setCreateTokenDialogOpen(true)}
       >
-        <Plus className="h-3.5 w-3.5 mr-1.5" />
+        <Plus className="h-3.5 w-3.5 me-1.5" />
         Create token
       </Button>
     </div>
@@ -773,7 +773,7 @@ export function FileSecurity({
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Create file token</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Create a token to share this file publicly. Choose when the token
@@ -887,7 +887,7 @@ export function FileSecurity({
         onOpenChange={(open) => !open && setViewingTokenId(null)}
       >
         <DialogContent className="sm:max-w-[600px] p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>File Token</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Copy the full token below. Keep it secure and never share it
@@ -950,7 +950,7 @@ export function FileSecurity({
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete token</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete this token? This action cannot be
@@ -999,7 +999,7 @@ export function FileSecurity({
         }}
       >
         <DialogContent className="sm:max-w-[600px] p-0 max-h-[90dvh] overflow-hidden flex flex-col">
-          <DialogHeader className="px-6 pt-6 text-left shrink-0">
+          <DialogHeader className="px-6 pt-6 text-start shrink-0">
             <DialogTitle>Copy File URL</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Use the token-based URL below to access this file securely.
@@ -1032,12 +1032,12 @@ export function FileSecurity({
                       {copiedField === 'copyUrl' &&
                       copyUrlMode === 'preview' ? (
                         <>
-                          <Check className="h-3 w-3 mr-1 text-emerald-500" />
+                          <Check className="h-3 w-3 me-1 text-emerald-500" />
                           Copied
                         </>
                       ) : (
                         <>
-                          <Copy className="h-3 w-3 mr-1" />
+                          <Copy className="h-3 w-3 me-1" />
                           Preview
                         </>
                       )}
@@ -1058,12 +1058,12 @@ export function FileSecurity({
                     >
                       {copiedField === 'copyUrl' && copyUrlMode === 'view' ? (
                         <>
-                          <Check className="h-3 w-3 mr-1 text-emerald-500" />
+                          <Check className="h-3 w-3 me-1 text-emerald-500" />
                           Copied
                         </>
                       ) : (
                         <>
-                          <Copy className="h-3 w-3 mr-1" />
+                          <Copy className="h-3 w-3 me-1" />
                           View
                         </>
                       )}
@@ -1085,12 +1085,12 @@ export function FileSecurity({
                       {copiedField === 'copyUrl' &&
                       copyUrlMode === 'download' ? (
                         <>
-                          <Check className="h-3 w-3 mr-1 text-emerald-500" />
+                          <Check className="h-3 w-3 me-1 text-emerald-500" />
                           Copied
                         </>
                       ) : (
                         <>
-                          <Copy className="h-3 w-3 mr-1" />
+                          <Copy className="h-3 w-3 me-1" />
                           Download
                         </>
                       )}

@@ -79,7 +79,7 @@ export function DomainTargetCard({
             onClick={() => onBehaviourChange('active')}
             disabled={disabled}
             className={cn(
-              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'active'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
@@ -99,7 +99,7 @@ export function DomainTargetCard({
             disabled={disabled || branchDisabled}
             title={branchDisabled ? 'Connect repository first' : undefined}
             className={cn(
-              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'branch'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
@@ -118,7 +118,7 @@ export function DomainTargetCard({
             onClick={() => onBehaviourChange('redirect')}
             disabled={disabled || redirectDisabled}
             className={cn(
-              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'redirect'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',

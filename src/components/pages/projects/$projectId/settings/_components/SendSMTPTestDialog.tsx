@@ -83,7 +83,7 @@ export function SendSMTPTestDialog({
       <DialogContent
         className="sm:max-w-md p-0"
 >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Send test email</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Verify your SMTP configuration by sending a test email to one or more
@@ -129,7 +129,7 @@ export function SendSMTPTestDialog({
                 Test email sent to {emails.length}{' '}
                 {emails.length === 1 ? 'recipient' : 'recipients'}.
               </p>
-              <ul className="w-full text-left text-[12px] text-muted-foreground space-y-1">
+              <ul className="w-full text-start text-[12px] text-muted-foreground space-y-1">
                 {emails.map((email) => (
                   <li key={email} className="truncate">
                     {email}
@@ -161,7 +161,7 @@ export function SendSMTPTestDialog({
                 onClick={handleSend}
 >
                 {isSending ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                  <Loader2 className="me-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
                 ) : null}
                 Send
               </Button>

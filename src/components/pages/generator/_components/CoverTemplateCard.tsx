@@ -63,7 +63,7 @@ export function CoverTemplateCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'flex w-full flex-col overflow-hidden border text-left transition-colors',
+        'flex w-full flex-col overflow-hidden border text-start transition-colors',
         variant === 'panel' ? 'rounded-md' : 'rounded-xl',
         selected
           ? 'border-[var(--brand-cta)] bg-[var(--brand-cta)]/5 ring-1 ring-[var(--brand-cta)]/25'
@@ -80,7 +80,7 @@ export function CoverTemplateCard({
             data={previewData}
             previewUrl={previewUrl || undefined}
             displayWidth={previewWidth}
-            className="absolute left-0 top-0"
+            className="absolute start-0 top-0"
           />
         ) : null}
       </div>

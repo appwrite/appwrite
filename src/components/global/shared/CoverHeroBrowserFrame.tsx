@@ -123,7 +123,7 @@ export function CoverHeroBrowserFrame({
         style={{
           width: shotRect.width,
           height: shotRect.height,
-          marginLeft: paddingX,
+          marginInlineStart: paddingX,
           marginBottom: closed ? paddingBottom : 0,
           borderTopLeftRadius: radii.topLeft,
           borderTopRightRadius: radii.topRight,

@@ -137,9 +137,9 @@ export function View() {
             onClick={handleCreateSecret}
           >
             {createSecretMutation.isPending ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              <Plus className="me-1.5 h-3.5 w-3.5" />
             )}
             Create secret
           </Button>
@@ -243,7 +243,7 @@ export function View() {
         }}
       >
         <DialogContent className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden">
-          <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
             <DialogTitle>OAuth secret created</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Copy this value now. For security, the full secret cannot be
@@ -278,9 +278,9 @@ export function View() {
                   onClick={() => void handleCopyNewSecret()}
                 >
                   {copiedNewSecret ? (
-                    <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+                    <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
                   ) : (
-                    <Copy className="mr-1.5 h-3.5 w-3.5" />
+                    <Copy className="me-1.5 h-3.5 w-3.5" />
                   )}
                   Copy
                 </Button>
@@ -309,7 +309,7 @@ export function View() {
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete OAuth secret</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Token refresh and authorization flows using this secret will stop

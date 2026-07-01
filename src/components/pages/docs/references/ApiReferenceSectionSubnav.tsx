@@ -399,7 +399,7 @@ function ReferenceServicesNav({
               className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
             >
               <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
-                <span className="min-w-0 flex-1 truncate text-left">{group.label}</span>
+                <span className="min-w-0 flex-1 truncate text-start">{group.label}</span>
               </AccordionTrigger>
               <AccordionContent className="pb-2 pt-0">
                 <ul className="space-y-0.5">
@@ -438,7 +438,7 @@ export function ApiReferenceSectionSubnavPanel({
   return (
     <aside
       className={cn(
-        'relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-r border-border bg-background',
+        'relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-e border-border bg-background',
         REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS,
       )}
       aria-label={
@@ -475,7 +475,7 @@ export function ApiReferenceSectionSubnavMobile({
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="flex w-[min(100vw,320px)] flex-col p-0">
-        <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-left">
+        <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-start">
           <SheetTitle className="text-[15px]">
             {parent?.label ?? 'API references'}
           </SheetTitle>

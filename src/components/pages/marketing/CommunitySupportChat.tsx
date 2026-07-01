@@ -88,15 +88,15 @@ function ChatBubble({ message }: { message: ChatMessage }) {
             ? [
                 'border border-[hsl(340_55%_80%)] bg-[hsl(330_28%_88%)] shadow-[0_1px_3px_rgba(0,0,0,0.06)]',
                 'dark:border-[hsl(340_62%_86%)] dark:bg-[hsl(330_26%_91%)] dark:shadow-none',
-                'before:pointer-events-none before:absolute before:right-[23px] before:-top-[15px] before:block before:h-4 before:w-[23px] before:rotate-180 before:bg-[hsl(340_55%_80%)] before:[clip-path:polygon(50%_100%,0_0,100%_0)]',
+                'before:pointer-events-none before:absolute before:end-[23px] before:-top-[15px] before:block before:h-4 before:w-[23px] before:rotate-180 before:bg-[hsl(340_55%_80%)] before:[clip-path:polygon(50%_100%,0_0,100%_0)]',
                 'before:dark:bg-[hsl(340_62%_86%)]',
-                'after:pointer-events-none after:absolute after:right-6 after:-top-[14px] after:block after:h-[15px] after:w-[21px] after:rotate-180 after:bg-[hsl(330_28%_88%)] after:[clip-path:polygon(50%_100%,0_0,100%_0)]',
+                'after:pointer-events-none after:absolute after:end-6 after:-top-[14px] after:block after:h-[15px] after:w-[21px] after:rotate-180 after:bg-[hsl(330_28%_88%)] after:[clip-path:polygon(50%_100%,0_0,100%_0)]',
                 'after:dark:bg-[hsl(330_26%_91%)]',
               ]
             : [
                 'border border-border bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]',
                 'dark:border-transparent dark:bg-[hsl(0_0%_99%)] dark:shadow-sm',
-                'before:pointer-events-none before:absolute before:left-[23px] before:top-[calc(100%-1px)] before:block before:h-4 before:w-[23px] before:bg-white before:[clip-path:polygon(50%_100%,0_0,100%_0)]',
+                'before:pointer-events-none before:absolute before:start-[23px] before:top-[calc(100%-1px)] before:block before:h-4 before:w-[23px] before:bg-white before:[clip-path:polygon(50%_100%,0_0,100%_0)]',
                 'before:dark:bg-[hsl(0_0%_99%)]',
               ],
         )}

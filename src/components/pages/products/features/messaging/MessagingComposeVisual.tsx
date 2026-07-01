@@ -46,7 +46,7 @@ export function MessagingComposeVisual() {
       contentClassName="p-0"
     >
       <div className="grid min-h-[16rem] lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="min-w-0 border-b border-border p-4 sm:p-5 lg:border-b-0 lg:border-r">
+        <div className="min-w-0 border-b border-border p-4 sm:p-5 lg:border-b-0 lg:border-e">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Compose message
           </p>

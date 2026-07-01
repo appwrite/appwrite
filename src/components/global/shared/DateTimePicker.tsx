@@ -116,7 +116,7 @@ export function DateTimePicker({
           onFocus={onFocus}
           aria-label={ariaLabel}
           className={cn(
-            'w-full cursor-pointer justify-start gap-2 text-left font-normal',
+            'w-full cursor-pointer justify-start gap-2 text-start font-normal',
             size === 'sm' ? 'h-8 text-[12px]' : 'h-9 text-[13px]',
             !date && 'text-muted-foreground',
             className,

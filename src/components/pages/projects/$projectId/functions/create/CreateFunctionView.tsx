@@ -152,7 +152,7 @@ function LanguageCard({
     return (
       <div
         className={cn(
-          'rounded-xl border border-border bg-card/50 p-4 text-left opacity-60 cursor-not-allowed',
+          'rounded-xl border border-border bg-card/50 p-4 text-start opacity-60 cursor-not-allowed',
         )}
       >
         {content}
@@ -165,7 +165,7 @@ function LanguageCard({
       params={{ projectId, templateId: template!.id }}
       search={{ runtime: language }}
       className={cn(
-        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card',
+        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card',
         RESOURCE_CARD_SHELL_CLASSNAME,
       )}
     >
@@ -186,7 +186,7 @@ function TemplateCard({
       to="/projects/$projectId/functions/create/template/$templateId"
       params={{ projectId, templateId: template.id }}
       className={cn(
-        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card',
+        'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card',
         RESOURCE_CARD_SHELL_CLASSNAME,
       )}
     >
@@ -427,7 +427,7 @@ export function CreateFunctionView() {
               </p>
               <Button size="sm" asChild>
                 <a href={getGitHubAuthUrl}>
-                  <GitHubIcon className="mr-1.5 h-3.5 w-3.5" />
+                  <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
                   Connect GitHub
                 </a>
               </Button>
@@ -482,12 +482,12 @@ export function CreateFunctionView() {
                 </Select>
 
                 <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Search className="absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <Input
                     value={repoSearch}
                     onChange={(e) => setRepoSearch(e.target.value)}
                     placeholder="Search repositories"
-                    className="h-9 pl-9 text-[13px]"
+                    className="h-9 ps-9 text-[13px]"
                   />
                 </div>
 

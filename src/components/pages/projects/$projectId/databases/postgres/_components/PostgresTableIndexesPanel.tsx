@@ -201,7 +201,7 @@ export function PostgresTableIndexesPanel({
               <tr>
                 <th
                   className={cn(
-                    'min-w-[200px] px-3 py-2 text-left',
+                    'min-w-[200px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -211,7 +211,7 @@ export function PostgresTableIndexesPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[100px] px-3 py-2 text-left',
+                    'min-w-[100px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -221,7 +221,7 @@ export function PostgresTableIndexesPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[90px] px-3 py-2 text-left',
+                    'min-w-[90px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -231,7 +231,7 @@ export function PostgresTableIndexesPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[180px] px-3 py-2 text-left',
+                    'min-w-[180px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -241,7 +241,7 @@ export function PostgresTableIndexesPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[140px] px-3 py-2 text-left',
+                    'min-w-[140px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -251,7 +251,7 @@ export function PostgresTableIndexesPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[120px] px-3 py-2 text-left',
+                    'min-w-[120px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -261,7 +261,7 @@ export function PostgresTableIndexesPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[140px] px-3 py-2 text-left',
+                    'min-w-[140px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -447,7 +447,7 @@ export function PostgresTableIndexesPanel({
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete index</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}

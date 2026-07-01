@@ -96,7 +96,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
           <Table className="border-b border-border">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] ps-6 sm:ps-8">
                   Message ID
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
@@ -122,7 +122,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
                     index === messages.length - 1 && 'border-b border-border',
                   )}
                 >
-                  <TableCell className="pl-6 sm:pl-8 py-3">
+                  <TableCell className="ps-6 sm:ps-8 py-3">
                     <CopyableId id={message.id} size="sm" />
                   </TableCell>
                   <TableCell className="px-4 py-3">

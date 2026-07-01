@@ -279,7 +279,7 @@ export function PlatformIcon({
         {/* Flutter badge in corner - bigger and no color */}
         <div
           className={cn(
-            'absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
+            'absolute -bottom-1 -end-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
             frameworkBadgeSize,
           )}
         >
@@ -302,7 +302,7 @@ export function PlatformIcon({
         {/* React Native badge in corner - bigger and no color */}
         <div
           className={cn(
-            'absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
+            'absolute -bottom-1 -end-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
             frameworkBadgeSize,
           )}
         >

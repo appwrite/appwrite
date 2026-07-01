@@ -302,19 +302,19 @@ export function PaymentHistory() {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr>
-              <th className="px-6 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <th className="px-6 py-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Invoice
               </th>
-              <th className="px-6 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <th className="px-6 py-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Due Date
               </th>
-              <th className="px-6 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <th className="px-6 py-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Status
               </th>
-              <th className="px-6 py-2.5 text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <th className="px-6 py-2.5 text-end text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Amount
               </th>
-              <th className="px-6 py-2.5 text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground" />
+              <th className="px-6 py-2.5 text-end text-[11px] font-medium uppercase tracking-wider text-muted-foreground" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -545,12 +545,12 @@ function InvoiceRow({
             : invoice.status}
         </Badge>
       </td>
-      <td className="px-6 py-3 text-right">
+      <td className="px-6 py-3 text-end">
         <span className="text-[13px] font-medium text-foreground">
           {formatCurrency(invoice.amount, invoice.currency)}
         </span>
       </td>
-      <td className="px-6 py-3 text-right">
+      <td className="px-6 py-3 text-end">
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           {showAuthorize && (
             <Button

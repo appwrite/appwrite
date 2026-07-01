@@ -127,7 +127,7 @@ export function ComparisonSelector({
           )}
         >
           <TrendingUp className="h-3.5 w-3.5" />
-          <span className="min-w-[120px] text-left">
+          <span className="min-w-[120px] text-start">
             {selectedOption?.label || 'Compare'}
           </span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50" />

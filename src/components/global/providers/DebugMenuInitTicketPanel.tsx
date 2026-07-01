@@ -73,7 +73,7 @@ export function DebugMenuInitTicketPanel() {
                 type="button"
                 onClick={() => setDebugOverride('mockInitTicketType', option.id)}
                 className={cn(
-                  'flex w-full flex-col rounded-lg border px-3 py-2.5 text-left transition-colors',
+                  'flex w-full flex-col rounded-lg border px-3 py-2.5 text-start transition-colors',
                   active
                     ? 'border-[color-mix(in_srgb,var(--network-globe-edge)_60%,var(--border))] bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)]'
                     : 'border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',

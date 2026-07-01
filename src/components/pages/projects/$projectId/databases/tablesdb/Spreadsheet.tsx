@@ -295,8 +295,8 @@ const getIndexTypeColor = (type: string) => {
 // Reusable table styles for spreadsheet views
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
-  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-const bodyCellBorderClass = 'border-b border-r border-border'
+  'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+const bodyCellBorderClass = 'border-b border-e border-border'
 const lastCellBorderClass = 'border-b border-border'
 
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
@@ -314,8 +314,8 @@ const ROW_GRID_DEFAULT_DATE_KEYS = ['$createdAt', '$updatedAt'] as const
  */
 const DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
   'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:start-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100',
 )
 
@@ -428,7 +428,7 @@ function RowEditArraySortableRow({
     >
       <button
         type="button"
-        className="flex w-8 shrink-0 cursor-grab touch-none items-center justify-center border-r border-foreground/10 bg-muted/30 text-muted-foreground hover:bg-muted/45 active:cursor-grabbing"
+        className="flex w-8 shrink-0 cursor-grab touch-none items-center justify-center border-e border-foreground/10 bg-muted/30 text-muted-foreground hover:bg-muted/45 active:cursor-grabbing"
         aria-label="Drag to reorder"
         {...attributes}
         {...listeners}
@@ -1497,7 +1497,7 @@ function RowEditDrawer({
                       'z-10 flex gap-1.5 sm:gap-2',
                       useCompactInlineJsonToolbar
                         ? 'pointer-events-auto relative shrink-0 flex-row flex-wrap justify-end border-b border-border bg-background/95 px-2 py-2 backdrop-blur-sm'
-                        : 'pointer-events-none absolute right-3 top-4 flex-col p-1 sm:right-6 sm:top-5',
+                        : 'pointer-events-none absolute end-3 top-4 flex-col p-1 sm:end-6 sm:top-5',
                     )}
                   >
                     <TooltipProvider delayDuration={0}>
@@ -1747,7 +1747,7 @@ function RowEditDrawer({
                               )}
                               {isRequired && (
                                 <span
-                                  className="text-destructive text-[12px] font-semibold ml-0.5"
+                                  className="text-destructive text-[12px] font-semibold ms-0.5"
                                   aria-label="Required field"
                                 >
                                   *
@@ -1981,7 +1981,7 @@ function RowEditDrawer({
 
                                             return (
                                               <>
-                                            <div className="flex w-9 shrink-0 select-none items-center justify-center border-r border-foreground/10 bg-muted/40 text-[11px] font-mono tabular-nums text-muted-foreground">
+                                            <div className="flex w-9 shrink-0 select-none items-center justify-center border-e border-foreground/10 bg-muted/40 text-[11px] font-mono tabular-nums text-muted-foreground">
                                               {index + 1}
                                             </div>
                                             <div className="flex min-w-0 flex-1 flex-col">
@@ -2219,7 +2219,7 @@ function RowEditDrawer({
                                             <button
                                               type="button"
                                               aria-label={`Remove item ${index + 1}`}
-                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-l border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-s border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                               onClick={() =>
                                                 handleRemoveArrayItem(
                                                   key,
@@ -2252,7 +2252,7 @@ function RowEditDrawer({
                                   onClick={() => handleAddArrayItem(key)}
                                   className="h-9 w-full cursor-pointer justify-center rounded-none border-t border-foreground/10 bg-muted/30 text-[12px] text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 >
-                                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                  <Plus className="me-1.5 h-3.5 w-3.5" />
                                   Add item
                                 </Button>
                               </div>
@@ -2386,8 +2386,8 @@ function RowEditDrawer({
                                   hasLimit || showNullCheckbox
                                 const counterPadding = needsCounterSpace
                                   ? isRTLContent
-                                    ? 'pl-28'
-                                    : 'pr-28'
+                                    ? 'ps-28'
+                                    : 'pe-28'
                                   : ''
 
                                 return (
@@ -2475,11 +2475,11 @@ function RowEditDrawer({
                                           'absolute flex items-center gap-2 pointer-events-none',
                                           useTextarea
                                             ? isRTLContent
-                                              ? 'bottom-2 left-2'
-                                              : 'bottom-2 right-2'
+                                              ? 'bottom-2 start-2'
+                                              : 'bottom-2 end-2'
                                             : isRTLContent
-                                              ? 'top-1/2 -translate-y-1/2 left-2'
-                                              : 'top-1/2 -translate-y-1/2 right-2',
+                                              ? 'top-1/2 -translate-y-1/2 start-2'
+                                              : 'top-1/2 -translate-y-1/2 end-2',
                                         )}
                                       >
                                         {hasLimit && (
@@ -2564,7 +2564,7 @@ function RowEditDrawer({
 
             {presentation === 'inline' &&
             (inlineDocumentDirty || isCreateMode) ? (
-              <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-20 flex justify-center px-2 sm:bottom-4 sm:px-4">
+              <div className="pointer-events-none absolute bottom-3 start-0 end-0 z-20 flex justify-center px-2 sm:bottom-4 sm:px-4">
                 <div className="pointer-events-auto flex w-full max-w-[520px] min-w-0 flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 shadow-sm sm:min-w-[min(100%,400px)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3">
                   <Badge variant="secondary" className="h-6 w-fit shrink-0 px-2.5">
                     {isCreateMode
@@ -4753,7 +4753,7 @@ export function RowsSpreadsheet({
                   'shrink-0 border-border',
                   isDocumentsStackedLayout
                     ? 'max-h-[min(42dvh,320px)] w-full border-b'
-                    : 'border-r',
+                    : 'border-e',
                   paginatedRows.length === 0 && 'border-t border-border',
                 )
               : 'min-w-0 flex-1',
@@ -4857,7 +4857,7 @@ export function RowsSpreadsheet({
             <tr>
               <th
                 className={cn(
-                  'sticky left-0 z-40 w-10 bg-background px-2 py-2 text-center',
+                  'sticky start-0 z-40 w-10 bg-background px-2 py-2 text-center',
                   useInlineDocumentPane &&
                     'min-w-[40px] max-w-[40px] shrink-0 box-border',
                   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]',
@@ -4888,7 +4888,7 @@ export function RowsSpreadsheet({
                     <th
                       key="th-$sequence"
                       className={cn(
-                        'w-[72px] min-w-[72px] px-2 py-2 text-left',
+                        'w-[72px] min-w-[72px] px-2 py-2 text-start',
                         headerCellBorderClass,
                       )}
                     >
@@ -4929,7 +4929,7 @@ export function RowsSpreadsheet({
                           type="button"
                           aria-label="Copy column name: $id"
                           onClick={() => void copyColumnHeaderName('$id')}
-                          className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           <span className="min-w-0 truncate">$id</span>
                           {copiedColumnHeaderKey === '$id' ? (
@@ -4947,7 +4947,7 @@ export function RowsSpreadsheet({
                         <button
                           type="button"
                           onClick={() => handleSortColumn('$id')}
-                          className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          className="ms-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           {sortBy === '$id' ? (
                             sortOrder === 'asc' ? (
@@ -4976,7 +4976,7 @@ export function RowsSpreadsheet({
                           type="button"
                           aria-label={`Copy column name: ${gridKey}`}
                           onClick={() => void copyColumnHeaderName(gridKey)}
-                          className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           <span className="min-w-0 truncate">{gridKey}</span>
                           {copiedColumnHeaderKey === gridKey ? (
@@ -4994,7 +4994,7 @@ export function RowsSpreadsheet({
                         <button
                           type="button"
                           onClick={() => handleSortColumn(gridKey)}
-                          className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          className="ms-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           {sortBy === gridKey ? (
                             sortOrder === 'asc' ? (
@@ -5048,13 +5048,13 @@ export function RowsSpreadsheet({
                           }
                     }
                   >
-                    <div className="flex min-w-0 items-center gap-2 pr-1.5">
+                    <div className="flex min-w-0 items-center gap-2 pe-1.5">
                       <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <button
                         type="button"
                         aria-label={`Copy column name: ${col}`}
                         onClick={() => void copyColumnHeaderName(col)}
-                        className="group inline-flex max-w-full min-w-0 shrink items-center gap-1 overflow-hidden rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="group inline-flex max-w-full min-w-0 shrink items-center gap-1 overflow-hidden rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         <span className="min-w-0 truncate">{col}</span>
                         {isCopiedHeader ? (
@@ -5091,7 +5091,7 @@ export function RowsSpreadsheet({
               })}
               <th
                 className={cn(
-                  'relative sticky right-0 z-30 bg-background p-0',
+                  'relative sticky end-0 z-30 bg-background p-0',
                   useInlineDocumentPane && 'shrink-0 box-border',
                   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)]',
                 )}
@@ -5184,7 +5184,7 @@ export function RowsSpreadsheet({
                 >
                   <td
                     className={cn(
-                      'sticky left-0 w-10 border-b border-border px-2 py-1.5 text-center',
+                      'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
                       useInlineDocumentPane &&
                         'min-w-[40px] max-w-[40px] shrink-0 box-border',
                       'shadow-[inset_-1px_0_0_0_var(--border)]',
@@ -5366,7 +5366,7 @@ export function RowsSpreadsheet({
                   })}
                   <td
                     className={cn(
-                      'sticky right-0 border-b border-border p-0',
+                      'sticky end-0 border-b border-border p-0',
                       useInlineDocumentPane && 'shrink-0 box-border',
                       'shadow-[inset_1px_0_0_0_var(--border)]',
                       !isInlinePreviewRow
@@ -5564,7 +5564,7 @@ export function RowsSpreadsheet({
 
       {/* Bulk Delete Action Bar */}
       {selectedRows.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
+        <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
           <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedRows.size}{' '}
@@ -5674,7 +5674,7 @@ export function RowsSpreadsheet({
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete {dbLabels.recordPluralTitle}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete {selectedRows.size}{' '}
@@ -6285,7 +6285,7 @@ export function ColumnsSpreadsheet({
                 <tr>
                   <th
                     className={cn(
-                      'min-w-[200px] px-3 py-2 text-left',
+                      'min-w-[200px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6295,7 +6295,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[120px] px-3 py-2 text-left',
+                      'min-w-[120px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6305,7 +6305,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'w-[120px] min-w-[120px] px-3 py-2 text-left',
+                      'w-[120px] min-w-[120px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6315,7 +6315,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[80px] px-3 py-2 text-left',
+                      'min-w-[80px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6325,7 +6325,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[108px] px-3 py-2 text-left',
+                      'min-w-[108px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6335,7 +6335,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[80px] px-3 py-2 text-left',
+                      'min-w-[80px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6345,7 +6345,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[80px] px-3 py-2 text-left',
+                      'min-w-[80px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6355,7 +6355,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[80px] px-3 py-2 text-left',
+                      'min-w-[80px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6365,7 +6365,7 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[120px] px-3 py-2 text-left',
+                      'min-w-[120px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -6638,10 +6638,10 @@ export function ColumnsSpreadsheet({
 
       {/* Bulk Action Bar for Suggestions */}
       {suggestedColumns.length > 0 && (
-        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
+        <div className="absolute bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              <Lightbulb className="h-3 w-3 mr-1.5" />
+              <Lightbulb className="h-3 w-3 me-1.5" />
               {suggestedColumns.length} suggestion
               {suggestedColumns.length !== 1 ? 's' : ''}
             </Badge>
@@ -6664,7 +6664,7 @@ export function ColumnsSpreadsheet({
                 disabled={createColumnMutation.isPending}
                 className="h-8"
               >
-                <Check className="h-3.5 w-3.5 mr-1.5" />
+                <Check className="h-3.5 w-3.5 me-1.5" />
                 Approve all
               </Button>
             </div>
@@ -6710,7 +6710,7 @@ export function ColumnsSpreadsheet({
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete Column</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete the column "{columnToDelete}"?
@@ -6750,7 +6750,7 @@ export function ColumnsSpreadsheet({
         <DialogContent className="sm:max-w-md p-0">
           {isLoadingSuggestions ? (
             <>
-              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>Generating suggestions</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   AI is analyzing your table structure and generating column
@@ -6777,7 +6777,7 @@ export function ColumnsSpreadsheet({
                 handleGenerateSuggestions(context)
               }}
             >
-              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>AI column suggestions</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Provide optional context or instructions to help generate
@@ -7293,7 +7293,7 @@ export function IndexesSpreadsheet({
                 <tr>
                   <th
                     className={cn(
-                      'min-w-[200px] px-3 py-2 text-left',
+                      'min-w-[200px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -7303,7 +7303,7 @@ export function IndexesSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[100px] px-3 py-2 text-left',
+                      'min-w-[100px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -7313,7 +7313,7 @@ export function IndexesSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[300px] px-3 py-2 text-left',
+                      'min-w-[300px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -7323,7 +7323,7 @@ export function IndexesSpreadsheet({
                   </th>
                   <th
                     className={cn(
-                      'min-w-[100px] px-3 py-2 text-left',
+                      'min-w-[100px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
                   >
@@ -7536,7 +7536,7 @@ export function IndexesSpreadsheet({
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete index</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete the index "{indexToDelete}"? This
@@ -7576,7 +7576,7 @@ export function IndexesSpreadsheet({
         <DialogContent className="sm:max-w-md p-0">
           {isLoadingSuggestions ? (
             <>
-              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>Generating suggestions</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   AI is analyzing your table structure and generating index
@@ -7603,7 +7603,7 @@ export function IndexesSpreadsheet({
                 handleGenerateSuggestions(context)
               }}
             >
-              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>AI index suggestions</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Provide optional context or instructions to help generate
@@ -7645,10 +7645,10 @@ export function IndexesSpreadsheet({
 
       {/* Bulk Action Bar for Suggestions */}
       {suggestedIndexes.length > 0 && (
-        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
+        <div className="absolute bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              <Lightbulb className="h-3 w-3 mr-1.5" />
+              <Lightbulb className="h-3 w-3 me-1.5" />
               {suggestedIndexes.length} suggestion
               {suggestedIndexes.length !== 1 ? 's' : ''}
             </Badge>
@@ -7671,7 +7671,7 @@ export function IndexesSpreadsheet({
                 disabled={createIndexMutation.isPending}
                 className="h-8"
               >
-                <Check className="h-3.5 w-3.5 mr-1.5" />
+                <Check className="h-3.5 w-3.5 me-1.5" />
                 Approve all
               </Button>
             </div>
@@ -8366,7 +8366,7 @@ export function TableSettings({
                   onClick={handleAddDisplayNameColumn}
                   disabled={displayNames[displayNames.length - 1] === ''}
                 >
-                  <Plus className="h-4 w-4 mr-1.5" />
+                  <Plus className="h-4 w-4 me-1.5" />
                   Add column
                 </Button>
               )}
@@ -8448,7 +8448,7 @@ export function TableSettings({
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md p-0">
-                <DialogHeader className="px-6 pt-6 text-left">
+                <DialogHeader className="px-6 pt-6 text-start">
                   <DialogTitle>Delete table</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Are you sure you want to delete{' '}

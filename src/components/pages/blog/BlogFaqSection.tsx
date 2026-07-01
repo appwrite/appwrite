@@ -27,7 +27,7 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
       <Collapsible defaultOpen={false}>
         <CollapsibleTrigger
           className={cn(
-            'flex w-full cursor-pointer items-center justify-between gap-4 text-left transition-colors duration-150 hover:text-muted-foreground',
+            'flex w-full cursor-pointer items-center justify-between gap-4 text-start transition-colors duration-150 hover:text-muted-foreground',
             '[&[data-state=open]>svg]:rotate-180',
           )}
         >
@@ -43,10 +43,10 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
                 <AccordionItem key={faq.question} value={`item-${index}`}>
                   <AccordionTrigger
                     className={cn(
-                      'rounded-none px-4 py-4 text-left transition-colors duration-150 hover:bg-muted/40 hover:no-underline',
+                      'rounded-none px-4 py-4 text-start transition-colors duration-150 hover:bg-muted/40 hover:no-underline',
                     )}
                   >
-                    <span className="pr-4 text-[14px] font-medium text-foreground">
+                    <span className="pe-4 text-[14px] font-medium text-foreground">
                       {faq.question}
                     </span>
                   </AccordionTrigger>

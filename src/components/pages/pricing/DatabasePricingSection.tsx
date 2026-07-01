@@ -122,7 +122,7 @@ export function DatabasePricingSection() {
                   <TableHead className={compareHeadClassName}>CPU</TableHead>
                   <TableHead className={compareHeadClassName}>Memory</TableHead>
                   <TableHead
-                    className={`${compareHeadClassName} text-right`}
+                    className={`${compareHeadClassName} text-end`}
                   >
                     Price
                   </TableHead>
@@ -143,7 +143,7 @@ export function DatabasePricingSection() {
                     <TableCell className="px-4 py-3 text-[13px] text-muted-foreground sm:px-6">
                       {tier.memory}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-right text-[13px] font-medium text-foreground sm:px-6">
+                    <TableCell className="px-4 py-3 text-end text-[13px] font-medium text-foreground sm:px-6">
                       {tier.price}
                     </TableCell>
                   </TableRow>

@@ -172,7 +172,7 @@ export function AddressModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>
             {isEditing ? 'Update billing address' : 'Add billing address'}
           </DialogTitle>
@@ -209,7 +209,7 @@ export function AddressModal({
                           'Select a country'
                         : 'Select a country'}
                     </span>
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
@@ -236,7 +236,7 @@ export function AddressModal({
                           >
                             <Check
                               className={cn(
-                                'mr-2 h-4 w-4',
+                                'me-2 h-4 w-4',
                                 country === c.code
                                   ? 'opacity-100'
                                   : 'opacity-0',

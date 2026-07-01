@@ -31,9 +31,9 @@ import { CliTerminalLayoutProvider } from './CliTerminalLayoutContext'
 
 const HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:w-2 after:left-1/2 after:-translate-x-1/2',
+  'after:w-2 after:start-1/2 after:-translate-x-1/2',
 )
 
 const PERSIST_DEBOUNCE_MS = 250
@@ -247,7 +247,7 @@ export function CliTerminalResizableLayout({
             {main}
           </div>
           <div
-            className="flex min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-muted/20"
+            className="flex min-h-0 shrink-0 flex-col overflow-hidden border-s border-border bg-muted/20"
             style={{ width: sidebarWidthPx }}
           >
             {sidebar}
@@ -290,7 +290,7 @@ export function CliTerminalResizableLayout({
           minSize={panelLayout.secondMinPercent}
           className="min-w-0"
         >
-          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-l border-border bg-muted/20">
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-s border-border bg-muted/20">
             {sidebar}
           </div>
         </ResizablePanel>

@@ -26,6 +26,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useProject } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { getApiEndpoint, getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -1417,7 +1418,7 @@ export function ConnectProject({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-6xl h-[70dvh] max-h-[70dvh] p-0 gap-0 flex flex-col overflow-hidden">
-        <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
           <DialogTitle>Connect to your project</DialogTitle>
         </DialogHeader>
         <Tabs
@@ -1460,7 +1461,7 @@ export function ConnectProject({
                 >
                   {label}
                   {isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                    <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
                   )}
                 </button>
               )
@@ -1848,8 +1849,15 @@ export function ConnectProject({
                       Copy
                     </Button>
                   </div>
-                  <div className="relative rounded-xl border border-border overflow-hidden bg-background">
-                    <pre className="overflow-x-auto p-4 text-[12px] font-mono text-left m-0 bg-background">
+                  <div
+                    dir="ltr"
+                    data-code-example
+                    className={cn(
+                      FORCE_LTR_CLASS,
+                      'relative rounded-xl border border-border overflow-hidden bg-background',
+                    )}
+                  >
+                    <pre className="overflow-x-auto p-4 text-[12px] font-mono text-start m-0 bg-background">
                       <code>
                         appwrite login --email{' '}
                         <span

@@ -358,7 +358,7 @@ function CreateExecutionDrawerForm({
                       className="h-8 text-[13px] text-primary hover:text-primary"
                       onClick={addHeader}
                     >
-                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      <Plus className="me-1.5 h-3.5 w-3.5" />
                       Add header
                     </Button>
                   </div>
@@ -424,7 +424,7 @@ function CreateExecutionDrawerForm({
                 <span className="text-[13px] font-medium">Response</span>
                 <Badge
                   variant={response.ok ? 'default' : 'destructive'}
-                  className="ml-2 text-[11px]"
+                  className="ms-2 text-[11px]"
                 >
                   {response.status} {response.statusText}
                 </Badge>
@@ -470,7 +470,7 @@ function CreateExecutionDrawerForm({
 
         <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button type="submit" disabled={!canExecute || isExecuting}>
-            <Play className="mr-1.5 h-4 w-4" />
+            <Play className="me-1.5 h-4 w-4" />
             Execute
           </Button>
           <Button

@@ -218,7 +218,7 @@ function ExplorerSingleQueryBuilderDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,520px)] w-[min(96vw,640px)] flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Build {fieldLabel}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Add one Appwrite Query condition for this entry.

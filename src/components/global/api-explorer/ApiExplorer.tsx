@@ -128,9 +128,9 @@ import {
 
 const HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:w-2 after:left-1/2 after:-translate-x-1/2',
+  'after:w-2 after:start-1/2 after:-translate-x-1/2',
 )
 
 const VERTICAL_HANDLE_CLASS = cn(
@@ -255,12 +255,12 @@ export function ApiExplorerDownloadSpecButton({
           )}
         >
           {isDownloading ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            <Loader2 className="me-1.5 h-4 w-4 animate-spin" />
           ) : (
-            <Download className="mr-1.5 h-4 w-4" />
+            <Download className="me-1.5 h-4 w-4" />
           )}
           OpenAPI spec
-          <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+          <ChevronDown className="ms-1.5 h-3.5 w-3.5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -307,9 +307,9 @@ function ApiExplorerOpenApiSpecDownloadFooter({
         className="h-9 w-full text-[13px] text-muted-foreground hover:text-foreground"
       >
         {isDownloading ? (
-          <Loader2 className="mr-1.5 size-4 animate-spin" />
+          <Loader2 className="me-1.5 size-4 animate-spin" />
         ) : (
-          <Download className="mr-1.5 size-4" />
+          <Download className="me-1.5 size-4" />
         )}
         OpenAPI spec
       </Button>
@@ -920,7 +920,7 @@ export function ApiExplorer({
           className,
         )}
       >
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 className="me-2 h-4 w-4 animate-spin" />
         Loading API specification…
       </div>
     )
@@ -1041,7 +1041,7 @@ function ServiceListPanel({
   const hasServices = productGroups.some((group) => group.services.length > 0)
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-background">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-e border-border bg-background">
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-4">
           <div className="px-1">
@@ -1077,7 +1077,7 @@ function ServiceListPanel({
                     className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
                   >
                     <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
-                      <span className="min-w-0 flex-1 truncate text-left">
+                      <span className="min-w-0 flex-1 truncate text-start">
                         {group.label}
                       </span>
                     </AccordionTrigger>
@@ -1091,7 +1091,7 @@ function ServiceListPanel({
                                 type="button"
                                 onClick={() => onSelectService(service)}
                                 className={cn(
-                                  'w-full text-left',
+                                  'w-full text-start',
                                   apiNavItemClassName(isActive),
                                 )}
                               >
@@ -1229,7 +1229,7 @@ function MethodListPanel({
   )
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-e border-border bg-muted/20">
       <div
         className={cn(
           COLUMN_HEADER_CLASS,
@@ -1247,12 +1247,12 @@ function MethodListPanel({
 
       <div className="shrink-0 border-b border-border bg-muted/20 px-2 py-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             placeholder="Search methods…"
-            className="h-8 border-border/60 bg-background pl-8 pr-8 text-[13px]"
+            className="h-8 border-border/60 bg-background ps-8 pe-8 text-[13px]"
             aria-label="Search methods"
             disabled={!service}
           />
@@ -1261,7 +1261,7 @@ function MethodListPanel({
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+              className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
               aria-label="Clear method search"
               onClick={() => setSearchValue('')}
             >
@@ -1306,7 +1306,7 @@ function MethodListPanel({
                           className="border-b border-border/50 pb-1 last:border-b-0 last:pb-0"
                         >
                           <AccordionTrigger className="gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:no-underline [&>svg]:size-3.5 [&>svg]:text-muted-foreground/70">
-                            <span className="min-w-0 flex-1 truncate text-left">
+                            <span className="min-w-0 flex-1 truncate text-start">
                               {group.label}
                             </span>
                             <span className="shrink-0 text-[10px] font-medium normal-case tracking-normal text-muted-foreground/60">

@@ -79,7 +79,7 @@ function AdapterOptionCard({
       )}
     >
       <RadioGroupItem value={value} id={id} className="mt-1 shrink-0" />
-      <div className="ml-4 flex-1 min-w-0 pr-2">
+      <div className="ms-4 flex-1 min-w-0 pe-2">
         <span className="block text-[15px] font-semibold tracking-tight text-foreground">
           {label}
         </span>

@@ -86,7 +86,7 @@ export function ConfigurationPanel({
               size="sm"
               className="h-9 w-full text-[13px]"
             >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              <Plus className="me-1.5 h-3.5 w-3.5" />
                 Subscriptions
             </Button>
           </PopoverTrigger>

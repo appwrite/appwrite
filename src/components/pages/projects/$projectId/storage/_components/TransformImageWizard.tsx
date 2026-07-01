@@ -165,11 +165,11 @@ function NullablePxInput({
           onChange(Math.min(max, Math.max(min, cur + delta)))
         }}
         className={cn(
-          'h-9 pr-24 text-[13px]',
+          'h-9 pe-24 text-[13px]',
           isNull && 'cursor-not-allowed opacity-50',
         )}
       />
-      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+      <div className="pointer-events-none absolute inset-y-0 end-2 flex items-center">
         <div className="pointer-events-auto flex items-center gap-1.5">
           <Checkbox
             id={`${id}-null`}
@@ -1009,7 +1009,7 @@ export function TransformImageWizard({
                         {' '}
                         <Badge
                           variant="warning"
-                          className="ml-0.5 inline h-4 align-middle px-1 py-0 text-[9px]"
+                          className="ms-0.5 inline h-4 align-middle px-1 py-0 text-[9px]"
                         >
                           Larger payload
                         </Badge>
@@ -1029,9 +1029,9 @@ export function TransformImageWizard({
               onClick={() => void downloadPreview()}
             >
               {previewDownloadBusy ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Download className="mr-1.5 h-3.5 w-3.5" />
+                <Download className="me-1.5 h-3.5 w-3.5" />
               )}
               Download
             </Button>
@@ -1041,7 +1041,7 @@ export function TransformImageWizard({
               size="sm"
               onClick={copyPreviewUrl}
             >
-              <Copy className="mr-1.5 h-3.5 w-3.5" />
+              <Copy className="me-1.5 h-3.5 w-3.5" />
               Copy URL
             </Button>
             <Button
@@ -1050,7 +1050,7 @@ export function TransformImageWizard({
               size="sm"
               onClick={openPreviewInNewTab}
             >
-              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              <ExternalLink className="me-1.5 h-3.5 w-3.5" />
               Open
             </Button>
           </div>
@@ -1217,7 +1217,7 @@ export function TransformImageWizard({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-8 w-8 shrink-0 border-border bg-card/95 p-0 shadow-none backdrop-blur-sm mr-2"
+                      className="h-8 w-8 shrink-0 border-border bg-card/95 p-0 shadow-none backdrop-blur-sm me-2"
                       onClick={copyActiveCode}
                       aria-label={copiedSdk ? 'Copied' : 'Copy code example'}
                     >
@@ -1234,7 +1234,7 @@ export function TransformImageWizard({
           )}
         </div>
 
-        <aside className="flex max-h-[min(48dvh,420px)] min-h-0 w-full shrink-0 flex-col border-t border-border bg-background md:max-h-none md:w-[min(420px,100%)] md:border-l md:border-t-0">
+        <aside className="flex max-h-[min(48dvh,420px)] min-h-0 w-full shrink-0 flex-col border-t border-border bg-background md:max-h-none md:w-[min(420px,100%)] md:border-s md:border-t-0">
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
             <Accordion
               type="multiple"
@@ -1247,7 +1247,7 @@ export function TransformImageWizard({
                     'text-[13px] hover:no-underline [&>span]:min-w-0',
                   )}
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
+                  <span className="flex min-w-0 flex-1 items-center gap-2 pe-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
                       Size & crop
                     </span>
@@ -1364,7 +1364,7 @@ export function TransformImageWizard({
                         Gravity
                       </Label>
                       <span
-                        className="ml-auto min-w-0 shrink-0 whitespace-nowrap text-right font-mono text-[10px] leading-none tracking-wide text-muted-foreground"
+                        className="ms-auto min-w-0 shrink-0 whitespace-nowrap text-end font-mono text-[10px] leading-none tracking-wide text-muted-foreground"
                         title={state.gravity}
                         aria-live="polite"
                       >
@@ -1384,13 +1384,13 @@ export function TransformImageWizard({
                             const i = ri * 3 + ci
                             const cornerBtn =
                               i === 0
-                                ? 'rounded-tl-[calc(var(--radius-lg)_-_1px)]'
+                                ? 'rounded-ss-[calc(var(--radius-lg)_-_1px)]'
                                 : i === 2
-                                  ? 'rounded-tr-[calc(var(--radius-lg)_-_1px)]'
+                                  ? 'rounded-se-[calc(var(--radius-lg)_-_1px)]'
                                   : i === 6
-                                    ? 'rounded-bl-[calc(var(--radius-lg)_-_1px)]'
+                                    ? 'rounded-es-[calc(var(--radius-lg)_-_1px)]'
                                     : i === 8
-                                      ? 'rounded-br-[calc(var(--radius-lg)_-_1px)]'
+                                      ? 'rounded-ee-[calc(var(--radius-lg)_-_1px)]'
                                       : ''
                             return (
                               <button
@@ -1437,7 +1437,7 @@ export function TransformImageWizard({
                     'text-[13px] hover:no-underline [&>span]:min-w-0',
                   )}
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
+                  <span className="flex min-w-0 flex-1 items-center gap-2 pe-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
                       Quality & format
                     </span>
@@ -1536,7 +1536,7 @@ export function TransformImageWizard({
                     'text-[13px] hover:no-underline [&>span]:min-w-0',
                   )}
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
+                  <span className="flex min-w-0 flex-1 items-center gap-2 pe-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
                       Style & effects
                     </span>

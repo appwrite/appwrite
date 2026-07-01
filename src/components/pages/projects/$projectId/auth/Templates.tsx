@@ -432,7 +432,7 @@ export function Templates({ projectId }: TemplatesProps) {
                     key={templateConfig.type}
                     onClick={() => setSelectedType(templateConfig.type)}
                     className={cn(
-                      'w-full cursor-pointer px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                      'w-full cursor-pointer px-4 py-3 text-start transition-colors hover:bg-muted/50',
                       isSelected && 'bg-muted',
                     )}
                   >
@@ -495,7 +495,7 @@ export function Templates({ projectId }: TemplatesProps) {
       {/* Reset Confirmation Dialog */}
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Reset email template?</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to reset the email template?{' '}
@@ -797,12 +797,12 @@ function TemplateEditor({
                             >
                               {copiedVariable === variable ? (
                                 <>
-                                  <Check className="mr-1.5 h-3.5 w-3.5" />
+                                  <Check className="me-1.5 h-3.5 w-3.5" />
                                   Copied
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                                  <Copy className="me-1.5 h-3.5 w-3.5" />
                                   {variable}
                                 </>
                               )}
@@ -903,7 +903,7 @@ function TemplateTypeSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-auto w-full justify-between gap-2 py-3 text-left"
+          className="h-auto w-full justify-between gap-2 py-3 text-start"
         >
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -939,7 +939,7 @@ function TemplateTypeSelector({
                 >
                   <Check
                     className={cn(
-                      'mr-2 mt-0.5 h-4 w-4 shrink-0',
+                      'me-2 mt-0.5 h-4 w-4 shrink-0',
                       selectedType === templateConfig.type
                         ? 'opacity-100'
                         : 'opacity-0',
@@ -989,7 +989,7 @@ function LocaleSelector({
           <span className="truncate">
             {selectedLocale ? selectedLocale.name : 'Select language...'}
           </span>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] @[400px]:w-[240px] p-0" align="end">
@@ -1009,7 +1009,7 @@ function LocaleSelector({
                 >
                   <Check
                     className={cn(
-                      'mr-2 h-4 w-4',
+                      'me-2 h-4 w-4',
                       locale === localeOption.code
                         ? 'opacity-100'
                         : 'opacity-0',

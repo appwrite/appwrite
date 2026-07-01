@@ -1442,10 +1442,10 @@ export function View({
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[80px]">
                             MFA
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Joined
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Last Active
                           </TableHead>
                         </TableRow>
@@ -1703,7 +1703,7 @@ export function View({
                                       projectId: projectId!,
                                       userId: user.$id,
                                     }}
-                                    className="block text-right"
+                                    className="block text-end"
                                   >
                                     <DateTooltip
                                       date={new Date(user.createdAt)}
@@ -1718,7 +1718,7 @@ export function View({
                                       projectId: projectId!,
                                       userId: user.$id,
                                     }}
-                                    className="block text-right"
+                                    className="block text-end"
                                   >
                                     {user.accessedAt ? (
                                       <span className="text-[12px] text-muted-foreground font-mono">
@@ -1861,7 +1861,7 @@ export function View({
 
             {/* Bulk Delete Action Bar */}
             {selectedUsers.size > 0 && (
-              <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+              <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                 <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                   <Badge variant="secondary" className="h-6 px-2.5">
                     {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}{' '}
@@ -1893,7 +1893,7 @@ export function View({
             {/* Bulk Delete Confirmation Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <DialogContent className="sm:max-w-md p-0">
-                <DialogHeader className="px-6 pt-6 text-left">
+                <DialogHeader className="px-6 pt-6 text-start">
                   <DialogTitle>Delete Users</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Are you sure you want to delete {selectedUsers.size} user
@@ -1948,7 +1948,7 @@ export function View({
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                             Team
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Created
                           </TableHead>
                         </TableRow>
@@ -2028,7 +2028,7 @@ export function View({
                                     projectId: projectId!,
                                     teamId: team.id,
                                   }}
-                                  className="block text-right"
+                                  className="block text-end"
                                 >
                                   <DateTooltip
                                     date={new Date(team.createdAt)}
@@ -2140,7 +2140,7 @@ export function View({
 
             {/* Bulk Delete Teams Action Bar */}
             {selectedTeams.size > 0 && (
-              <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+              <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                 <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                   <Badge variant="secondary" className="h-6 px-2.5">
                     {selectedTeams.size} team{selectedTeams.size > 1 ? 's' : ''}{' '}
@@ -2175,7 +2175,7 @@ export function View({
               onOpenChange={setDeleteTeamDialogOpen}
             >
               <DialogContent className="sm:max-w-md p-0">
-                <DialogHeader className="px-6 pt-6 text-left">
+                <DialogHeader className="px-6 pt-6 text-start">
                   <DialogTitle>Delete Teams</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Are you sure you want to delete {selectedTeams.size} team

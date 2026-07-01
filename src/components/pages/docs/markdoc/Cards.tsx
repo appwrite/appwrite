@@ -15,12 +15,12 @@ const CARD_HOVER_LIGHTS = [
 ] as const
 
 const CARD_HOVER_LIGHT_POSITIONS = [
-  'absolute -right-[18%] -top-[36%] h-[170px] w-[220px]',
-  'absolute -left-[16%] -top-[32%] h-[165px] w-[210px]',
-  'absolute right-[8%] -top-[40%] h-[175px] w-[225px]',
-  'absolute -right-[22%] top-[8%] h-[160px] w-[205px]',
-  'absolute -left-[20%] bottom-[-28%] h-[170px] w-[220px]',
-  'absolute -right-[14%] bottom-[-24%] h-[165px] w-[215px]',
+  'absolute -end-[18%] -top-[36%] h-[170px] w-[220px]',
+  'absolute -start-[16%] -top-[32%] h-[165px] w-[210px]',
+  'absolute end-[8%] -top-[40%] h-[175px] w-[225px]',
+  'absolute -end-[22%] top-[8%] h-[160px] w-[205px]',
+  'absolute -start-[20%] bottom-[-28%] h-[170px] w-[220px]',
+  'absolute -end-[14%] bottom-[-24%] h-[165px] w-[215px]',
 ] as const
 
 const CARD_LINK_CLASS = 'link-unstyled block h-full'

@@ -54,15 +54,15 @@ export function getPostgresRowsDataColumnHeaderStyle(
 
 export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
   'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:start-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100',
 )
 
 export const POSTGRES_STICKY_THEAD_CLASS = 'sticky top-0 z-20 bg-background'
 export const POSTGRES_HEADER_CELL_BORDER_CLASS =
-  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-export const POSTGRES_BODY_CELL_BORDER_CLASS = 'border-b border-r border-border'
+  'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+export const POSTGRES_BODY_CELL_BORDER_CLASS = 'border-b border-e border-border'
 export const POSTGRES_LAST_CELL_BORDER_CLASS = 'border-b border-border'
 
 export function getPostgresColumnTypeColor(type: string): string {

@@ -1570,14 +1570,14 @@ export function View() {
                       fileMultiSelectModifierActive && 'select-none',
                       splitFilesTable
                         ? cn(
-                            'col-start-1 row-start-1 border-r border-border',
+                            'col-start-1 row-start-1 border-e border-border',
                             files.length === 0 && 'border-t border-border',
                           )
                         : cn(
                             'border-border',
                             isFilesStackedLayout
                               ? 'min-h-0 w-full flex-1'
-                              : 'shrink-0 border-r',
+                              : 'shrink-0 border-e',
                             files.length === 0 && 'border-t border-border',
                           ),
                     )}
@@ -1648,7 +1648,7 @@ export function View() {
                         <tr>
                           <th
                             className={cn(
-                              'sticky left-0 z-40 w-10 bg-background px-2 text-center',
+                              'sticky start-0 z-40 w-10 bg-background px-2 text-center',
                               STORAGE_FILES_TABLE_HEADER_TH_CLASS,
                               splitFilesTable &&
                                 'min-w-[40px] max-w-[40px] shrink-0 box-border',
@@ -1706,7 +1706,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('$id')}
-                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ms-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === '$id' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1743,7 +1743,7 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
+                            <div className="flex h-full min-w-0 items-center gap-2 pe-1.5">
                               <FileIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 name
@@ -1751,7 +1751,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('name')}
-                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ms-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === 'name' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1788,14 +1788,14 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
+                            <div className="flex h-full min-w-0 items-center gap-2 pe-1.5">
                               <span className="text-[12px] font-medium text-foreground">
                                 mimeType
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('mimeType')}
-                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ms-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === 'mimeType' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1832,7 +1832,7 @@ export function View() {
                                 : undefined
                             }
                           >
-                            <div className="flex h-full min-w-0 items-center gap-2 whitespace-nowrap pr-1.5">
+                            <div className="flex h-full min-w-0 items-center gap-2 whitespace-nowrap pe-1.5">
                               <span className="text-[12px] font-medium text-foreground">
                                 size
                               </span>
@@ -1841,7 +1841,7 @@ export function View() {
                                 onClick={() =>
                                   handleFileColumnSort('sizeOriginal')
                                 }
-                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ms-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === 'sizeOriginal' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1886,7 +1886,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('$createdAt')}
-                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ms-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === '$createdAt' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1931,7 +1931,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('$updatedAt')}
-                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ms-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === '$updatedAt' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1947,7 +1947,7 @@ export function View() {
                           </th>
                           <th
                             className={cn(
-                              'sticky right-0 z-30 bg-background p-0',
+                              'sticky end-0 z-30 bg-background p-0',
                               STORAGE_FILES_TABLE_HEADER_TH_CLASS,
                               splitFilesTable && 'shrink-0 box-border',
                               STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW,
@@ -2035,7 +2035,7 @@ export function View() {
                               >
                                 <td
                                   className={cn(
-                                    'sticky left-0 w-10 border-b border-border px-2 py-1.5 text-center',
+                                    'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
                                     splitFilesTable &&
                                       'min-w-[40px] max-w-[40px] shrink-0 box-border',
                                     'shadow-[inset_-1px_0_0_0_var(--border)]',
@@ -2155,8 +2155,8 @@ export function View() {
                                 <td
                                   className={cn(
                                     splitFilesTable
-                                      ? 'min-w-0 shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums'
-                                      : 'w-[120px] min-w-[120px] shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums',
+                                      ? 'min-w-0 shrink-0 whitespace-nowrap px-3 py-1.5 text-end tabular-nums'
+                                      : 'w-[120px] min-w-[120px] shrink-0 whitespace-nowrap px-3 py-1.5 text-end tabular-nums',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                     pending && 'opacity-70',
                                   )}
@@ -2237,7 +2237,7 @@ export function View() {
                                 </td>
                                 <td
                                   className={cn(
-                                    'sticky right-0 border-b border-border p-0',
+                                    'sticky end-0 border-b border-border p-0',
                                     splitFilesTable && 'shrink-0 box-border',
                                     'shadow-[inset_1px_0_0_0_var(--border)]',
                                     STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,
@@ -2305,7 +2305,7 @@ export function View() {
                     className={cn(
                       'h-[54px] shrink-0 border-t border-border bg-background',
                       splitFilesTable
-                        ? 'col-start-1 row-start-2 border-r'
+                        ? 'col-start-1 row-start-2 border-e'
                         : 'w-full',
                     )}
                   >
@@ -2403,7 +2403,7 @@ export function View() {
                 </div>
 
                 {selectedFiles.size > 0 && (
-                  <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
+                  <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
                     <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
                       <Badge variant="secondary" className="h-6 px-2.5">
                         {selectedFiles.size} file
@@ -2437,7 +2437,7 @@ export function View() {
                   onOpenChange={setDeleteDialogOpen}
                 >
                   <DialogContent className="sm:max-w-md p-0">
-                    <DialogHeader className="px-6 pt-6 text-left">
+                    <DialogHeader className="px-6 pt-6 text-start">
                       <DialogTitle>Delete Files</DialogTitle>
                       <DialogDescription className="mt-2 text-[13px]">
                         Are you sure you want to delete {selectedFiles.size} file

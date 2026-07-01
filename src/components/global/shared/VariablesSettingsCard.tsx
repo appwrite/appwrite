@@ -830,7 +830,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                     onClick={handleOpenEditor}
                     disabled={actionsDisabled}
                   >
-                    <Code className="mr-1.5 h-4 w-4" />
+                    <Code className="me-1.5 h-4 w-4" />
                     Editor
                   </Button>
                   <Button
@@ -844,7 +844,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                     }
                     disabled={actionsDisabled}
                   >
-                    <Upload className="mr-1.5 h-4 w-4" />
+                    <Upload className="me-1.5 h-4 w-4" />
                     Import .env
                   </Button>
                 </div>
@@ -855,7 +855,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   onClick={() => setShowCreateModal(true)}
                   disabled={actionsDisabled}
                 >
-                  <Plus className="mr-1.5 h-4 w-4" />
+                  <Plus className="me-1.5 h-4 w-4" />
                   Create variable
                 </Button>
               </div>
@@ -1163,7 +1163,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
             focusCreateKeyInput(0)
           }}
         >
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Create variable</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Add one or more environment variables. You can add multiple
@@ -1250,7 +1250,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 onClick={handleAddCreatePair}
                 disabled={!createPairs[createPairs.length - 1]?.key}
               >
-                <Plus className="mr-1.5 h-4 w-4" />
+                <Plus className="me-1.5 h-4 w-4" />
                 Add variable
               </Button>
 
@@ -1309,7 +1309,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Update variable</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Update the value of this variable. The key cannot be changed.
@@ -1378,7 +1378,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       {!isWizard && (
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete variable</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete this variable? This action cannot
@@ -1420,7 +1420,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       {!isWizard && (
       <Dialog open={showSecretModal} onOpenChange={setShowSecretModal}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Mark as secret</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Once marked as secret, you and your team won't be able to read
@@ -1455,7 +1455,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       {!isWizard && (
       <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Import .env file</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Upload a .env file to import variables. Existing variables with

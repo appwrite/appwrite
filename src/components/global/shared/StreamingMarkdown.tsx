@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
   resolveFenceCodeLanguage,
   resolveFenceCodeLabel,
@@ -77,7 +78,7 @@ export function StreamingMarkdown({
   return (
     <div
       className={cn(
-        'text-[13px] leading-snug break-words [&_p]:my-0 [&_p+p]:mt-2.5 [&_h1]:mb-2 [&_h1]:mt-2.5 [&_h1]:text-[16px] [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-2.5 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-1.5 [&_h3]:mt-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 prose-links-neutral [&_blockquote]:my-1.5 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-2.5 [&_table]:my-1.5 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:px-1.5 [&_th]:py-1 [&_th]:text-left [&_td]:border [&_td]:border-border [&_td]:px-1.5 [&_td]:py-1',
+        'text-[13px] leading-snug break-words [&_p]:my-0 [&_p+p]:mt-2.5 [&_h1]:mb-2 [&_h1]:mt-2.5 [&_h1]:text-[16px] [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-2.5 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-1.5 [&_h3]:mt-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:ps-4 [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:ps-4 [&_li]:my-0.5 prose-links-neutral [&_blockquote]:my-1.5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-2.5 [&_table]:my-1.5 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:px-1.5 [&_th]:py-1 [&_th]:text-start [&_td]:border [&_td]:border-border [&_td]:px-1.5 [&_td]:py-1',
         className,
       )}
     >
@@ -118,7 +119,9 @@ export function StreamingMarkdown({
             if (!className) {
               return (
                 <code
+                  dir="ltr"
                   className={cn(
+                    FORCE_LTR_CLASS,
                     'rounded-sm bg-muted/60 px-1 py-0.5 text-[12px]',
                     className,
                   )}
@@ -132,7 +135,14 @@ export function StreamingMarkdown({
             if (deferCodeBlocks) {
               const language = resolveMarkdownCodeLanguage(className)
               return (
-                <div className="mt-2 mb-3.5 overflow-hidden rounded-xl border border-border bg-background">
+                <div
+                  dir="ltr"
+                  data-code-example
+                  className={cn(
+                    FORCE_LTR_CLASS,
+                    'mt-2 mb-3.5 overflow-hidden rounded-xl border border-border bg-background',
+                  )}
+                >
                   <div className="flex h-10 items-center border-b border-border px-3">
                     <span className="text-[11px] font-medium text-muted-foreground">
                       {resolveFenceCodeLabel(

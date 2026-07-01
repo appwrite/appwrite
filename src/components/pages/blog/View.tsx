@@ -111,7 +111,7 @@ export function View({
 
           <div className={cn(showSpotlights ? 'mt-8' : undefined, 'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between')}>
             <div className="relative max-w-md flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -119,7 +119,7 @@ export function View({
                   if (event.key === 'Enter') handleSearch()
                 }}
                 placeholder="Search articles"
-                className="h-10 pl-9 text-[13px]"
+                className="h-10 ps-9 text-[13px]"
               />
             </div>
             <Button size="sm" className="h-10 text-[13px]" onClick={handleSearch}>

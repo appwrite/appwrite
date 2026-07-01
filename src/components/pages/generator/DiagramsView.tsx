@@ -33,9 +33,9 @@ import { cn } from '@/lib/utils'
 
 const RESIZE_HANDLE_CLASS = cn(
   'relative z-[45] w-[0.5px] bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:w-2 after:left-1/2 after:-translate-x-1/2',
+  'after:w-2 after:start-1/2 after:-translate-x-1/2',
 )
 
 type DiagramsViewProps = {
@@ -527,7 +527,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
           handleClassName={RESIZE_HANDLE_CLASS}
           className="h-full min-h-0"
           templates={
-            <div className="flex h-full min-h-0 flex-col overflow-hidden border-r border-border bg-background">
+            <div className="flex h-full min-h-0 flex-col overflow-hidden border-e border-border bg-background">
               <DiagramElementsPanel
                 theme={document.theme}
                 onThemeChange={setTheme}
@@ -541,7 +541,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
             </div>
           }
           properties={
-            <div className="flex h-full min-h-0 flex-col overflow-hidden border-l border-border bg-background">
+            <div className="flex h-full min-h-0 flex-col overflow-hidden border-s border-border bg-background">
               {propertiesPanel}
             </div>
           }

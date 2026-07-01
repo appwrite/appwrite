@@ -609,7 +609,7 @@ export function BucketSettings() {
             <div className="mt-4 space-y-1">
               <p className="text-[13px] text-muted-foreground">
                 Bucket ID:{' '}
-                <span className="ml-1.5">
+                <span className="ms-1.5">
                   <CopyableId id={bucket.$id} size="sm" />
                 </span>
               </p>
@@ -1065,7 +1065,7 @@ export function BucketSettings() {
                         <button
                           type="button"
                           onClick={() => handleRemoveExtension(ext)}
-                          className="ml-0.5 rounded-full hover:bg-muted/80 p-0.5"
+                          className="ms-0.5 rounded-full hover:bg-muted/80 p-0.5"
                           disabled={updateAllowedExtensionsMutation.isPending}
                         >
                           <X className="h-3 w-3" />
@@ -1106,7 +1106,7 @@ export function BucketSettings() {
                         allowedFileExtensions.length >= 100
                       }
                     >
-                      <Plus className="h-3 w-3 mr-1" />
+                      <Plus className="h-3 w-3 me-1" />
                       {ext}
                     </Button>
                   ))}
@@ -1177,7 +1177,7 @@ export function BucketSettings() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md p-0">
-                <DialogHeader className="px-6 pt-6 text-left">
+                <DialogHeader className="px-6 pt-6 text-start">
                   <DialogTitle>Delete bucket</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Are you sure you want to delete{' '}

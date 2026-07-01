@@ -61,7 +61,7 @@ export const overviewChartContentRowClass =
 
 /** Left chart column — grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
-  'flex h-full w-full min-w-0 flex-col border-b border-border px-5 pb-5 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-r'
+  'flex h-full w-full min-w-0 flex-col border-b border-border px-5 pb-5 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
 
 /** Right breakdown column (top endpoints / consumers). */
 export const overviewBreakdownColumnClass =

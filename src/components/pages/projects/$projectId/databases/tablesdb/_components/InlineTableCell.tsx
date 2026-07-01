@@ -53,7 +53,7 @@ type InlineTableCellProps = {
 }
 
 const CELL_SURFACE_CLASS =
-  'absolute inset-0 flex items-center px-3 py-1.5 text-left'
+  'absolute inset-0 flex items-center px-3 py-1.5 text-start'
 
 const INLINE_INPUT_CLASS =
   'h-7 w-full border-amber-500/40 bg-background px-2 text-[12px] shadow-none'
@@ -317,7 +317,7 @@ export function InlineTableCell({
           </span>
           <button
             type="button"
-            className="ml-auto text-[11px] font-medium text-primary"
+            className="ms-auto text-[11px] font-medium text-primary"
             onClick={commitLocalEdit}
           >
             Done

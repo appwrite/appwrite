@@ -33,7 +33,7 @@ export function StorageBucketsVisual() {
           <div className="flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-2">
             <Checkbox checked="indeterminate" disabled aria-hidden />
             <span className="text-[11px] font-medium text-foreground">Name</span>
-            <span className="ml-auto text-[11px] text-muted-foreground">Size</span>
+            <span className="ms-auto text-[11px] text-muted-foreground">Size</span>
           </div>
           <div className="divide-y divide-border">
             {FILES.map((file) => {
@@ -46,7 +46,7 @@ export function StorageBucketsVisual() {
                   <Checkbox checked={file.selected} disabled aria-hidden />
                   <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 truncate text-[12px] text-foreground">{file.name}</span>
-                  <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
+                  <span className="ms-auto shrink-0 text-[11px] text-muted-foreground">
                     {file.size}
                   </span>
                 </div>

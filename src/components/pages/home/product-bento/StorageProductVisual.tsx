@@ -84,7 +84,7 @@ function MockSliderRow({
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] text-muted-foreground">{label}</span>
         {idleValue && hoverValue ? (
-          <span className={cn('relative min-w-[2.25rem] text-right text-[10px] tabular-nums', productBentoIdle.text)}>
+          <span className={cn('relative min-w-[2.25rem] text-end text-[10px] tabular-nums', productBentoIdle.text)}>
             <span className="transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
               {idleValue}
             </span>
@@ -161,7 +161,7 @@ export function StorageProductVisual() {
             </div>
           </div>
 
-          <aside className="w-full shrink-0 border-t border-border bg-card/70 p-2 sm:w-[42%] sm:border-l sm:border-t-0 sm:p-2.5">
+          <aside className="w-full shrink-0 border-t border-border bg-card/70 p-2 sm:w-[42%] sm:border-s sm:border-t-0 sm:p-2.5">
             <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>Transform</p>
             <div className="mt-1.5 space-y-1.5 sm:mt-2.5 sm:space-y-2">
               <MockSliderRow

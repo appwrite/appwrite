@@ -11,6 +11,11 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+  secondarySidebarNavLinkClassName,
+} from '@/lib/layout/secondary-sidebar-nav'
+import {
   postgresNav,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
@@ -28,10 +33,8 @@ type PostgresDatabaseNavProps = {
 
 const navLinkClass = (active: boolean) =>
   cn(
-    'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-    active
-      ? 'bg-accent text-foreground'
-      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+    secondarySidebarNavLinkClassName(active, 'transition-colors duration-150'),
+    SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
   )
 
 export function PostgresDatabaseNav({
@@ -51,7 +54,7 @@ export function PostgresDatabaseNav({
     <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
       <Link {...nav.sql()} className={navLinkClass(activeTab === 'sql')}>
         <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
-        <span>SQL editor</span>
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>SQL editor</span>
       </Link>
       {connectDialog ? (
         <button
@@ -60,7 +63,7 @@ export function PostgresDatabaseNav({
           onClick={connectDialog.openConnect}
         >
           <KeyRound className="h-3.5 w-3.5 shrink-0" />
-          <span>Credentials</span>
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Credentials</span>
         </button>
       ) : null}
       <Link
@@ -68,7 +71,7 @@ export function PostgresDatabaseNav({
         className={navLinkClass(activeTab === 'visualizer')}
       >
         <Network className="h-3.5 w-3.5 shrink-0" />
-        <span>Visualizer</span>
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Visualizer</span>
       </Link>
       {features.usageStats ? (
         <Link
@@ -76,7 +79,7 @@ export function PostgresDatabaseNav({
           className={navLinkClass(activeTab === 'monitor')}
         >
           <Activity className="h-3.5 w-3.5 shrink-0" />
-          <span>Monitor</span>
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Monitor</span>
         </Link>
       ) : null}
       {features.databaseInsights ? (
@@ -85,7 +88,7 @@ export function PostgresDatabaseNav({
           className={navLinkClass(activeTab === 'insights')}
         >
           <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-          <span>Insights</span>
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Insights</span>
         </Link>
       ) : null}
       {features.databaseBackups ? (
@@ -94,7 +97,7 @@ export function PostgresDatabaseNav({
           className={navLinkClass(activeTab === 'backups')}
         >
           <Archive className="h-3.5 w-3.5 shrink-0" />
-          <span>Backups</span>
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Backups</span>
         </Link>
       ) : null}
       <Link
@@ -102,7 +105,7 @@ export function PostgresDatabaseNav({
         className={navLinkClass(activeTab === 'connections')}
       >
         <Cable className="h-3.5 w-3.5 shrink-0" />
-        <span>Connections</span>
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Connections</span>
       </Link>
       {showSettings ? (
         <Link
@@ -110,7 +113,7 @@ export function PostgresDatabaseNav({
           className={navLinkClass(activeTab === 'settings')}
         >
           <Settings className="h-3.5 w-3.5 shrink-0" />
-          <span>Settings</span>
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>Settings</span>
         </Link>
       ) : null}
     </div>

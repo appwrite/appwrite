@@ -13,7 +13,7 @@ export function CoverThemeSelectItem({ theme }: CoverThemeSelectItemProps) {
     <SelectPrimitive.Item
       value={theme.id}
       className={cn(
-        'relative flex w-full cursor-pointer items-start gap-2.5 rounded-sm py-2 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex w-full cursor-pointer items-start gap-2.5 rounded-sm py-2 pe-8 ps-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       )}
     >
       <CoverThemePreviewThumb themeId={theme.id} className="mt-0.5" />
@@ -25,7 +25,7 @@ export function CoverThemeSelectItem({ theme }: CoverThemeSelectItemProps) {
           {theme.description}
         </p>
       </div>
-      <span className="absolute right-2 top-2 flex size-3.5 items-center justify-center">
+      <span className="absolute end-2 top-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
           <CheckIcon className="size-4" />
         </SelectPrimitive.ItemIndicator>

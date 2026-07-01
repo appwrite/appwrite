@@ -86,7 +86,7 @@ export function GeneratorSavedGenerationsPanel({
                 <button
                   type="button"
                   onClick={() => onOpenGeneration(generation.id)}
-                  className="min-w-0 flex-1 text-left"
+                  className="min-w-0 flex-1 text-start"
                 >
                   <span className="block truncate text-[13px] font-medium text-foreground">
                     {generation.name}

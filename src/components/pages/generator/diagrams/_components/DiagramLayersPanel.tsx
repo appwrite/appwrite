@@ -160,7 +160,7 @@ function SortableLayerRow({
       <button
         type="button"
         onClick={(event) => onSelect(event)}
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1.5 text-left"
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1.5 text-start"
       >
         <LayerNodeIcon node={node} />
         <div className="min-w-0 flex-1">
@@ -190,7 +190,7 @@ function SortableLayerRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
           <DropdownMenuItem onClick={onRemove}>
-            <Trash2 className="mr-2 size-3.5" />
+            <Trash2 className="me-2 size-3.5" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

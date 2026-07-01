@@ -231,14 +231,14 @@ export function StorageFileExplorerDialog({
         className="!flex flex-col gap-0 p-0 max-h-[90dvh] !max-w-[min(95vw,1100px)] w-full overflow-hidden"
         style={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       >
-        <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">{description}</DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
-          <div className="w-[220px] shrink-0 border-r border-border flex flex-col">
+          <div className="w-[220px] shrink-0 border-e border-border flex flex-col">
             <div className="px-3 py-1.5 border-b border-border">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Buckets
@@ -255,7 +255,7 @@ export function StorageFileExplorerDialog({
                     setStorageSearch('')
                   }}
                   className={cn(
-                    'w-full px-3 py-2 text-left text-[13px] truncate transition-colors',
+                    'w-full px-3 py-2 text-start text-[13px] truncate transition-colors',
                     selectedBucketId === b.$id
                       ? 'bg-accent text-accent-foreground font-medium'
                       : 'text-foreground hover:bg-muted/50',
@@ -294,12 +294,12 @@ export function StorageFileExplorerDialog({
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="relative flex-1 min-w-0">
-                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             placeholder="Search files"
                             value={storageSearch}
                             onChange={(e) => setStorageSearch(e.target.value.trim())}
-                            className="pl-8 h-8 text-[13px]"
+                            className="ps-8 h-8 text-[13px]"
                           />
                         </div>
                         <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
@@ -398,7 +398,7 @@ export function StorageFileExplorerDialog({
                                       })
                                     }
                                     className={cn(
-                                      'w-full flex items-center gap-3 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
+                                      'w-full flex items-center gap-3 px-3 py-2.5 text-start text-[13px] transition-colors hover:bg-accent cursor-pointer',
                                       isSelected && 'bg-accent',
                                     )}
                                   >
@@ -449,7 +449,7 @@ export function StorageFileExplorerDialog({
                                     })
                                   }
                                   className={cn(
-                                    'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 cursor-pointer',
+                                    'rounded-lg border border-border bg-card p-3 text-start transition-colors hover:border-primary/40 cursor-pointer',
                                     isSelected && 'border-primary ring-1 ring-primary/20',
                                   )}
                                 >

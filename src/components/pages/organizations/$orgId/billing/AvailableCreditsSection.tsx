@@ -295,13 +295,13 @@ export function AvailableCreditsSection({
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Code
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                     Total
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                     Remaining
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                     Credit expires
                   </TableHead>
                 </TableRow>
@@ -324,10 +324,10 @@ export function AvailableCreditsSection({
                           {credit.couponId || '-'}
                         </code>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right text-[13px] text-muted-foreground">
+                      <TableCell className="px-4 py-3 text-end text-[13px] text-muted-foreground">
                         {formatCurrency(credit.total || 0, 'USD')}
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
+                      <TableCell className="px-4 py-3 text-end">
                         <span
                           className={cn(
                             'text-[13px] font-medium',
@@ -339,7 +339,7 @@ export function AvailableCreditsSection({
                           {formatCurrency(credit.credits || 0, 'USD')}
                         </span>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
+                      <TableCell className="px-4 py-3 text-end">
                         {credit.expiration ? (
                           <div className="flex items-center justify-end gap-2">
                             <DateTooltip

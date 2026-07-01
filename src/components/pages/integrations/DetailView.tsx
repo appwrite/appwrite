@@ -38,7 +38,7 @@ export function DetailView({ integration }: DetailViewProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Button variant="ghost" size="sm" className="mb-6 h-9 px-0 text-[13px]" asChild>
             <Link to="/integrations">
-              <ArrowLeft className="mr-1.5 size-4" aria-hidden />
+              <ArrowLeft className="me-1.5 size-4" aria-hidden />
               Back to catalog
             </Link>
           </Button>

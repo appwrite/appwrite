@@ -74,7 +74,7 @@ export function LineEditor({
           disabled={disabled}
           className="h-7 text-[11px]"
         >
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="h-3 w-3 me-1" />
           Add Point
         </Button>
       </div>

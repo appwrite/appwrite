@@ -142,7 +142,7 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
                   onClick={() => setType(rt)}
                   disabled={!projectId}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-left transition-colors disabled:opacity-50',
+                    'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-start transition-colors disabled:opacity-50',
                     active
                       ? 'border-foreground/30 bg-accent text-foreground'
                       : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -172,7 +172,7 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
                     onClick={() => setMode(m)}
                     disabled={!projectId}
                     className={cn(
-                      'flex flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors disabled:opacity-50',
+                      'flex flex-col gap-0.5 rounded-md border px-2.5 py-2 text-start transition-colors disabled:opacity-50',
                       active
                         ? 'border-foreground/30 bg-accent text-foreground'
                         : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',

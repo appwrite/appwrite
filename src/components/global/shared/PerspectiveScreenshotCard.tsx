@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 export type PerspectiveScreenshotSceneLayout =
   | 'center'
   | 'clip-bottom-right'
-  | 'cover-right-edge'
+  | 'cover-end-edge'
   | 'fill-bottom-right'
 
 export type PerspectiveScreenshotSceneProps = {
@@ -51,20 +51,20 @@ export function PerspectiveScreenshotScene({
   contentTransformOrigin = '20% 20%',
 }: PerspectiveScreenshotSceneProps) {
   const clipBottomRight = layout === 'clip-bottom-right' || layout === 'fill-bottom-right'
-  const coverRightEdge = layout === 'cover-right-edge'
+  const coverEndEdge = layout === 'cover-end-edge'
   const sceneGlowVisible = showSceneGlow ?? showBaseBackground
   const sceneGridVisible = showSceneGrid ?? showBaseBackground
 
-  const transformOrigin = coverRightEdge
+  const transformOrigin = coverEndEdge
     ? '100% 50%'
     : clipBottomRight
       ? contentTransformOrigin
       : undefined
 
   const contentTransform =
-    clipBottomRight || coverRightEdge
+    clipBottomRight || coverEndEdge
       ? [
-          coverRightEdge
+          coverEndEdge
             ? `translate(calc(0px + ${clipOffset.x}px), calc(-50% + ${clipOffset.y}px))`
             : `translate(${clipOffset.x}px, ${clipOffset.y}px)`,
           contentScale !== 1 ? `scale(${contentScale})` : null,
@@ -112,7 +112,7 @@ export function PerspectiveScreenshotScene({
         <div
           className={cn(
             'relative flex h-full w-full',
-            coverRightEdge
+            coverEndEdge
               ? 'block'
               : clipBottomRight
                 ? 'items-end justify-end'
@@ -121,7 +121,7 @@ export function PerspectiveScreenshotScene({
           style={{ transformStyle: 'preserve-3d' }}
         >
           <div
-            className={coverRightEdge ? 'absolute right-0 top-1/2' : undefined}
+            className={coverEndEdge ? 'absolute end-0 top-1/2' : undefined}
             style={{
               transformStyle: 'preserve-3d',
               transform: contentTransform

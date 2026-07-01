@@ -129,7 +129,7 @@ export function ScreenshotAngledOg({ data, prepared }: ScreenshotAngledOgProps) 
             style={{
               width: shotRect.width,
               height: shotRect.height,
-              marginLeft: paddingX,
+              marginInlineStart: paddingX,
               borderTopLeftRadius: innerRadius,
               borderTopRightRadius: innerRadius,
               overflow: 'hidden',

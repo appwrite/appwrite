@@ -34,7 +34,7 @@ export function ProductAvatarsList({
 }: ProductAvatarsListProps) {
   return (
     <ul
-      className={cn('inline-flex items-center justify-center pl-0', className)}
+      className={cn('inline-flex items-center justify-center ps-0', className)}
       aria-label={ariaLabel}
     >
       {items.map((item, index) => {
@@ -43,7 +43,7 @@ export function ProductAvatarsList({
         return (
           <li
             key={item.name}
-            className={cn('relative shrink-0', index > 0 && '-ml-2 sm:-ml-2.5')}
+            className={cn('relative shrink-0', index > 0 && '-ms-2 sm:-ms-2.5')}
             style={{ zIndex: index + 1 }}
           >
             <Tooltip>

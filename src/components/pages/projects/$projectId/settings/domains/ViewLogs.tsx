@@ -31,7 +31,7 @@ export function ViewLogsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0 max-h-[90dvh] flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
           <DialogTitle>View logs</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />

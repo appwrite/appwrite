@@ -489,7 +489,7 @@ export function PostgresConnectDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,800px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
           <DialogTitle>Credentials</DialogTitle>
           <DialogDescription className="mt-2 text-[13px]">
             Credentials and connection strings for external clients, ORMs, and CLI tools.
@@ -551,7 +551,7 @@ export function PostgresConnectDialog({
                   >
                     {tab.label}
                     {isActive ? (
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                      <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
                     ) : null}
                   </button>
                 )

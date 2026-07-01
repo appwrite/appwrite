@@ -84,7 +84,7 @@ export function DomainSuggestionCard({
         if (canSelect && onSelect) onSelect(full)
       }}
       className={cn(
-        'group flex h-full min-h-[8.75rem] w-full min-w-0 flex-col rounded-xl border px-4 py-3.5 text-left backdrop-blur-sm',
+        'group flex h-full min-h-[8.75rem] w-full min-w-0 flex-col rounded-xl border px-4 py-3.5 text-start backdrop-blur-sm',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         'disabled:pointer-events-none',
         taken
@@ -118,7 +118,7 @@ export function DomainSuggestionCard({
         {premium ? (
           <Badge
             variant="info"
-            className="ml-auto shrink-0 px-1.5 py-0 text-[10px] font-medium"
+            className="ms-auto shrink-0 px-1.5 py-0 text-[10px] font-medium"
           >
             Premium
           </Badge>
@@ -128,7 +128,7 @@ export function DomainSuggestionCard({
       <div className="mt-2 flex min-h-0 w-full min-w-0 flex-1 flex-row items-end justify-between gap-2">
         <div
           className={cn(
-            'flex min-h-0 min-w-0 flex-1 flex-col items-start justify-end gap-1 text-left',
+            'flex min-h-0 min-w-0 flex-1 flex-col items-start justify-end gap-1 text-start',
             DOMAIN_CARD_PRICE_BLOCK_MIN_H,
           )}
         >

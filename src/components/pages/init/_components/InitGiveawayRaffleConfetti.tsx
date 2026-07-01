@@ -73,7 +73,7 @@ function GiveawayRaffleConfettiBurst({
       className="pointer-events-none fixed inset-0 z-[125] overflow-hidden"
       aria-hidden
     >
-      <div className="absolute left-1/2 top-[38%] h-0 w-0 -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute start-1/2 top-[38%] h-0 w-0 -translate-x-1/2 -translate-y-1/2">
         {particles.map((particle, index) => (
           <motion.span
             key={`${burstKey}-${particle.id}`}

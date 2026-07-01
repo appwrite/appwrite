@@ -22,7 +22,7 @@ function PeerCursor({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute z-10 flex origin-top-left items-center gap-1 opacity-0 transition-all duration-700 ease-out',
+        'pointer-events-none absolute z-10 flex origin-top-start items-center gap-1 opacity-0 transition-all duration-700 ease-out',
         className,
       )}
     >
@@ -84,12 +84,12 @@ export function AuthPresencesVisual() {
           <PeerCursor
             name="Happy Quinn"
             color={COLLABORATORS[0].color}
-            className="left-[6%] top-[18%] translate-x-0 translate-y-0 group-hover/visual:translate-x-12 group-hover/visual:translate-y-1 group-hover/visual:opacity-100 motion-reduce:translate-x-12 motion-reduce:translate-y-1 motion-reduce:opacity-100"
+            className="start-[6%] top-[18%] translate-x-0 translate-y-0 group-hover/visual:translate-x-12 group-hover/visual:translate-y-1 group-hover/visual:opacity-100 motion-reduce:translate-x-12 motion-reduce:translate-y-1 motion-reduce:opacity-100"
           />
           <PeerCursor
             name="Paige Dineen"
             color={COLLABORATORS[1].color}
-            className="left-[6%] top-[58%] translate-x-0 translate-y-0 delay-150 group-hover/visual:translate-x-16 group-hover/visual:-translate-y-1 group-hover/visual:opacity-100 motion-reduce:translate-x-16 motion-reduce:-translate-y-1 motion-reduce:opacity-100"
+            className="start-[6%] top-[58%] translate-x-0 translate-y-0 delay-150 group-hover/visual:translate-x-16 group-hover/visual:-translate-y-1 group-hover/visual:opacity-100 motion-reduce:translate-x-16 motion-reduce:-translate-y-1 motion-reduce:opacity-100"
           />
 
           <div className="flex items-start justify-between gap-2">

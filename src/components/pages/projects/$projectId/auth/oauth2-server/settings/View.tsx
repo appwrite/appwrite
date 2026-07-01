@@ -282,12 +282,12 @@ function CopyableUrl({ value }: { value: string }) {
       >
         {copied ? (
           <>
-            <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+            <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
             Copied
           </>
         ) : (
           <>
-            <Copy className="mr-1.5 h-3.5 w-3.5" />
+            <Copy className="me-1.5 h-3.5 w-3.5" />
             Copy
           </>
         )}
@@ -651,7 +651,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             }
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-0">
-              <div className="lg:pr-8">
+              <div className="lg:pe-8">
               <ClientTokenSettingsColumn
                 title="Confidential clients"
                 description={
@@ -717,7 +717,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
               </ClientTokenSettingsColumn>
               </div>
 
-              <div className="border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+              <div className="border-t border-border pt-6 lg:border-s lg:border-t-0 lg:ps-8 lg:pt-0">
                 <ClientTokenSettingsColumn
                 title="Public clients"
                 description="Browser and mobile clients. PKCE is always required; no client secret is issued."

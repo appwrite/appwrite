@@ -49,7 +49,7 @@ export function GeneratorDocumentMenu() {
           className="h-7 text-[12px]"
           onClick={onBrowseDocuments}
         >
-          <LayoutGrid className="mr-1.5 size-3.5" />
+          <LayoutGrid className="me-1.5 size-3.5" />
           {browseDocumentsLabel}
         </Button>
       ) : null}
@@ -62,9 +62,9 @@ export function GeneratorDocumentMenu() {
             size="sm"
             className="h-7 text-[12px]"
           >
-            <Plus className="mr-1.5 size-3.5" />
+            <Plus className="me-1.5 size-3.5" />
             New
-            <ChevronDown className="ml-1 size-3.5 opacity-60" />
+            <ChevronDown className="ms-1 size-3.5 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">

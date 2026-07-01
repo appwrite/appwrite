@@ -125,10 +125,10 @@ const RADIUS_CORNER_POS: Record<
   RadiusCorner,
   string
 > = {
-  nw: 'left-0 top-0 -translate-x-[42px] -translate-y-[42px]',
-  ne: 'right-0 top-0 translate-x-[42px] -translate-y-[42px]',
-  se: 'right-0 bottom-0 translate-x-[42px] translate-y-[42px]',
-  sw: 'left-0 bottom-0 -translate-x-[42px] translate-y-[42px]',
+  nw: 'start-0 top-0 -translate-x-[42px] -translate-y-[42px]',
+  ne: 'end-0 top-0 translate-x-[42px] -translate-y-[42px]',
+  se: 'end-0 bottom-0 translate-x-[42px] translate-y-[42px]',
+  sw: 'start-0 bottom-0 -translate-x-[42px] translate-y-[42px]',
 }
 
 function CornerRadiusArchIcon({ corner }: { corner: RadiusCorner }) {
@@ -167,14 +167,14 @@ const EDGE_CURSOR: Record<ResizeEdge, string> = {
 
 /** Resize handles: inside the frame; larger inset = farther from the image edge */
 const RESIZE_HANDLE_POS: Record<ResizeEdge, string> = {
-  nw: 'left-5 top-5',
-  n: 'left-1/2 top-5 -translate-x-1/2',
-  ne: 'right-5 top-5',
-  e: 'right-5 top-1/2 -translate-y-1/2',
-  se: 'right-5 bottom-5',
-  s: 'left-1/2 bottom-5 -translate-x-1/2',
-  sw: 'left-5 bottom-5',
-  w: 'left-5 top-1/2 -translate-y-1/2',
+  nw: 'start-5 top-5',
+  n: 'start-1/2 top-5 -translate-x-1/2',
+  ne: 'end-5 top-5',
+  e: 'end-5 top-1/2 -translate-y-1/2',
+  se: 'end-5 bottom-5',
+  s: 'start-1/2 bottom-5 -translate-x-1/2',
+  sw: 'start-5 bottom-5',
+  w: 'start-5 top-1/2 -translate-y-1/2',
 }
 
 type Drag =
@@ -826,7 +826,7 @@ export function TransformImageDesignOverlay({
         </div>
         {showHandles && (
           <div
-            className="pointer-events-none absolute left-0 top-0 opacity-100 transition-opacity duration-150"
+            className="pointer-events-none absolute start-0 top-0 opacity-100 transition-opacity duration-150"
             style={{ width: displayW, height: displayH }}
           >
           <div
@@ -867,7 +867,7 @@ export function TransformImageDesignOverlay({
                 type="button"
                 className={cn(
                   HANDLE_TOOL,
-                  'left-1/2 top-0 -translate-x-1/2 -translate-y-[calc(100%+40px)] cursor-grab active:cursor-grabbing',
+                  'start-1/2 top-0 -translate-x-1/2 -translate-y-[calc(100%+40px)] cursor-grab active:cursor-grabbing',
                 )}
                 aria-label="Rotate: drag in a circle, or use Left and Right arrow keys. Shift with arrows rotates 15 degrees."
                 onPointerDown={startRotate}

@@ -45,7 +45,7 @@ export function View() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Github className="mr-1.5 h-4 w-4" />
+            <Github className="me-1.5 h-4 w-4" />
             GitHub Education
           </a>
         </Button>
@@ -92,7 +92,7 @@ export function View() {
             {educationSteps.map((step, index) => (
               <article
                 key={step.title}
-                className="flex h-full flex-col border-b border-border p-6 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
+                className="flex h-full flex-col border-b border-border p-6 last:border-b-0 lg:border-b-0 lg:border-e lg:last:border-e-0"
               >
                 <Badge variant="info" className="w-fit text-[10px] shrink-0">
                   Step {index + 1}

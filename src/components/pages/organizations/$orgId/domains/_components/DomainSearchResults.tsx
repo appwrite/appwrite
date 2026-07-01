@@ -11,7 +11,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const DOMAIN_SEARCH_FIELD_CLASS =
-  'h-11 pl-10 font-mono text-[14px] tracking-tight bg-muted/30 border-border/80 focus:bg-background'
+  'h-11 ps-10 font-mono text-[14px] tracking-tight bg-muted/30 border-border/80 focus:bg-background'
 const DOMAIN_SEARCH_HELPER_CLASS = 'text-[12px] leading-5 text-muted-foreground'
 const FOCUS_MARKETING_CONTENT_WIDTH = 'max-w-2xl'
 
@@ -58,12 +58,12 @@ function DomainSearchField({
   const showFooterSlot = footer != null
 
   return (
-    <div className={cn('w-full max-w-md space-y-2 text-left', className)}>
+    <div className={cn('w-full max-w-md space-y-2 text-start', className)}>
       <Label htmlFor={inputId} className="text-[13px]">
         Domain name
       </Label>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           id={inputId}
           value={searchValue}

@@ -218,13 +218,13 @@ export function RepositoryPicker({
               </SelectContent>
             </Select>
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Search className="absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <Input
                 id="repo-picker-search"
                 value={repoSearch}
                 onChange={(e) => setRepoSearch(e.target.value)}
                 placeholder="Search repositories..."
-                className="h-9 pl-9 text-[13px]"
+                className="h-9 ps-9 text-[13px]"
               />
             </div>
             <Button

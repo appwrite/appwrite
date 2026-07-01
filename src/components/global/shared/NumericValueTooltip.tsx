@@ -108,7 +108,7 @@ export function NumericValueTooltip({
             <button
               key={`${entry.label ?? 'value'}-${index}`}
               type="button"
-              className="group flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-muted/40"
+              className="group flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-start transition-colors hover:bg-muted/40"
               onClick={(event) =>
                 handleCopy(index, entry.copyValue, event)
               }
@@ -122,7 +122,7 @@ export function NumericValueTooltip({
                 {entry.detail}
               </span>
               <span
-                className="ml-auto inline-flex h-6 w-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                className="ms-auto inline-flex h-6 w-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
                 aria-hidden="true"
               >
                 {copiedIndex === index ? (

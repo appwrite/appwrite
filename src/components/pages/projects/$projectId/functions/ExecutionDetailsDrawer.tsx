@@ -465,9 +465,9 @@ export function ExecutionDetailsDrawer({
             onClick={() => void handleCopyJson()}
           >
             {copiedJson ? (
-              <Check className="mr-1.5 h-4 w-4 text-emerald-500" />
+              <Check className="me-1.5 h-4 w-4 text-emerald-500" />
             ) : (
-              <FileJson className="mr-1.5 h-4 w-4" />
+              <FileJson className="me-1.5 h-4 w-4" />
             )}
             Copy as JSON
           </Button>
@@ -673,12 +673,12 @@ export function ExecutionDetailsDrawer({
                           <Input
                             value={execution.requestPath}
                             readOnly
-                            className="pr-10 font-mono text-[13px] bg-muted"
+                            className="pe-10 font-mono text-[13px] bg-muted"
                           />
                           <button
                             type="button"
                             onClick={handleCopyPath}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent transition-colors"
+                            className="absolute end-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent transition-colors"
                             aria-label="Copy path"
                           >
                             {copiedPath ? (
@@ -716,7 +716,7 @@ export function ExecutionDetailsDrawer({
                         <TabsTrigger value="parameters" className="text-[13px]">
                           Parameters
                           {queryParams.length > 0 && (
-                            <span className="ml-1.5 text-muted-foreground">
+                            <span className="ms-1.5 text-muted-foreground">
                               ({queryParams.length})
                             </span>
                           )}
@@ -725,7 +725,7 @@ export function ExecutionDetailsDrawer({
                           Headers
                           {execution.requestHeaders &&
                             execution.requestHeaders.length > 0 && (
-                              <span className="ml-1.5 text-muted-foreground">
+                              <span className="ms-1.5 text-muted-foreground">
                                 ({execution.requestHeaders.length})
                               </span>
                             )}
@@ -853,7 +853,7 @@ export function ExecutionDetailsDrawer({
                           Headers
                           {execution.responseHeaders &&
                             execution.responseHeaders.length > 0 && (
-                              <span className="ml-1.5 text-muted-foreground">
+                              <span className="ms-1.5 text-muted-foreground">
                                 ({execution.responseHeaders.length})
                               </span>
                             )}
@@ -880,14 +880,14 @@ export function ExecutionDetailsDrawer({
                               <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                   <div className="relative flex-1 min-w-0 -mx-1 px-1">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                       placeholder="Search logs..."
                                       value={logsSearch}
                                       onChange={(e) =>
                                         setLogsSearch(e.target.value)
                                       }
-                                      className="pl-9 h-9 text-[13px]"
+                                      className="ps-9 h-9 text-[13px]"
                                     />
                                   </div>
                                   <TooltipProvider>
@@ -951,14 +951,14 @@ export function ExecutionDetailsDrawer({
                               <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                   <div className="relative min-w-0 flex-1 -mx-1 px-1">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                       placeholder="Search errors..."
                                       value={errorsSearch}
                                       onChange={(e) =>
                                         setErrorsSearch(e.target.value)
                                       }
-                                      className="h-9 pl-9 text-[13px]"
+                                      className="h-9 ps-9 text-[13px]"
                                     />
                                   </div>
                                   <TooltipProvider>
@@ -1061,14 +1061,14 @@ export function ExecutionDetailsDrawer({
                           {execution.responseBody ? (
                             <div className="space-y-3">
                               <div className="relative -mx-1 px-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   placeholder="Search body..."
                                   value={bodySearch}
                                   onChange={(e) =>
                                     setBodySearch(e.target.value)
                                   }
-                                  className="pl-9 h-9 text-[13px]"
+                                  className="ps-9 h-9 text-[13px]"
                                 />
                               </div>
                               <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">

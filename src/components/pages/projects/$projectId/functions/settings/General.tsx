@@ -162,7 +162,7 @@ export function View() {
         <div className="px-6 py-4 space-y-1">
           <p className="text-[13px] text-muted-foreground">
             Function ID:{' '}
-            <span className="ml-1.5">
+            <span className="ms-1.5">
               <CopyableId id={func.$id} size="sm" />
             </span>
           </p>
@@ -327,12 +327,12 @@ export function View() {
                 className="h-9 text-[13px]"
                 disabled={deleteFunctionMutation.isPending}
               >
-                <Trash2 className="mr-1.5 h-4 w-4" />
+                <Trash2 className="me-1.5 h-4 w-4" />
                 Delete function
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Delete function</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete{' '}

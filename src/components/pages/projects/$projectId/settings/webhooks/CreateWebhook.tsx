@@ -161,7 +161,7 @@ export function CreateWebhookDialog({
         <DialogContent
           className="sm:max-w-2xl p-0"
 >
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Create webhook</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {currentStep === 'name-url' && 'Enter the webhook name and URL'}
@@ -274,7 +274,7 @@ export function CreateWebhookDialog({
                 onClick={handleBack}
                 disabled={createWebhookMutation.isPending}
 >
-                <ChevronLeft className="mr-1.5 h-4 w-4" />
+                <ChevronLeft className="me-1.5 h-4 w-4" />
                 Back
               </Button>
             )}
@@ -288,7 +288,7 @@ export function CreateWebhookDialog({
                 }
 >
                 Next
-                <ChevronRight className="ml-1.5 h-4 w-4" />
+                <ChevronRight className="ms-1.5 h-4 w-4" />
               </Button>
             ) : (
               <Button
@@ -307,7 +307,7 @@ export function CreateWebhookDialog({
         <DialogContent
           className="sm:max-w-md p-0"
 >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Webhook created</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               This secret is only shown once after webhook creation or secret

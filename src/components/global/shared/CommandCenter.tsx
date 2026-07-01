@@ -1513,7 +1513,7 @@ export function CommandCenter({
             <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent">
               <button
                 onClick={() => setPages([])}
-                className="ml-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+                className="ms-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
               >
                 ← Back
               </button>
@@ -1526,7 +1526,7 @@ export function CommandCenter({
               {isMobile && (
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="mr-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="me-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -1587,7 +1587,7 @@ export function CommandCenter({
             <div className="flex items-center border-b border-border [&_[data-slot=command-input-wrapper]]:h-14 [&_[data-slot=command-input-wrapper]]:border-transparent">
               <button
                 onClick={() => setPages([])}
-                className="ml-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+                className="ms-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
               >
                 ← Back
               </button>
@@ -1600,7 +1600,7 @@ export function CommandCenter({
               {isMobile && (
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="mr-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="me-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -1680,7 +1680,7 @@ export function CommandCenter({
                       setSearchScope(null)
                       setSearch('')
                     }}
-                    className="ml-0.5 rounded-sm hover:bg-accent/80 p-0.5 -mr-0.5"
+                    className="ms-0.5 rounded-sm hover:bg-accent/80 p-0.5 -me-0.5"
                     aria-label="Remove scope"
                   >
                     <X className="h-3 w-3" />

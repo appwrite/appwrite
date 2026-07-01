@@ -100,7 +100,7 @@ export function MessageSendDialog({
       <DialogContent
         className="sm:max-w-md p-0"
 >
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Confirm sending message</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Please confirm you want to send this message now. It will be
@@ -234,7 +234,7 @@ export function MessageScheduleDialog({
       <DialogContent
         className="sm:max-w-md p-0"
 >
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Schedule message</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Choose when this message should be delivered. Time uses your local
@@ -339,7 +339,7 @@ export function MessageCancelScheduleDialog({
       <DialogContent
         className="sm:max-w-md p-0"
 >
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Cancel scheduling</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Are you sure you want to cancel the scheduling of{' '}

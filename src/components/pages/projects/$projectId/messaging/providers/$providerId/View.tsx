@@ -892,7 +892,7 @@ export function View({
                   onClick={() => setDeleteDialogOpen(true)}
                   disabled={deleteProviderMutation.isPending}
                 >
-                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  <Trash2 className="me-1.5 h-4 w-4" />
                   Delete
                 </Button>
               </div>
@@ -902,7 +902,7 @@ export function View({
 
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>Delete Provider</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete {provider.name} from '

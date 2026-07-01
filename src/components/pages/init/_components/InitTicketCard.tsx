@@ -199,7 +199,7 @@ function TicketStubContent({
           bottom: `${bottom}%`,
         }}
       >
-        <div className="flex origin-bottom-left -rotate-90 flex-col items-start gap-2 whitespace-nowrap text-left">
+        <div className="flex origin-bottom-start -rotate-90 flex-col items-start gap-2 whitespace-nowrap text-start">
           <InitWordmark
             accentColor={accentColor}
             className={cn(

@@ -25,6 +25,34 @@ code {
     source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+/* LTR-only UI enclaves (code, loader logo) when the page is RTL. */
+.force-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Code examples and monospace blocks stay LTR when the page is RTL. */
+html[dir='rtl'] [data-code-example],
+html[dir='rtl'] pre {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+html[dir='rtl'] code {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+html[dir='rtl'] .monaco-editor,
+html[dir='rtl'] .monaco-editor-background {
+  direction: ltr;
+}
+
+html[dir='rtl'] textarea.font-mono {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 ::selection {
   color: hsl(0 0% 0%);
   -webkit-text-fill-color: hsl(0 0% 0%);
@@ -929,7 +957,7 @@ code {
   content: '';
   position: absolute;
   top: -50%;
-  left: -50%;
+  inset-inline-start: -50%;
   width: 200%;
   height: 200%;
   background: linear-gradient(
@@ -1267,7 +1295,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 /* Intact until burst: shards fully hidden during delay */
 .plan-badge-shard {
   position: absolute;
-  left: 50%;
+  inset-inline-start: 50%;
   top: 50%;
   width: 12px;
   height: 14px;
@@ -1550,7 +1578,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 
 @keyframes product-bento-firewall-request-pass {
   0% {
-    left: 4%;
+    inset-inline-start: 4%;
     opacity: 0;
     transform: translateY(-50%) scale(0.65);
   }
@@ -1565,7 +1593,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 
   100% {
-    left: 92%;
+    inset-inline-start: 92%;
     opacity: 0;
     transform: translateY(-50%) scale(0.75);
   }
@@ -1573,7 +1601,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 
 @keyframes product-bento-firewall-request-block {
   0% {
-    left: 4%;
+    inset-inline-start: 4%;
     opacity: 0;
     transform: translateY(-50%) scale(0.65);
   }
@@ -1584,19 +1612,19 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 
   42% {
-    left: 48%;
+    inset-inline-start: 48%;
     opacity: 1;
     transform: translateY(-50%) scale(1.15);
   }
 
   62% {
-    left: 48%;
+    inset-inline-start: 48%;
     opacity: 0.35;
     transform: translateY(-50%) scale(0.85);
   }
 
   100% {
-    left: 48%;
+    inset-inline-start: 48%;
     opacity: 0;
     transform: translateY(-50%) scale(0.65);
   }
@@ -1629,7 +1657,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   .group:hover .product-bento-firewall-request-pass,
   .group:hover .product-bento-firewall-request-block {
     animation: none;
-    left: 72%;
+    inset-inline-start: 72%;
     opacity: 0.85;
     transform: translateY(-50%) scale(1);
   }
@@ -1796,7 +1824,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   visibility: hidden;
   position: absolute;
   top: 0;
-  left: -9999em;
+  inset-inline-start: -9999em;
   line-height: normal;
 }
 

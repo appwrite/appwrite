@@ -194,7 +194,7 @@ export function PostgresRowsSpreadsheet({
                 <tr>
                   <th
                     className={cn(
-                      'sticky left-0 z-30 bg-background px-2 py-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
+                      'sticky start-0 z-30 bg-background px-2 py-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
                       POSTGRES_HEADER_CELL_BORDER_CLASS,
                     )}
                     style={{
@@ -225,7 +225,7 @@ export function PostgresRowsSpreadsheet({
                         className={cn(
                           'px-3 py-2',
                           POSTGRES_HEADER_CELL_BORDER_CLASS,
-                          isLastColumn && 'border-r-0',
+                          isLastColumn && 'border-e-0',
                         )}
                         style={getPostgresRowsDataColumnHeaderStyle(
                           columnIndex,
@@ -234,7 +234,7 @@ export function PostgresRowsSpreadsheet({
                           isDragResize,
                         )}
                       >
-                        <div className="flex min-w-0 items-center gap-2 pr-1.5">
+                        <div className="flex min-w-0 items-center gap-2 pe-1.5">
                           <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <span className="min-w-0 truncate text-[12px] font-medium text-foreground">
                             {key}
@@ -278,7 +278,7 @@ export function PostgresRowsSpreadsheet({
                     >
                       <td
                         className={cn(
-                          'sticky left-0 z-10 bg-background px-2 py-2.5 text-center',
+                          'sticky start-0 z-10 bg-background px-2 py-2.5 text-center',
                           POSTGRES_BODY_CELL_BORDER_CLASS,
                         )}
                       >
@@ -300,7 +300,7 @@ export function PostgresRowsSpreadsheet({
                             originalValue={rawValue as never}
                             canWrite={canWrite}
                             className={
-                              isLastColumn ? 'border-r-0' : undefined
+                              isLastColumn ? 'border-e-0' : undefined
                             }
                             onCancelDrawerOpen={cancelDrawerOpen}
                             onCellClick={handleCellClick(

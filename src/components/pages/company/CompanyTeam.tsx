@@ -162,7 +162,7 @@ function TeamPhotoGrid() {
 
 function TeamPillar({ title, body }: (typeof companyTeamPillars)[number]) {
   return (
-    <div className="space-y-2.5 md:px-6 md:first:pl-0 md:last:pr-0">
+    <div className="space-y-2.5 md:px-6 md:first:ps-0 md:last:pe-0">
       <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
       <p className="text-[14px] leading-7 text-muted-foreground">{body}</p>
     </div>

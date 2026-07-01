@@ -45,7 +45,7 @@ export function SitesRollbacksVisual() {
             </p>
           </div>
           <Button size="sm" variant="outline" className="h-8 shrink-0 text-[12px]">
-            <RotateCcw className="mr-1.5 size-3.5" aria-hidden />
+            <RotateCcw className="me-1.5 size-3.5" aria-hidden />
             Instant Rollback
           </Button>
         </div>

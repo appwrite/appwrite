@@ -8,7 +8,7 @@ type Props = {
 
 /**
  * Numbered step row used inside the manual setup card. Provides a consistent
- * left-aligned number badge, an uppercase caption, and an indented content
+ * start-aligned number badge, an uppercase caption, and an indented content
  * column so every step in the sequence shares the same vertical rhythm.
  */
 export function SetupStep({ number, label, children }: Props) {

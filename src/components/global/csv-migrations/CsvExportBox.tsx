@@ -163,7 +163,7 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
                       className="h-auto p-0 text-[12px]"
                       onClick={() => window.open(url, '_blank')}
                     >
-                      <Download className="h-3 w-3 mr-1" />
+                      <Download className="h-3 w-3 me-1" />
                       Download
                     </Button>
                   ) : null}

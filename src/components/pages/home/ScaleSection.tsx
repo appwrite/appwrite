@@ -28,7 +28,7 @@ function ScaleQuoteBelowChart() {
           <AvatarImage src={SCALE_QUOTE.avatar} alt="" />
           <AvatarFallback className="text-xs">RO</AvatarFallback>
         </Avatar>
-        <p className="text-left text-sm leading-snug">
+        <p className="text-start text-sm leading-snug">
           <span className="font-medium text-foreground">{SCALE_QUOTE.name}</span>
           <span className="text-muted-foreground">
             {' '}
@@ -85,7 +85,10 @@ function ScaleStatCard({
 function ScaleAreaCurve({ className }: { className?: string }) {
   return (
     <svg
-      className={cn('absolute inset-0 h-full w-full', className)}
+      className={cn(
+        'absolute inset-0 h-full w-full origin-center rtl:-scale-x-100',
+        className,
+      )}
       viewBox="0 0 400 280"
       preserveAspectRatio="none"
       aria-hidden

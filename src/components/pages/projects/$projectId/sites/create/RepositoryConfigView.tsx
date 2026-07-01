@@ -362,7 +362,7 @@ export function RepositoryConfigView({
               )}
             </div>
             {frameworkInfo && (
-              <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+              <div className="absolute -bottom-1 -end-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
                 <GitHubIcon className="h-3 w-3 text-muted-foreground" />
               </div>
             )}

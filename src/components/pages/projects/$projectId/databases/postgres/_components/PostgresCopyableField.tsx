@@ -59,10 +59,10 @@ export function PostgresCopyableField({
           className={cn(
             'h-9 border-border bg-muted/30 text-[13px] shadow-none focus-visible:ring-inset',
             mono && 'font-mono',
-            masked ? 'pr-16' : 'pr-10',
+            masked ? 'pe-16' : 'pe-10',
           )}
         />
-        <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+        <div className="absolute end-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
           {masked ? (
             <button
               type="button"

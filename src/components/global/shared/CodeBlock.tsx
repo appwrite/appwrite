@@ -26,6 +26,7 @@ import {
   isResolvedThemeDarkChrome,
 } from '@/lib/html-theme'
 import { cn } from '@/lib/utils'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { toast } from 'sonner'
@@ -414,7 +415,10 @@ export function CodeBlock({
 
   return (
     <div
+      dir="ltr"
+      data-code-example
       className={cn(
+        FORCE_LTR_CLASS,
         'w-full',
         isHeadless ? 'space-y-0' : 'space-y-1.5',
         className,
@@ -495,7 +499,7 @@ export function CodeBlock({
               )}
               style={resolvePrismPreSurfaceStyle(style as CSSProperties)}
             >
-              <code className="block bg-transparent text-left">
+              <code className="block bg-transparent text-start">
                 {tokens.map((line, i) => {
                   const lineProps = getLineProps({
                     line,
@@ -535,7 +539,7 @@ export function CodeBlock({
           contentClassName="-mx-6"
           headerActions={renderCopyButton()}
         >
-          <div>
+          <div dir="ltr" data-code-example className={FORCE_LTR_CLASS}>
             <Highlight
               key={effectiveLanguage}
               theme={prismTheme}
@@ -558,7 +562,7 @@ export function CodeBlock({
                   )}
                   style={resolvePrismPreSurfaceStyle(style as CSSProperties)}
                 >
-                  <code className="block bg-transparent text-left">
+                  <code className="block bg-transparent text-start">
                     {tokens.map((line, i) => {
                       const lineProps = getLineProps({
                         line,

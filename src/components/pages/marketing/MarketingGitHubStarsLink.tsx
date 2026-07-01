@@ -35,8 +35,8 @@ export function MarketingGitHubStarsLink({
       aria-label={`Appwrite on GitHub, ${stat} stars`}
       className={cn(
         mobile
-          ? 'flex h-10 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
-          : 'inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+          ? 'flex h-10 w-full items-center justify-start gap-1.5 rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+          : 'inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
         className,
       )}
     >

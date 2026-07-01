@@ -112,7 +112,7 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
       }}
     >
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Create distribution app</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Pick a framework and platforms to start shipping builds to the app

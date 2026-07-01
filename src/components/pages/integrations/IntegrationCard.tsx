@@ -40,7 +40,7 @@ export function IntegrationCard({
         </div>
       ) : null}
 
-      <div className={cn('flex flex-1 flex-col p-5', isFeatured ? 'sm:py-6 sm:pr-6' : undefined)}>
+      <div className={cn('flex flex-1 flex-col p-5', isFeatured ? 'sm:py-6 sm:pe-6' : undefined)}>
         <div className="flex flex-col items-start gap-3">
           <IntegrationIcon
             slug={integration.slug}
@@ -53,7 +53,7 @@ export function IntegrationCard({
               {integration.title}
               {integration.isPartner ? (
                 <BadgeCheck
-                  className="ml-1.5 inline-block size-4 translate-y-[-1px] align-middle text-emerald-600 dark:text-emerald-400"
+                  className="ms-1.5 inline-block size-4 translate-y-[-1px] align-middle text-emerald-600 dark:text-emerald-400"
                   aria-label="Verified"
                 />
               ) : null}

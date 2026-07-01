@@ -83,7 +83,7 @@ export function GetInvolvedCards({ event, account }: GetInvolvedCardsProps) {
           )
 
           const className = cn(
-            'group flex w-full items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors',
+            'group flex w-full items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-start transition-colors',
             item.href && 'hover:border-border hover:bg-accent/50',
           )
           const presenceHandlers = {

@@ -122,7 +122,7 @@ function ActivityLogsTableHead() {
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider ps-6 sm:ps-8 shadow-[inset_0_-1px_0_var(--border)]">
           Event
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
@@ -140,7 +140,7 @@ function ActivityLogsTableHead() {
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Country
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pr-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pe-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pe-8 shadow-[inset_0_-1px_0_var(--border)]">
           Time
         </TableHead>
       </TableRow>
@@ -157,7 +157,7 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
           className="pointer-events-none hover:bg-transparent"
           aria-hidden
         >
-          <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
+          <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
             <div className="flex min-w-0 items-center gap-2">
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
               <Skeleton className="h-3.5 min-w-0 flex-1 max-w-full" />
@@ -190,7 +190,7 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
           <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-20 max-w-full" />
           </TableCell>
-          <TableCell className="min-w-0 px-4 py-3 pr-6 sm:pr-8">
+          <TableCell className="min-w-0 px-4 py-3 pe-6 sm:pe-8">
             <Skeleton className="h-3.5 w-[6.5rem]" />
           </TableCell>
         </TableRow>
@@ -230,7 +230,7 @@ function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
         aria-label="Loading activities"
       >
         <div
-          className="pointer-events-none absolute right-4 top-2.5 z-20 sm:right-6"
+          className="pointer-events-none absolute end-4 top-2.5 z-20 sm:end-6"
           aria-hidden
         >
           <RefreshCw
@@ -866,7 +866,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 <button
                   type="button"
                   className={cn(
-                    'inline-flex max-w-[10.5rem] shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-left sm:max-w-[13rem]',
+                    'inline-flex max-w-[10.5rem] shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-start sm:max-w-[13rem]',
                     'border border-transparent text-muted-foreground',
                     'hover:border-border hover:bg-muted/50 hover:text-foreground',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
@@ -1019,7 +1019,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                             }
                           }}
                         >
-                      <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
+                      <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
                         <div className="flex min-w-0 items-center gap-2">
                           <div
                             className={cn(
@@ -1122,7 +1122,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           countryName={activity.countryName}
                         />
                       </TableCell>
-                      <TableCell className="min-w-0 px-4 py-3 pr-6 sm:pr-8">
+                      <TableCell className="min-w-0 px-4 py-3 pe-6 sm:pe-8">
                         <DateTooltip
                           date={activity.timestamp}
                           className="text-[12px] text-muted-foreground"

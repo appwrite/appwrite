@@ -21,7 +21,7 @@ export function ApiReferenceMethodsPanel({
   onSelectMethod,
 }: ApiReferenceMethodsPanelProps) {
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-border bg-muted/20">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-e border-border bg-muted/20">
       <div
         className={cn(
           REFERENCE_COLUMN_HEADER_CLASS,

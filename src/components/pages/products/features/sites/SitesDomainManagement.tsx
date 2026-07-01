@@ -59,7 +59,7 @@ export function SitesDomainManagement({ className }: SitesDomainManagementProps)
           item={item}
           className={cn(
             index < DOMAIN_CAPABILITIES.length - 1 &&
-              'border-b border-border sm:border-b-0 sm:border-r',
+              'border-b border-border sm:border-b-0 sm:border-e',
           )}
         />
       ))}

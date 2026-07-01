@@ -309,13 +309,13 @@ function HomePage() {
           <div className="relative z-[1] mt-8 w-full sm:mt-10">
             <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
               <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10">
-                <div className="relative z-10 flex h-10 shrink-0 items-center gap-2 text-left">
-                  <div className="ml-2 flex items-center gap-1.5" aria-hidden>
+                <div className="relative z-10 flex h-10 shrink-0 items-center gap-2 text-start">
+                  <div className="ms-2 flex items-center gap-1.5" aria-hidden>
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
                   </div>
-                  <div className="ml-2 flex min-w-0 items-center gap-1.5 pr-4 text-[12px] text-muted-foreground">
+                  <div className="ms-2 flex min-w-0 items-center gap-1.5 pe-4 text-[12px] text-muted-foreground">
                     <span className="font-medium text-foreground">appwrite</span>
                     <ChevronRight className="size-3" />
                     <span className="truncate">Acme Corp</span>
@@ -528,7 +528,7 @@ function HomePage() {
                 return (
                   <article
                     key={item.title}
-                    className="group border-b border-border p-5 transition-colors hover:bg-accent/15 sm:border-r sm:[&:nth-child(2n)]:border-r-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(4n)]:border-r-0 lg:[&:nth-child(n+5)]:border-b-0"
+                    className="group border-b border-border p-5 transition-colors hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0"
                   >
                     <div className="flex flex-col gap-3">
                       <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">

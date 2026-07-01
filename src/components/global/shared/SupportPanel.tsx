@@ -240,13 +240,13 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
                 params={{ orgId }}
                 onClick={() => onNavigateAway?.()}
               >
-                <MessageCircle className="mr-1.5 h-4 w-4" />
+                <MessageCircle className="me-1.5 h-4 w-4" />
                 Contact Support
               </Link>
             </Button>
           ) : (
             <Button className="mt-3 w-full" size="sm" disabled>
-              <MessageCircle className="mr-1.5 h-4 w-4" />
+              <MessageCircle className="me-1.5 h-4 w-4" />
               Contact Support
             </Button>
           )

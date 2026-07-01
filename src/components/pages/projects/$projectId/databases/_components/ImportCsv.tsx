@@ -1,5 +1,5 @@
 /**
- * Import CSV modal: single file selector with left-pane sources (Local file + Buckets).
+ * Import CSV modal: single file selector with file source picker (Local file + Buckets).
  * Fixed-size modal to avoid layout shifts when switching sources.
  * Only CSV-compatible files are fetched from storage (filtered by API).
  */
@@ -366,7 +366,7 @@ export function ImportCsv({
         className="!flex flex-col gap-0 p-0 max-h-[90dvh] !max-w-[min(95vw,1100px)] w-full overflow-hidden"
         style={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       >
-        <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
           <DialogTitle>Import CSV</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Choose a CSV file from your device or from a storage bucket. Only
@@ -377,7 +377,7 @@ export function ImportCsv({
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left: sources (Local file + Buckets) */}
-          <div className="w-[220px] shrink-0 border-r border-border flex flex-col">
+          <div className="w-[220px] shrink-0 border-e border-border flex flex-col">
             <div className="py-2">
               <button
                 type="button"
@@ -387,7 +387,7 @@ export function ImportCsv({
                   setSelectedStorageFile(null)
                 }}
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] transition-colors',
+                  'w-full flex items-center gap-2 px-3 py-2.5 text-start text-[13px] transition-colors',
                   isLocal
                     ? 'bg-accent text-accent-foreground font-medium'
                     : 'text-foreground hover:bg-muted/50',
@@ -416,7 +416,7 @@ export function ImportCsv({
                     if (fileInputRef.current) fileInputRef.current.value = ''
                   }}
                   className={cn(
-                    'w-full px-3 py-2 text-left text-[13px] truncate transition-colors',
+                    'w-full px-3 py-2 text-start text-[13px] truncate transition-colors',
                     selectedBucketId === b.$id
                       ? 'bg-accent text-accent-foreground font-medium'
                       : 'text-foreground hover:bg-muted/50',
@@ -502,14 +502,14 @@ export function ImportCsv({
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="relative flex-1 min-w-0">
-                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             placeholder="Search files"
                             value={storageSearch}
                             onChange={(e) =>
                               setStorageSearch(e.target.value.trim())
                             }
-                            className="pl-8 h-8 text-[13px]"
+                            className="ps-8 h-8 text-[13px]"
                           />
                         </div>
                         <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
@@ -632,7 +632,7 @@ export function ImportCsv({
                                       })
                                     }
                                     className={cn(
-                                      'w-full flex items-center gap-3 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
+                                      'w-full flex items-center gap-3 px-3 py-2.5 text-start text-[13px] transition-colors hover:bg-accent cursor-pointer',
                                       isSelected && 'bg-accent',
                                     )}
                                   >
@@ -683,7 +683,7 @@ export function ImportCsv({
                                     })
                                   }
                                   className={cn(
-                                    'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 cursor-pointer',
+                                    'rounded-lg border border-border bg-card p-3 text-start transition-colors hover:border-primary/40 cursor-pointer',
                                     isSelected &&
                                       'border-primary ring-1 ring-primary/20',
                                   )}

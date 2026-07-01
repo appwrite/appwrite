@@ -44,12 +44,12 @@ export function CreateWizardRightColumn({
         {search ? (
           <div className="mb-4 shrink-0">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search.value}
                 onChange={(e) => search.onChange(e.target.value)}
                 placeholder={search.placeholder ?? 'Search templates...'}
-                className="h-9 pl-9 text-[13px]"
+                className="h-9 ps-9 text-[13px]"
               />
             </div>
           </div>

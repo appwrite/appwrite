@@ -255,8 +255,8 @@ const getIndexTypeColor = (type: string) => {
 // Reusable table styles for spreadsheet views
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
-  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-const bodyCellBorderClass = 'border-b border-r border-border'
+  'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+const bodyCellBorderClass = 'border-b border-e border-border'
 const lastCellBorderClass = 'border-b border-border'
 
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
@@ -371,7 +371,7 @@ function RowEditArraySortableRow({
     >
       <button
         type="button"
-        className="flex w-8 shrink-0 cursor-grab touch-none items-center justify-center border-r border-foreground/10 bg-muted/30 text-muted-foreground hover:bg-muted/45 active:cursor-grabbing"
+        className="flex w-8 shrink-0 cursor-grab touch-none items-center justify-center border-e border-foreground/10 bg-muted/30 text-muted-foreground hover:bg-muted/45 active:cursor-grabbing"
         aria-label="Drag to reorder"
         {...attributes}
         {...listeners}
@@ -1440,7 +1440,7 @@ function RowEditDrawer({
                       'z-10 flex gap-1.5 sm:gap-2',
                       useCompactInlineJsonToolbar
                         ? 'pointer-events-auto relative shrink-0 flex-row flex-wrap justify-end border-b border-border bg-background/95 px-2 py-2 backdrop-blur-sm'
-                        : 'pointer-events-none absolute right-3 top-4 flex-col p-1 sm:right-6 sm:top-5',
+                        : 'pointer-events-none absolute end-3 top-4 flex-col p-1 sm:end-6 sm:top-5',
                     )}
                   >
                     <TooltipProvider delayDuration={0}>
@@ -1690,7 +1690,7 @@ function RowEditDrawer({
                               )}
                               {isRequired && (
                                 <span
-                                  className="text-destructive text-[12px] font-semibold ml-0.5"
+                                  className="text-destructive text-[12px] font-semibold ms-0.5"
                                   aria-label="Required field"
                                 >
                                   *
@@ -1924,7 +1924,7 @@ function RowEditDrawer({
 
                                             return (
                                               <>
-                                            <div className="flex w-9 shrink-0 select-none items-center justify-center border-r border-foreground/10 bg-muted/40 text-[11px] font-mono tabular-nums text-muted-foreground">
+                                            <div className="flex w-9 shrink-0 select-none items-center justify-center border-e border-foreground/10 bg-muted/40 text-[11px] font-mono tabular-nums text-muted-foreground">
                                               {index + 1}
                                             </div>
                                             <div className="flex min-w-0 flex-1 flex-col">
@@ -2162,7 +2162,7 @@ function RowEditDrawer({
                                             <button
                                               type="button"
                                               aria-label={`Remove item ${index + 1}`}
-                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-l border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-s border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                               onClick={() =>
                                                 handleRemoveArrayItem(
                                                   key,
@@ -2195,7 +2195,7 @@ function RowEditDrawer({
                                   onClick={() => handleAddArrayItem(key)}
                                   className="h-9 w-full cursor-pointer justify-center rounded-none border-t border-foreground/10 bg-muted/30 text-[12px] text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 >
-                                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                  <Plus className="me-1.5 h-3.5 w-3.5" />
                                   Add item
                                 </Button>
                               </div>
@@ -2329,8 +2329,8 @@ function RowEditDrawer({
                                   hasLimit || showNullCheckbox
                                 const counterPadding = needsCounterSpace
                                   ? isRTLContent
-                                    ? 'pl-28'
-                                    : 'pr-28'
+                                    ? 'ps-28'
+                                    : 'pe-28'
                                   : ''
 
                                 return (
@@ -2418,11 +2418,11 @@ function RowEditDrawer({
                                           'absolute flex items-center gap-2 pointer-events-none',
                                           useTextarea
                                             ? isRTLContent
-                                              ? 'bottom-2 left-2'
-                                              : 'bottom-2 right-2'
+                                              ? 'bottom-2 start-2'
+                                              : 'bottom-2 end-2'
                                             : isRTLContent
-                                              ? 'top-1/2 -translate-y-1/2 left-2'
-                                              : 'top-1/2 -translate-y-1/2 right-2',
+                                              ? 'top-1/2 -translate-y-1/2 start-2'
+                                              : 'top-1/2 -translate-y-1/2 end-2',
                                         )}
                                       >
                                         {hasLimit && (
@@ -2507,7 +2507,7 @@ function RowEditDrawer({
 
             {presentation === 'inline' &&
             (inlineDocumentDirty || isCreateMode) ? (
-              <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-20 flex justify-center px-2 sm:bottom-4 sm:px-4">
+              <div className="pointer-events-none absolute bottom-3 start-0 end-0 z-20 flex justify-center px-2 sm:bottom-4 sm:px-4">
                 <div className="pointer-events-auto flex w-full max-w-[520px] min-w-0 flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 shadow-sm sm:min-w-[min(100%,400px)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3">
                   <Badge variant="secondary" className="h-6 w-fit shrink-0 px-2.5">
                     {isCreateMode
@@ -4142,7 +4142,7 @@ export function RowsSpreadsheet({
                   'shrink-0 border-border',
                   isDocumentsStackedLayout
                     ? 'max-h-[min(42dvh,320px)] w-full border-b'
-                    : 'border-r',
+                    : 'border-e',
                   paginatedRows.length === 0 && 'border-t border-border',
                 )
               : 'min-w-0 flex-1',
@@ -4218,7 +4218,7 @@ export function RowsSpreadsheet({
             <tr>
               <th
                 className={cn(
-                  'sticky left-0 z-40 w-10 bg-background px-2 py-2 text-center',
+                  'sticky start-0 z-40 w-10 bg-background px-2 py-2 text-center',
                   useInlineDocumentPane &&
                     'min-w-[40px] max-w-[40px] shrink-0 box-border',
                   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]',
@@ -4246,7 +4246,7 @@ export function RowsSpreadsheet({
               {!hideSequenceColumn ? (
                 <th
                   className={cn(
-                    'w-[72px] min-w-[72px] px-2 py-2 text-left',
+                    'w-[72px] min-w-[72px] px-2 py-2 text-start',
                     headerCellBorderClass,
                   )}
                 >
@@ -4256,7 +4256,7 @@ export function RowsSpreadsheet({
                       type="button"
                       aria-label="Copy column name: $sequence"
                       onClick={() => void copyColumnHeaderName('$sequence')}
-                      className="group inline-flex min-w-0 flex-1 items-center gap-0.5 rounded px-0.5 -mx-0.5 py-0 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="group inline-flex min-w-0 flex-1 items-center gap-0.5 rounded px-0.5 -mx-0.5 py-0 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
                       <span className="min-w-0 truncate">#</span>
                       {copiedColumnHeaderKey === '$sequence' ? (
@@ -4281,7 +4281,7 @@ export function RowsSpreadsheet({
                     type="button"
                     aria-label="Copy column name: $id"
                     onClick={() => void copyColumnHeaderName('$id')}
-                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 truncate">
                       $id
@@ -4301,7 +4301,7 @@ export function RowsSpreadsheet({
                   <button
                     type="button"
                     onClick={() => handleSortColumn('$id')}
-                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="ms-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     {sortBy === '$id' ? (
                       sortOrder === 'asc' ? (
@@ -4339,7 +4339,7 @@ export function RowsSpreadsheet({
                         type="button"
                         aria-label={`Copy column name: ${col}`}
                         onClick={() => void copyColumnHeaderName(col)}
-                        className="group inline-flex max-w-full min-w-0 shrink items-center gap-1 overflow-hidden rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="group inline-flex max-w-full min-w-0 shrink items-center gap-1 overflow-hidden rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         <span className="min-w-0 truncate">
                           {col}
@@ -4386,7 +4386,7 @@ export function RowsSpreadsheet({
                     type="button"
                     aria-label="Copy column name: $createdAt"
                     onClick={() => void copyColumnHeaderName('$createdAt')}
-                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 truncate">
                       $createdAt
@@ -4406,7 +4406,7 @@ export function RowsSpreadsheet({
                   <button
                     type="button"
                     onClick={() => handleSortColumn('$createdAt')}
-                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="ms-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     {sortBy === '$createdAt' ? (
                       sortOrder === 'asc' ? (
@@ -4427,7 +4427,7 @@ export function RowsSpreadsheet({
                     type="button"
                     aria-label="Copy column name: $updatedAt"
                     onClick={() => void copyColumnHeaderName('$updatedAt')}
-                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 truncate">
                       $updatedAt
@@ -4447,7 +4447,7 @@ export function RowsSpreadsheet({
                   <button
                     type="button"
                     onClick={() => handleSortColumn('$updatedAt')}
-                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="ms-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     {sortBy === '$updatedAt' ? (
                       sortOrder === 'asc' ? (
@@ -4463,7 +4463,7 @@ export function RowsSpreadsheet({
               </th>
               <th
                 className={cn(
-                  'relative sticky right-0 z-30 bg-background p-0',
+                  'relative sticky end-0 z-30 bg-background p-0',
                   useInlineDocumentPane && 'shrink-0 box-border',
                   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)]',
                 )}
@@ -4541,7 +4541,7 @@ export function RowsSpreadsheet({
                 >
                   <td
                     className={cn(
-                      'sticky left-0 w-10 border-b border-border px-2 py-1.5 text-center',
+                      'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
                       useInlineDocumentPane &&
                         'min-w-[40px] max-w-[40px] shrink-0 box-border',
                       'shadow-[inset_-1px_0_0_0_var(--border)]',
@@ -4683,7 +4683,7 @@ export function RowsSpreadsheet({
                   </td>
                   <td
                     className={cn(
-                      'sticky right-0 border-b border-border p-0',
+                      'sticky end-0 border-b border-border p-0',
                       useInlineDocumentPane && 'shrink-0 box-border',
                       'shadow-[inset_1px_0_0_0_var(--border)]',
                       !isInlinePreviewRow
@@ -4853,7 +4853,7 @@ export function RowsSpreadsheet({
 
       {/* Bulk Delete Action Bar */}
       {selectedRows.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
+        <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
           <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedRows.size}{' '}
@@ -4963,7 +4963,7 @@ export function RowsSpreadsheet({
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete {dbLabels.recordPluralTitle}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete {selectedRows.size}{' '}
@@ -5669,7 +5669,7 @@ export function TableSettings({
                   onClick={handleAddDisplayNameColumn}
                   disabled={displayNames[displayNames.length - 1] === ''}
                 >
-                  <Plus className="h-4 w-4 mr-1.5" />
+                  <Plus className="h-4 w-4 me-1.5" />
                   Add column
                 </Button>
               )}
@@ -5751,7 +5751,7 @@ export function TableSettings({
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md p-0">
-                <DialogHeader className="px-6 pt-6 text-left">
+                <DialogHeader className="px-6 pt-6 text-start">
                   <DialogTitle>Delete table</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Are you sure you want to delete{' '}

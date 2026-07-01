@@ -300,7 +300,7 @@ function MonitorSidebarNav({
           type="button"
           onClick={() => onNavigate(s.id)}
           className={cn(
-            'flex w-full items-center rounded-md px-2 py-1.5 text-left text-[13px] transition-colors',
+            'flex w-full items-center rounded-md px-2 py-1.5 text-start text-[13px] transition-colors',
             'text-muted-foreground hover:bg-accent hover:text-foreground',
           )}
         >
@@ -385,7 +385,7 @@ export function DatabaseMonitorView({
 
   return (
     <div className="flex h-full min-h-0 w-full overflow-hidden">
-      <aside className="hidden w-[200px] shrink-0 border-r border-border lg:block">
+      <aside className="hidden w-[200px] shrink-0 border-e border-border lg:block">
         <div className="h-full overflow-y-auto p-3">
           <MonitorSidebarNav sections={sections} onNavigate={scrollToChart} />
         </div>

@@ -821,10 +821,10 @@ export function View() {
                           Backups
                         </TableHead>
                       )}
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                         Created
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                         Updated
                       </TableHead>
                     </TableRow>
@@ -952,7 +952,7 @@ export function View() {
                                 (db as { databaseType?: ApiDatabaseType })
                                   .databaseType,
                               )}
-                              className="block text-right"
+                              className="block text-end"
                             >
                               <DateTooltip
                                 date={
@@ -972,7 +972,7 @@ export function View() {
                                 (db as { databaseType?: ApiDatabaseType })
                                   .databaseType,
                               )}
-                              className="block text-right"
+                              className="block text-end"
                             >
                               <DateTooltip
                                 date={
@@ -1160,7 +1160,7 @@ export function View() {
 
         {/* Bulk Delete Action Bar */}
         {selectedDatabases.size > 0 && (
-          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
                 {selectedDatabases.size} database
@@ -1192,7 +1192,7 @@ export function View() {
         {/* Bulk Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>Delete Databases</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete {selectedDatabases.size}{' '}
@@ -1317,7 +1317,7 @@ export function DatabaseDetailLayout({
   return (
     <div className="@container flex h-full">
       {/* Tables Sidebar */}
-      <div className="hidden w-56 shrink-0 flex-col border-r border-border @[800px]:flex">
+      <div className="hidden w-56 shrink-0 flex-col border-e border-border @[800px]:flex">
         {/* Database Header with back button */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
@@ -1337,7 +1337,7 @@ export function DatabaseDetailLayout({
           {/* Tables Section Header */}
           <button
             onClick={() => setTablesExpanded(!tablesExpanded)}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             {tablesExpanded ? (
               <ChevronDown className="h-3.5 w-3.5 shrink-0" />
@@ -1355,7 +1355,7 @@ export function DatabaseDetailLayout({
 
           {/* Tables List (collapsible) */}
           {tablesExpanded && (
-            <div className="ml-3 mt-0.5 border-l border-border pl-2">
+            <div className="ms-3 mt-0.5 border-s border-border ps-2">
               {dbTables.map((table) =>
                 projectId ? (
                   <TableContextMenu
@@ -1373,7 +1373,7 @@ export function DatabaseDetailLayout({
                         resourceId: table.$id,
                       })}
                       className={cn(
-                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
+                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start transition-colors',
                         selectedTable?.$id === table.$id
                           ? 'bg-accent text-foreground'
                           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -1398,7 +1398,7 @@ export function DatabaseDetailLayout({
                       resourceId: table.$id,
                     })}
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
+                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start transition-colors',
                       selectedTable?.$id === table.$id
                         ? 'bg-accent text-foreground'
                         : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -1418,7 +1418,7 @@ export function DatabaseDetailLayout({
               {/* Create container */}
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">{dbLabels.createContainer}</span>
@@ -1430,7 +1430,7 @@ export function DatabaseDetailLayout({
           <Link
             to="/projects/$projectId/databases/$dbKind/$databaseId/db-security"
             params={{ projectId, dbKind: dbKind, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
@@ -1440,7 +1440,7 @@ export function DatabaseDetailLayout({
             <Link
               to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
               params={{ projectId, dbKind: dbKind, databaseId }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
             >
               <Cpu className="h-3.5 w-3.5 shrink-0" />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -1455,7 +1455,7 @@ export function DatabaseDetailLayout({
           {features.databaseInsights && (
             <>
               {/* Insights Link - Coming Soon */}
-              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
+              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground/50">
                 <BarChart3 className="h-3.5 w-3.5 shrink-0" />
                 <span className="flex-1 text-[13px]">Insights</span>
                 <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -1470,7 +1470,7 @@ export function DatabaseDetailLayout({
               databaseId={databaseId}
               to="/projects/$projectId/databases/$dbKind/$databaseId/backups"
               params={{ projectId, dbKind: dbKind, databaseId }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
               labelClassName="flex-1 text-[13px]"
             />
           )}
@@ -1479,7 +1479,7 @@ export function DatabaseDetailLayout({
           <Link
             to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
             params={{ projectId, dbKind: dbKind, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Settings</span>
@@ -1599,7 +1599,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   return (
     <div className="@container flex h-full">
       {/* Containers sidebar */}
-      <div className="hidden w-56 shrink-0 flex-col border-r border-border lg:flex">
+      <div className="hidden w-56 shrink-0 flex-col border-e border-border lg:flex">
         {/* Database Header with back button */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
@@ -1619,7 +1619,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {/* Tables Section Header */}
           <button
             onClick={() => setTablesExpanded(!tablesExpanded)}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             {tablesExpanded ? (
               <ChevronDown className="h-3.5 w-3.5 shrink-0" />
@@ -1635,10 +1635,10 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 
           {/* Tables List (collapsible) - Empty state */}
           {tablesExpanded && (
-            <div className="ml-3 mt-0.5 border-l border-border pl-2">
+            <div className="ms-3 mt-0.5 border-s border-border ps-2">
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">{dbLabels.createContainer}</span>
@@ -1650,7 +1650,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           <Link
             to="/projects/$projectId/databases/$dbKind/$databaseId/db-security"
             params={{ projectId, dbKind: dbKind, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
@@ -1660,7 +1660,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <Link
               to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
               params={{ projectId, dbKind: dbKind, databaseId }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
             >
               <Cpu className="h-3.5 w-3.5 shrink-0" />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -1675,7 +1675,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {features.databaseInsights && (
             <>
               {/* Insights Link - Coming Soon */}
-              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
+              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground/50">
                 <BarChart3 className="h-3.5 w-3.5 shrink-0" />
                 <span className="flex-1 text-[13px]">Insights</span>
                 <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -1690,7 +1690,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               databaseId={databaseId}
               to="/projects/$projectId/databases/$dbKind/$databaseId/backups"
               params={{ projectId, dbKind: dbKind, databaseId }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
               labelClassName="flex-1 text-[13px]"
             />
           )}
@@ -1699,7 +1699,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           <Link
             to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
             params={{ projectId, dbKind: dbKind, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Settings</span>
@@ -1731,7 +1731,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               onClick={() => setCreateTableDialogOpen(true)}
               className="mt-4"
             >
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Plus className="me-1.5 h-4 w-4" />
               {dbLabels.createContainer}
             </Button>
           </div>

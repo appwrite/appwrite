@@ -364,7 +364,7 @@ export function BillingAddressSection({
 
       <Dialog open={removeConfirmOpen} onOpenChange={setRemoveConfirmOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Remove billing address</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to remove the billing address from{' '}

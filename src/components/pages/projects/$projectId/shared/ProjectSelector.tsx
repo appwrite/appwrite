@@ -675,7 +675,7 @@ export function ProjectSelector({
         <button
           onClick={() => setOpen(true)}
           className={cn(
-            'flex w-full items-center gap-2 overflow-visible rounded-md border border-border bg-background px-2.5 py-2 text-left transition-colors hover:bg-accent cursor-pointer',
+            'flex w-full items-center gap-2 overflow-visible rounded-md border border-border bg-background px-2.5 py-2 text-start transition-colors hover:bg-accent cursor-pointer',
             className,
           )}
         >
@@ -714,7 +714,7 @@ export function ProjectSelector({
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent
-            className="fixed inset-0 left-0 top-0 z-[132] flex h-[100dvh] max-h-none w-[100dvw] max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none sm:rounded-none"
+            className="fixed inset-0 start-0 top-0 z-[132] flex h-[100dvh] max-h-none w-[100dvw] max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none sm:rounded-none"
             overlayClassName="z-[131]"
             showCloseButton={false}
           >
@@ -777,7 +777,7 @@ export function ProjectSelector({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'flex h-9 max-w-full min-w-0 items-center gap-2 overflow-visible rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
+              'flex h-9 max-w-full min-w-0 items-center gap-2 overflow-visible rounded-md px-2 py-1.5 text-start transition-colors hover:bg-accent cursor-pointer',
               className,
             )}
           >
@@ -1004,7 +1004,7 @@ function ProjectSelectorContent({
                       onClick={() => onSelectTeam(team)}
                       onMouseEnter={() => prefetchTeamProjects(team.$id)}
                       className={cn(
-                        'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
+                        'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-colors',
                         selectedTeam.$id === team.$id
                           ? 'bg-accent'
                           : 'hover:bg-accent/50',
@@ -1045,7 +1045,7 @@ function ProjectSelectorContent({
             <button
               type="button"
               onClick={onCreateOrganization}
-              className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-3.5 w-3.5" />
@@ -1102,7 +1102,7 @@ function ProjectSelectorContent({
                       params={{ projectId: project.$id }}
                       onClick={(e) => handleSelectProject(project, e)}
                       className={cn(
-                        'group flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
+                        'group flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-colors',
                         selectedProject?.$id === project.$id
                           ? 'bg-accent'
                           : 'hover:bg-accent/50',
@@ -1121,7 +1121,7 @@ function ProjectSelectorContent({
                           {isCurrentProject && (
                             <Badge
                               variant="outline"
-                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                              className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
                               Current
                             </Badge>
@@ -1129,7 +1129,7 @@ function ProjectSelectorContent({
                           {project.paused && (
                             <Badge
                               variant="outline"
-                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                              className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
                               Paused
                             </Badge>
@@ -1166,7 +1166,7 @@ function ProjectSelectorContent({
         <div className="border-t border-border p-1.5">
           <button
             onClick={onCreateProject}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
@@ -1321,7 +1321,7 @@ function MobileProjectSelectorContent({
                       }}
                       onMouseEnter={() => prefetchTeamProjects(team.$id)}
                       className={cn(
-                        'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
+                        'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start transition-colors',
                         selectedTeam.$id === team.$id
                           ? 'bg-accent'
                           : 'hover:bg-accent/50',
@@ -1362,7 +1362,7 @@ function MobileProjectSelectorContent({
             <button
               type="button"
               onClick={onCreateOrganization}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
@@ -1384,7 +1384,7 @@ function MobileProjectSelectorContent({
               </span>
               <button
                 onClick={() => setActiveTab('teams')}
-                className="ml-auto cursor-pointer link-neutral text-[12px] dark:text-muted-foreground"
+                className="ms-auto cursor-pointer link-neutral text-[12px] dark:text-muted-foreground"
               >
                 Change
               </button>
@@ -1427,7 +1427,7 @@ function MobileProjectSelectorContent({
                         params={{ projectId: project.$id }}
                         onClick={(e) => handleSelectProject(project, e)}
                         className={cn(
-                          'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
+                          'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start transition-colors',
                           selectedProject?.$id === project.$id
                             ? 'bg-accent'
                             : 'hover:bg-accent/50',
@@ -1446,7 +1446,7 @@ function MobileProjectSelectorContent({
                             {isCurrentProject && (
                               <Badge
                                 variant="outline"
-                                className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                                className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                               >
                                 Current
                               </Badge>
@@ -1454,7 +1454,7 @@ function MobileProjectSelectorContent({
                             {project.paused && (
                               <Badge
                                 variant="outline"
-                                className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                                className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                               >
                                 Paused
                               </Badge>
@@ -1494,7 +1494,7 @@ function MobileProjectSelectorContent({
           <div className="border-t border-border p-2">
             <button
               onClick={onCreateProject}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />

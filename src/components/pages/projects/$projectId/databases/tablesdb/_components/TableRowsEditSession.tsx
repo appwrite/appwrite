@@ -297,7 +297,7 @@ export function TableRowsEditSessionProvider({
     <TableRowsEditSessionContext.Provider value={value}>
       {children}
       {pendingEdits.size > 0 ? (
-        <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-lg -translate-x-1/2 px-2 sm:px-0">
+        <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-lg -translate-x-1/2 px-2 sm:px-0">
           <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-amber-500/30 bg-background px-4 py-3 shadow-lg sm:gap-3 sm:px-6">
             <Badge variant="warning" className="h-6 shrink-0 px-2.5">
               {pendingEdits.size} unsaved change

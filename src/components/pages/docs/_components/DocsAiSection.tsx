@@ -132,7 +132,7 @@ export function DocsAiSection({ variant = 'page' }: DocsAiSectionProps) {
               title="MCP"
               description="Connect agents to your Appwrite project, APIs, and docs."
               shade="mcp"
-              className="border-b border-border @[900px]:border-b-0 @[900px]:border-r"
+              className="border-b border-border @[900px]:border-b-0 @[900px]:border-e"
               cta={
                 <Button variant="outline" className="h-9 text-[13px]" asChild>
                   <DocsRouteLink href="/docs/tooling/ai/mcp-servers">
@@ -148,7 +148,7 @@ export function DocsAiSection({ variant = 'page' }: DocsAiSectionProps) {
               title="Agent skills"
               description="Teach agents your backend so they make SDK-accurate calls."
               shade="skills"
-              className="border-b border-border @[900px]:border-b-0 @[900px]:border-r"
+              className="border-b border-border @[900px]:border-b-0 @[900px]:border-e"
               cta={
                 <Button variant="outline" className="h-9 text-[13px]" asChild>
                   <DocsRouteLink href="/docs/tooling/ai/skills">
@@ -183,14 +183,14 @@ export function DocsAiSection({ variant = 'page' }: DocsAiSectionProps) {
             description="Editors and agents where you ship code locally or in the terminal."
             tools={DOCS_HOME_IDE_AI_TOOLS}
             tone="mcp"
-            className="@[900px]:pr-10"
+            className="@[900px]:pe-10"
           />
           <DocsAiToolColumn
             title="Vibe coding platforms"
             description="Build from prompts in the browser; connect docs or full MCP where supported."
             tools={DOCS_HOME_VIBE_AI_TOOLS}
             tone="integrations"
-            className="border-t border-border pt-6 @[900px]:border-t-0 @[900px]:pl-10 @[900px]:pt-0"
+            className="border-t border-border pt-6 @[900px]:border-t-0 @[900px]:ps-10 @[900px]:pt-0"
           />
         </div>
 

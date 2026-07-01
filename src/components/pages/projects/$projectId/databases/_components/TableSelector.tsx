@@ -167,11 +167,11 @@ export function TableSelector({
                 placeholder="Search"
                 value={search}
                 onValueChange={setSearch}
-                className={cn('h-9', isFetching && 'pr-8')}
+                className={cn('h-9', isFetching && 'pe-8')}
               />
               <div
                 className={cn(
-                  'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                  'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
                 aria-hidden
@@ -192,7 +192,7 @@ export function TableSelector({
                       onSelect(table.$id)
                       setOpen(false)
                     }}
-                    className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">{table.name}</span>

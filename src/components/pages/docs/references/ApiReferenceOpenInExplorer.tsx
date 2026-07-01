@@ -72,12 +72,12 @@ export function ApiReferenceOpenInExplorer({
         onClick={() => setOpen(true)}
       >
         Open in explorer
-        <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+        <ExternalLink className="ms-1.5 h-3.5 w-3.5" />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Open in explorer</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Try this endpoint in your project with the live API explorer.

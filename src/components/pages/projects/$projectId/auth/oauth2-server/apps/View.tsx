@@ -100,7 +100,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
           </p>
         </div>
         <Button size="sm" className="h-9 shrink-0" onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <Plus className="me-1.5 h-3.5 w-3.5" />
           Create app
         </Button>
       </div>
@@ -119,7 +119,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
       ) : (
         <div className="relative rounded-lg border border-border bg-card overflow-hidden">
           {isFetching ? (
-            <div className="absolute right-3 top-3 z-10">
+            <div className="absolute end-3 top-3 z-10">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : null}
@@ -141,7 +141,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Created
                 </TableHead>
-                <TableHead className="w-[100px] px-4 py-3 text-right" />
+                <TableHead className="w-[100px] px-4 py-3 text-end" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -169,10 +169,10 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
                   <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                     {app.redirectUris?.length ?? 0}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-right">
+                  <TableCell className="px-4 py-3 text-end">
                     <DateTooltip date={app.$createdAt} />
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-right">
+                  <TableCell className="px-4 py-3 text-end">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -203,7 +203,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete OAuth2 app</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Delete {deleteTarget?.name}? Active tokens for this client will stop

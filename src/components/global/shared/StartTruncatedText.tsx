@@ -19,7 +19,7 @@ export function StartTruncatedText({
     <span
       dir="rtl"
       className={cn(
-        'block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-left',
+        'block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-start',
         className,
       )}
       title={title ?? text}

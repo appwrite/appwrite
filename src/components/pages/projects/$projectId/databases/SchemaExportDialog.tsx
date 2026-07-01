@@ -104,7 +104,7 @@ export function SchemaExportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Export Database Schema</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Export your database structure in a format suitable for AI agents

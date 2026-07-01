@@ -224,7 +224,7 @@ export function ComparisonRowLabel({
   info?: string
 }) {
   return (
-    <div className="flex items-center gap-1.5 text-left">
+    <div className="flex items-center gap-1.5 text-start">
       <span className="text-[13px] font-medium text-foreground">{title}</span>
       {info ? (
         <Tooltip>

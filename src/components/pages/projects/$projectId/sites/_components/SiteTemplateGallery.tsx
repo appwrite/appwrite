@@ -163,14 +163,14 @@ export function SiteTemplateGallery({
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[140px] flex-1">
           <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <Input
             value={templateSearch}
             onChange={(event) => setTemplateSearch(event.target.value)}
             placeholder="Search templates..."
-            className="h-9 pl-9 text-[13px]"
+            className="h-9 ps-9 text-[13px]"
           />
         </div>
 
@@ -186,7 +186,7 @@ export function SiteTemplateGallery({
               {SITE_TEMPLATE_USE_CASE_OPTIONS.find(
                 (option) => option.value === selectedUseCase,
               )?.label || 'All use cases'}
-              <ChevronsUpDown className="ml-2 size-3.5 shrink-0 opacity-50" />
+              <ChevronsUpDown className="ms-2 size-3.5 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[200px] p-0" align="start" sideOffset={4}>
@@ -233,7 +233,7 @@ export function SiteTemplateGallery({
                     ?.label || 'All frameworks'}
                 </span>
               </span>
-              <ChevronsUpDown className="ml-2 size-3.5 shrink-0 opacity-50" />
+              <ChevronsUpDown className="ms-2 size-3.5 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[220px] p-0" align="start" sideOffset={4}>
@@ -257,7 +257,7 @@ export function SiteTemplateGallery({
                         <FrameworkIcon
                           framework={option.value}
                           size="sm"
-                          className="mr-2"
+                          className="me-2"
                         />
                       ) : null}
                       <span className="capitalize">{option.label}</span>

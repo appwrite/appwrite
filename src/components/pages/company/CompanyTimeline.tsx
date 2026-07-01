@@ -323,7 +323,7 @@ function MobileTimelineEntry({ index, milestone }: TimelineEntryProps) {
     <li className="relative pb-8 last:pb-0">
       <span
         aria-hidden
-        className="absolute left-3 top-2 z-[1] size-2 -translate-x-1/2 rounded-full bg-muted-foreground/50 ring-[3px] ring-background"
+        className="absolute start-3 top-2 z-[1] size-2 -translate-x-1/2 rounded-full bg-muted-foreground/50 ring-[3px] ring-background"
       />
       <div className="flex flex-col gap-3 ps-8">
         <TimelineDate date={milestone.date} highlighted={index === 0} />
@@ -358,7 +358,7 @@ function DesktopTimelineEntry({ index, milestone }: TimelineEntryProps) {
             <div className="relative w-full max-w-md">
               <span
                 aria-hidden
-                className="absolute right-0 top-3 h-px w-6 translate-x-full bg-border lg:w-8"
+                className="absolute end-0 top-3 h-px w-6 ltr:translate-x-full rtl:-translate-x-full bg-border lg:w-8"
               />
               <MilestoneCard
                 title={milestone.title}
@@ -375,7 +375,7 @@ function DesktopTimelineEntry({ index, milestone }: TimelineEntryProps) {
             <div className="relative w-full max-w-md">
               <span
                 aria-hidden
-                className="absolute left-0 top-3 h-px w-6 -translate-x-full bg-border lg:w-8"
+                className="absolute start-0 top-3 h-px w-6 ltr:-translate-x-full rtl:translate-x-full bg-border lg:w-8"
               />
               <MilestoneCard
                 title={milestone.title}
@@ -436,7 +436,7 @@ export function CompanyTimeline() {
           <div className="@[768px]:hidden">
             <span
               aria-hidden
-              className="pointer-events-none absolute left-3 top-0 bottom-0 z-0 w-px -translate-x-1/2 bg-border"
+              className="pointer-events-none absolute start-3 top-0 bottom-0 z-0 w-px -translate-x-1/2 bg-border"
             />
             <ol className="relative z-[1]">
               {companyTimelineYearGroups.map((group) => (

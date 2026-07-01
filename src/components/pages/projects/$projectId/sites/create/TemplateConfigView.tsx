@@ -418,7 +418,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       {/* Template preview - tilted screenshot style (aspect-video reserves space to avoid layout shift) */}
       <div className="relative h-[120px] overflow-hidden border-b border-border/50">
         {screenshotUrl ? (
-          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3">
+          <div className="absolute start-6 -end-4 top-4 aspect-video transform -rotate-3">
             <div className="relative h-full w-full overflow-hidden rounded-lg ring-1 ring-border bg-muted/30">
               <FadeImage
                 src={screenshotUrl}
@@ -428,7 +428,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             </div>
           </div>
         ) : (
-          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
+          <div className="absolute start-6 -end-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
             <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
           </div>
         )}
@@ -499,7 +499,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <GitBranch className="mr-1.5 h-4 w-4" />
+                <GitBranch className="me-1.5 h-4 w-4" />
                 View source
               </a>
             </Button>
@@ -516,7 +516,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <ExternalLink className="mr-1.5 h-4 w-4" />
+                <ExternalLink className="me-1.5 h-4 w-4" />
                 Live demo
               </a>
             </Button>
@@ -714,7 +714,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           )}
         >
           <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
-          <div className="ml-3 flex-1">
+          <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
               Connect your repository
             </span>
@@ -738,7 +738,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             id="git-later"
             className="mt-1 shrink-0"
           />
-          <div className="ml-3 flex-1">
+          <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
               Connect later
             </span>
@@ -804,7 +804,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                   <Label className="text-[13px] font-mono">
                     {variable.key}
                     {templateVar?.required && (
-                      <span className="text-destructive ml-1">*</span>
+                      <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
                   {templateVar?.secret && (

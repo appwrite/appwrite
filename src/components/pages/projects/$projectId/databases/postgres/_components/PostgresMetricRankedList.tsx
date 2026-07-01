@@ -117,7 +117,7 @@ export function PostgresMetricRankedList({
                     {formatValue(item.value)}
                   </span>
                 </div>
-                <div className="pl-7">
+                <div className="ps-7">
                   <Progress
                     value={item.sharePercent}
                     className="h-1.5 bg-[var(--chart-brand)]/15 [&_[data-slot=progress-indicator]]:bg-[var(--chart-brand)]"

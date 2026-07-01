@@ -115,7 +115,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
         />
 
         <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="h-full min-h-[280px] border-b border-border sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:col-start-1 lg:row-start-1 lg:border-b lg:border-r">
+          <div className="h-full min-h-[280px] border-b border-border sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:col-start-1 lg:row-start-1 lg:border-b lg:border-e">
             <div className="flex h-full min-h-[280px] flex-col lg:min-h-0">
               <div className="shrink-0 border-b border-border bg-muted/15 px-4 py-2.5">
                 <p className="text-[13px] font-semibold text-foreground">
@@ -136,7 +136,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.api}
-            className="border-b border-border sm:border-r lg:col-start-3 lg:row-start-1 lg:border-b lg:border-r"
+            className="border-b border-border sm:border-e lg:col-start-3 lg:row-start-1 lg:border-b lg:border-e"
           >
             <ToolsTileIcon icon={Braces} />
             <ToolsTileTitle>Everything is an API</ToolsTileTitle>
@@ -169,7 +169,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.realtime}
-            className="border-b border-border sm:border-r lg:col-start-3 lg:row-start-2 lg:border-b lg:border-r"
+            className="border-b border-border sm:border-e lg:col-start-3 lg:row-start-2 lg:border-b lg:border-e"
           >
             <ToolsTileIcon icon={Radio} />
             <ToolsTileTitle>Realtime</ToolsTileTitle>
@@ -198,7 +198,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={terraform.href}
-            className="border-b border-border sm:border-r lg:col-start-1 lg:row-start-3 lg:border-b-0 lg:border-r"
+            className="border-b border-border sm:border-e lg:col-start-1 lg:row-start-3 lg:border-b-0 lg:border-e"
           >
             <ToolsTileIcon>
               <TerraformIcon variant="nav" className="size-3.5 text-muted-foreground" />
@@ -212,7 +212,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.skills}
-            className="border-b border-border sm:border-r lg:col-start-2 lg:row-start-3 lg:border-b-0 lg:border-r"
+            className="border-b border-border sm:border-e lg:col-start-2 lg:row-start-3 lg:border-b-0 lg:border-e"
           >
             <ToolsTileIcon icon={Sparkles} />
             <ToolsTileTitle>Agent skills</ToolsTileTitle>
@@ -224,7 +224,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.sdks}
-            className="border-b border-border sm:border-r lg:col-start-3 lg:row-start-3 lg:border-b-0 lg:border-r"
+            className="border-b border-border sm:border-e lg:col-start-3 lg:row-start-3 lg:border-b-0 lg:border-e"
           >
             <ToolsTileIcon icon={Layers} />
             <ToolsTileTitle>SDKs</ToolsTileTitle>

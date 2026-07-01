@@ -107,10 +107,10 @@ function TablesDbColumnIcon({ type }: { type: string }) {
 }
 
 const spreadsheetHeaderCellClass =
-  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+  'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
 const spreadsheetLastHeaderCellClass =
   'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-const spreadsheetBodyCellClass = 'border-b border-r border-border'
+const spreadsheetBodyCellClass = 'border-b border-e border-border'
 const spreadsheetLastBodyCellClass = 'border-b border-border'
 
 const EMPTY_TABLE_ROW_COUNT = 4
@@ -247,7 +247,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
                     className={cn(
                       TABLE_CELL_X,
                       TABLE_HEADER_Y,
-                      column.cellAlign === 'right' ? 'text-right' : 'text-left',
+                      column.cellAlign === 'right' ? 'text-end' : 'text-start',
                       isLast ? spreadsheetLastHeaderCellClass : spreadsheetHeaderCellClass,
                     )}
                   >
@@ -312,7 +312,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
                         TABLE_CELL_X,
                         TABLE_BODY_Y,
                         isLast ? spreadsheetLastBodyCellClass : spreadsheetBodyCellClass,
-                        column.cellAlign === 'right' && 'text-right',
+                        column.cellAlign === 'right' && 'text-end',
                         column.type === 'system-id' && 'font-mono',
                       )}
                     >
@@ -371,19 +371,19 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
         <div className="product-bento-db-reveal" style={{ animationDelay: '60ms' }}>
           <Syn tone="punctuation">{'{'}</Syn>
         </div>
-        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '120ms' }}>
+        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '120ms' }}>
           <Syn tone="property">&quot;event&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Monaco GP&quot;</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '180ms' }}>
+        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '180ms' }}>
           <Syn tone="property">&quot;session&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Race&quot;</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '260ms' }}>
+        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '260ms' }}>
           <Syn tone="property">&quot;weather&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="punctuation">{'{ '}</Syn>
@@ -397,7 +397,7 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
           <Syn tone="punctuation">{' }'}</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="product-bento-db-reveal pl-2" style={{ animationDelay: '340ms' }}>
+        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '340ms' }}>
           <Syn tone="property">&quot;strategy&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Medium stint, pit 14-17&quot;</Syn>

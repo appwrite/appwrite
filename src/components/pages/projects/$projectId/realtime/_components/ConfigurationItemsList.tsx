@@ -70,7 +70,7 @@ function ConfigurationSubscriptionRow({
                 size="sm"
                 className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
               >
-                <Filter className="mr-1 h-3 w-3" />
+                <Filter className="me-1 h-3 w-3" />
                 Query
               </Button>
             </PopoverTrigger>
@@ -109,7 +109,7 @@ function ConfigurationSubscriptionRow({
       </div>
 
       {entry.queries.length > 0 ? (
-        <ul className="space-y-1 border-t border-border/60 py-2 pl-9 pr-2.5">
+        <ul className="space-y-1 border-t border-border/60 py-2 ps-9 pe-2.5">
           {entry.queries.map((query) => {
             const parts = getQueryDisplayPartsFromEntry(query)
 

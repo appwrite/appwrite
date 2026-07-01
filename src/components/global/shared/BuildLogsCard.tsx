@@ -166,12 +166,12 @@ export function BuildLogsCard({
         <TooltipProvider>
           <div className="flex items-center gap-2">
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search logs..."
                 value={logsSearch}
                 onChange={(e) => setLogsSearch(e.target.value)}
-                className="pl-9 h-9 text-[13px]"
+                className="ps-9 h-9 text-[13px]"
               />
             </div>
             <TooltipPrimitive.Root>
@@ -213,7 +213,7 @@ export function BuildLogsCard({
       <div className="relative">
         <div
           ref={logsContainerRef}
-          className="h-[400px] overflow-y-scroll overflow-x-hidden pr-16 [scrollbar-gutter:stable]"
+          className="h-[400px] overflow-y-scroll overflow-x-hidden pe-16 [scrollbar-gutter:stable]"
         >
           <BuildLogsView
             buildLogs={buildLogs}
@@ -223,7 +223,7 @@ export function BuildLogsCard({
           />
         </div>
         {buildLogs && (
-          <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
+          <div className="absolute bottom-3 end-3 flex flex-col gap-2 z-10">
             <TooltipProvider>
               <TooltipPrimitive.Root>
                 <TooltipTrigger asChild>

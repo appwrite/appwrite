@@ -203,7 +203,7 @@ function ExplorerPermissionsItemHelper({
         }}
       >
         <DialogContent className="flex max-h-[min(90dvh,720px)] w-[min(96vw,720px)] flex-col gap-0 overflow-hidden p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Build permission</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Build a permission string for this entry. Changes apply when you

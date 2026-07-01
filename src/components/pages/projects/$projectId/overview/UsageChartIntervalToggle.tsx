@@ -66,9 +66,9 @@ export function UsageChartIntervalToggle({
               className={cn(
                 TOGGLE_ITEM_CLASS,
                 '!rounded-none shadow-none',
-                isFirst && '!rounded-l-md !border-l',
-                isLast && '!rounded-r-md',
-                !isFirst && '!border-l-0',
+                isFirst && '!rounded-s-md !border-s',
+                isLast && '!rounded-e-md',
+                !isFirst && '!border-s-0',
               )}
             >
               {option.label}

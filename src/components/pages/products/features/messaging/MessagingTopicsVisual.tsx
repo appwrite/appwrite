@@ -63,7 +63,7 @@ export function MessagingTopicsVisual() {
                 <TableHead className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Use case
                 </TableHead>
-                <TableHead className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <TableHead className="px-3 py-2.5 text-end text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Subscribers
                 </TableHead>
               </TableRow>
@@ -85,7 +85,7 @@ export function MessagingTopicsVisual() {
                       {topic.useCase}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-3 py-2.5 text-right">
+                  <TableCell className="px-3 py-2.5 text-end">
                     <span className="inline-flex items-center justify-end gap-1.5 text-[11px] text-foreground">
                       <Users className="size-3 text-muted-foreground" aria-hidden />
                       {topic.subscribers.toLocaleString()}

@@ -355,7 +355,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   onClick={() => void createChallenge(AuthenticationFactor.Totp)}
                   disabled={disabled}
                 >
-                  <Smartphone className="mr-1.5 h-4 w-4" />
+                  <Smartphone className="me-1.5 h-4 w-4" />
                   Authenticator app
                 </Button>
               )}
@@ -369,7 +369,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   onClick={() => void createChallenge(AuthenticationFactor.Email)}
                   disabled={disabled}
                 >
-                  <Mail className="mr-1.5 h-4 w-4" />
+                  <Mail className="me-1.5 h-4 w-4" />
                   Email verification
                 </Button>
               )}
@@ -383,7 +383,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   onClick={() => void createChallenge(AuthenticationFactor.Phone)}
                   disabled={disabled}
                 >
-                  <Smartphone className="mr-1.5 h-4 w-4" />
+                  <Smartphone className="me-1.5 h-4 w-4" />
                   Phone verification
                 </Button>
               )}

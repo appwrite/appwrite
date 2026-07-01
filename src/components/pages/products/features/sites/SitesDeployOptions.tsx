@@ -62,7 +62,7 @@ export function SitesDeployOptions({ className }: SitesDeployOptionsProps) {
           key={option.id}
           option={option}
           className={cn(
-            index < DEPLOY_OPTIONS.length - 1 && 'border-b border-border sm:border-b-0 sm:border-r',
+            index < DEPLOY_OPTIONS.length - 1 && 'border-b border-border sm:border-b-0 sm:border-e',
           )}
         />
       ))}

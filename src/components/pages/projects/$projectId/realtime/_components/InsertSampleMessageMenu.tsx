@@ -29,7 +29,7 @@ export function InsertSampleMessageMenu({
           size="sm"
           className="h-7 text-[12px]"
         >
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <Plus className="me-1.5 h-3.5 w-3.5" />
           Sample
         </Button>
       </DropdownMenuTrigger>

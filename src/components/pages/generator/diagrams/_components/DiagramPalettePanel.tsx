@@ -56,7 +56,7 @@ export function DiagramPalettePanel({
               className="h-8 text-[12px]"
               onClick={() => onAddNode(item.kind)}
             >
-              <Plus className="mr-1.5 size-3.5" />
+              <Plus className="me-1.5 size-3.5" />
               {item.label}
             </Button>
           ))}
@@ -94,7 +94,7 @@ export function DiagramPalettePanel({
                 key={template.id}
                 type="button"
                 onClick={() => onApplyTemplate(template.id)}
-                className="w-full rounded-lg border border-border bg-card/40 px-3 py-2.5 text-left transition-colors hover:bg-accent/40"
+                className="w-full rounded-lg border border-border bg-card/40 px-3 py-2.5 text-start transition-colors hover:bg-accent/40"
               >
                 <span className="block text-[13px] font-medium text-foreground">
                   {template.label}
@@ -123,7 +123,7 @@ export function DiagramPalettePanel({
                   className="h-9 justify-start text-[12px]"
                   onClick={() => onAddNode(item.kind)}
                 >
-                  <Icon className="mr-1.5 size-3.5" />
+                  <Icon className="me-1.5 size-3.5" />
                   Add {item.label.toLowerCase()}
                 </Button>
               )

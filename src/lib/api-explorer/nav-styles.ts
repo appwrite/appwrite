@@ -14,7 +14,7 @@ export function apiNavItemClassName(active: boolean) {
 
 export function apiNavMethodItemClassName(active: boolean) {
   return cn(
-    'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 rounded-md px-2 py-1.5 text-left transition-colors',
+    'flex w-full max-w-full min-w-0 cursor-pointer flex-col gap-1 rounded-md px-2 py-1.5 text-start transition-colors',
     active
       ? cn(API_NAV_ACTIVE_BG_CLASS, 'text-foreground')
       : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

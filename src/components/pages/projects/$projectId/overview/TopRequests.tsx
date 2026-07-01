@@ -229,7 +229,7 @@ export function TopRequests({
                   )}
                 >
                   <div
-                    className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                    className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                     style={{ width: `${(request.count / maxCount) * 100}%` }}
                   />
 

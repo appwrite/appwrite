@@ -168,13 +168,13 @@ export function DomainInput({
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              'h-9 pr-10 text-[13px]',
+              'h-9 pe-10 text-[13px]',
               status === 'available' && 'border-green-500/50',
               (status === 'invalid' || status === 'taken') &&
                 'border-destructive/50',
             )}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="absolute end-3 top-1/2 -translate-y-1/2">
             {status === 'checking' && (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             )}

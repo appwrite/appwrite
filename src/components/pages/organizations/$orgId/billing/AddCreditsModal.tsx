@@ -75,7 +75,7 @@ export function AddCreditsModal({
       <DialogContent
         className="sm:max-w-md p-0"
 >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add credits</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Apply Appwrite credits to your organization. Credits expire after a

@@ -493,7 +493,7 @@ export function WebhookDrawer({
                         disabled={regenerateSignatureMutation.isPending}
 >
                         <RefreshCw
-                          className={`mr-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
+                          className={`me-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
                         />
                         Rotate secret
                       </Button>
@@ -524,7 +524,7 @@ export function WebhookDrawer({
                         onClick={handleRequestDelete}
                         disabled={isPending}
 >
-                        <Trash2 className="mr-1.5 h-4 w-4" />
+                        <Trash2 className="me-1.5 h-4 w-4" />
                         Delete webhook
                       </Button>
                     </div>
@@ -587,7 +587,7 @@ export function WebhookDrawer({
           className="sm:max-w-md p-0 z-[130] overflow-hidden"
           overlayClassName="z-[130]"
 >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>
               {revealedSecret
                 ? secretDialogMode === 'create'

@@ -52,7 +52,7 @@ function MockEmailField({
               {typedText}
             </span>
             <span
-              className="ml-px inline-block h-2.5 w-px shrink-0 bg-muted-foreground opacity-0 group-hover:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover:animate-none"
+              className="ms-px inline-block h-2.5 w-px shrink-0 bg-muted-foreground opacity-0 group-hover:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover:animate-none"
               style={{ animationDelay: `${cursorDelay}ms` }}
             />
           </span>
@@ -145,7 +145,7 @@ export function AuthProductVisual() {
         </div>
 
         <div
-          className="pointer-events-none absolute -right-1 top-8 z-10 max-w-[calc(100%-0.5rem)] translate-x-2 rounded-lg border border-border bg-background/95 px-2 py-1.5 opacity-0 shadow-sm transition-[opacity,transform] duration-500 group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:translate-x-0 motion-reduce:opacity-100 sm:-right-2"
+          className="pointer-events-none absolute -end-1 top-8 z-10 max-w-[calc(100%-0.5rem)] translate-x-2 rounded-lg border border-border bg-background/95 px-2 py-1.5 opacity-0 shadow-sm transition-[opacity,transform] duration-500 group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:translate-x-0 motion-reduce:opacity-100 sm:-end-2"
           style={{ transitionDelay: '640ms' }}
         >
           <div className="flex items-center gap-1.5">

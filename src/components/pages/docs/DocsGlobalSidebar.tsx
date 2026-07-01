@@ -65,6 +65,16 @@ import {
 import type { DocsNavLink, DocsNavTree } from '@/lib/docs/types'
 import { getBlogPageUrl, getDocsPageUrl, getMarketingPageUrl, isBlogPageExternal, isDocsPageExternal, isMarketingPageExternal, parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
+import {
+  SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+} from '@/lib/layout/secondary-sidebar-nav'
+import {
+  OFFCANVAS_START_CLOSED,
+  SIDEBAR_EDGE_TOGGLE_OVERFLOW,
+} from '@/lib/layout/offcanvas-classes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DocsRouteLink } from './DocsRouteLink'
 import { DocsAudienceSwitcher } from './DocsAudienceSwitcher'
@@ -98,7 +108,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   shield: Shield,
   server: Server,
   rest: ArrowUpDown,
-  'arrow-left-right': ArrowLeftRight,
+  'arrow-start-right': ArrowLeftRight,
   'bar-chart-2': BarChart2,
   command: Command,
   text: Type,
@@ -198,14 +208,20 @@ function DocsGlobalNavItem({
           : resolvedHref.startsWith('http')) ||
     item.openInNewTab
 
+  const hasTrailing = (!collapsed || isMobile) && (external || item.new)
+
   const className = cn(
-    'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
+    'rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
     'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
     isActive
       ? cn(DOCS_NAV_ACTIVE_BG_CLASS, 'text-foreground')
       : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-    collapsed && !isMobile && 'justify-center px-0',
-    isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
+    collapsed && !isMobile
+      ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
+      : hasTrailing
+        ? SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS
+        : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+    isMobile && 'gap-x-3 px-3 py-2.5 text-[14px]',
   )
 
   const content = (
@@ -221,7 +237,9 @@ function DocsGlobalNavItem({
           strokeWidth={DOCS_MENU_ICON_STROKE}
         />
       ) : null}
-      {(!collapsed || isMobile) && <span className="flex-1 text-left">{item.label}</span>}
+      {(!collapsed || isMobile) && (
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{item.label}</span>
+      )}
       {(!collapsed || isMobile) && external ? (
         <ArrowUpRight
           className="size-3 shrink-0 text-muted-foreground/50"
@@ -317,12 +335,12 @@ function DocsGlobalNavCategory({
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger
           className={cn(
-            'mb-1.5 flex w-full cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-colors hover:bg-accent/50 hover:text-muted-foreground',
+            'mb-1.5 flex w-full cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-colors hover:bg-accent/50 hover:text-muted-foreground',
             isMobile && 'px-3',
           )}
           aria-expanded={open}
         >
-          <span className="flex-1 text-left">{label}</span>
+          <span className="flex-1 text-start">{label}</span>
           {open ? (
             <ChevronDown
               className="size-3.5 shrink-0 text-muted-foreground/50"
@@ -345,7 +363,7 @@ function DocsGlobalNavCategory({
       {(!collapsed || isMobile) && (
         <p
           className={cn(
-            'mb-1.5 px-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60',
+            'mb-1.5 px-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60',
             isMobile && 'px-3',
           )}
         >
@@ -439,7 +457,7 @@ export function DocsGlobalSidebar({
       >
         <aside
           className={cn(
-            'flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
+            'flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
@@ -461,7 +479,10 @@ export function DocsGlobalSidebar({
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            SIDEBAR_EDGE_TOGGLE_OVERFLOW,
+          )}
           aria-label={collapsed ? 'Expand docs navigation' : 'Collapse docs navigation'}
         >
           <ChevronLeft
@@ -476,9 +497,9 @@ export function DocsGlobalSidebar({
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
+          'fixed start-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-e border-border bg-background',
           'transition-transform duration-200 ease-out [backface-visibility:hidden]',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          mobileOpen ? 'translate-x-0' : OFFCANVAS_START_CLOSED,
           '@[1024px]:hidden',
         )}
         role="dialog"

@@ -63,9 +63,9 @@ export function ConsoleBanner() {
           href="https://imagine.dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 min-h-0 items-center gap-3 text-left transition-opacity hover:opacity-80 py-1 sm:py-0"
+          className="flex flex-1 min-h-0 items-center gap-3 text-start transition-opacity hover:opacity-80 py-1 sm:py-0"
         >
-          <div className="flex items-center pl-2.5 py-1.5 shrink-0">
+          <div className="flex items-center ps-2.5 py-1.5 shrink-0">
             <img src={logoSrc} alt="Imagine" className="h-5 w-auto shrink-0" />
           </div>
           <span className="text-[13px] text-muted-foreground min-w-0">

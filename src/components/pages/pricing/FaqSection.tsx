@@ -22,8 +22,8 @@ export function FaqSection() {
           <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
             {pricingFaqItems.map((item, index) => (
               <AccordionItem key={item.question} value={`item-${index}`}>
-                <AccordionTrigger className="py-5 text-left hover:no-underline">
-                  <span className="pr-4 text-[14px] font-medium text-foreground">
+                <AccordionTrigger className="py-5 text-start hover:no-underline">
+                  <span className="pe-4 text-[14px] font-medium text-foreground">
                     {item.question}
                   </span>
                 </AccordionTrigger>

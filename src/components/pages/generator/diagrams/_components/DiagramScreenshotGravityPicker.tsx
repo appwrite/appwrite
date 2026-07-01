@@ -54,7 +54,7 @@ export function DiagramScreenshotGravityPicker({
       <div className="flex items-center gap-2">
         <Label className="text-[12px]">Gravity</Label>
         <span
-          className="ml-auto min-w-0 shrink-0 whitespace-nowrap text-right text-[11px] capitalize text-muted-foreground"
+          className="ms-auto min-w-0 shrink-0 whitespace-nowrap text-end text-[11px] capitalize text-muted-foreground"
           aria-live="polite"
         >
           {formatDiagramScreenshotGravityLabel(selectedGravity)}
@@ -73,13 +73,13 @@ export function DiagramScreenshotGravityPicker({
               const cellIndex = rowIndex * 3 + columnIndex
               const cornerClass =
                 cellIndex === 0
-                  ? 'rounded-tl-[calc(var(--radius-lg)_-_1px)]'
+                  ? 'rounded-ss-[calc(var(--radius-lg)_-_1px)]'
                   : cellIndex === 2
-                    ? 'rounded-tr-[calc(var(--radius-lg)_-_1px)]'
+                    ? 'rounded-se-[calc(var(--radius-lg)_-_1px)]'
                     : cellIndex === 6
-                      ? 'rounded-bl-[calc(var(--radius-lg)_-_1px)]'
+                      ? 'rounded-es-[calc(var(--radius-lg)_-_1px)]'
                       : cellIndex === 8
-                        ? 'rounded-br-[calc(var(--radius-lg)_-_1px)]'
+                        ? 'rounded-ee-[calc(var(--radius-lg)_-_1px)]'
                         : ''
 
               return (

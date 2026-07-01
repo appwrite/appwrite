@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 
 import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { cn } from '@/lib/utils'
 
 function LoaderBrandMark() {
   return (
-    <div className="inline-flex items-end gap-1.5">
+    <div className={cn('inline-flex items-end gap-1.5', FORCE_LTR_CLASS)} dir="ltr">
       <AppwriteWordmark className="h-8" />
       <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
         / 2.0
@@ -92,7 +93,7 @@ export function FullscreenLoader({
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    'absolute top-0 left-0 right-0 z-10 min-h-14 transition-all duration-200 hover:opacity-95',
+                    'absolute top-0 start-0 end-0 z-10 min-h-14 transition-all duration-200 hover:opacity-95',
                     'flex min-h-14 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4',
                     presentation.containerClassName,
                   )}
@@ -129,7 +130,7 @@ export function FullscreenLoader({
                   </div>
                   <span
                     className={cn(
-                      'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ml-auto',
+                      'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ms-auto',
                       presentation.buttonClassName,
                     )}
                   >

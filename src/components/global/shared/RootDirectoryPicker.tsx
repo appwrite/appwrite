@@ -69,7 +69,7 @@ export function RootDirectoryPicker({
           <TooltipTrigger asChild>
             <button
               type="button"
-              className="inline-flex ml-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              className="inline-flex ms-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
               aria-label="More info"
             >
               <Info className="h-3.5 w-3.5" />
@@ -304,7 +304,7 @@ export function RootDirectoryPicker({
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Select root directory</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   {description}
@@ -406,10 +406,10 @@ function DirectoryTree({
       <div
         onClick={handleRowClick}
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
+          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-[13px] transition-colors hover:bg-accent cursor-pointer',
           selectedPath === path && 'bg-accent',
         )}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{ paddingInlineStart: `${level * 16 + 8}px` }}
       >
         {showExpandButton ? (
           <ChevronRight

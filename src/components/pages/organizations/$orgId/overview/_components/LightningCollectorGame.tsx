@@ -282,7 +282,7 @@ export function LightningCollectorGame() {
                 </div>
                 <div className="hidden text-muted-foreground sm:block">
                   <span className="text-border">|</span>
-                  <span className="ml-6">
+                  <span className="ms-6">
                     Space or ↑ to jump · R to restart · click arena to jump
                   </span>
                 </div>

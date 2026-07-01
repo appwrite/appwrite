@@ -48,11 +48,11 @@ export function IntegrationGallery({ images, className }: IntegrationGalleryProp
         className="w-full"
       >
         <div className="relative min-w-0 overflow-hidden">
-          <CarouselContent className="-ml-4">
+          <CarouselContent className="-ms-4">
             {images.map((image, index) => (
               <CarouselItem
                 key={`${image}-${index}`}
-                className="basis-[280px] pl-4 sm:basis-[360px] lg:basis-[420px]"
+                className="basis-[280px] ps-4 sm:basis-[360px] lg:basis-[420px]"
               >
                 <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
                   <img
@@ -70,7 +70,7 @@ export function IntegrationGallery({ images, className }: IntegrationGalleryProp
           <div
             aria-hidden
             className={cn(
-              'pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-muted/20 to-transparent transition-opacity duration-200 sm:w-24',
+              'pointer-events-none absolute end-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-muted/20 to-transparent transition-opacity duration-200 sm:w-24',
               showRightFade ? 'opacity-100' : 'opacity-0',
             )}
           />

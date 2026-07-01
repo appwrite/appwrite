@@ -307,7 +307,7 @@ export function UsageBreakdownRow({
       )}
     >
       <div
-        className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+        className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
         style={{ width: `${(item.count / maxCount) * 100}%` }}
       />
       <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden">

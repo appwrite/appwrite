@@ -23,7 +23,7 @@ export function ApiReferenceCopyableName({
       copyToastLabel="Name"
       constrainToContainer
       className={cn(
-        'min-w-0 max-w-full font-mono px-0 py-0 text-left',
+        'min-w-0 max-w-full font-mono px-0 py-0 text-start',
         textClassName,
         className,
       )}

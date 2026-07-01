@@ -131,7 +131,7 @@ export function SitesProductVisual() {
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  'min-w-[2rem] text-right font-mono text-[11px] tabular-nums text-muted-foreground transition-opacity duration-200',
+                  'min-w-[2rem] text-end font-mono text-[11px] tabular-nums text-muted-foreground transition-opacity duration-200',
                   buildSeconds === null && 'opacity-50',
                 )}
               >
@@ -172,7 +172,7 @@ export function SitesProductVisual() {
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
                 <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />
-                <span className="ml-0.5 truncate font-mono text-[9px] text-muted-foreground">
+                <span className="ms-0.5 truncate font-mono text-[9px] text-muted-foreground">
                   preview.appwrite.network
                 </span>
               </div>

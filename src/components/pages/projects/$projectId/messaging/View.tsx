@@ -569,10 +569,10 @@ export function View() {
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                             Status
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Scheduled at
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Delivered at
                           </TableHead>
                         </>
@@ -584,10 +584,10 @@ export function View() {
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                             Name
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Subscribers
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             Created
                           </TableHead>
                         </>
@@ -705,7 +705,7 @@ export function View() {
                                     message.deliveryErrors,
                                   )}
                                 </TableCell>
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-3 text-end">
                                   <Link
                                     to="/projects/$projectId/messaging/$messageId"
                                     params={{
@@ -726,7 +726,7 @@ export function View() {
                                     )}
                                   </Link>
                                 </TableCell>
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-3 text-end">
                                   <Link
                                     to="/projects/$projectId/messaging/$messageId"
                                     params={{
@@ -825,7 +825,7 @@ export function View() {
                                   </p>
                                 </Link>
                               </TableCell>
-                              <TableCell className="px-4 py-3 text-right">
+                              <TableCell className="px-4 py-3 text-end">
                                 <Link
                                   to="/projects/$projectId/messaging/topics/$topicId"
                                   params={{
@@ -839,7 +839,7 @@ export function View() {
                                   </span>
                                 </Link>
                               </TableCell>
-                              <TableCell className="px-4 py-3 text-right">
+                              <TableCell className="px-4 py-3 text-end">
                                 <Link
                                   to="/projects/$projectId/messaging/topics/$topicId"
                                   params={{
@@ -1040,7 +1040,7 @@ export function View() {
 
         {/* Bulk Delete Action Bar */}
         {selectedItems.size > 0 && (
-          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="info" className="h-6 shrink-0 px-2.5 text-[10px]">
                 {selectedItems.size} {activeTab.slice(0, -1)}
@@ -1072,7 +1072,7 @@ export function View() {
         {/* Bulk Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>Delete {activeTab}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete {selectedItems.size}{' '}
@@ -1106,7 +1106,7 @@ export function View() {
           onOpenChange={(open) => !open && setDeliveryErrorLines(null)}
         >
           <DialogContent className="sm:max-w-lg p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Message error</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 The message failed to deliver. See the details below.

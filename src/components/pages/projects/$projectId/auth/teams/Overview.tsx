@@ -334,7 +334,7 @@ export function TeamOverview() {
                 onClick={handleAddPreference}
                 disabled={!lastPrefComplete || updatePrefsMutation.isPending}
               >
-                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                <Plus className="me-1.5 h-3.5 w-3.5" />
                 Add preference
               </Button>
             </div>
@@ -413,7 +413,7 @@ export function TeamOverview() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Delete team</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete <strong>{team.name}</strong>?

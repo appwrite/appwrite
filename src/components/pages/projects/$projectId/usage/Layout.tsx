@@ -63,6 +63,16 @@ import {
   RefreshProvider,
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
+import {
+  SECONDARY_SIDEBAR_ASIDE_CLASS,
+  SECONDARY_SIDEBAR_CONTENT_CLASS,
+  SECONDARY_SIDEBAR_GROUP_HEADING_CLASS,
+  SECONDARY_SIDEBAR_LAYOUT_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+  secondarySidebarNavLinkClassName,
+} from '@/lib/layout/secondary-sidebar-nav'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 
 const iconMap: Record<string, LucideIcon> = {
   Zap,
@@ -108,20 +118,19 @@ function UsageCategoryNavLink({
       to="/projects/$projectId/usage/$categoryId"
       params={{ projectId, categoryId: category.id }}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-        isActive
-          ? 'bg-accent text-foreground'
-          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+        secondarySidebarNavLinkClassName(isActive),
+        SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
       )}
     >
-      <div className="relative">
+      <div className="relative shrink-0">
         <Icon className="h-4 w-4 shrink-0" />
         {hasWarning ? (
-          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-amber-500" />
+          <span className="absolute -end-1 -top-1 h-2 w-2 rounded-full bg-amber-500" />
         ) : null}
       </div>
-      <span className="truncate">{category.label}</span>
+      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+        {category.label}
+      </span>
     </Link>
   )
 }
@@ -134,11 +143,7 @@ interface CategoryNavigationProps {
 }
 
 function UsageNavGroupHeading({ label }: { label: string }) {
-  return (
-    <p className="mb-1.5 px-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-      {label}
-    </p>
-  )
+  return <p className={SECONDARY_SIDEBAR_GROUP_HEADING_CLASS}>{label}</p>
 }
 
 function CategoryNavigation({
@@ -185,6 +190,7 @@ function MobileCategoryDrawer({
 }: MobileCategoryDrawerProps) {
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const { pageDirection } = useDebugOverrides()
   const categories = useMemo(
     () => navGroups.flatMap((group) => group.categories),
     [navGroups],
@@ -208,16 +214,16 @@ function MobileCategoryDrawer({
             <Menu className="h-4 w-4" />
             {activeLabel}
           </span>
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 rtl:rotate-180" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] p-0">
         <SheetHeader className="border-b border-border px-4 py-4">
-          <SheetTitle className="text-left text-[15px]">
+          <SheetTitle className="text-start text-[15px]">
             Usage Categories
           </SheetTitle>
         </SheetHeader>
-        <ScrollArea className="h-[calc(100dvh-65px)]">
+        <ScrollArea className="h-[calc(100dvh-65px)]" dir={pageDirection}>
           <div className="px-3 py-4">
             <CategoryNavigation
               projectId={projectId}
@@ -237,8 +243,8 @@ function UsageLoadingState() {
       <div className="shrink-0 border-b border-border px-4 py-6 sm:px-6">
         <Skeleton className="h-9 w-full max-w-xl" />
       </div>
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div className="hidden w-[220px] shrink-0 border-r border-border px-3 py-4 lg:block">
+      <div className={SECONDARY_SIDEBAR_LAYOUT_CLASS}>
+        <div className={cn(SECONDARY_SIDEBAR_ASIDE_CLASS, 'px-3 py-4')}>
           <div className="space-y-5">
             {Array.from({ length: 2 }).map((_, groupIndex) => (
               <div key={groupIndex} className="space-y-0.5">
@@ -250,7 +256,7 @@ function UsageLoadingState() {
             ))}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className={cn(SECONDARY_SIDEBAR_CONTENT_CLASS, 'p-6')}>
           <Skeleton className="mb-6 h-8 w-48" />
           <div className="grid gap-6 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -340,6 +346,7 @@ function UsageLayoutContent({
   const [state, setState] = useState<UsageState>('success')
   const contentScrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
+  const { pageDirection } = useDebugOverrides()
   const {
     triggerRefresh,
     hasRefreshHandler,
@@ -438,7 +445,10 @@ function UsageLayoutContent({
   }
 
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden', className)}>
+    <div
+      dir={pageDirection}
+      className={cn('flex h-full flex-col overflow-hidden', className)}
+    >
       <div className="shrink-0 border-b border-border bg-background">
         <div className="w-full px-4 py-6 sm:px-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -490,9 +500,9 @@ function UsageLayoutContent({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="hidden w-[220px] shrink-0 border-r border-border lg:block">
-          <ScrollArea className="h-full">
+      <div className={SECONDARY_SIDEBAR_LAYOUT_CLASS}>
+        <aside className={SECONDARY_SIDEBAR_ASIDE_CLASS} dir={pageDirection}>
+          <ScrollArea className="h-full" dir={pageDirection}>
             <div className="px-3 py-4">
               <CategoryNavigation
                 projectId={projectId}
@@ -503,7 +513,10 @@ function UsageLayoutContent({
           </ScrollArea>
         </aside>
 
-        <div ref={contentScrollRef} className="min-h-0 flex-1 overflow-y-auto">
+        <div
+          ref={contentScrollRef}
+          className={SECONDARY_SIDEBAR_CONTENT_CLASS}
+        >
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             <div className="mb-6 lg:hidden">
               <MobileCategoryDrawer

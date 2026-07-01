@@ -140,7 +140,7 @@ export function MarketplaceExplore({
                 type="button"
                 onClick={() => onNavigate(`category:${category}`)}
                 className={cn(
-                  'group flex cursor-pointer flex-col items-start gap-3 rounded-lg border border-border bg-card p-4 text-left transition-all',
+                  'group flex cursor-pointer flex-col items-start gap-3 rounded-lg border border-border bg-card p-4 text-start transition-all',
                   'hover:border-border hover:bg-accent/50',
                 )}
               >

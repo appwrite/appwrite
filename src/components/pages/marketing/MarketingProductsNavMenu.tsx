@@ -22,7 +22,7 @@ import type { ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
 
 const NAV_TRIGGER_CLASS =
-  'inline-flex h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
+  'inline-flex h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
 
 type MarketingProductsNavPanelProps = {
   activeNavItemId?: ProductNavItemId
@@ -81,7 +81,7 @@ function ProductNavLink({
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'group block cursor-pointer rounded-lg border border-transparent text-left transition-colors',
+        'group block cursor-pointer rounded-lg border border-transparent text-start transition-colors',
         isDense && 'flex items-center gap-2.5 px-2 py-2 hover:bg-accent/40',
         isCompact && 'flex items-start gap-3 px-3 py-2.5 hover:bg-accent/40',
         !isDense &&
@@ -130,7 +130,7 @@ function ProductNavLink({
 
       {!isActive && !isDense && !isCompact ? (
         <ArrowRight
-          className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground/70"
+          className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground/70 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
           aria-hidden
         />
       ) : null}
@@ -161,7 +161,7 @@ function ProductsNavCategorySection({
 }) {
   return (
     <div className="min-w-0">
-      <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="px-2 pb-1.5 text-start text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <div
@@ -194,10 +194,10 @@ function DesktopProductsNavPanel({
   onNavigate?: () => void
 }) {
   return (
-    <div>
+    <div className="text-start">
       <div className="flex items-baseline justify-between gap-4 border-b border-border bg-muted/15 px-4 py-2.5">
-        <p className="shrink-0 text-[13px] font-semibold text-foreground">Platform products</p>
-        <p className="min-w-0 truncate text-[11px] text-muted-foreground">
+        <p className="shrink-0 text-start text-[13px] font-semibold text-foreground">Platform products</p>
+        <p className="min-w-0 truncate text-start text-[11px] text-muted-foreground">
           Build, deploy, and scale on one backend platform
         </p>
       </div>
@@ -218,10 +218,10 @@ function DesktopProductsNavPanel({
         <Link
           to="/home"
           onClick={onNavigate}
-          className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex cursor-pointer items-center gap-1.5 text-start text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           View platform overview
-          <ArrowRight className="size-3.5" aria-hidden />
+          <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden />
         </Link>
       </div>
     </div>
@@ -236,7 +236,7 @@ function MobileProductsNavPanel({
   closeSheet?: boolean
 }) {
   return (
-    <div className="space-y-4 px-1 pb-1">
+    <div className="space-y-4 px-1 pb-1 text-start">
       {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
         <ProductsNavCategorySection
           key={category.id}
@@ -256,7 +256,7 @@ function MobileProductsNavPanel({
               className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               View platform overview
-              <ArrowRight className="size-3.5" aria-hidden />
+              <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden />
             </Link>
           </SheetClose>
         </div>
@@ -312,7 +312,7 @@ export function MarketingProductsNavPopover() {
       <PopoverContent
         align="start"
         sideOffset={10}
-        className="w-[min(calc(100vw-2rem),720px)] overflow-hidden rounded-xl border border-border bg-popover p-0 shadow-lg md:w-[min(calc(100vw-2rem),840px)] lg:w-[min(calc(100vw-2rem),960px)] xl:w-[min(calc(100vw-2rem),1080px)]"
+        className="w-[min(calc(100vw-2rem),720px)] overflow-hidden rounded-xl border border-border bg-popover p-0 text-start shadow-lg md:w-[min(calc(100vw-2rem),840px)] lg:w-[min(calc(100vw-2rem),960px)] xl:w-[min(calc(100vw-2rem),1080px)]"
       >
         <MarketingProductsNavPanel
           activeNavItemId={activeNavItemId}
@@ -330,7 +330,7 @@ export function MarketingProductsMobileNav() {
   return (
     <Accordion type="single" collapsible className="px-1">
       <AccordionItem value="products" className="border-none">
-        <AccordionTrigger className="flex h-10 items-center rounded-md px-3 py-0 text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground">
+        <AccordionTrigger className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground">
           Products
         </AccordionTrigger>
         <AccordionContent className="pb-2 pt-1">

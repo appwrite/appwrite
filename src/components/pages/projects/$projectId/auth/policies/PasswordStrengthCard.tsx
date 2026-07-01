@@ -407,7 +407,7 @@ export function PasswordStrengthCard({
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="flex w-full cursor-pointer items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+              className="flex w-full cursor-pointer items-center justify-between gap-4 py-1 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
               aria-expanded={complianceOpen}
             >
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
@@ -676,7 +676,7 @@ function StandardRow({
               >
                 Why
                 <ChevronDown
-                  className={`h-3.5 w-3.5 ml-1 transition-transform ${open ? 'rotate-180' : ''}`}
+                  className={`h-3.5 w-3.5 ms-1 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
               </Button>
             </CollapsibleTrigger>

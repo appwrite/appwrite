@@ -77,7 +77,7 @@ export function AddDomainDialog({
       <DialogContent
         className="sm:max-w-md p-0"
 >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add domain</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Enter the domain name you want to use for your API endpoint.
@@ -119,7 +119,7 @@ export function AddDomainDialog({
 >
               {isSubmitting ? (
                 <>
-                  <span className="mr-2">Adding...</span>
+                  <span className="me-2">Adding...</span>
                 </>
               ) : (
                 'Add'

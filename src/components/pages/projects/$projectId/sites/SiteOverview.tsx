@@ -415,7 +415,7 @@ export function SiteOverviewView() {
                                 {hasMoreDomains && (
                                   <Badge
                                     variant="secondary"
-                                    className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
+                                    className="ms-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
                                   >
                                     +{totalActiveDomains - activeDomains.length}
                                   </Badge>
@@ -495,14 +495,14 @@ export function SiteOverviewView() {
                       size="sm"
                       className="h-9 text-[13px]"
                     >
-                      <Download className="mr-1.5 h-4 w-4" />
+                      <Download className="me-1.5 h-4 w-4" />
                       Download
-                      <ChevronDown className="ml-auto sm:ml-1.5 h-3.5 w-3.5" />
+                      <ChevronDown className="ms-auto sm:ms-1.5 h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      <FileCode className="mr-2 h-4 w-4" />
+                      <FileCode className="me-2 h-4 w-4" />
                       Source code
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -520,7 +520,7 @@ export function SiteOverviewView() {
                           : undefined
                       }
                     >
-                      <Package className="mr-2 h-4 w-4" />
+                      <Package className="me-2 h-4 w-4" />
                       Build output
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -532,7 +532,7 @@ export function SiteOverviewView() {
                   disabled={redeployMutation.isPending}
                   className="h-9 text-[13px]"
                 >
-                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  <RefreshCw className="me-1.5 h-4 w-4" />
                   Redeploy
                 </Button>
                 <Link
@@ -548,7 +548,7 @@ export function SiteOverviewView() {
                     variant="outline"
                     className="h-9 text-[13px]"
                   >
-                    <ScrollText className="mr-1.5 h-4 w-4" />
+                    <ScrollText className="me-1.5 h-4 w-4" />
                     Build logs
                   </Button>
                 </Link>
@@ -560,7 +560,7 @@ export function SiteOverviewView() {
                         size="sm"
                         className="h-9 text-[13px]"
                       >
-                        <Globe className="mr-1.5 h-4 w-4" />
+                        <Globe className="me-1.5 h-4 w-4" />
                         Visit
                       </Button>
                     </PopoverTrigger>
@@ -659,7 +659,7 @@ export function SiteOverviewView() {
                             </div>
                           </div>
                         </div>
-                        <div className="text-right shrink-0 ml-4">
+                        <div className="text-end shrink-0 ms-4">
                           <DateTooltip
                             date={deploymentData.$createdAt}
                             className="text-[12px] text-muted-foreground"
@@ -687,7 +687,7 @@ export function SiteOverviewView() {
       {activeDeploymentResolved && activeDeploymentForCard && (
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Delete deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -726,7 +726,7 @@ export function SiteOverviewView() {
       {activeDeploymentResolved && activeDeploymentForCard && (
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Redeploy deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -767,7 +767,7 @@ export function SiteOverviewView() {
       {activeDeploymentResolved && activeDeploymentForCard && (
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Activate deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />

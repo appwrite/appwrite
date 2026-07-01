@@ -237,9 +237,9 @@ function FileTreeNodes({
             <div key={node.pathPrefix} className="select-none">
               <button
                 type="button"
-                className="flex w-full items-center gap-1.5 py-1 pr-2 text-left text-[12px] text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+                className="flex w-full items-center gap-1.5 py-1 pe-2 text-start text-[12px] text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
                 style={{
-                  paddingLeft: depth * EXPLORER_INDENT + 6,
+                  paddingInlineStart: depth * EXPLORER_INDENT + 6,
                   backgroundColor: 'transparent',
                 }}
                 onClick={() => onToggleFolder(node.pathPrefix)}
@@ -280,12 +280,12 @@ function FileTreeNodes({
             role="button"
             tabIndex={0}
             className={cn(
-              'group relative flex items-center gap-2 py-1 pr-1.5 text-[12px] cursor-pointer border-l-2 border-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset',
+              'group relative flex items-center gap-2 py-1 pe-1.5 text-[12px] cursor-pointer border-s-2 border-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset',
               isActive
-                ? 'border-l-primary bg-muted/40 text-foreground'
+                ? 'border-s-primary bg-muted/40 text-foreground'
                 : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground',
             )}
-            style={{ paddingLeft: depth * EXPLORER_INDENT + 6 + 18 }}
+            style={{ paddingInlineStart: depth * EXPLORER_INDENT + 6 + 18 }}
             onClick={() => onSelectFile(node.path)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -1114,7 +1114,7 @@ export function View() {
               maxSize={explorerPanelLayout.explorerMax}
               style={{ minWidth: FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX }}
             >
-              <div className="flex h-full flex-col border-r border-border bg-background">
+              <div className="flex h-full flex-col border-e border-border bg-background">
                 {/* Explorer header – no close button (moved to left of tabs) */}
                 <div className="flex h-8 shrink-0 items-center justify-between border-b border-border px-2">
                   <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
@@ -1157,19 +1157,19 @@ export function View() {
                 </div>
                 <div className="flex h-[41px] shrink-0 items-center border-b border-border px-2">
                   <div className="relative w-full">
-                    <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <Search className="absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     <Input
                       type="search"
                       placeholder="Search files..."
                       value={fileSearchQuery}
                       onChange={(e) => setFileSearchQuery(e.target.value)}
-                      className="h-7 pl-7 pr-2 text-[12px] font-normal"
+                      className="h-7 ps-7 pe-2 text-[12px] font-normal"
                       aria-label="Search files"
                     />
                   </div>
                 </div>
                 <ScrollArea className="flex-1">
-                  <nav className="py-1 pr-1 pl-0.5" aria-label="Project files">
+                  <nav className="py-1 pe-1 ps-0.5" aria-label="Project files">
                     {fileTree.length === 0 ? (
                       <div className="px-3 py-4 text-center">
                         <p className="text-[12px] text-muted-foreground">
@@ -1181,7 +1181,7 @@ export function View() {
                           className="mt-2 h-7 text-[12px]"
                           onClick={() => setAddFileOpen(true)}
                         >
-                          <Plus className="h-3 w-3 mr-1.5" />
+                          <Plus className="h-3 w-3 me-1.5" />
                           New file
                         </Button>
                       </div>
@@ -1210,9 +1210,9 @@ export function View() {
             <ResizableHandle
               className={cn(
                 'relative z-10 w-[0.5px] bg-border',
-                'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity before:z-10',
+                'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity before:z-10',
                 'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-                'after:w-2 after:left-1/2 after:-translate-x-1/2',
+                'after:w-2 after:start-1/2 after:-translate-x-1/2',
               )}
             />
             <ResizablePanel
@@ -1233,7 +1233,7 @@ export function View() {
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          className="flex h-8 w-8 shrink-0 items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center border-e border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
                           onClick={() => setExplorerOpen(false)}
                           aria-label="Close explorer"
                         >
@@ -1508,7 +1508,7 @@ export function View() {
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      className="flex h-8 w-8 shrink-0 items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center border-e border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
                       onClick={() => setExplorerOpen(true)}
                       aria-label="Open explorer"
                     >
@@ -1764,7 +1764,7 @@ export function View() {
       {/* Add file dialog */}
       <Dialog open={addFileOpen} onOpenChange={setAddFileOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Add file</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Enter the file path (e.g. src/utils.js or lib/helper.ts).
@@ -1801,7 +1801,7 @@ export function View() {
         onOpenChange={(open) => !open && setDeleteConfirmPath(null)}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Remove file</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Remove &quot;{deleteConfirmPath}&quot; from the project? This

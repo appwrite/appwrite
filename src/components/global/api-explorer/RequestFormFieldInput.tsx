@@ -820,14 +820,14 @@ function ExplorerPasswordValue({
         placeholder={getFormFieldPlaceholder('password')}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={cn(REQUEST_BUILDER_INPUT, 'pr-10')}
+        className={cn(REQUEST_BUILDER_INPUT, 'pe-10')}
         autoComplete="new-password"
         spellCheck={false}
       />
       <button
         type="button"
         onClick={() => setRevealed((current) => !current)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+        className="absolute end-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         aria-label={revealed ? 'Hide password' : 'Show password'}
         title={revealed ? 'Hide password' : 'Show password'}
       >

@@ -119,9 +119,9 @@ export function CliTerminalSearch({
             aria-label="Search terminal output"
           />
           {query.trim() ? (
-            <div className="flex shrink-0 items-center gap-0.5 pl-1">
+            <div className="flex shrink-0 items-center gap-0.5 ps-1">
               <span
-                className="min-w-[4.5rem] shrink-0 px-1 text-right text-[11px] tabular-nums text-muted-foreground"
+                className="min-w-[4.5rem] shrink-0 px-1 text-end text-[11px] tabular-nums text-muted-foreground"
                 aria-live="polite"
               >
                 {matchLabel}

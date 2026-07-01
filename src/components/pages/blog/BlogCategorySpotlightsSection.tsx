@@ -24,7 +24,7 @@ function BlogCategorySpotlightPostLink({
       to="/blog/post/$slug"
       params={{ slug: post.slug }}
       className={cn(
-        'group relative block rounded-md px-3 py-2.5 pr-9 transition-colors hover:bg-muted/40',
+        'group relative block rounded-md px-3 py-2.5 pe-9 transition-colors hover:bg-muted/40',
         className,
       )}
     >
@@ -36,7 +36,7 @@ function BlogCategorySpotlightPostLink({
         {post.timeToRead > 0 ? ` · ${post.timeToRead} min read` : ''}
       </p>
       <ArrowUpRight
-        className="absolute top-2.5 right-2.5 size-3.5 text-muted-foreground"
+        className="absolute top-2.5 end-2.5 size-3.5 text-muted-foreground"
         aria-hidden
       />
     </Link>

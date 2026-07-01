@@ -28,7 +28,7 @@ export function InitPresenceReactionSpark({
     <motion.span
       key={`${animationKey}-spark-${index}`}
       className={cn(
-        'absolute left-1/2 top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full',
+        'absolute start-1/2 top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full',
         'bg-muted-foreground/50 shadow-[0_0_4px_color-mix(in_srgb,var(--muted-foreground)_35%,transparent)]',
         index % 2 === 0 && 'size-[3px] rounded-[1px] rotate-45',
       )}

@@ -103,12 +103,12 @@ function CopyableInput({ value, label, className }: CopyableInputProps) {
         ref={inputRef}
         value={value}
         readOnly
-        className="pr-10 font-mono text-[13px]"
+        className="pe-10 font-mono text-[13px]"
       />
       <button
         type="button"
         onClick={handleCopy}
-        className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent transition-colors"
+        className="absolute end-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent transition-colors"
         aria-label={`Copy ${label}`}
       >
         {copied ? (
@@ -1094,7 +1094,7 @@ export function ProjectSettingsOverview({
             onOpenChange={setProtocolDialogOpen}
           >
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>
                   {protocolBulkStatus
                     ? 'Enable all protocols'
@@ -1273,7 +1273,7 @@ function ChangeOrganizationSection({
       {/* Transfer Confirmation Dialog */}
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>
               Transfer project{' '}
               <span
@@ -1435,7 +1435,7 @@ function DeleteProjectSection({
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Delete Project</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete{' '}

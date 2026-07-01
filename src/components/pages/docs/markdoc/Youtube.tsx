@@ -69,7 +69,7 @@ export function MarkdocYoutube({ src, thumbnail, id, title }: MarkdocYoutubeProp
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative block w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/25 text-left"
+          className="group relative block w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-muted/25 text-start"
           aria-label={`Play ${dialogTitle}`}
         >
           <div className="relative aspect-video w-full">
@@ -90,8 +90,8 @@ export function MarkdocYoutube({ src, thumbnail, id, title }: MarkdocYoutubeProp
               aria-hidden
             />
 
-            <span className="absolute left-1/2 top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-foreground shadow-sm backdrop-blur-md transition-transform duration-150 group-hover:scale-105 group-active:scale-95">
-              <Play className="ml-0.5 size-4 fill-current" aria-hidden />
+            <span className="absolute start-1/2 top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-foreground shadow-sm backdrop-blur-md transition-transform duration-150 group-hover:scale-105 group-active:scale-95">
+              <Play className="ms-0.5 size-4 fill-current" aria-hidden />
             </span>
           </div>
         </button>
@@ -103,7 +103,7 @@ export function MarkdocYoutube({ src, thumbnail, id, title }: MarkdocYoutubeProp
         className={cn(
           'z-[120] w-[min(92vw,960px)] max-w-none gap-0 overflow-visible rounded-2xl border border-border/80',
           'bg-card/95 p-3 shadow-2xl ring-1 ring-foreground/[0.06] backdrop-blur-xl sm:p-4 sm:max-w-[960px]',
-          '[&_[data-slot=dialog-close]]:-top-3 [&_[data-slot=dialog-close]]:-right-3 sm:[&_[data-slot=dialog-close]]:-top-3.5 sm:[&_[data-slot=dialog-close]]:-right-3.5',
+          '[&_[data-slot=dialog-close]]:-top-3 [&_[data-slot=dialog-close]]:-end-3 sm:[&_[data-slot=dialog-close]]:-top-3.5 sm:[&_[data-slot=dialog-close]]:-end-3.5',
           '[&_[data-slot=dialog-close]]:z-20 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:size-9 [&_[data-slot=dialog-close]]:shrink-0',
           '[&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center',
           '[&_[data-slot=dialog-close]]:rounded-full [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-border/80',

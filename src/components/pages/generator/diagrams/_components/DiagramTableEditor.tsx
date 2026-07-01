@@ -109,7 +109,7 @@ export function DiagramTableEditor({
               {headers.map((header, columnIndex) => (
                 <th
                   key={columnIndex}
-                  className="min-w-[120px] px-2 py-1.5 text-left font-medium"
+                  className="min-w-[120px] px-2 py-1.5 text-start font-medium"
                 >
                   <Input
                     value={header}

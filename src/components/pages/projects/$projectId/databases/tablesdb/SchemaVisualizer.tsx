@@ -910,7 +910,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           columnNameText.textContent = displayName
           columnGroup.appendChild(columnNameText)
 
-          // Calculate positions for badges (right-aligned)
+          // Calculate positions for badges (end-aligned)
           let currentX = node.width - 12
 
           // Column type badge (always shown)
@@ -1291,7 +1291,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         </svg>
 
         {/* Placeholder table node - positioned lower */}
-        <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 z-10">
+        <div className="absolute start-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 z-10">
           <div
             className="rounded-lg border border-dashed border-border/40 bg-card/20 opacity-40"
             style={{ width: `${NODE_WIDTH}px` }}
@@ -1348,7 +1348,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
     >
       {/* Top controls - Left side */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+      <div className="absolute top-4 start-4 z-10 flex items-center gap-2">
         {/* Copy share link button */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -1388,11 +1388,11 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           </Tooltip>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={handleExportJSON}>
-              <FileJson className="h-4 w-4 mr-2" />
+              <FileJson className="h-4 w-4 me-2" />
               Copy as JSON
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleCopyMarkdown}>
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 me-2" />
               Copy as Markdown
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -1434,7 +1434,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/chatgpt.svg"
                 alt="ChatGPT"
-                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               ChatGPT
             </DropdownMenuItem>
@@ -1442,7 +1442,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/claude.svg"
                 alt="Claude"
-                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               Claude
             </DropdownMenuItem>
@@ -1450,7 +1450,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/cursor-ai.svg"
                 alt="Cursor"
-                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               Cursor
             </DropdownMenuItem>
@@ -1458,7 +1458,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/lovable.svg"
                 alt="Lovable"
-                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                className={`h-4 w-4 me-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               Lovable
             </DropdownMenuItem>
@@ -1467,7 +1467,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       </div>
 
       {/* Top controls - Right side */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+      <div className="absolute top-4 end-4 z-10 flex items-center gap-2">
         {/* Zoom controls */}
         <Button
           variant="outline"
@@ -1595,7 +1595,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                           {node.name}
                         </span>
                         {!node.enabled && (
-                          <span className="ml-auto text-[10px] text-muted-foreground">
+                          <span className="ms-auto text-[10px] text-muted-foreground">
                             Disabled
                           </span>
                         )}
@@ -1722,7 +1722,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                             className="h-7 flex-1 text-[11px]"
                             onClick={(e) => handleOpenColumnDialog(node.id, e)}
                           >
-                            <Plus className="h-3 w-3 mr-1.5" />
+                            <Plus className="h-3 w-3 me-1.5" />
                             Column
                           </Button>
                           <Button
@@ -1731,7 +1731,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                             className="h-7 flex-1 text-[11px]"
                             onClick={(e) => handleOpenIndexDialog(node.id, e)}
                           >
-                            <Plus className="h-3 w-3 mr-1.5" />
+                            <Plus className="h-3 w-3 me-1.5" />
                             Index
                           </Button>
                         </div>
@@ -1746,7 +1746,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                       handleNavigateToTable(node.id)
                     }}
                   >
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye className="h-4 w-4 me-2" />
                     View rows
                   </ContextMenuItem>
                   <ContextMenuItem
@@ -1756,7 +1756,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                       setColumnDialogOpen(true)
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 me-2" />
                     Create column
                   </ContextMenuItem>
                   <ContextMenuItem
@@ -1766,7 +1766,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                       setIndexDialogOpen(true)
                     }}
                   >
-                    <Key className="h-4 w-4 mr-2" />
+                    <Key className="h-4 w-4 me-2" />
                     Create index
                   </ContextMenuItem>
                   <ContextMenuSeparator />
@@ -1776,7 +1776,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                       handleNavigateToSettings(node.id)
                     }}
                   >
-                    <Settings className="h-4 w-4 mr-2" />
+                    <Settings className="h-4 w-4 me-2" />
                     Table settings
                   </ContextMenuItem>
                 </ContextMenuContent>
@@ -1788,8 +1788,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
       {/* Minimap */}
       {showMinimap && nodes.length > 0 && minimapBounds && (
-        <div className="absolute bottom-4 right-4 z-10 w-64 h-44 rounded-lg border border-border bg-card/95 backdrop-blur-sm overflow-hidden select-none">
-          <div className="absolute top-0 left-0 right-0 h-8 bg-muted/50 border-b border-border flex items-center justify-between px-3">
+        <div className="absolute bottom-4 end-4 z-10 w-64 h-44 rounded-lg border border-border bg-card/95 backdrop-blur-sm overflow-hidden select-none">
+          <div className="absolute top-0 start-0 end-0 h-8 bg-muted/50 border-b border-border flex items-center justify-between px-3">
             <span className="text-[12px] font-medium text-foreground flex items-center gap-2 select-none">
               <MapIcon className="h-4 w-4" />
               Overview
@@ -1918,7 +1918,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         <Button
           variant="outline"
           size="sm"
-          className="absolute bottom-4 right-4 z-10 h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+          className="absolute bottom-4 end-4 z-10 h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
           onClick={() => setShowMinimap(true)}
         >
           <MapIcon className="h-4 w-4" />

@@ -25,7 +25,7 @@ export function PricingSectionHeading({
   return (
     <div
       className={cn(
-        align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-2xl text-left',
+        align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-2xl text-start',
         className,
       )}
     >

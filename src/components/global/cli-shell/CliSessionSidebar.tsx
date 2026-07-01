@@ -116,7 +116,7 @@ function SessionRow({
             )
           : cn(
               'h-11',
-              isRoot && 'pl-1 pr-1',
+              isRoot && 'ps-1 pe-1',
               !isNested && 'hover:bg-muted/60',
               !isNested && isFocused && 'bg-muted/60',
               isRoot && isActive && !isFocused && 'bg-muted/40',
@@ -153,7 +153,7 @@ function SessionRow({
           }
         }}
         className={cn(
-          'flex min-w-0 flex-1 items-center gap-2 rounded-md text-left text-foreground transition-colors',
+          'flex min-w-0 flex-1 items-center gap-2 rounded-md text-start text-foreground transition-colors',
           isStrip ? 'h-7 px-1.5' : cn('h-11', isNested ? 'px-0' : 'px-2'),
           !isEditing && 'cursor-pointer',
         )}
@@ -502,8 +502,8 @@ export function CliSessionSidebar() {
     return (
       <div
         className={cn(
-          isStrip ? undefined : 'border-l border-border/80 pl-3',
-          !isStrip && (canReorder ? 'ml-8' : 'ml-5'),
+          isStrip ? undefined : 'border-s border-border/80 ps-3',
+          !isStrip && (canReorder ? 'ms-8' : 'ms-5'),
           isStrip && 'flex shrink-0 items-center gap-1',
         )}
       >

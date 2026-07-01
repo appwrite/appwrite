@@ -386,11 +386,11 @@ export function EventResourceIdSelector({
               placeholder={SEARCH_PLACEHOLDERS[type]}
               value={search}
               onValueChange={setSearch}
-              className={cn('h-9', isFetching && 'pr-8')}
+              className={cn('h-9', isFetching && 'pe-8')}
             />
             <div
               className={cn(
-                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
                 isFetching ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden

@@ -52,12 +52,12 @@ export function AuthPasswordlessVisual() {
           <div>
             <Syn tone="keyword">await</Syn> <Syn tone="identifier">account</Syn>
           </div>
-          <div className="pl-3">
+          <div className="ps-3">
             <Syn tone="punctuation">.</Syn>
             <Syn tone="function">createMagicURLToken</Syn>
             <Syn tone="punctuation">(</Syn>
           </div>
-          <div className="pl-6">
+          <div className="ps-6">
             <Syn tone="string">&apos;paige@acme.io&apos;</Syn>
             <Syn tone="punctuation">)</Syn>
           </div>

@@ -20,22 +20,22 @@ import { CliTerminalSession } from './CliTerminalSession'
 
 const SPLIT_HANDLE_CLASS = cn(
   'relative z-10 h-full w-px shrink-0 self-stretch items-stretch bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:absolute after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2',
+  'after:absolute after:inset-y-0 after:start-1/2 after:w-3 after:-translate-x-1/2',
 )
 
 function getSplitPaneContentClass(index: number, total: number): string {
   if (total <= 1) return ''
 
-  const beforeSeparator = 'pr-3'
-  const afterSeparator = 'pl-5 sm:pl-6'
+  const beforeSeparator = 'pe-3'
+  const afterSeparator = 'ps-5 sm:ps-6'
 
   if (index === 0) {
-    return cn('pl-4 sm:pl-6', total > 1 && beforeSeparator)
+    return cn('ps-4 sm:ps-6', total > 1 && beforeSeparator)
   }
   if (index === total - 1) {
-    return cn(afterSeparator, 'pr-4 sm:pr-6')
+    return cn(afterSeparator, 'pe-4 sm:pe-6')
   }
   return cn(afterSeparator, beforeSeparator)
 }

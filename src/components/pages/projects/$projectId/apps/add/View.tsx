@@ -830,9 +830,9 @@ APPWRITE_ENDPOINT="${endpoint}"`
                         alt={ide.name}
                         className="h-4 w-4"
                       />
-                      <span className="ml-2">Prompt {ide.name}</span>
+                      <span className="ms-2">Prompt {ide.name}</span>
                       <ExternalLink
-                        className="ml-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
+                        className="ms-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
                         strokeWidth={1.25}
                       />
                     </DropdownMenuItem>

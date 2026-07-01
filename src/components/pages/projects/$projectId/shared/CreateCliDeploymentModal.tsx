@@ -183,7 +183,7 @@ export function CreateCliDeploymentModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Create CLI deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {DESCRIPTION[resourceType]}

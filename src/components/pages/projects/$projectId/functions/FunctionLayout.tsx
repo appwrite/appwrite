@@ -201,7 +201,7 @@ function FunctionLayoutContent() {
                 to="/projects/$projectId/functions"
                 params={{ projectId: projectId! }}
               >
-                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                <ArrowLeft className="me-1.5 h-4 w-4" />
                 Back to Functions
               </Link>
             </Button>

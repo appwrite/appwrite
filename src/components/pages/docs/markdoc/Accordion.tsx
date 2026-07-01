@@ -20,8 +20,8 @@ const accordionContentClassName = cn(
   '[&_p]:my-0 [&_p+p]:mt-3',
   '[&_strong]:font-semibold [&_strong]:text-foreground',
   '[&_code]:rounded-md [&_code]:border [&_code]:border-border [&_code]:bg-muted/50 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-foreground/85',
-  '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-4',
-  '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-4',
+  '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:ps-4',
+  '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:ps-4',
   '[&_li]:leading-[1.65]',
   '[&_.not-prose]:my-4 [&_.not-prose]:w-full [&_.not-prose:first-child]:mt-0',
   'prose-links-neutral',
@@ -84,11 +84,11 @@ export function MarkdocAccordionItem({
     <AccordionItem value={value} className="border-border">
       <AccordionTrigger
         className={cn(
-          'rounded-none px-4 py-4 text-left transition-colors duration-150 hover:bg-muted/40 hover:no-underline data-[state=open]:bg-muted/30',
+          'rounded-none px-4 py-4 text-start transition-colors duration-150 hover:bg-muted/40 hover:no-underline data-[state=open]:bg-muted/30',
           triggerTextClass,
         )}
       >
-        <span className="pr-4 font-medium text-foreground">{title}</span>
+        <span className="pe-4 font-medium text-foreground">{title}</span>
       </AccordionTrigger>
       <AccordionContent
         className={cn(

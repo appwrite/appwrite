@@ -281,7 +281,7 @@ function UsagePanel() {
                 type="button"
                 onClick={() => setActiveMetric(item.id)}
                 className={cn(
-                  'shrink-0 rounded-md border px-2 py-1 text-left transition-colors',
+                  'shrink-0 rounded-md border px-2 py-1 text-start transition-colors',
                   isActive
                     ? 'border-border bg-muted/40'
                     : 'border-transparent bg-transparent hover:bg-muted/20',
@@ -322,7 +322,7 @@ function UsagePanel() {
                     style={{ width: row.value }}
                   />
                 </div>
-                <span className="w-7 shrink-0 text-right text-muted-foreground">{row.value}</span>
+                <span className="w-7 shrink-0 text-end text-muted-foreground">{row.value}</span>
               </div>
             ))}
           </div>
@@ -351,7 +351,7 @@ function LogsPanel() {
               <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Path
               </TableHead>
-              <TableHead className="px-3 py-2 pr-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="px-3 py-2 pe-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Time
               </TableHead>
             </TableRow>
@@ -376,7 +376,7 @@ function LogsPanel() {
                 <TableCell className="max-w-[6rem] truncate px-3 py-2 font-mono text-[10px] text-foreground">
                   {log.path}
                 </TableCell>
-                <TableCell className="px-3 py-2 pr-3 text-[10px] text-muted-foreground">
+                <TableCell className="px-3 py-2 pe-3 text-[10px] text-muted-foreground">
                   {log.duration}
                 </TableCell>
               </TableRow>
@@ -446,7 +446,7 @@ export function SitesObservabilityVisual() {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/45">
       <div className="grid min-h-[24rem] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="min-w-0 border-b border-border lg:border-b-0 lg:border-r">
+        <div className="min-w-0 border-b border-border lg:border-b-0 lg:border-e">
           <SectionLabel>Traffic</SectionLabel>
           <UsagePanel />
         </div>

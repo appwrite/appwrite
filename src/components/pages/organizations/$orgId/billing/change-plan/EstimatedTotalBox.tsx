@@ -407,7 +407,7 @@ export function EstimatedTotalBox({
             {budgetEnabled && (
               <div>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground">
+                  <span className="absolute start-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground">
                     $
                   </span>
                   <Input
@@ -416,7 +416,7 @@ export function EstimatedTotalBox({
                     placeholder="200"
                     value={budgetValue}
                     onChange={(e) => handleBudgetChange(e.target.value)}
-                    className="h-9 text-[13px] pl-7"
+                    className="h-9 text-[13px] ps-7"
                     min={1}
                     step={1}
                   />

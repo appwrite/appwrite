@@ -542,7 +542,7 @@ export function FileInspectorPanel({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="absolute bottom-2 left-2 z-10 h-8 gap-1.5 bg-background/90 text-[13px] opacity-60 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 sm:bottom-3 sm:left-3"
+                className="absolute bottom-2 start-2 z-10 h-8 gap-1.5 bg-background/90 text-[13px] opacity-60 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 sm:bottom-3 sm:start-3"
                 onClick={() => setTransformWizardOpen(true)}
               >
                 <Wand2 className="h-3.5 w-3.5 shrink-0" />
@@ -662,12 +662,12 @@ export function FileInspectorPanel({
                 size="sm"
                 className="h-8 text-[12px]"
               >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                <Trash2 className="me-1.5 h-3.5 w-3.5" />
                 Delete
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Delete file</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete{' '}
@@ -766,7 +766,7 @@ export function FileInspectorPanel({
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PanelRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate text-left text-[12px] font-medium leading-none text-foreground">
+            <span className="truncate text-start text-[12px] font-medium leading-none text-foreground">
               {file.name}
             </span>
           </div>

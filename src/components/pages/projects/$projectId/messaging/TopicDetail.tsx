@@ -284,7 +284,7 @@ export function TopicDetailView() {
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           Type
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                           Created
                         </TableHead>
                       </TableRow>
@@ -328,7 +328,7 @@ export function TopicDetailView() {
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
+                            <TableCell className="px-4 py-3 text-end">
                               {subscriber.$createdAt ? (
                                 <DateTooltip
                                   date={subscriber.$createdAt}

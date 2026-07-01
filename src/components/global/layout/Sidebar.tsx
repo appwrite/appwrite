@@ -2,6 +2,18 @@ import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
+import {
+  OFFCANVAS_START_CLOSED,
+  SIDEBAR_EDGE_TOGGLE_OVERFLOW,
+} from '@/lib/layout/offcanvas-classes'
+import {
+  SECONDARY_SIDEBAR_GROUP_HEADING_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+  secondarySidebarNavLinkClassName,
+} from '@/lib/layout/secondary-sidebar-nav'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   useSidebarCollapsed,
@@ -372,20 +384,23 @@ export function ConsoleSidebar({
         <span
           key={item.id}
           className={cn(
-            'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium',
-            'cursor-not-allowed text-muted-foreground/50',
-            collapsed && !isMobile && 'justify-center px-0',
-            isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
+            secondarySidebarNavLinkClassName(false, 'cursor-not-allowed text-muted-foreground/50'),
+            collapsed && !isMobile
+              ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
+              : SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
+            isMobile && 'gap-x-3 px-3 py-2.5 text-[14px]',
           )}
         >
           <Icon
             className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
           />
           {(!collapsed || isMobile) && (
-            <span className="flex-1 text-left">{item.label}</span>
+            <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+              {item.label}
+            </span>
           )}
           {(!collapsed || isMobile) && (
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               Soon
             </span>
           )}
@@ -398,7 +413,7 @@ export function ConsoleSidebar({
             <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
               <p>{item.label}</p>
-              <span className="ml-1 text-muted-foreground">(Coming Soon)</span>
+              <span className="ms-1 text-muted-foreground">(Coming Soon)</span>
             </TooltipContent>
           </Tooltip>
         )
@@ -415,18 +430,18 @@ export function ConsoleSidebar({
         data-analytics-track="manual"
         onClick={() => handleNavClick(item, isMobile)}
         className={cn(
-          'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-          isActive
-            ? 'bg-accent text-foreground'
-            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-          collapsed && !isMobile && 'justify-center px-0',
-          isMobile && 'gap-3 px-3 py-2.5 text-[14px]',
+          secondarySidebarNavLinkClassName(isActive, 'transition-colors duration-150'),
+          collapsed && !isMobile
+            ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
+            : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+          isMobile && 'gap-x-3 px-3 py-2.5 text-[14px]',
         )}
       >
         {renderIcon()}
         {(!collapsed || isMobile) && (
-          <span className="flex-1 text-left">{item.label}</span>
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+            {item.label}
+          </span>
         )}
       </Link>
     )
@@ -450,10 +465,7 @@ export function ConsoleSidebar({
     <div key={category.label} className="space-y-0.5">
       {(!collapsed || isMobile) && (
         <p
-          className={cn(
-            'mb-1.5 px-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60',
-            isMobile && 'px-3',
-          )}
+          className={cn(SECONDARY_SIDEBAR_GROUP_HEADING_CLASS, isMobile && 'px-3')}
         >
           {category.label}
         </p>
@@ -480,7 +492,7 @@ export function ConsoleSidebar({
       >
         <aside
           className={cn(
-            'console-sidebar flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
+            'console-sidebar flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
@@ -525,7 +537,10 @@ export function ConsoleSidebar({
               mode: nextCollapsed ? 'collapsed' : 'expanded',
             })
           }}
-          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            SIDEBAR_EDGE_TOGGLE_OVERFLOW,
+          )}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <ChevronLeft
@@ -540,9 +555,10 @@ export function ConsoleSidebar({
       {/* Mobile Sidebar - GPU-accelerated transform; inert when closed so it's skipped in tab order */}
       <aside
         className={cn(
-          'console-sidebar fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
+          'console-sidebar fixed start-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-e border-border bg-background',
           'transition-transform duration-200 ease-out [backface-visibility:hidden]',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          '@[1024px]:hidden',
+          mobileOpen ? 'translate-x-0' : OFFCANVAS_START_CLOSED,
         )}
         role="dialog"
         aria-modal="true"

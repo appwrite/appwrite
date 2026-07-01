@@ -57,7 +57,7 @@ export function ConnectionCodeDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Realtime connection code</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {subscriptionCount > 0 ? (

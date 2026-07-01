@@ -153,12 +153,12 @@ export function IdInput({
                 maxLength={maxLength}
                 disabled={disabled}
                 className={cn(
-                  'pr-16',
+                  'pe-16',
                   error && 'border-destructive focus-visible:ring-destructive',
                 )}
                 autoFocus
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <div className="absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <span
                   className={cn(
                     'text-[11px] text-muted-foreground',

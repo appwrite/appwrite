@@ -271,11 +271,11 @@ export function ImpersonateConsoleUserPopover() {
               placeholder="Name, email, phone, or user ID…"
               value={search}
               onValueChange={setSearch}
-              className={cn('h-9 text-[13px]', isFetching && 'pr-9')}
+              className={cn('h-9 text-[13px]', isFetching && 'pe-9')}
             />
             <div
               className={cn(
-                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity',
+                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity',
                 isFetching ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden
@@ -316,7 +316,7 @@ export function ImpersonateConsoleUserPopover() {
                         size="sm"
                         className="shrink-0"
                       />
-                      <div className="min-w-0 flex-1 text-left">
+                      <div className="min-w-0 flex-1 text-start">
                         <p className="truncate text-[13px] font-medium text-foreground">
                           {recent.name || '-'}
                         </p>
@@ -394,7 +394,7 @@ export function ImpersonateConsoleUserPopover() {
                       size="sm"
                       className="shrink-0"
                     />
-                    <div className="min-w-0 flex-1 text-left">
+                    <div className="min-w-0 flex-1 text-start">
                       <p className="truncate text-[13px] font-medium text-foreground">
                         {user.name || '-'}
                       </p>

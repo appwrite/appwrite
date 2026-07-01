@@ -32,7 +32,7 @@ export function PostgresHistorySidebarPanel() {
             type="button"
             onClick={() => selectRecentQuery(query)}
             className={cn(
-              'flex w-full cursor-pointer flex-col gap-0.5 rounded-md px-3 py-2 text-left transition-colors',
+              'flex w-full cursor-pointer flex-col gap-0.5 rounded-md px-3 py-2 text-start transition-colors',
               selectedQueryKey === postgresQuerySelectionKey('recent', query.id)
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',

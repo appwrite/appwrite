@@ -46,7 +46,7 @@ export function MarketingHeroSection({
       <div
         className={cn(
           'relative z-[1] mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20',
-          isCenter ? 'text-center' : 'text-left',
+          isCenter ? 'text-center' : 'text-start',
         )}
       >
         {eyebrow ? (
@@ -146,7 +146,7 @@ export function MarketingSectionHeading({
   return (
     <div
       className={cn(
-        align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-2xl text-left',
+        align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-2xl text-start',
         className,
       )}
     >
@@ -203,7 +203,7 @@ function featureGridCellBorderClass(
 
     return cn(
       !isLastItem && 'border-b border-border sm:border-b-0',
-      col === 0 && 'sm:border-r sm:border-border',
+      col === 0 && 'sm:border-e sm:border-border',
       row < totalRows - 1 && 'sm:border-b sm:border-border',
     )
   }
@@ -218,9 +218,9 @@ function featureGridCellBorderClass(
 
     return cn(
       !isLastItem && 'border-b border-border sm:border-b-0 lg:border-b-0',
-      smCol === 0 && 'sm:border-r sm:border-border',
+      smCol === 0 && 'sm:border-e sm:border-border',
       smRow < smTotalRows - 1 && 'sm:border-b sm:border-border',
-      lgCol < 3 && 'lg:border-r lg:border-border',
+      lgCol < 3 && 'lg:border-e lg:border-border',
       lgRow < lgTotalRows - 1 && 'lg:border-b lg:border-border',
     )
   }
@@ -234,9 +234,9 @@ function featureGridCellBorderClass(
 
   return cn(
     !isLastItem && 'border-b border-border sm:border-b-0 lg:border-b-0',
-    smCol === 0 && 'sm:border-r sm:border-border',
+    smCol === 0 && 'sm:border-e sm:border-border',
     smRow < smTotalRows - 1 && 'sm:border-b sm:border-border',
-    lgCol < 2 && 'lg:border-r lg:border-border',
+    lgCol < 2 && 'lg:border-e lg:border-border',
     lgRow < lgTotalRows - 1 && 'lg:border-b lg:border-border',
   )
 }
@@ -310,7 +310,7 @@ export function MarketingBentoFeatureCard({
               key={item.title}
               className={cn(
                 'px-4 py-4',
-                index % 2 === 1 && 'border-l border-border',
+                index % 2 === 1 && 'border-s border-border',
                 index >= 2 && 'border-t border-border',
               )}
             >
@@ -359,9 +359,9 @@ export function MarketingHeroStats({ items, className }: MarketingHeroStatsProps
             className={cn(
               'flex flex-col-reverse items-center gap-1.5 py-4 text-center sm:gap-2 sm:py-5',
               isWide ? 'px-2 sm:px-3' : 'px-3 sm:px-4',
-              index % 2 === 1 && 'border-l border-border/60',
+              index % 2 === 1 && 'border-s border-border/60',
               index >= 2 && 'border-t border-border/60 sm:border-t-0',
-              index > 0 && 'sm:border-l sm:border-border/60',
+              index > 0 && 'sm:border-s sm:border-border/60',
             )}
           >
             <dt
@@ -487,7 +487,7 @@ export function MarketingInvolvementCards({
           )
 
           const cardClassName =
-            'group flex w-full items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:bg-accent/50'
+            'group flex w-full items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-start transition-colors hover:bg-accent/50'
 
           if (item.href) {
             return (

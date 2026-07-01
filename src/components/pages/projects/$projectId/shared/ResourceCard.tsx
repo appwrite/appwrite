@@ -228,7 +228,7 @@ export function ResourceCard({
                 <div
                   className={cn(
                     'flex shrink-0 items-center gap-0.5',
-                    item.align === 'right' && 'ml-auto',
+                    item.align === 'right' && 'ms-auto',
                   )}
                 >
                   {item.label ? (

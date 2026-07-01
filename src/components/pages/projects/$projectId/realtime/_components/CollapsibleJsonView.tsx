@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { Check, ChevronRight, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { cn } from '@/lib/utils'
 
 type JsonValue =
@@ -85,7 +86,7 @@ function CollapseToggle({
         event.stopPropagation()
         onToggle()
       }}
-      className="mr-1 inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+      className="me-1 inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
       aria-label={collapsed ? `Expand ${label}` : `Collapse ${label}`}
       aria-expanded={!collapsed}
     >
@@ -165,7 +166,7 @@ function JsonProperty({
             {value.map((item, index) => (
               <div
                 key={`${path}[${index}]`}
-                style={{ paddingLeft: (depth + 1) * 14 }}
+                style={{ paddingInlineStart: (depth + 1) * 14 }}
               >
                 <JsonProperty
                   value={item}
@@ -175,7 +176,7 @@ function JsonProperty({
                 />
               </div>
             ))}
-            <div style={{ paddingLeft: depth * 14 }}>
+            <div style={{ paddingInlineStart: depth * 14 }}>
               <span className="text-muted-foreground">]{comma}</span>
             </div>
           </>
@@ -229,7 +230,7 @@ function JsonProperty({
             {entries.map(([key, child], index) => (
               <div
                 key={`${path}.${key}`}
-                style={{ paddingLeft: (depth + 1) * 14 }}
+                style={{ paddingInlineStart: (depth + 1) * 14 }}
               >
                 <JsonProperty
                   name={key}
@@ -240,7 +241,7 @@ function JsonProperty({
                 />
               </div>
             ))}
-            <div style={{ paddingLeft: depth * 14 }}>
+            <div style={{ paddingInlineStart: depth * 14 }}>
               <span className="text-muted-foreground">{`}${comma}`}</span>
             </div>
           </>
@@ -276,7 +277,7 @@ function JsonRoot({ value }: { value: JsonValue }) {
       <>
         <span className="text-muted-foreground">{'{'}</span>
         {entries.map(([key, child], index) => (
-          <div key={key} style={{ paddingLeft: 14 }}>
+          <div key={key} style={{ paddingInlineStart: 14 }}>
             <JsonProperty
               name={key}
               value={child}
@@ -311,7 +312,11 @@ export function CollapsibleJsonView({
 
   if (parsed === null) {
     return (
-      <div className={cn('overflow-hidden rounded-md border border-border', className)}>
+      <div
+        dir="ltr"
+        data-code-example
+        className={cn(FORCE_LTR_CLASS, 'overflow-hidden rounded-md border border-border', className)}
+      >
         <CodeBlock
           code={payload}
           language="json"
@@ -325,13 +330,17 @@ export function CollapsibleJsonView({
   }
 
   return (
-    <div className={cn('overflow-hidden rounded-md border border-border', className)}>
+    <div
+      dir="ltr"
+      data-code-example
+      className={cn(FORCE_LTR_CLASS, 'overflow-hidden rounded-md border border-border', className)}
+    >
       <div className="relative bg-muted/10">
-        <div className="absolute right-2 top-2 z-10">
+        <div className="absolute end-2 top-2 z-10">
           <JsonCopyButton content={payload} />
         </div>
         <div
-          className="overflow-x-auto px-3 py-3 pr-10 font-mono text-[12px] leading-relaxed"
+          className="overflow-x-auto px-3 py-3 pe-10 font-mono text-[12px] leading-relaxed"
           onClick={(event) => event.stopPropagation()}
         >
           <JsonRoot value={parsed} />

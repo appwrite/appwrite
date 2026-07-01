@@ -256,7 +256,7 @@ export function View() {
     return (
       <div className="relative">
         {listFetching && (
-          <div className="absolute right-0 top-0 z-10">
+          <div className="absolute end-0 top-0 z-10">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
         )}

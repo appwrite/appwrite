@@ -308,7 +308,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 </span>
               )}
               {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
               )}
             </>
           )
@@ -429,7 +429,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     <>
                       {tab.label}
                       {isActive && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                        <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
                       )}
                     </>
                   )
@@ -513,14 +513,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               {/* Search */}
               {onSearchChange && (
                 <div className="relative min-w-0 w-full max-w-xs flex-1 shrink @[520px]:w-64 @[520px]:max-w-none @[520px]:flex-none @[520px]:shrink-0">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     placeholder={searchPlaceholder}
                     value={searchValue}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 ps-10 pe-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                   />
                 </div>
               )}
@@ -551,7 +551,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             </div>
 
             {/* Action Buttons Group */}
-            <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 @[640px]:gap-2">
+            <div className="ms-auto flex min-w-0 shrink-0 items-center gap-1.5 @[640px]:gap-2">
               {beforeRefreshButtons ? (
                 <div className="flex shrink-0 items-center gap-1.5 @[640px]:gap-2">
                   {beforeRefreshButtons}

@@ -67,7 +67,7 @@ export function DocsSearchView({
         <button
           type="button"
           onClick={onBack}
-          className="ml-3 flex h-6 shrink-0 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+          className="ms-3 flex h-6 shrink-0 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
         >
           ← Back
         </button>
@@ -83,7 +83,7 @@ export function DocsSearchView({
           <button
             type="button"
             onClick={onClose}
-            className="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="me-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>

@@ -82,7 +82,7 @@ function GeneratorLayoutContent() {
                 className="h-7 px-2 text-[12px]"
                 onClick={() => setApiDocsOpen(true)}
               >
-                <Terminal className="mr-1 size-3" />
+                <Terminal className="me-1 size-3" />
                 API
               </Button>
             </div>

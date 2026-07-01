@@ -269,12 +269,12 @@ export function ScopeEditor({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search scopes…"
-            className="h-9 pl-9 text-[13px]"
+            className="h-9 ps-9 text-[13px]"
             disabled={disabled}
           />
         </div>
@@ -334,7 +334,7 @@ export function ScopeEditor({
                 className={cn('border-b', isLastCategory && 'border-b-0')}
               >
                 <AccordionHeader className="flex w-full min-w-0 items-stretch">
-                  <div className="flex shrink-0 items-center self-center py-4 pl-1 pr-2">
+                  <div className="flex shrink-0 items-center self-center py-4 ps-1 pe-2">
                     <Checkbox
                       checked={
                         categoryState === 'checked'
@@ -350,7 +350,7 @@ export function ScopeEditor({
                     />
                   </div>
                   <AccordionRowTrigger className="hover:no-underline min-w-0 flex-1">
-                    <div className="flex min-w-0 flex-1 items-center justify-between pr-4">
+                    <div className="flex min-w-0 flex-1 items-center justify-between pe-4">
                       <div className="flex min-w-0 items-center gap-3">
                         <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate text-[13px] font-medium text-foreground">

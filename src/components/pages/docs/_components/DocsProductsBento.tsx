@@ -5,14 +5,14 @@ import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '../DocsRouteLink'
 
 const TILE_HOVER_LIGHTS = [
-  'absolute -left-[28%] -top-[48%] h-[200px] w-[260px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.16)_0%,rgba(133,219,216,0.05)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.028)_42%,transparent_76%)]',
-  'absolute -right-[28%] -top-[44%] h-[200px] w-[260px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.14)_0%,rgba(253,54,110,0.045)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.08)_0%,rgba(253,54,110,0.025)_42%,transparent_76%)]',
-  'absolute left-[8%] -top-[52%] h-[210px] w-[280px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.13)_0%,rgba(124,103,254,0.04)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.075)_0%,rgba(124,103,254,0.022)_42%,transparent_76%)]',
-  'absolute -left-[32%] top-[18%] h-[190px] w-[250px] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_14%,transparent)_0%,color-mix(in_srgb,var(--brand-cta)_4%,transparent)_42%,transparent_76%)]',
-  'absolute -right-[24%] bottom-[-40%] h-[180px] w-[240px] bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.11)_0%,rgba(254,149,103,0.035)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.065)_0%,rgba(254,149,103,0.02)_42%,transparent_76%)]',
-  'absolute -left-[24%] bottom-[-42%] h-[180px] w-[240px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.1)_0%,rgba(124,103,254,0.03)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.06)_0%,rgba(124,103,254,0.018)_42%,transparent_76%)]',
-  'absolute -right-[30%] bottom-[-38%] h-[170px] w-[230px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.12)_0%,rgba(133,219,216,0.038)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.07)_0%,rgba(133,219,216,0.02)_42%,transparent_76%)]',
-  'absolute -right-[26%] -top-[36%] h-[180px] w-[240px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.038)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.07)_0%,rgba(253,54,110,0.02)_42%,transparent_76%)]',
+  'absolute -start-[28%] -top-[48%] h-[200px] w-[260px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.16)_0%,rgba(133,219,216,0.05)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.028)_42%,transparent_76%)]',
+  'absolute -end-[28%] -top-[44%] h-[200px] w-[260px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.14)_0%,rgba(253,54,110,0.045)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.08)_0%,rgba(253,54,110,0.025)_42%,transparent_76%)]',
+  'absolute start-[8%] -top-[52%] h-[210px] w-[280px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.13)_0%,rgba(124,103,254,0.04)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.075)_0%,rgba(124,103,254,0.022)_42%,transparent_76%)]',
+  'absolute -start-[32%] top-[18%] h-[190px] w-[250px] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_14%,transparent)_0%,color-mix(in_srgb,var(--brand-cta)_4%,transparent)_42%,transparent_76%)]',
+  'absolute -end-[24%] bottom-[-40%] h-[180px] w-[240px] bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.11)_0%,rgba(254,149,103,0.035)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.065)_0%,rgba(254,149,103,0.02)_42%,transparent_76%)]',
+  'absolute -start-[24%] bottom-[-42%] h-[180px] w-[240px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.1)_0%,rgba(124,103,254,0.03)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.06)_0%,rgba(124,103,254,0.018)_42%,transparent_76%)]',
+  'absolute -end-[30%] bottom-[-38%] h-[170px] w-[230px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.12)_0%,rgba(133,219,216,0.038)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.07)_0%,rgba(133,219,216,0.02)_42%,transparent_76%)]',
+  'absolute -end-[26%] -top-[36%] h-[180px] w-[240px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.038)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.07)_0%,rgba(253,54,110,0.02)_42%,transparent_76%)]',
 ] as const
 
 function productTileBorderClass(index: number, count: number): string {
@@ -29,10 +29,10 @@ function productTileBorderClass(index: number, count: number): string {
   return cn(
     'border-b border-border last:border-b-0',
     '@[560px]:border-b-0',
-    smCol < smCols - 1 && '@[560px]:border-r @[560px]:border-border',
+    smCol < smCols - 1 && '@[560px]:border-e @[560px]:border-border',
     smRow < smRows - 1 && '@[560px]:border-b @[560px]:border-border',
-    '@[1080px]:border-b-0 @[1080px]:border-r-0',
-    xlCol < xlCols - 1 && '@[1080px]:border-r @[1080px]:border-border',
+    '@[1080px]:border-b-0 @[1080px]:border-e-0',
+    xlCol < xlCols - 1 && '@[1080px]:border-e @[1080px]:border-border',
     xlRow < xlRows - 1 && '@[1080px]:border-b @[1080px]:border-border',
   )
 }

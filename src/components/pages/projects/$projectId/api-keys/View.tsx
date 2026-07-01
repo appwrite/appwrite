@@ -252,7 +252,7 @@ export function View({ initialData }: ViewProps = {}) {
                       <div className="h-5 w-32 animate-pulse rounded bg-muted" />
                       <div className="h-3.5 w-3.5 animate-pulse rounded bg-muted" />
                       <div className="h-3.5 w-3.5 animate-pulse rounded bg-muted" />
-                      <div className="ml-auto h-3 w-24 animate-pulse rounded bg-muted" />
+                      <div className="ms-auto h-3 w-24 animate-pulse rounded bg-muted" />
                     </div>
                   </div>
                   <div className="h-6 w-6 shrink-0 animate-pulse rounded bg-muted" />
@@ -365,7 +365,7 @@ export function View({ initialData }: ViewProps = {}) {
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete API key</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete "{selectedKey?.name}"? This action

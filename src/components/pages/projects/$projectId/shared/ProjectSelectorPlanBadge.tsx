@@ -138,7 +138,7 @@ export function ProjectSelectorPlanBadge({
           ))}
         </span>
         <span
-          className="plan-badge-stress-crack pointer-events-none absolute left-1/2 top-[12%] z-[5] w-px bg-gradient-to-b from-transparent via-foreground/45 to-transparent dark:via-foreground/40"
+          className="plan-badge-stress-crack pointer-events-none absolute start-1/2 top-[12%] z-[5] w-px bg-gradient-to-b from-transparent via-foreground/45 to-transparent dark:via-foreground/40"
           style={{ bottom: '12%' }}
           aria-hidden
         />

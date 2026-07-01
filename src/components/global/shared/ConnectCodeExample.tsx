@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 
 const CODE_EXAMPLE_HEADER_LABEL_CLASS =
   'flex h-8 items-center text-[12px] font-medium'
@@ -94,7 +95,10 @@ export function ConnectCodeExample({
 
   return (
     <div
+      dir="ltr"
+      data-code-example
       className={cn(
+        FORCE_LTR_CLASS,
         'flex w-full min-w-0 flex-col overflow-hidden',
         !headless && 'rounded-xl border border-border',
         fixedHeight && 'min-h-0',

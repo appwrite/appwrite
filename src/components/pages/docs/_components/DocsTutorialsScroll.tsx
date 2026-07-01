@@ -14,28 +14,28 @@ import { DocsRouteLink } from '../DocsRouteLink'
 
 const TUTORIAL_COVER_LIGHT_PAIRS = [
   [
-    'absolute -left-[32%] -top-[45%] h-[150px] w-[170px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.3)_0%,rgba(133,219,216,0.11)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.17)_0%,rgba(133,219,216,0.055)_40%,transparent_72%)]',
-    'absolute -right-[28%] -bottom-[40%] h-[130px] w-[150px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.24)_0%,rgba(253,54,110,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.14)_0%,rgba(253,54,110,0.045)_40%,transparent_72%)]',
+    'absolute -start-[32%] -top-[45%] h-[150px] w-[170px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.3)_0%,rgba(133,219,216,0.11)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.17)_0%,rgba(133,219,216,0.055)_40%,transparent_72%)]',
+    'absolute -end-[28%] -bottom-[40%] h-[130px] w-[150px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.24)_0%,rgba(253,54,110,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.14)_0%,rgba(253,54,110,0.045)_40%,transparent_72%)]',
   ],
   [
-    'absolute -right-[30%] -top-[42%] h-[145px] w-[165px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.26)_0%,rgba(124,103,254,0.09)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.048)_40%,transparent_72%)]',
-    'absolute -left-[26%] -bottom-[38%] h-[125px] w-[145px] bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.22)_0%,rgba(254,149,103,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.13)_0%,rgba(254,149,103,0.04)_40%,transparent_72%)]',
+    'absolute -end-[30%] -top-[42%] h-[145px] w-[165px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.26)_0%,rgba(124,103,254,0.09)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.048)_40%,transparent_72%)]',
+    'absolute -start-[26%] -bottom-[38%] h-[125px] w-[145px] bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.22)_0%,rgba(254,149,103,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.13)_0%,rgba(254,149,103,0.04)_40%,transparent_72%)]',
   ],
   [
-    'absolute left-[10%] -top-[50%] h-[155px] w-[175px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.26)_0%,rgba(253,54,110,0.09)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.048)_40%,transparent_72%)]',
-    'absolute -right-[22%] bottom-[-30%] h-[120px] w-[140px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.22)_0%,rgba(133,219,216,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.13)_0%,rgba(133,219,216,0.04)_40%,transparent_72%)]',
+    'absolute start-[10%] -top-[50%] h-[155px] w-[175px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.26)_0%,rgba(253,54,110,0.09)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.048)_40%,transparent_72%)]',
+    'absolute -end-[22%] bottom-[-30%] h-[120px] w-[140px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.22)_0%,rgba(133,219,216,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.13)_0%,rgba(133,219,216,0.04)_40%,transparent_72%)]',
   ],
   [
-    'absolute -left-[24%] top-[5%] h-[140px] w-[160px] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_24%,transparent)_0%,color-mix(in_srgb,var(--brand-cta)_8%,transparent)_40%,transparent_72%)]',
-    'absolute -right-[30%] -top-[35%] h-[135px] w-[155px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.22)_0%,rgba(124,103,254,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.13)_0%,rgba(124,103,254,0.04)_40%,transparent_72%)]',
+    'absolute -start-[24%] top-[5%] h-[140px] w-[160px] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_24%,transparent)_0%,color-mix(in_srgb,var(--brand-cta)_8%,transparent)_40%,transparent_72%)]',
+    'absolute -end-[30%] -top-[35%] h-[135px] w-[155px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.22)_0%,rgba(124,103,254,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.13)_0%,rgba(124,103,254,0.04)_40%,transparent_72%)]',
   ],
   [
-    'absolute -right-[26%] top-[0%] h-[150px] w-[170px] bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.24)_0%,rgba(254,149,103,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.14)_0%,rgba(254,149,103,0.045)_40%,transparent_72%)]',
-    'absolute -left-[28%] -bottom-[42%] h-[130px] w-[150px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.24)_0%,rgba(133,219,216,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.045)_40%,transparent_72%)]',
+    'absolute -end-[26%] top-[0%] h-[150px] w-[170px] bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.24)_0%,rgba(254,149,103,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.14)_0%,rgba(254,149,103,0.045)_40%,transparent_72%)]',
+    'absolute -start-[28%] -bottom-[42%] h-[130px] w-[150px] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.24)_0%,rgba(133,219,216,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.045)_40%,transparent_72%)]',
   ],
   [
-    'absolute -left-[34%] -top-[38%] h-[145px] w-[165px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.24)_0%,rgba(124,103,254,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.14)_0%,rgba(124,103,254,0.045)_40%,transparent_72%)]',
-    'absolute right-[5%] -bottom-[35%] h-[125px] w-[145px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.22)_0%,rgba(253,54,110,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.13)_0%,rgba(253,54,110,0.04)_40%,transparent_72%)]',
+    'absolute -start-[34%] -top-[38%] h-[145px] w-[165px] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.24)_0%,rgba(124,103,254,0.085)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.14)_0%,rgba(124,103,254,0.045)_40%,transparent_72%)]',
+    'absolute end-[5%] -bottom-[35%] h-[125px] w-[145px] bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.22)_0%,rgba(253,54,110,0.075)_40%,transparent_72%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.13)_0%,rgba(253,54,110,0.04)_40%,transparent_72%)]',
   ],
 ] as const
 
@@ -85,11 +85,11 @@ export function DocsTutorialsScroll() {
       className="w-full"
     >
       <div className="relative min-w-0 overflow-hidden">
-        <CarouselContent className="-ml-4">
+        <CarouselContent className="-ms-4">
           {DOCS_HOME_TUTORIALS.map((tutorial, index) => (
             <CarouselItem
               key={tutorial.href}
-              className="basis-[280px] pl-4 @[480px]:basis-[300px]"
+              className="basis-[280px] ps-4 @[480px]:basis-[300px]"
             >
               <DocsRouteLink
                 href={tutorial.href}
@@ -123,7 +123,7 @@ export function DocsTutorialsScroll() {
         <div
           aria-hidden
           className={cn(
-            'pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-background via-background/80 to-transparent transition-opacity duration-200 @[480px]:w-24',
+            'pointer-events-none absolute end-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-background via-background/80 to-transparent transition-opacity duration-200 @[480px]:w-24',
             showRightFade ? 'opacity-100' : 'opacity-0',
           )}
         />

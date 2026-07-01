@@ -221,7 +221,7 @@ export function InitPresenceStatusControl({
                   <motion.span
                     key={isOnline ? 'online' : 'offline'}
                     className={cn(
-                      'absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-background',
+                      'absolute -bottom-0.5 -end-0.5 size-2.5 rounded-full ring-2 ring-background',
                       isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50',
                     )}
                     animate={reduceMotion ? undefined : { scale: [1, 1.25, 1] }}
@@ -230,7 +230,7 @@ export function InitPresenceStatusControl({
                   />
                 </span>
                 {isParticipantStatusUpdating ? (
-                  <Loader2 className="absolute right-1 top-1 size-3 animate-spin text-muted-foreground" />
+                  <Loader2 className="absolute end-1 top-1 size-3 animate-spin text-muted-foreground" />
                 ) : null}
               </button>
             </PopoverTrigger>

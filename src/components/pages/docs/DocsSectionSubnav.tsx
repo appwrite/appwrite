@@ -57,7 +57,7 @@ function SectionNavLinks({
 
   if (!nested) return list
 
-  return <div className="ml-3 mt-0.5 pl-2">{list}</div>
+  return <div className="ms-3 mt-0.5 ps-2">{list}</div>
 }
 
 function SectionNavCategory({
@@ -73,7 +73,7 @@ function SectionNavCategory({
 }) {
   return (
     <nav aria-label={label}>
-      <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="mb-1.5 px-2 text-start text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <SectionNavLinks
@@ -165,7 +165,7 @@ export function DocsSectionSubnavPanel({
 
   return (
     <aside
-      className="relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-r border-border bg-background @[1024px]:flex"
+      className="relative z-10 hidden h-full w-[220px] shrink-0 flex-col overflow-hidden border-e border-border bg-background @[1024px]:flex"
       aria-label={parent?.label ? `${parent.label} section navigation` : 'Section navigation'}
     >
       {parent ? (
@@ -207,7 +207,7 @@ export function DocsSectionSubnavMobile({
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[280px] p-0">
-          <SheetHeader className="border-b border-border px-4 py-4 text-left">
+          <SheetHeader className="border-b border-border px-4 py-4 text-start">
             <SheetTitle className="text-[15px]">
               {parent?.label ?? 'Section'}
             </SheetTitle>

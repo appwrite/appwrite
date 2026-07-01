@@ -45,10 +45,10 @@ export function ApiReferenceModelPropertyRow({
             textClassName="text-[12px] text-foreground"
           />
         </div>
-        <div className="flex items-start justify-start border-l border-border/50 px-3 py-2">
+        <div className="flex items-start justify-start border-s border-border/50 px-3 py-2">
           <ApiReferencePropertyTypeCell property={property} />
         </div>
-        <div className="border-l border-border/50 px-3 py-2 text-[12px] text-muted-foreground">
+        <div className="border-s border-border/50 px-3 py-2 text-[12px] text-muted-foreground">
           {description ? (
             <MethodDescriptionMarkdown
               content={description}
@@ -67,7 +67,7 @@ export function ApiReferenceModelPropertyRow({
           )}
         >
           <div aria-hidden className="px-3 py-2" />
-          <div className="col-span-2 min-w-0 border-l border-border/50 px-3 py-3">
+          <div className="col-span-2 min-w-0 border-s border-border/50 px-3 py-3">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {getPropertyVariantsSectionTitle(property)}
             </p>
@@ -102,8 +102,8 @@ export function ApiReferenceModelPropertyRows({
     >
       <div className={INLINE_MODEL_HEADER}>
         <div className="px-3 py-2">Name</div>
-        <div className="border-l border-border/50 px-3 py-2">Type</div>
-        <div className="border-l border-border/50 px-3 py-2">Description</div>
+        <div className="border-s border-border/50 px-3 py-2">Type</div>
+        <div className="border-s border-border/50 px-3 py-2">Description</div>
       </div>
       {properties.map((property, index) => (
         <ApiReferenceModelPropertyRow

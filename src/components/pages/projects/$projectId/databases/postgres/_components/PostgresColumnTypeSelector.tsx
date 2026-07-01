@@ -69,7 +69,7 @@ function PostgresColumnTypePropertyField({
         <Label htmlFor={inputId} className="text-[12px] font-medium leading-snug">
           {property.label}
         </Label>
-        <span className="shrink-0 text-right text-[11px] font-medium tabular-nums text-muted-foreground">
+        <span className="shrink-0 text-end text-[11px] font-medium tabular-nums text-muted-foreground">
           {limitsLabel}
         </span>
       </div>
@@ -190,7 +190,7 @@ export function PostgresColumnTypeSelector({
                         >
                           <Check
                             className={cn(
-                              'mr-2 h-4 w-4 shrink-0',
+                              'me-2 h-4 w-4 shrink-0',
                               value.typeId === entry.id
                                 ? 'opacity-100'
                                 : 'opacity-0',

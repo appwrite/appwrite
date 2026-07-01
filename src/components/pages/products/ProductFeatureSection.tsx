@@ -98,7 +98,7 @@ export function ProductFeatureSection({
             )}
           >
             {!stacked ? (
-              <div className={cn(reversed ? 'lg:pl-4' : 'lg:pr-4')}>
+              <div className={cn(reversed ? 'lg:ps-4' : 'lg:pe-4')}>
                 <h2 className="font-aeonik-pro text-balance text-[28px] font-normal leading-tight tracking-tight text-foreground sm:text-[32px]">
                   {feature.title}
                 </h2>

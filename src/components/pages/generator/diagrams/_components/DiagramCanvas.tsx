@@ -769,14 +769,14 @@ export function DiagramCanvas({
         >
           <SchemaBlueprintMat />
           <div
-            className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="pointer-events-auto absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{
               width: artboardDisplaySize.width,
               height: artboardDisplaySize.height,
             }}
           >
             <div
-              className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-xl border border-border shadow-sm"
+              className="absolute start-0 top-0 origin-top-start overflow-hidden rounded-xl border border-border shadow-sm"
               style={artboardTransformStyle}
             >
                 <CoverBrandBackgroundPreview
@@ -891,7 +891,7 @@ export function DiagramCanvas({
               className="h-8 border-border bg-card/95 text-[12px] backdrop-blur-sm"
               onClick={onBackToStart}
             >
-              <LayoutGrid className="mr-1.5 size-3.5" />
+              <LayoutGrid className="me-1.5 size-3.5" />
               All diagrams
             </Button>
           ) : null}
@@ -902,7 +902,7 @@ export function DiagramCanvas({
             className="h-8 border-border bg-card/95 text-[12px] backdrop-blur-sm"
             onClick={onOpenImage}
           >
-            <ExternalLink className="mr-1.5 size-3.5" />
+            <ExternalLink className="me-1.5 size-3.5" />
             Open image
           </Button>
 
@@ -932,10 +932,10 @@ export function DiagramCanvas({
             <Button
               type="button"
               size="sm"
-              className="relative z-[1] h-8 rounded-r-none px-3 text-[12px] shadow-sm"
+              className="relative z-[1] h-8 rounded-e-none px-3 text-[12px] shadow-sm"
               onClick={() => onDownload(document.format, 1)}
             >
-              <Download className="mr-1.5 size-3.5" />
+              <Download className="me-1.5 size-3.5" />
               Download
             </Button>
             <DropdownMenu modal={false}>
@@ -943,7 +943,7 @@ export function DiagramCanvas({
                 <Button
                   type="button"
                   size="sm"
-                  className="relative z-[2] h-8 rounded-l-none border-l border-primary-foreground/15 px-2 shadow-sm"
+                  className="relative z-[2] h-8 rounded-s-none border-s border-primary-foreground/15 px-2 shadow-sm"
                   aria-label="More download options"
                 >
                   <ChevronDown className="size-3.5" />
@@ -975,7 +975,7 @@ export function DiagramCanvas({
                           onSelect={() => onDownload(format, scaleOption)}
                         >
                           <span className="font-medium">{scaleLabel}</span>
-                          <span className="ml-auto text-[12px] text-muted-foreground">
+                          <span className="ms-auto text-[12px] text-muted-foreground">
                             {sizeLabel}
                           </span>
                         </DropdownMenuItem>

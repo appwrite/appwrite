@@ -57,9 +57,9 @@ const PLATFORM_META = {
 } as const
 
 const DAILY_PLACEMENT = [
-  'border-b border-r border-border sm:col-start-1 sm:row-start-2 lg:col-start-1 lg:row-start-1',
+  'border-b border-e border-border sm:col-start-1 sm:row-start-2 lg:col-start-1 lg:row-start-1',
   'border-b border-border sm:col-start-2 sm:row-start-2 lg:col-start-2 lg:row-start-1',
-  'border-b border-r border-border sm:col-start-1 sm:row-start-3 lg:col-start-1 lg:row-start-2 lg:border-b-0',
+  'border-b border-e border-border sm:col-start-1 sm:row-start-3 lg:col-start-1 lg:row-start-2 lg:border-b-0',
   'border-b border-border sm:col-start-2 sm:row-start-3 lg:col-start-2 lg:row-start-2 lg:border-b-0',
 ] as const
 
@@ -271,7 +271,7 @@ function PrizesGrid({ prizes }: { prizes: NonNullable<InitDisplayEvent['prizes']
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 lg:items-stretch">
         <GrandPrizeCell
           grandPrize={prizes.grandPrize}
-          className="order-first border-b border-border sm:col-span-2 sm:row-start-1 lg:col-span-2 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-b-0 lg:border-l"
+          className="order-first border-b border-border sm:col-span-2 sm:row-start-1 lg:col-span-2 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-b-0 lg:border-s"
         />
 
         {prizes.dailyGiveaways.map((giveaway, index) => (

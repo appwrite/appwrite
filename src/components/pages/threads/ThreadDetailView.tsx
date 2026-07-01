@@ -39,9 +39,9 @@ export function ThreadDetailView({
     <div className="relative overflow-x-hidden bg-background">
       <section className="border-b border-border bg-[radial-gradient(circle_at_top_right,hsl(var(--muted))_0,transparent_34rem)] py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <Button variant="ghost" size="sm" className="-ml-2 mb-6 h-8 px-2" asChild>
+          <Button variant="ghost" size="sm" className="-ms-2 mb-6 h-8 px-2" asChild>
             <Link to="/threads">
-              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              <ArrowLeft className="me-1.5 h-4 w-4" />
               Back
             </Link>
           </Button>
@@ -83,7 +83,7 @@ export function ThreadDetailView({
                 <Button variant="brandCta" className="shrink-0" asChild>
                   <a href={discordLink} target="_blank" rel="noopener noreferrer">
                     View on Discord
-                    <ExternalLink className="ml-1.5 h-4 w-4" />
+                    <ExternalLink className="ms-1.5 h-4 w-4" />
                   </a>
                 </Button>
               </div>
@@ -143,7 +143,7 @@ export function ThreadDetailView({
                 <Button className="mt-4" variant="brandCta" asChild>
                   <a href={discordLink} target="_blank" rel="noopener noreferrer">
                     Reply on Discord
-                    <ExternalLink className="ml-1.5 h-4 w-4" />
+                    <ExternalLink className="ms-1.5 h-4 w-4" />
                   </a>
                 </Button>
               </div>

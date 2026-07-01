@@ -27,6 +27,7 @@ import {
   Terminal,
   Search,
   X,
+  Languages,
 } from 'lucide-react'
 import {
   Popover,
@@ -327,7 +328,7 @@ function renderDebugSubmenuItemRow(
         }
       }}
       disabled={item.disabled}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
         item.disabled
           ? 'cursor-not-allowed opacity-50'
           : item.active
@@ -555,7 +556,7 @@ function ConsoleProfileComparisonTable({
         . Debug feature overrides are not reflected here.
       </p>
       <div className="overflow-x-auto rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))]">
-        <table className="w-full border-collapse text-left text-[11px]">
+        <table className="w-full border-collapse text-start text-[11px]">
           <thead>
             <TableRow className="border-b border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40">
               <TableHead className="min-w-[140px]">Feature</TableHead>
@@ -884,6 +885,35 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
       active: overrides.keyboardLayout === option.value,
       icon: <Keyboard className="h-3 w-3" />,
+    }))
+
+    const pageDirectionDescription =
+      overrides.pageDirection === 'rtl'
+        ? 'Right-to-left (RTL)'
+        : 'Left-to-right (LTR)'
+
+    const pageDirectionOptions: MenuItem[] = (
+      [
+        {
+          label: 'LTR (default)',
+          value: 'ltr' as const,
+          description: 'Left-to-right layout',
+        },
+        {
+          label: 'RTL',
+          value: 'rtl' as const,
+          description: 'Right-to-left layout for i18n testing',
+        },
+      ] as const
+    ).map((option) => ({
+      label: option.label,
+      description: option.description,
+      onClick: () => {
+        setOverrides((prev) => ({ ...prev, pageDirection: option.value }))
+        setDebugOverride('pageDirection', option.value)
+      },
+      active: overrides.pageDirection === option.value,
+      icon: <Languages className="h-3 w-3" />,
     }))
 
     const activeEndpointLabel = !endpointPreset
@@ -1224,6 +1254,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             description: keyboardLayoutDescription,
             icon: <Keyboard className="h-3 w-3" />,
             submenu: keyboardLayoutOptions,
+          },
+          {
+            label: 'Page direction',
+            description: pageDirectionDescription,
+            icon: <Languages className="h-3 w-3" />,
+            submenu: pageDirectionOptions,
           },
           {
             label: 'User & team prefs',
@@ -1779,7 +1815,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             {isFeatureFlagsSubmenu ? (
               <div className="px-4 pb-3">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
+                  <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
                   <Input
                     autoFocus
                     value={featureFlagsSearch}
@@ -1787,13 +1823,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       setFeatureFlagsSearch(event.target.value)
                     }
                     placeholder="Search flags…"
-                    className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 pl-8 pr-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
+                    className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
                   />
                   {featureFlagsSearch ? (
                     <button
                       type="button"
                       onClick={() => setFeatureFlagsSearch('')}
-                      className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
+                      className="absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
                       aria-label="Clear search"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -1905,7 +1941,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 item.onClick()
                               }
                             }}
-                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
+                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
                               item.active
                                 ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
                                 : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'

@@ -538,7 +538,7 @@ function OAuth2RedirectUriCard({
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
-        <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal pl-4 [list-style-position:outside]">
+        <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal ps-4 [list-style-position:outside]">
           <li>
             Open your {providerName} application in the provider&apos;s
             developer console.
@@ -571,12 +571,12 @@ function OAuth2RedirectUriCard({
           >
             {copied ? (
               <>
-                <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+                <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
                 Copied
               </>
             ) : (
               <>
-                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                <Copy className="me-1.5 h-3.5 w-3.5" />
                 Copy
               </>
             )}
@@ -872,7 +872,7 @@ export function OAuth2ProvidersSection({
             type="button"
             onClick={() => openDrawerFor(row.$id)}
             className={cn(
-              'flex w-full min-w-0 items-center justify-between gap-2 text-left',
+              'flex w-full min-w-0 items-center justify-between gap-2 text-start',
               RESOURCE_CARD_PADDED_CLASSNAME,
               RESOURCE_CARD_INTERACTIVE_CLASSNAME,
               RESOURCE_CARD_SHELL_CLASSNAME,
@@ -921,13 +921,13 @@ export function OAuth2ProvidersSection({
 
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search providers..."
             value={providerSearch}
             onChange={(e) => setProviderSearch(e.target.value)}
-            className="pl-9 h-9 text-[13px]"
+            className="ps-9 h-9 text-[13px]"
           />
         </div>
       </div>

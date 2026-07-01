@@ -197,7 +197,7 @@ export function ChangelogArrowLink({
       <ChangelogLink
         href={href}
         className={cn(
-          'relative block w-full rounded-none px-4 py-4 pr-10 text-left transition-colors duration-150 hover:bg-muted/40',
+          'relative block w-full rounded-none px-4 py-4 pe-10 text-start transition-colors duration-150 hover:bg-muted/40',
           textClassName ??
             'text-[13px] font-medium leading-5 text-foreground',
         )}
@@ -211,7 +211,7 @@ export function ChangelogArrowLink({
           {children}
         </span>
         <ArrowUpRight
-          className="absolute top-4 right-4 size-3.5 shrink-0 text-muted-foreground"
+          className="absolute top-4 end-4 size-3.5 shrink-0 text-muted-foreground"
           aria-hidden
         />
       </ChangelogLink>

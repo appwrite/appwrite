@@ -98,7 +98,7 @@ export function ConsoleRightPane() {
       ref={panelRef}
       style={{ width: `${widthPx}px` }}
       className={cn(
-        'relative flex h-full shrink-0 flex-col border-l border-border bg-background',
+        'relative flex h-full shrink-0 flex-col border-s border-border bg-background',
         resolvedContent === 'assistant' &&
           '[&_button:not(:disabled)]:cursor-pointer',
       )}
@@ -106,7 +106,7 @@ export function ConsoleRightPane() {
       <div
         onMouseDown={handleMouseDown}
         className={cn(
-          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+          'absolute start-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
           isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
         )}
         aria-hidden

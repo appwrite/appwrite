@@ -9,84 +9,84 @@ import { cn } from '@/lib/utils'
 const variants = {
   hero: {
     left: cn(
-      'absolute -left-[42%] bottom-[-32%] h-[480px] w-[820px]',
+      'absolute -start-[42%] bottom-[-32%] h-[480px] w-[820px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.2)_0%,rgba(253,54,110,0.07)_38%,transparent_72%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.04)_38%,transparent_72%)]',
-      'sm:-left-[38%] sm:h-[560px] sm:w-[980px]',
-      'lg:-left-[36%] lg:h-[640px] lg:w-[1120px]',
+      'sm:-start-[38%] sm:h-[560px] sm:w-[980px]',
+      'lg:-start-[36%] lg:h-[640px] lg:w-[1120px]',
     ),
     right: cn(
-      'absolute -right-[44%] bottom-[-34%] h-[500px] w-[840px]',
+      'absolute -end-[44%] bottom-[-34%] h-[500px] w-[840px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.17)_0%,rgba(124,103,254,0.06)_40%,transparent_74%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.04)_40%,transparent_74%)]',
-      'sm:-right-[40%] sm:h-[580px] sm:w-[1000px]',
-      'lg:-right-[38%] lg:h-[660px] lg:w-[1140px]',
+      'sm:-end-[40%] sm:h-[580px] sm:w-[1000px]',
+      'lg:-end-[38%] lg:h-[660px] lg:w-[1140px]',
     ),
   },
   pricing: {
     left: cn(
-      'absolute -left-[52%] top-1/2 h-[780px] w-[1360px] -translate-y-1/2',
+      'absolute -start-[52%] top-1/2 h-[780px] w-[1360px] -translate-y-1/2',
       'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.18)_0%,rgba(253,54,110,0.06)_24%,transparent_58%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.11)_0%,rgba(253,54,110,0.035)_24%,transparent_58%)]',
-      'sm:-left-[48%] sm:h-[920px] sm:w-[1620px]',
-      'lg:-left-[46%] lg:h-[1040px] lg:w-[1860px]',
+      'sm:-start-[48%] sm:h-[920px] sm:w-[1620px]',
+      'lg:-start-[46%] lg:h-[1040px] lg:w-[1860px]',
     ),
     right: cn(
-      'absolute -right-[52%] top-1/2 h-[800px] w-[1380px] -translate-y-1/2',
+      'absolute -end-[52%] top-1/2 h-[800px] w-[1380px] -translate-y-1/2',
       'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_26%,transparent_60%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.095)_0%,rgba(124,103,254,0.035)_26%,transparent_60%)]',
-      'sm:-right-[48%] sm:h-[940px] sm:w-[1640px]',
-      'lg:-right-[46%] lg:h-[1060px] lg:w-[1880px]',
+      'sm:-end-[48%] sm:h-[940px] sm:w-[1640px]',
+      'lg:-end-[46%] lg:h-[1060px] lg:w-[1880px]',
     ),
   },
   /** Docs hero: pink wash below, brand mint green (#85DBD8) at the top instead of purple. */
   docs: {
     left: cn(
-      'absolute -left-[42%] bottom-[-32%] h-[480px] w-[820px]',
+      'absolute -start-[42%] bottom-[-32%] h-[480px] w-[820px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.2)_0%,rgba(253,54,110,0.07)_38%,transparent_72%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.04)_38%,transparent_72%)]',
-      'sm:-left-[38%] sm:h-[560px] sm:w-[980px]',
-      'lg:-left-[36%] lg:h-[640px] lg:w-[1120px]',
+      'sm:-start-[38%] sm:h-[560px] sm:w-[980px]',
+      'lg:-start-[36%] lg:h-[640px] lg:w-[1120px]',
     ),
     right: cn(
-      'absolute -right-[40%] top-[-28%] h-[500px] w-[840px]',
+      'absolute -end-[40%] top-[-28%] h-[500px] w-[840px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.17)_0%,rgba(133,219,216,0.06)_40%,transparent_74%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.11)_0%,rgba(133,219,216,0.04)_40%,transparent_74%)]',
-      'sm:-right-[36%] sm:top-[-30%] sm:h-[580px] sm:w-[1000px]',
-      'lg:-right-[34%] lg:top-[-32%] lg:h-[660px] lg:w-[1140px]',
+      'sm:-end-[36%] sm:top-[-30%] sm:h-[580px] sm:w-[1000px]',
+      'lg:-end-[34%] lg:top-[-32%] lg:h-[660px] lg:w-[1140px]',
     ),
   },
   /** Partners docs hero: warm orange bottom-left, purple wash top-right. */
   partners: {
     left: cn(
-      'absolute -left-[42%] bottom-[-32%] h-[480px] w-[820px]',
+      'absolute -start-[42%] bottom-[-32%] h-[480px] w-[820px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.17)_0%,rgba(254,149,103,0.06)_38%,transparent_72%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.11)_0%,rgba(254,149,103,0.04)_38%,transparent_72%)]',
-      'sm:-left-[38%] sm:h-[560px] sm:w-[980px]',
-      'lg:-left-[36%] lg:h-[640px] lg:w-[1120px]',
+      'sm:-start-[38%] sm:h-[560px] sm:w-[980px]',
+      'lg:-start-[36%] lg:h-[640px] lg:w-[1120px]',
     ),
     right: cn(
-      'absolute -right-[40%] top-[-30%] h-[500px] w-[860px]',
+      'absolute -end-[40%] top-[-30%] h-[500px] w-[860px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.18)_0%,rgba(124,103,254,0.06)_40%,transparent_74%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.04)_40%,transparent_74%)]',
-      'sm:-right-[36%] sm:top-[-32%] sm:h-[580px] sm:w-[1020px]',
-      'lg:-right-[34%] lg:top-[-34%] lg:h-[660px] lg:w-[1160px]',
+      'sm:-end-[36%] sm:top-[-32%] sm:h-[580px] sm:w-[1020px]',
+      'lg:-end-[34%] lg:top-[-34%] lg:h-[660px] lg:w-[1160px]',
     ),
   },
   testimonials: {
     left: cn(
-      'absolute -left-[44%] bottom-[-34%] h-[500px] w-[860px]',
+      'absolute -start-[44%] bottom-[-34%] h-[500px] w-[860px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.18)_0%,rgba(253,54,110,0.06)_38%,transparent_72%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.11)_0%,rgba(253,54,110,0.04)_38%,transparent_72%)]',
-      'sm:-left-[40%] sm:h-[580px] sm:w-[1020px]',
-      'lg:-left-[38%] lg:h-[640px] lg:w-[1160px]',
+      'sm:-start-[40%] sm:h-[580px] sm:w-[1020px]',
+      'lg:-start-[38%] lg:h-[640px] lg:w-[1160px]',
     ),
     right: cn(
-      'absolute -right-[44%] bottom-[-34%] h-[520px] w-[880px]',
+      'absolute -end-[44%] bottom-[-34%] h-[520px] w-[880px]',
       'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.16)_0%,rgba(124,103,254,0.055)_40%,transparent_74%)]',
       'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.1)_0%,rgba(124,103,254,0.035)_40%,transparent_74%)]',
-      'sm:-right-[40%] sm:h-[600px] sm:w-[1040px]',
-      'lg:-right-[38%] lg:h-[660px] lg:w-[1180px]',
+      'sm:-end-[40%] sm:h-[600px] sm:w-[1040px]',
+      'lg:-end-[38%] lg:h-[660px] lg:w-[1180px]',
     ),
   },
 } as const
@@ -110,14 +110,14 @@ const singleSecondaryLightGradients = {
 
 const singleSecondaryLightHorizontal = {
   left: cn(
-    'absolute -left-[36%]',
-    'sm:-left-[32%]',
-    'lg:-left-[28%]',
+    'absolute -start-[36%]',
+    'sm:-start-[32%]',
+    'lg:-start-[28%]',
   ),
   right: cn(
-    'absolute -right-[36%]',
-    'sm:-right-[32%]',
-    'lg:-right-[28%]',
+    'absolute -end-[36%]',
+    'sm:-end-[32%]',
+    'lg:-end-[28%]',
   ),
 } as const
 
@@ -227,22 +227,22 @@ export function SectionSoftLight({
 /** Tile-scoped lights for MCP / Skills / plugins bento — softer than hero, stronger than bare wash. */
 const tileLights = {
   mcp: cn(
-    'absolute -left-[36%] top-[-32%] h-[300px] w-[440px]',
+    'absolute -start-[36%] top-[-32%] h-[300px] w-[440px]',
     'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.15)_0%,rgba(124,103,254,0.055)_42%,transparent_74%)]',
     'dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.05)_0%,rgba(124,103,254,0.016)_42%,transparent_74%)]',
   ),
   skills: cn(
-    'absolute -right-[36%] top-[-32%] h-[300px] w-[440px]',
+    'absolute -end-[36%] top-[-32%] h-[300px] w-[440px]',
     'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.15)_0%,rgba(253,54,110,0.055)_42%,transparent_74%)]',
     'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.05)_0%,rgba(253,54,110,0.016)_42%,transparent_74%)]',
   ),
   plugins: cn(
-    'absolute -left-[34%] bottom-[6%] h-[280px] w-[420px]',
+    'absolute -start-[34%] bottom-[6%] h-[280px] w-[420px]',
     'bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.15)_0%,rgba(133,219,216,0.055)_42%,transparent_74%)]',
     'dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.05)_0%,rgba(133,219,216,0.016)_42%,transparent_74%)]',
   ),
   integrations: cn(
-    'absolute -right-[34%] bottom-[10%] h-[280px] w-[420px]',
+    'absolute -end-[34%] bottom-[10%] h-[280px] w-[420px]',
     'bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.15)_0%,rgba(254,149,103,0.055)_42%,transparent_74%)]',
     'dark:bg-[radial-gradient(ellipse_at_center,rgba(254,149,103,0.05)_0%,rgba(254,149,103,0.016)_42%,transparent_74%)]',
   ),
@@ -288,8 +288,8 @@ export function ProductBentoSoftLights({
 export function ProductPageBrandLight() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
-      <div className="absolute -left-[22%] top-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.045)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.028)_42%,transparent_76%)]" />
-      <div className="absolute -right-[22%] bottom-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.034)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.075)_0%,rgba(124,103,254,0.022)_42%,transparent_76%)]" />
+      <div className="absolute -start-[22%] top-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.045)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.028)_42%,transparent_76%)]" />
+      <div className="absolute -end-[22%] bottom-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.034)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.075)_0%,rgba(124,103,254,0.022)_42%,transparent_76%)]" />
       <div className="absolute left-1/2 top-1/2 h-[88%] w-[72%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_10%,transparent)_0%,transparent_68%)] dark:bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_7%,transparent)_0%,transparent_68%)]" />
     </div>
   )
@@ -317,20 +317,20 @@ export function ProductBentoHoverLight({
         className={cn(
           'absolute bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.09)_0%,rgba(133,219,216,0.03)_45%,transparent_78%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.018)_45%,transparent_78%)]',
           productPage
-            ? '-left-[18%] top-[0%] h-full w-[136%]'
+            ? '-start-[18%] top-[0%] h-full w-[136%]'
             : tall
-              ? '-left-[28%] top-[-28%] h-[440px] w-[680px]'
-              : '-left-[38%] top-[-38%] h-[300px] w-[440px]',
+              ? '-start-[28%] top-[-28%] h-[440px] w-[680px]'
+              : '-start-[38%] top-[-38%] h-[300px] w-[440px]',
         )}
       />
       <div
         className={cn(
           'absolute bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.07)_0%,rgba(124,103,254,0.022)_45%,transparent_78%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.05)_0%,rgba(124,103,254,0.015)_45%,transparent_78%)]',
           productPage
-            ? '-right-[18%] bottom-[0%] h-full w-[136%]'
+            ? '-end-[18%] bottom-[0%] h-full w-[136%]'
             : tall
-              ? '-right-[28%] bottom-[-28%] h-[400px] w-[640px]'
-              : '-right-[38%] bottom-[-38%] h-[280px] w-[420px]',
+              ? '-end-[28%] bottom-[-28%] h-[400px] w-[640px]'
+              : '-end-[38%] bottom-[-38%] h-[280px] w-[420px]',
         )}
       />
     </div>

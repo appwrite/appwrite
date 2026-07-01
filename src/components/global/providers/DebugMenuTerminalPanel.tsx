@@ -114,9 +114,9 @@ export function DebugMenuTerminalPanel() {
           onClick={() => void handleClearCache()}
         >
           {clearing ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
           ) : (
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            <Trash2 className="me-1.5 h-3.5 w-3.5" />
           )}
           Clear terminal cache
         </Button>

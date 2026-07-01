@@ -78,11 +78,11 @@ function DnsRecordsTable({
             Value
           </TableHead>
           {showTtl && (
-            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
               TTL
             </TableHead>
           )}
-          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]" />
+          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -104,11 +104,11 @@ function DnsRecordsTable({
               {r.value}
             </TableCell>
             {showTtl && (
-              <TableCell className="px-4 py-3 text-right text-[12px] text-muted-foreground">
+              <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
                 {r.ttl ?? '-'}
               </TableCell>
             )}
-            <TableCell className="px-4 py-3 text-right">
+            <TableCell className="px-4 py-3 text-end">
               <Button
                 variant="ghost"
                 size="sm"

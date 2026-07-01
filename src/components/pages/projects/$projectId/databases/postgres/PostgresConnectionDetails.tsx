@@ -134,7 +134,7 @@ function ConnectionsTableHead() {
   return (
     <TableHeader>
       <TableRow className="border-b border-border hover:bg-transparent">
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pl-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:pl-8">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 ps-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:ps-8">
           PID
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
@@ -167,7 +167,7 @@ function ConnectionsTableHead() {
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
           Started
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[100px] bg-background px-4 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]" />
+        <TableHead className="sticky top-0 z-10 w-[100px] bg-background px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]" />
       </TableRow>
     </TableHeader>
   )
@@ -182,7 +182,7 @@ function ConnectionsSkeletonRows({ rowCount }: { rowCount: number }) {
           className="pointer-events-none hover:bg-transparent"
           aria-hidden
         >
-          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 pl-6 sm:pl-8">
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
             <Skeleton className="h-3.5 w-10" />
           </TableCell>
           <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
@@ -215,8 +215,8 @@ function ConnectionsSkeletonRows({ rowCount }: { rowCount: number }) {
           <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
             <Skeleton className="h-3.5 w-[6.5rem]" />
           </TableCell>
-          <TableCell className="min-w-0 px-4 py-3 text-right">
-            <Skeleton className="ml-auto h-8 w-8 rounded-md" />
+          <TableCell className="min-w-0 px-4 py-3 text-end">
+            <Skeleton className="ms-auto h-8 w-8 rounded-md" />
           </TableCell>
         </TableRow>
       ))}
@@ -389,7 +389,7 @@ export function PostgresConnectionDetails({
       }
       onClick={() => setPendingAction({ type: 'terminate-idle' })}
     >
-      <Unplug className="mr-1.5 h-3.5 w-3.5" />
+      <Unplug className="me-1.5 h-3.5 w-3.5" />
       Terminate idle in transaction
     </Button>
   )
@@ -454,7 +454,7 @@ export function PostgresConnectionDetails({
                         onClick={() => setStateFilter(filter.id)}
                       >
                         {filter.label}
-                        <span className="ml-1.5 text-muted-foreground">
+                        <span className="ms-1.5 text-muted-foreground">
                           {count}
                         </span>
                       </Button>
@@ -488,7 +488,7 @@ export function PostgresConnectionDetails({
               >
                 <RefreshCw
                   className={cn(
-                    'mr-1.5 h-3.5 w-3.5',
+                    'me-1.5 h-3.5 w-3.5',
                     isFetching && 'animate-spin',
                   )}
                 />
@@ -593,7 +593,7 @@ export function PostgresConnectionDetails({
                               }
                             }}
                           >
-                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 pl-6 sm:pl-8">
+                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
                             <span className="font-mono text-[13px] text-foreground">
                               {connection.pid}
                             </span>
@@ -720,7 +720,7 @@ export function PostgresConnectionDetails({
                             )}
                           </TableCell>
                           <TableCell
-                            className="px-4 py-3 text-right"
+                            className="px-4 py-3 text-end"
                             onClick={(event) => event.stopPropagation()}
                           >
                             <div className="flex justify-end">
@@ -884,12 +884,12 @@ export function PostgresConnectionDetails({
             >
               {pendingAction?.type === 'cancel' ? (
                 <>
-                  <StopCircle className="mr-1.5 h-3.5 w-3.5" />
+                  <StopCircle className="me-1.5 h-3.5 w-3.5" />
                   Cancel query
                 </>
               ) : (
                 <>
-                  <Unplug className="mr-1.5 h-3.5 w-3.5" />
+                  <Unplug className="me-1.5 h-3.5 w-3.5" />
                   Terminate
                 </>
               )}

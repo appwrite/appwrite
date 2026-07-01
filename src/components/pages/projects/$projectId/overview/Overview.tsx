@@ -224,7 +224,7 @@ export function View({ projectId, initialData }: ViewProps) {
   )
   const overviewMainChartColumnClass = cn(
     overviewChartColumnClass,
-    !showUsageBreakdownPanels && '@[700px]:border-r-0',
+    !showUsageBreakdownPanels && '@[700px]:border-e-0',
   )
   const overviewChartRowClassName = useMemo(
     () => overviewChartContentRowClassName(showUsageBreakdownPanels),
@@ -901,7 +901,7 @@ export function View({ projectId, initialData }: ViewProps) {
                             aria-selected={isActive}
                             onClick={() => handleOverviewTabChange(tab.id)}
                             className={cn(
-                              'relative flex min-w-[168px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
+                              'relative flex min-w-[168px] flex-col gap-0.5 px-4 py-3 text-start cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:ps-0 rounded-sm',
                               'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                               isActive
                                 ? 'text-foreground'
@@ -928,7 +928,7 @@ export function View({ projectId, initialData }: ViewProps) {
 
                             {/* Active indicator */}
                             {isActive && (
-                              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                              <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
                             )}
                           </button>
                         </div>
@@ -1276,7 +1276,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     className={cn(
                       RESOURCE_CARD_PADDED_CLASSNAME,
                       RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                      'flex items-center gap-4 text-left',
+                      'flex items-center gap-4 text-start',
                       RESOURCE_CARD_SHELL_CLASSNAME,
                     )}
                   >
@@ -1340,7 +1340,7 @@ export function View({ projectId, initialData }: ViewProps) {
                         <Skeleton className="h-5 w-32 rounded" />
                         <Skeleton className="h-3.5 w-3.5 rounded" />
                         <Skeleton className="h-3.5 w-3.5 rounded" />
-                        <Skeleton className="ml-auto h-3 w-24" />
+                        <Skeleton className="ms-auto h-3 w-24" />
                       </div>
                     </div>
                     <Skeleton className="h-6 w-6 shrink-0 rounded" />
@@ -1427,7 +1427,7 @@ export function View({ projectId, initialData }: ViewProps) {
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete API key</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete "{selectedKey?.name}"? This action

@@ -584,7 +584,7 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
           <Button
             variant="outline"
             size="sm"
-            className="absolute bottom-4 right-4 z-10 h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+            className="absolute bottom-4 end-4 z-10 h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
             onClick={() => setShowMinimap(true)}
           >
             <MapIcon className="h-4 w-4" />
@@ -737,12 +737,12 @@ function RelationNodeCard({
                 {label}
               </span>
               {isView ? (
-                <Badge variant="info" className="ml-auto text-[10px] shrink-0">
+                <Badge variant="info" className="ms-auto text-[10px] shrink-0">
                   View
                 </Badge>
               ) : null}
               {node.isExternal ? (
-                <Badge variant="warning" className="ml-auto text-[10px] shrink-0">
+                <Badge variant="warning" className="ms-auto text-[10px] shrink-0">
                   External
                 </Badge>
               ) : null}
@@ -824,11 +824,11 @@ function RelationNodeCard({
         {!node.isExternal ? (
           <>
             <ContextMenuItem onClick={onNavigateRows}>
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="me-2 h-4 w-4" />
               Rows
             </ContextMenuItem>
             <ContextMenuItem onClick={onNavigateColumns}>
-              <Table2 className="mr-2 h-4 w-4" />
+              <Table2 className="me-2 h-4 w-4" />
               Columns
             </ContextMenuItem>
           </>
@@ -894,8 +894,8 @@ function Minimap({
   onClose,
 }: MinimapProps) {
   return (
-    <div className="absolute bottom-4 right-4 z-10 h-44 w-64 overflow-hidden rounded-lg border border-border bg-card/95 backdrop-blur-sm select-none">
-      <div className="absolute left-0 right-0 top-0 flex h-8 items-center justify-between border-b border-border bg-muted/50 px-3">
+    <div className="absolute bottom-4 end-4 z-10 h-44 w-64 overflow-hidden rounded-lg border border-border bg-card/95 backdrop-blur-sm select-none">
+      <div className="absolute start-0 end-0 top-0 flex h-8 items-center justify-between border-b border-border bg-muted/50 px-3">
         <span className="flex items-center gap-2 text-[12px] font-medium text-foreground">
           <MapIcon className="h-4 w-4" />
           Overview

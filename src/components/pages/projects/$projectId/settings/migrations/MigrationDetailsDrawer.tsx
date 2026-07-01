@@ -438,7 +438,7 @@ export function MigrationDetailsDrawer({
                         </p>
                       </div>
                       <ul
-                        className="mt-2 list-disc list-outside pl-5 space-y-1.5 overflow-y-auto overflow-x-hidden pr-2 text-[13px] text-foreground min-h-0 flex-1 overscroll-contain"
+                        className="mt-2 list-disc list-outside ps-5 space-y-1.5 overflow-y-auto overflow-x-hidden pe-2 text-[13px] text-foreground min-h-0 flex-1 overscroll-contain"
                         onWheel={(e) => {
                           const el = e.currentTarget
                           const { scrollTop, scrollHeight, clientHeight } = el

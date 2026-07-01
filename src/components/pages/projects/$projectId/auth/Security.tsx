@@ -1254,7 +1254,7 @@ export function MockPhoneNumbersCard({
                   onClick={handleAddNumber}
                   disabled={mutation.isPending}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   Generate number
                 </Button>
               </div>
@@ -1263,7 +1263,7 @@ export function MockPhoneNumbersCard({
                 {numbers.map((number) => (
                   <div
                     key={number.id}
-                    className="relative rounded-lg border border-border bg-muted/30 p-3 pr-11"
+                    className="relative rounded-lg border border-border bg-muted/30 p-3 pe-11"
                   >
                     <div className="min-w-0 space-y-3">
                       <div className="space-y-2">
@@ -1371,7 +1371,7 @@ export function MockPhoneNumbersCard({
                       variant="ghost"
                       onClick={() => handleDeleteNumber(number.id)}
                       disabled={mutation.isPending}
-                      className="absolute right-1 top-1 h-8 w-8 shrink-0 p-0"
+                      className="absolute end-1 top-1 h-8 w-8 shrink-0 p-0"
                       aria-label="Remove mock phone number"
                     >
                       <X className="h-4 w-4" />
@@ -1386,7 +1386,7 @@ export function MockPhoneNumbersCard({
                     disabled={mutation.isPending}
                     className="w-full"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 me-2" />
                     Add number
                   </Button>
                 )}

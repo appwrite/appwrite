@@ -168,7 +168,7 @@ export function MessagingTargetsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[80dvh] flex flex-col">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {description}
@@ -226,7 +226,7 @@ export function MessagingTargetsModal({
                         }}
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-left min-w-0">
+                      <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-start min-w-0">
                         {isOpen ? (
                           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                         ) : (
@@ -246,7 +246,7 @@ export function MessagingTargetsModal({
                         {targets.map((target) => (
                           <div
                             key={target.$id}
-                            className="flex items-start gap-2 pl-6"
+                            className="flex items-start gap-2 ps-6"
                           >
                             <Checkbox
                               checked={!!selectedById[target.$id]}

@@ -79,7 +79,7 @@ export function View() {
           </p>
         </div>
         <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <Plus className="me-1.5 h-3.5 w-3.5" />
           Add app
         </Button>
       </div>
@@ -99,7 +99,7 @@ export function View() {
       ) : (
         <div className="relative">
           {isFetching && (
-            <div className="absolute right-0 top-0 z-10">
+            <div className="absolute end-0 top-0 z-10">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           )}

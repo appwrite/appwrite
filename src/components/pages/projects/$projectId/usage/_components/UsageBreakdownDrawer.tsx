@@ -248,7 +248,7 @@ export function UsageBreakdownDrawer({
               className="h-8 cursor-pointer text-[12px]"
               disabled={!canExport}
             >
-              <Download className="mr-1.5 h-3.5 w-3.5" />
+              <Download className="me-1.5 h-3.5 w-3.5" />
               Export
             </Button>
           </DropdownMenuTrigger>
@@ -257,14 +257,14 @@ export function UsageBreakdownDrawer({
               className="cursor-pointer"
               onClick={handleExportJson}
             >
-              <FileJson className="mr-2 h-4 w-4" />
+              <FileJson className="me-2 h-4 w-4" />
               Export as JSON
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={handleExportCsv}
             >
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="me-2 h-4 w-4" />
               Export as CSV
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -321,7 +321,7 @@ export function UsageBreakdownDrawer({
               Showing up to {USAGE_BREAKDOWN_DRAWER_LIMIT} items
               {isFetching ? (
                 <Loader2
-                  className="ml-1 inline h-3 w-3 animate-spin align-middle"
+                  className="ms-1 inline h-3 w-3 animate-spin align-middle"
                   aria-hidden
                 />
               ) : null}

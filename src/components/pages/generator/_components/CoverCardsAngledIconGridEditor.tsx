@@ -177,7 +177,7 @@ export function CoverCardsAngledIconGridEditor({
         onOpenChange={handleDialogOpenChange}
       >
         <DialogContent className="flex max-h-[min(85dvh,640px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>
               {editingIndex != null ? `Icon ${editingIndex + 1}` : 'Icon'}
             </DialogTitle>

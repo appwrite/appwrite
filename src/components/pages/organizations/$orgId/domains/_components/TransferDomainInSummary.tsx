@@ -108,7 +108,7 @@ export function TransferDomainInSummary({
                   </div>
                   <p className="shrink-0 tabular-nums font-semibold text-foreground">
                     ${formatUsd(quote.renewalPrice!)}
-                    <span className="ml-1 text-[12px] font-normal text-muted-foreground">
+                    <span className="ms-1 text-[12px] font-normal text-muted-foreground">
                       {renewalPeriodSuffix(renewalYears)}
                     </span>
                   </p>

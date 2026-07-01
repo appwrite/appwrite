@@ -131,13 +131,13 @@ export function View({
                   Search integrations
                 </label>
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="integration-search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search integrations"
-                    className="h-10 pl-9 text-[13px]"
+                    className="h-10 ps-9 text-[13px]"
                   />
                 </div>
               </div>

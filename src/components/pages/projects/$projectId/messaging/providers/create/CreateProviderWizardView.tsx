@@ -605,7 +605,7 @@ function ProviderCard({
       type="button"
       onClick={() => onPick(provider)}
       className={cn(
-        'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-left transition-all',
+        'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-start transition-all',
         'hover:border-border/80 hover:bg-card/60',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
       )}
@@ -764,5 +764,5 @@ function FieldRenderer({
 }
 
 function RequiredMark() {
-  return <span className="ml-0.5 text-destructive">*</span>
+  return <span className="ms-0.5 text-destructive">*</span>
 }

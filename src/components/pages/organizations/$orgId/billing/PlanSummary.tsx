@@ -536,7 +536,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </p>
             )}
           </div>
-          <div className="text-right shrink-0 flex items-end">
+          <div className="text-end shrink-0 flex items-end">
             <p className="text-[11px] text-muted-foreground italic">
               Estimate, subject to change based on usage
             </p>
@@ -679,7 +679,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="ml-5 mt-1 border-l border-border pl-3 pr-6 pb-2">
+                        <div className="ms-5 mt-1 border-s border-border ps-3 pe-6 pb-2">
                           <div className="divide-y divide-border">
                             {project.categories.map((category) => (
                               <BillingProjectResourceCategorySection
@@ -884,10 +884,10 @@ function BillingDedicatedDbSpecGroup({
       </div>
       <div className="px-3 py-1.5 border-b border-border/50">
         <div className="flex items-center justify-end gap-4">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[88px] text-right">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[88px] text-end">
             Usage
           </span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[70px] text-right">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[70px] text-end">
             Cost
           </span>
         </div>
@@ -926,7 +926,7 @@ function BillingDedicatedDbMetricRow({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-[11px] text-muted-foreground tabular-nums min-w-[88px] text-right underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+                <span className="text-[11px] text-muted-foreground tabular-nums min-w-[88px] text-end underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
                   {usageLabel}
                 </span>
               </TooltipTrigger>
@@ -936,11 +936,11 @@ function BillingDedicatedDbMetricRow({
             </Tooltip>
           </TooltipProvider>
         ) : (
-          <span className="text-[11px] text-muted-foreground tabular-nums min-w-[88px] text-right">
+          <span className="text-[11px] text-muted-foreground tabular-nums min-w-[88px] text-end">
             {usageLabel}
           </span>
         )}
-        <span className="text-[11px] font-medium text-foreground tabular-nums min-w-[70px] text-right">
+        <span className="text-[11px] font-medium text-foreground tabular-nums min-w-[70px] text-end">
           {formatCurrency(item.cost)}
         </span>
       </div>
@@ -1030,7 +1030,7 @@ function BillingProjectResourceRow({
           {usageContent}
         </span>
 
-        <span className="text-[12px] font-medium text-foreground shrink-0 text-right min-w-[70px]">
+        <span className="text-[12px] font-medium text-foreground shrink-0 text-end min-w-[70px]">
           {formatCurrency(resource.cost)}
         </span>
       </div>

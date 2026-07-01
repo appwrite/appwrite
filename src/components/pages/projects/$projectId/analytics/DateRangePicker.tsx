@@ -133,13 +133,13 @@ export function DateRangePicker({
           variant="outline"
           size="sm"
           className={cn(
-            'h-8 gap-1.5 text-[12px] font-medium justify-start text-left min-w-[180px]',
+            'h-8 gap-1.5 text-[12px] font-medium justify-start text-start min-w-[180px]',
             !dateRange && 'text-muted-foreground',
             className,
           )}
         >
           <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1 truncate text-left">
+          <span className="flex-1 truncate text-start">
             {triggerLabel}
           </span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0" />
@@ -155,7 +155,7 @@ export function DateRangePicker({
           <div
             className={cn(
               'flex flex-col border-b border-border bg-muted/25',
-              'min-[820px]:w-[220px] min-[820px]:shrink-0 min-[820px]:border-b-0 min-[820px]:border-r',
+              'min-[820px]:w-[220px] min-[820px]:shrink-0 min-[820px]:border-b-0 min-[820px]:border-e',
             )}
           >
             <div className="shrink-0 border-b border-border/80 px-3 py-2.5">
@@ -187,7 +187,7 @@ export function DateRangePicker({
                           type="button"
                           onClick={() => handlePresetSelect(preset)}
                           className={cn(
-                            'cursor-pointer rounded-md px-2 py-2 text-left text-[12px] font-medium transition-colors',
+                            'cursor-pointer rounded-md px-2 py-2 text-start text-[12px] font-medium transition-colors',
                             'outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                             'min-[820px]:px-2.5 min-[820px]:py-1.5',
                             isSelected

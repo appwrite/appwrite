@@ -96,7 +96,7 @@ function OnboardingProductBreakdown({
         const rowInner = (
           <div
             className={cn(
-              'space-y-1.5 w-full text-left',
+              'space-y-1.5 w-full text-start',
               locked && 'opacity-[0.65]',
             )}
           >
@@ -278,7 +278,7 @@ function OnboardingProgressPanel({
       {/* Narrow / single column: headline + ring side by side (saves vertical space) */}
       <div className="px-4 py-4 sm:px-5 sm:py-5 lg:hidden">
         <div className="flex flex-row items-start gap-3 sm:gap-5">
-          <div className="min-w-0 flex-1 text-left">{headlineBlock}</div>
+          <div className="min-w-0 flex-1 text-start">{headlineBlock}</div>
           <div
             className={cn(
               'flex shrink-0 justify-end pt-0.5',
@@ -316,7 +316,7 @@ function OnboardingProgressPanel({
 
       {/* lg+ sidebar: original stacked card - copy, separator, centered ring */}
       <div className="hidden lg:block">
-        <div className="px-4 py-4 text-left sm:px-5 sm:py-5">{headlineBlock}</div>
+        <div className="px-4 py-4 text-start sm:px-5 sm:py-5">{headlineBlock}</div>
         <div className="border-t border-border" />
         <div className="flex flex-col items-center px-4 pb-6 pt-5 sm:px-5 sm:pb-7 sm:pt-6">
           {progressRing('stacked')}
@@ -495,7 +495,7 @@ function SubStepRow({
           )}
         </div>
       </div>
-      <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto sm:self-center sm:pl-0">
+      <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto sm:self-center sm:ps-0">
         {!fulfilled && onSkip ? (
           <Button
             type="button"
@@ -636,7 +636,7 @@ export function View({ initialData }: ViewProps = {}) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-auto min-h-0 shrink-0 py-1 -mr-1 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                    className="h-auto min-h-0 shrink-0 py-1 -me-1 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
                     onClick={() => {
                       setAccordionOpenByCategory((prev) => ({
                         ...prev,

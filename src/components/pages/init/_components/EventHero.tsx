@@ -110,7 +110,7 @@ function CollapsedHeroBar({
               className={cn(
                 'pointer-events-none absolute inset-0 flex items-center justify-center px-4',
                 liveBanner
-                  ? 'pr-[5.75rem] sm:px-28 sm:pr-36 md:px-36'
+                  ? 'pe-[5.75rem] sm:px-28 sm:pe-36 md:px-36'
                   : 'sm:px-28 md:px-36',
               )}
             >
@@ -123,7 +123,7 @@ function CollapsedHeroBar({
               </div>
             </div>
 
-            <div className="relative z-10 ml-auto flex shrink-0 justify-end">
+            <div className="relative z-10 ms-auto flex shrink-0 justify-end">
               {liveBanner ? (
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <Badge variant="error" className="text-[10px] shrink-0">

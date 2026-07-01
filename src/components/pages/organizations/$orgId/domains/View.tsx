@@ -598,12 +598,12 @@ export function View() {
       <div className="mb-4 flex items-center gap-3">
         <div className="flex items-center gap-2">
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search domains..."
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+              className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
             />
           </div>
           <FiltersPopover
@@ -643,7 +643,7 @@ export function View() {
             teamId={orgId}
           />
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-2">
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -810,7 +810,7 @@ export function View() {
 
         {/* Bulk Delete Action Bar */}
         {selectedDomains.size > 0 && (
-          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
                 {selectedDomains.size} domain
@@ -842,7 +842,7 @@ export function View() {
         {/* Bulk Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>
                 Delete Domain{selectedDomains.size > 1 ? 's' : ''}
               </DialogTitle>

@@ -287,7 +287,7 @@ export function DocsPreviewContent() {
           <button
             type="button"
             onClick={() => navigatePreviewSlug('')}
-            className="min-w-0 truncate text-left text-[13px] font-semibold text-foreground transition-colors hover:text-foreground/80"
+            className="min-w-0 truncate text-start text-[13px] font-semibold text-foreground transition-colors hover:text-foreground/80"
           >
             Docs
           </button>
@@ -299,7 +299,7 @@ export function DocsPreviewContent() {
               className="h-8 px-2 text-[12px]"
               onClick={handleOpenInNewWindow}
             >
-              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              <ExternalLink className="me-1.5 h-3.5 w-3.5" />
               Open in new window
             </Button>
             <button
@@ -346,7 +346,7 @@ export function DocsPreviewContent() {
                               onClick={() =>
                                 handleBreadcrumbSelect(item.slug, item.view)
                               }
-                              className="max-w-[9rem] cursor-pointer truncate text-left @[480px]:max-w-[11rem]"
+                              className="max-w-[9rem] cursor-pointer truncate text-start @[480px]:max-w-[11rem]"
                             >
                               {item.label}
                             </button>
@@ -382,7 +382,7 @@ export function DocsPreviewContent() {
             <DocsPreviewMenu slug={slug} scrollContainerRef={contentRef} />
           ) : isLoading ? (
             <div className="flex h-full min-h-[240px] items-center justify-center text-[13px] text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
               Loading documentation...
             </div>
           ) : isError || !page ? (
@@ -397,7 +397,7 @@ export function DocsPreviewContent() {
                 className="h-9 text-[13px]"
                 onClick={handleOpenInNewWindow}
               >
-                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                <ExternalLink className="me-1.5 h-3.5 w-3.5" />
                 Open in new window
               </Button>
             </div>

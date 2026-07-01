@@ -208,7 +208,7 @@ export function PostgresTableColumnsPanel({
               <tr>
                 <th
                   className={cn(
-                    'min-w-[200px] px-3 py-2 text-left',
+                    'min-w-[200px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -218,7 +218,7 @@ export function PostgresTableColumnsPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[120px] px-3 py-2 text-left',
+                    'min-w-[120px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -228,7 +228,7 @@ export function PostgresTableColumnsPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[80px] px-3 py-2 text-left',
+                    'min-w-[80px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -238,7 +238,7 @@ export function PostgresTableColumnsPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[120px] px-3 py-2 text-left',
+                    'min-w-[120px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -248,7 +248,7 @@ export function PostgresTableColumnsPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[140px] px-3 py-2 text-left',
+                    'min-w-[140px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -258,7 +258,7 @@ export function PostgresTableColumnsPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[140px] px-3 py-2 text-left',
+                    'min-w-[140px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -268,7 +268,7 @@ export function PostgresTableColumnsPanel({
                 </th>
                 <th
                   className={cn(
-                    'min-w-[140px] px-3 py-2 text-left',
+                    'min-w-[140px] px-3 py-2 text-start',
                     POSTGRES_HEADER_CELL_BORDER_CLASS,
                   )}
                 >
@@ -487,7 +487,7 @@ export function PostgresTableColumnsPanel({
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete column</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}

@@ -194,7 +194,7 @@ export function View() {
               onClick={() => setEventDialogOpen(true)}
               disabled={events.length >= 100 || executionsPending}
             >
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Plus className="me-1.5 h-4 w-4" />
               Add event
             </Button>
             {events.length > 0 && (

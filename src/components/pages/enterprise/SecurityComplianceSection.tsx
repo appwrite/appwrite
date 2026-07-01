@@ -19,7 +19,7 @@ function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps
       <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
         <DocsRouteLink href="/docs/advanced/security">
           Security docs
-          <ArrowRight className="ml-1.5 size-3.5" aria-hidden />
+          <ArrowRight className="ms-1.5 size-3.5" aria-hidden />
         </DocsRouteLink>
       </Button>
       {onContactSales ? (
@@ -76,7 +76,7 @@ export function SecurityComplianceSection({ onContactSales }: SecurityCompliance
             <div
               key={control.title}
               className={cn(
-                index > 0 && 'border-t border-border sm:border-t-0 sm:border-l sm:border-border',
+                index > 0 && 'border-t border-border sm:border-t-0 sm:border-s sm:border-border',
               )}
             >
               <div className="border-b border-border bg-muted/15 px-4 py-3">

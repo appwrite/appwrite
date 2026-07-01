@@ -71,7 +71,7 @@ export function SitesBuildPerformanceVisual() {
       contentClassName="p-0"
     >
       <div className="grid min-h-[18rem] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-r">
+        <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-e">
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
             <h3 className="text-[13px] font-semibold text-foreground">Build logs</h3>
             <span className="shrink-0 text-[11px] text-muted-foreground">
@@ -82,12 +82,12 @@ export function SitesBuildPerformanceVisual() {
           <div className="border-b border-border px-3 py-2.5">
             <div className="flex items-center gap-2">
               <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search logs..."
                   value={logsSearch}
                   onChange={(event) => setLogsSearch(event.target.value)}
-                  className="h-8 pl-8 text-[12px]"
+                  className="h-8 ps-8 text-[12px]"
                 />
               </div>
               <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
@@ -105,7 +105,7 @@ export function SitesBuildPerformanceVisual() {
               searchTerm={logsSearch}
               highlightLineOnHover
               fontSizeClass="text-[10px] sm:text-[11px]"
-              lineHorizontalPaddingClass="pl-3 pr-3"
+              lineHorizontalPaddingClass="ps-3 pe-3"
               trailingPadding={false}
             />
           </div>

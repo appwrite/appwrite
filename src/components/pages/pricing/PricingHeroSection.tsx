@@ -115,7 +115,7 @@ export function StackConsolidationSection() {
               }}
             >
               See what&apos;s included
-              <ArrowRight className="ml-1.5 size-4" />
+              <ArrowRight className="ms-1.5 size-4" />
             </a>
           </Button>
           <p className="text-[12px] text-muted-foreground">

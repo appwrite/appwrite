@@ -278,7 +278,7 @@ export function PostgresRowEditDrawer({
                         <span>{column.column_name}</span>
                         {required ? (
                           <span
-                            className="ml-0.5 text-[12px] font-semibold text-destructive"
+                            className="ms-0.5 text-[12px] font-semibold text-destructive"
                             aria-label="Required field"
                           >
                             *
@@ -365,7 +365,7 @@ export function PostgresRowEditDrawer({
                             className={cn(
                               'min-h-[36px] max-h-[600px] resize-none text-[13px] font-mono',
                               isNull && 'cursor-not-allowed opacity-50',
-                              showNullToggle ? 'pb-8 pr-28' : 'pb-2',
+                              showNullToggle ? 'pb-8 pe-28' : 'pb-2',
                             )}
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -377,7 +377,7 @@ export function PostgresRowEditDrawer({
                               onCheckedChange={(checked) =>
                                 handleNullToggle(column.column_name, checked)
                               }
-                              className="bottom-2 right-2"
+                              className="bottom-2 end-2"
                             />
                           ) : null}
                         </div>
@@ -398,7 +398,7 @@ export function PostgresRowEditDrawer({
                             className={cn(
                               'h-9 text-[13px]',
                               isNull && 'cursor-not-allowed opacity-50',
-                              showNullToggle && 'pr-28',
+                              showNullToggle && 'pe-28',
                             )}
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -410,7 +410,7 @@ export function PostgresRowEditDrawer({
                               onCheckedChange={(checked) =>
                                 handleNullToggle(column.column_name, checked)
                               }
-                              className="top-1/2 right-2 -translate-y-1/2"
+                              className="top-1/2 end-2 -translate-y-1/2"
                             />
                           ) : null}
                         </div>

@@ -73,7 +73,7 @@ function SavedQueryButton({
       <button
         type="button"
         onClick={onSelect}
-        className="flex min-w-0 flex-1 cursor-pointer flex-col px-3 py-2 text-left"
+        className="flex min-w-0 flex-1 cursor-pointer flex-col px-3 py-2 text-start"
         title={query.sql}
       >
         <span className="truncate text-[13px] font-medium text-foreground">
@@ -91,7 +91,7 @@ function SavedQueryButton({
             void onDelete()
           }}
           disabled={isDeleting}
-          className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 disabled:opacity-50"
+          className="me-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 disabled:opacity-50"
           aria-label={`Delete ${query.name}`}
         >
           {isDeleting ? (
@@ -232,13 +232,13 @@ export function PostgresQueriesSidebarPanel({
       <div className="shrink-0 pb-2">
         <div className="flex min-w-0 items-center gap-2">
           <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
               value={querySearch}
               onChange={(event) => setQuerySearch(event.target.value)}
               placeholder="Search queries"
-              className="h-8 pl-8 pr-8 text-[13px]"
+              className="h-8 ps-8 pe-8 text-[13px]"
               aria-label="Search queries"
             />
             {querySearch ? (
@@ -246,7 +246,7 @@ export function PostgresQueriesSidebarPanel({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
                 aria-label="Clear query search"
                 onClick={() => setQuerySearch('')}
               >

@@ -47,7 +47,7 @@ export function StorageEncryptionVisual() {
           <div className="flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-2">
             <Lock className="size-3.5 text-muted-foreground" aria-hidden />
             <span className="text-[11px] font-medium text-foreground">documents</span>
-            <Badge variant="success" className="ml-auto text-[10px]">
+            <Badge variant="success" className="ms-auto text-[10px]">
               Encrypted
             </Badge>
           </div>

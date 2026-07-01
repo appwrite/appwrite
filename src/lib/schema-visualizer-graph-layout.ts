@@ -473,8 +473,8 @@ function layoutComponent(
 }
 
 /**
- * Hierarchical left-to-right layout for schema visualizer graphs.
- * Referenced tables (FK targets) sit left; dependent tables sit right.
+ * Hierarchical start-to-end layout for schema visualizer graphs.
+ * Referenced tables (FK targets) sit at inline-start; dependent tables sit at inline-end.
  */
 export function layoutSchemaVisualizerNodesWithMetadata(
   nodes: SchemaVisualizerLayoutNode[],

@@ -51,7 +51,7 @@ export function View() {
           <MarketingFeatureGrid
             items={startupsTopBenefits}
             columns={4}
-            className="mt-16 text-left sm:mt-20"
+            className="mt-16 text-start sm:mt-20"
           />
         }
       >
@@ -102,7 +102,7 @@ export function View() {
                     'p-5',
                     index < startupsEligibility.exclusions.items.length - 1 &&
                       'border-b border-border sm:border-b-0',
-                    index % 2 === 0 && 'sm:border-r sm:border-border',
+                    index % 2 === 0 && 'sm:border-e sm:border-border',
                     index < 2 && 'sm:border-b sm:border-border',
                   )}
                 >
@@ -155,7 +155,7 @@ export function View() {
             {startupsApplySteps.map((step, index) => (
               <article
                 key={step.title}
-                className="flex h-full flex-col border-b border-border p-6 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
+                className="flex h-full flex-col border-b border-border p-6 last:border-b-0 lg:border-b-0 lg:border-e lg:last:border-e-0"
               >
                 <Badge variant="info" className="w-fit shrink-0 text-[10px]">
                   Step {index + 1}

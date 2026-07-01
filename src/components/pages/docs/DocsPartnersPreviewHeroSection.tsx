@@ -13,7 +13,7 @@ import { DocsRouteLink } from './DocsRouteLink'
 export function DocsPartnersPreviewHeroSection() {
   return (
     <section className={cn('border-b border-border', docsPreviewSectionPaddingY)}>
-      <div className={cn('mx-auto w-full max-w-6xl text-left', docsContentPaddingX)}>
+      <div className={cn('mx-auto w-full max-w-6xl text-start', docsContentPaddingX)}>
         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Partner documentation
         </p>

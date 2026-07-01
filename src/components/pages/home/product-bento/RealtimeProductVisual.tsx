@@ -21,7 +21,7 @@ function PeerCursor({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute z-10 flex origin-top-left items-center gap-1 opacity-0 transition-all duration-700 ease-out',
+        'pointer-events-none absolute z-10 flex origin-top-start items-center gap-1 opacity-0 transition-all duration-700 ease-out',
         className,
       )}
     >
@@ -106,12 +106,12 @@ export function RealtimeProductVisual() {
               <PeerCursor
                 name="Happy Quinn"
                 color={PEERS[0].color}
-                className="left-[4%] top-[14%] translate-x-0 translate-y-0 group-hover:translate-x-14 group-hover:translate-y-2 group-hover:opacity-100 motion-reduce:translate-x-14 motion-reduce:translate-y-2 motion-reduce:opacity-100"
+                className="start-[4%] top-[14%] translate-x-0 translate-y-0 group-hover:translate-x-14 group-hover:translate-y-2 group-hover:opacity-100 motion-reduce:translate-x-14 motion-reduce:translate-y-2 motion-reduce:opacity-100"
               />
               <PeerCursor
                 name="Paige Dineen"
                 color={PEERS[1].color}
-                className="left-[4%] top-[50%] translate-x-0 translate-y-0 delay-150 group-hover:translate-x-12 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
+                className="start-[4%] top-[50%] translate-x-0 translate-y-0 delay-150 group-hover:translate-x-12 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
               />
 
               <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">

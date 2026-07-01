@@ -95,7 +95,7 @@ export function SelectPaymentMethod({
                 className="h-8 text-[13px]"
                 onClick={onAddPaymentMethod}
               >
-                <Plus className="mr-1.5 h-4 w-4" />
+                <Plus className="me-1.5 h-4 w-4" />
                 Add payment method
               </Button>
               {showApplyCoupon && onAddCredits ? (
@@ -105,7 +105,7 @@ export function SelectPaymentMethod({
                   className="h-8 text-[13px]"
                   onClick={onAddCredits}
                 >
-                  <Ticket className="mr-1.5 h-4 w-4" />
+                  <Ticket className="me-1.5 h-4 w-4" />
                   Apply coupon
                 </Button>
               ) : null}

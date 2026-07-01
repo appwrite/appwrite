@@ -200,7 +200,7 @@ export function OAuth2ConsentCard({
                 approveMutation.mutate()
               }}
             >
-              <Check className="mr-1.5 size-4" />
+              <Check className="me-1.5 size-4" />
               {approveMutation.isPending ? 'Authorizing…' : 'Authorize'}
             </Button>
             <Button

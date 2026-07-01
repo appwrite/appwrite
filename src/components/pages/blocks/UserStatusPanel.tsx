@@ -86,7 +86,7 @@ export function UserStatusPanel() {
                 >
                   {i === 'block' ? 'Block' : 'Unblock'}
                   {active && (
-                    <span className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-foreground" />
+                    <span className="absolute bottom-[-1px] start-0 end-0 h-[2px] bg-foreground" />
                   )}
                 </button>
               )

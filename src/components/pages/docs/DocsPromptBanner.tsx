@@ -124,9 +124,9 @@ export function DocsPromptBanner({
             {aiChatIDEs.map((ide) => (
               <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>
                 <img src={ide.iconPath} alt="" className="size-4" />
-                <span className="ml-2">Prompt {ide.name}</span>
+                <span className="ms-2">Prompt {ide.name}</span>
                 <ExternalLink
-                  className="ml-auto size-2.5 shrink-0 text-muted-foreground/30"
+                  className="ms-auto size-2.5 shrink-0 text-muted-foreground/30"
                   strokeWidth={1.25}
                 />
               </DropdownMenuItem>
@@ -137,7 +137,7 @@ export function DocsPromptBanner({
 
       {showPromptPreview ? (
         <Collapsible defaultOpen={false}>
-          <CollapsibleTrigger className="group flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-6 py-3 text-left transition-colors hover:bg-muted/30 data-[state=open]:bg-muted/20">
+          <CollapsibleTrigger className="group flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-6 py-3 text-start transition-colors hover:bg-muted/30 data-[state=open]:bg-muted/20">
             <span className="text-[13px] font-medium text-foreground">View prompt</span>
             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>

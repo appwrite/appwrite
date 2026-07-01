@@ -23,16 +23,16 @@ import { SpreadsheetCellValueDialog } from '@/components/global/shared/Spreadshe
 /** Matches database product spreadsheet table chrome (see tablesdb/Spreadsheet.tsx). */
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
-  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
-const bodyCellBorderClass = 'border-b border-r border-border'
+  'border-e border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+const bodyCellBorderClass = 'border-b border-e border-border'
 const rowNumberColumnWidthPx = 48
 const resizableColumnDefaultWidthPx = 150
 const resizableColumnMinWidthPx = 72
 const resizableColumnMaxWidthPx = 640
 const dataColumnResizeRailHandleClass = cn(
   'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:start-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
   'hover:before:opacity-100',
 )
 
@@ -322,7 +322,7 @@ export function ReadOnlyDataSpreadsheet({
           >
             <table
               className={cn(
-                'w-full border-collapse text-left',
+                'w-full border-collapse text-start',
                 enableColumnResize ? 'table-fixed' : 'min-w-max',
               )}
               style={enableColumnResize ? { minWidth: tableMinWidthPx } : undefined}
@@ -366,7 +366,7 @@ export function ReadOnlyDataSpreadsheet({
                   {showRowNumbers ? (
                     <th
                       className={cn(
-                        'w-12 px-3 py-3 text-right text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
+                        'w-12 px-3 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
                         headerCellBorderClass,
                       )}
                       style={{
@@ -392,8 +392,8 @@ export function ReadOnlyDataSpreadsheet({
                         }}
                         className={cn(
                           isStudio
-                            ? 'px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
-                            : 'px-3 py-2 text-left text-[12px] font-medium text-foreground',
+                            ? 'px-4 py-3 text-start text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
+                            : 'px-3 py-2 text-start text-[12px] font-medium text-foreground',
                           headerCellBorderClass,
                         )}
                         style={
@@ -430,7 +430,7 @@ export function ReadOnlyDataSpreadsheet({
                             bodyCellBorderClass,
                           )}
                         >
-                          <span className="block text-right text-[11px] tabular-nums text-muted-foreground">
+                          <span className="block text-end text-[11px] tabular-nums text-muted-foreground">
                             {rowNumberOffset + rowIndex + 1}
                           </span>
                         </td>

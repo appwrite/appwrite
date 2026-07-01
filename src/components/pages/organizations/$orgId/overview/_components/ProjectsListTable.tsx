@@ -144,7 +144,7 @@ export function ProjectsListTable({
               Platforms
             </TableHead>
             <TableHead
-              className={`${getActionsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-right`}
+              className={`${getActionsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-end`}
             />
           </TableRow>
         </TableHeader>
@@ -235,7 +235,7 @@ export function ProjectsListTable({
                     </div>
                   </TableCell>
                   <TableCell
-                    className={cn(listTableCellClassName, 'text-right')}
+                    className={cn(listTableCellClassName, 'text-end')}
                     onClick={(event) => event.stopPropagation()}
                   >
                     <div className="flex h-full items-center justify-end gap-1">

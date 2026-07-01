@@ -170,7 +170,7 @@ type TemplatesSearch = {
 }
 
 const filterSectionTitle =
-  'text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'
+  'text-start text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'
 
 function UseCaseFilterTrigger({
   selectedUseCases,
@@ -788,14 +788,14 @@ function TemplateCatalogFilters({
           Search templates by name
         </label>
         <div className="relative w-full">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="template-catalog-search"
             type="search"
             placeholder="Search by name…"
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
-            className="h-9 w-full border-border bg-background pl-9 pr-3 text-[13px] placeholder:text-muted-foreground"
+            className="h-9 w-full border-border bg-background ps-9 pe-3 text-[13px] placeholder:text-muted-foreground"
             autoComplete="off"
           />
         </div>
@@ -1465,7 +1465,7 @@ function TemplateCard({
   const cardClassName = cn(
     RESOURCE_CARD_PADDED_CLASSNAME,
     RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-    'flex w-full min-h-[160px] min-w-0 flex-col text-left',
+    'flex w-full min-h-[160px] min-w-0 flex-col text-start',
     RESOURCE_CARD_SHELL_CLASSNAME,
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
   )

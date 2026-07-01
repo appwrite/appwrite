@@ -62,7 +62,7 @@ export function StatsCard({
           </div>
         </div>
         {icon && (
-          <div className="ml-2 shrink-0 rounded-md bg-muted p-1.5 text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground sm:p-2">
+          <div className="ms-2 shrink-0 rounded-md bg-muted p-1.5 text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground sm:p-2">
             {icon}
           </div>
         )}

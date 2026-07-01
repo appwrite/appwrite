@@ -839,7 +839,7 @@ export function View() {
                                   />
                                   {/* Framework Icon - Bottom Left */}
                                   {site && (
-                                    <div className="absolute bottom-2 left-2">
+                                    <div className="absolute bottom-2 start-2">
                                       <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                                         <FrameworkIcon
                                           framework={
@@ -854,7 +854,7 @@ export function View() {
                                     </div>
                                   )}
                                   {/* Theme Toggle Overlay */}
-                                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
                                       <button
                                         onClick={() => {
@@ -900,7 +900,7 @@ export function View() {
                                   Preview not available
                                 </p>
                                 {site && (
-                                  <div className="absolute bottom-2 left-2">
+                                  <div className="absolute bottom-2 start-2">
                                     <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                                       <FrameworkIcon
                                         framework={
@@ -1155,7 +1155,7 @@ export function View() {
                                 {hasMoreDomains && (
                                   <Badge
                                     variant="secondary"
-                                    className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
+                                    className="ms-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
                                   >
                                     +{totalActiveDomains - activeDomains.length}
                                   </Badge>
@@ -1192,9 +1192,9 @@ export function View() {
                           size="sm"
                           className="h-9 text-[13px]"
                         >
-                          <Download className="mr-1.5 h-4 w-4" />
+                          <Download className="me-1.5 h-4 w-4" />
                           Download
-                          <ChevronDown className="ml-auto sm:ml-1.5 h-3.5 w-3.5" />
+                          <ChevronDown className="ms-auto sm:ms-1.5 h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="z-[200]">
@@ -1227,7 +1227,7 @@ export function View() {
                       disabled={redeployMutation.isPending}
                       className="h-9 text-[13px]"
                     >
-                      <RefreshCw className="mr-1.5 h-4 w-4" />
+                      <RefreshCw className="me-1.5 h-4 w-4" />
                       Redeploy
                     </Button>
                     <Button
@@ -1243,7 +1243,7 @@ export function View() {
                           siteId: siteId!,
                           deploymentId: activeDeploymentResolved.$id}}
                       >
-                        <ScrollText className="mr-1.5 h-4 w-4" />
+                        <ScrollText className="me-1.5 h-4 w-4" />
                         Build logs
                       </Link>
                     </Button>
@@ -1255,7 +1255,7 @@ export function View() {
                             size="sm"
                             className="h-9 text-[13px]"
                           >
-                            <Globe className="mr-1.5 h-4 w-4" />
+                            <Globe className="me-1.5 h-4 w-4" />
                             Visit
                           </Button>
                         </PopoverTrigger>
@@ -1306,7 +1306,7 @@ export function View() {
                         className="h-9 text-[13px]"
                         disabled
                       >
-                        <Globe className="mr-1.5 h-4 w-4" />
+                        <Globe className="me-1.5 h-4 w-4" />
                         Visit
                       </Button>
                     )}
@@ -1398,7 +1398,7 @@ export function View() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                         Created
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]"></TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1711,7 +1711,7 @@ export function View() {
                             />
                           </TableCell>
                           <TableCell
-                            className="px-4 py-3 text-right"
+                            className="px-4 py-3 text-end"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <DropdownMenu>
@@ -2013,7 +2013,7 @@ export function View() {
 
       {/* Bulk Delete Action Bar */}
       {selectedDeployments.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+        <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedDeployments.size} deployment
@@ -2046,7 +2046,7 @@ export function View() {
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete Deployments</DialogTitle>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -2095,7 +2095,7 @@ export function View() {
           onOpenChange={setDeleteActiveDialogOpen}
         >
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Delete deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -2141,7 +2141,7 @@ export function View() {
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Cancel build</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Stop the current deployment? You can deploy again later.
@@ -2197,7 +2197,7 @@ export function View() {
       {activeDeploymentResolved && (
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Redeploy deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -2240,7 +2240,7 @@ export function View() {
       {activeDeploymentResolved && (
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
               <DialogTitle>Activate deployment</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />

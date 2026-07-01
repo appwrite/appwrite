@@ -108,7 +108,7 @@ export function EventEditor({
         className="sm:max-w-md p-0 z-[130]"
         overlayClassName="z-[130]"
       >
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{resolvedTitle}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {resolvedDescription}{' '}
@@ -154,7 +154,7 @@ export function EventEditor({
                       : !builder.isValid
                   }
                 >
-                  <Check className="h-4 w-4 mr-1.5" />
+                  <Check className="h-4 w-4 me-1.5" />
                   Apply
                 </Button>
               </div>

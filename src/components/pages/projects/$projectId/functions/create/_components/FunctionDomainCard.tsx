@@ -79,7 +79,7 @@ export function FunctionDomainCard({
               if (sub && region) setDomain(`${sub}.${region}.appwrite.run`)
             }}
             className={cn(
-              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              'text-start rounded-lg border p-4 transition-all cursor-pointer',
               endpointType === 'region'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
@@ -101,7 +101,7 @@ export function FunctionDomainCard({
               if (sub) setDomain(`${sub}.appwrite.network`)
             }}
             className={cn(
-              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              'text-start rounded-lg border p-4 transition-all cursor-pointer',
               endpointType === 'edge'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',

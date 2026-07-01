@@ -123,7 +123,7 @@ export function ComingSoonCurtain({
           </div>
 
           {/* Content */}
-          <div className="flex-1 text-center @[400px]:text-left space-y-0.5 @[200px]:space-y-1 @[300px]:space-y-1.5 @[400px]:space-y-2 min-w-0">
+          <div className="flex-1 text-center @[400px]:text-start space-y-0.5 @[200px]:space-y-1 @[300px]:space-y-1.5 @[400px]:space-y-2 min-w-0">
             <h4 className="text-[12px] @[200px]:text-[13px] @[250px]:text-[14px] @[300px]:text-[15px] font-semibold text-foreground leading-tight">
               Coming soon
             </h4>

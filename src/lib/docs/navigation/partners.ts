@@ -50,7 +50,7 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
       {
         label: 'Proxy',
         href: '/docs/partners/proxy',
-        icon: 'arrow-left-right',
+        icon: 'arrow-start-right',
       },
       {
         label: 'Usage',

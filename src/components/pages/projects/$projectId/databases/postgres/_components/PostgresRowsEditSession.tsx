@@ -265,7 +265,7 @@ export function PostgresRowsEditSessionProvider({
     <PostgresRowsEditSessionContext.Provider value={value}>
       {children}
       {pendingEdits.size > 0 ? (
-        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 shadow-lg">
+        <div className="fixed bottom-4 start-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 shadow-lg">
           <Badge variant="warning" className="text-[11px] shrink-0">
             {pendingEdits.size} unsaved change{pendingEdits.size === 1 ? '' : 's'}
           </Badge>

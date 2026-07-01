@@ -193,7 +193,7 @@ function CaseStudyPanelContent({
       id={panelId}
       role="tabpanel"
       aria-labelledby={tabId}
-      className="flex w-[min(100%,36rem)] min-w-[17.5rem] max-w-none flex-col gap-5 p-6 text-left lg:w-full lg:min-w-0 lg:p-10"
+      className="flex w-[min(100%,36rem)] min-w-[17.5rem] max-w-none flex-col gap-5 p-6 text-start lg:w-full lg:min-w-0 lg:p-10"
     >
       <div
         className={cn(

@@ -45,7 +45,7 @@ export const COVER_HERO_SCREENSHOT_FRAME = {
   chromeDotSize: 10,
   /** Gap between dots (`gap-1.5`). */
   chromeDotGap: 6,
-  /** Dot row inset from padded shell edge (`ml-2`). */
+  /** Dot row inset from padded shell edge (`ms-2`). */
   chromeDotMarginLeft: 8,
   /** Bottom inset when the shell is fully closed (diagram / floating frames). */
   paddingBottom: 16,

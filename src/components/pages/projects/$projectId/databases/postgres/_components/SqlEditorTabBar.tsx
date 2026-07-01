@@ -114,7 +114,7 @@ function SortableTab({
             ref={setActivatorNodeRef}
             type="button"
             onClick={() => onSelectTab(tab.id)}
-            className="flex h-full min-w-0 flex-1 cursor-grab items-center px-2.5 text-left active:cursor-grabbing"
+            className="flex h-full min-w-0 flex-1 cursor-grab items-center px-2.5 text-start active:cursor-grabbing"
             title={tab.title}
             {...attributes}
             {...listeners}
@@ -127,7 +127,7 @@ function SortableTab({
               onClick={() => onCloseTab(tab.id)}
               onPointerDown={(event) => event.stopPropagation()}
               className={cn(
-                'mr-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground',
+                'me-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground',
                 isActive
                   ? 'opacity-70 hover:opacity-100'
                   : 'opacity-0 group-hover:opacity-70 group-hover:hover:opacity-100',
@@ -284,7 +284,7 @@ export function SqlEditorTabBar({
         ref={tabListRef}
         className="flex min-w-0 flex-1 items-center overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <div className="flex min-w-max items-end gap-1.5 pr-1.5">
+        <div className="flex min-w-max items-end gap-1.5 pe-1.5">
           {sortableTabsRegion}
           {newTabButton}
         </div>

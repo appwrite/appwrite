@@ -14,7 +14,7 @@ export const DOCS_NAV_SCROLL_CLASS = 'overlay-scrollbar overscroll-y-contain'
 
 /** Section subnav links (desktop panel + mobile sheet). */
 export function docsSidebarNavLinkClassName(active: boolean) {
-  return cn('block w-full text-left', apiNavItemClassName(active))
+  return cn('block w-full text-start', apiNavItemClassName(active))
 }
 
 /** Right-rail table of contents links. */

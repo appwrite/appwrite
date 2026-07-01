@@ -468,7 +468,7 @@ export function View({
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           Type
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                           Created
                         </TableHead>
                         <TableHead className="px-4 py-3 w-[52px]" />
@@ -516,7 +516,7 @@ export function View({
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
+                            <TableCell className="px-4 py-3 text-end">
                               {subscriber.$createdAt ? (
                                 <DateTooltip
                                   date={subscriber.$createdAt}
@@ -528,7 +528,7 @@ export function View({
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
+                            <TableCell className="px-4 py-3 text-end">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <RowActionsMenuTrigger aria-label="Subscriber actions" />
@@ -614,7 +614,7 @@ export function View({
         }}
       >
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Subscriber logs</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Audit log events for subscriber{' '}

@@ -85,7 +85,7 @@ export function PostgresIndexAlgorithmSelector({
                     >
                       <Check
                         className={cn(
-                          'mr-2 mt-0.5 h-4 w-4 shrink-0',
+                          'me-2 mt-0.5 h-4 w-4 shrink-0',
                           value === entry.id ? 'opacity-100' : 'opacity-0',
                         )}
                       />

@@ -20,6 +20,7 @@ import {
   defineMonacoAppTheme,
   monacoAppThemeId,
 } from '@/lib/monaco-app-theme'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 
 export type CodeEditorLanguage =
   | 'javascript'
@@ -157,7 +158,10 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
 
     return (
       <div
+        dir="ltr"
+        data-code-example
         className={cn(
+          FORCE_LTR_CLASS,
           'overflow-hidden rounded-lg border border-border bg-background',
           className,
         )}

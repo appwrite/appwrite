@@ -221,7 +221,7 @@ export function AppLogoFilePicker({
                 asChild
               >
                 <label className="cursor-pointer">
-                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                  <Upload className="me-1.5 h-3.5 w-3.5" />
                   Upload PNG
                   <input
                     ref={uploadInputRef}
@@ -243,7 +243,7 @@ export function AppLogoFilePicker({
                   disabled={disabled}
                   onClick={() => onChange('')}
                 >
-                  <X className="mr-1.5 h-3.5 w-3.5" />
+                  <X className="me-1.5 h-3.5 w-3.5" />
                   Remove
                 </Button>
               ) : null}
@@ -254,7 +254,7 @@ export function AppLogoFilePicker({
 
       <Dialog open={explorerOpen} onOpenChange={handleExplorerOpenChange}>
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-2xl">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Select app logo</DialogTitle>
             <DialogDescription className="mt-2 text-[13px]">
               Choose a PNG from the Apps bucket or upload a new one.
@@ -281,7 +281,7 @@ export function AppLogoFilePicker({
                 asChild
               >
                 <label className="cursor-pointer">
-                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                  <Upload className="me-1.5 h-3.5 w-3.5" />
                   Upload PNG
                   <input
                     type="file"
@@ -327,7 +327,7 @@ export function AppLogoFilePicker({
                           type="button"
                           onClick={() => setSelectedFileId(file.$id)}
                           className={cn(
-                            'flex w-full items-center gap-3 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-accent',
+                            'flex w-full items-center gap-3 px-3 py-2.5 text-start text-[13px] transition-colors hover:bg-accent',
                             isSelected && 'bg-accent',
                           )}
                         >

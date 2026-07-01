@@ -1,7 +1,7 @@
 'use client'
 
 import { Link } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { formatDate } from '@/lib/date-utils'
 import type { BlogAuthor } from '@/lib/blog/types'
 import {
@@ -9,8 +9,8 @@ import {
   BLOG_PAGE_TITLE_CLASS,
   BLOG_STICKY_TITLE_CLASS,
 } from '@/lib/blog/prose-typography'
-import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
-import { cn, findScrollParent } from '@/lib/utils'
+import { ArticleStickyToolbar } from '@/components/global/shared/ArticleStickyToolbar'
+import { useArticleStickyOverlay } from '@/lib/layout/use-article-sticky-overlay'
 import { BlogPostShareActions } from './_components/BlogPostShareActions'
 import { BlogAvatar } from './BlogCoverPlaceholder'
 
@@ -24,14 +24,6 @@ type BlogArticleHeaderProps = {
   lastUpdated: string
 }
 
-type StickyBounds = {
-  top: number
-  shellLeft: number
-  shellWidth: number
-  contentInsetLeft: number
-  contentWidth: number
-}
-
 const BLOG_TITLE_SUFFIX = <span className="text-[var(--brand-cta)]">_</span>
 
 export function BlogArticleHeader({
@@ -43,123 +35,29 @@ export function BlogArticleHeader({
   timeToRead,
   lastUpdated,
 }: BlogArticleHeaderProps) {
+  const contentAnchorRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const [showStickyHeader, setShowStickyHeader] = useState(false)
-  const [stickyBounds, setStickyBounds] = useState<StickyBounds | null>(null)
-
-  useEffect(() => {
-    setShowStickyHeader(false)
-    setStickyBounds(null)
-
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-
-    const updatePinned = () => {
-      const currentSentinel = sentinelRef.current
-      if (!currentSentinel) return
-
-      const scrollRoot =
-        findScrollParent(currentSentinel) ??
-        document.getElementById('main-content')
-      const article = currentSentinel.closest('article')
-      const scrollContainer =
-        scrollRoot instanceof HTMLElement ? scrollRoot : document.getElementById('main-content')
-
-      const shellTop = scrollContainer?.getBoundingClientRect().top ?? 0
-      const sentinelTop = currentSentinel.getBoundingClientRect().top
-      const pinned = sentinelTop <= shellTop + 1
-
-      setShowStickyHeader(pinned)
-
-      if (pinned && article && scrollContainer) {
-        const shellRect = scrollContainer.getBoundingClientRect()
-        const articleRect = article.getBoundingClientRect()
-        setStickyBounds({
-          top: shellTop,
-          shellLeft: shellRect.left,
-          shellWidth: shellRect.width,
-          contentInsetLeft: articleRect.left - shellRect.left,
-          contentWidth: articleRect.width,
-        })
-      } else {
-        setStickyBounds(null)
-      }
-    }
-
-    const scrollRoot =
-      findScrollParent(sentinel) ??
-      document.getElementById('main-content')
-
-    const observer = new IntersectionObserver(
-      () => {
-        updatePinned()
-      },
-      {
-        root: scrollRoot,
-        threshold: 0,
-      },
-    )
-
-    observer.observe(sentinel)
-    scrollRoot?.addEventListener('scroll', updatePinned, { passive: true })
-    window.addEventListener('scroll', updatePinned, { passive: true })
-    window.addEventListener('resize', updatePinned)
-    updatePinned()
-
-    return () => {
-      observer.disconnect()
-      scrollRoot?.removeEventListener('scroll', updatePinned)
-      window.removeEventListener('scroll', updatePinned)
-      window.removeEventListener('resize', updatePinned)
-    }
-  }, [title])
+  const { pinned, bounds } = useArticleStickyOverlay({
+    sentinelRef,
+    contentAnchorRef,
+    resetKey: title,
+  })
 
   const shareActions = <BlogPostShareActions slug={slug} title={title} />
 
   return (
     <>
-      {showStickyHeader && stickyBounds ? (
-        <header
-          className="pointer-events-none fixed z-30 h-14"
-          style={{
-            top: stickyBounds.top,
-            left: stickyBounds.shellLeft,
-            width: stickyBounds.shellWidth,
-          }}
-          aria-label="Article toolbar"
-        >
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80"
-          />
-          <div
-            className={cn(
-              DOCS_SECTION_HEADER_CLASS,
-              'relative pointer-events-auto border-b-0 bg-transparent',
-            )}
-            style={{
-              marginLeft: stickyBounds.contentInsetLeft,
-              width: stickyBounds.contentWidth,
-              maxWidth: stickyBounds.contentWidth,
-            }}
-          >
-            <div className="flex w-full items-center justify-between gap-4">
-              <p className={BLOG_STICKY_TITLE_CLASS}>
-                {title}
-                {BLOG_TITLE_SUFFIX}
-              </p>
-              <div className="flex shrink-0 items-center justify-end">{shareActions}</div>
-            </div>
-          </div>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 border-b border-border"
-          />
-        </header>
-      ) : null}
+      <ArticleStickyToolbar
+        pinned={pinned}
+        bounds={bounds}
+        title={title}
+        titleSuffix={BLOG_TITLE_SUFFIX}
+        titleClassName={BLOG_STICKY_TITLE_CLASS}
+        actions={shareActions}
+      />
 
       <header className="border-b border-border py-4">
-        <div className="min-w-0">
+        <div ref={contentAnchorRef} className="min-w-0">
           <h1 className={BLOG_PAGE_TITLE_CLASS}>
             {title}
             {BLOG_TITLE_SUFFIX}

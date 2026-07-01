@@ -77,7 +77,7 @@ function ReactionConfettiBurst({
 
   return (
     <div
-      className="pointer-events-none fixed bottom-0 left-0 z-[120] h-0 w-0 overflow-visible"
+      className="pointer-events-none fixed bottom-0 start-0 z-[120] h-0 w-0 overflow-visible"
       aria-hidden
     >
       {particles.map((particle, index) => (

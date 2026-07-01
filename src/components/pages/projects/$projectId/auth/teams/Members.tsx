@@ -182,7 +182,7 @@ export function TeamMembers({
             </p>
           </div>
           <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
+            <Plus className="h-4 w-4 me-1.5" />
             Add member
           </Button>
         </div>
@@ -217,7 +217,7 @@ export function TeamMembers({
                 className="h-9 text-[13px]"
                 onClick={() => setCreateDialogOpen(true)}
               >
-                <Plus className="mr-1.5 h-4 w-4" />
+                <Plus className="me-1.5 h-4 w-4" />
                 Add member
               </Button>
             </div>
@@ -382,7 +382,7 @@ export function TeamMembers({
           )}
 
           {selectedMemberships.size > 0 && (
-            <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+            <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
               <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                 <Badge variant="secondary" className="h-6 px-2.5">
                   {selectedMemberships.size} member
@@ -498,7 +498,7 @@ function CreateMembershipDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Add member</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Select an existing user and assign team roles.
@@ -554,13 +554,13 @@ function CreateMembershipDialog({
                       <Badge
                         key={role}
                         variant="info"
-                        className="text-[10px] shrink-0 pr-1"
+                        className="text-[10px] shrink-0 pe-1"
                       >
                         {role}
                         <button
                           type="button"
                           onClick={() => handleRemoveRole(role)}
-                          className="ml-0.5 hover:text-foreground rounded p-0.5"
+                          className="ms-0.5 hover:text-foreground rounded p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>

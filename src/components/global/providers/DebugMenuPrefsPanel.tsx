@@ -116,20 +116,20 @@ function PrefsSearchBar({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
+        <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
         <Input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
           placeholder="Search keys or values…"
-          className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 pl-8 pr-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
+          className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
         />
         {value && (
           <button
             type="button"
             onClick={() => onChange('')}
             disabled={disabled}
-            className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground disabled:opacity-50"
+            className="absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground disabled:opacity-50"
             aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
@@ -150,7 +150,7 @@ function PrefsSearchBar({
                     type="button"
                     onClick={() => onSelectKey(key)}
                     disabled={disabled}
-                    className="flex w-full flex-col gap-0.5 px-2.5 py-2 text-left transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)] disabled:opacity-50"
+                    className="flex w-full flex-col gap-0.5 px-2.5 py-2 text-start transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)] disabled:opacity-50"
                   >
                     <code className="truncate text-[11px] text-foreground">
                       {key}
@@ -564,13 +564,13 @@ export function DebugMenuPrefsPanel() {
           <TabsTrigger value="account" className={tabTriggerClass}>
             Account prefs
             {accountLoading && (
-              <Loader2 className="ml-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
+              <Loader2 className="ms-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
             )}
           </TabsTrigger>
           <TabsTrigger value="team" className={tabTriggerClass}>
             Team prefs
             {resolvedTeamId && teamLoading && (
-              <Loader2 className="ml-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
+              <Loader2 className="ms-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
             )}
           </TabsTrigger>
         </TabsList>

@@ -368,7 +368,7 @@ export function TransformImagePresetsPopover({
             <div className="min-h-0 max-h-[min(52dvh,380px)] flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
               <TabsContent
                 value="builtin"
-                className="m-0 px-4 py-3 pr-3 pt-0 outline-none"
+                className="m-0 px-4 py-3 pe-3 pt-0 outline-none"
               >
                 <div className="space-y-1">
                   {IMAGE_TRANSFORM_PRESETS.map((preset) => (
@@ -384,7 +384,7 @@ export function TransformImagePresetsPopover({
               </TabsContent>
               <TabsContent
                 value="user"
-                className="m-0 px-4 py-3 pr-3 pt-0 outline-none"
+                className="m-0 px-4 py-3 pe-3 pt-0 outline-none"
               >
                 {userPresets.length > 0 ? (
                   <div className="space-y-1">
@@ -435,7 +435,7 @@ export function TransformImagePresetsPopover({
               </TabsContent>
               <TabsContent
                 value="team"
-                className="m-0 px-4 py-3 pr-3 pt-0 outline-none"
+                className="m-0 px-4 py-3 pe-3 pt-0 outline-none"
               >
                 {!hasTeamLevel ? (
                   <p className="text-[12px] leading-relaxed text-muted-foreground">
@@ -541,7 +541,7 @@ export function TransformImagePresetsPopover({
               onClick={() => void handleSaveCurrent()}
             >
               {isAdding ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
               ) : null}
               Save preset
             </Button>
@@ -561,7 +561,7 @@ export function TransformImagePresetsPopover({
           overlayClassName="z-[10060]"
           className="z-[10061] gap-0 border-border p-0 sm:max-w-md"
         >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle className="text-[15px]">{alertCopy.title}</DialogTitle>
             <DialogDescription className="mt-2 text-[13px]">
               {alertCopy.description}

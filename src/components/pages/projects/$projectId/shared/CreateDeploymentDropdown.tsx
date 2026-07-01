@@ -75,7 +75,7 @@ export function CreateDeploymentDropdown({
         >
           <GitBranch className="h-4 w-4" />
           <span>Git</span>
-          <span className="ml-auto text-[11px] text-muted-foreground">
+          <span className="ms-auto text-[11px] text-muted-foreground">
             Recommended
           </span>
         </DropdownMenuItem>

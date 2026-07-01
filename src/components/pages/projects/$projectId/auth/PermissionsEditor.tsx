@@ -482,7 +482,7 @@ function UserSelectionModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Select Users</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Choose one or more users to add permissions for.
@@ -657,7 +657,7 @@ function TeamSelectionModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Select Teams</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Choose one or more teams to add permissions for.
@@ -777,7 +777,7 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add Label</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Enter a label name to create a label-based permission.
@@ -863,7 +863,7 @@ function CustomRoleInputModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add by role string</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Grant access using a user or team ID. Use{' '}
@@ -1321,8 +1321,8 @@ export const PermissionsEditor = forwardRef<
             <div
               key={role}
               className={cn(
-                'flex items-center gap-2 rounded-lg border border-border bg-muted/30 pr-1 min-w-0',
-                compact ? 'pl-2 py-1.5' : 'pl-3 py-2',
+                'flex items-center gap-2 rounded-lg border border-border bg-muted/30 pe-1 min-w-0',
+                compact ? 'ps-2 py-1.5' : 'ps-3 py-2',
               )}
             >
               <RoleDisplay role={role} projectId={projectId} />
@@ -1581,7 +1581,7 @@ function AddRoleDropdown({
           </Button>
         ) : (
           <Button variant="secondary" size="sm">
-            <Plus className="size-4 mr-1.5" />
+            <Plus className="size-4 me-1.5" />
             Add role
           </Button>
         )}
@@ -1607,20 +1607,20 @@ function AddRoleDropdown({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onOpenUserModal}>
-          <User className="size-4 mr-2" />
+          <User className="size-4 me-2" />
           <span>Select users</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onOpenTeamModal}>
-          <Building2 className="size-4 mr-2" />
+          <Building2 className="size-4 me-2" />
           <span>Select teams</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onOpenLabelModal}>
-          <Tag className="size-4 mr-2" />
+          <Tag className="size-4 me-2" />
           <span>Label</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onOpenCustomModal}>
-          <Code className="size-4 mr-2" />
+          <Code className="size-4 me-2" />
           <span>Custom</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -90,7 +90,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
                   <img
                     src={ide.iconPath}
                     alt=""
-                    className={`mr-1.5 h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                    className={`me-1.5 h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
                   />
                   {ide.name}
                 </a>

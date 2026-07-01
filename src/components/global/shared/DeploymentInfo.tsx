@@ -132,7 +132,7 @@ export function DeploymentInfo({
               <GitCommit className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <span className="text-muted-foreground">Commit:</span>
-                <span className="ml-1.5 text-foreground whitespace-pre-wrap break-words">
+                <span className="ms-1.5 text-foreground whitespace-pre-wrap break-words">
                   {deployment.providerCommitMessage}
                 </span>
               </div>

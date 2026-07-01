@@ -183,7 +183,7 @@ export function Blockquote({
   return (
     <blockquote
       className={cn(
-        'my-5 border-l-2 border-[var(--brand-cta)] pl-4 italic',
+        'my-5 border-s-2 border-[var(--brand-cta)] ps-4 italic',
         proseVariant === 'blog' ? BLOG_BODY_TEXT_CLASS : DOCS_BODY_TEXT_CLASS,
       )}
     >

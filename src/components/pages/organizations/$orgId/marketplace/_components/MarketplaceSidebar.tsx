@@ -40,21 +40,21 @@ function SidebarSearch({
 }) {
   return (
     <div className="relative w-full mb-2">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <Input
         placeholder="Search apps..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          'h-9 w-full rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-          value && 'pr-9',
+          'h-9 w-full rounded-md border border-border bg-accent/50 ps-10 pe-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+          value && 'pe-9',
         )}
       />
       {value ? (
         <button
           type="button"
           onClick={() => onChange('')}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded p-0.5"
+          className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded p-0.5"
           aria-label="Clear search"
         >
           <X className="h-3.5 w-3.5" />
@@ -82,7 +82,7 @@ function NavButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors',
+        'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-start text-[13px] font-medium transition-colors',
         isActive
           ? 'bg-accent text-foreground'
           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -142,7 +142,7 @@ function SidebarLinks({
       {links.map((link) => {
         const Icon = link.icon
         const className = cn(
-          'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors',
+          'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-start text-[13px] font-medium transition-colors',
           link.action === 'add-app'
             ? 'text-foreground hover:bg-accent/50'
             : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

@@ -171,7 +171,7 @@ function BrowserIcon({
           <Activity className="h-4 w-4 text-muted-foreground" />
         </div>
         {deviceName && (
-          <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
+          <div className="absolute -bottom-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
             <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
           </div>
         )}
@@ -190,7 +190,7 @@ function BrowserIcon({
         />
       </div>
       {deviceName && (
-        <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
+        <div className="absolute -bottom-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
           <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
         </div>
       )}
@@ -416,7 +416,7 @@ export function View() {
               disabled={deleteAllSessions.isPending}
               aria-label="Delete all sessions"
             >
-              <LogOut className="h-4 w-4 shrink-0 @[640px]:mr-1.5" />
+              <LogOut className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
               <span className="hidden @[640px]:inline">Delete all sessions</span>
             </Button>
           ) : undefined
@@ -508,7 +508,7 @@ export function View() {
           onOpenChange={setDeleteAllSessionsDialogOpen}
         >
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>Delete all sessions</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete{' '}
@@ -1322,13 +1322,13 @@ function UpdateLabelsSection({
                     <Badge
                       key={label}
                       variant="info"
-                      className="gap-1 h-6 text-[10px] shrink-0 pr-1"
+                      className="gap-1 h-6 text-[10px] shrink-0 pe-1"
                     >
                       {label}
                       <button
                         type="button"
                         onClick={() => handleRemoveLabel(label)}
-                        className="ml-0.5 rounded-full hover:bg-muted/80 p-0.5"
+                        className="ms-0.5 rounded-full hover:bg-muted/80 p-0.5"
                         disabled={updateLabels.isPending}
                       >
                         <X className="h-3 w-3" />
@@ -1376,7 +1376,7 @@ function UpdateLabelsSection({
                         updateLabels.isPending || labels.includes(label)
                       }
                     >
-                      <Plus className="h-3 w-3 mr-1" />
+                      <Plus className="h-3 w-3 me-1" />
                       {label}
                     </Button>
                   ))}
@@ -1544,7 +1544,7 @@ function UpdatePreferencesSection({
               onClick={handleAddPreference}
               disabled={lastRowIncomplete || updatePrefs.isPending}
             >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              <Plus className="me-1.5 h-3.5 w-3.5" />
               Add preference
             </Button>
           </div>
@@ -1731,7 +1731,7 @@ function UpdateMFASection({
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           Type
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]" />
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px]" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1742,7 +1742,7 @@ function UpdateMFASection({
                               ? 'TOTP'
                               : auth.type}
                           </TableCell>
-                          <TableCell className="px-4 py-3 text-right">
+                          <TableCell className="px-4 py-3 text-end">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1767,7 +1767,7 @@ function UpdateMFASection({
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete authentication method</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete this authentication method? This
@@ -1890,7 +1890,7 @@ function DeleteUserSection({
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Delete user</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete{' '}
@@ -2231,7 +2231,7 @@ function CreateUserMembershipDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Create membership</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Select a team and assign roles for this user.
@@ -2287,13 +2287,13 @@ function CreateUserMembershipDialog({
                       <Badge
                         key={role}
                         variant="info"
-                        className="text-[10px] shrink-0 pr-1"
+                        className="text-[10px] shrink-0 pe-1"
                       >
                         {role}
                         <button
                           type="button"
                           onClick={() => handleRemoveRole(role)}
-                          className="ml-0.5 hover:text-foreground rounded p-0.5"
+                          className="ms-0.5 hover:text-foreground rounded p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -2693,7 +2693,7 @@ function CreateTargetDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Create target</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Add a new messaging target for this user.
@@ -2973,7 +2973,7 @@ function SessionsTab({
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
                 Expires
               </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -3095,7 +3095,7 @@ function SessionsTab({
                       className="text-[12px] font-medium text-foreground"
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3.5 text-right">
+                  <TableCell className="px-4 py-3.5 text-end">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -3126,7 +3126,7 @@ function SessionsTab({
         }}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>Delete session</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete this session? This action cannot

@@ -141,7 +141,7 @@ export function ReplaceAddressModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Replace billing address</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Replace the existing billing address for your organization.

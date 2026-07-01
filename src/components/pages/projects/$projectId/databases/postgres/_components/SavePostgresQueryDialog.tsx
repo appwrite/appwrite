@@ -94,7 +94,7 @@ export function SavePostgresQueryDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Save query</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Save this SQL query to reopen it later from the Queries panel.
@@ -126,7 +126,7 @@ export function SavePostgresQueryDialog({
                       onClick={() => canSaveTeam && setLevel('team')}
                       disabled={!canSaveTeam}
                       className={cn(
-                        'flex h-9 flex-1 cursor-pointer items-center justify-center border-l border-border text-[12px] transition-colors disabled:cursor-not-allowed',
+                        'flex h-9 flex-1 cursor-pointer items-center justify-center border-s border-border text-[12px] transition-colors disabled:cursor-not-allowed',
                         level === 'team'
                           ? 'bg-muted text-foreground'
                           : 'text-muted-foreground hover:bg-muted/60 disabled:opacity-50',

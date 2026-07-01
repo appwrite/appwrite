@@ -237,7 +237,7 @@ export function CreateGitDeploymentModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Create git deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {showRepoPicker
@@ -303,10 +303,10 @@ export function CreateGitDeploymentModal({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-[12px] text-muted-foreground hover:text-foreground mt-1 -ml-1"
+                    className="h-7 text-[12px] text-muted-foreground hover:text-foreground mt-1 -ms-1"
                     onClick={handleBackToRepoPicker}
                   >
-                    <ArrowLeft className="h-3 w-3 mr-1" />
+                    <ArrowLeft className="h-3 w-3 me-1" />
                     Change repository
                   </Button>
                 </div>
@@ -350,9 +350,9 @@ export function CreateGitDeploymentModal({
                   variant="ghost"
                   onClick={handleBackToRepoPicker}
                   disabled={isPending}
-                  className="h-9 text-[13px] mr-auto sm:mr-0 sm:order-first"
+                  className="h-9 text-[13px] me-auto sm:me-0 sm:order-first"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                  <ArrowLeft className="h-3.5 w-3.5 me-1.5" />
                   Back
                 </Button>
               )}
@@ -377,7 +377,7 @@ export function CreateGitDeploymentModal({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-9 text-[13px] ml-auto"
+              className="h-9 text-[13px] ms-auto"
             >
               Cancel
             </Button>

@@ -120,7 +120,7 @@ export function getCoverTitleGradientStyle(themeId: CoverThemeId): {
   backgroundClip: 'text'
   color: 'transparent'
   WebkitTextFillColor: 'transparent'
-  paddingRight: string
+  paddingInlineEnd: string
 } {
   return {
     backgroundImage: getCoverTitleGradientBackgroundImage(getCoverTheme(themeId)),
@@ -129,6 +129,6 @@ export function getCoverTitleGradientStyle(themeId: CoverThemeId): {
     color: 'transparent',
     WebkitTextFillColor: 'transparent',
     // background-clip:text trims glyph overhang on the last character (worse with negative tracking).
-    paddingRight: '0.075em',
+    paddingInlineEnd: '0.075em',
   }
 }

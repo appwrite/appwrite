@@ -50,7 +50,7 @@ function FilterChip({
   onRemove: () => void
 }) {
   return (
-    <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-muted/40 py-0.5 pl-2 pr-1 text-[11px] text-foreground">
+    <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-muted/40 py-0.5 ps-2 pe-1 text-[11px] text-foreground">
       <span className="truncate">{label}</span>
       <button
         type="button"
@@ -108,7 +108,7 @@ export function MessagesFilterBar({
     <div className="shrink-0 border-b border-border bg-muted/20">
       <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
         <div className="relative min-w-0 flex-1 basis-[160px]">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             value={filters.search}
@@ -117,12 +117,12 @@ export function MessagesFilterBar({
             }
             placeholder="Search messages…"
             spellCheck={false}
-            className="h-9 w-full min-w-0 rounded-md border border-border bg-background pl-8 pr-8 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="h-9 w-full min-w-0 rounded-md border border-border bg-background ps-8 pe-8 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           />
           {filters.search ? (
             <button
               type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="absolute end-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Clear search"
               onClick={() => onChange({ ...filters, search: '' })}
             >
@@ -243,7 +243,7 @@ export function MessagesFilterBar({
                   </button>
                 </div>
               </div>
-              <div className="max-h-52 space-y-0.5 overflow-y-auto overscroll-contain pr-1">
+              <div className="max-h-52 space-y-0.5 overflow-y-auto overscroll-contain pe-1">
                 {MESSAGE_FRAME_TYPES.map((type) => (
                   <label
                     key={type}

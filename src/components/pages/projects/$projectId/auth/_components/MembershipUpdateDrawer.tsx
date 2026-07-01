@@ -281,7 +281,7 @@ export function MembershipUpdateDrawer({
                           <Badge
                             key={role}
                             variant="info"
-                            className="text-[10px] shrink-0 gap-1 pr-1"
+                            className="text-[10px] shrink-0 gap-1 pe-1"
                           >
                             {role}
                             <button
@@ -326,7 +326,7 @@ export function MembershipUpdateDrawer({
                         onClick={() => setDeleteConfirmOpen(true)}
                         disabled={isPending}
                       >
-                        <Trash2 className="mr-1.5 h-4 w-4" />
+                        <Trash2 className="me-1.5 h-4 w-4" />
                         Remove from team
                       </Button>
                     </div>
@@ -358,7 +358,7 @@ export function MembershipUpdateDrawer({
 
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Remove from team</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to remove{' '}

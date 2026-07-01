@@ -58,7 +58,7 @@ function FieldLabel({
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="inline-flex ml-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            className="inline-flex ms-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
             aria-label="More info"
           >
             <Info className="h-3.5 w-3.5" />
@@ -274,7 +274,7 @@ export function BuildTriggersCard({
                 >
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-[12px]">
-                    <ul className="list-disc pl-4 space-y-1">
+                    <ul className="list-disc ps-4 space-y-1">
                       {validationIssues.map((issue) => (
                         <li key={`${issue.field}-${issue.message}`}>
                           {issue.message}

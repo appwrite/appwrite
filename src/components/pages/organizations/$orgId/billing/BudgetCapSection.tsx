@@ -185,19 +185,19 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
 
         {/* Budget Limit Input */}
         {enabled && (
-          <div className="mt-4 pl-14">
+          <div className="mt-4 ps-14">
             <label className="text-[12px] text-muted-foreground">
               Budget cap (USD)
             </label>
             <div className="mt-1.5 flex items-center gap-2">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground">
+                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground">
                   $
                 </span>
                 <Input
                   value={budget}
                   onChange={(e) => handleLimitChange(e.target.value)}
-                  className="h-9 w-32 pl-7 text-[13px]"
+                  className="h-9 w-32 ps-7 text-[13px]"
                   placeholder="0.00"
                 />
               </div>

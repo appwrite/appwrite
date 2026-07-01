@@ -212,7 +212,7 @@ function ProjectCliShellCollapsedBar() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex h-full w-full cursor-pointer items-center justify-between gap-4 bg-background px-4 text-left transition-colors hover:bg-muted/40 sm:px-6"
+      className="flex h-full w-full cursor-pointer items-center justify-between gap-4 bg-background px-4 text-start transition-colors hover:bg-muted/40 sm:px-6"
       aria-label="Open terminal"
     >
       <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />

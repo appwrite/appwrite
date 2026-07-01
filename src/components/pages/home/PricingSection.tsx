@@ -81,7 +81,7 @@ function PricingTierCta({ tier }: { tier: PricingTier }) {
 
 function PricingTierCard({ tier }: { tier: PricingTier }) {
   return (
-    <article className="group flex min-h-[280px] flex-col border-b border-border p-6 transition-colors last:border-b-0 hover:bg-accent/15 sm:min-h-[300px] sm:border-r sm:border-b-0 sm:p-7 sm:[&:nth-child(3n)]:border-r-0">
+    <article className="group flex min-h-[280px] flex-col border-b border-border p-6 transition-colors last:border-b-0 hover:bg-accent/15 sm:min-h-[300px] sm:border-e sm:border-b-0 sm:p-7 sm:[&:nth-child(3n)]:border-e-0">
       <div className="flex flex-1 flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-[14px] font-semibold text-foreground">{tier.name}</h3>

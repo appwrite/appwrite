@@ -488,7 +488,7 @@ export function ImportWizardView() {
                   setProvider(p.id)
                   setStep(2)
                 }}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-5 text-start transition-all hover:border-border/80 hover:bg-card/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden">
                   {p.icon ? (
@@ -975,7 +975,7 @@ export function ImportWizardView() {
                       >
                         <AccordionItem value="users" className="border-none">
                           <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
-                            <div className="flex items-center gap-3 text-left">
+                            <div className="flex items-center gap-3 text-start">
                               <Checkbox
                                 checked={resourceForm.users.root}
                                 onCheckedChange={(v) =>
@@ -992,7 +992,7 @@ export function ImportWizardView() {
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-3 pt-0">
-                            <div className="flex items-center gap-2 pl-6">
+                            <div className="flex items-center gap-2 ps-6">
                               <Checkbox
                                 id="users-teams"
                                 checked={resourceForm.users.teams}
@@ -1007,7 +1007,7 @@ export function ImportWizardView() {
                                 Include teams
                               </Label>
                             </div>
-                            <p className="mt-1 pl-6 text-[11px] text-muted-foreground">
+                            <p className="mt-1 ps-6 text-[11px] text-muted-foreground">
                               Import all teams and the team memberships of your
                               users.
                             </p>
@@ -1029,7 +1029,7 @@ export function ImportWizardView() {
                           className="border-none"
                         >
                           <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
-                            <div className="flex items-center gap-3 text-left">
+                            <div className="flex items-center gap-3 text-start">
                               <Checkbox
                                 checked={resourceForm.databases.root}
                                 onCheckedChange={(v) =>
@@ -1046,7 +1046,7 @@ export function ImportWizardView() {
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-3 pt-0">
-                            <div className="flex items-center gap-2 pl-6">
+                            <div className="flex items-center gap-2 ps-6">
                               <Checkbox
                                 id="databases-rows"
                                 checked={resourceForm.databases.rows}
@@ -1061,7 +1061,7 @@ export function ImportWizardView() {
                                 Include rows
                               </Label>
                             </div>
-                            <p className="mt-1 pl-6 text-[11px] text-muted-foreground">
+                            <p className="mt-1 ps-6 text-[11px] text-muted-foreground">
                               Import all rows inside tables.
                             </p>
                           </AccordionContent>
@@ -1082,7 +1082,7 @@ export function ImportWizardView() {
                           className="border-none"
                         >
                           <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
-                            <div className="flex items-center gap-3 text-left">
+                            <div className="flex items-center gap-3 text-start">
                               <Checkbox
                                 checked={resourceForm.functions.root}
                                 onCheckedChange={(v) =>
@@ -1099,7 +1099,7 @@ export function ImportWizardView() {
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-3 pt-0 space-y-2">
-                            <div className="flex items-center gap-2 pl-6">
+                            <div className="flex items-center gap-2 ps-6">
                               <Checkbox
                                 id="functions-env"
                                 checked={resourceForm.functions.env}
@@ -1114,10 +1114,10 @@ export function ImportWizardView() {
                                 Include environment variables
                               </Label>
                             </div>
-                            <p className="pl-6 text-[11px] text-muted-foreground">
+                            <p className="ps-6 text-[11px] text-muted-foreground">
                               Import all environment variables.
                             </p>
-                            <div className="flex items-center gap-2 pl-6">
+                            <div className="flex items-center gap-2 ps-6">
                               <Checkbox
                                 id="functions-inactive"
                                 checked={resourceForm.functions.inactive}
@@ -1136,7 +1136,7 @@ export function ImportWizardView() {
                                 Include inactive deployments
                               </Label>
                             </div>
-                            <p className="pl-6 text-[11px] text-muted-foreground">
+                            <p className="ps-6 text-[11px] text-muted-foreground">
                               Import all deployments that are not currently
                               active.
                             </p>

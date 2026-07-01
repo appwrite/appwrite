@@ -134,7 +134,7 @@ export function PlanSelection({
           <p className="text-[13px] font-medium text-foreground">
             Who should reach out
           </p>
-          <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc pl-4">
+          <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc ps-4">
             {ENTERPRISE_WHO_SHOULD_REACH_OUT.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -144,7 +144,7 @@ export function PlanSelection({
           <p className="text-[13px] font-medium text-foreground">
             When to reach out
           </p>
-          <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc pl-4">
+          <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc ps-4">
             {ENTERPRISE_WHEN_TO_REACH_OUT.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -387,7 +387,7 @@ export function PlanSelection({
 >
             <MarketingSiteLink href="/pricing">
               View detailed pricing
-              <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+              <ExternalLink className="ms-1.5 h-3.5 w-3.5" />
             </MarketingSiteLink>
           </Button>
         </div>

@@ -93,7 +93,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
           <Table className="border-b border-border">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[300px] pl-6 sm:pl-8">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[300px] ps-6 sm:ps-8">
                   Channel
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
@@ -119,7 +119,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
                     index === channels.length - 1 && 'border-b border-border',
                   )}
                 >
-                  <TableCell className="pl-6 sm:pl-8 py-3">
+                  <TableCell className="ps-6 sm:ps-8 py-3">
                     <code className="text-[12px] text-foreground font-mono">
                       {channel.name}
                     </code>

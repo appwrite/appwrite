@@ -67,7 +67,7 @@ export function MessagingRecipientUsersModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0 max-h-[80dvh] flex flex-col">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Add users</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Users receive this message on every target matching the message

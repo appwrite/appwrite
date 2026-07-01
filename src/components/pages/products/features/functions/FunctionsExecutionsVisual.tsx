@@ -122,13 +122,13 @@ export function FunctionsExecutionsVisual() {
       contentClassName="p-0"
     >
       <div className="grid min-h-[18rem] lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-r">
+        <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-e">
           <div className={cn('relative max-h-[14rem] overflow-hidden', SCROLL_FADE_MASK_CLASS)}>
             <div className="overflow-x-auto">
               <Table className="min-w-[36rem]">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pl-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 ps-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
                       Execution ID
                     </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
@@ -143,7 +143,7 @@ export function FunctionsExecutionsVisual() {
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
                       Duration
                     </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pr-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
+                    <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pe-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
                       Created
                     </TableHead>
                   </TableRow>
@@ -159,7 +159,7 @@ export function FunctionsExecutionsVisual() {
                           : 'hover:bg-muted/40',
                       )}
                     >
-                      <TableCell className="px-3 py-2.5 pl-4 sm:px-4">
+                      <TableCell className="px-3 py-2.5 ps-4 sm:px-4">
                         <MockId id={execution.id} />
                       </TableCell>
                       <TableCell className="px-3 py-2.5">
@@ -178,7 +178,7 @@ export function FunctionsExecutionsVisual() {
                       <TableCell className="px-3 py-2.5 text-[10px] text-foreground sm:text-[11px]">
                         {execution.duration}
                       </TableCell>
-                      <TableCell className="px-3 py-2.5 pr-4 text-[10px] text-muted-foreground sm:px-4 sm:text-[11px]">
+                      <TableCell className="px-3 py-2.5 pe-4 text-[10px] text-muted-foreground sm:px-4 sm:text-[11px]">
                         {execution.created}
                       </TableCell>
                     </TableRow>
@@ -249,12 +249,12 @@ export function FunctionsExecutionsVisual() {
             <TabsContent value="logs" className="mt-0 min-h-0">
               <div className="rounded-lg border border-border bg-card p-3">
                 <div className="relative mb-2">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Search logs..."
                     value={logsSearch}
                     onChange={(event) => setLogsSearch(event.target.value)}
-                    className="h-8 pl-8 text-[12px]"
+                    className="h-8 ps-8 text-[12px]"
                   />
                 </div>
                 <div className="rounded-md border border-border bg-muted/15 p-3">

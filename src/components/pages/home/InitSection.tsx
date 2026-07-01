@@ -32,7 +32,7 @@ function HomeInitDayCard({
         to="/init"
         hash={getInitDayCardId(day.day)}
         className={cn(
-          'link-unstyled flex min-h-full flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-left transition-colors',
+          'link-unstyled flex min-h-full flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-start transition-colors',
           'hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         )}
       >
@@ -61,7 +61,7 @@ function HomeInitDayCard({
       to="/init"
       hash={getInitDayCardId(day.day)}
       className={cn(
-        'link-unstyled group flex min-h-full flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
+        'link-unstyled group flex min-h-full flex-col rounded-xl border bg-card/50 p-4 text-start transition-colors',
         'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         day.isLive
           ? 'border-[color-mix(in_srgb,var(--brand-cta)_45%,var(--border))]'

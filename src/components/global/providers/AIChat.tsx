@@ -750,7 +750,7 @@ function MessageAttachments({
             <div
               className={cn(
                 'space-y-1.5',
-                fileAttachments.length > 4 && 'max-h-44 overflow-y-auto pr-1',
+                fileAttachments.length > 4 && 'max-h-44 overflow-y-auto pe-1',
               )}
             >
               {fileAttachments.map((attachment) => {
@@ -2354,7 +2354,7 @@ export function AIChatPanelContent() {
                     <Button
                       type="button"
                       variant="ghost"
-                      className="h-8 max-w-[248px] justify-start px-1.5 text-left"
+                      className="h-8 max-w-[248px] justify-start px-1.5 text-start"
                     >
                       <div className="flex min-w-0 items-center gap-1.5">
                         <div className="min-w-0">
@@ -2406,7 +2406,7 @@ export function AIChatPanelContent() {
                                       setActiveConversationId(conversation.$id)
                                       setConversationsPopoverOpen(false)
                                     }}
-                                    className="min-w-0 flex-1 cursor-pointer text-left"
+                                    className="min-w-0 flex-1 cursor-pointer text-start"
                                   >
                                     <p className="truncate text-[12px] font-medium text-foreground">
                                       {conversation.title ||
@@ -2513,7 +2513,7 @@ export function AIChatPanelContent() {
                     <button
                       key={question}
                       onClick={() => handleSend(question)}
-                      className="w-full rounded-lg border border-border bg-card p-3 text-left text-sm text-foreground transition-colors hover:bg-accent"
+                      className="w-full rounded-lg border border-border bg-card p-3 text-start text-sm text-foreground transition-colors hover:bg-accent"
                     >
                       {question}
                     </button>
@@ -2534,7 +2534,7 @@ export function AIChatPanelContent() {
                     >
                       {isLoadingOlderMessages ? (
                         <>
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          <Loader2 className="me-1 h-3 w-3 animate-spin" />
                           Loading older messages...
                         </>
                       ) : (

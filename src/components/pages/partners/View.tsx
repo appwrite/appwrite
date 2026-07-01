@@ -130,7 +130,7 @@ export function View() {
                   </p>
                   <span className={cn('mt-4 text-[13px]', CARD_LINK_HINT_CLASS)}>
                     {way.label}
-                    <ChevronRight className="ml-0.5 size-4" aria-hidden />
+                    <ChevronRight className="ms-0.5 size-4" aria-hidden />
                   </span>
                 </div>
               </a>

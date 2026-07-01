@@ -43,7 +43,7 @@ export function SpreadsheetCellValueDialog({
   return (
     <Dialog open={state !== null} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 px-6 pb-4 pt-6 text-left">
+        <DialogHeader className="shrink-0 px-6 pb-4 pt-6 text-start">
           <DialogTitle>{state?.columnLabel ?? 'Cell value'}</DialogTitle>
           {state ? (
             <DialogDescription className="mt-2 text-[13px]">

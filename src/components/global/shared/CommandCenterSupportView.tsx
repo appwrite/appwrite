@@ -32,13 +32,13 @@ export function CommandCenterSupportView({
         >
           ← Back
         </button>
-        <span className="ml-3 text-[14px] font-medium text-foreground">
+        <span className="ms-3 text-[14px] font-medium text-foreground">
           Support
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="ms-auto flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
           aria-label="Close"
         >
           <X className="h-4 w-4" />

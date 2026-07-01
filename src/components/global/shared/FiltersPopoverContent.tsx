@@ -69,7 +69,7 @@ const SECTION_DIVIDE =
 
 /** Vertical split inside compact button groups (Asc | Desc, For me | For team) */
 const SEGMENT_DIVIDE =
-  'border-l border-muted-foreground/7 dark:border-muted-foreground/10'
+  'border-s border-muted-foreground/7 dark:border-muted-foreground/10'
 
 const K1024 = 1024
 
@@ -809,7 +809,7 @@ export function FiltersPopoverContent({
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-left transition-colors hover:bg-muted/50"
+                className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-start transition-colors hover:bg-muted/50"
               >
                 <ChevronDown
                   className={cn(
@@ -1080,7 +1080,7 @@ export function FiltersPopoverContent({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-[12px] text-muted-foreground hover:text-foreground -mr-1"
+                className="h-7 text-[12px] text-muted-foreground hover:text-foreground -me-1"
                 onClick={handleClearAll}
               >
                 Clear all
@@ -1107,7 +1107,7 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => beginEditFilter(key)}
-                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 truncate text-left text-[12px] rounded-md outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring -mx-1 px-1 -my-0.5 py-0.5"
+                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 truncate text-start text-[12px] rounded-md outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring -mx-1 px-1 -my-0.5 py-0.5"
                     >
                       <span className="shrink-0 font-medium text-foreground">
                         {column}

@@ -168,7 +168,7 @@ export function CreateManualDeploymentModal({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>Create manual deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Upload a .tar.gz archive of your code. Maximum file size is {maxMb}

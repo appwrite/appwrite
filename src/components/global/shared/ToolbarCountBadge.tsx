@@ -46,7 +46,7 @@ export function ToolbarCountBadge({
   return (
     <span
       className={cn(
-        'pointer-events-none absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-semibold tabular-nums text-primary-foreground',
+        'pointer-events-none absolute -end-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-semibold tabular-nums text-primary-foreground',
         className,
       )}
     >

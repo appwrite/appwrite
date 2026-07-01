@@ -202,7 +202,7 @@ function MessageComposeCardFooter({
                 className="h-9 text-[13px]"
                 onClick={onReschedule}
               >
-                <Calendar className="mr-1.5 h-4 w-4" />
+                <Calendar className="me-1.5 h-4 w-4" />
                 Reschedule
               </Button>
             </>
@@ -1151,7 +1151,7 @@ export function View({
                             className="h-8 text-[12px]"
                             onClick={() => setTargetPickerFor('cc')}
                           >
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
                             Add
                           </Button>
                         )}
@@ -1203,7 +1203,7 @@ export function View({
                             className="h-8 text-[12px]"
                             onClick={() => setTargetPickerFor('bcc')}
                           >
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
                             Add
                           </Button>
                         )}
@@ -1255,7 +1255,7 @@ export function View({
                             className="h-8 text-[12px]"
                             onClick={() => setAttachmentExplorerOpen(true)}
                           >
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
                             Add
                           </Button>
                         )}
@@ -1500,7 +1500,7 @@ export function View({
                             !pushCustomData[pushCustomData.length - 1]?.key
                           }
                         >
-                          <Plus className="mr-1 h-3.5 w-3.5" />
+                          <Plus className="me-1 h-3.5 w-3.5" />
                           Add
                         </Button>
                       </div>
@@ -1722,7 +1722,7 @@ export function View({
                     className="h-8 shrink-0 text-[12px]"
                     onClick={() => setTopicsModalOpen(true)}
                   >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    <Plus className="me-1.5 h-3.5 w-3.5" />
                     Add
                   </Button>
                 )}
@@ -1747,7 +1747,7 @@ export function View({
                               Topic name
                             </TableHead>
                             {isDraft && (
-                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
                             )}
                           </TableRow>
                         </TableHeader>
@@ -1782,7 +1782,7 @@ export function View({
                                   )}
                                 </TableCell>
                                 {isDraft && (
-                                  <TableCell className="px-4 py-3 text-right">
+                                  <TableCell className="px-4 py-3 text-end">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -1857,7 +1857,7 @@ export function View({
                     className="h-8 shrink-0 text-[12px]"
                     onClick={() => setRecipientUsersModalOpen(true)}
                   >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    <Plus className="me-1.5 h-3.5 w-3.5" />
                     Add
                   </Button>
                 )}
@@ -1883,7 +1883,7 @@ export function View({
                               User
                             </TableHead>
                             {isDraft && (
-                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
                             )}
                           </TableRow>
                         </TableHeader>
@@ -1899,7 +1899,7 @@ export function View({
                                   <CopyableId id={uid} size="xs" />
                                 </TableCell>
                                 {isDraft && (
-                                  <TableCell className="px-4 py-3 text-right">
+                                  <TableCell className="px-4 py-3 text-end">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -1973,7 +1973,7 @@ export function View({
                     className="h-8 shrink-0 text-[12px]"
                     onClick={() => setTargetPickerFor('primary')}
                   >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    <Plus className="me-1.5 h-3.5 w-3.5" />
                     Add
                   </Button>
                 )}
@@ -2001,7 +2001,7 @@ export function View({
                               User
                             </TableHead>
                             {isDraft && (
-                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
                             )}
                           </TableRow>
                         </TableHeader>
@@ -2052,7 +2052,7 @@ export function View({
                                   )}
                                 </TableCell>
                                 {isDraft && (
-                                  <TableCell className="px-4 py-3 text-right">
+                                  <TableCell className="px-4 py-3 text-end">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -2249,7 +2249,7 @@ export function View({
                   onClick={() => setDeleteDialogOpen(true)}
                   disabled={deleteMessageMutation.isPending}
                 >
-                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  <Trash2 className="me-1.5 h-4 w-4" />
                   Delete
                 </Button>
               </div>
@@ -2360,7 +2360,7 @@ export function View({
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>Delete message</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete{' '}
@@ -2401,7 +2401,7 @@ export function View({
           onOpenChange={setMessageLogsDialogOpen}
         >
           <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
-            <DialogHeader className="px-6 pt-6 text-left">
+            <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>Message logs</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
                 Audit log entries for this message.
@@ -2528,7 +2528,7 @@ function TopicsSelectionModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[80dvh] flex flex-col">
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Select topics</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Choose one or more topics to send this message to.

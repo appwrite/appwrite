@@ -23,7 +23,7 @@ export function DocsPreviewHeroSection() {
 
   return (
     <section className={cn('border-b border-border', docsPreviewSectionPaddingY)}>
-      <div className={cn('mx-auto w-full max-w-6xl text-left', docsContentPaddingX)}>
+      <div className={cn('mx-auto w-full max-w-6xl text-start', docsContentPaddingX)}>
         <h1 className={cn('max-w-[600px]', docsPreviewPrimaryTitleClass)}>
           Ship faster with Appwrite
         </h1>

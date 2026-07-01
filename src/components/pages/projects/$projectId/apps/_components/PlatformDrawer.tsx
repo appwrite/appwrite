@@ -283,7 +283,7 @@ export function PlatformDrawer({
                           onClick={() => setDeleteConfirmOpen(true)}
                           disabled={isPending}
                         >
-                          <Trash2 className="mr-1.5 h-4 w-4" />
+                          <Trash2 className="me-1.5 h-4 w-4" />
                           Delete app
                         </Button>
                       </div>
@@ -315,7 +315,7 @@ export function PlatformDrawer({
           className="sm:max-w-md p-0 z-[130]"
           overlayClassName="z-[130]"
         >
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete app</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}

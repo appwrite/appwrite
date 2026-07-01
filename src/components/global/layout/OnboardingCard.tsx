@@ -17,7 +17,7 @@ interface OnboardingCardProps {
 const CARD_BASE = 'rounded-md border border-border bg-card/50 overflow-visible'
 
 const EXPANDED_LINK =
-  'block w-full text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+  'block w-full text-start transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
 export function OnboardingCard({
   projectId,

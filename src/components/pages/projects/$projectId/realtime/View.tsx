@@ -287,7 +287,7 @@ function RealtimeWebSocketUrlField({
         <TooltipTrigger asChild>
           <div
             className={cn(
-              'flex w-[7.25rem] shrink-0 items-center justify-center gap-1.5 border-r border-border px-2 sm:gap-2 sm:px-2.5',
+              'flex w-[7.25rem] shrink-0 items-center justify-center gap-1.5 border-e border-border px-2 sm:gap-2 sm:px-2.5',
               connectionStatusSegmentClass(status, socketOpen),
             )}
           >
@@ -332,7 +332,7 @@ function RealtimeWebSocketUrlField({
       <button
         type="button"
         onClick={handleCopy}
-        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border-s border-border text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
         aria-label="Copy WebSocket URL"
       >
         {copied ? (
@@ -993,7 +993,7 @@ export function View() {
               REALTIME_LAYOUT_GRID,
             )}
           >
-            <div className="flex min-w-0 flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:gap-3 lg:min-h-14 lg:border-b-0 lg:border-r">
+            <div className="flex min-w-0 flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:gap-3 lg:min-h-14 lg:border-b-0 lg:border-e">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="cursor-default shrink-0 text-[12px] font-medium text-muted-foreground sm:w-auto">
@@ -1032,7 +1032,7 @@ export function View() {
                   socketOpen={socketOpen}
                 />
               </div>
-              <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto lg:ml-auto">
+              <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto lg:ms-auto">
                 <Button
                   type="button"
                   variant="outline"
@@ -1040,7 +1040,7 @@ export function View() {
                   className="h-9 flex-1 text-[13px] sm:flex-none"
                   onClick={() => setConnectionCodeOpen(true)}
                 >
-                  <Code2 className="mr-1.5 h-4 w-4" />
+                  <Code2 className="me-1.5 h-4 w-4" />
                   SDK code
                 </Button>
                 {isConnected ? (
@@ -1062,7 +1062,7 @@ export function View() {
                   >
                     {isConnecting ? (
                       <>
-                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                        <Loader2 className="me-1.5 h-4 w-4 animate-spin" />
                         Connecting
                       </>
                     ) : (
@@ -1086,7 +1086,7 @@ export function View() {
         >
           <RealtimePanelHeader
             title="Subscriptions"
-            className="order-1 lg:col-start-1 lg:row-start-1 lg:border-r lg:border-border"
+            className="order-1 lg:col-start-1 lg:row-start-1 lg:border-e lg:border-border"
             actions={
               <span className="rounded-md border border-border bg-muted/30 px-2 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
                 {subscriptionCount}
@@ -1094,7 +1094,7 @@ export function View() {
             }
           />
 
-          <div className="order-2 flex max-h-[min(50dvh,28rem)] min-h-0 flex-col overflow-hidden border-b border-border lg:col-start-1 lg:row-start-2 lg:max-h-none lg:min-h-0 lg:border-b-0 lg:border-r">
+          <div className="order-2 flex max-h-[min(50dvh,28rem)] min-h-0 flex-col overflow-hidden border-b border-border lg:col-start-1 lg:row-start-2 lg:max-h-none lg:min-h-0 lg:border-b-0 lg:border-e">
             <ConfigurationPanel
               isConnected={isConnected}
               configuredSubscriptions={configuredSubscriptions}
@@ -1115,7 +1115,7 @@ export function View() {
                 disabled={!canDisconnectAll}
                 onClick={() => void handleDisconnectAll()}
               >
-                <Unplug className="mr-1.5 h-4 w-4" />
+                <Unplug className="me-1.5 h-4 w-4" />
                 Disconnect all
               </Button>
             </div>
@@ -1136,12 +1136,12 @@ export function View() {
                 >
                   {isPaused ? (
                     <>
-                      <Play className="mr-1.5 h-3.5 w-3.5" />
+                      <Play className="me-1.5 h-3.5 w-3.5" />
                       Resume
                     </>
                   ) : (
                     <>
-                      <Pause className="mr-1.5 h-3.5 w-3.5" />
+                      <Pause className="me-1.5 h-3.5 w-3.5" />
                       Pause
                     </>
                   )}
@@ -1154,7 +1154,7 @@ export function View() {
                   onClick={handleClearLogs}
                   disabled={logs.length === 0}
                 >
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  <Trash2 className="me-1.5 h-3.5 w-3.5" />
                   Clear
                 </Button>
                 <TooltipProvider delayDuration={0}>
@@ -1317,7 +1317,7 @@ function MessageRow({
       >
         <MessageDirectionIcon entry={entry} />
 
-        <span className="pt-0.5 text-right font-mono text-[11px] tabular-nums leading-none text-muted-foreground">
+        <span className="pt-0.5 text-end font-mono text-[11px] tabular-nums leading-none text-muted-foreground">
           {sequence}
         </span>
 

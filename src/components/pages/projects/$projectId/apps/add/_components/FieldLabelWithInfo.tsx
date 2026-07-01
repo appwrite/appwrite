@@ -37,7 +37,7 @@ export function FieldLabelWithInfo({
     >
       <span>
         {children}
-        {required ? <span className="ml-1 text-destructive">*</span> : null}
+        {required ? <span className="ms-1 text-destructive">*</span> : null}
       </span>
       {tooltip ? (
         <Tooltip>

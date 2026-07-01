@@ -58,7 +58,7 @@ export function VariableEditor({
         overlayClassName={elevatedForWizard ? WIZARD_DIALOG_OVERLAY_Z : undefined}
         onEscapeKeyDown={(e) => e.stopPropagation()}
       >
-        <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>Variable editor</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Edit all variables at once. Secret variables are not shown and will
@@ -85,7 +85,7 @@ export function VariableEditor({
                 className="h-8 text-[12px]"
                 onClick={onCopy}
               >
-                <Copy className="mr-2 h-3.5 w-3.5" />
+                <Copy className="me-2 h-3.5 w-3.5" />
                 Copy
               </Button>
               <Button
@@ -95,7 +95,7 @@ export function VariableEditor({
                 className="h-8 text-[12px]"
                 onClick={onDownload}
               >
-                <Download className="mr-2 h-3.5 w-3.5" />
+                <Download className="me-2 h-3.5 w-3.5" />
                 Download
               </Button>
             </div>

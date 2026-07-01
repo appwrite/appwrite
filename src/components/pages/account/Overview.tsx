@@ -900,7 +900,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
       {/* Setup Dialog */}
       <Dialog open={setupDialogOpen} onOpenChange={handleSetupDialogOpenChange}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>
               {step === 'qr' ? 'Scan QR code' : 'Enter verification code'}
             </DialogTitle>
@@ -1010,7 +1010,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Delete authenticator app</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               This removes authenticator app codes from your account.
@@ -1296,7 +1296,7 @@ function RecoveryCodesMethod({
         onOpenChange={handleRegenerateDialogOpenChange}
       >
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Regenerate recovery codes</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to regenerate all recovery codes? All
@@ -1343,7 +1343,7 @@ function RecoveryCodesMethod({
       {/* Recovery Codes Dialog */}
       <Dialog open={codesDialogOpen} onOpenChange={setCodesDialogOpen}>
         <DialogContent className="sm:max-w-lg p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>Recovery codes</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Use these codes to access your account if you lose your
@@ -1371,7 +1371,7 @@ function RecoveryCodesMethod({
                 onClick={handleCopyAll}
                 disabled={recoveryCodes.length === 0}
               >
-                <Copy className="mr-1.5 h-4 w-4" />
+                <Copy className="me-1.5 h-4 w-4" />
                 Copy all
               </Button>
               <Button
@@ -1381,7 +1381,7 @@ function RecoveryCodesMethod({
                 onClick={handleDownload}
                 disabled={recoveryCodes.length === 0}
               >
-                <Download className="mr-1.5 h-4 w-4" />
+                <Download className="me-1.5 h-4 w-4" />
                 Download .txt
               </Button>
             </div>
@@ -1518,7 +1518,7 @@ export function DeleteAccountSection() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
+              <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>Delete account</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   Are you sure you want to delete your account? This action

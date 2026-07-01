@@ -16,6 +16,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+/** Chevrons mirror in RTL so prev/next point along inline progression. */
+const paginationChevronClass = 'h-4 w-4 rtl:rotate-180'
+
 // ============================================================================
 // SIMPLE PAGINATION (when total is unknown)
 // ============================================================================
@@ -82,14 +85,14 @@ export function SimplePagination({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-none border-0 border-r border-border hover:bg-muted/80"
+          className="h-8 w-8 rounded-none border-0 border-e border-border hover:bg-muted/80"
           onClick={handlePreviousPage}
           disabled={!canGoPrevious || disabled}
           aria-label="Go to previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className={paginationChevronClass} />
         </Button>
-        <span className="flex items-center justify-center min-w-[2.25rem] h-8 px-2.5 text-[12px] font-medium text-muted-foreground tabular-nums border-r border-border">
+        <span className="flex items-center justify-center min-w-[2.25rem] h-8 px-2.5 text-[12px] font-medium text-muted-foreground tabular-nums border-e border-border">
           {currentPage}
         </span>
         <Button
@@ -100,7 +103,7 @@ export function SimplePagination({
           disabled={!canGoNext || disabled}
           aria-label="Go to next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className={paginationChevronClass} />
         </Button>
       </div>
     </div>
@@ -312,24 +315,27 @@ export function Pagination({
           <Button
             variant="ghost"
             size="icon"
-            className="hidden h-8 w-8 rounded-none border-0 border-r border-border @[500px]:inline-flex hover:bg-muted/80"
+            className="hidden h-8 w-8 rounded-none border-0 border-e border-border @[500px]:inline-flex hover:bg-muted/80"
             onClick={handleFirstPage}
             disabled={!canGoPrevious}
             aria-label="Go to first page"
           >
-            <ChevronsLeft className="h-4 w-4" />
+            <ChevronsLeft className={paginationChevronClass} />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-none border-0 border-r border-border hover:bg-muted/80"
+            className="h-8 w-8 rounded-none border-0 border-e border-border hover:bg-muted/80"
             onClick={handlePreviousPage}
             disabled={!canGoPrevious}
             aria-label="Go to previous page"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className={paginationChevronClass} />
           </Button>
-          <div className="hidden items-center gap-1.5 h-8 px-3 border-r border-border @[400px]:flex">
+          <div
+            className="hidden items-center gap-1.5 h-8 px-3 border-e border-border @[400px]:flex"
+            dir="ltr"
+          >
             <span className="text-muted-foreground whitespace-nowrap text-[12px]">
               Page
             </span>
@@ -345,12 +351,12 @@ export function Pagination({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-none border-0 border-r border-border hover:bg-muted/80"
+            className="h-8 w-8 rounded-none border-0 border-e border-border hover:bg-muted/80"
             onClick={handleNextPage}
             disabled={!canGoNext}
             aria-label="Go to next page"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className={paginationChevronClass} />
           </Button>
           <Button
             variant="ghost"
@@ -360,7 +366,7 @@ export function Pagination({
             disabled={!totalKnown || !canGoNext}
             aria-label="Go to last page"
           >
-            <ChevronsRight className="h-4 w-4" />
+            <ChevronsRight className={paginationChevronClass} />
           </Button>
         </div>
       </div>

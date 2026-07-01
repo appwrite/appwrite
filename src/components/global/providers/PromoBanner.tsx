@@ -47,7 +47,7 @@ function PromoBannerComponent({
   const visibleBanners = filteredBanners.slice(0, 3)
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-4 start-4 z-50">
       {/* Stacked banners container */}
       <div className="relative">
         {visibleBanners.map((banner, index) => {
@@ -59,7 +59,7 @@ function PromoBannerComponent({
             <div
               key={banner.id}
               className={cn(
-                'absolute bottom-0 left-0 w-[320px] transition-all duration-300 ease-out',
+                'absolute bottom-0 start-0 w-[320px] transition-all duration-300 ease-out',
                 isExpanded ? 'z-30' : index === 1 ? 'z-20' : 'z-10',
                 !isExpanded && 'cursor-pointer hover:translate-y-[-2px]',
               )}
@@ -102,7 +102,7 @@ function PromoBannerComponent({
                           )
                         }
                       }}
-                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-background hover:text-foreground"
+                      className="absolute end-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-background hover:text-foreground"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -162,7 +162,7 @@ function PromoBannerComponent({
               />
             ))}
             {filteredBanners.length > 3 && (
-              <span className="ml-1.5 text-[11px] text-muted-foreground">
+              <span className="ms-1.5 text-[11px] text-muted-foreground">
                 +{filteredBanners.length - 3} more
               </span>
             )}

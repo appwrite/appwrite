@@ -207,7 +207,7 @@ export function View({ initialData }: ViewProps = {}) {
                     className={cn(
                       RESOURCE_CARD_PADDED_CLASSNAME,
                       RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                      'flex items-center gap-4 text-left',
+                      'flex items-center gap-4 text-start',
                       RESOURCE_CARD_SHELL_CLASSNAME,
                     )}
                   >

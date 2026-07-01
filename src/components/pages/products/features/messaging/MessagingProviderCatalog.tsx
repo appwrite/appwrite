@@ -162,16 +162,16 @@ export function MessagingProviderCatalog({ className }: MessagingProviderCatalog
     >
       <ChannelTile
         tile={pushTile}
-        className="border-b border-border sm:border-r lg:border-r"
+        className="border-b border-border sm:border-e lg:border-e"
       />
-      <ChannelTile tile={emailTile} className="border-b border-border lg:border-r" />
+      <ChannelTile tile={emailTile} className="border-b border-border lg:border-e" />
       <ChannelTile
         tile={chatTile}
-        className="border-b border-border sm:border-r lg:border-r-0"
+        className="border-b border-border sm:border-e lg:border-e-0"
       />
       <ChannelTile
         tile={inAppTile}
-        className="border-b border-border sm:border-r lg:border-r lg:border-b-0"
+        className="border-b border-border sm:border-e lg:border-e lg:border-b-0"
       />
       <ChannelTile
         tile={smsTile}

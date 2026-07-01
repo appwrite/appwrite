@@ -84,7 +84,7 @@ export function SortPopover({
                 onOpenChange(false)
               }}
               className={cn(
-                'flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-[13px] transition-colors hover:bg-muted/80',
+                'flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-start text-[13px] transition-colors hover:bg-muted/80',
                 sortBy === opt.id && 'bg-muted/50',
               )}
             >

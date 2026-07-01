@@ -36,7 +36,7 @@ export function DocsHomeSectionHeading({
       : DOCS_HOME_SECTION_DESCRIPTION_CLASS
 
   return (
-    <div className={cn('max-w-2xl text-left', className)}>
+    <div className={cn('max-w-2xl text-start', className)}>
       <h2 className={titleClassName}>
         {title}
         <span className="text-[var(--brand-cta)]">_</span>

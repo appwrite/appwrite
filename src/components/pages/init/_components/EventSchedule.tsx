@@ -38,7 +38,7 @@ function LockedScheduleDayCard({
       onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onBlur={() => setTransientActivity(null)}
       className={cn(
-        'flex flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-left transition-colors',
+        'flex flex-col rounded-xl border border-dashed border-border bg-muted/20 p-4 text-start transition-colors',
         'cursor-pointer hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         fullWidth ? 'min-w-0 w-full' : 'min-w-[200px] max-w-[220px] shrink-0',
       )}
@@ -85,7 +85,7 @@ function ScheduleDayCard({
       onFocus={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
       onBlur={() => setTransientActivity(null)}
       className={cn(
-        'flex flex-col rounded-xl border bg-card/50 p-4 text-left transition-colors',
+        'flex flex-col rounded-xl border bg-card/50 p-4 text-start transition-colors',
         'cursor-pointer hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         fullWidth ? 'min-w-0 w-full' : 'min-w-[200px] max-w-[220px] shrink-0',
         !isRecapMode &&

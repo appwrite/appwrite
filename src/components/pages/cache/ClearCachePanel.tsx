@@ -166,7 +166,7 @@ export function ClearCachePanel() {
                   onClick={() => setTarget(ct)}
                   title={meta.description}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-left transition-colors',
+                    'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-start transition-colors',
                     active
                       ? 'border-foreground/30 bg-accent text-foreground'
                       : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -220,7 +220,7 @@ export function ClearCachePanel() {
                       onClick={() => setDatabase(db)}
                       title={meta.description}
                       className={cn(
-                        'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-left transition-colors',
+                        'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-start transition-colors',
                         active
                           ? 'border-foreground/30 bg-accent text-foreground'
                           : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground',

@@ -14,7 +14,7 @@ export function UsageHistoricDataNote({
   const content = (
     <p className="text-[12px] leading-relaxed text-muted-foreground">
       <Info
-        className="mb-0.5 mr-1.5 inline-block h-3.5 w-3.5 align-middle"
+        className="mb-0.5 me-1.5 inline-block h-3.5 w-3.5 align-middle"
         aria-hidden
       />
       {USAGE_HISTORIC_DATA_NOTE}

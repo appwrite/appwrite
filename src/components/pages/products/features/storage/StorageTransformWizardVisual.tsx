@@ -45,14 +45,14 @@ const TRANSFORM_HANDLE_DOT_CLASS =
   'h-5 w-5 shrink-0 rounded-full border-2 border-border bg-background'
 
 const MOCK_RESIZE_HANDLES = [
-  { id: 'nw', className: 'left-5 top-5' },
-  { id: 'n', className: 'left-1/2 top-5 -translate-x-1/2' },
-  { id: 'ne', className: 'right-5 top-5' },
-  { id: 'e', className: 'right-5 top-1/2 -translate-y-1/2' },
-  { id: 'se', className: 'right-5 bottom-5' },
-  { id: 's', className: 'left-1/2 bottom-5 -translate-x-1/2' },
-  { id: 'sw', className: 'left-5 bottom-5' },
-  { id: 'w', className: 'left-5 top-1/2 -translate-y-1/2' },
+  { id: 'nw', className: 'start-5 top-5' },
+  { id: 'n', className: 'start-1/2 top-5 -translate-x-1/2' },
+  { id: 'ne', className: 'end-5 top-5' },
+  { id: 'e', className: 'end-5 top-1/2 -translate-y-1/2' },
+  { id: 'se', className: 'end-5 bottom-5' },
+  { id: 's', className: 'start-1/2 bottom-5 -translate-x-1/2' },
+  { id: 'sw', className: 'start-5 bottom-5' },
+  { id: 'w', className: 'start-5 top-1/2 -translate-y-1/2' },
 ] as const
 
 function MockTransformCropFrame() {
@@ -66,7 +66,7 @@ function MockTransformCropFrame() {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute left-0 top-0 h-full w-full">
+        <div className="pointer-events-none absolute start-0 top-0 h-full w-full">
           <div
             className="absolute z-[1] rounded-md border-[3px] border-dotted border-muted-foreground/35"
             style={{ inset: -28 }}
@@ -268,7 +268,7 @@ export function StorageTransformWizardVisual() {
           </div>
         </div>
 
-        <aside className="w-full shrink-0 border-t border-border bg-background md:w-[min(18rem,100%)] md:border-l md:border-t-0">
+        <aside className="w-full shrink-0 border-t border-border bg-background md:w-[min(18rem,100%)] md:border-s md:border-t-0">
           <div className="px-4 py-3">
             <div className="border-b border-border">
               <div className="flex items-center justify-between py-3 text-[13px] font-medium text-foreground">
@@ -297,7 +297,7 @@ export function StorageTransformWizardVisual() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label className="text-[11px] text-muted-foreground">Gravity</Label>
-                    <span className="ml-auto font-mono text-[10px] text-muted-foreground">center</span>
+                    <span className="ms-auto font-mono text-[10px] text-muted-foreground">center</span>
                   </div>
                   <div className="w-full max-w-[9.5rem] rounded-lg border border-border bg-muted/25 p-px">
                     <div className="grid grid-cols-3 gap-px bg-border/70">
@@ -350,7 +350,7 @@ export function StorageTransformWizardVisual() {
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" className="h-8 text-[11px]" disabled>
-            <Download className="mr-1.5 size-3.5" aria-hidden />
+            <Download className="me-1.5 size-3.5" aria-hidden />
             Download
           </Button>
           <Button
@@ -360,11 +360,11 @@ export function StorageTransformWizardVisual() {
             className="h-8 text-[11px] group-hover/visual:border-foreground/15 group-hover/visual:bg-background"
             disabled
           >
-            <Copy className="mr-1.5 size-3.5" aria-hidden />
+            <Copy className="me-1.5 size-3.5" aria-hidden />
             Copy URL
           </Button>
           <Button type="button" variant="outline" size="sm" className="h-8 text-[11px]" disabled>
-            <ExternalLink className="mr-1.5 size-3.5" aria-hidden />
+            <ExternalLink className="me-1.5 size-3.5" aria-hidden />
             Open
           </Button>
         </div>

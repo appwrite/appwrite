@@ -49,7 +49,7 @@ function NetworkGlobePlaceholder({ className }: { className?: string }) {
           <div className="size-10 animate-spin rounded-full border-2 border-border border-t-[var(--brand-cta)]" />
         </div>
       </div>
-      <NetworkGlobeLegend className="absolute bottom-4 left-3 z-30 sm:bottom-5 sm:left-4" />
+      <NetworkGlobeLegend className="absolute bottom-4 start-3 z-30 sm:bottom-5 sm:start-4" />
     </div>
   )
 }
@@ -82,7 +82,7 @@ export function NetworkGlobe({ className }: { className?: string }) {
         />
       </div>
 
-      <NetworkGlobeLegend className="absolute bottom-4 left-3 z-30 sm:bottom-5 sm:left-4" />
+      <NetworkGlobeLegend className="absolute bottom-4 start-3 z-30 sm:bottom-5 sm:start-4" />
     </div>
   )
 }

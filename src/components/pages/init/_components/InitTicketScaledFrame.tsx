@@ -49,7 +49,7 @@ function ScaledTicketShell({
     >
       <div
         className={cn(
-          'absolute left-0 top-0 origin-top-left will-change-transform',
+          'absolute start-0 top-0 origin-top-start will-change-transform',
           pointerEventsNone && 'pointer-events-none',
         )}
         style={{

@@ -481,7 +481,7 @@ function ResourceTitleSwitcherPopover({
           type="button"
           disabled={disabled}
           className={cn(
-            'inline-flex min-w-0 max-w-full items-center gap-1 rounded-md px-1 py-0.5 text-left text-[17px] font-semibold text-foreground transition-colors',
+            'inline-flex min-w-0 max-w-full items-center gap-1 rounded-md px-1 py-0.5 text-start text-[17px] font-semibold text-foreground transition-colors',
             'hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             disabled && 'pointer-events-none opacity-50',
             className,
@@ -502,11 +502,11 @@ function ResourceTitleSwitcherPopover({
               placeholder={SEARCH_PLACEHOLDERS[kind]}
               value={search}
               onValueChange={setSearch}
-              className={cn('h-9', isFetching && 'pr-8')}
+              className={cn('h-9', isFetching && 'pe-8')}
             />
             <div
               className={cn(
-                'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
                 isFetching ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden
