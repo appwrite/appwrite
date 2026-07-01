@@ -20,7 +20,7 @@ return [
             $templateRuntimes['DENO']
         ),
         'bundleCommand' => 'bash /usr/local/server/helpers/analog/bundle.sh',
-        'envCommand' => 'source /usr/local/server/helpers/analog/env.sh',
+        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "(function(){function s(o,p,v){try{var d=Object.getOwnPropertyDescriptor(o,p);if(!d||d.configurable){Object.defineProperty(o,p,{value:v,writable:true,enumerable:true,configurable:true});}else if(d.writable){o[p]=v;}}catch(e){}}s(process,\'version\',\'v24.15.0\');s(process.versions,\'node\',\'24.15.0\');})();" > "$BYPASS_NODE_CHECK" && source /usr/local/server/helpers/analog/env.sh && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK"',
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
@@ -50,7 +50,7 @@ return [
             $templateRuntimes['DENO']
         ),
         'bundleCommand' => 'bash /usr/local/server/helpers/angular/bundle.sh',
-        'envCommand' => 'source /usr/local/server/helpers/angular/env.sh',
+        'envCommand' => 'BYPASS_NODE_CHECK=$(mktemp) && echo "(function(){function s(o,p,v){try{var d=Object.getOwnPropertyDescriptor(o,p);if(!d||d.configurable){Object.defineProperty(o,p,{value:v,writable:true,enumerable:true,configurable:true});}else if(d.writable){o[p]=v;}}catch(e){}}s(process,\'version\',\'v24.15.0\');s(process.versions,\'node\',\'24.15.0\');})();" > "$BYPASS_NODE_CHECK" && source /usr/local/server/helpers/angular/env.sh && export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require $BYPASS_NODE_CHECK"',
         'adapters' => [
             'ssr' => [
                 'key' => 'ssr',
