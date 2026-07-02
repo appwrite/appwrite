@@ -75,6 +75,7 @@ services:
       - redis
       - ${_APP_DB_HOST:-mongodb}
       - appwrite-embedding
+      - appwrite-geo
     environment:
       - _APP_ENV
       - _APP_EDITION
@@ -201,6 +202,8 @@ services:
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
       - _APP_MIGRATION_HOST
+      - _APP_GEO_SECRET
+      - _APP_GEO_ENDPOINT
   appwrite-console:
     logging:
       driver: json-file
@@ -1095,6 +1098,27 @@ services:
     image: appwrite/browser:0.3.2
     networks:
       - appwrite
+
+  appwrite-geo:
+    container_name: appwrite-geo
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    image: appwrite/geo:0.3.0
+    restart: unless-stopped
+    networks:
+      - appwrite
+    environment:
+      - GEO_SECRET=$_APP_GEO_SECRET
+    healthcheck:
+      test: 'php -r "exit(json_decode(file_get_contents(''http://localhost/v1/health''))->status === ''ok'' ? 0 : 1);"'
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
   openruntimes-executor:
     container_name: exc1
     hostname: exc1

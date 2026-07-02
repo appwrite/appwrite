@@ -333,8 +333,6 @@ function getDevice(string $root, string $connection = ''): Device
     }
 }
 
-$container->set('geodb', fn ($register) => $register->get('geodb'), ['register']);
-
 $container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 
 $container->set('servers', function () {
