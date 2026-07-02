@@ -144,7 +144,7 @@ export function OAuth2ConsentCard({
 
         <div className="space-y-3">
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-            {t('This will allow')} {app.name} {t('to')}
+            {t('This will allow')} {app.name} {t('to:')}
           </p>
           <ul className="space-y-3">
             {scopes.map((scope) => {

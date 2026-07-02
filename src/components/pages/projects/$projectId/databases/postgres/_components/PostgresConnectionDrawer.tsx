@@ -328,7 +328,7 @@ export function PostgresConnectionDrawer({
 
               <DetailSection title={t('Activity')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label={t('State')}>
+                  <DetailField label={t('Connection state')}>
                     {stateLabel === '—' ? (
                       <p className="text-[13px] text-muted-foreground">—</p>
                     ) : (

@@ -341,7 +341,7 @@ export function PostgresTableColumnDrawer({
             </div>
             <div className="space-y-2">
               <Label htmlFor="column-check" className="text-[12px] font-medium">
-                {t('Check')}
+                Check
               </Label>
               <p className="text-[11px] text-muted-foreground">
                 SQL expression inside CHECK (...), for example{' '}

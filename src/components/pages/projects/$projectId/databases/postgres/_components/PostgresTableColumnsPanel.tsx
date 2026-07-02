@@ -255,7 +255,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    {t('Check')}
+                    Check
                   </span>
                 </th>
                 <th
