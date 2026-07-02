@@ -378,7 +378,10 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
-        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification') ?? APP_COMPUTE_SPECIFICATION_DEFAULT] ?? null;
+        if (empty($spec)) {
+            $spec = Config::getParam('specifications')[APP_COMPUTE_SPECIFICATION_DEFAULT] ?? [];
+        }
 
         Span::add('function.id', $functionId);
         Span::add('deployment.id', $deploymentId);

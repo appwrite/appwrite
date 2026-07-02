@@ -319,7 +319,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('specifications')[$resource->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('runtimeSpecification') ?? APP_COMPUTE_SPECIFICATION_DEFAULT] ?? null;
+        if (empty($spec)) {
+            $spec = Config::getParam('specifications')[APP_COMPUTE_SPECIFICATION_DEFAULT] ?? [];
+        }
 
         $runtime = match ($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
