@@ -2,8 +2,10 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useT } from '@/lib/i18n/translate'
 
 export function ImaginePlaceholder() {
+  const t = useT()
   const { currentUser, signOut } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
@@ -17,14 +19,14 @@ export function ImaginePlaceholder() {
             ? '/imagine-logo-dark.svg'
             : '/imagine-logo-light.svg'
         }
-        alt="Imagine Logo"
+        alt={t('Imagine Logo')}
         className="size-14"
       />
 
       {currentUser ? (
         <>
           <p className="text-foreground/70">
-            You are signed in as{' '}
+            {t('You are signed in as')}{' '}
             <span className="font-medium">{currentUser.email}</span>
           </p>
           <Button
@@ -34,12 +36,12 @@ export function ImaginePlaceholder() {
               navigate({ to: '/' })
             }}
           >
-            Sign out
+            {t('Sign out')}
           </Button>
         </>
       ) : (
         <>
-          <p className="text-foreground/70">You are not signed in.</p>
+          <p className="text-foreground/70">{t('You are not signed in.')}</p>
           <Link
             to="/sign-in"
             search={{
@@ -47,7 +49,7 @@ export function ImaginePlaceholder() {
             }}
             className="text-blue-500 underline"
           >
-            <Button size="sm">Sign in</Button>
+            <Button size="sm">{t('Sign in')}</Button>
           </Link>
         </>
       )}

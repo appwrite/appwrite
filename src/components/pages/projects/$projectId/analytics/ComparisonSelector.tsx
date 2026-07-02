@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
+import { useT } from '@/lib/i18n/translate'
 
 export type ComparisonType =
   | 'none'
@@ -90,6 +91,7 @@ export function ComparisonSelector({
   onComparisonRangeChange,
   className,
 }: ComparisonSelectorProps) {
+  const t = useT()
   const selectedOption = COMPARISON_OPTIONS.find(
     (opt) => opt.value === comparisonType,
   )
@@ -128,7 +130,7 @@ export function ComparisonSelector({
         >
           <TrendingUp className="h-3.5 w-3.5" />
           <span className="min-w-[120px] text-start">
-            {selectedOption?.label || 'Compare'}
+            {selectedOption ? t(selectedOption.label) : t('Compare')}
           </span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50" />
         </Button>
@@ -144,9 +146,9 @@ export function ComparisonSelector({
                 comparisonType === option.value && 'bg-accent',
               )}
             >
-              <span className="text-[12px] font-medium">{option.label}</span>
+              <span className="text-[12px] font-medium">{t(option.label)}</span>
               <span className="text-[11px] text-muted-foreground">
-                {option.description}
+                {t(option.description)}
               </span>
             </DropdownMenuItem>
           </React.Fragment>

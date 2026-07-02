@@ -22,6 +22,7 @@ import { DateRange } from 'react-day-picker'
 import { useRealtimeMessages } from '@/lib/react-query/hooks/realtime'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { MessageSquare } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 interface RealtimeMessagesProps {
   projectId: string | null | undefined
@@ -30,6 +31,7 @@ interface RealtimeMessagesProps {
 const MESSAGES_PER_PAGE = 25
 
 export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
+  const t = useT()
   useLocation()
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     // Default to last 7 days
@@ -88,7 +90,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
       {isLoading && (!messages || messages.length === 0) ? (
         <div className="flex h-64 items-center justify-center px-4 sm:px-6">
           <p className="text-[13px] text-muted-foreground">
-            Loading messages...
+            {t('Loading messages...')} {/* pragma: allowlist secret */}
           </p>
         </div>
       ) : messages && messages.length > 0 ? (
@@ -97,19 +99,19 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] ps-6 sm:ps-8">
-                  Message ID
+                  {t('Message ID')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
-                  Channel
+                  {t('Channel')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                  Events
+                  {t('Events')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                  Payload Size
+                  {t('Payload Size')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  Timestamp
+                  {t('Timestamp')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -137,7 +139,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
                       ))}
                       {message.channels.length > 2 && (
                         <span className="text-[11px] text-muted-foreground/70 whitespace-nowrap">
-                          +{message.channels.length - 2} more
+                          +{message.channels.length - 2} {t('more')}
                         </span>
                       )}
                     </div>
@@ -155,7 +157,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
                       ))}
                       {message.events.length > 2 && (
                         <span className="text-[11px] text-muted-foreground/70 whitespace-nowrap">
-                          +{message.events.length - 2} more
+                          +{message.events.length - 2} {t('more')}
                         </span>
                       )}
                     </div>
@@ -183,7 +185,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
-              itemLabel="messages"
+              itemLabel={t('messages') /* pragma: allowlist secret */}
               className="py-2"
             />
           </div>
@@ -192,11 +194,11 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
         <div className="px-4 py-12 sm:px-6">
           <EmptyState
             icon={MessageSquare}
-            title="No messages found"
+            title={t('No messages found') /* pragma: allowlist secret */}
             description={
               dateRange
                 ? undefined
-                : 'Realtime messages will appear here when they are received'
+                : t('Realtime messages will appear here when they are received') // pragma: allowlist secret
             }
             isEmpty={!dateRange}
             hasFilters={!!dateRange}

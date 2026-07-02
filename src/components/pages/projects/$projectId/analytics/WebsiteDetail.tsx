@@ -56,6 +56,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import { useT } from '@/lib/i18n/translate'
 
 // Types
 interface VisitorMetric {
@@ -530,6 +531,7 @@ function MetricTab({
   isActive: boolean
   onClick: () => void
 }) {
+  const t = useT()
   // For bounce rate, negative change is good (lower bounce = better)
   const isPositive =
     metric.id === 'bounceRate' ? metric.change < 0 : metric.change > 0
@@ -577,7 +579,7 @@ function MetricTab({
           isActive ? 'text-muted-foreground' : 'text-muted-foreground/70',
         )}
       >
-        {metric.label}
+        {t(metric.label)}
       </span>
       {isActive && (
         <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
@@ -589,6 +591,7 @@ function MetricTab({
 // World Map Component using mapcn
 // Internal component that uses map context
 function MapContent({ data }: { data: LocationData[] }) {
+  const t = useT()
   const { map, isLoaded } = useMap()
 
   // Resize map when it becomes visible or when map loads
@@ -705,7 +708,7 @@ function MapContent({ data }: { data: LocationData[] }) {
                   </span>
                 </div>
                 <div className="mt-1 text-[11px] text-muted-foreground">
-                  {formatNumber(location.visitors)} visitors
+                  {formatNumber(location.visitors)} {t('visitors')}
                 </div>
               </div>
             </MarkerPopup>
@@ -716,7 +719,7 @@ function MapContent({ data }: { data: LocationData[] }) {
       {/* Legend */}
       <div className="absolute bottom-8 start-4 rounded-lg border border-border bg-background/95 px-3 py-2 backdrop-blur-sm">
         <div className="mb-2 text-[11px] font-semibold text-foreground">
-          Visitors
+          {t('Visitors')}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -790,6 +793,7 @@ export function WebsiteAnalyticsDetail({
   websiteName = 'Main Marketing Site',
   onBack,
 }: WebsiteAnalyticsDetailProps) {
+  const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
   const [activeMetric, setActiveMetric] = useState('unique')
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -923,8 +927,8 @@ export function WebsiteAnalyticsDetail({
   }, [techView])
 
   const tabs: Tab[] = [
-    { id: 'analytics', label: 'Analytics' },
-    { id: 'settings', label: 'Settings' },
+    { id: 'analytics', label: t('Analytics') },
+    { id: 'settings', label: t('Settings') },
   ]
 
   const maxLocationVisitors = Math.max(...locationData.map((l) => l.visitors))
@@ -969,7 +973,7 @@ export function WebsiteAnalyticsDetail({
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   <span className="text-[12px] font-medium text-muted-foreground">
-                    30 active visitors
+                    30 {t('active visitors')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1088,7 +1092,7 @@ export function WebsiteAnalyticsDetail({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Traffic sources
+                        {t('Traffic sources')}
                       </h3>
                       <Tabs
                         value={sourcesView}
@@ -1103,19 +1107,19 @@ export function WebsiteAnalyticsDetail({
                             value="channels"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Channels
+                            {t('Channels')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="sources"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Sources
+                            {t('Sources')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="campaigns"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Campaigns
+                            {t('Campaigns')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1166,7 +1170,7 @@ export function WebsiteAnalyticsDetail({
                                     style={{ backgroundColor: channel.color }}
                                   />
                                   <span className="flex-1 truncate text-[12px] font-medium text-foreground">
-                                    {channel.name}
+                                    {t(channel.name)}
                                   </span>
                                   <div className="flex items-center gap-3">
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
@@ -1282,7 +1286,7 @@ export function WebsiteAnalyticsDetail({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Pages
+                        {t('Pages')}
                       </h3>
                       <Tabs
                         value={pagesView}
@@ -1295,19 +1299,19 @@ export function WebsiteAnalyticsDetail({
                             value="top"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Top Pages
+                            {t('Top Pages')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="entry"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Entry Pages
+                            {t('Entry Pages')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="exit"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Exit Pages
+                            {t('Exit Pages')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1378,12 +1382,12 @@ export function WebsiteAnalyticsDetail({
                             >
                               {showAllTopPages ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({topPages.length - 15} more)
+                                  {t('Show more')} ({topPages.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1452,12 +1456,12 @@ export function WebsiteAnalyticsDetail({
                             >
                               {showAllEntryPages ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({entryPages.length - 15} more)
+                                  {t('Show more')} ({entryPages.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1526,12 +1530,12 @@ export function WebsiteAnalyticsDetail({
                             >
                               {showAllExitPages ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({exitPages.length - 15} more)
+                                  {t('Show more')} ({exitPages.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1548,7 +1552,7 @@ export function WebsiteAnalyticsDetail({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Locations
+                        {t('Locations')}
                       </h3>
                       <Tabs
                         value={locationView}
@@ -1563,25 +1567,25 @@ export function WebsiteAnalyticsDetail({
                             value="map"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Map
+                            {t('Map')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="countries"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Countries
+                            {t('Countries')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="regions"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Regions
+                            {t('Regions')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="cities"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Cities
+                            {t('Cities')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1644,7 +1648,7 @@ export function WebsiteAnalyticsDetail({
                                     <div className="flex items-center gap-3">
                                       <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                         {formatNumber(location.uniqueVisitors)}{' '}
-                                        unique
+                                        {t('unique')}
                                       </span>
                                       <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                         {formatNumber(location.visitors)}
@@ -1667,12 +1671,12 @@ export function WebsiteAnalyticsDetail({
                               >
                                 {showAllCountries ? (
                                   <>
-                                    Show less
+                                    {t('Show less')}
                                     <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
-                                    Show more ({locationData.length - 15} more)
+                                    {t('Show more')} ({locationData.length - 15} {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -1744,12 +1748,12 @@ export function WebsiteAnalyticsDetail({
                               >
                                 {showAllRegions ? (
                                   <>
-                                    Show less
+                                    {t('Show less')}
                                     <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
-                                    Show more ({regions.length - 15} more)
+                                    {t('Show more')} ({regions.length - 15} {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -1818,12 +1822,12 @@ export function WebsiteAnalyticsDetail({
                               >
                                 {showAllCities ? (
                                   <>
-                                    Show less
+                                    {t('Show less')}
                                     <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
-                                    Show more ({cities.length - 15} more)
+                                    {t('Show more')} ({cities.length - 15} {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -1841,7 +1845,7 @@ export function WebsiteAnalyticsDetail({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Technology
+                        {t('Technology')}
                       </h3>
                       <Tabs
                         value={techView}
@@ -1854,19 +1858,19 @@ export function WebsiteAnalyticsDetail({
                             value="browsers"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Browsers
+                            {t('Browsers')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="os"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Operating Systems
+                            {t('Operating Systems')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="devices"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Devices
+                            {t('Devices')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1937,12 +1941,12 @@ export function WebsiteAnalyticsDetail({
                             >
                               {showAllBrowsers ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({browsers.length - 15} more)
+                                  {t('Show more')} ({browsers.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2013,13 +2017,13 @@ export function WebsiteAnalyticsDetail({
                             >
                               {showAllOS ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({operatingSystems.length - 15}{' '}
-                                  more)
+                                  {t('Show more')} ({operatingSystems.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2067,7 +2071,7 @@ export function WebsiteAnalyticsDetail({
                                     {device.icon}
                                   </span>
                                   <span className="flex-1 truncate text-[12px] font-medium text-foreground">
-                                    {device.type}
+                                    {t(device.type)}
                                   </span>
                                   <div className="flex items-center gap-3">
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
@@ -2092,12 +2096,12 @@ export function WebsiteAnalyticsDetail({
                             >
                               {showAllDevices ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({devices.length - 15} more)
+                                  {t('Show more')} ({devices.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2116,7 +2120,7 @@ export function WebsiteAnalyticsDetail({
                 <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Peak hours
+                      {t('Peak hours')}
                     </h3>
                   </div>
                   <div className="px-4 pt-3 pb-4">
@@ -2129,7 +2133,7 @@ export function WebsiteAnalyticsDetail({
                         <ChartContainer
                           config={{
                             visitors: {
-                              label: 'Visitors',
+                              label: t('Visitors'),
                               color: 'var(--chart-brand)',
                             },
                           }}
@@ -2170,7 +2174,8 @@ export function WebsiteAnalyticsDetail({
                                   hideLabel
                                   formatter={(value) => (
                                     <span className="text-[12px] font-semibold tabular-nums">
-                                      {formatNumber(value as number)} visitors
+                                      {formatNumber(value as number)}{' '}
+                                      {t('visitors')}
                                     </span>
                                   )}
                                 />
@@ -2193,7 +2198,7 @@ export function WebsiteAnalyticsDetail({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Visitor types
+                      {t('Visitor types')}
                     </h3>
                   </div>
                   <div className="p-4">
@@ -2227,7 +2232,7 @@ export function WebsiteAnalyticsDetail({
                                   {visitorType.icon}
                                 </span>
                                 <span className="text-[12px] font-medium text-foreground">
-                                  {visitorType.type} visitors
+                                  {t(`${visitorType.type} visitors`)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3">
@@ -2261,15 +2266,14 @@ export function WebsiteAnalyticsDetail({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Goals
+                      {t('Goals')}
                     </h3>
                   </div>
                   <div className="p-6 text-center">
                     <p className="mb-4 text-[13px] text-muted-foreground">
-                      Measure how often visitors complete specific actions.
-                      Goals allow you to track registrations, button clicks,
-                      form completions, external link clicks, file downloads,
-                      404 error pages and more.
+                      {t(
+                        'Measure how often visitors complete specific actions. Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.',
+                      )}
                     </p>
                     <div className="flex items-center justify-center gap-2">
                       <Button
@@ -2277,10 +2281,10 @@ export function WebsiteAnalyticsDetail({
                         size="sm"
                         className="h-8 text-[12px]"
                       >
-                        Hide this report
+                        {t('Hide this report')}
                       </Button>
                       <Button size="sm" className="h-8 text-[12px]">
-                        Set up goals →
+                        {t('Set up goals')} →
                       </Button>
                     </div>
                   </div>
@@ -2293,10 +2297,10 @@ export function WebsiteAnalyticsDetail({
             <div className="px-4 py-4 sm:px-6">
               <div className="rounded-xl border border-border bg-card p-5">
                 <h3 className="mb-4 text-[14px] font-medium text-foreground">
-                  Settings
+                  {t('Settings')}
                 </h3>
                 <p className="text-[13px] text-muted-foreground">
-                  Settings content will be displayed here.
+                  {t('Settings content will be displayed here.')}
                 </p>
               </div>
             </div>

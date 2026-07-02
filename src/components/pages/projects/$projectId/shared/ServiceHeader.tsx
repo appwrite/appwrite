@@ -26,6 +26,7 @@ import {
   serviceHeaderIconOnlyButton,
   serviceHeaderShowLabel,
 } from './service-header-container'
+import { useT } from '@/lib/i18n/translate'
 
 export interface Tab {
   id: string
@@ -129,6 +130,7 @@ function ServiceHeaderCreateButton({
   createParams?: Record<string, string>
   onCreate?: () => void
 }) {
+  const t = useT()
   const label = <span className={serviceHeaderShowLabel}>{createLabel}</span>
 
   if (createDisabled) {
@@ -168,7 +170,7 @@ function ServiceHeaderCreateButton({
           <TooltipContent side="bottom">
             <p>
               {createDisabledTooltip ??
-                "You've reached the limit for this resource on your plan"}
+                t("You've reached the limit for this resource on your plan")}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -251,6 +253,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
     },
     ref,
   ) {
+    const t = useT()
     const searchInputRef = useRef<HTMLInputElement>(null)
     const [isCollapsed, setIsCollapsed] = useState(false)
     const hasToolbar =
@@ -517,7 +520,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   <input
                     ref={searchInputRef}
                     type="text"
-                    placeholder={searchPlaceholder}
+                    placeholder={t(searchPlaceholder)}
                     value={searchValue}
                     onChange={(e) => onSearchChange(e.target.value)}
                     className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 ps-10 pe-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -538,7 +541,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     )}
                   >
                     <Filter className="h-3.5 w-3.5 shrink-0" />
-                    <span className={serviceHeaderFiltersLabel}>Filters</span>
+                    <span className={serviceHeaderFiltersLabel}>
+                      {t('Filters')}
+                    </span>
                   </Button>
                 ))}
 
@@ -578,7 +583,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>Refresh</p>
+                      <p>{t('Refresh')}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -598,7 +603,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>{importTooltip ?? 'Import'}</p>
+                      <p>{importTooltip ?? t('Import')}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -618,7 +623,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>{exportTooltip ?? 'Export'}</p>
+                      <p>{exportTooltip ?? t('Export')}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -663,7 +668,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>{isCollapsed ? 'Expand header' : 'Collapse header'}</p>
+                      <p>
+                        {isCollapsed ? t('Expand header') : t('Collapse header')}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Zap, Upload, LogIn } from 'lucide-react'
 import { activityEvents, type ActivityEvent } from '@/lib/utils/mock-data'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { useT } from '@/lib/i18n/translate'
 
 const eventIcons: Record<ActivityEvent['type'], React.ReactNode> = {
   create: <Plus className="h-3 w-3" />,
@@ -36,16 +37,17 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ className, limit = 8 }: ActivityFeedProps) {
+  const t = useT()
   const events = activityEvents.slice(0, limit)
 
   return (
     <div className={cn('rounded-lg border border-border bg-card', className)}>
       <div className="flex items-center justify-between border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
         <h3 className="text-[13px] font-medium text-foreground">
-          Recent Activity
+          {t('Recent Activity')}
         </h3>
         <button className="text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground">
-          View all
+          {t('View all')}
         </button>
       </div>
 
@@ -67,12 +69,12 @@ export function ActivityFeed({ className, limit = 8 }: ActivityFeedProps) {
             <div className="min-w-0 flex-1">
               <p className="truncate text-[12px] text-foreground/80 sm:text-[13px]">
                 <span className="font-medium text-foreground">
-                  {eventLabels[event.type]}
+                  {t(eventLabels[event.type])}
                 </span>{' '}
                 {event.resource}
               </p>
               <p className="text-[10px] text-muted-foreground sm:text-[11px]">
-                by {event.userName}
+                {t('by')} {event.userName}
               </p>
             </div>
 

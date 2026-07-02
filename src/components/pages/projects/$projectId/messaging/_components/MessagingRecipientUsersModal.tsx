@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useProjectUsers } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export function MessagingRecipientUsersModal({
   open,
@@ -27,6 +28,7 @@ export function MessagingRecipientUsersModal({
   existingUserIds: Set<string>
   onConfirm: (userIds: string[]) => void
 }) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
@@ -68,16 +70,17 @@ export function MessagingRecipientUsersModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0 max-h-[80dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add users</DialogTitle>
+          <DialogTitle>{t('Add users')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Users receive this message on every target matching the message
-            channel for their account.
+            {t(
+              'Users receive this message on every target matching the message channel for their account.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0 flex-1 min-h-0 flex flex-col gap-3">
           <Input
-            placeholder="Search users by name, email, or ID…"
+            placeholder={t('Search users by name, email, or ID…')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -88,7 +91,7 @@ export function MessagingRecipientUsersModal({
           <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
             {isLoading ? (
               <div className="py-8 text-center text-[13px] text-muted-foreground">
-                Loading users…
+                {t('Loading users…')}
               </div>
             ) : users.length === 0 ? (
               <EmptyState
@@ -138,10 +141,10 @@ export function MessagingRecipientUsersModal({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={selectedUserIds.size === 0}>
-            Add
+            {t('Add')}
           </Button>
         </div>
       </DialogContent>

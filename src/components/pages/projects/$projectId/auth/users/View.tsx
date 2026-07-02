@@ -34,6 +34,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -199,6 +200,7 @@ function BrowserIcon({
 }
 
 export function View() {
+  const t = useT()
   const { projectId, userId } = useParams({
     strict: false,
   })
@@ -255,7 +257,7 @@ export function View() {
     () => [
       {
         id: 'overview',
-        label: 'Overview',
+        label: t('Overview'),
         to: '/projects/$projectId/auth/users/$userId',
         params: {
           projectId: projectId as string,
@@ -264,7 +266,7 @@ export function View() {
       },
       {
         id: 'memberships',
-        label: 'Memberships',
+        label: t('Memberships'),
         to: '/projects/$projectId/auth/users/$userId/memberships',
         params: {
           projectId: projectId as string,
@@ -273,7 +275,7 @@ export function View() {
       },
       {
         id: 'identities',
-        label: 'Identities',
+        label: t('Identities'),
         to: '/projects/$projectId/auth/users/$userId/identities',
         params: {
           projectId: projectId as string,
@@ -282,7 +284,7 @@ export function View() {
       },
       {
         id: 'targets',
-        label: 'Targets',
+        label: t('Targets'),
         to: '/projects/$projectId/auth/users/$userId/targets',
         params: {
           projectId: projectId as string,
@@ -291,7 +293,7 @@ export function View() {
       },
       {
         id: 'sessions',
-        label: 'Sessions',
+        label: t('Sessions'),
         to: '/projects/$projectId/auth/users/$userId/sessions',
         params: {
           projectId: projectId as string,
@@ -299,7 +301,7 @@ export function View() {
         },
       },
     ],
-    [projectId, userId],
+    [projectId, userId, t],
   )
 
   const handleBack = () => {
@@ -315,16 +317,16 @@ export function View() {
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Missing project ID or user ID
+            {t('Missing project ID or user ID')}
           </p>
           {!projectId && (
             <p className="text-[12px] text-muted-foreground mt-2">
-              Project ID is required
+              {t('Project ID is required')}
             </p>
           )}
           {!userId && (
             <p className="text-[12px] text-muted-foreground mt-2">
-              User ID is required
+              {t('User ID is required')}
             </p>
           )}
         </div>
@@ -345,10 +347,12 @@ export function View() {
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-destructive mb-2">
-            Error loading user
+            {t('Error loading user')}
           </p>
           <p className="text-[12px] text-muted-foreground">
-            {userError instanceof Error ? userError.message : 'Unknown error'}
+            {userError instanceof Error
+              ? userError.message
+              : t('Unknown error')}
           </p>
         </div>
       </div>
@@ -359,10 +363,12 @@ export function View() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">User not found</p>
+          <p className="text-[13px] text-muted-foreground">
+            {t('User not found')}
+          </p>
           {projectId && userId && (
             <p className="text-[12px] text-muted-foreground mt-2">
-              Project: {projectId}, User: {userId}
+              {t('Project')}: {projectId}, {t('User')}: {userId}
             </p>
           )}
         </div>
@@ -371,16 +377,16 @@ export function View() {
   }
 
   const userName = user.name || '-'
-  const displayName = user.name || user.email || user.phone || 'Anonymous'
+  const displayName = user.name || user.email || user.phone || t('Anonymous')
 
   const handleDeleteAllSessions = () => {
     deleteAllSessions.mutate(undefined, {
       onSuccess: () => {
-        toast.success('All sessions have been deleted')
+        toast.success(t('All sessions have been deleted'))
         setDeleteAllSessionsDialogOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to delete all sessions')
+        toast.error(error.message || t('Failed to delete all sessions'))
       },
     })
   }
@@ -396,7 +402,7 @@ export function View() {
             projectId={projectId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to users',
+              'aria-label': t('Back to users'),
             }}
           />
         }
@@ -414,14 +420,18 @@ export function View() {
               className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
               onClick={() => setDeleteAllSessionsDialogOpen(true)}
               disabled={deleteAllSessions.isPending}
-              aria-label="Delete all sessions"
+              aria-label={t('Delete all sessions')}
             >
               <LogOut className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
-              <span className="hidden @[640px]:inline">Delete all sessions</span>
+              <span className="hidden @[640px]:inline">
+                {t('Delete all sessions')}
+              </span>
             </Button>
           ) : undefined
         }
-        createLabel={activeTab === 'memberships' ? 'Create membership' : undefined}
+        createLabel={
+          activeTab === 'memberships' ? t('Create membership') : undefined
+        }
         onCreate={
           activeTab === 'memberships'
             ? () => setCreateMembershipDialogOpen(true)
@@ -437,12 +447,12 @@ export function View() {
                 >
                   <Info className="h-4 w-4 text-blue-500" />
                   <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
-                    User targets
+                    {t('User targets')}
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                    User targets include emails, phone numbers, and devices with
-                    your app installed. These targets can subscribe to a topic
-                    and receive messages published to it.
+                    {t(
+                      'User targets include emails, phone numbers, and devices with your app installed. These targets can subscribe to a topic and receive messages published to it.', // pragma: allowlist secret
+                    )}
                   </AlertDescription>
                 </Alert>
               </div>
@@ -509,11 +519,13 @@ export function View() {
         >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete all sessions</DialogTitle>
+              <DialogTitle>{t('Delete all sessions')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete{' '}
-                <strong>all of {displayName}'s sessions</strong>? This action
-                cannot be undone.
+                {t('Are you sure you want to delete')}{' '}
+                <strong>
+                  {t('all sessions of')} {displayName}
+                </strong>
+                ? {t('This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -522,14 +534,14 @@ export function View() {
                 onClick={() => setDeleteAllSessionsDialogOpen(false)}
                 disabled={deleteAllSessions.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteAllSessions}
                 disabled={deleteAllSessions.isPending}
               >
-                Delete all sessions
+                {t('Delete all sessions')}
               </Button>
             </div>
           </DialogContent>
@@ -615,6 +627,7 @@ function UserStatusCard({
   userId: string
   displayName: string
 }) {
+  const t = useT()
   const [, setVerifyMenuOpen] = useState(false)
   const updateEmailVerification = useUpdateUserEmailVerification(
     projectId,
@@ -654,12 +667,14 @@ function UserStatusCard({
     updateEmailVerification.mutate(!emailVerified, {
       onSuccess: () => {
         toast.success(
-          `${displayName}'s email has been ${emailVerified ? 'unverified' : 'verified'}`,
+          emailVerified
+            ? `${displayName}: ${t('email has been unverified')}`
+            : `${displayName}: ${t('email has been verified')}`,
         )
         setVerifyMenuOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update email verification')
+        toast.error(error.message || t('Failed to update email verification'))
       },
     })
   }
@@ -668,12 +683,14 @@ function UserStatusCard({
     updatePhoneVerification.mutate(!phoneVerified, {
       onSuccess: () => {
         toast.success(
-          `${displayName}'s phone has been ${phoneVerified ? 'unverified' : 'verified'}`,
+          phoneVerified
+            ? `${displayName}: ${t('phone has been unverified')}`
+            : `${displayName}: ${t('phone has been verified')}`,
         )
         setVerifyMenuOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update phone verification')
+        toast.error(error.message || t('Failed to update phone verification'))
       },
     })
   }
@@ -682,11 +699,13 @@ function UserStatusCard({
     updateStatus.mutate(isBlocked, {
       onSuccess: () => {
         toast.success(
-          `${displayName} has been ${isBlocked ? 'unblocked' : 'blocked'}`,
+          isBlocked
+            ? `${displayName} ${t('has been unblocked')}`
+            : `${displayName} ${t('has been blocked')}`,
         )
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update status')
+        toast.error(error.message || t('Failed to update status'))
       },
     })
   }
@@ -697,7 +716,9 @@ function UserStatusCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Status</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Status')}
+        </h3>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
@@ -712,7 +733,7 @@ function UserStatusCard({
                 variant={statusBadge.variant}
                 className="text-[10px] shrink-0"
               >
-                {statusBadge.label}
+                {t(statusBadge.label)}
               </Badge>
             </div>
             <div className="space-y-1 text-[13px] text-muted-foreground">
@@ -730,18 +751,18 @@ function UserStatusCard({
               )}
               {joinedDate && (
                 <div className="flex items-center gap-1.5">
-                  <span>Joined:</span>
+                  <span>{t('Joined:')}</span>
                   <DateTooltip date={joinedDate} />
                 </div>
               )}
               {lastActivity ? (
                 <div className="flex items-center gap-1.5">
-                  <span>Last activity:</span>
+                  <span>{t('Last activity:')}</span>
                   <DateTooltip date={lastActivity} />
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <span>Last activity: never</span>
+                  <span>{t('Last activity: never')}</span>
                 </div>
               )}
             </div>
@@ -757,7 +778,7 @@ function UserStatusCard({
             onClick={handleVerifyEmail}
             disabled={updateEmailVerification.isPending}
           >
-            {emailVerified ? 'Unverify' : 'Verify'} Email
+            {emailVerified ? t('Unverify Email') : t('Verify Email')}
           </Button>
         )}
         {hasPhone && (
@@ -768,7 +789,7 @@ function UserStatusCard({
             onClick={handleVerifyPhone}
             disabled={updatePhoneVerification.isPending}
           >
-            {phoneVerified ? 'Unverify' : 'Verify'} Phone
+            {phoneVerified ? t('Unverify Phone') : t('Verify Phone')}
           </Button>
         )}
         <Button
@@ -778,7 +799,7 @@ function UserStatusCard({
           onClick={handleBlockToggle}
           disabled={updateStatus.isPending}
         >
-          {isBlocked ? 'Unblock' : 'Block'} Account
+          {isBlocked ? t('Unblock Account') : t('Block Account')}
         </Button>
       </div>
     </div>
@@ -794,6 +815,7 @@ function UserImpersonationCapabilityCard({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [canImpersonate, setCanImpersonate] = useState(!!user.impersonator)
   const updateImpersonator = useUpdateUserImpersonator(projectId, userId)
 
@@ -807,12 +829,14 @@ function UserImpersonationCapabilityCard({
       onSuccess: () => {
         toast.success(
           checked
-            ? 'User impersonation has been enabled for this account'
-            : 'User impersonation has been disabled for this account',
+            ? t('User impersonation has been enabled for this account')
+            : t('User impersonation has been disabled for this account'),
         )
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update impersonation setting')
+        toast.error(
+          error.message || t('Failed to update impersonation setting'),
+        )
         setCanImpersonate(!!user.impersonator)
       },
     })
@@ -822,17 +846,14 @@ function UserImpersonationCapabilityCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          User impersonation
+          {t('User impersonation')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          When enabled, this user may use the Appwrite client SDK&apos;s
-          impersonation support in your app: you designate which other project
-          user a session should run as, and the SDK applies that context on
-          outgoing requests so the API treats each call like it came from the
-          impersonated user - permissions, data access, and limits follow that
-          identity.{' '}
+          {t(
+            "When enabled, this user may use the Appwrite client SDK's impersonation support in your app: you designate which other project user a session should run as, and the SDK applies that context on outgoing requests so the API treats each call like it came from the impersonated user - permissions, data access, and limits follow that identity.", // pragma: allowlist secret
+          )}{' '}
           <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/impersonation">
-            Documentation
+            {t('Documentation')}
             <ExternalLink className="h-3 w-3 shrink-0" />
           </DocsRouteLink>
         </p>
@@ -842,12 +863,12 @@ function UserImpersonationCapabilityCard({
         >
           <Info className="h-4 w-4" />
           <AlertTitle className="text-[13px] font-medium text-foreground">
-            Note
+            {t('Note')}
           </AlertTitle>
           <AlertDescription className="text-[12px] text-muted-foreground">
-            Grant this only for trusted operator or support-style accounts.
-            Audit logs still attribute actions to the account that started
-            impersonation, not only the impersonated user.
+            {t(
+              'Grant this only for trusted operator or support-style accounts. Audit logs still attribute actions to the account that started impersonation, not only the impersonated user.',
+            )}
           </AlertDescription>
         </Alert>
       </div>
@@ -863,12 +884,12 @@ function UserImpersonationCapabilityCard({
                 htmlFor="user-impersonation-toggle"
                 className="text-[13px] font-semibold text-foreground cursor-pointer"
               >
-                Impersonation capability
+                {t('Impersonation capability')}
               </Label>
               <p className="text-[12px] text-muted-foreground">
                 {canImpersonate
-                  ? 'This user may impersonate others in this project'
-                  : 'This user cannot impersonate others'}
+                  ? t('This user may impersonate others in this project')
+                  : t('This user cannot impersonate others')}
               </p>
             </div>
           </div>
@@ -894,6 +915,7 @@ function UpdateNameSection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [userName, setUserName] = useState(user.name || '')
   const updateName = useUpdateUserName(projectId, userId)
 
@@ -909,10 +931,10 @@ function UpdateNameSection({
     if (!isDisabled) {
       updateName.mutate(userName, {
         onSuccess: () => {
-          toast.success('Name has been updated')
+          toast.success(t('Name has been updated'))
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update name')
+          toast.error(error.message || t('Failed to update name'))
         },
       })
     }
@@ -922,21 +944,21 @@ function UpdateNameSection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update name
+          {t('Update name')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Update the user's display name.
+          {t("Update the user's display name.")}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t('Name')}</Label>
             <Input
               id="name"
               type="text"
-              placeholder="Enter name"
+              placeholder={t('Enter name')}
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               disabled={updateName.isPending}
@@ -952,7 +974,7 @@ function UpdateNameSection({
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -970,6 +992,7 @@ function UpdateEmailSection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [userEmail, setUserEmail] = useState(user.email || '')
   const updateEmail = useUpdateUserEmail(projectId, userId)
 
@@ -985,10 +1008,10 @@ function UpdateEmailSection({
     if (!isDisabled) {
       updateEmail.mutate(userEmail, {
         onSuccess: () => {
-          toast.success('Email has been updated')
+          toast.success(t('Email has been updated'))
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update email')
+          toast.error(error.message || t('Failed to update email'))
         },
       })
     }
@@ -998,21 +1021,21 @@ function UpdateEmailSection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update email
+          {t('Update email')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Update the user's email address.
+          {t("Update the user's email address.")}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('Email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter email"
+              placeholder={t('Enter email')}
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
               disabled={updateEmail.isPending}
@@ -1028,7 +1051,7 @@ function UpdateEmailSection({
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -1046,6 +1069,7 @@ function UpdatePhoneSection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [userPhone, setUserPhone] = useState(user.phone || '')
   const updatePhone = useUpdateUserPhone(projectId, userId)
 
@@ -1061,10 +1085,10 @@ function UpdatePhoneSection({
     if (!isDisabled) {
       updatePhone.mutate(userPhone, {
         onSuccess: () => {
-          toast.success('Phone has been updated')
+          toast.success(t('Phone has been updated'))
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update phone')
+          toast.error(error.message || t('Failed to update phone'))
         },
       })
     }
@@ -1074,21 +1098,21 @@ function UpdatePhoneSection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update phone
+          {t('Update phone')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Update the user's phone number.
+          {t("Update the user's phone number.")}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">{t('Phone')}</Label>
             <Input
               id="phone"
               type="tel"
-              placeholder="For example: +14155552671"
+              placeholder={t('For example: +14155552671')}
               value={userPhone}
               onChange={(e) => setUserPhone(e.target.value)}
               disabled={updatePhone.isPending}
@@ -1096,7 +1120,7 @@ function UpdatePhoneSection({
               autoComplete="off"
             />
             <p className="text-[12px] text-muted-foreground">
-              Phone number must start with '+' and maximum of 15 digits.
+              {t("Phone number must start with '+' and maximum of 15 digits.")}
             </p>
           </div>
         </div>
@@ -1107,7 +1131,7 @@ function UpdatePhoneSection({
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -1123,6 +1147,7 @@ function UpdatePasswordSection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [newPassword, setNewPassword] = useState('')
   const updatePassword = useUpdateUserPassword(projectId, userId)
 
@@ -1133,11 +1158,11 @@ function UpdatePasswordSection({
     if (!isDisabled) {
       updatePassword.mutate(newPassword, {
         onSuccess: () => {
-          toast.success('Password has been updated')
+          toast.success(t('Password has been updated'))
           setNewPassword('')
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update password')
+          toast.error(error.message || t('Failed to update password'))
         },
       })
     }
@@ -1147,21 +1172,21 @@ function UpdatePasswordSection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update password
+          {t('Update password')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Update the user's password.
+          {t("Update the user's password.")}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="password">New password</Label>
+            <Label htmlFor="password">{t('New password')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter new password"
+              placeholder={t('Enter new password')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={updatePassword.isPending}
@@ -1169,7 +1194,7 @@ function UpdatePasswordSection({
               autoComplete="off"
             />
             <p className="text-[12px] text-muted-foreground">
-              A password must contain at least 8 characters.
+              {t('A password must contain at least 8 characters.')}
             </p>
           </div>
         </div>
@@ -1180,7 +1205,7 @@ function UpdatePasswordSection({
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -1198,6 +1223,7 @@ function UpdateLabelsSection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [labels, setLabels] = useState<string[]>(user.labels || [])
   const [labelInput, setLabelInput] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -1218,7 +1244,7 @@ function UpdateLabelsSection({
     if (!trimmed) return
 
     if (!validateLabel(trimmed)) {
-      setError('Only alphanumeric characters are allowed')
+      setError(t('Only alphanumeric characters are allowed'))
       return
     }
 
@@ -1273,10 +1299,10 @@ function UpdateLabelsSection({
     if (!isDisabled) {
       updateLabels.mutate(labels, {
         onSuccess: () => {
-          toast.success('User labels have been updated')
+          toast.success(t('User labels have been updated'))
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update labels')
+          toast.error(error.message || t('Failed to update labels'))
         },
       })
     }
@@ -1286,12 +1312,12 @@ function UpdateLabelsSection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update labels
+          {t('Update labels')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Categorize and manage your users based on specific criteria by
-          assigning them customizable labels. New label-based roles will be
-          assigned.
+          {t(
+            'Categorize and manage your users based on specific criteria by assigning them customizable labels. New label-based roles will be assigned.',
+          )}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
@@ -1303,10 +1329,10 @@ function UpdateLabelsSection({
                 htmlFor="labels"
                 className="text-[13px] font-medium text-foreground"
               >
-                Labels
+                {t('Labels')}
               </Label>
               <p className="text-[12px] text-muted-foreground">
-                Type and press Enter or comma to add labels
+                {t('Type and press Enter or comma to add labels')}
               </p>
               <div className="relative max-w-md">
                 <div
@@ -1345,7 +1371,7 @@ function UpdateLabelsSection({
                     }}
                     onKeyDown={handleLabelInputKeyDown}
                     placeholder={
-                      labels.length === 0 ? 'Enter label (e.g., admin)' : ''
+                      labels.length === 0 ? t('Enter label (e.g., admin)') : ''
                     }
                     className="flex-1 min-w-[120px] bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
                     disabled={updateLabels.isPending}
@@ -1357,12 +1383,14 @@ function UpdateLabelsSection({
                 <p className="text-[12px] text-destructive mt-1">{error}</p>
               )}
               <p className="text-[12px] text-muted-foreground">
-                Only alphanumeric characters are allowed
+                {t('Only alphanumeric characters are allowed')}
               </p>
             </div>
             {suggestedLabels.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[12px] text-muted-foreground">Suggested:</p>
+                <p className="text-[12px] text-muted-foreground">
+                  {t('Suggested:')}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {suggestedLabels.map((label) => (
                     <Button
@@ -1392,7 +1420,7 @@ function UpdateLabelsSection({
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -1410,6 +1438,7 @@ function UpdatePreferencesSection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [preferences, setPreferences] = useState<
     Array<{ key: string; value: string }>
   >([])
@@ -1475,10 +1504,10 @@ function UpdatePreferencesSection({
     if (!isDisabled) {
       updatePrefs.mutate(currentPrefs, {
         onSuccess: () => {
-          toast.success('Preferences have been updated')
+          toast.success(t('Preferences have been updated'))
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update preferences')
+          toast.error(error.message || t('Failed to update preferences'))
         },
       })
     }
@@ -1488,10 +1517,10 @@ function UpdatePreferencesSection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update preferences
+          {t('Update preferences')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Update user preferences as key-value pairs.
+          {t('Update user preferences as key-value pairs.')}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
@@ -1502,7 +1531,7 @@ function UpdatePreferencesSection({
               <div key={index} className="flex items-center gap-2">
                 <Input
                   type="text"
-                  placeholder="Key"
+                  placeholder={t('Key')}
                   value={pref.key}
                   onChange={(e) =>
                     handlePreferenceChange(index, 'key', e.target.value)
@@ -1512,7 +1541,7 @@ function UpdatePreferencesSection({
                 />
                 <Input
                   type="text"
-                  placeholder="Value"
+                  placeholder={t('Value')}
                   value={pref.value}
                   onChange={(e) =>
                     handlePreferenceChange(index, 'value', e.target.value)
@@ -1545,7 +1574,7 @@ function UpdatePreferencesSection({
               disabled={lastRowIncomplete || updatePrefs.isPending}
             >
               <Plus className="me-1.5 h-3.5 w-3.5" />
-              Add preference
+              {t('Add preference')}
             </Button>
           </div>
         </div>
@@ -1556,7 +1585,7 @@ function UpdatePreferencesSection({
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -1578,6 +1607,7 @@ function UpdateMFASection({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [userMfa, setUserMfa] = useState(!!user.mfa)
   const updateMFA = useUpdateUserMFA(projectId, userId)
   const deleteAuthenticator = useDeleteUserMFAAuthenticator(projectId, userId)
@@ -1596,11 +1626,13 @@ function UpdateMFASection({
     updateMFA.mutate(checked, {
       onSuccess: () => {
         toast.success(
-          `Multi-factor authentication has been ${checked ? 'enabled' : 'disabled'}`,
+          checked
+            ? t('Multi-factor authentication has been enabled')
+            : t('Multi-factor authentication has been disabled'),
         )
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update MFA')
+        toast.error(error.message || t('Failed to update MFA'))
         // Revert on error
         setUserMfa(!!user.mfa)
       },
@@ -1619,12 +1651,12 @@ function UpdateMFASection({
     if (authenticatorToDelete) {
       deleteAuthenticator.mutate(authenticatorToDelete.type, {
         onSuccess: () => {
-          toast.success('Authentication method has been deleted')
+          toast.success(t('Authentication method has been deleted'))
           setDeleteDialogOpen(false)
           setAuthenticatorToDelete(null)
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to delete authenticator')
+          toast.error(error.message || t('Failed to delete authenticator'))
         },
       })
     }
@@ -1640,13 +1672,14 @@ function UpdateMFASection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Multi-factor authentication
+            {t('Multi-factor authentication')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Enhance the user&apos;s account security by requiring a second
-            sign-in method.{' '}
+            {t(
+              "Enhance the user's account security by requiring a second sign-in method.",
+            )}{' '}
             <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/mfa">
-              Documentation
+              {t('Documentation')}
               <ExternalLink className="h-3 w-3 shrink-0" />
             </DocsRouteLink>
           </p>
@@ -1659,12 +1692,12 @@ function UpdateMFASection({
                 htmlFor="mfa-toggle"
                 className="text-[13px] font-semibold text-foreground cursor-pointer"
               >
-                Multi-factor authentication
+                {t('Multi-factor authentication')}
               </Label>
               <p className="text-[12px] text-muted-foreground">
                 {userMfa
-                  ? 'MFA is currently enabled'
-                  : 'MFA is currently disabled'}
+                  ? t('MFA is currently enabled')
+                  : t('MFA is currently disabled')}
               </p>
             </div>
             <Switch
@@ -1684,7 +1717,7 @@ function UpdateMFASection({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="text-[14px] font-semibold text-foreground">
-                      Authenticator app
+                      {t('Authenticator app')}
                     </h4>
                     {hasTOTP && (
                       <Badge
@@ -1692,14 +1725,16 @@ function UpdateMFASection({
                         className="text-[10px] shrink-0 gap-1"
                       >
                         <CheckCircle2 className="h-3 w-3" />
-                        connected
+                        {t('connected')}
                       </Badge>
                     )}
                   </div>
                   <p className="text-[13px] text-muted-foreground">
                     {hasTOTP
-                      ? 'User has connected an authenticator app for two-factor authentication.'
-                      : 'No authenticator app has been connected yet.'}
+                      ? t(
+                          'User has connected an authenticator app for two-factor authentication.',
+                        )
+                      : t('No authenticator app has been connected yet.')}
                   </p>
                 </div>
                 {hasTOTP && authenticators.length > 0 && (
@@ -1717,7 +1752,7 @@ function UpdateMFASection({
                       }
                       disabled={deleteAuthenticator.isPending}
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </div>
                 )}
@@ -1729,7 +1764,7 @@ function UpdateMFASection({
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Type
+                          {t('Type')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px]" />
                       </TableRow>
@@ -1749,7 +1784,7 @@ function UpdateMFASection({
                               className="h-8 w-8 p-0"
                               onClick={() => handleDeleteAuthenticator(auth)}
                               disabled={deleteAuthenticator.isPending}
-                              aria-label="Remove authenticator"
+                              aria-label={t('Remove authenticator')}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -1768,10 +1803,11 @@ function UpdateMFASection({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete authentication method</DialogTitle>
+            <DialogTitle>{t('Delete authentication method')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this authentication method? This
-              action cannot be undone.
+              {t(
+                'Are you sure you want to delete this authentication method? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1781,7 +1817,7 @@ function UpdateMFASection({
               className="h-9 text-[13px]"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1790,7 +1826,7 @@ function UpdateMFASection({
               onClick={confirmDeleteAuthenticator}
               disabled={deleteAuthenticator.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -1811,6 +1847,7 @@ function DeleteUserSection({
   userId: string
   displayName: string
 }) {
+  const t = useT()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -1819,14 +1856,14 @@ function DeleteUserSection({
   const handleDelete = () => {
     deleteUser.mutate(userId, {
       onSuccess: () => {
-        toast.success(`${displayName} has been deleted`)
+        toast.success(`${displayName} ${t('has been deleted')}`)
         navigate({
           to: '/projects/$projectId/auth',
           params: { projectId: projectId! },
         })
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to delete user')
+        toast.error(error.message || t('Failed to delete user'))
       },
     })
   }
@@ -1838,14 +1875,15 @@ function DeleteUserSection({
       <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Delete user
+            {t('Delete user')}
           </h3>
         </div>
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Permanently delete this user from the project. This action cannot be
-            undone.
+            {t(
+              'Permanently delete this user from the project. This action cannot be undone.',
+            )}
           </p>
 
           {/* User Info Summary */}
@@ -1863,7 +1901,7 @@ function DeleteUserSection({
                   if (lastActivity) {
                     parts.push(
                       <>
-                        Last activity: <DateTooltip date={lastActivity} />
+                        {t('Last activity:')} <DateTooltip date={lastActivity} />
                       </>,
                     )
                   }
@@ -1886,18 +1924,18 @@ function DeleteUserSection({
                 size="sm"
                 className="h-9 text-[13px]"
               >
-                Delete user
+                {t('Delete user')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Delete user</DialogTitle>
+                <DialogTitle>{t('Delete user')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete{' '}
+                  {t('Are you sure you want to delete')}{' '}
                   <strong>
-                    {displayName} · {project?.name || 'this project'}
+                    {displayName} · {project?.name || t('this project')}
                   </strong>
-                  ? This action cannot be undone.
+                  ? {t('This action cannot be undone.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1908,7 +1946,7 @@ function DeleteUserSection({
                   className="h-9 text-[13px]"
                   onClick={() => setDeleteDialogOpen(false)}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="button"
@@ -1918,7 +1956,7 @@ function DeleteUserSection({
                   onClick={handleDelete}
                   disabled={deleteUser.isPending}
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </DialogContent>
@@ -1944,6 +1982,7 @@ function MembershipsTab({
   createDialogOpen: boolean
   onCreateDialogOpenChange: (open: boolean) => void
 }) {
+  const t = useT()
   const { data, isLoading } = useUserMemberships(projectId, userId)
   const { teams } = useProjectTeams(projectId, 0, 100)
   const createMembershipMutation = useCreateTeamMembership(projectId, null)
@@ -1971,19 +2010,19 @@ function MembershipsTab({
   }) => {
     try {
       const teamName =
-        teams.find((team) => team.id === data.teamId)?.name || 'Team'
+        teams.find((team) => team.id === data.teamId)?.name || t('Team')
       await createMembershipMutation.mutateAsync({
         teamId: data.teamId,
         userId,
         roles: data.roles,
       })
-      toast.success(`${teamName} membership created`)
+      toast.success(`${t('Membership created for team')} ${teamName}`)
       onCreateDialogOpenChange(false)
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to create membership',
+          : t('Failed to create membership'),
       )
     }
   }
@@ -2001,8 +2040,8 @@ function MembershipsTab({
       <div className="space-y-4">
         <EmptyState
           icon={Users}
-          title="No memberships available"
-          description="This user is not a member of any teams."
+          title={t('No memberships available')}
+          description={t('This user is not a member of any teams.')}
           isEmpty={true}
           variant="card"
           iconSize="md"
@@ -2042,16 +2081,16 @@ function MembershipsTab({
                 />
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Name
+                {t('Name')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Status
+                {t('Status')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Roles
+                {t('Roles')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Joined
+                {t('Joined')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -2103,7 +2142,7 @@ function MembershipsTab({
                       variant={membership.confirm ? 'active' : 'pending'}
                       className="text-[10px] shrink-0"
                     >
-                      {membership.confirm ? 'Active' : 'Pending'}
+                      {membership.confirm ? t('Active') : t('Pending')}
                     </Badge>
                   </TableCell>
                   <TableCell
@@ -2194,6 +2233,7 @@ function CreateUserMembershipDialog({
   isLoading,
   teams,
 }: CreateUserMembershipDialogProps) {
+  const t = useT()
   const [teamId, setTeamId] = useState('')
   const [roles, setRoles] = useState<string[]>([])
   const [roleInput, setRoleInput] = useState('')
@@ -2232,9 +2272,9 @@ function CreateUserMembershipDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Create membership</DialogTitle>
+          <DialogTitle>{t('Create membership')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select a team and assign roles for this user.
+            {t('Select a team and assign roles for this user.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -2243,20 +2283,20 @@ function CreateUserMembershipDialog({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="membership-team">
-                Team <span className="text-destructive">*</span>
+                {t('Team')} <span className="text-destructive">*</span>
               </Label>
               <SearchableSelect
                 value={teamId}
                 onValueChange={setTeamId}
                 items={teamItems}
-                placeholder="Select a team"
-                searchPlaceholder="Search teams..."
-                emptyMessage="No available teams"
+                placeholder={t('Select a team')}
+                searchPlaceholder={t('Search teams...')}
+                emptyMessage={t('No available teams')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="membership-roles">Roles</Label>
+              <Label htmlFor="membership-roles">{t('Roles')}</Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -2269,7 +2309,7 @@ function CreateUserMembershipDialog({
                         handleAddRole()
                       }
                     }}
-                    placeholder="Add role"
+                    placeholder={t('Add role')}
                     autoComplete="off"
                   />
                   <Button
@@ -2305,9 +2345,9 @@ function CreateUserMembershipDialog({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
-                  Roles are used to manage access permissions.{' '}
+                  {t('Roles are used to manage access permissions.')}{' '}
                   <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
-                    Learn more about permissions
+                    {t('Learn more about permissions')}
                   </DocsRouteLink>
                 </AlertDescription>
               </Alert>
@@ -2321,13 +2361,13 @@ function CreateUserMembershipDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!teamId || roles.length === 0 || isLoading}
           >
-            Create
+            {t('Create')}
           </Button>
         </div>
       </DialogContent>
@@ -2346,6 +2386,7 @@ function IdentitiesTab({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [page, setPage] = useState(1)
   const [search] = useState('')
   const { data, isLoading } = useUserIdentities(
@@ -2421,8 +2462,8 @@ function IdentitiesTab({
     return (
       <EmptyState
         icon={Key}
-        title="No identities available"
-        description="No OAuth identities linked to this user."
+        title={t('No identities available')}
+        description={t('No OAuth identities linked to this user.')}
         isEmpty={true}
         variant="card"
         iconSize="md"
@@ -2436,8 +2477,9 @@ function IdentitiesTab({
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
           <Info className="h-4 w-4 text-muted-foreground" />
           <p className="text-[13px] text-muted-foreground">
-            User identities are the user's connected OAuth accounts. The user
-            can sign in using these identities.
+            {t(
+              "User identities are the user's connected OAuth accounts. The user can sign in using these identities.",
+            )}
           </p>
         </div>
 
@@ -2446,16 +2488,16 @@ function IdentitiesTab({
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Identity ID
+                  {t('Identity ID')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Provider
+                  {t('Provider')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Email
+                  {t('Email')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Created
+                  {t('Created')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -2520,6 +2562,7 @@ function TargetsTab({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [page, setPage] = useState(1)
   const { data, isLoading } = useUserTargets(
     projectId,
@@ -2545,8 +2588,8 @@ function TargetsTab({
         {targets.length === 0 ? (
           <EmptyState
             icon={Smartphone}
-            title="No targets available"
-            description="No messaging targets configured for this user."
+            title={t('No targets available')}
+            description={t('No messaging targets configured for this user.')}
             isEmpty={true}
             variant="card"
             iconSize="md"
@@ -2558,16 +2601,16 @@ function TargetsTab({
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Target ID
+                      {t('Target ID')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Target
+                      {t('Target')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Provider Type
+                      {t('Provider Type')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Created
+                      {t('Created')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -2635,6 +2678,7 @@ function CreateTargetDialog({
   projectId: string
   userId: string
 }) {
+  const t = useT()
   const [providerType, setProviderType] = useState<string>(
     MessagingProviderType.Push,
   )
@@ -2667,7 +2711,7 @@ function CreateTargetDialog({
     if (providerType === MessagingProviderType.Push) {
       if (!providerId || !identifier || !name) {
         toast.error(
-          'Provider ID, identifier, and name are required for push targets',
+          t('Provider ID, identifier, and name are required for push targets'),
         )
         return
       }
@@ -2681,11 +2725,11 @@ function CreateTargetDialog({
 
     createTarget.mutate(targetData, {
       onSuccess: () => {
-        toast.success('Target has been created')
+        toast.success(t('Target has been created'))
         onOpenChange(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to create target')
+        toast.error(error.message || t('Failed to create target'))
       },
     })
   }
@@ -2694,9 +2738,9 @@ function CreateTargetDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create target</DialogTitle>
+          <DialogTitle>{t('Create target')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Add a new messaging target for this user.
+            {t('Add a new messaging target for this user.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -2704,7 +2748,7 @@ function CreateTargetDialog({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="provider-type" className="text-[12px]">
-                Provider Type <span className="text-destructive">*</span>
+                {t('Provider Type')} <span className="text-destructive">*</span>
               </Label>
               <Select value={providerType} onValueChange={setProviderType}>
                 <SelectTrigger id="provider-type" className="h-9 text-[13px]">
@@ -2712,10 +2756,10 @@ function CreateTargetDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={MessagingProviderType.Push}>
-                    Push
+                    {t('Push')}
                   </SelectItem>
                   <SelectItem value={MessagingProviderType.Email}>
-                    Email
+                    {t('Email')}
                   </SelectItem>
                   <SelectItem value={MessagingProviderType.Sms}>SMS</SelectItem>
                 </SelectContent>
@@ -2726,26 +2770,26 @@ function CreateTargetDialog({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="provider-id" className="text-[12px]">
-                    Provider ID <span className="text-destructive">*</span>
+                    {t('Provider ID')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="provider-id"
                     value={providerId}
                     onChange={(e) => setProviderId(e.target.value)}
-                    placeholder="Enter provider ID"
+                    placeholder={t('Enter provider ID')}
                     className="h-9 text-[13px]"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-[12px]">
-                    Name <span className="text-destructive">*</span>
+                    {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter target name"
+                    placeholder={t('Enter target name')}
                     className="h-9 text-[13px]"
                     required
                   />
@@ -2755,7 +2799,7 @@ function CreateTargetDialog({
 
             <div className="space-y-2">
               <Label htmlFor="identifier" className="text-[12px]">
-                Identifier <span className="text-destructive">*</span>
+                {t('Identifier')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="identifier"
@@ -2768,10 +2812,10 @@ function CreateTargetDialog({
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder={
                   providerType === MessagingProviderType.Push
-                    ? 'Enter push token'
+                    ? t('Enter push token')
                     : providerType === MessagingProviderType.Email
-                      ? 'Enter email address'
-                      : 'Enter phone number'
+                      ? t('Enter email address')
+                      : t('Enter phone number')
                 }
                 className="h-9 text-[13px]"
                 required
@@ -2785,20 +2829,20 @@ function CreateTargetDialog({
                 onCheckedChange={(checked) => setShowCustomId(checked === true)}
               />
               <Label htmlFor="custom-id" className="text-[13px] cursor-pointer">
-                Use custom target ID
+                {t('Use custom target ID')}
               </Label>
             </div>
 
             {showCustomId && (
               <div className="space-y-2">
                 <Label htmlFor="target-id" className="text-[12px]">
-                  Target ID
+                  {t('Target ID')}
                 </Label>
                 <Input
                   id="target-id"
                   value={targetId}
                   onChange={(e) => setTargetId(e.target.value)}
-                  placeholder="Enter custom target ID"
+                  placeholder={t('Enter custom target ID')}
                   className="h-9 text-[13px] font-mono"
                   maxLength={36}
                 />
@@ -2811,10 +2855,10 @@ function CreateTargetDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={createTarget.isPending}>
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>
@@ -2835,6 +2879,7 @@ function SessionsTab({
   userId: string
   displayName: string
 }) {
+  const t = useT()
   const { data, isLoading } = useUserSessions(projectId, userId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [sessionToDelete, setSessionToDelete] = useState<Models.Session | null>(
@@ -2853,12 +2898,12 @@ function SessionsTab({
     if (sessionToDelete) {
       deleteSession.mutate(sessionToDelete.$id, {
         onSuccess: () => {
-          toast.success('Session has been deleted')
+          toast.success(t('Session has been deleted'))
           setDeleteDialogOpen(false)
           setSessionToDelete(null)
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to delete session')
+          toast.error(error.message || t('Failed to delete session'))
         },
       })
     }
@@ -2889,7 +2934,7 @@ function SessionsTab({
         : session.deviceModel || session.deviceBrand || null
 
     return {
-      primary: parts.length > 0 ? parts.join(' ') : 'Unknown device',
+      primary: parts.length > 0 ? parts.join(' ') : t('Unknown device'),
       secondary: osInfo || deviceInfo || null,
     }
   }
@@ -2943,8 +2988,10 @@ function SessionsTab({
     return (
       <EmptyState
         icon={Monitor}
-        title="No active sessions"
-        description="This user doesn't have any active sessions at the moment."
+        title={t('No active sessions')}
+        description={t(
+          "This user doesn't have any active sessions at the moment.",
+        )}
         isEmpty={true}
         variant="card"
         iconSize="md"
@@ -2959,19 +3006,19 @@ function SessionsTab({
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[320px]">
-                Device & Auth
+                {t('Device & Auth')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                Location
+                {t('Location')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                IP Address
+                {t('IP Address')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[160px]">
-                Created
+                {t('Created')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                Expires
+                {t('Expires')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
             </TableRow>
@@ -3002,7 +3049,7 @@ function SessionsTab({
                               variant="success"
                               className="text-[10px] font-medium px-1.5 py-0 h-4"
                             >
-                              Current
+                              {t('Current')}
                             </Badge>
                           )}
                           {hasMFA && (
@@ -3014,7 +3061,7 @@ function SessionsTab({
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="text-xs">
-                                  MFA: {session.factors?.join(', ')}
+                                  {t('MFA')}: {session.factors?.join(', ')}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -3041,7 +3088,7 @@ function SessionsTab({
                                 <Key className="h-3 w-3 text-muted-foreground/60" />
                               )}
                               <span className="text-[11px] text-muted-foreground/80 font-medium">
-                                {getProviderName(session.provider)}
+                                {t(getProviderName(session.provider))}
                               </span>
                             </div>
                           )}
@@ -3068,7 +3115,7 @@ function SessionsTab({
                         session.countryCode &&
                         session.countryCode !== '--'
                           ? session.countryName
-                          : 'Unknown'}
+                          : t('Unknown')}
                       </span>
                     </div>
                   </TableCell>
@@ -3102,8 +3149,8 @@ function SessionsTab({
                       className="h-8 w-8 p-0"
                       onClick={() => handleDelete(session)}
                       disabled={deleteSession.isPending}
-                      title="Revoke session"
-                      aria-label="Revoke session"
+                      title={t('Revoke session')}
+                      aria-label={t('Revoke session')}
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>
@@ -3127,10 +3174,11 @@ function SessionsTab({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete session</DialogTitle>
+            <DialogTitle>{t('Delete session')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this session? This action cannot
-              be undone.
+              {t(
+                'Are you sure you want to delete this session? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -3139,14 +3187,14 @@ function SessionsTab({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteSession.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleteSession.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

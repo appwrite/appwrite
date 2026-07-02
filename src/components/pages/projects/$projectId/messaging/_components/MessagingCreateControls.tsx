@@ -28,6 +28,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -48,6 +49,7 @@ export function MessagingCreateControls({
   disabled?: boolean
   disabledTooltip?: string
 }) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [topicDialogOpen, setTopicDialogOpen] = useState(false)
@@ -71,14 +73,14 @@ export function MessagingCreateControls({
     },
     onSuccess: (msg) => {
       queryClient.refetchQueries({ queryKey: ['messages', 'project', projectId] })
-      toast.success('Draft message created')
+      toast.success(t('Draft message created'))
       navigate({
         to: '/projects/$projectId/messaging/$messageId',
         params: { projectId: projectId!, messageId: msg.$id },
       })
     },
     onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || 'Could not create message'),
+      toast.error(getErrorMessage(e) || t('Could not create message')),
   })
 
   const createDraftSms = useMutation({
@@ -97,14 +99,14 @@ export function MessagingCreateControls({
     },
     onSuccess: (msg) => {
       queryClient.refetchQueries({ queryKey: ['messages', 'project', projectId] })
-      toast.success('Draft message created')
+      toast.success(t('Draft message created'))
       navigate({
         to: '/projects/$projectId/messaging/$messageId',
         params: { projectId: projectId!, messageId: msg.$id },
       })
     },
     onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || 'Could not create message'),
+      toast.error(getErrorMessage(e) || t('Could not create message')),
   })
 
   const createDraftPush = useMutation({
@@ -124,14 +126,14 @@ export function MessagingCreateControls({
     },
     onSuccess: (msg) => {
       queryClient.refetchQueries({ queryKey: ['messages', 'project', projectId] })
-      toast.success('Draft message created')
+      toast.success(t('Draft message created'))
       navigate({
         to: '/projects/$projectId/messaging/$messageId',
         params: { projectId: projectId!, messageId: msg.$id },
       })
     },
     onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || 'Could not create message'),
+      toast.error(getErrorMessage(e) || t('Could not create message')),
   })
 
   const createTopicMutation = useMutation({
@@ -145,7 +147,7 @@ export function MessagingCreateControls({
     },
     onSuccess: async (topic) => {
       await queryClient.refetchQueries({ queryKey: ['topics', 'project', projectId] })
-      toast.success('Topic created')
+      toast.success(t('Topic created'))
       setTopicDialogOpen(false)
       setTopicName('')
       navigate({
@@ -154,7 +156,7 @@ export function MessagingCreateControls({
       })
     },
     onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || 'Could not create topic'),
+      toast.error(getErrorMessage(e) || t('Could not create topic')),
   })
 
   const busy =
@@ -166,10 +168,10 @@ export function MessagingCreateControls({
 
   const label =
     activeTab === 'messages'
-      ? 'Create message'
+      ? t('Create message')
       : activeTab === 'topics'
-        ? 'Create topic'
-        : 'Create provider'
+        ? t('Create topic')
+        : t('Create provider')
 
   if (disabled) {
     return (
@@ -189,7 +191,7 @@ export function MessagingCreateControls({
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p>{disabledTooltip ?? 'You do not have permission to create this resource.'}</p>
+            <p>{disabledTooltip ?? t('You do not have permission to create this resource.')}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -203,33 +205,33 @@ export function MessagingCreateControls({
           variant="brandCta"
           className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
           onClick={() => setTopicDialogOpen(true)}
-          aria-label="Create topic"
+          aria-label={t('Create topic')}
 >
           <Plus className="h-4 w-4 shrink-0" />
-          <span className={serviceHeaderShowLabel}>Create topic</span>
-          <span className="sr-only @[640px]:hidden">Create topic</span>
+          <span className={serviceHeaderShowLabel}>{t('Create topic')}</span>
+          <span className="sr-only @[640px]:hidden">{t('Create topic')}</span>
         </Button>
         <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
           <DialogContent
             className="sm:max-w-md p-0"
 >
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Create topic</DialogTitle>
+              <DialogTitle>{t('Create topic')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Topics group subscribers for email, SMS, or push.
+                {t('Topics group subscribers for email, SMS, or push.')}
               </DialogDescription>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 py-4 space-y-3">
               <div>
                 <Label htmlFor="topic-name" className="text-[13px]">
-                  Name
+                  {t('Name')}
                 </Label>
                 <Input
                   id="topic-name"
                   value={topicName}
                   onChange={(e) => setTopicName(e.target.value)}
-                  placeholder="Marketing"
+                  placeholder={t('Marketing')}
                   className="mt-1.5 h-9"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && topicName.trim()) {
@@ -245,13 +247,13 @@ export function MessagingCreateControls({
                 onClick={() => setTopicDialogOpen(false)}
                 disabled={createTopicMutation.isPending}
 >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 onClick={() => createTopicMutation.mutate(topicName)}
                 disabled={!topicName.trim() || createTopicMutation.isPending}
 >
-                Create
+                {t('Create')}
               </Button>
             </div>
           </DialogContent>
@@ -271,11 +273,11 @@ export function MessagingCreateControls({
             params: { projectId },
           })
         }
-        aria-label="Create provider"
+        aria-label={t('Create provider')}
 >
         <Plus className="h-4 w-4 shrink-0" />
-        <span className={serviceHeaderShowLabel}>Create provider</span>
-        <span className="sr-only @[640px]:hidden">Create provider</span>
+        <span className={serviceHeaderShowLabel}>{t('Create provider')}</span>
+        <span className="sr-only @[640px]:hidden">{t('Create provider')}</span>
       </Button>
     )
   }
@@ -290,11 +292,11 @@ export function MessagingCreateControls({
             'text-[13px] font-medium @[640px]:gap-1.5',
           )}
           disabled={busy}
-          aria-label="Create message"
+          aria-label={t('Create message')}
 >
           <Plus className="h-4 w-4 shrink-0" />
-          <span className={serviceHeaderShowLabel}>Create message</span>
-          <span className="sr-only @[640px]:hidden">Create message</span>
+          <span className={serviceHeaderShowLabel}>{t('Create message')}</span>
+          <span className="sr-only @[640px]:hidden">{t('Create message')}</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
@@ -307,21 +309,21 @@ export function MessagingCreateControls({
           disabled={busy}
 >
           <Mail className="me-2 h-4 w-4 text-muted-foreground" />
-          Email
+          {t('Email')}
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => createDraftSms.mutate()}
           disabled={busy}
 >
           <Phone className="me-2 h-4 w-4 text-muted-foreground" />
-          SMS
+          {t('SMS')}
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => createDraftPush.mutate()}
           disabled={busy}
 >
           <Bell className="me-2 h-4 w-4 text-muted-foreground" />
-          Push
+          {t('Push')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

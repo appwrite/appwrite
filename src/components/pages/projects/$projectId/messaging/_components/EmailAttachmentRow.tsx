@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { StorageFilePreviewThumb } from '@/components/global/shared/StorageFilePreviewThumb'
 import { useFile } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export function parseStorageCompoundId(compound: string): {
   bucketId: string
@@ -28,6 +29,7 @@ export function EmailAttachmentRow({
   isDraft,
   onRemove,
 }: EmailAttachmentRowProps) {
+  const t = useT()
   const parsed = parseStorageCompoundId(compoundId)
   const bucketLabel = parsed
     ? buckets.find((b) => b.$id === parsed.bucketId)?.name ?? parsed.bucketId
@@ -47,7 +49,7 @@ export function EmailAttachmentRow({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-foreground">
-            Invalid attachment
+            {t('Invalid attachment')}
           </p>
           <p className="truncate font-mono text-[11px] text-muted-foreground">
             {compoundId}
@@ -103,7 +105,7 @@ export function EmailAttachmentRow({
           )}
           title={displayName}
         >
-          {isLoading ? 'Loading file…' : displayName}
+          {isLoading ? t('Loading file…') : displayName}
         </p>
         <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
           <Folder className="h-3.5 w-3.5 shrink-0" aria-hidden />

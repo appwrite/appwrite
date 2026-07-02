@@ -8,6 +8,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteRuntimeLoggingCardProps {
   projectId: string | null | undefined
@@ -20,6 +21,7 @@ export function SiteRuntimeLoggingCard({
   siteId,
   site,
 }: SiteRuntimeLoggingCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [logging, setLogging] = useState(true)
 
@@ -37,7 +39,7 @@ export function SiteRuntimeLoggingCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Logging updated successfully')
+      toast.success(t('Logging updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -46,7 +48,7 @@ export function SiteRuntimeLoggingCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update logging'))
+      toast.error(getErrorMessage(error, t('Failed to update logging')))
     },
   })
 
@@ -59,12 +61,13 @@ export function SiteRuntimeLoggingCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Logging</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Logging')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Controls how much detail is captured for each request. Full logging
-          helps you debug production issues with stdout, stderr, and stack
-          traces in the console. Turning logging off reduces overhead and can
-          slightly improve response time when you do not need that detail.
+          {t(
+            'Controls how much detail is captured for each request. Full logging helps you debug production issues with stdout, stderr, and stack traces in the console. Turning logging off reduces overhead and can slightly improve response time when you do not need that detail.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -72,12 +75,14 @@ export function SiteRuntimeLoggingCard({
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Label htmlFor="site-runtime-logging" className="text-[13px]">
-              Full request logging
+              {t('Full request logging')}
             </Label>
             <p className="text-[12px] text-muted-foreground mt-1">
               {logging
-                ? 'Enabled - logs and errors from your site are recorded.'
-                : 'Disabled - lighter request records; responses may be slightly faster.'}
+                ? t('Enabled - logs and errors from your site are recorded.')
+                : t(
+                    'Disabled - lighter request records; responses may be slightly faster.',
+                  )}
             </p>
           </div>
           <Switch
@@ -96,7 +101,7 @@ export function SiteRuntimeLoggingCard({
           disabled={!hasChanges || updateSiteMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

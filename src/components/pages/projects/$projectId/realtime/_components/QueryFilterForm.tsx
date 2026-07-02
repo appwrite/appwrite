@@ -13,6 +13,7 @@ import {
   type SubscriptionQueryEntry,
 } from '@/lib/realtime/subscription-queries'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const LABEL_CLASS = 'mb-1 block text-[12px] font-medium text-muted-foreground'
 const INPUT_CLASS = 'h-9 w-full text-[13px]'
@@ -38,6 +39,7 @@ export function QueryFilterForm({
   onSubmit,
   onCancel,
 }: QueryFilterFormProps) {
+  const t = useT()
   const [attribute, setAttribute] = useState('')
   const [valueType, setValueType] = useState<RealtimeQueryValueType>('string')
   const [operatorKey, setOperatorKey] = useState('equal')
@@ -113,18 +115,18 @@ export function QueryFilterForm({
       return (
         <div className="space-y-1">
           <label className={LABEL_CLASS} htmlFor="query-value">
-            Value
+            {t('Value')}
           </label>
           <SearchableSelect
             value={valueInput}
             onValueChange={setValueInput}
             items={[
-              { value: 'true', label: 'True' },
-              { value: 'false', label: 'False' },
+              { value: 'true', label: t('True') },
+              { value: 'false', label: t('False') },
             ]}
-            placeholder="Select value"
-            searchPlaceholder="Search…"
-            emptyMessage="No results"
+            placeholder={t('Select value')}
+            searchPlaceholder={t('Search…')}
+            emptyMessage={t('No results')}
             disabled={disabled}
             triggerClassName={INPUT_CLASS}
           />
@@ -136,7 +138,7 @@ export function QueryFilterForm({
       return (
         <div className="space-y-1">
           <label className={LABEL_CLASS} htmlFor="query-value">
-            Value
+            {t('Value')}
           </label>
           <Input
             id="query-value"
@@ -156,14 +158,14 @@ export function QueryFilterForm({
     return (
       <div className="space-y-1">
         <label className={LABEL_CLASS} htmlFor="query-value">
-          Value
+          {t('Value')}
         </label>
         <Input
           id="query-value"
           type={isNumericType ? 'number' : 'text'}
           value={valueInput}
           onChange={(event) => setValueInput(event.target.value)}
-          placeholder={isNumericType ? '0' : 'Enter value'}
+          placeholder={isNumericType ? '0' : t('Enter value')}
           className={cn(INPUT_CLASS, isNumericType ? '' : 'font-mono')}
           disabled={disabled}
           spellCheck={false}
@@ -177,7 +179,7 @@ export function QueryFilterForm({
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="space-y-1">
         <label className={LABEL_CLASS} htmlFor="query-attribute">
-          Attribute
+          {t('Attribute')}
         </label>
         <Input
           id="query-attribute"
@@ -193,7 +195,7 @@ export function QueryFilterForm({
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <label className={LABEL_CLASS} htmlFor="query-value-type">
-            Value type
+            {t('Value type')}
           </label>
           <SearchableSelect
             value={valueType}
@@ -202,18 +204,18 @@ export function QueryFilterForm({
             }
             items={REALTIME_QUERY_VALUE_TYPES.map((item) => ({
               value: item.value,
-              label: item.label,
+              label: t(item.label),
             }))}
-            placeholder="Type"
-            searchPlaceholder="Search types…"
-            emptyMessage="No types found"
+            placeholder={t('Type')}
+            searchPlaceholder={t('Search types…')}
+            emptyMessage={t('No types found')}
             disabled={disabled}
             triggerClassName={INPUT_CLASS}
           />
         </div>
         <div className="space-y-1">
           <label className={LABEL_CLASS} htmlFor="query-operator">
-            Operator
+            {t('Operator')}
           </label>
           <SearchableSelect
             value={operatorKey}
@@ -223,11 +225,11 @@ export function QueryFilterForm({
             }}
             items={operators.map((operator) => ({
               value: operator.key,
-              label: operator.label,
+              label: t(operator.label),
             }))}
-            placeholder="Operator"
-            searchPlaceholder="Search operators…"
-            emptyMessage="No operators found"
+            placeholder={t('Operator')}
+            searchPlaceholder={t('Search operators…')}
+            emptyMessage={t('No operators found')}
             disabled={disabled}
             triggerClassName={INPUT_CLASS}
           />
@@ -243,7 +245,7 @@ export function QueryFilterForm({
           className="h-9 min-w-0 flex-1 text-[13px]"
           disabled={disabled || !canSubmit}
         >
-          {submitLabel}
+          {t(submitLabel)}
         </Button>
         {onCancel ? (
           <Button
@@ -254,7 +256,7 @@ export function QueryFilterForm({
             disabled={disabled}
             onClick={onCancel}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
         ) : null}
       </div>

@@ -50,6 +50,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 // Mock data for tracked websites/apps
 const trackedWebsites = [
@@ -197,6 +198,7 @@ function StatHighlight({
 }
 
 function AppwriteSitesBadge() {
+  const t = useT()
   return (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
@@ -207,7 +209,7 @@ function AppwriteSitesBadge() {
           </span>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p>Linked to Appwrite Sites deployment</p>
+          <p>{t('Linked to Appwrite Sites deployment')}</p> {/* pragma: allowlist secret */}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -218,6 +220,7 @@ function TrafficBreakdown({
   traffic}: {
   traffic: { human: number; ai: number }
 }) {
+  const t = useT()
   const total = traffic.human + traffic.ai
   if (total === 0) return null
 
@@ -241,7 +244,7 @@ function TrafficBreakdown({
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p>Human vs AI traffic (last 30 days)</p>
+          <p>{t('Human vs AI traffic (last 30 days)')}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -252,6 +255,7 @@ function DeviceBreakdown({
   devices}: {
   devices: { desktop: number; mobile: number; tablet: number }
 }) {
+  const t = useT()
   const total = devices.desktop + devices.mobile + devices.tablet
   if (total === 0) return null
 
@@ -266,7 +270,9 @@ function DeviceBreakdown({
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>Desktop: {devices.desktop}%</p>
+            <p>
+              {t('Desktop')}: {devices.desktop}%
+            </p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -279,7 +285,9 @@ function DeviceBreakdown({
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>Mobile: {devices.mobile}%</p>
+            <p>
+              {t('Mobile')}: {devices.mobile}%
+            </p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -292,7 +300,9 @@ function DeviceBreakdown({
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>Tablet: {devices.tablet}%</p>
+            <p>
+              {t('Tablet')}: {devices.tablet}%
+            </p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -301,6 +311,7 @@ function DeviceBreakdown({
 }
 
 export function View() {
+  const t = useT()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const navigate = useNavigate()
@@ -356,11 +367,11 @@ export function View() {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Analytics"
-        searchPlaceholder="Search websites..."
+        title={t('Analytics')}
+        searchPlaceholder={t('Search websites...')}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        createLabel="Add Website"
+        createLabel={t('Add Website')}
         onCreate={() => {}}
         showFilters
         fullWidthBorder
@@ -413,14 +424,20 @@ export function View() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <MenuItemContent icon={ExternalLink}>Visit</MenuItemContent>
+                          <MenuItemContent icon={ExternalLink}>
+                            {t('Visit')}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <MenuItemContent icon={Settings}>Settings</MenuItemContent>
+                          <MenuItemContent icon={Settings}>
+                            {t('Settings')}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                          <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
+                          <MenuItemContent icon={Trash2}>
+                            {t('Remove')}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -431,25 +448,25 @@ export function View() {
                     <>
                       <div className="grid grid-cols-2 gap-2">
                         <StatHighlight
-                          label="Visitors"
+                          label={t('Visitors')}
                           value={site.stats.visitors}
                           change={site.stats.visitorsChange}
                           icon={Users}
                         />
                         <StatHighlight
-                          label="Page Views"
+                          label={t('Page Views')}
                           value={site.stats.pageViews}
                           change={site.stats.pageViewsChange}
                           icon={Eye}
                         />
                         <StatHighlight
-                          label="Avg. Duration"
+                          label={t('Avg. Duration')}
                           value={site.stats.avgDuration}
                           change={site.stats.durationChange}
                           icon={Clock}
                         />
                         <StatHighlight
-                          label="Bounce Rate"
+                          label={t('Bounce Rate')}
                           value={`${site.stats.bounceRate}%`}
                           change={site.stats.bounceRateChange}
                           icon={MousePointerClick}
@@ -481,10 +498,10 @@ export function View() {
                         <Globe className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <p className="text-[13px] font-medium text-muted-foreground">
-                        No data yet
+                        {t('No data yet')}
                       </p>
                       <p className="mt-1 text-[12px] text-muted-foreground/70">
-                        Waiting for first visitor
+                        {t('Waiting for first visitor')}
                       </p>
                     </div>
                   )}
@@ -495,8 +512,10 @@ export function View() {
                 <div className="col-span-full py-12">
                   <EmptyState
                     icon={Globe}
-                    title="No websites yet"
-                    description="Add your first website to start tracking analytics"
+                    title={t('No websites yet')}
+                    description={t(
+                      'Add your first website to start tracking analytics',
+                    )}
                     isEmpty={!searchValue}
                     hasFilters={!!searchValue}
                     iconSize="md"
@@ -515,7 +534,7 @@ export function View() {
                   setPageSize(size)
                   setPage(1)
                 }}
-                itemLabel="websites"
+                itemLabel={t('websites')}
               />
             )}
           </div>
@@ -526,25 +545,25 @@ export function View() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
-                      Website
+                      {t('Website')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                      Visitors
+                      {t('Visitors')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                      Page Views
+                      {t('Page Views')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                      Avg. Duration
+                      {t('Avg. Duration')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                      Bounce Rate
+                      {t('Bounce Rate')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                      Traffic
+                      {t('Traffic')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                      Last Activity
+                      {t('Last Activity')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
@@ -668,7 +687,7 @@ export function View() {
                             />
                           ) : (
                             <span className="text-[12px] text-muted-foreground/50">
-                              Never
+                              {t('Never')}
                             </span>
                           )}
                         </Link>
@@ -684,18 +703,24 @@ export function View() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
                               <MenuItemContent icon={BarChart3}>
-                                Analytics
+                                {t('Analytics')}
                               </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <MenuItemContent icon={ExternalLink}>Visit</MenuItemContent>
+                              <MenuItemContent icon={ExternalLink}>
+                                {t('Visit')}
+                              </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <MenuItemContent icon={Settings}>Settings</MenuItemContent>
+                              <MenuItemContent icon={Settings}>
+                                {t('Settings')}
+                              </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem>
-                              <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
+                              <MenuItemContent icon={Trash2}>
+                                {t('Remove')}
+                              </MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -715,14 +740,14 @@ export function View() {
                 setPageSize(size)
                 setPage(1)
               }}
-              itemLabel="websites"
+              itemLabel={t('websites')}
             />
           </>
         ) : (
           <EmptyState
             icon={Globe}
-            title="No websites yet"
-            description="Add your first website to start tracking analytics"
+            title={t('No websites yet')}
+            description={t('Add your first website to start tracking analytics')}
             isEmpty={!searchValue}
             hasFilters={!!searchValue}
             variant="card"

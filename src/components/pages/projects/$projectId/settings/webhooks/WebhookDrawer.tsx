@@ -35,6 +35,7 @@ import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 function getWebhookSecret(webhook: Models.Webhook | null | undefined) {
   if (!webhook) return ''
@@ -43,6 +44,7 @@ function getWebhookSecret(webhook: Models.Webhook | null | undefined) {
 }
 
 function CopyableSecret({ value }: { value: string }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -62,7 +64,7 @@ function CopyableSecret({ value }: { value: string }) {
         size="icon"
         className="h-7 w-7 shrink-0"
         onClick={handleCopy}
-        aria-label="Copy secret"
+        aria-label={t('Copy secret')}
 >
         {copied ? (
           <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -91,6 +93,7 @@ export function WebhookDrawer({
   onSuccess,
   onDelete,
 }: WebhookDrawerProps) {
+  const t = useT()
   const isEditing = !!webhook
 
   const createMutation = useCreateWebhook(projectId)
@@ -149,9 +152,9 @@ export function WebhookDrawer({
 
   const canSubmit = !!name.trim() && !!url.trim()
   const submitDisabledReason = !name.trim()
-    ? 'Enter a webhook name.'
+    ? t('Enter a webhook name.')
     : !url.trim()
-      ? 'Enter a webhook URL.'
+      ? t('Enter a webhook URL.')
       : undefined
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -180,11 +183,11 @@ export function WebhookDrawer({
       setRevealedSecret(secret)
       toast.success(
         customSecret.trim()
-          ? 'Webhook secret updated.'
-          : 'Webhook secret rotated.',
+          ? t('Webhook secret updated.')
+          : t('Webhook secret rotated.'),
       )
     } catch (error) {
-      toast.error(getErrorMessage(error as Error, 'Failed to rotate secret'))
+      toast.error(getErrorMessage(error as Error, t('Failed to rotate secret')))
     }
   }
 
@@ -207,10 +210,10 @@ export function WebhookDrawer({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
-    if (!name.trim()) newErrors.name = 'Name is required'
-    if (!url.trim()) newErrors.url = 'URL is required'
-    if (events.length === 0) newErrors.events = 'Select at least one event'
-    if (events.length > 100) newErrors.events = 'Maximum 100 events allowed'
+    if (!name.trim()) newErrors.name = t('Name is required')
+    if (!url.trim()) newErrors.url = t('URL is required')
+    if (events.length === 0) newErrors.events = t('Select at least one event')
+    if (events.length > 100) newErrors.events = t('Maximum 100 events allowed')
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -233,12 +236,12 @@ export function WebhookDrawer({
         },
         {
           onSuccess: () => {
-            toast.success('Webhook has been updated')
+            toast.success(t('Webhook has been updated'))
             handleOpenChange(false)
             onSuccess?.()
           },
           onError: (error: Error) => {
-            toast.error(getErrorMessage(error) || 'Failed to update webhook')
+            toast.error(getErrorMessage(error) || t('Failed to update webhook'))
           },
         },
       )
@@ -258,8 +261,8 @@ export function WebhookDrawer({
             const secret = getWebhookSecret(createdWebhook)
             toast.success(
               secret
-                ? 'Webhook created. Secret ready to copy.'
-                : 'Webhook has been created',
+                ? t('Webhook created. Secret ready to copy.')
+                : t('Webhook has been created'),
             )
 
             if (secret) {
@@ -278,7 +281,7 @@ export function WebhookDrawer({
             onSuccess?.()
           },
           onError: (error: Error) => {
-            toast.error(getErrorMessage(error) || 'Failed to create webhook')
+            toast.error(getErrorMessage(error) || t('Failed to create webhook'))
           },
         },
       )
@@ -290,7 +293,7 @@ export function WebhookDrawer({
       <BaseDrawer
         open={open}
         onOpenChange={handleOpenChange}
-        title={isEditing ? 'Update webhook' : 'Create webhook'}
+        title={isEditing ? t('Update webhook') : t('Create webhook')}
         maxWidth="sm:max-w-2xl"
 >
         <>
@@ -307,11 +310,11 @@ export function WebhookDrawer({
                     htmlFor="webhook-name"
                     className="text-[12px] font-medium"
 >
-                    Name <span className="text-destructive">*</span>
+                    {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="webhook-name"
-                    placeholder="Enter webhook name"
+                    placeholder={t('Enter webhook name')}
                     value={name}
                     onChange={(e) => {
                       setName(e.target.value)
@@ -333,7 +336,7 @@ export function WebhookDrawer({
                     htmlFor="webhook-url"
                     className="text-[12px] font-medium"
 >
-                    POST URL <span className="text-destructive">*</span>
+                    {t('POST URL')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="webhook-url"
@@ -355,7 +358,7 @@ export function WebhookDrawer({
 
                 <div className="space-y-2">
                   <Label className="text-[12px] font-medium">
-                    Events <span className="text-destructive">*</span>
+                    {t('Events')} <span className="text-destructive">*</span>
                   </Label>
                   <EventSelector
                     projectId={projectId}
@@ -388,7 +391,7 @@ export function WebhookDrawer({
                       htmlFor="webhook-enabled"
                       className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 >
-                      Enabled
+                      {t('Enabled')}
                     </Label>
                   </div>
                 )}
@@ -396,7 +399,7 @@ export function WebhookDrawer({
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Security
+                      {t('Security')}
                     </h3>
                   </div>
                   <div className="border-t border-border" />
@@ -406,11 +409,11 @@ export function WebhookDrawer({
                         htmlFor="webhook-authUsername"
                         className="text-[12px] font-medium text-muted-foreground"
 >
-                        User
+                        {t('User')}
                       </Label>
                       <Input
                         id="webhook-authUsername"
-                        placeholder="Enter username"
+                        placeholder={t('Enter username')}
                         value={authUsername}
                         onChange={(e) => setAuthUsername(e.target.value)}
                         disabled={isPending}
@@ -421,15 +424,15 @@ export function WebhookDrawer({
                         htmlFor="webhook-authPassword"
                         className="text-[12px] font-medium text-muted-foreground"
 >
-                        Password
+                        {t('Password')}
                       </Label>
                       <Input
                         id="webhook-authPassword"
                         type="password"
                         placeholder={
                           isEditing
-                            ? 'Leave blank to keep existing'
-                            : 'Enter password'
+                            ? t('Leave blank to keep existing')
+                            : t('Enter password')
                         }
                         value={authPassword}
                         onChange={(e) => setAuthPassword(e.target.value)}
@@ -447,13 +450,13 @@ export function WebhookDrawer({
                         htmlFor="webhook-tls"
                         className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 >
-                        Certificate verification (SSL/TLS)
+                        {t('Certificate verification (SSL/TLS)')}
                       </Label>
                     </div>
                     <p className="text-[13px] text-muted-foreground">
-                      Set an optional basic HTTP authentication username and
-                      password to protect your endpoint from unauthorized
-                      access.
+                      {t(
+                        'Set an optional basic HTTP authentication username and password to protect your endpoint from unauthorized access.',
+                      )}
                     </p>
                   </div>
                 </div>
@@ -462,13 +465,14 @@ export function WebhookDrawer({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Webhook secret
+                        {t('Webhook secret')}
                       </h3>
                       <p className="mt-2 text-[13px] text-muted-foreground">
-                        Used to validate incoming webhook payloads with the
-                        X-Appwrite-Webhook-Signature header.{' '}
+                        {t(
+                          'Used to validate incoming webhook payloads with the X-Appwrite-Webhook-Signature header.', // pragma: allowlist secret
+                        )}{' '}
                         <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/advanced/platform/webhooks#verification">
-                          Learn more
+                          {t('Learn more')}
                           <ExternalLink className="h-3 w-3 shrink-0" />
                         </DocsRouteLink>
                       </p>
@@ -478,8 +482,9 @@ export function WebhookDrawer({
                       <div className="flex min-w-0 items-start gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5 text-[13px] text-muted-foreground">
                         <Info className="mt-0.5 h-4 w-4 shrink-0" />
                         <p>
-                          This secret is only shown once after webhook creation
-                          or secret rotation.
+                          {t(
+                            'This secret is only shown once after webhook creation or secret rotation.',
+                          )}
                         </p>
                       </div>
                     </div>
@@ -495,7 +500,7 @@ export function WebhookDrawer({
                         <RefreshCw
                           className={`me-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
                         />
-                        Rotate secret
+                        {t('Rotate secret')}
                       </Button>
                     </div>
                   </div>
@@ -505,14 +510,15 @@ export function WebhookDrawer({
                   <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden mt-6">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Delete webhook
+                        {t('Delete webhook')}
                       </h3>
                     </div>
                     <div className="border-t border-destructive/20" />
                     <div className="px-6 py-4">
                       <p className="text-[13px] text-muted-foreground">
-                        Permanently delete this webhook. It will stop receiving
-                        events immediately. This action cannot be undone.
+                        {t(
+                          'Permanently delete this webhook. It will stop receiving events immediately. This action cannot be undone.',
+                        )}
                       </p>
                     </div>
                     <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
@@ -525,7 +531,7 @@ export function WebhookDrawer({
                         disabled={isPending}
 >
                         <Trash2 className="me-1.5 h-4 w-4" />
-                        Delete webhook
+                        {t('Delete webhook')}
                       </Button>
                     </div>
                   </div>
@@ -543,7 +549,7 @@ export function WebhookDrawer({
                         disabled
                         aria-describedby="webhook-submit-disabled-reason"
 >
-                        {isEditing ? 'Update' : 'Create webhook'}
+                        {isEditing ? t('Update') : t('Create webhook')}
                       </Button>
                     </span>
                   </TooltipTrigger>
@@ -559,7 +565,7 @@ export function WebhookDrawer({
                   type="submit"
                   disabled={isPending}
 >
-                  {isEditing ? 'Update' : 'Create webhook'}
+                  {isEditing ? t('Update') : t('Create webhook')}
                 </Button>
               )}
               <Button
@@ -568,7 +574,7 @@ export function WebhookDrawer({
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
 >
-                Cancel
+                {t('Cancel')}
               </Button>
             </div>
           </form>
@@ -591,14 +597,18 @@ export function WebhookDrawer({
             <DialogTitle>
               {revealedSecret
                 ? secretDialogMode === 'create'
-                  ? 'Webhook created'
-                  : 'Webhook secret rotated'
-                : 'Rotate webhook secret'}
+                  ? t('Webhook created')
+                  : t('Webhook secret rotated')
+                : t('Rotate webhook secret')}
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {revealedSecret
-                ? 'This secret is only shown once after webhook creation or secret rotation. Copy it now.'
-                : 'Leave this empty to rotate the webhook secret automatically, or enter a value to set a custom secret.'}
+                ? t(
+                    'This secret is only shown once after webhook creation or secret rotation. Copy it now.',
+                  )
+                : t(
+                    'Leave this empty to rotate the webhook secret automatically, or enter a value to set a custom secret.',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -611,19 +621,19 @@ export function WebhookDrawer({
                   htmlFor="webhook-secret"
                   className="text-[12px] font-medium"
 >
-                  Secret
+                  {t('Secret')}
                 </Label>
                 <Input
                   id="webhook-secret"
                   type="password"
-                  placeholder="Leave empty to auto-generate"
+                  placeholder={t('Leave empty to auto-generate')}
                   value={customSecret}
                   onChange={(e) => setCustomSecret(e.target.value)}
                   disabled={regenerateSignatureMutation.isPending}
                   autoComplete="new-password"
                 />
                 <p className="text-[12px] text-muted-foreground">
-                  Used to validate incoming webhook payloads.
+                  {t('Used to validate incoming webhook payloads.')}
                 </p>
               </div>
             )}
@@ -636,7 +646,7 @@ export function WebhookDrawer({
                 className="h-9 text-[13px]"
                 onClick={handleSecretContinue}
 >
-                Continue
+                {t('Continue')}
               </Button>
             ) : (
               <>
@@ -648,7 +658,7 @@ export function WebhookDrawer({
                   onClick={() => setSecretDialogOpen(false)}
                   disabled={regenerateSignatureMutation.isPending}
 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="button"
@@ -657,7 +667,7 @@ export function WebhookDrawer({
                   onClick={handleRotateSecret}
                   disabled={regenerateSignatureMutation.isPending}
 >
-                  {customSecret.trim() ? 'Set custom secret' : 'Rotate secret'}
+                  {customSecret.trim() ? t('Set custom secret') : t('Rotate secret')}
                 </Button>
               </>
             )}

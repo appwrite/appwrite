@@ -32,6 +32,7 @@ import {
   type PostgresColumnTypeState,
 } from '@/lib/postgres-column-types'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresColumnTypeSelectorProps = {
   value: PostgresColumnTypeState
@@ -115,6 +116,7 @@ export function PostgresColumnTypeSelector({
   onChange,
   allowSerialTypes = true,
 }: PostgresColumnTypeSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const definition = getPostgresColumnTypeDefinition(value.typeId)
 
@@ -159,12 +161,12 @@ export function PostgresColumnTypeSelector({
           >
             <Command>
               <CommandInput
-                placeholder="Search types..."
+                placeholder={t('Search types...')}
                 className="h-9 text-[13px]"
               />
               <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
                 <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                  No types found
+                  {t('No types found')}
                 </CommandEmpty>
                 {POSTGRES_COLUMN_TYPE_GROUPS.map((group) => {
                   const options = visibleDefinitions.filter(
@@ -211,7 +213,7 @@ export function PostgresColumnTypeSelector({
       {definition.properties.length > 0 ? (
         <div className="space-y-3 rounded-lg border border-border bg-muted/20 px-3 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Type options
+            {t('Type options')}
           </p>
           {definition.properties.map((property) => (
             <PostgresColumnTypePropertyField

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { useCreateDistributionApp } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { PlatformIcon, platformLabel } from './platform'
 
 interface CreateAppProps {
@@ -40,6 +41,7 @@ const FRAMEWORKS = [
 ]
 
 export function CreateApp({ open, onOpenChange }: CreateAppProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const createApp = useCreateDistributionApp(projectId)
@@ -87,7 +89,7 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
         packageIdentity:
           trimmedId && usesPackageIdentity ? trimmedId : undefined,
       })
-      toast.success('Distribution app created')
+      toast.success(t('Distribution app created'))
       onOpenChange(false)
       reset()
       navigate({
@@ -98,7 +100,7 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to create distribution app',
+          : t('Failed to create distribution app'),
       )
     }
   }
@@ -113,26 +115,27 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
     >
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Create distribution app</DialogTitle>
+          <DialogTitle>{t('Create distribution app')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Pick a framework and platforms to start shipping builds to the app
-            stores.
+            {t(
+              'Pick a framework and platforms to start shipping builds to the app stores.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="flex flex-col gap-4 px-6 py-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="distribution-app-name">Name</Label>
+            <Label htmlFor="distribution-app-name">{t('Name')}</Label>
             <Input
               id="distribution-app-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="My app"
+              placeholder={t('My app')}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="distribution-app-framework">Framework</Label>
+            <Label htmlFor="distribution-app-framework">{t('Framework')}</Label>
             <Select value={framework} onValueChange={setFramework}>
               <SelectTrigger id="distribution-app-framework">
                 <SelectValue />
@@ -148,7 +151,7 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Platforms</Label>
+            <Label>{t('Platforms')}</Label>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((platform) => {
                 const active = platforms.includes(platform)
@@ -174,7 +177,7 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="distribution-app-identifier">
-              Identifier (optional)
+              {t('Identifier (optional)')}
             </Label>
             <Input
               id="distribution-app-identifier"
@@ -191,14 +194,14 @@ export function CreateApp({ open, onOpenChange }: CreateAppProps) {
             onClick={() => onOpenChange(false)}
             disabled={createApp.isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             className="h-9 text-[13px]"
             onClick={handleSubmit}
             disabled={!canSubmit || createApp.isPending}
           >
-            {createApp.isPending ? 'Creating...' : 'Create'}
+            {createApp.isPending ? t('Creating...') : t('Create')}
           </Button>
         </div>
       </DialogContent>

@@ -54,6 +54,7 @@ import {
 } from '@/components/global/shared/ConnectRepositorySection'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
+import { useT } from '@/lib/i18n/translate'
 
 interface TemplateConfigViewProps {
   templateId: string
@@ -64,6 +65,7 @@ export function TemplateConfigView({
   templateId,
   runtimeFromSearch,
 }: TemplateConfigViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -217,20 +219,20 @@ export function TemplateConfigView({
 
   const handleDeploy = async () => {
     if (!projectId || !template) {
-      toast.error('Template not loaded')
+      toast.error(t('Template not loaded'))
       return
     }
     if (!functionName || !runtime) {
-      toast.error('Please fill in function name and runtime')
+      toast.error(t('Please fill in function name and runtime'))
       return
     }
     if (!domain.trim()) {
-      toast.error('Please enter a domain')
+      toast.error(t('Please enter a domain'))
       return
     }
     if (gitConnection === 'now') {
       if (!formData.installationId || !formData.providerRepositoryId) {
-        toast.error('Please select a repository')
+        toast.error(t('Please select a repository'))
         return
       }
     }
@@ -309,7 +311,7 @@ export function TemplateConfigView({
       // Use template deployment so the deployment has source code (same as sites).
       // Payload must match backend expectation: repository name, owner, rootDirectory path in repo (e.g. php/starter), tag reference (e.g. 0.2.*).
       if (!template.providerRepositoryId || !template.providerOwner) {
-        toast.error('Template is missing repository information')
+        toast.error(t('Template is missing repository information'))
         setIsDeploying(false)
         return
       }
@@ -345,7 +347,7 @@ export function TemplateConfigView({
       })
     } catch (err: unknown) {
       toast.error(
-        err instanceof Error ? err.message : 'Failed to create function',
+        err instanceof Error ? err.message : t('Failed to create function'),
       )
       setIsDeploying(false)
     }
@@ -371,7 +373,7 @@ export function TemplateConfigView({
               {template.tagline ||
                 (template.providerOwner && template.providerRepositoryId
                   ? `${template.providerOwner}/${template.providerRepositoryId}`
-                  : 'Template')}
+                  : t('Template'))}
             </p>
           </div>
         </div>
@@ -380,7 +382,7 @@ export function TemplateConfigView({
         {runtime && (
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-              Runtime
+              {t('Runtime')}
             </span>
             <span className="flex items-center gap-1.5 text-[12px] text-foreground">
               <RuntimeIcon runtime={runtime} size="sm" />
@@ -392,7 +394,7 @@ export function TemplateConfigView({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Tag className="h-3.5 w-3.5" />
-              Version
+              {t('Version')}
             </span>
             <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">
               {template.providerVersion}
@@ -403,12 +405,12 @@ export function TemplateConfigView({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Key className="h-3.5 w-3.5" />
-              Variables
+              {t('Variables')}
             </span>
             <span className="text-[12px] text-foreground">
-              {variables.length} configured
+              {variables.length} {t('configured')}
               {template.variables?.length
-                ? ` · ${template.variables.length} in template`
+                ? ` · ${template.variables.length} ${t('in template')}`
                 : ''}
             </span>
           </div>
@@ -428,7 +430,7 @@ export function TemplateConfigView({
               rel="noopener noreferrer"
             >
               <GitBranch className="me-1.5 h-4 w-4" />
-              View source
+              {t('View source')}
             </a>
           </Button>
         </div>
@@ -437,7 +439,7 @@ export function TemplateConfigView({
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[11px] text-muted-foreground">
-            Ready to deploy
+            {t('Ready to deploy')}
           </span>
         </div>
       </div>
@@ -447,7 +449,7 @@ export function TemplateConfigView({
   if (templateLoading || !template) {
     return (
       <WizardLayout
-        title="Create function"
+        title={t('Create function')}
         fallbackPath={`/projects/${projectId}/functions/create`}
         fullscreen
         maxWidth="max-w-[1400px]"
@@ -461,9 +463,9 @@ export function TemplateConfigView({
 
   return (
     <WizardLayout
-      title="Create function"
+      title={t('Create function')}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       fallbackPath={`/projects/${projectId}/functions`}
       onClose={() =>
         navigate({
@@ -493,7 +495,7 @@ export function TemplateConfigView({
             }
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -507,42 +509,44 @@ export function TemplateConfigView({
                 (!formData.providerRepositoryId || !formData.installationId))
             }
           >
-            Create and deploy
+            {t('Create and deploy')}
           </Button>
         </>
       }
     >
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="function-name" className="text-[13px]">
-              Function name
+              {t('Function name')}
             </Label>
             <Input
               id="function-name"
               value={functionName}
               onChange={(e) => setFunctionName(e.target.value)}
-              placeholder="My function"
+              placeholder={t('My function')}
               className="h-9 text-[13px]"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Function ID</Label>
+            <Label className="text-[13px]">{t('Function ID')}</Label>
             <IdInput
               value={functionId}
               onChange={setFunctionId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Runtime</Label>
+            <Label className="text-[13px]">{t('Runtime')}</Label>
             <Select value={runtime} onValueChange={setRuntime}>
               <SelectTrigger className="h-9 text-[13px]">
-                <SelectValue placeholder="Select runtime" />
+                <SelectValue placeholder={t('Select runtime')} />
               </SelectTrigger>
               <SelectContent>
                 {templateRuntimes.map((r) => {
@@ -562,9 +566,9 @@ export function TemplateConfigView({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-[13px]">Public</Label>
+              <Label className="text-[13px]">{t('Public')}</Label>
               <p className="text-[11px] text-muted-foreground">
-                Allow anyone to execute this function (execute role: any)
+                {t('Allow anyone to execute this function (execute role: any)')}
               </p>
             </div>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
@@ -572,14 +576,14 @@ export function TemplateConfigView({
           {specifications.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="specification" className="text-[13px]">
-                Compute
+                {t('Compute')}
               </Label>
               <Select
                 value={specification || undefined}
                 onValueChange={setSpecification}
               >
                 <SelectTrigger id="specification" className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select specification" />
+                  <SelectValue placeholder={t('Select specification')} />
                 </SelectTrigger>
                 <SelectContent>
                   {specifications
@@ -596,12 +600,12 @@ export function TemplateConfigView({
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Runtime specification for your function
+                {t('Runtime specification for your function')}
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
-                  additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} />{' '}
+                  {t('to unlock additional specifications.')}
                 </p>
               )}
             </div>
@@ -634,11 +638,12 @@ export function TemplateConfigView({
           <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
           <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
-              Connect your repository
+              {t('Connect your repository')}
             </span>
             <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              Clone this template into a new Git repository or link it to an
-              existing one.
+              {t(
+                'Clone this template into a new Git repository or link it to an existing one.',
+              )}
             </p>
           </div>
         </Label>
@@ -658,11 +663,12 @@ export function TemplateConfigView({
           />
           <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
-              Connect later
+              {t('Connect later')}
             </span>
             <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              Deploy now and connect your version control later via CLI or Git
-              integration in your function settings.
+              {t(
+                'Deploy now and connect your version control later via CLI or Git integration in your function settings.',
+              )}
             </p>
           </div>
         </Label>
@@ -690,11 +696,19 @@ export function TemplateConfigView({
             setConnectRootDir(r)
             updateFormData({ providerRootDirectory: r })
           }}
-          branchLabelTooltip="Production branch for the repo linked to the function. Successful deployments from this branch get activated automatically."
-          rootDirectoryLabelTooltip="Path to function code in the linked repo. Use the repository root (./) or a subdirectory that contains your function code."
-          rootDirectoryDescription="Choose the directory containing your function code"
-          emptyStateTitle="Connect Git repository"
-          emptyStateDescription="Create and deploy a Function with a connected git repository."
+          branchLabelTooltip={t(
+            'Production branch for the repo linked to the function. Successful deployments from this branch get activated automatically.',
+          )}
+          rootDirectoryLabelTooltip={t(
+            'Path to function code in the linked repo. Use the repository root (./) or a subdirectory that contains your function code.',
+          )}
+          rootDirectoryDescription={t(
+            'Choose the directory containing your function code',
+          )}
+          emptyStateTitle={t('Connect Git repository')}
+          emptyStateDescription={t(
+            'Create and deploy a Function with a connected git repository.',
+          )}
           className="mb-6"
         />
       )}
@@ -729,7 +743,7 @@ export function TemplateConfigView({
                   </Label>
                   {templateVar?.secret && (
                     <span className="text-[10px] text-muted-foreground">
-                      Secret
+                      {t('Secret')}
                     </span>
                   )}
                 </div>
@@ -752,7 +766,8 @@ export function TemplateConfigView({
                     setVariables(newVars)
                   }}
                   placeholder={
-                    templateVar?.placeholder || `Enter ${variable.key}`
+                    templateVar?.placeholder ||
+                    `${t('Enter')} ${variable.key}`
                   }
                   type={templateVar?.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
@@ -765,10 +780,10 @@ export function TemplateConfigView({
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Template variables
+                  {t('Template variables')}
                 </h3>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Configure the environment variables for this template
+                  {t('Configure the environment variables for this template')}
                 </p>
               </div>
               <div className="border-t border-border" />
@@ -784,7 +799,7 @@ export function TemplateConfigView({
                 {optionalVars.length > 0 && (
                   <div className="mt-4 border-t border-border pt-4">
                     <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
-                      Optional variables ({optionalVars.length})
+                      {t('Optional variables')} ({optionalVars.length})
                     </h4>
                     <div className="space-y-3">
                       {optionalVars.map((variable) => {

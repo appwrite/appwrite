@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresSchemaSelectorProps = {
   value: string | null | undefined
@@ -43,6 +44,7 @@ export function PostgresSchemaSelector({
   onLoadMore,
   onOpenChange,
 }: PostgresSchemaSelectorProps) {
+  const t = useT()
   const triggerId = useId()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -82,7 +84,7 @@ export function PostgresSchemaSelector({
   return (
     <div className="space-y-2">
       <Label htmlFor={triggerId} className="text-[13px]">
-        Schema
+        {t('Schema')}
       </Label>
       <Popover
         open={open}
@@ -112,7 +114,7 @@ export function PostgresSchemaSelector({
         <Command shouldFilter={false}>
           <div className="relative">
             <CommandInput
-              placeholder="Search schemas"
+              placeholder={t('Search schemas')}
               value={search}
               onValueChange={setSearch}
               className={cn('h-9', isFetching && 'pe-8')}
@@ -130,10 +132,10 @@ export function PostgresSchemaSelector({
           <CommandList ref={listScrollRef} className="max-h-[240px]">
             {showInitialLoading ? (
               <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
-                Loading schemas…
+                {t('Loading schemas…')}
               </div>
             ) : schemas.length === 0 ? (
-              <CommandEmpty>No schemas found</CommandEmpty>
+              <CommandEmpty>{t('No schemas found')}</CommandEmpty>
             ) : (
               <CommandGroup>
                 {schemas.map((schema) => (

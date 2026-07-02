@@ -2,6 +2,7 @@ import { Server } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
+import { useT } from '@/lib/i18n/translate'
 
 export type S3ConnectionCardProps = {
   className?: string
@@ -11,6 +12,7 @@ export type S3ConnectionCardProps = {
  * Sidebar teaser that opens the project Connect modal on the S3 tab (WIP).
  */
 export function S3ConnectionCard({ className }: S3ConnectionCardProps) {
+  const t = useT()
   const projectConnect = useProjectConnectDialog()
 
   return (
@@ -24,10 +26,10 @@ export function S3ConnectionCard({ className }: S3ConnectionCardProps) {
         <Server className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <p className="text-[12px] font-medium leading-snug text-foreground">
-            S3-compatible access
+            {t('S3-compatible access')}
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Project endpoint and credentials for external tooling - in progress.
+            {t('Project endpoint and credentials for external tooling - in progress.')}
           </p>
         </div>
       </div>
@@ -39,7 +41,7 @@ export function S3ConnectionCard({ className }: S3ConnectionCardProps) {
         disabled={!projectConnect}
         onClick={() => projectConnect?.openConnect('s3')}
       >
-        Open in Connect
+        {t('Open in Connect')}
       </Button>
     </div>
   )

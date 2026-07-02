@@ -2,6 +2,7 @@ import {
   POSTGRES_DATABASE_TAB_LABELS,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
+import { useT } from '@/lib/i18n/translate'
 
 const TAB_DESCRIPTIONS: Partial<Record<PostgresDatabaseTab, string>> = {
   visualizer:
@@ -21,19 +22,20 @@ type TabPlaceholderProps = {
 }
 
 export function TabPlaceholder({ tab }: TabPlaceholderProps) {
+  const t = useT()
   const title = POSTGRES_DATABASE_TAB_LABELS[tab]
   const description = TAB_DESCRIPTIONS[tab]
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-      <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
+      <h2 className="text-[15px] font-semibold text-foreground">{t(title)}</h2>
       {description ? (
         <p className="mt-2 max-w-md text-[13px] text-muted-foreground">
-          {description}
+          {t(description)}
         </p>
       ) : null}
       <p className="mt-4 text-[12px] text-muted-foreground">
-        This view is not implemented yet.
+        {t('This view is not implemented yet.')}
       </p>
     </div>
   )

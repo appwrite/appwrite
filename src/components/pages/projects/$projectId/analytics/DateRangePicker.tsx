@@ -19,6 +19,7 @@ import {
   type UsageDateRangePreset,
 } from '@/lib/usage/usage-date-range-presets'
 import { isFullCalendarDayRange } from '@/lib/usage/usage-date-range'
+import { useT } from '@/lib/i18n/translate'
 
 export type DateRangePreset = UsageDateRangePreset
 
@@ -44,6 +45,7 @@ export function DateRangePicker({
   className,
   popoverContentAlign = 'end',
 }: DateRangePickerProps) {
+  const t = useT()
   const [isOpen, setIsOpen] = React.useState(false)
   const [pendingDateRange, setPendingDateRange] = React.useState<
     DateRange | undefined
@@ -108,7 +110,7 @@ export function DateRangePicker({
   }
 
   const formatDateRange = (range: DateRange | undefined): string => {
-    if (!range?.from) return 'Select date range'
+    if (!range?.from) return t('Select date range')
     if (!range.to) {
       return format(range.from, 'MMM d, yyyy')
     }
@@ -124,7 +126,9 @@ export function DateRangePicker({
     return `${format(range.from, 'MMM d, h:mm a')} - ${format(range.to, 'MMM d, h:mm a')}`
   }
 
-  const triggerLabel = matchingPreset?.label ?? formatDateRange(dateRange)
+  const triggerLabel = matchingPreset
+    ? t(matchingPreset.label)
+    : formatDateRange(dateRange)
 
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
@@ -160,10 +164,10 @@ export function DateRangePicker({
           >
             <div className="shrink-0 border-b border-border/80 px-3 py-2.5">
               <p className="text-[11px] font-semibold leading-none text-foreground">
-                Quick select
+                {t('Quick select')}
               </p>
               <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
-                Common ranges or pick dates on the calendar
+                {t('Common ranges or pick dates on the calendar')}
               </p>
             </div>
             <div className="flex min-h-0 flex-1 flex-col justify-start overflow-y-auto px-2 py-2 min-[820px]:px-2">
@@ -176,7 +180,7 @@ export function DateRangePicker({
                   )}
                 >
                   <p className="mb-1.5 px-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground min-[820px]:px-2">
-                    {group.title}
+                    {t(group.title)}
                   </p>
                   <div className="grid grid-cols-2 gap-1 min-[820px]:grid-cols-1 min-[820px]:gap-0.5">
                     {group.presets.map((preset) => {
@@ -195,7 +199,7 @@ export function DateRangePicker({
                               : 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
                           )}
                         >
-                          {preset.label}
+                          {t(preset.label)}
                         </button>
                       )
                     })}
@@ -223,7 +227,7 @@ export function DateRangePicker({
                 className="h-7 text-[11px]"
                 onClick={handleClear}
               >
-                Clear
+                {t('Clear')}
               </Button>
               <div className="flex items-center gap-2">
                 <Button
@@ -232,14 +236,14 @@ export function DateRangePicker({
                   className="h-7 text-[11px]"
                   onClick={handleCancel}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   size="sm"
                   className="h-7 text-[11px]"
                   onClick={handleApply}
                 >
-                  Apply
+                  {t('Apply')}
                 </Button>
               </div>
             </div>

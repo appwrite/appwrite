@@ -20,6 +20,7 @@ import {
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export type CreateCliDeploymentResourceType = 'function' | 'site'
 
@@ -160,6 +161,7 @@ export function CreateCliDeploymentModal({
   resourceId,
   siteBuildConfig,
 }: CreateCliDeploymentModalProps) {
+  const t = useT()
   const defaultTab = useMemo(() => getDefaultCliTab(), [])
   const [activeTab, setActiveTab] = useState(defaultTab)
   const commands = buildCommands(
@@ -184,9 +186,9 @@ export function CreateCliDeploymentModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Create CLI deployment</DialogTitle>
+          <DialogTitle>{t('Create CLI deployment')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {DESCRIPTION[resourceType]}
+            {t(DESCRIPTION[resourceType])}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -246,15 +248,15 @@ export function CreateCliDeploymentModal({
           <div className="mt-4 rounded-lg border border-border bg-muted/30 px-4 py-3 flex gap-3 text-[12px] text-muted-foreground">
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
             <p>
-              If it&apos;s your first time using the CLI, remember to{' '}
+              {t("If it's your first time using the CLI, remember to")}{' '}
               <DocsRouteLink className="link-neutral" href={CLI_INSTALL_URL}>
-                install the CLI
+                {t('install the CLI')}
               </DocsRouteLink>{' '}
-              and{' '}
+              {t('and')}{' '}
               <DocsRouteLink className="link-neutral" href={CLI_LOGIN_URL}>
-                log in to your account
+                {t('log in to your account')}
               </DocsRouteLink>{' '}
-              before running the deployment command.
+              {t('before running the deployment command.')}
             </p>
           </div>
         </div>
@@ -264,7 +266,7 @@ export function CreateCliDeploymentModal({
             onClick={() => onOpenChange(false)}
             className="h-9 text-[13px]"
           >
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

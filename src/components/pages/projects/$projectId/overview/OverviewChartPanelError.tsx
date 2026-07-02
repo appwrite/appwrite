@@ -1,5 +1,6 @@
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 import { overviewChartPanelErrorClass } from './chart-panel'
 
 interface OverviewChartPanelErrorProps {
@@ -13,6 +14,7 @@ export function OverviewChartPanelError({
   message,
   onRetry,
 }: OverviewChartPanelErrorProps) {
+  const t = useT()
   return (
     <div className={overviewChartPanelErrorClass}>
       <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
@@ -24,7 +26,7 @@ export function OverviewChartPanelError({
       </div>
       {onRetry ? (
         <Button variant="outline" size="sm" onClick={onRetry}>
-          Try again
+          {t('Try again')}
         </Button>
       ) : null}
     </div>

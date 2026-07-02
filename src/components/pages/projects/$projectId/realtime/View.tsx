@@ -82,6 +82,7 @@ import {
 } from '@/lib/realtime/subscription-queries'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 const MAX_LOG_ENTRIES = 1000
 
@@ -263,16 +264,17 @@ function RealtimeWebSocketUrlField({
   status: ConnectionStatus
   socketOpen: boolean
 }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
-  const statusLabel = connectionStatusShortLabel(status, socketOpen)
-  const statusDescription = connectionStatusLabel(status, socketOpen)
+  const statusLabel = t(connectionStatusShortLabel(status, socketOpen))
+  const statusDescription = t(connectionStatusLabel(status, socketOpen))
 
   const handleCopy = useCallback(() => {
     void navigator.clipboard.writeText(url)
     setCopied(true)
-    toast.success('WebSocket URL copied')
+    toast.success(t('WebSocket URL copied'))
     window.setTimeout(() => setCopied(false), 2000)
-  }, [url])
+  }, [url, t])
 
   return (
     <div
@@ -281,7 +283,7 @@ function RealtimeWebSocketUrlField({
       )}
       role="status"
       aria-live="polite"
-      aria-label={`Connection status: ${statusDescription}. ${url}`}
+      aria-label={`${t('Connection status')}: ${statusDescription}. ${url}`}
     >
       <Tooltip>
         <TooltipTrigger asChild>
@@ -333,7 +335,7 @@ function RealtimeWebSocketUrlField({
         type="button"
         onClick={handleCopy}
         className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center border-s border-border text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-        aria-label="Copy WebSocket URL"
+        aria-label={t('Copy WebSocket URL')}
       >
         {copied ? (
           <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -365,14 +367,15 @@ function MessagesEmptyState({
   isConnected: boolean
   hasSubscriptions: boolean
 }) {
+  const t = useT()
   if (!isConnected) {
     return (
       <EmptyState
         variant="centered"
         icon={MessagesSquare}
         iconSize="md"
-        title="No messages yet"
-        description="Connect as guest or a project user, then subscribe to channels to inspect WebSocket traffic. You can also insert sample frames to preview payload structure."
+        title={t('No messages yet') /* pragma: allowlist secret */}
+        description={t('Connect as guest or a project user, then subscribe to channels to inspect WebSocket traffic. You can also insert sample frames to preview payload structure.')}
         isEmpty
         className="w-full"
       />
@@ -385,8 +388,8 @@ function MessagesEmptyState({
         variant="centered"
         icon={MessagesSquare}
         iconSize="md"
-        title="Waiting for subscriptions"
-        description="Add a channel subscription to start receiving and logging Realtime frames."
+        title={t('Waiting for subscriptions')}
+        description={t('Add a channel subscription to start receiving and logging Realtime frames.')}
         isEmpty
         className="w-full"
       />
@@ -398,8 +401,8 @@ function MessagesEmptyState({
       variant="centered"
       icon={Radio}
       iconSize="md"
-      title="Listening for traffic"
-      description="Incoming and outgoing WebSocket frames will appear here as they arrive."
+      title={t('Listening for traffic')}
+      description={t('Incoming and outgoing WebSocket frames will appear here as they arrive.')}
       isEmpty
       className="w-full"
     />
@@ -407,6 +410,7 @@ function MessagesEmptyState({
 }
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
 
   const websocketUrl = useMemo(
@@ -467,13 +471,13 @@ export function View() {
     () => [
       {
         value: GUEST_ACTOR_ID,
-        label: 'Guest',
-        description: 'No session or JWT',
+        label: t('Guest'),
+        description: t('No session or JWT'),
         searchText: 'guest unauthenticated public',
       },
       ...userItems,
     ],
-    [userItems],
+    [userItems, t],
   )
 
   const isGuestActAs = actAsValue === GUEST_ACTOR_ID
@@ -615,7 +619,7 @@ export function View() {
     if (!projectId) return
 
     if (!actAsValue) {
-      toast.error('Select guest or a project user to connect as.')
+      toast.error(t('Select guest or a project user to connect as.'))
       return
     }
 
@@ -726,6 +730,7 @@ export function View() {
     projectId,
     teardownSession,
     websocketUrl,
+    t,
   ])
 
   const subscribeWebSocket = useCallback(
@@ -983,7 +988,7 @@ export function View() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ServiceHeader title="Realtime" fullWidthBorder fullWidth />
+      <ServiceHeader title={t('Realtime')} fullWidthBorder fullWidth />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <TooltipProvider delayDuration={300}>
@@ -997,13 +1002,17 @@ export function View() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="cursor-default shrink-0 text-[12px] font-medium text-muted-foreground sm:w-auto">
-                    Act as
+                    {t('Act as')}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-xs text-[12px]">
                   {isGuestActAs
-                    ? 'Guest connections do not send a session or JWT. Subscribe only to channels with public read permissions.'
-                    : 'User connections create a JWT for the selected project user when you connect.'}
+                    ? t(
+                        'Guest connections do not send a session or JWT. Subscribe only to channels with public read permissions.',
+                      )
+                    : t(
+                        'User connections create a JWT for the selected project user when you connect.',
+                      )}
                 </TooltipContent>
               </Tooltip>
 
@@ -1013,10 +1022,10 @@ export function View() {
                   onValueChange={setActAsValue}
                   items={actAsItems}
                   placeholder={
-                    usersLoading ? 'Loading users…' : 'Select guest or user'
+                    usersLoading ? t('Loading users…') : t('Select guest or user')
                   }
-                  searchPlaceholder="Search users or select guest…"
-                  emptyMessage="No users found"
+                  searchPlaceholder={t('Search users or select guest…')}
+                  emptyMessage={t('No users found')}
                   disabled={authControlsDisabled}
                   isFetching={usersLoading}
                   onSearchChange={setUserSearch}
@@ -1041,7 +1050,7 @@ export function View() {
                   onClick={() => setConnectionCodeOpen(true)}
                 >
                   <Code2 className="me-1.5 h-4 w-4" />
-                  SDK code
+                  {t('SDK code')}
                 </Button>
                 {isConnected ? (
                   <Button
@@ -1051,7 +1060,7 @@ export function View() {
                     onClick={() => void handleDisconnect()}
                     disabled={isConnecting}
                   >
-                    Disconnect
+                    {t('Disconnect')}
                   </Button>
                 ) : (
                   <Button
@@ -1063,10 +1072,10 @@ export function View() {
                     {isConnecting ? (
                       <>
                         <Loader2 className="me-1.5 h-4 w-4 animate-spin" />
-                        Connecting
+                        {t('Connecting')}
                       </>
                     ) : (
-                      'Connect'
+                      t('Connect')
                     )}
                   </Button>
                 )}
@@ -1085,7 +1094,7 @@ export function View() {
           )}
         >
           <RealtimePanelHeader
-            title="Subscriptions"
+            title={t('Subscriptions')}
             className="order-1 lg:col-start-1 lg:row-start-1 lg:border-e lg:border-border"
             actions={
               <span className="rounded-md border border-border bg-muted/30 px-2 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -1116,13 +1125,13 @@ export function View() {
                 onClick={() => void handleDisconnectAll()}
               >
                 <Unplug className="me-1.5 h-4 w-4" />
-                Disconnect all
+                {t('Disconnect all')}
               </Button>
             </div>
           </div>
 
           <RealtimePanelHeader
-            title="Messages"
+            title={t('Messages') /* pragma: allowlist secret */}
             className="order-3 lg:col-start-2 lg:row-start-1"
             actions={
               <>
@@ -1137,12 +1146,12 @@ export function View() {
                   {isPaused ? (
                     <>
                       <Play className="me-1.5 h-3.5 w-3.5" />
-                      Resume
+                      {t('Resume')}
                     </>
                   ) : (
                     <>
                       <Pause className="me-1.5 h-3.5 w-3.5" />
-                      Pause
+                      {t('Pause')}
                     </>
                   )}
                 </Button>
@@ -1155,7 +1164,7 @@ export function View() {
                   disabled={logs.length === 0}
                 >
                   <Trash2 className="me-1.5 h-3.5 w-3.5" />
-                  Clear
+                  {t('Clear')}
                 </Button>
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
@@ -1166,7 +1175,7 @@ export function View() {
                         onClick={handleToggleAllMessages}
                         disabled={logs.length === 0}
                         aria-label={
-                          allMessagesExpanded ? 'Collapse all' : 'Expand all'
+                          allMessagesExpanded ? t('Collapse all') : t('Expand all') // pragma: allowlist secret
                         }
                       >
                         {allMessagesExpanded ? (
@@ -1177,7 +1186,7 @@ export function View() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>{allMessagesExpanded ? 'Collapse all' : 'Expand all'}</p>
+                      <p>{allMessagesExpanded ? t('Collapse all') : t('Expand all')}</p> {/* pragma: allowlist secret */}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1202,7 +1211,7 @@ export function View() {
                 </div>
               ) : filteredLogs.length === 0 ? (
                 <div className="flex min-h-[160px] items-center justify-center px-4 py-12 text-center text-[13px] text-muted-foreground">
-                  No messages match your filters.
+                  {t('No messages match your filters.')} {/* pragma: allowlist secret */}
                 </div>
               ) : (
                 <div>
@@ -1242,13 +1251,14 @@ export function View() {
 }
 
 function MessageDirectionIcon({ entry }: { entry: LogEntry }) {
+  const t = useT()
   const type = entry.message.type || 'unknown'
 
   if (type === 'info') {
     return (
       <Info
         className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-        aria-label="Info message"
+        aria-label={t('Info message')}
       />
     )
   }
@@ -1257,7 +1267,7 @@ function MessageDirectionIcon({ entry }: { entry: LogEntry }) {
     return (
       <ArrowDownLeft
         className="h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400"
-        aria-label="Incoming message"
+        aria-label={t('Incoming message')}
       />
     )
   }
@@ -1265,7 +1275,7 @@ function MessageDirectionIcon({ entry }: { entry: LogEntry }) {
   return (
     <ArrowUpRight
       className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-      aria-label="Outgoing message"
+      aria-label={t('Outgoing message')}
     />
   )
 }
@@ -1281,6 +1291,7 @@ function MessageRow({
   expanded: boolean
   onToggle: () => void
 }) {
+  const t = useT()
   const type = entry.message.type || 'unknown'
   const payload = useMemo(
     () => formatMessagePayload(entry.message),
@@ -1343,7 +1354,7 @@ function MessageRow({
                   variant="warning"
                   className="h-5 shrink-0 text-[10px] uppercase"
                 >
-                  Sample
+                  {t('Sample')}
                 </Badge>
               ) : null}
             </div>
@@ -1368,8 +1379,9 @@ function MessageRow({
           <div className="min-w-0 pt-2">
             {entry.isSample ? (
               <p className="mb-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[12px] leading-snug text-muted-foreground">
-                Sample frame for reference only. Nothing was sent over the
-                network and no project data was changed.
+                {t(
+                  'Sample frame for reference only. Nothing was sent over the network and no project data was changed.',
+                )}
               </p>
             ) : null}
             <MessagePayloadBlock payload={payload} message={entry.message} />

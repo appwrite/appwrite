@@ -47,6 +47,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 export type BucketContextMenuBucket = {
   id: string
@@ -64,6 +65,7 @@ export function BucketContextMenu({
   bucket,
   children,
 }: BucketContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -78,7 +80,7 @@ export function BucketContextMenu({
       const lists = getCachedBucketListsFromQueryClient(queryClient, projectId)
       const nextBucketId = pickNextBucketIdAfterDelete(lists, deletedId)
       await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })
-      toast.success('Bucket deleted')
+      toast.success(t('Bucket deleted'))
       setDeleteDialogOpen(false)
       if (nextBucketId) {
         navigate({
@@ -93,7 +95,7 @@ export function BucketContextMenu({
       }
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete bucket')
+      toast.error(getErrorMessage(error) || t('Failed to delete bucket'))
     },
   })
 
@@ -135,42 +137,42 @@ export function BucketContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={() => navigateToTab('files')}>
             <ContextMenuIcon icon={Folder} />
-            Files
+            {t('Files')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('security')}>
             <ContextMenuIcon icon={Shield} />
-            Security
+            {t('Security')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('settings')}>
             <ContextMenuIcon icon={Settings} />
-            Settings
+            {t('Settings')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', bucket.id)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', bucket.name)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', bucketHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -180,23 +182,23 @@ export function BucketContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(bucketHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(bucketHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -204,10 +206,11 @@ export function BucketContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete bucket</DialogTitle>
+            <DialogTitle>{t('Delete bucket')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this bucket? This action cannot be
-              undone.
+              {t(
+                'Are you sure you want to delete this bucket? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -216,14 +219,14 @@ export function BucketContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

@@ -13,6 +13,7 @@ import {
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrollFade'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -185,6 +186,7 @@ interface ViewProps {
 }
 
 export function View({ projectId, initialData }: ViewProps) {
+  const t = useT()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [storageBreakdownType, setStorageBreakdownType] =
@@ -623,11 +625,11 @@ export function View({ projectId, initialData }: ViewProps) {
   }) => {
     createMutation.mutate(data, {
       onSuccess: () => {
-        toast.success('API key created successfully')
+        toast.success(t('API key created successfully'))
         setCreateDrawerOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to create API key')
+        toast.error(getErrorMessage(error) || t('Failed to create API key'))
       },
     })
   }
@@ -736,12 +738,12 @@ export function View({ projectId, initialData }: ViewProps) {
       },
       {
         onSuccess: () => {
-          toast.success('API key updated successfully')
+          toast.success(t('API key updated successfully'))
           setUpdateDrawerOpen(false)
           setSelectedKeyId(null)
         },
         onError: (error: Error) => {
-          toast.error(getErrorMessage(error) || 'Failed to update API key')
+          toast.error(getErrorMessage(error) || t('Failed to update API key'))
         },
       },
     )
@@ -757,12 +759,12 @@ export function View({ projectId, initialData }: ViewProps) {
 
     deleteMutation.mutate(selectedKeyId, {
       onSuccess: () => {
-        toast.success('API key deleted successfully')
+        toast.success(t('API key deleted successfully'))
         setDeleteDialogOpen(false)
         setSelectedKeyId(null)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete API key')
+        toast.error(getErrorMessage(error) || t('Failed to delete API key'))
       },
     })
   }
@@ -835,7 +837,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Copy project ID</p>
+                    <p>{t('Copy project ID')}</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -859,7 +861,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Copy API endpoint</p>
+                    <p>{t('Copy API endpoint')}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -923,7 +925,7 @@ export function View({ projectId, initialData }: ViewProps) {
                                   : 'text-muted-foreground/70',
                               )}
                             >
-                              {tab.label}
+                              {t(tab.label)}
                             </span>
 
                             {/* Active indicator */}
@@ -1209,7 +1211,7 @@ export function View({ projectId, initialData }: ViewProps) {
         {/* Integrations Section */}
         <div className={visibleOverviewChartTabs.length > 0 ? 'mt-6' : 'mt-0'}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
+            <h2 className="text-[15px] font-semibold text-foreground">{t('Apps')}</h2>
             <Button
               variant="brandCta"
               onClick={() => goToAddAppWizard()}
@@ -1217,7 +1219,7 @@ export function View({ projectId, initialData }: ViewProps) {
               className="h-8 gap-1.5 text-[13px] font-medium"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add app
+              {t('Add app')}
             </Button>
           </div>
           {integrations.length === 0 ? (
@@ -1227,16 +1229,15 @@ export function View({ projectId, initialData }: ViewProps) {
                   <Plug2 className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  No apps connected
+                  {t('No apps connected')}
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Connect your first app to start building with Appwrite. Add
-                  web apps, mobile apps, or server SDKs to get started.
+                  {t('Connect your first app to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.')} {/* pragma: allowlist secret */}
                 </p>
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />
                   <span className="font-medium text-foreground/80">
-                    Connect with your stack
+                    {t('Connect with your stack')}
                   </span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
@@ -1310,7 +1311,7 @@ export function View({ projectId, initialData }: ViewProps) {
         <div className="mt-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">
-              API keys
+              {t('API keys')}
             </h2>
             <Button
               variant="brandCta"
@@ -1319,7 +1320,7 @@ export function View({ projectId, initialData }: ViewProps) {
               className="h-8 gap-1.5 text-[13px] font-medium"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add API key
+              {t('Add API key')}
             </Button>
           </div>
           {showLoadingKeys ? (
@@ -1355,18 +1356,16 @@ export function View({ projectId, initialData }: ViewProps) {
                   <Key className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  No API keys created
+                  {t('No API keys created')}
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Create an API key to authenticate your applications and access
-                  Appwrite services. API keys provide secure access to your
-                  project resources.
+                  {t('Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.')} {/* pragma: allowlist secret */}
                 </p>
                 <div className="w-full">
                   <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                     <div className="h-px flex-1 bg-border" />
                     <span className="font-medium text-foreground/80">
-                      Create API key for your language
+                      {t('Create API key for your language')}
                     </span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
@@ -1428,10 +1427,10 @@ export function View({ projectId, initialData }: ViewProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete API key</DialogTitle>
+            <DialogTitle>{t('Delete API key')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete "{selectedKey?.name}"? This action
-              cannot be undone.
+              {t('Are you sure you want to delete')} "{selectedKey?.name}"?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -1441,14 +1440,14 @@ export function View({ projectId, initialData }: ViewProps) {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

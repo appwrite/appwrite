@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from '@tanstack/react-router'
+import { useT } from '@/lib/i18n/translate'
 
 interface BrowserProps {
   databaseId: string
@@ -133,6 +134,7 @@ const CONNECTIONS: Connection[] = [
 ]
 
 export function Browser({}: BrowserProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const navigate = useNavigate()
@@ -1000,7 +1002,7 @@ export function Browser({}: BrowserProps) {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={() => moveResource(resource.id, 'forward')}
-                        title="Move Forward"
+                        title={t('Move Forward')}
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
@@ -1009,7 +1011,7 @@ export function Browser({}: BrowserProps) {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={() => moveResource(resource.id, 'backward')}
-                        title="Move Backward"
+                        title={t('Move Backward')}
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
@@ -1019,7 +1021,7 @@ export function Browser({}: BrowserProps) {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={handleFitToView}
-                        title="Fit to view"
+                        title={t('Fit to view')}
                       >
                         <Maximize2 className="h-3.5 w-3.5" />
                       </Button>
@@ -1131,7 +1133,7 @@ export function Browser({}: BrowserProps) {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={() => moveFrame(frame.id, 'forward')}
-                        title="Move Forward"
+                        title={t('Move Forward')}
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
@@ -1140,7 +1142,7 @@ export function Browser({}: BrowserProps) {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={() => moveFrame(frame.id, 'backward')}
-                        title="Move Backward"
+                        title={t('Move Backward')}
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
@@ -1150,7 +1152,7 @@ export function Browser({}: BrowserProps) {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={handleFitToView}
-                        title="Fit to view"
+                        title={t('Fit to view')}
                       >
                         <Maximize2 className="h-3.5 w-3.5" />
                       </Button>

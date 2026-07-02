@@ -54,6 +54,7 @@ import {
 } from '@/components/global/shared/ConnectRepositorySection'
 import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 // Fade-in image component
 function FadeImage({
@@ -102,6 +103,7 @@ interface TemplateConfigViewProps {
 }
 
 export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -234,18 +236,18 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
   const handleDeploy = async () => {
     if (!projectId || !template || !siteName || !framework) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('Please fill in all required fields'))
       return
     }
 
     if (!domainValid) {
-      toast.error('Please enter a valid domain')
+      toast.error(t('Please enter a valid domain'))
       return
     }
 
     if (gitConnection === 'now') {
       if (!formData.installationId || !formData.providerRepositoryId) {
-        toast.error('Please select a repository')
+        toast.error(t('Please select a repository'))
         return
       }
     }
@@ -326,7 +328,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       // (When connect now, the site is linked to the user's repo for future VCS deployments,
       // but the initial deploy uses the template repo so new/empty user repos don't fail.)
       if (!template.providerRepositoryId || !template.providerOwner) {
-        toast.error('Template is missing repository information')
+        toast.error(t('Template is missing repository information'))
         setIsDeploying(false)
         return
       }
@@ -358,7 +360,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         },
       })
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to create site')
+      toast.error(error.message || t('Failed to create site'))
       setIsDeploying(false)
     }
   }
@@ -440,7 +442,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Layers className="h-3.5 w-3.5" />
-              Framework
+              {t('Framework')}
             </span>
             <span className="flex items-center gap-1.5 text-[12px] text-foreground">
               <FrameworkIcon framework={framework} size="sm" />
@@ -452,7 +454,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Tag className="h-3.5 w-3.5" />
-              Version
+              {t('Version')}
             </span>
             <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">
               {template.providerVersion}
@@ -464,7 +466,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
                 <FolderOpen className="h-3.5 w-3.5" />
-                Root directory
+                {t('Root directory')}
               </span>
               <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
                 {template.providerRootDirectory}
@@ -475,10 +477,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Key className="h-3.5 w-3.5" />
-              Variables
+              {t('Variables')}
             </span>
             <span className="text-[12px] text-foreground">
-              {template.variables.length} required
+              {template.variables.length} {t('required')}
             </span>
           </div>
         )}
@@ -500,7 +502,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                 rel="noopener noreferrer"
               >
                 <GitBranch className="me-1.5 h-4 w-4" />
-                View source
+                {t('View source')}
               </a>
             </Button>
           )}
@@ -517,7 +519,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                 rel="noopener noreferrer"
               >
                 <ExternalLink className="me-1.5 h-4 w-4" />
-                Live demo
+                {t('Live demo')}
               </a>
             </Button>
           )}
@@ -529,7 +531,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[11px] text-muted-foreground">
-            Ready to deploy
+            {t('Ready to deploy')}
           </span>
         </div>
       </div>
@@ -539,7 +541,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   if (templateLoading) {
     return (
       <WizardLayout
-        title="Create site"
+        title={t('Create site')}
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
         maxWidth="max-w-[1400px]"
@@ -554,19 +556,19 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   if (!template) {
     return (
       <WizardLayout
-        title="Create site"
+        title={t('Create site')}
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
         maxWidth="max-w-[1400px]"
       >
         <div className="text-center py-16">
-          <p className="text-muted-foreground">Template not found</p>
+          <p className="text-muted-foreground">{t('Template not found')}</p>
           <Button variant="outline" className="mt-4" asChild>
             <Link
               to="/projects/$projectId/sites/create/templates"
               params={{ projectId: projectId! }}
             >
-              Browse templates
+              {t('Browse templates')}
             </Link>
           </Button>
         </div>
@@ -576,9 +578,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
   return (
     <WizardLayout
-      title="Create site"
+      title={t('Create site')}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
       maxWidth="max-w-[1400px]"
@@ -591,7 +593,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             onClick={() => window.history.back()}
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -605,7 +607,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                 (!formData.providerRepositoryId || !formData.installationId))
             }
           >
-            Deploy
+            {t('Deploy')}
           </Button>
         </>
       }
@@ -613,31 +615,33 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       {/* Details section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           {/* Site name */}
           <div className="space-y-2">
             <Label htmlFor="site-name" className="text-[13px]">
-              Site name
+              {t('Site name')}
             </Label>
             <Input
               id="site-name"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
-              placeholder="My awesome site"
+              placeholder={t('My awesome site')}
               className="h-9 text-[13px]"
             />
           </div>
 
           {/* Site ID */}
           <div className="space-y-2">
-            <Label className="text-[13px]">Site ID</Label>
+            <Label className="text-[13px]">{t('Site ID')}</Label>
             <IdInput
               value={siteId}
               onChange={setSiteId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
 
@@ -645,11 +649,11 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           {template.frameworks && template.frameworks.length > 1 && (
             <div className="space-y-2">
               <Label htmlFor="framework" className="text-[13px]">
-                Framework
+                {t('Framework')}
               </Label>
               <Select value={framework} onValueChange={setFramework}>
                 <SelectTrigger className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select framework" />
+                  <SelectValue placeholder={t('Select framework')} />
                 </SelectTrigger>
                 <SelectContent>
                   {template.frameworks.map((f, index) => {
@@ -674,9 +678,11 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Domain')}
+          </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Your site will be accessible at this URL
+            {t('Your site will be accessible at this URL')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -689,10 +695,11 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a
-            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            {t(
+              'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
+            )}{' '}
             <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
-              Learn more →
+              {t('Learn more →')}
             </DocsRouteLink>
           </p>
         </div>
@@ -716,11 +723,12 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
           <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
-              Connect your repository
+              {t('Connect your repository')}
             </span>
             <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              Clone this template into a new Git repository or link it to an
-              existing one.
+              {t(
+                'Clone this template into a new Git repository or link it to an existing one.',
+              )}
             </p>
           </div>
         </Label>
@@ -740,11 +748,12 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           />
           <div className="ms-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
-              Connect later
+              {t('Connect later')}
             </span>
             <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              Deploy now and connect your version control later via CLI or Git
-              integration in your settings.
+              {t(
+                'Deploy now and connect your version control later via CLI or Git integration in your settings.',
+              )}
             </p>
           </div>
         </Label>
@@ -773,8 +782,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             setConnectRootDir(r)
             updateFormData({ providerRootDirectory: r })
           }}
-          emptyStateTitle="Connect Git repository"
-          emptyStateDescription="Create and deploy a Site with a connected git repository."
+          emptyStateTitle={t('Connect Git repository')}
+          emptyStateDescription={t(
+            'Create and deploy a Site with a connected git repository.',
+          )}
         />
       )}
 
@@ -809,7 +820,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                   </Label>
                   {templateVar?.secret && (
                     <span className="text-[10px] text-muted-foreground">
-                      Secret
+                      {t('Secret')}
                     </span>
                   )}
                 </div>
@@ -845,10 +856,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Template variables
+                  {t('Template variables')}
                 </h3>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Configure the environment variables for this template
+                  {t('Configure the environment variables for this template')}
                 </p>
               </div>
               <div className="border-t border-border" />
@@ -864,7 +875,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                 {optionalVars.length > 0 && (
                   <div className="mt-4 border-t border-border pt-4">
                     <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
-                      Optional variables ({optionalVars.length})
+                      {t('Optional variables')} ({optionalVars.length})
                     </h4>
                     <div className="space-y-3">
                       {optionalVars.map((variable) => {

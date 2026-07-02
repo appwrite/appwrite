@@ -38,6 +38,7 @@ import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
 import { Plus, Trash2, X, Info, Loader2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const DEFAULT_PAGE_SIZE = 25
@@ -56,6 +57,7 @@ export function TeamMembers({
   createDialogOpen: createDialogOpenProp,
   onCreateDialogOpenChange: onCreateDialogOpenChangeProp,
 }: TeamMembersProps = {}) {
+  const t = useT()
   const { projectId, teamId } = useParams({
     strict: false,
   })
@@ -115,11 +117,11 @@ export function TeamMembers({
         roles: data.roles,
       })
 
-      toast.success('Member added successfully')
+      toast.success(t('Member added successfully'))
       setCreateDialogOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to add member',
+        error instanceof Error ? error.message : t('Failed to add member'),
       )
     }
   }
@@ -139,12 +141,14 @@ export function TeamMembers({
         ),
       )
       toast.success(
-        `Deleted ${selectedMemberships.size} member${selectedMemberships.size !== 1 ? 's' : ''}`,
+        selectedMemberships.size !== 1
+          ? `${selectedMemberships.size} ${t('members deleted successfully')}`
+          : t('Member deleted successfully'),
       )
       setSelectedMemberships(new Set())
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to delete members',
+        error instanceof Error ? error.message : t('Failed to delete members'),
       )
     }
   }
@@ -176,14 +180,16 @@ export function TeamMembers({
       {!hasHeaderInParent && (
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[15px] font-medium text-foreground">Members</h2>
+            <h2 className="text-[15px] font-medium text-foreground">
+              {t('Members')}
+            </h2>
             <p className="text-[12px] text-muted-foreground mt-1">
-              {total} member{total !== 1 ? 's' : ''}
+              {total} {total !== 1 ? t('members') : t('member')}
             </p>
           </div>
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 me-1.5" />
-            Add member
+            {t('Add member')}
           </Button>
         </div>
       )}
@@ -192,18 +198,18 @@ export function TeamMembers({
         <div className="rounded-lg border border-border bg-card py-12 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
           <p className="mt-2 text-[13px] text-muted-foreground">
-            Loading members...
+            {t('Loading members...')}
           </p>
         </div>
       ) : memberships.length === 0 ? (
         <div className="space-y-4">
           <EmptyState
             icon={Users}
-            title="No memberships available"
+            title={t('No memberships available')}
             description={
               search
-                ? 'No members match your search.'
-                : 'Invite members to this team to get started.'
+                ? t('No members match your search.')
+                : t('Invite members to this team to get started.')
             }
             isEmpty={!search}
             hasFilters={!!search}
@@ -218,7 +224,7 @@ export function TeamMembers({
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="me-1.5 h-4 w-4" />
-                Add member
+                {t('Add member')}
               </Button>
             </div>
           )}
@@ -239,16 +245,16 @@ export function TeamMembers({
                     />
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Name
+                    {t('Name')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Status
+                    {t('Status')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Roles
+                    {t('Roles')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Joined
+                    {t('Joined')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -314,7 +320,7 @@ export function TeamMembers({
                             variant={membership.confirm ? 'active' : 'pending'}
                             className="text-[10px] shrink-0"
                           >
-                            {membership.confirm ? 'Active' : 'Pending'}
+                            {membership.confirm ? t('Active') : t('Pending')}
                           </Badge>
                         </TableCell>
                         <TableCell
@@ -385,8 +391,10 @@ export function TeamMembers({
             <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
               <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                 <Badge variant="secondary" className="h-6 px-2.5">
-                  {selectedMemberships.size} member
-                  {selectedMemberships.size !== 1 ? 's' : ''} selected
+                  {selectedMemberships.size}{' '}
+                  {selectedMemberships.size !== 1
+                    ? t('members selected')
+                    : t('member selected')}
                 </Badge>
                 <div className="flex items-center gap-2">
                   <Button
@@ -395,7 +403,7 @@ export function TeamMembers({
                     onClick={() => setSelectedMemberships(new Set())}
                     className="h-8 text-xs"
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -404,7 +412,7 @@ export function TeamMembers({
                     disabled={deleteMembershipMutation.isPending}
                     className="h-8 gap-2"
                   >
-                    Delete
+                    {t('Delete')}
                   </Button>
                 </div>
               </div>
@@ -456,6 +464,7 @@ function CreateMembershipDialog({
   users,
   memberships,
 }: CreateMembershipDialogProps) {
+  const t = useT()
   const [selectedUserId, setSelectedUserId] = useState('')
   const [roles, setRoles] = useState<string[]>([])
   const [roleInput, setRoleInput] = useState('')
@@ -499,9 +508,9 @@ function CreateMembershipDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Add member</DialogTitle>
+          <DialogTitle>{t('Add member')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select an existing user and assign team roles.
+            {t('Select an existing user and assign team roles.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -510,20 +519,20 @@ function CreateMembershipDialog({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="member-user">
-                User <span className="text-destructive">*</span>
+                {t('User')} <span className="text-destructive">*</span>
               </Label>
               <SearchableSelect
                 value={selectedUserId}
                 onValueChange={setSelectedUserId}
                 items={userItems}
-                placeholder="Select a user"
-                searchPlaceholder="Search users..."
-                emptyMessage="No available users"
+                placeholder={t('Select a user')}
+                searchPlaceholder={t('Search users...')}
+                emptyMessage={t('No available users')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="roles">Roles</Label>
+              <Label htmlFor="roles">{t('Roles')}</Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -536,7 +545,7 @@ function CreateMembershipDialog({
                         handleAddRole()
                       }
                     }}
-                    placeholder="Add roles"
+                    placeholder={t('Add roles')}
                     autoComplete="off"
                   />
                   <Button
@@ -572,9 +581,9 @@ function CreateMembershipDialog({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
-                  Roles are used to manage access permissions.{' '}
+                  {t('Roles are used to manage access permissions.')}{' '}
                   <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
-                    Learn more about permissions
+                    {t('Learn more about permissions')}
                   </DocsRouteLink>
                 </AlertDescription>
               </Alert>
@@ -583,13 +592,15 @@ function CreateMembershipDialog({
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-3">
                 <h3 className="text-[14px] font-semibold text-foreground">
-                  Need a new user?
+                  {t('Need a new user?')}
                 </h3>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-3">
                 <p className="text-[13px] text-muted-foreground">
-                  Create the user in Users first, then add them to this team.
+                  {t(
+                    'Create the user in Users first, then add them to this team.',
+                  )}
                 </p>
               </div>
               <div className="px-6 py-3 border-t border-border bg-muted/30">
@@ -599,7 +610,7 @@ function CreateMembershipDialog({
                   onClick={() => handleOpenChange(false)}
                 >
                   <Button variant="outline" size="sm" className="h-9 text-[13px]">
-                    Go to users
+                    {t('Go to users')}
                   </Button>
                 </Link>
               </div>
@@ -613,13 +624,13 @@ function CreateMembershipDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!selectedUserId || roles.length === 0 || isLoading}
           >
-            Add member
+            {t('Add member')}
           </Button>
         </div>
       </DialogContent>

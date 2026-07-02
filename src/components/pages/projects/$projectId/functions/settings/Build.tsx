@@ -22,8 +22,10 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
@@ -59,7 +61,7 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Function updated successfully')
+      toast.success(t('Function updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -69,7 +71,7 @@ export function View() {
     },
     onError: (error: unknown) => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update function',
+        error instanceof Error ? error.message : t('Failed to update function'),
       )
     },
   })
@@ -90,7 +92,9 @@ export function View() {
   if (funcLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }
@@ -114,17 +118,18 @@ export function View() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Commands
+              {t('Commands')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Commands run while your function deployment is being built and
-              packaged.
+              {t(
+                'Commands run while your function deployment is being built and packaged.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <Label htmlFor="build-commands" className="text-[13px]">
-              Commands
+              {t('Commands')}
             </Label>
             <Input
               id="build-commands"
@@ -134,7 +139,7 @@ export function View() {
               className="mt-2 h-9 font-mono text-[13px]"
             />
             <p className="mt-1 text-[12px] text-muted-foreground">
-              Commands to run during function build.
+              {t('Commands to run during function build.')}
             </p>
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -144,7 +149,7 @@ export function View() {
               disabled={!commandsDirty || updateFunctionMutation.isPending}
               onClick={handleSaveCommands}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -203,8 +208,10 @@ export function View() {
             },
             node: (
               <SpecificationTableCard
-                title="Specification"
-                description="CPU and memory allocated on the build worker while your function image is produced."
+                title={t('Specification')}
+                description={t(
+                  'CPU and memory allocated on the build worker while your function image is produced.',
+                )}
                 scope="build"
                 specs={specifications}
                 selectedSlug={buildSpecification}

@@ -20,7 +20,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, ArrowLeft } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -53,6 +53,7 @@ import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
 import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
+import { useT } from '@/lib/i18n/translate'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -67,6 +68,7 @@ export function Layout() {
 }
 
 function FunctionLayoutContent() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
@@ -214,7 +216,7 @@ function FunctionLayoutContent() {
     const base: Tab[] = [
       {
         id: 'deployments',
-        label: 'Deployments',
+        label: t('Deployments'),
         to: '/projects/$projectId/functions/$functionId',
         params: {
           projectId: projectId as string,
@@ -223,7 +225,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'domains',
-        label: 'Domains',
+        label: t('Domains'),
         to: '/projects/$projectId/functions/$functionId/domains',
         params: {
           projectId: projectId as string,
@@ -232,7 +234,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'executions',
-        label: 'Executions',
+        label: t('Executions'),
         to: '/projects/$projectId/functions/$functionId/executions',
         params: {
           projectId: projectId as string,
@@ -243,7 +245,7 @@ function FunctionLayoutContent() {
         ? [
             {
               id: 'variables' as const,
-              label: 'Variables',
+              label: t('Variables'),
               to: '/projects/$projectId/functions/$functionId/variables',
               params: {
                 projectId: projectId as string,
@@ -252,7 +254,7 @@ function FunctionLayoutContent() {
             },
             {
               id: 'security' as const,
-              label: 'Security',
+              label: t('Security'),
               to: '/projects/$projectId/functions/$functionId/security',
               params: {
                 projectId: projectId as string,
@@ -261,7 +263,7 @@ function FunctionLayoutContent() {
             },
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/functions/$functionId/settings',
               params: {
                 projectId: projectId as string,
@@ -272,7 +274,7 @@ function FunctionLayoutContent() {
         : []),
     ]
     return base
-  }, [projectId, functionId, showSecuritySettings])
+  }, [projectId, functionId, showSecuritySettings, t])
 
   // Redirect from variables/security/settings when user lacks permission
   useEffect(() => {
@@ -327,18 +329,18 @@ function FunctionLayoutContent() {
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
-      toast.success('Deployment rebuild started')
+      toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to redeploy')
+      toast.error(error.message || t('Failed to redeploy'))
     },
   })
 
   const handleCreateExecution = () => {
     if (!func?.deploymentId) {
       toast.error(
-        'Execution cannot be created because there is no active deployment',
+        t('Execution cannot be created because there is no active deployment'),
       )
       return
     }
@@ -355,11 +357,11 @@ function FunctionLayoutContent() {
   if (isLoading) {
     return (
       <div className="flex flex-col">
-        <ServiceHeader title="Loading..." fullWidthBorder />
+        <ServiceHeader title={t('Loading...')} fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="text-[13px] text-muted-foreground">
-              Loading function...
+              {t('Loading function...')}
             </p>
           </div>
         </div>
@@ -370,12 +372,13 @@ function FunctionLayoutContent() {
   if (!func) {
     return (
       <div className="flex flex-col">
-        <ServiceHeader title="Function not found" fullWidthBorder />
+        <ServiceHeader title={t('Function not found')} fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="mb-4 text-[13px] text-muted-foreground">
-              The function you're looking for doesn't exist or you don't have
-              access to it.
+              {t(
+                "The function you're looking for doesn't exist or you don't have access to it.",
+              )}
             </p>
             <Button variant="outline" asChild>
               <Link
@@ -383,7 +386,7 @@ function FunctionLayoutContent() {
                 params={{ projectId: projectId! }}
               >
                 <ArrowLeft className="me-1.5 h-4 w-4" />
-                Back to Functions
+                {t('Back to Functions')}
               </Link>
             </Button>
           </div>
@@ -403,20 +406,21 @@ function FunctionLayoutContent() {
           >
             <AlertCircle className="h-4 w-4 text-amber-500" />
             <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-              Function is disabled
+              {t('Function is disabled')}
             </AlertTitle>
             <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
               <span className="inline">
-                This function is disabled and not accessible to end users
-                through the API. Console actions remain available.{' '}
+                {t(
+                  'This function is disabled and not accessible to end users through the API. Console actions remain available.',
+                )}{' '}
                 <Link
                   to="/projects/$projectId/functions/$functionId/settings"
                   params={{ projectId: projectId!, functionId: functionId! }}
                   className="font-medium underline hover:no-underline inline"
                 >
-                  Enable it in the Settings tab
+                  {t('Enable it in the Settings tab')}
                 </Link>{' '}
-                to make it available to end users.
+                {t('to make it available to end users.')}
               </span>
             </AlertDescription>
           </Alert>
@@ -437,13 +441,13 @@ function FunctionLayoutContent() {
             <div className="flex flex-1 items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                  Settings changes are not live yet
+                  {t('Settings changes are not live yet')}
                 </AlertTitle>
                 <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                   <span className="inline">
-                    You've updated function settings, but they won't take effect
-                    until you redeploy. The current deployment is still running
-                    with the previous settings.
+                    {t(
+                      "You've updated function settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.",
+                    )}
                   </span>
                 </AlertDescription>
               </div>
@@ -457,7 +461,7 @@ function FunctionLayoutContent() {
                   redeployMutation.isPending
                 }
               >
-                Redeploy
+                {t('Redeploy')}
               </Button>
             </div>
           </Alert>
@@ -489,13 +493,13 @@ function FunctionLayoutContent() {
             title={
             <DetailResourceHeaderTitle
               kind="function"
-              label={func.name || 'Unnamed Function'}
+              label={func.name || t('Unnamed Function')}
               resourceId={func.$id}
               projectId={projectId}
               back={{
                 to: '/projects/$projectId/functions',
                 params: { projectId: projectId! },
-                'aria-label': 'Back to functions',
+                'aria-label': t('Back to functions'),
               }}
             />
           }
@@ -505,7 +509,7 @@ function FunctionLayoutContent() {
           fullWidth={activeTab === 'executions'}
           showToolbarBottomBorder={isExecutionsTabLayout}
           searchPlaceholder={
-            activeTab === 'domains' ? 'Search domain...' : undefined
+            activeTab === 'domains' ? t('Search domain...') : undefined
           }
           searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
           onSearchChange={
@@ -551,9 +555,9 @@ function FunctionLayoutContent() {
             activeTab === 'deployments'
               ? undefined
               : activeTab === 'executions'
-                ? 'Create execution'
+                ? t('Create execution')
                 : activeTab === 'domains'
-                  ? 'Add domain'
+                  ? t('Add domain')
                   : undefined
           }
           onCreate={
@@ -659,14 +663,14 @@ function FunctionLayoutContent() {
           <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 pb-4 text-start">
-                <DialogTitle>Redeploy deployment</DialogTitle>
+                <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
               </DialogHeader>
               <div className="border-t border-border" />
               <div className="px-6 pb-4 pt-4">
                 <DialogDescription className="text-[13px] mb-4">
-                  This will create a new build for this deployment using the
-                  current function configuration. The original deployment's code
-                  will be preserved and used for the new build.
+                  {t(
+                    "This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.",
+                  )}
                 </DialogDescription>
                 <DeploymentInfo deployment={activeDeployment} showStatus={true} />
               </div>
@@ -677,7 +681,7 @@ function FunctionLayoutContent() {
                   disabled={redeployMutation.isPending}
                   className="h-9 text-[13px]"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="default"
@@ -685,7 +689,7 @@ function FunctionLayoutContent() {
                   disabled={redeployMutation.isPending}
                   className="h-9 text-[13px]"
                 >
-                  Redeploy
+                  {t('Redeploy')}
                 </Button>
               </div>
             </DialogContent>

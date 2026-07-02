@@ -23,6 +23,7 @@ import { SqlWorkbench } from './SqlWorkbench'
 import { PostgresTableRowsEmptyState } from './_components/PostgresTableRowsEmptyState'
 import { SqlWorkbenchPanelEmptyState } from './_components/SqlWorkbenchPanelEmptyState'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 export type PostgresSqlWorkbenchProps = {
   databaseId: string
@@ -64,6 +65,7 @@ export function PostgresSqlWorkbenchContent({
   databaseId,
   routeTableId,
 }: PostgresSqlWorkbenchContentProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const { account } = useAuth()
@@ -229,7 +231,7 @@ export function PostgresSqlWorkbenchContent({
         typeof row.$id === 'string' ? row.$id : `table-row-${index}`
       }
       isLoading={rowsLoading || rowsFetching}
-      loadingLabel="Loading rows…"
+      loadingLabel={t('Loading rows…')}
       emptyContent={<PostgresTableRowsEmptyState />}
       header={
         <PostgresQueryResultsMeta

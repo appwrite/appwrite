@@ -6,8 +6,10 @@ import {
   queryPreviewLabel,
   usePostgresSidebar,
 } from './PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 export function PostgresHistorySidebarPanel() {
+  const t = useT()
   const {
     recentQueries,
     selectedQueryKey,
@@ -18,7 +20,7 @@ export function PostgresHistorySidebarPanel() {
   if (recentQueries.length === 0) {
     return (
       <p className="px-2 py-3 text-[12px] text-muted-foreground">
-        No query history yet. Run a query in the editor to see it here.
+        {t('No query history yet. Run a query in the editor to see it here.')}
       </p>
     )
   }
@@ -58,7 +60,7 @@ export function PostgresHistorySidebarPanel() {
           className="h-7 w-full text-[12px] text-muted-foreground hover:text-foreground"
           onClick={clearRecentQueries}
         >
-          Clear history
+          {t('Clear history')}
         </Button>
       </div>
     </div>

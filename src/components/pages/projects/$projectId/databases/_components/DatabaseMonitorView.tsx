@@ -18,6 +18,7 @@ import {
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { useT } from '@/lib/i18n/translate'
 
 type MonitorSection = { id: string; label: string }
 
@@ -285,14 +286,15 @@ function MonitorSidebarNav({
   onNavigate: (id: string) => void
   className?: string
 }) {
+  const t = useT()
   return (
     <nav
       className={cn('space-y-0.5', className)}
       role="navigation"
-      aria-label="Monitor metrics"
+      aria-label={t('Monitor metrics')}
     >
       <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Metrics
+        {t('Metrics')}
       </p>
       {sections.map((s) => (
         <button
@@ -304,7 +306,7 @@ function MonitorSidebarNav({
             'text-muted-foreground hover:bg-accent hover:text-foreground',
           )}
         >
-          <span className="truncate">{s.label}</span>
+          <span className="truncate">{t(s.label)}</span>
         </button>
       ))}
     </nav>
@@ -322,6 +324,7 @@ export function DatabaseMonitorView({
   dateRange,
   chartTick,
 }: DatabaseMonitorViewProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
 
@@ -398,16 +401,16 @@ export function DatabaseMonitorView({
               <>
                 <MonitorChart
                   id="reads"
-                  title="Read operations"
-                  description="Total database read operations per day."
+                  title={t('Read operations')}
+                  description={t('Total database read operations per day.')}
                   unit="reads"
                   data={readSeries}
                   formatY={(v) => Math.round(v).toLocaleString()}
                 />
                 <MonitorChart
                   id="writes"
-                  title="Write operations"
-                  description="Total database write operations per day."
+                  title={t('Write operations')}
+                  description={t('Total database write operations per day.')}
                   unit="writes"
                   data={writeSeries}
                   formatY={(v) => Math.round(v).toLocaleString()}
@@ -417,40 +420,40 @@ export function DatabaseMonitorView({
               <>
                 <MonitorChart
                   id="cpu"
-                  title="CPU usage"
-                  description="Average CPU utilization for this database instance."
+                  title={t('CPU usage')}
+                  description={t('Average CPU utilization for this database instance.')}
                   unit=""
                   data={cpuSeries}
                   formatY={(v) => `${Math.round(v)}%`}
                 />
                 <MonitorChart
                   id="memory"
-                  title="Memory usage"
-                  description="Memory utilization relative to provisioned RAM."
+                  title={t('Memory usage')}
+                  description={t('Memory utilization relative to provisioned RAM.')}
                   unit=""
                   data={ramSeries}
                   formatY={(v) => `${Math.round(v)}%`}
                 />
                 <MonitorChart
                   id="disk"
-                  title="Disk usage"
-                  description="Disk utilization for database storage."
+                  title={t('Disk usage')}
+                  description={t('Disk utilization for database storage.')}
                   unit=""
                   data={diskSeries}
                   formatY={(v) => `${Math.round(v)}%`}
                 />
                 <MonitorChart
                   id="network"
-                  title="Network throughput"
-                  description="Combined ingress and egress."
+                  title={t('Network throughput')}
+                  description={t('Combined ingress and egress.')}
                   unit="MB/s"
                   data={netSeries}
                   formatY={(v) => `${v.toFixed(1)}`}
                 />
                 <MonitorChart
                   id="connections"
-                  title="Connections"
-                  description="Active client connections."
+                  title={t('Connections')}
+                  description={t('Active client connections.')}
                   unit="connections"
                   data={connSeries}
                   formatY={(v) => `${Math.round(v)}`}

@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import {
@@ -11,7 +12,6 @@ import type {
   DatabaseReadsBreakdownQueryEntry,
   DatabaseWritesBreakdownQueryEntry,
 } from '@/lib/react-query/hooks/usage-events'
-import type { DatabaseOperationsBreakdownSection } from '@/lib/usage/database-operations-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
 import {
@@ -62,14 +62,6 @@ type DatabaseOperationBentoCardProps = {
   docsHref?: string
 }
 
-function breakdownDrawerTitle(
-  operation: 'reads' | 'writes',
-  section: DatabaseOperationsBreakdownSection,
-): string {
-  const prefix = operation === 'reads' ? 'Reads' : 'Writes'
-  return `${prefix} · ${section.title}`
-}
-
 export function DatabaseOperationBentoCard({
   projectId,
   operation,
@@ -90,6 +82,7 @@ export function DatabaseOperationBentoCard({
   onOpenBreakdownDrawer,
   docsHref,
 }: DatabaseOperationBentoCardProps) {
+  const t = useT()
   return (
     <UsageMetricCardShell>
       <UsageTimeSeriesChartCard
@@ -134,7 +127,7 @@ export function DatabaseOperationBentoCard({
               onShowMore={() =>
                 onOpenBreakdownDrawer({
                   operation,
-                  title: breakdownDrawerTitle(operation, section),
+                  title: `${t(operation === 'reads' ? 'Reads' : 'Writes')} · ${t(section.title)}`,
                   description: section.description,
                   dimension: section.dimension,
                   labelVariant: section.labelVariant,

@@ -12,6 +12,7 @@ import {
 import type { RealtimeConfiguredSubscription } from '@/lib/realtime/debugger-prefs'
 import type { SubscriptionQueryEntry } from '@/lib/realtime/subscription-queries'
 import { ConfigurationItemsList } from './ConfigurationItemsList'
+import { useT } from '@/lib/i18n/translate'
 
 const SUGGESTED_CHANNELS = [
   'account',
@@ -47,6 +48,7 @@ export function ConfigurationPanel({
   onRemoveSubscriptionQuery,
   onOpenChannelBuilder,
 }: ConfigurationPanelProps) {
+  const t = useT()
   const [subscriptionPopoverOpen, setSubscriptionPopoverOpen] = useState(false)
   const [channelDraft, setChannelDraft] = useState('')
 
@@ -87,7 +89,7 @@ export function ConfigurationPanel({
               className="h-9 w-full text-[13px]"
             >
               <Plus className="me-1.5 h-3.5 w-3.5" />
-                Subscriptions
+                {t('Subscriptions')}
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -97,12 +99,16 @@ export function ConfigurationPanel({
           >
             <div className="border-b border-border px-4 py-3">
               <p className="text-[13px] font-semibold text-foreground">
-                Add subscription
+                {t('Add subscription')}
               </p>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 {isConnected
-                  ? 'Subscribe to a channel. Add query filters to each subscription separately.'
-                  : 'Configure a channel now. Add queries per subscription, then connect.'}
+                  ? t(
+                      'Subscribe to a channel. Add query filters to each subscription separately.',
+                    )
+                  : t(
+                      'Configure a channel now. Add queries per subscription, then connect.',
+                    )}
               </p>
             </div>
             <form
@@ -130,7 +136,7 @@ export function ConfigurationPanel({
 
               <div className="space-y-1.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Suggested
+                  {t('Suggested')}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTED_CHANNELS.map((channel) => (
@@ -154,7 +160,7 @@ export function ConfigurationPanel({
                 className="h-9 w-full text-[13px]"
                 disabled={!channelDraft.trim()}
               >
-                Add subscription
+                {t('Add subscription')}
               </Button>
             </form>
           </PopoverContent>

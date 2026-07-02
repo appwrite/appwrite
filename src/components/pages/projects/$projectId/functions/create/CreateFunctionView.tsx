@@ -55,6 +55,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -235,6 +236,7 @@ function RepositorySkeleton({
 }
 
 export function CreateFunctionView() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData } = useFunctionWizard()
@@ -404,14 +406,14 @@ export function CreateFunctionView() {
 
   return (
     <WizardLayout
-      title="Create function"
+      title={t('Create function')}
       fallbackPath={`/projects/${projectId}/functions`}
       fullscreen
       useSidebar={false}
       maxWidth="max-w-[1400px]"
     >
       <div className="grid gap-12 lg:grid-cols-5">
-        <CreateWizardLeftColumn title="Connect Git repository">
+        <CreateWizardLeftColumn title={t('Connect Git repository')}>
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="flex justify-center mb-3">
@@ -420,15 +422,15 @@ export function CreateFunctionView() {
                 </div>
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
-                Connect Git provider
+                {t('Connect Git provider')}
               </h3>
               <p className="text-[11px] text-muted-foreground mb-3">
-                Connect a repository to deploy functions from your codebase
+                {t('Connect a repository to deploy functions from your codebase')}
               </p>
               <Button size="sm" asChild>
                 <a href={getGitHubAuthUrl}>
                   <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
-                  Connect GitHub
+                  {t('Connect GitHub')}
                 </a>
               </Button>
             </div>
@@ -443,7 +445,7 @@ export function CreateFunctionView() {
                   }}
                 >
                   <SelectTrigger className="w-[180px] h-9 text-[13px]">
-                    <SelectValue placeholder="Select organization">
+                    <SelectValue placeholder={t('Select organization')}>
                       {selectedInstallation && (
                         <span className="flex items-center gap-2">
                           <ProviderIcon
@@ -475,7 +477,7 @@ export function CreateFunctionView() {
                         className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                       >
                         <Plus className="h-3 w-3" />
-                        Add account
+                        {t('Add account')}
                       </a>
                     </div>
                   </SelectContent>
@@ -486,7 +488,7 @@ export function CreateFunctionView() {
                   <Input
                     value={repoSearch}
                     onChange={(e) => setRepoSearch(e.target.value)}
-                    placeholder="Search repositories"
+                    placeholder={t('Search repositories')}
                     className="h-9 ps-9 text-[13px]"
                   />
                 </div>
@@ -565,7 +567,7 @@ export function CreateFunctionView() {
                             className="h-7 text-[12px] shrink-0"
                             onClick={() => handleSelectRepository(repo)}
                           >
-                            Connect
+                            {t('Connect')}
                           </Button>
                         </div>
                       ),
@@ -575,8 +577,8 @@ export function CreateFunctionView() {
                   <div className="py-8 text-center">
                     <p className="text-[12px] text-muted-foreground">
                       {repoSearch
-                        ? 'No repositories found'
-                        : 'No repositories available'}
+                        ? t('No repositories found')
+                        : t('No repositories available')}
                     </p>
                   </div>
                 )}
@@ -591,12 +593,12 @@ export function CreateFunctionView() {
 
               <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
                 <p className="text-[12px] text-muted-foreground">
-                  Missing a repository?{' '}
+                  {t('Missing a repository?')}{' '}
                   <a
                     href={getGitHubAuthUrl}
                     className="link-neutral inline-flex items-center gap-1 font-medium"
                   >
-                    Check your permissions
+                    {t('Check your permissions')}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </a>
                 </p>
@@ -605,7 +607,7 @@ export function CreateFunctionView() {
           )}
         </CreateWizardLeftColumn>
 
-        <CreateWizardRightColumn title="Clone template">
+        <CreateWizardRightColumn title={t('Clone template')}>
           {/* Language cards: one per runtime, link to template with runtime pre-selected */}
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
             {LANGUAGE_RUNTIMES.map((lang) => (
@@ -621,13 +623,15 @@ export function CreateFunctionView() {
           {/* Other highlighted templates from API */}
           <div>
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-[12px] text-muted-foreground">More templates</p>
+              <p className="text-[12px] text-muted-foreground">
+                {t('More templates')}
+              </p>
               <Link
                 to="/projects/$projectId/functions/templates"
                 params={{ projectId: projectId! }}
                 className="shrink-0 text-[12px] font-medium link-neutral"
               >
-                View all templates
+                {t('View all templates')}
               </Link>
             </div>
             {highlighted.length > 0 ? (
@@ -643,8 +647,10 @@ export function CreateFunctionView() {
             ) : (
               <EmptyState
                 icon={LayoutTemplate}
-                title="No additional templates"
-                description="More highlighted templates will show here when the catalog includes them."
+                title={t('No additional templates')}
+                description={t(
+                  'More highlighted templates will show here when the catalog includes them.',
+                )}
                 isEmpty
                 hasFilters={false}
                 variant="card"
@@ -656,13 +662,13 @@ export function CreateFunctionView() {
 
       <div className="mt-6 pt-6 border-t border-border">
         <p className="text-[12px] text-muted-foreground">
-          You can also{' '}
+          {t('You can also')}{' '}
           <Link
             to="/projects/$projectId/functions/create/manual"
             params={{ projectId: projectId! }}
             className="link-neutral"
           >
-            create a function manually
+            {t('create a function manually')}
           </Link>
           ,{' '}
           <Link
@@ -670,11 +676,11 @@ export function CreateFunctionView() {
             params={{ projectId: projectId! }}
             className="link-neutral"
           >
-            deploy from URL
+            {t('deploy from URL')}
           </Link>
-          , or using the CLI.{' '}
+          , {t('or using the CLI.')}{' '}
           <DocsRouteLink className="link-neutral" href="/docs/functions">
-            Learn more
+            {t('Learn more')}
           </DocsRouteLink>
         </p>
       </div>

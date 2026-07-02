@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import { getDedicatedDatabaseRegionUnavailableDescription } from '@/lib/databases/dedicated-database-regions'
+import { useT } from '@/lib/i18n/translate'
 
 type DedicatedDatabaseRegionUnavailableCardProps = {
   icon: LucideIcon
@@ -27,9 +28,10 @@ export function DedicatedDatabaseRegionUnavailableCard({
 }
 
 export function DedicatedDatabaseRegionUnavailableBadge() {
+  const t = useT()
   return (
     <Badge variant="inactive" className="text-[10px] shrink-0">
-      Coming soon
+      {t('Coming soon')}
     </Badge>
   )
 }

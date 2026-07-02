@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useVerifyDomain, useDeleteDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { VerifyDomainContent } from './VerifyDomainContent'
 
@@ -32,6 +33,7 @@ export function VerifyDomainDialog({
   onVerifySuccess,
   onReconfigure,
 }: VerifyDomainDialogProps) {
+  const t = useT()
   const verifyDomainMutation = useVerifyDomain(projectId, region)
   const deleteDomainMutation = useDeleteDomain(projectId, region)
   const [verificationError, setVerificationError] = useState<string | null>(
@@ -48,7 +50,7 @@ export function VerifyDomainDialog({
       onOpenChange(false)
       onReconfigure?.(rule.domain)
     } catch {
-      toast.error('Failed to remove domain')
+      toast.error(t('Failed to remove domain'))
     }
   }
 
@@ -61,19 +63,19 @@ export function VerifyDomainDialog({
       })
       if (updatedRule.status === 'created') {
         setVerificationError(
-          'Domain verification failed. Please check your domain settings or try again later.',
+          t('Domain verification failed. Please check your domain settings or try again later.'),
         )
       } else if (updatedRule.status === 'verified') {
-        toast.success('Domain added successfully')
+        toast.success(t('Domain added successfully'))
         onVerifySuccess()
       } else {
-        toast.success('Verification in progress')
+        toast.success(t('Verification in progress'))
         onVerifySuccess()
       }
     } catch (error: unknown) {
       setVerificationError(
         (error instanceof Error ? error.message : null) ||
-          'Failed to verify domain',
+          t('Failed to verify domain'),
       )
     }
   }
@@ -82,7 +84,7 @@ export function VerifyDomainDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle>Verify {rule.domain}</DialogTitle>
+          <DialogTitle>{t('Verify')} {rule.domain}</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 py-4 max-h-[70dvh] overflow-y-auto">
@@ -104,7 +106,7 @@ export function VerifyDomainDialog({
                 verifyDomainMutation.isPending || deleteDomainMutation.isPending
               }
             >
-              Change
+              {t('Change')}
             </Button>
           )}
           <Button
@@ -113,7 +115,7 @@ export function VerifyDomainDialog({
             onClick={handleVerify}
             disabled={verifyDomainMutation.isPending}
           >
-            Verify
+            {t('Verify')}
           </Button>
         </div>
       </DialogContent>

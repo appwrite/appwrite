@@ -3,12 +3,14 @@
 import { Loader2, RefreshCw } from 'lucide-react'
 import type { RealtimeReconnectState } from '@/lib/realtime/session-client'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type ReconnectBannerProps = {
   state: RealtimeReconnectState
 }
 
 export function ReconnectBanner({ state }: ReconnectBannerProps) {
+  const t = useT()
   if (state.status === 'idle') return null
 
   const delaySeconds =
@@ -29,8 +31,8 @@ export function ReconnectBanner({ state }: ReconnectBannerProps) {
       )}
       <span>
         {state.status === 'connecting'
-          ? `Reconnecting… attempt ${state.attempt} of ${state.maxAttempts}`
-          : `Connection lost. Reconnecting in ${delaySeconds ?? '?'}s… attempt ${state.attempt} of ${state.maxAttempts}`}
+          ? `${t('Reconnecting…')} ${t('attempt')} ${state.attempt} ${t('of')} ${state.maxAttempts}`
+          : `${t('Connection lost. Reconnecting in')} ${delaySeconds ?? '?'}s… ${t('attempt')} ${state.attempt} ${t('of')} ${state.maxAttempts}`}
       </span>
     </div>
   )

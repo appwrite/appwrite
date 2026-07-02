@@ -19,12 +19,14 @@ import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { CreateBucket } from './_components/CreateBucket'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Storage index: buckets live in the workspace sidebar; this pane prompts selection
  * or creation when no bucket route is active.
  */
 export function View() {
+  const t = useT()
   const { projectId, bucketId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -84,7 +86,7 @@ export function View() {
       })
     },
     onSuccess: (bucket) => {
-      toast.success(`${bucket.name} has been created`)
+      toast.success(`${bucket.name} ${t('has been created')}`)
       void queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
       setCreateOpen(false)
       navigate({
@@ -109,7 +111,7 @@ export function View() {
               <HardDrive className="h-6 w-6 text-muted-foreground" />
             </div>
             <h3 className="mb-2 text-[15px] font-medium text-foreground">
-              {total === 0 ? 'Create your first bucket' : 'Select a bucket'}
+              {total === 0 ? t('Create your first bucket') : t('Select a bucket')}
             </h3>
             <p
               className={
@@ -119,12 +121,17 @@ export function View() {
               }
             >
               {total === 0
-                ? 'Buckets isolate files, permissions, and delivery rules. Create one from the sidebar to start uploading.'
-                : 'Choose a bucket in the left sidebar to browse files, security, and settings. This layout mirrors the database console workspace.'}
+                ? t(
+                    'Buckets isolate files, permissions, and delivery rules. Create one from the sidebar to start uploading.',
+                  )
+                : t(
+                    'Choose a bucket in the left sidebar to browse files, security, and settings. This layout mirrors the database console workspace.',
+                  )}
             </p>
             {showPlanLimitLine ? (
               <p className="mb-6 max-w-sm text-[12px] text-muted-foreground">
-                Plan limit: {total} of {bucketsLimit} buckets ·{' '}
+                {t('Plan limit:')} {total} {t('of')} {bucketsLimit}{' '}
+                {t('buckets')} ·{' '}
                 {resolveOrganizationPlanDisplayLabel({
                   planName: organizationPlan?.name ?? null,
                   planId: organizationPlan?.$id,

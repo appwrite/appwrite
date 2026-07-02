@@ -53,6 +53,7 @@ import {
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -141,6 +142,7 @@ function MessageComposeCardFooter({
   onReschedule,
   onOpenLogs,
 }: MessageComposeCardFooterProps) {
+  const t = useT()
   const isDraft = messageStatus === 'draft'
   const isScheduled = messageStatus === 'scheduled'
   const logsEnabled = messageStatus !== 'draft'
@@ -155,7 +157,7 @@ function MessageComposeCardFooter({
           disabled={!logsEnabled}
           onClick={onOpenLogs}
         >
-          Logs
+          {t('Logs')}
         </Button>
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
           {isDraft ? (
@@ -166,7 +168,7 @@ function MessageComposeCardFooter({
                 className="h-9 text-[13px]"
                 onClick={onSchedule}
               >
-                Schedule
+                {t('Schedule')}
               </Button>
               <Button
                 variant="secondary"
@@ -175,7 +177,7 @@ function MessageComposeCardFooter({
                 disabled={!hasContentChanges || updatePending}
                 onClick={onUpdateDraft}
               >
-                Update draft
+                {t('Update draft')}
               </Button>
               <Button
                 variant="secondary"
@@ -183,7 +185,7 @@ function MessageComposeCardFooter({
                 className="h-9 shrink-0 text-[13px]"
                 onClick={onSend}
               >
-                Send message
+                {t('Send message')}
               </Button>
             </>
           ) : isScheduled ? (
@@ -194,7 +196,7 @@ function MessageComposeCardFooter({
                 className="h-9 text-[13px]"
                 onClick={onCancelSchedule}
               >
-                Cancel scheduling
+                {t('Cancel scheduling')}
               </Button>
               <Button
                 variant="secondary"
@@ -203,7 +205,7 @@ function MessageComposeCardFooter({
                 onClick={onReschedule}
               >
                 <Calendar className="me-1.5 h-4 w-4" />
-                Reschedule
+                {t('Reschedule')}
               </Button>
             </>
           ) : null}
@@ -218,6 +220,7 @@ export function View({
 }: {
   initialMessage?: Models.Message
 } = {}) {
+  const t = useT()
   const { projectId, messageId } = useParams({
     strict: false,
   })
@@ -495,10 +498,10 @@ export function View({
       await queryClient.refetchQueries({
         queryKey: ['message-targets', 'project', projectId, messageId],
       })
-      toast.success('Draft updated')
+      toast.success(t('Draft updated'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update draft')
+      toast.error(getErrorMessage(error) || t('Failed to update draft'))
     },
   })
 
@@ -527,10 +530,10 @@ export function View({
       await queryClient.refetchQueries({
         queryKey: ['message-targets', 'project', projectId, messageId],
       })
-      toast.success('Message updated successfully')
+      toast.success(t('Message updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update message')
+      toast.error(getErrorMessage(error) || t('Failed to update message'))
     },
   })
 
@@ -599,10 +602,10 @@ export function View({
         queryKey: ['message-targets', 'project', projectId, messageId],
       })
       setPushImage(null)
-      toast.success('Message updated successfully')
+      toast.success(t('Message updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update message')
+      toast.error(getErrorMessage(error) || t('Failed to update message'))
     },
   })
 
@@ -622,10 +625,10 @@ export function View({
       })
       const statusMessage =
         message?.status === 'draft'
-          ? 'The draft message has been deleted'
+          ? t('The draft message has been deleted')
           : message?.status === 'scheduled'
-            ? 'The scheduled message has been deleted, and its delivery was cancelled'
-            : 'The message has been deleted'
+            ? t('The scheduled message has been deleted, and its delivery was cancelled')
+            : t('The message has been deleted')
       toast.success(statusMessage)
       navigate({
         to: '/projects/$projectId/messaging/',
@@ -633,7 +636,7 @@ export function View({
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete message')
+      toast.error(getErrorMessage(error) || t('Failed to delete message'))
     },
   })
 
@@ -864,18 +867,18 @@ export function View({
     return [
       {
         id: 'compose',
-        label: 'Compose',
+        label: t('Compose'),
         to: '/projects/$projectId/messaging/$messageId',
         params: { projectId, messageId },
       },
       {
         id: 'settings',
-        label: 'Settings',
+        label: t('Settings'),
         to: '/projects/$projectId/messaging/$messageId/settings',
         params: { projectId, messageId },
       },
     ]
-  }, [hasComposeSettingsTabs, projectId, messageId])
+  }, [hasComposeSettingsTabs, projectId, messageId, t])
 
   const messageDetailActiveTab = isMessageSettingsPath ? 'settings' : 'compose'
 
@@ -888,7 +891,7 @@ export function View({
     if (message?.providerType === 'email') {
       const full = emailSubject.trim()
       if (!full) {
-        return { label: 'Message', nativeTitle: undefined as string | undefined }
+        return { label: t('Message'), nativeTitle: undefined as string | undefined }
       }
       const label = trimForPageTitle(full)
       return {
@@ -899,7 +902,7 @@ export function View({
     if (message?.providerType === 'sms') {
       const full = smsContent.trim()
       if (!full) {
-        return { label: 'SMS', nativeTitle: undefined as string | undefined }
+        return { label: t('SMS'), nativeTitle: undefined as string | undefined }
       }
       const label = trimForPageTitle(full)
       return {
@@ -910,7 +913,7 @@ export function View({
     if (message?.providerType === 'push') {
       const full = pushTitle.trim()
       if (!full) {
-        return { label: 'Push', nativeTitle: undefined as string | undefined }
+        return { label: t('Push'), nativeTitle: undefined as string | undefined }
       }
       const label = trimForPageTitle(full)
       return {
@@ -919,10 +922,10 @@ export function View({
       }
     }
     return {
-      label: 'Message',
+      label: t('Message'),
       nativeTitle: undefined as string | undefined,
     }
-  }, [message?.providerType, emailSubject, smsContent, pushTitle])
+  }, [message?.providerType, emailSubject, smsContent, pushTitle, t])
 
   if (!message) {
     if (messageLoading) {
@@ -932,8 +935,8 @@ export function View({
       <div className="flex items-center justify-center p-6 py-16">
         <EmptyState
           icon={AlertCircle}
-          title="Message not found"
-          description="This message may have been deleted or the link is incorrect."
+          title={t('Message not found')}
+          description={t('This message may have been deleted or the link is incorrect.')}
           variant="card"
           iconSize="md"
         />
@@ -945,7 +948,7 @@ export function View({
     if (message.status === 'sent') {
       return (
         <Badge variant="success" className="text-[10px] shrink-0">
-          Sent
+          {t('Sent')}
         </Badge>
       )
     }
@@ -954,7 +957,7 @@ export function View({
         <div className="flex items-center gap-2">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
           <Badge variant="processing" className="text-[10px] shrink-0">
-            Processing
+            {t('Processing')}
           </Badge>
         </div>
       )
@@ -962,21 +965,21 @@ export function View({
     if (message.status === 'failed') {
       return (
         <Badge variant="error" className="text-[10px] shrink-0">
-          Failed
+          {t('Failed')}
         </Badge>
       )
     }
     if (message.status === 'draft') {
       return (
         <Badge variant="info" className="text-[10px] shrink-0">
-          Draft
+          {t('Draft')}
         </Badge>
       )
     }
     if (message.status === 'scheduled') {
       return (
         <Badge variant="warning" className="text-[10px] shrink-0">
-          Scheduled
+          {t('Scheduled')}
         </Badge>
       )
     }
@@ -1070,7 +1073,7 @@ export function View({
               <div className="px-6 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Content
+                    {t('Content')}
                   </h3>
                   {getMessageStatusBadge()}
                 </div>
@@ -1080,8 +1083,9 @@ export function View({
                 <div className="flex flex-col gap-6 @[600px]:flex-row">
                   <div className="@[600px]:w-64 shrink-0">
                     <p className="text-[13px] text-muted-foreground">
-                      Write the subject and body, enable HTML if your content uses tags,
-                      add optional CC and BCC targets, and attach files from Storage.
+                      {t(
+                        'Write the subject and body, enable HTML if your content uses tags, add optional CC and BCC targets, and attach files from Storage.',
+                      )}
                     </p>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1091,14 +1095,14 @@ export function View({
                         htmlFor="email-subject"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Subject
+                        {t('Subject')}
                       </Label>
                       <Input
                         id="email-subject"
                         value={emailSubject}
                         onChange={(e) => setEmailSubject(e.target.value)}
                         disabled={!isDraft}
-                        placeholder="Email subject"
+                        placeholder={t('Email subject')}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                       />
                     </div>
@@ -1107,14 +1111,14 @@ export function View({
                         htmlFor="email-content"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Body
+                        {t('Body')}
                       </Label>
                       <Textarea
                         id="email-content"
                         value={emailContent}
                         onChange={(e) => setEmailContent(e.target.value)}
                         disabled={!isDraft}
-                        placeholder="Email content"
+                        placeholder={t('Email content')}
                         className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                       />
                     </div>
@@ -1124,11 +1128,12 @@ export function View({
                           htmlFor="email-html"
                           className="text-[13px] font-medium text-foreground"
                         >
-                          HTML mode
+                          {t('HTML mode')}
                         </Label>
                         <p className="text-[12px] text-muted-foreground mt-0.5">
-                          Enable the HTML mode if your message contains HTML
-                          tags.
+                          {t(
+                            'Enable the HTML mode if your message contains HTML tags.',
+                          )}
                         </p>
                       </div>
                       <Switch
@@ -1141,7 +1146,7 @@ export function View({
                     <div className="space-y-3 border-t border-border pt-4 mt-4">
                       <div className="flex items-center justify-between gap-2">
                         <Label className="text-[13px] font-medium text-foreground">
-                          CC targets
+                          {t('CC targets')}
                         </Label>
                         {isDraft && (
                           <Button
@@ -1152,7 +1157,7 @@ export function View({
                             onClick={() => setTargetPickerFor('cc')}
                           >
                             <Plus className="me-1.5 h-3.5 w-3.5" />
-                            Add
+                            {t('Add')}
                           </Button>
                         )}
                       </div>
@@ -1186,14 +1191,14 @@ export function View({
                         </ul>
                       ) : (
                         <p className="text-[12px] text-muted-foreground">
-                          No CC targets
+                          {t('No CC targets')}
                         </p>
                       )}
                     </div>
                     <div className="space-y-3 border-t border-border pt-4 mt-4">
                       <div className="flex items-center justify-between gap-2">
                         <Label className="text-[13px] font-medium text-foreground">
-                          BCC targets
+                          {t('BCC targets')}
                         </Label>
                         {isDraft && (
                           <Button
@@ -1204,7 +1209,7 @@ export function View({
                             onClick={() => setTargetPickerFor('bcc')}
                           >
                             <Plus className="me-1.5 h-3.5 w-3.5" />
-                            Add
+                            {t('Add')}
                           </Button>
                         )}
                       </div>
@@ -1238,14 +1243,14 @@ export function View({
                         </ul>
                       ) : (
                         <p className="text-[12px] text-muted-foreground">
-                          No BCC targets
+                          {t('No BCC targets')}
                         </p>
                       )}
                     </div>
                     <div className="space-y-3 border-t border-border pt-4 mt-4">
                       <div className="flex items-center justify-between gap-2">
                         <Label className="text-[13px] font-medium text-foreground">
-                          Attachments
+                          {t('Attachments')}
                         </Label>
                         {isDraft && (
                           <Button
@@ -1256,15 +1261,17 @@ export function View({
                             onClick={() => setAttachmentExplorerOpen(true)}
                           >
                             <Plus className="me-1.5 h-3.5 w-3.5" />
-                            Add
+                            {t('Add')}
                           </Button>
                         )}
                       </div>
                       {attachmentCompoundIds.length === 0 ? (
                         <EmptyState
                           icon={Paperclip}
-                          title="No attachments"
-                          description="Add files from your project's Storage buckets."
+                          title={t('No attachments')}
+                          description={t(
+                            "Add files from your project's Storage buckets.",
+                          )}
                           variant="card"
                           iconSize="md"
                         />
@@ -1323,7 +1330,7 @@ export function View({
               <div className="px-6 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Content
+                    {t('Content')}
                   </h3>
                   {getMessageStatusBadge()}
                 </div>
@@ -1333,8 +1340,9 @@ export function View({
                 <div className="flex flex-col gap-6 @[600px]:flex-row">
                   <div className="@[600px]:w-64 shrink-0">
                     <p className="text-[13px] text-muted-foreground">
-                      Enter the SMS body for this message. Delivery uses topics,
-                      users, and targets you add on this page.
+                      {t(
+                        'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.',
+                      )}
                     </p>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1344,14 +1352,14 @@ export function View({
                           htmlFor="sms-content"
                           className="text-[13px] font-medium text-foreground"
                         >
-                          Body
+                          {t('Body')}
                         </Label>
                         <Textarea
                           id="sms-content"
                           value={smsContent}
                           onChange={(e) => setSmsContent(e.target.value)}
                           disabled={!isDraft}
-                          placeholder="SMS content"
+                          placeholder={t('SMS content')}
                           className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         />
                       </div>
@@ -1378,7 +1386,7 @@ export function View({
               <div className="px-6 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Content
+                    {t('Content')}
                   </h3>
                   {getMessageStatusBadge()}
                 </div>
@@ -1388,8 +1396,9 @@ export function View({
                 <div className="flex flex-col gap-6 @[600px]:flex-row">
                   <div className="@[600px]:w-64 shrink-0">
                     <p className="text-[13px] text-muted-foreground">
-                      Build title, body, optional image and custom data. Advanced fields
-                      control action, appearance, and iOS-specific options.
+                      {t(
+                        'Build title, body, optional image and custom data. Advanced fields control action, appearance, and iOS-specific options.',
+                      )}
                     </p>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1399,14 +1408,14 @@ export function View({
                         htmlFor="push-title"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Title
+                        {t('Title')}
                       </Label>
                       <Input
                         id="push-title"
                         value={pushTitle}
                         onChange={(e) => setPushTitle(e.target.value)}
                         disabled={!isDraft}
-                        placeholder="Notification title"
+                        placeholder={t('Notification title')}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                       />
                     </div>
@@ -1422,13 +1431,13 @@ export function View({
                         value={pushBody}
                         onChange={(e) => setPushBody(e.target.value)}
                         disabled={!isDraft}
-                        placeholder="Notification body"
+                        placeholder={t('Notification body')}
                         className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                       />
                     </div>
                     <div>
                       <Label className="text-[13px] font-medium text-foreground">
-                        Media (Optional)
+                        {t('Media (Optional)')}
                       </Label>
                       <div className="mt-1.5">
                         <input
@@ -1445,12 +1454,12 @@ export function View({
                         />
                         {pushImage && (
                           <p className="mt-1.5 text-[12px] text-muted-foreground">
-                            Selected: {pushImage.name}
+                            {t('Selected:')} {pushImage.name}
                           </p>
                         )}
                         {!pushImage && message.data?.image && (
                           <p className="mt-1.5 text-[12px] text-muted-foreground">
-                            Current image: {message.data.image}
+                            {t('Current image:')} {message.data.image}
                           </p>
                         )}
                       </div>
@@ -1461,14 +1470,14 @@ export function View({
                           htmlFor="push-bucket"
                           className="text-[13px] font-medium text-foreground"
                         >
-                          Upload bucket
+                          {t('Upload bucket')}
                         </Label>
                         <Select
                           value={pushBucketId || undefined}
                           onValueChange={setPushBucketId}
                         >
                           <SelectTrigger id="push-bucket" className="h-9">
-                            <SelectValue placeholder="Select bucket for image upload" />
+                            <SelectValue placeholder={t('Select bucket for image upload')} />
                           </SelectTrigger>
                           <SelectContent>
                             {buckets.map((b) => (
@@ -1479,15 +1488,16 @@ export function View({
                           </SelectContent>
                         </Select>
                         <p className="text-[12px] text-muted-foreground">
-                          Uploading replaces the push image with a Storage file
-                          reference (bucket:file).
+                          {t(
+                            'Uploading replaces the push image with a Storage file reference (bucket:file).',
+                          )}
                         </p>
                       </div>
                     )}
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <Label className="text-[13px] font-medium text-foreground">
-                          Custom Data
+                          {t('Custom Data')}
                         </Label>
                         <Button
                           type="button"
@@ -1501,14 +1511,14 @@ export function View({
                           }
                         >
                           <Plus className="me-1 h-3.5 w-3.5" />
-                          Add
+                          {t('Add')}
                         </Button>
                       </div>
                       <div className="space-y-2">
                         {pushCustomData.map((item, index) => (
                           <div key={index} className="flex items-center gap-2">
                             <Input
-                              placeholder="Enter key"
+                              placeholder={t('Enter key')}
                               value={item.key}
                               onChange={(e) =>
                                 handleCustomDataKeyChange(index, e.target.value)
@@ -1517,7 +1527,7 @@ export function View({
                               className="h-9 text-[13px]"
                             />
                             <Input
-                              placeholder="Enter value"
+                              placeholder={t('Enter value')}
                               value={item.value}
                               onChange={(e) =>
                                 handleCustomDataValueChange(
@@ -1549,12 +1559,12 @@ export function View({
                     </div>
                     <div className="border-t border-border pt-4 space-y-3">
                       <h4 className="text-[13px] font-semibold text-foreground">
-                        Advanced
+                        {t('Advanced')}
                       </h4>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
                           <Label htmlFor="push-action" className="text-[12px]">
-                            Action
+                            {t('Action')}
                           </Label>
                           <Input
                             id="push-action"
@@ -1566,7 +1576,7 @@ export function View({
                         </div>
                         <div>
                           <Label htmlFor="push-icon" className="text-[12px]">
-                            Icon
+                            {t('Icon')}
                           </Label>
                           <Input
                             id="push-icon"
@@ -1578,7 +1588,7 @@ export function View({
                         </div>
                         <div>
                           <Label htmlFor="push-sound" className="text-[12px]">
-                            Sound
+                            {t('Sound')}
                           </Label>
                           <Input
                             id="push-sound"
@@ -1590,7 +1600,7 @@ export function View({
                         </div>
                         <div>
                           <Label htmlFor="push-color" className="text-[12px]">
-                            Color
+                            {t('Color')}
                           </Label>
                           <Input
                             id="push-color"
@@ -1602,7 +1612,7 @@ export function View({
                         </div>
                         <div>
                           <Label htmlFor="push-tag" className="text-[12px]">
-                            Tag
+                            {t('Tag')}
                           </Label>
                           <Input
                             id="push-tag"
@@ -1614,7 +1624,7 @@ export function View({
                         </div>
                         <div>
                           <Label htmlFor="push-badge" className="text-[12px]">
-                            Badge (iOS)
+                            {t('Badge (iOS)')}
                           </Label>
                           <Input
                             id="push-badge"
@@ -1626,7 +1636,7 @@ export function View({
                         </div>
                       </div>
                       <div>
-                        <Label className="text-[12px]">Priority</Label>
+                        <Label className="text-[12px]">{t('Priority')}</Label>
                         <Select
                           value={pushPriority}
                           onValueChange={(v) =>
@@ -1639,10 +1649,10 @@ export function View({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value={MessagePriority.Normal}>
-                              Normal
+                              {t('Normal')}
                             </SelectItem>
                             <SelectItem value={MessagePriority.High}>
-                              High
+                              {t('High')}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -1654,10 +1664,10 @@ export function View({
                               htmlFor="push-bg"
                               className="text-[13px] font-medium"
                             >
-                              Content available (iOS)
+                              {t('Content available (iOS)')}
                             </Label>
                             <p className="text-[12px] text-muted-foreground mt-0.5">
-                              Deliver in the background when possible.
+                              {t('Deliver in the background when possible.')}
                             </p>
                           </div>
                           <Switch
@@ -1673,10 +1683,10 @@ export function View({
                               htmlFor="push-critical"
                               className="text-[13px] font-medium"
                             >
-                              Critical (iOS)
+                              {t('Critical (iOS)')}
                             </Label>
                             <p className="text-[12px] text-muted-foreground mt-0.5">
-                              Requires critical notification entitlement.
+                              {t('Requires critical notification entitlement.')}
                             </p>
                           </div>
                           <Switch
@@ -1713,7 +1723,7 @@ export function View({
             <div className="px-6 py-4">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Topics
+                  {t('Topics')}
                 </h3>
                 {isDraft && (
                   <Button
@@ -1723,7 +1733,7 @@ export function View({
                     onClick={() => setTopicsModalOpen(true)}
                   >
                     <Plus className="me-1.5 h-3.5 w-3.5" />
-                    Add
+                    {t('Add')}
                   </Button>
                 )}
               </div>
@@ -1733,8 +1743,9 @@ export function View({
               <div className="flex flex-col gap-6 @[600px]:flex-row">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    Link topics so this message reaches their subscribers when you
-                    send. Subscriber counts reflect targets registered on each topic.
+                    {t(
+                      'Link topics so this message reaches their subscribers when you send. Subscriber counts reflect targets registered on each topic.',
+                    )}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1744,7 +1755,7 @@ export function View({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Topic name
+                              {t('Topic name')}
                             </TableHead>
                             {isDraft && (
                               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
@@ -1768,14 +1779,14 @@ export function View({
                                   {topic ? (
                                     <div>
                                       <p className="text-[13px] font-medium text-foreground">
-                                        {topic.name} ({totalSubscribers} targets)
+                                        {topic.name} ({totalSubscribers} {t('targets')})
                                       </p>
                                       <CopyableId id={topic.$id} size="xs" />
                                     </div>
                                   ) : (
                                     <div>
                                       <p className="text-[13px] text-muted-foreground">
-                                        Topic not found
+                                        {t('Topic not found')}
                                       </p>
                                       <CopyableId id={topicId} size="xs" />
                                     </div>
@@ -1808,16 +1819,18 @@ export function View({
                   ) : isDraft ? (
                     <EmptyState
                       icon={Hash}
-                      title="No topics yet"
-                      description="Select topics using Add to reach their subscribers when you send."
+                      title={t('No topics yet')}
+                      description={t(
+                        'Select topics using Add to reach their subscribers when you send.',
+                      )}
                       variant="card"
                       iconSize="md"
                     />
                   ) : (
                     <EmptyState
                       icon={Hash}
-                      title="No topics"
-                      description="This message has no linked topics."
+                      title={t('No topics')}
+                      description={t('This message has no linked topics.')}
                       variant="card"
                       iconSize="md"
                     />
@@ -1838,7 +1851,7 @@ export function View({
                   }
                   onClick={handleUpdateMessage}
                 >
-                  Update
+                  {t('Update')}
                 </Button>
               </div>
             )}
@@ -1848,7 +1861,7 @@ export function View({
             <div className="px-6 py-4">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Users
+                  {t('Users')}
                 </h3>
                 {isDraft && (
                   <Button
@@ -1858,7 +1871,7 @@ export function View({
                     onClick={() => setRecipientUsersModalOpen(true)}
                   >
                     <Plus className="me-1.5 h-3.5 w-3.5" />
-                    Add
+                    {t('Add')}
                   </Button>
                 )}
               </div>
@@ -1868,9 +1881,9 @@ export function View({
               <div className="flex flex-col gap-6 @[600px]:flex-row">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    Add project users to deliver to every matching channel target on
-                    their account (email, SMS, or push), alongside any topics you
-                    selected.
+                    {t(
+                      'Add project users to deliver to every matching channel target on their account (email, SMS, or push), alongside any topics you selected.',
+                    )}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1880,7 +1893,7 @@ export function View({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              User
+                              {t('User')}
                             </TableHead>
                             {isDraft && (
                               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
@@ -1923,16 +1936,18 @@ export function View({
                   ) : isDraft ? (
                     <EmptyState
                       icon={Users}
-                      title="No users yet"
-                      description="Choose users using Add to target every matching channel target for each user."
+                      title={t('No users yet')}
+                      description={t(
+                        'Choose users using Add to target every matching channel target for each user.',
+                      )}
                       variant="card"
                       iconSize="md"
                     />
                   ) : (
                     <EmptyState
                       icon={Users}
-                      title="No users"
-                      description="This message has no selected users."
+                      title={t('No users')}
+                      description={t('This message has no selected users.')}
                       variant="card"
                       iconSize="md"
                     />
@@ -1953,7 +1968,7 @@ export function View({
                   }
                   onClick={handleUpdateMessage}
                 >
-                  Update
+                  {t('Update')}
                 </Button>
               </div>
             )}
@@ -1964,7 +1979,7 @@ export function View({
             <div className="px-6 py-4">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Targets
+                  {t('Targets')}
                 </h3>
                 {isDraft && (
                   <Button
@@ -1974,7 +1989,7 @@ export function View({
                     onClick={() => setTargetPickerFor('primary')}
                   >
                     <Plus className="me-1.5 h-3.5 w-3.5" />
-                    Add
+                    {t('Add')}
                   </Button>
                 )}
               </div>
@@ -1984,8 +1999,9 @@ export function View({
               <div className="flex flex-col gap-6 @[600px]:flex-row">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    Pick specific channel targets for this message. Targets must match
-                    the message provider (email, SMS, or push).
+                    {t(
+                      'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).',
+                    )}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1995,10 +2011,10 @@ export function View({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Target
+                              {t('Target')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              User
+                              {t('User')}
                             </TableHead>
                             {isDraft && (
                               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
@@ -2031,7 +2047,7 @@ export function View({
                                     <div className="space-y-1">
                                       <CopyableId id={targetId} size="xs" />
                                       <p className="text-[12px] text-muted-foreground">
-                                        Loading target details…
+                                        {t('Loading target details…')}
                                       </p>
                                     </div>
                                   )}
@@ -2083,16 +2099,20 @@ export function View({
                   ) : isDraft ? (
                     <EmptyState
                       icon={Target}
-                      title="No targets yet"
-                      description="Select targets using Add to deliver this message on the matching channel."
+                      title={t('No targets yet')}
+                      description={t(
+                        'Select targets using Add to deliver this message on the matching channel.',
+                      )}
                       variant="card"
                       iconSize="md"
                     />
                   ) : (
                     <EmptyState
                       icon={Target}
-                      title="No targets"
-                      description="No targets have been selected for this message."
+                      title={t('No targets')}
+                      description={t(
+                        'No targets have been selected for this message.',
+                      )}
                       variant="card"
                       iconSize="md"
                     />
@@ -2113,7 +2133,7 @@ export function View({
                   }
                   onClick={handleUpdateMessage}
                 >
-                  Update
+                  {t('Update')}
                 </Button>
               </div>
             )}
@@ -2127,10 +2147,10 @@ export function View({
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Details
+                      {t('Details')}
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      Message ID and delivery timestamps.
+                      {t('Message ID and delivery timestamps.')}
                     </p>
                   </div>
                   <div className="shrink-0 pt-0.5">{getMessageStatusBadge()}</div>
@@ -2141,14 +2161,14 @@ export function View({
                 <div className="space-y-4">
                   <div className="min-w-0">
                     <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Message ID
+                      {t('Message ID')}
                     </p>
                     <CopyableId id={message.$id} size="sm" />
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                        Created
+                        {t('Created')}
                       </p>
                       {message.$createdAt ? (
                         <DateTooltip
@@ -2158,13 +2178,13 @@ export function View({
                         />
                       ) : (
                         <span className="text-[13px] text-muted-foreground/50 italic">
-                          N/A
+                          {t('N/A')}
                         </span>
                       )}
                     </div>
                     <div>
                       <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                        Updated
+                        {t('Updated')}
                       </p>
                       <DateTooltip
                         date={message.$updatedAt || message.$createdAt}
@@ -2178,7 +2198,7 @@ export function View({
                       {message.scheduledAt && (
                         <div>
                           <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Scheduled for
+                            {t('Scheduled for')}
                           </p>
                           <DateTooltip
                             date={message.scheduledAt}
@@ -2190,7 +2210,7 @@ export function View({
                       {message.deliveredAt && (
                         <div>
                           <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Sent
+                            {t('Sent')}
                           </p>
                           <DateTooltip
                             date={message.deliveredAt}
@@ -2211,14 +2231,17 @@ export function View({
             <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Delete message
+                  {t('Delete message')}
                 </h3>
                 <p className="text-[13px] text-muted-foreground mt-2">
-                  Permanently delete this message. This action cannot be undone.
+                  {t(
+                    'Permanently delete this message. This action cannot be undone.',
+                  )}
                   {message.status === 'scheduled' && (
                     <span className="block mt-1">
-                      This is a scheduled message. Deleting it will result in
-                      the cancellation of its delivery.
+                      {t(
+                        'This is a scheduled message. Deleting it will result in the cancellation of its delivery.',
+                      )}
                     </span>
                   )}
                 </p>
@@ -2231,11 +2254,11 @@ export function View({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-medium text-foreground truncate">
-                      {getMessageDescription() || 'Message'}
+                      {getMessageDescription() || t('Message')}
                     </p>
                     {message.$updatedAt && (
                       <p className="text-[12px] text-muted-foreground">
-                        Last updated: {formatDateTime(message.$updatedAt)}
+                        {t('Last updated:')} {formatDateTime(message.$updatedAt)}
                       </p>
                     )}
                   </div>
@@ -2250,7 +2273,7 @@ export function View({
                   disabled={deleteMessageMutation.isPending}
                 >
                   <Trash2 className="me-1.5 h-4 w-4" />
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -2277,15 +2300,19 @@ export function View({
           }}
           title={
             targetPickerFor === 'cc'
-              ? 'Select CC targets'
+              ? t('Select CC targets')
               : targetPickerFor === 'bcc'
-                ? 'Select BCC targets'
-                : 'Select targets'
+                ? t('Select BCC targets')
+                : t('Select targets')
           }
           description={
             targetPickerFor === 'cc' || targetPickerFor === 'bcc'
-              ? 'Choose email targets for copy. Targets must match the email channel.'
-              : 'Choose user targets for this message. Each user can have multiple targets per channel.'
+              ? t(
+                  'Choose email targets for copy. Targets must match the email channel.',
+                )
+              : t(
+                  'Choose user targets for this message. Each user can have multiple targets per channel.',
+                )
           }
           projectId={projectId}
           providerType={
@@ -2342,13 +2369,15 @@ export function View({
               open={attachmentExplorerOpen}
               onOpenChange={setAttachmentExplorerOpen}
               projectId={projectId}
-              title="Add attachment"
-              description="Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message."
-              confirmLabel="Add"
+              title={t('Add attachment')}
+              description={t(
+                'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.',
+              )}
+              confirmLabel={t('Add')}
               onConfirm={(sel) => {
                 const compound = `${sel.bucketId}:${sel.fileId}`
                 if (attachmentCompoundIds.includes(compound)) {
-                  toast.error('This file is already attached')
+                  toast.error(t('This file is already attached'))
                   return false
                 }
                 setAttachmentCompoundIds((rows) => [...rows, compound])
@@ -2361,19 +2390,27 @@ export function View({
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete message</DialogTitle>
+              <DialogTitle>{t('Delete message')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete{' '}
+                {t('Are you sure you want to delete')}{' '}
                 {getMessageDescription()
                   ? `"${getMessageDescription()}"`
-                  : 'this message'}
-                ? {message.status === 'draft' && 'This action is irreversible.'}
+                  : t('this message')}
+                ?{' '}
+                {message.status === 'draft' &&
+                  t('This action is irreversible.')}
                 {message.status === 'scheduled' &&
-                  'This is a scheduled message. Deleting it will result in the cancellation of its delivery. This action is irreversible.'}
+                  t(
+                    'This is a scheduled message. Deleting it will result in the cancellation of its delivery. This action is irreversible.',
+                  )}
                 {message.status === 'sent' &&
-                  'The message has already been sent. After deleting it, you will no longer see it here.'}
+                  t(
+                    'The message has already been sent. After deleting it, you will no longer see it here.',
+                  )}
                 {message.status === 'failed' &&
-                  'The message has been sent with errors. After deleting it, you will no longer see it here.'}
+                  t(
+                    'The message has been sent with errors. After deleting it, you will no longer see it here.',
+                  )}
               </DialogDescription>
             </DialogHeader>
 
@@ -2383,14 +2420,14 @@ export function View({
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={deleteMessageMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => deleteMessageMutation.mutate()}
                 disabled={deleteMessageMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>
@@ -2402,11 +2439,14 @@ export function View({
         >
           <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Message logs</DialogTitle>
+              <DialogTitle>{t('Message logs')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Audit log entries for this message.
+                {t('Audit log entries for this message.')}
                 {message.status === 'failed'
-                  ? ' When delivery fails, API errors are included below when available.'
+                  ? ' ' +
+                    t(
+                      'When delivery fails, API errors are included below when available.',
+                    )
                   : ''}
               </DialogDescription>
             </DialogHeader>
@@ -2415,7 +2455,7 @@ export function View({
               {message.deliveryErrors && message.deliveryErrors.length > 0 ? (
                 <div>
                   <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                    Delivery errors
+                    {t('Delivery errors')}
                   </h4>
                   <pre className="max-h-[220px] overflow-auto rounded-md border border-border bg-muted/30 p-4 text-[12px]">
                     {JSON.stringify(message.deliveryErrors, null, 2)}
@@ -2424,11 +2464,11 @@ export function View({
               ) : null}
               <div>
                 <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                  Log entries
+                  {t('Log entries')}
                 </h4>
                 <MessagingLogsTable
                   logs={messageLogsData?.logs ?? []}
-                  emptyLabel="No log entries returned for this message."
+                  emptyLabel={t('No log entries returned for this message.')}
                 />
               </div>
             </div>
@@ -2437,7 +2477,7 @@ export function View({
                 variant="outline"
                 onClick={() => setMessageLogsDialogOpen(false)}
               >
-                Close
+                {t('Close')}
               </Button>
             </div>
           </DialogContent>
@@ -2463,6 +2503,7 @@ function TopicsSelectionModal({
   providerType?: string
   existingTopicIds: Set<string>
 }) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [selectedTopicIds, setSelectedTopicIds] = useState<Set<string>>(
     new Set(),
@@ -2529,9 +2570,9 @@ function TopicsSelectionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[80dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Select topics</DialogTitle>
+          <DialogTitle>{t('Select topics')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose one or more topics to send this message to.
+            {t('Choose one or more topics to send this message to.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -2539,7 +2580,7 @@ function TopicsSelectionModal({
         <div className="px-6 pb-4 pt-0 flex-1 overflow-hidden flex flex-col">
           <div className="space-y-4">
             <Input
-              placeholder="Search topics..."
+              placeholder={t('Search topics...')}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -2551,7 +2592,7 @@ function TopicsSelectionModal({
             <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
-                  Loading topics...
+                  {t('Loading topics...')}
                 </div>
               ) : filteredTopics.length === 0 ? (
                 <EmptyState
@@ -2598,8 +2639,10 @@ function TopicsSelectionModal({
                           {topic.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {totalSubscribers} subscriber
-                          {totalSubscribers !== 1 ? 's' : ''}
+                          {totalSubscribers}{' '}
+                          {totalSubscribers !== 1
+                            ? t('subscribers')
+                            : t('subscriber')}
                         </p>
                       </div>
                     </div>
@@ -2612,10 +2655,11 @@ function TopicsSelectionModal({
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={selectedTopicIds.size === 0}>
-            Add {selectedTopicIds.size > 0 ? `(${selectedTopicIds.size})` : ''}
+            {t('Add')}{' '}
+            {selectedTopicIds.size > 0 ? `(${selectedTopicIds.size})` : ''}
           </Button>
         </div>
       </DialogContent>

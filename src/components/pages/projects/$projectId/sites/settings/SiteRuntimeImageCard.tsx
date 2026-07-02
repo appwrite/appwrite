@@ -18,6 +18,7 @@ import {
   buildSiteUpdateParams,
   useSiteFrameworks,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteRuntimeImageCardProps {
   projectId: string | null | undefined
@@ -30,6 +31,7 @@ export function SiteRuntimeImageCard({
   siteId,
   site,
 }: SiteRuntimeImageCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: frameworksData } = useSiteFrameworks(projectId)
 
@@ -64,7 +66,7 @@ export function SiteRuntimeImageCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Runtime settings updated successfully')
+      toast.success(t('Runtime settings updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -73,7 +75,9 @@ export function SiteRuntimeImageCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update runtime settings'))
+      toast.error(
+        getErrorMessage(error, t('Failed to update runtime settings')),
+      )
     },
   })
 
@@ -89,11 +93,13 @@ export function SiteRuntimeImageCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Image</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Image')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Base image used when your site runs in production (SSR, API routes,
-          and dynamic handlers). Pick an image that matches your stack. Changes
-          take effect after the next successful deploy.
+          {t(
+            'Base image used when your site runs in production (SSR, API routes, and dynamic handlers). Pick an image that matches your stack. Changes take effect after the next successful deploy.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -101,7 +107,7 @@ export function SiteRuntimeImageCard({
         {hasRuntimeChoices ? (
           <div className="space-y-2">
             <Label htmlFor="site-runtime-image" className="text-[13px]">
-              Image
+              {t('Image')}
             </Label>
             <Select
               value={buildRuntime || undefined}
@@ -111,7 +117,7 @@ export function SiteRuntimeImageCard({
                 id="site-runtime-image"
                 className="mt-2 h-9 max-w-md border-border bg-background text-[13px]"
               >
-                <SelectValue placeholder="Select an image" />
+                <SelectValue placeholder={t('Select an image')} />
               </SelectTrigger>
               <SelectContent>
                 {availableRuntimes.map((runtime: unknown) => {
@@ -132,8 +138,10 @@ export function SiteRuntimeImageCard({
         ) : (
           <p className="text-[13px] text-muted-foreground">
             {site?.framework
-              ? 'No images are available for this framework yet.'
-              : 'Choose a framework in build settings to see compatible images.'}
+              ? t('No images are available for this framework yet.')
+              : t(
+                  'Choose a framework in build settings to see compatible images.',
+                )}
           </p>
         )}
       </div>
@@ -146,7 +154,7 @@ export function SiteRuntimeImageCard({
           }
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

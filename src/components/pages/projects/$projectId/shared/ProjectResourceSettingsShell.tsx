@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { FUNCTION_SETTINGS_CARD_INDEX } from '@/lib/settings-search/function-settings-cards'
 import { SITE_SETTINGS_CARD_INDEX } from '@/lib/settings-search/site-settings-cards'
+import { useT } from '@/lib/i18n/translate'
 
 export type ResourceSettingsNavItem = {
   id: string
@@ -72,6 +73,7 @@ export function ProjectResourceSettingsShell({
   kind: ShellKind
   navItems: ResourceSettingsNavItem[]
 }) {
+  const t = useT()
   const location = useLocation()
   const navigate = useNavigate()
   const { projectId, functionId, siteId } = useParams({ strict: false })
@@ -98,13 +100,13 @@ export function ProjectResourceSettingsShell({
     () =>
       navItems.map((item) => ({
         id: item.id,
-        label: item.label,
+        label: t(item.label),
         icon: item.icon,
         keywords: item.keywords,
         to: toForItem(item.pathSuffix),
         params: paramsForNavigate,
       })),
-    [navItems, kind, projectId, functionId, siteId],
+    [navItems, kind, projectId, functionId, siteId, t],
   )
 
   return (

@@ -12,6 +12,7 @@ import {
   useSiteFrameworks,
 } from '@/lib/react-query/hooks'
 import { StartCommandLabel } from '../_components/StartCommandLabel'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteRuntimeStartCommandCardProps {
   projectId: string | null | undefined
@@ -24,6 +25,7 @@ export function SiteRuntimeStartCommandCard({
   siteId,
   site,
 }: SiteRuntimeStartCommandCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: frameworksData } = useSiteFrameworks(projectId)
 
@@ -56,7 +58,7 @@ export function SiteRuntimeStartCommandCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Start command updated successfully')
+      toast.success(t('Start command updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -65,7 +67,7 @@ export function SiteRuntimeStartCommandCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update start command'))
+      toast.error(getErrorMessage(error, t('Failed to update start command')))
     },
   })
 
@@ -85,11 +87,12 @@ export function SiteRuntimeStartCommandCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Start command
+          {t('Start command')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Command used to start your SSR server after a successful deploy. Leave
-          it empty to use the framework default.
+          {t(
+            'Command used to start your SSR server after a successful deploy. Leave it empty to use the framework default.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -100,7 +103,7 @@ export function SiteRuntimeStartCommandCard({
             id="site-start-command"
             value={startCommand}
             onChange={(e) => setStartCommand(e.target.value)}
-            placeholder={ssrDefaults.startCommand || 'Enter start command'}
+            placeholder={ssrDefaults.startCommand || t('Enter start command')}
             className="h-9 max-w-md font-mono text-[13px]"
           />
         </div>
@@ -112,7 +115,7 @@ export function SiteRuntimeStartCommandCard({
           disabled={!hasChanges || updateSiteMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

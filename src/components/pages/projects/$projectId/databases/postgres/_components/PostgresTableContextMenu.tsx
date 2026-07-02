@@ -40,6 +40,7 @@ import {
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { buildPostgresDropTableSql } from '@/lib/postgres-table-ddl'
 import { usePostgresSidebar } from './PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresTableContextMenuProps = {
   projectId: string
@@ -70,6 +71,7 @@ export function PostgresTableContextMenu({
   children,
   onDeleted,
 }: PostgresTableContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const { openTableInSqlEditor } = usePostgresSidebar()
   const executeSql = useExecutePostgresSql(projectId, databaseId)
@@ -104,27 +106,27 @@ export function PostgresTableContextMenu({
   const handleCopyId = async () => {
     try {
       await navigator.clipboard.writeText(tableId)
-      toast.success('ID copied to clipboard')
+      toast.success(t('ID copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
   const handleCopyName = async () => {
     try {
       await navigator.clipboard.writeText(tableName)
-      toast.success('Name copied to clipboard')
+      toast.success(t('Name copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(tableHref)
-      toast.success('Link copied to clipboard')
+      toast.success(t('Link copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -134,9 +136,9 @@ export function PostgresTableContextMenu({
       await navigator.clipboard.writeText(
         JSON.stringify({ schema, table, id: tableId }, null, 2),
       )
-      toast.success('Copied as JSON')
+      toast.success(t('Copied as JSON'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -174,32 +176,32 @@ export function PostgresTableContextMenu({
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Copy className="size-4" />
               </span>
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={handleCopyId}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Copy className="size-4" />
                 </span>
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyName}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Copy className="size-4" />
                 </span>
-                Copy name
+                {t('Copy name')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyLink}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Link2 className="size-4" />
                 </span>
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyAsJson}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Copy className="size-4" />
                 </span>
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -208,7 +210,7 @@ export function PostgresTableContextMenu({
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Terminal className="size-4" />
             </span>
-            Open in SQL editor
+            {t('Open in SQL editor')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
@@ -219,7 +221,7 @@ export function PostgresTableContextMenu({
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <ExternalLink className="size-4" />
             </span>
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() =>
@@ -233,14 +235,14 @@ export function PostgresTableContextMenu({
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Square className="size-4" />
             </span>
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Trash2 className="size-4" />
             </span>
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -248,7 +250,7 @@ export function PostgresTableContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete table</DialogTitle>
+            <DialogTitle>{t('Delete table')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete <strong>{tableName}</strong>? All
               rows and data will be permanently removed. This action cannot be
@@ -261,14 +263,14 @@ export function PostgresTableContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={executeSql.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleDelete()}
               disabled={executeSql.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

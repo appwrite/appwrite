@@ -30,6 +30,7 @@ import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useDeleteApiKey } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 export type ApiKeyContextMenuKey = {
   id: string
@@ -52,6 +53,7 @@ export function ApiKeyContextMenu({
   children,
   onUpdate,
 }: ApiKeyContextMenuProps) {
+  const t = useT()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteMutation = useDeleteApiKey(projectId)
 
@@ -65,11 +67,11 @@ export function ApiKeyContextMenu({
   const handleDelete = () => {
     deleteMutation.mutate(apiKey.id, {
       onSuccess: () => {
-        toast.success('API key deleted')
+        toast.success(t('API key deleted'))
         setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete API key')
+        toast.error(getErrorMessage(error) || t('Failed to delete API key'))
       },
     })
   }
@@ -83,7 +85,7 @@ export function ApiKeyContextMenu({
             <>
               <ContextMenuItem onSelect={() => onUpdate(apiKey.id)}>
                 <ContextMenuIcon icon={Pencil} />
-                Update
+                {t('Update')}
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
@@ -91,21 +93,21 @@ export function ApiKeyContextMenu({
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', apiKey.id)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', apiKey.name)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               {hasKey && (
@@ -113,7 +115,7 @@ export function ApiKeyContextMenu({
                   onSelect={() => copyToClipboard('API key', apiKey.key)}
                 >
                   <ContextMenuIcon icon={KeyRound} />
-                  Copy key
+                  {t('Copy key')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
@@ -124,14 +126,14 @@ export function ApiKeyContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -139,11 +141,11 @@ export function ApiKeyContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete API key</DialogTitle>
+            <DialogTitle>{t('Delete API key')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete
-              {apiKey.name ? ` "${apiKey.name}"` : ' this API key'}? This action
-              cannot be undone.
+              {t('Are you sure you want to delete')}
+              {apiKey.name ? ` "${apiKey.name}"` : ` ${t('this API key')}`}?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -152,14 +154,14 @@ export function ApiKeyContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

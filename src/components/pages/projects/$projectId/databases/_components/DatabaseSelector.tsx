@@ -54,6 +54,7 @@ import {
   type SpecOption,
 } from '@/lib/database-specs'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_LIMIT = 15
@@ -177,6 +178,7 @@ export function DatabaseSelector({
   createTableDisabled = false,
   createTableDisabledTooltip = "You don't have permission to create tables.",
 }: DatabaseSelectorProps) {
+  const t = useT()
   const isNative = mode === 'native'
   const resolvedNativeEngine = isNative ? nativeEngine : undefined
   const showCreateActions =
@@ -297,7 +299,7 @@ export function DatabaseSelector({
     value,
   ])
 
-  const displayName = selectedName || selectedItem?.name || placeholder
+  const displayName = selectedName || selectedItem?.name || t(placeholder)
 
   const selectedSpecSummary = isNative
     ? getSpecSummary(selectedItem?.specSlug ?? selectedSpecification)
@@ -321,11 +323,12 @@ export function DatabaseSelector({
     emptyLabel ??
     (isNative && resolvedNativeEngine
       ? getNativeDatabaseEmptyLabel(resolvedNativeEngine)
-      : 'No databases found')
+      : t('No databases found'))
 
   const bothCreateDisabled = createDatabaseDisabled && createTableDisabled
-  const triggerDisabledTooltip =
-    "You don't have permission to create databases or tables."
+  const triggerDisabledTooltip = t(
+    "You don't have permission to create databases or tables.",
+  )
 
   const popover = (
     <Popover open={open} onOpenChange={setOpen}>
@@ -363,7 +366,7 @@ export function DatabaseSelector({
         <Command shouldFilter={false}>
           <div className="relative">
             <CommandInput
-              placeholder="Search databases..."
+              placeholder={t('Search databases...')}
               value={search}
               onValueChange={setSearch}
               className={cn('h-9', isFetching && 'pe-8')}
@@ -380,7 +383,9 @@ export function DatabaseSelector({
           </div>
           <CommandList className="max-h-[240px]">
             {filteredItems.length === 0 && (
-              <CommandEmpty>{isFetching ? '' : resolvedEmptyLabel}</CommandEmpty>
+              <CommandEmpty>
+                {isFetching ? '' : t(resolvedEmptyLabel)}
+              </CommandEmpty>
             )}
             <CommandGroup>
               {filteredItems.map((item) => {
@@ -455,7 +460,7 @@ export function DatabaseSelector({
               variant="outline"
               size="icon"
               className="h-8 w-8 shrink-0"
-              aria-label="Create database or table"
+              aria-label={t('Create database or table')}
               aria-haspopup="menu"
             >
               <Plus className="h-4 w-4" />
@@ -466,25 +471,25 @@ export function DatabaseSelector({
               disabled={createDatabaseDisabled}
               title={
                 createDatabaseDisabled
-                  ? createDatabaseDisabledTooltip
+                  ? t(createDatabaseDisabledTooltip)
                   : undefined
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateDatabaseClick?.()}
             >
               <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
-              Create database
+              {t('Create database')}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={createTableDisabled}
               title={
-                createTableDisabled ? createTableDisabledTooltip : undefined
+                createTableDisabled ? t(createTableDisabledTooltip) : undefined
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateTableClick?.()}
             >
               <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-              {createTableMenuLabel}
+              {t(createTableMenuLabel)}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

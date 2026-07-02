@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useVerifyDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { VerifyDomainContent } from './VerifyDomainContent'
 
@@ -31,6 +32,7 @@ export function RetryDomainDialog({
   organizationDomainId,
   onRetrySuccess,
 }: RetryDomainDialogProps) {
+  const t = useT()
   const verifyDomainMutation = useVerifyDomain(projectId, region)
   const [verificationError, setVerificationError] = useState<string | null>(
     null,
@@ -49,19 +51,19 @@ export function RetryDomainDialog({
       })
       if (updatedRule.status === 'created') {
         setVerificationError(
-          'Domain verification failed. Please check your domain settings or try again later.',
+          t('Domain verification failed. Please check your domain settings or try again later.'),
         )
       } else if (updatedRule.status === 'verified') {
-        toast.success(`${rule.domain} has been verified`)
+        toast.success(`${rule.domain} ${t('has been verified')}`)
         onRetrySuccess()
       } else {
-        toast.success('Verification in progress')
+        toast.success(t('Verification in progress'))
         onRetrySuccess()
       }
     } catch (error: unknown) {
       setVerificationError(
         (error instanceof Error ? error.message : null) ||
-          'Failed to retry verification',
+          t('Failed to retry verification'),
       )
     }
   }
@@ -72,9 +74,9 @@ export function RetryDomainDialog({
         className="sm:max-w-4xl p-0"
 >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Retry verification</DialogTitle>
+          <DialogTitle>{t('Retry verification')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Retry domain verification for {rule.domain}
+            {t('Retry domain verification for')} {rule.domain}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -95,14 +97,14 @@ export function RetryDomainDialog({
             onClick={() => onOpenChange(false)}
             disabled={verifyDomainMutation.isPending}
 >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
             onClick={handleRetry}
             disabled={verifyDomainMutation.isPending}
 >
-            Retry
+            {t('Retry')}
           </Button>
         </div>
       </DialogContent>

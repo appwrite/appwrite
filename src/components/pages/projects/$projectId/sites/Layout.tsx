@@ -51,6 +51,7 @@ import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
 import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
+import { useT } from '@/lib/i18n/translate'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
 export const DeploymentsToolbarContext =
@@ -65,6 +66,7 @@ export function Layout() {
 }
 
 function SiteLayoutContent() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
@@ -131,10 +133,10 @@ function SiteLayoutContent() {
       await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
-      toast.success('Build cancelled')
+      toast.success(t('Build cancelled'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel build')
+      toast.error(error.message || t('Failed to cancel build'))
     },
   })
 
@@ -230,19 +232,19 @@ function SiteLayoutContent() {
     () => [
       {
         id: 'deployments',
-        label: 'Deployments',
+        label: t('Deployments'),
         to: '/projects/$projectId/sites/$siteId',
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
         id: 'domains',
-        label: 'Domains',
+        label: t('Domains'),
         to: '/projects/$projectId/sites/$siteId/domains',
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
         id: 'logs',
-        label: 'Logs',
+        label: t('Logs'),
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
@@ -250,20 +252,20 @@ function SiteLayoutContent() {
         ? [
             {
               id: 'variables' as const,
-              label: 'Variables',
+              label: t('Variables'),
               to: '/projects/$projectId/sites/$siteId/variables',
               params: { projectId: projectId!, siteId: siteId! },
             },
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/sites/$siteId/settings',
               params: { projectId: projectId!, siteId: siteId! },
             },
           ]
         : []),
     ],
-    [projectId, siteId, showSettingsTab],
+    [projectId, siteId, showSettingsTab, t],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -301,12 +303,12 @@ function SiteLayoutContent() {
             title={
             <DetailResourceHeaderTitle
               kind="site"
-              label={site?.name || 'Site'}
+              label={site?.name || t('Site')}
               resourceId={site?.$id ?? ''}
               projectId={projectId}
               back={{
                 onClick: handleBack,
-                'aria-label': 'Back to sites',
+                'aria-label': t('Back to sites'),
               }}
             />
           }
@@ -326,7 +328,7 @@ function SiteLayoutContent() {
                 onRemoveFilter={removeSiteFilter}
                 onClearAll={clearAllSiteFilters}
                 onApplyFilter={applySiteFilter}
-                resourceLabel={activeTab === 'logs' ? 'logs' : 'domains'}
+                resourceLabel={activeTab === 'logs' ? t('logs') : t('domains')}
                 filterScope={`sites.${activeTab}`}
                 onApplyQuery={(queryParam) => {
                   navigate({
@@ -348,7 +350,7 @@ function SiteLayoutContent() {
           showRefresh={activeTab === 'logs' && hasRefreshHandler}
           onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
           isRefreshing={siteLogsListRefreshing}
-          createLabel={activeTab === 'domains' ? 'Add domain' : undefined}
+          createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
           onCreate={
             activeTab === 'domains'
               ? () =>
@@ -374,7 +376,7 @@ function SiteLayoutContent() {
                   >
                     <Info className="h-4 w-4 text-blue-500 shrink-0" />
                     <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                      <span>Your site is currently being deployed.</span>
+                      <span>{t('Your site is currently being deployed.')}</span>
                       <Button
                         variant="outline"
                         size="sm"
@@ -382,7 +384,7 @@ function SiteLayoutContent() {
                         onClick={handleCancelBuild}
                         disabled={cancelBuildMutation.isPending}
                       >
-                        Cancel build
+                        {t('Cancel build')}
                       </Button>
                     </AlertDescription>
                   </Alert>
@@ -407,7 +409,7 @@ function SiteLayoutContent() {
                     onRemoveFilter={removeSiteFilter}
                     onClearAll={clearAllSiteFilters}
                     onApplyFilter={applySiteFilter}
-                    resourceLabel="deployments"
+                    resourceLabel={t('deployments')}
                     filterScope="sites.deployments"
                     onApplyQuery={(queryParam) => {
                       navigate({
@@ -478,9 +480,9 @@ function SiteLayoutContent() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Cancel build</DialogTitle>
+            <DialogTitle>{t('Cancel build')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Stop the current deployment? You can deploy again later.
+              {t('Stop the current deployment? You can deploy again later.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -495,7 +497,7 @@ function SiteLayoutContent() {
               onClick={() => setCancelBuildDialogOpen(false)}
               className="h-9 text-[13px]"
             >
-              Keep building
+              {t('Keep building')}
             </Button>
             <Button
               variant="destructive"
@@ -503,7 +505,7 @@ function SiteLayoutContent() {
               disabled={cancelBuildMutation.isPending}
               className="h-9 text-[13px]"
             >
-              Cancel build
+              {t('Cancel build')}
             </Button>
           </div>
         </DialogContent>

@@ -50,6 +50,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { usePostgresSidebar } from './_components/PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 type SchemaVisualizerProps = {
   databaseId: string
@@ -93,6 +94,7 @@ function formatRelationLabel(
 }
 
 export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const { selectedSchema } = usePostgresSidebar()
@@ -478,7 +480,7 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
       <div className="flex h-full flex-col">
         {toolbar}
         <div className="flex flex-1 items-center justify-center px-6 text-center text-[13px] text-muted-foreground">
-          Select a schema in the sidebar to explore tables, views, and relationships.
+          {t('Select a schema in the sidebar to explore tables, views, and relationships.')}
         </div>
       </div>
     )
@@ -702,6 +704,7 @@ function RelationNodeCard({
   onNavigateRows,
   onNavigateColumns,
 }: RelationNodeCardProps) {
+  const t = useT()
   const isView = isViewRelation(node)
   const label = formatRelationLabel(node)
   const visibleColumns = expanded
@@ -738,12 +741,12 @@ function RelationNodeCard({
               </span>
               {isView ? (
                 <Badge variant="info" className="ms-auto text-[10px] shrink-0">
-                  View
+                  {t('View')}
                 </Badge>
               ) : null}
               {node.isExternal ? (
                 <Badge variant="warning" className="ms-auto text-[10px] shrink-0">
-                  External
+                  {t('External')}
                 </Badge>
               ) : null}
             </div>
@@ -800,7 +803,7 @@ function RelationNodeCard({
                       {expanded ? (
                         <>
                           <ChevronUp className="h-3 w-3" />
-                          Show less
+                          {t('Show less')}
                         </>
                       ) : (
                         <>
@@ -813,7 +816,7 @@ function RelationNodeCard({
                 </div>
               ) : (
                 <div className="px-2 py-3 text-[12px] text-muted-foreground">
-                  No columns loaded
+                  {t('No columns loaded')}
                 </div>
               )}
             </div>
@@ -825,11 +828,11 @@ function RelationNodeCard({
           <>
             <ContextMenuItem onClick={onNavigateRows}>
               <Eye className="me-2 h-4 w-4" />
-              Rows
+              {t('Rows')}
             </ContextMenuItem>
             <ContextMenuItem onClick={onNavigateColumns}>
               <Table2 className="me-2 h-4 w-4" />
-              Columns
+              {t('Columns')}
             </ContextMenuItem>
           </>
         ) : null}
@@ -839,6 +842,7 @@ function RelationNodeCard({
 }
 
 function EmptySchemaState({ schema }: { schema: string }) {
+  const t = useT()
   return (
     <div
       className="relative flex flex-1 items-center justify-center overflow-hidden"
@@ -853,7 +857,7 @@ function EmptySchemaState({ schema }: { schema: string }) {
           No tables or views in {schema}
         </h3>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          This schema has no user tables or views to visualize yet.
+          {t('This schema has no user tables or views to visualize yet.')}
         </p>
       </div>
     </div>
@@ -893,12 +897,13 @@ function Minimap({
   onMinimapClick,
   onClose,
 }: MinimapProps) {
+  const t = useT()
   return (
     <div className="absolute bottom-4 end-4 z-10 h-44 w-64 overflow-hidden rounded-lg border border-border bg-card/95 backdrop-blur-sm select-none">
       <div className="absolute start-0 end-0 top-0 flex h-8 items-center justify-between border-b border-border bg-muted/50 px-3">
         <span className="flex items-center gap-2 text-[12px] font-medium text-foreground">
           <MapIcon className="h-4 w-4" />
-          Overview
+          {t('Overview')}
         </span>
         <button
           type="button"

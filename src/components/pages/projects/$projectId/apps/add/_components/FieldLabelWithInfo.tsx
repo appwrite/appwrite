@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type Props = {
   htmlFor: string
@@ -30,6 +31,7 @@ export function FieldLabelWithInfo({
   required,
   className,
 }: Props) {
+  const t = useT()
   return (
     <Label
       htmlFor={htmlFor}
@@ -44,7 +46,7 @@ export function FieldLabelWithInfo({
           <TooltipTrigger asChild>
             <button
               type="button"
-              aria-label="More information"
+              aria-label={t('More information')}
               className="inline-flex h-4 w-4 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             >
               <Info className="h-3.5 w-3.5" aria-hidden />

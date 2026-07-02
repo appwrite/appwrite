@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { Loader2 } from 'lucide-react'
 import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
 import {
@@ -38,6 +39,7 @@ function secureFromProject(smtpSecure?: string): 'tls' | 'ssl' | 'none' {
 }
 
 export function SMTP({ projectId }: SMTPProps) {
+  const t = useT()
   const { account } = useAuth()
   const { data: project, isLoading } = useQuery(projectQueryOptions(projectId))
   const updateSMTPMutation = useUpdateSMTP(projectId)
@@ -127,10 +129,10 @@ export function SMTP({ projectId }: SMTPProps) {
     try {
       await updateSMTPMutation.mutateAsync(smtpFormPayload)
       setPassword('')
-      toast.success(`SMTP server has been ${enabled ? 'enabled' : 'disabled'}.`)
+      toast.success(enabled ? t('SMTP server has been enabled.') : t('SMTP server has been disabled.'))
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update SMTP settings',
+        error instanceof Error ? error.message : t('Failed to update SMTP settings'),
       )
     }
   }
@@ -145,11 +147,11 @@ export function SMTP({ projectId }: SMTPProps) {
     (password.trim() !== '' || hasSavedSmtpPassword)
 
   const testDisabledReason = !supportsCustomSmtp
-    ? 'Custom SMTP is available on Appwrite Cloud Pro and higher plans.'
+    ? t('Custom SMTP is available on Appwrite Cloud Pro and higher plans.') // pragma: allowlist secret
     : !enabled
-      ? 'Enable custom SMTP to send a test email.'
+      ? t('Enable custom SMTP to send a test email.')
       : !isFormReadyForTest
-        ? 'Fill in sender name, sender email, server host, port, and password (for new setups) before sending a test email.'
+        ? t('Fill in sender name, sender email, server host, port, and password (for new setups) before sending a test email.')
         : undefined
   const canSendTest = supportsCustomSmtp && isFormReadyForTest
 
@@ -170,12 +172,10 @@ export function SMTP({ projectId }: SMTPProps) {
         {/* Header */}
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Custom SMTP server
+            {t('Custom SMTP server')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Configure a custom SMTP server to send emails from your own domain.
-            This allows you to customize email templates and prevents emails
-            from being labeled as spam.
+            {t('Configure a custom SMTP server to send emails from your own domain. This allows you to customize email templates and prevents emails from being labeled as spam.')}
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export function SMTP({ projectId }: SMTPProps) {
         <UpgradeCurtain
           isLocked={!supportsCustomSmtp}
           orgId={orgId}
-          message="Custom SMTP is available on Appwrite Cloud Pro and higher plans."
+          message={t('Custom SMTP is available on Appwrite Cloud Pro and higher plans.') /* pragma: allowlist secret */}
         >
           <div>
             <div className="px-6 py-4">
@@ -197,11 +197,10 @@ export function SMTP({ projectId }: SMTPProps) {
                     htmlFor="smtp-enabled"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Enable custom SMTP server
+                    {t('Enable custom SMTP server')}
                   </Label>
                   <p className="text-[12px] text-muted-foreground mt-0.5">
-                    When enabled, all emails will be sent through your
-                    configured SMTP server.
+                    {t('When enabled, all emails will be sent through your configured SMTP server.')}
                   </p>
                 </div>
                 <Switch
@@ -219,7 +218,7 @@ export function SMTP({ projectId }: SMTPProps) {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-[13px] font-medium text-foreground mb-3">
-                        Sender information
+                        {t('Sender information')}
                       </h4>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
@@ -227,7 +226,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="sender-name"
                             className="text-[12px] font-medium"
                           >
-                            Sender name{' '}
+                            {t('Sender name')}{' '}
                             <span className="text-destructive">*</span>
                           </Label>
                           <Input
@@ -245,7 +244,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="sender-email"
                             className="text-[12px] font-medium"
                           >
-                            Sender email{' '}
+                            {t('Sender email')}{' '}
                             <span className="text-destructive">*</span>
                           </Label>
                           <Input
@@ -264,7 +263,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="reply-to"
                             className="text-[12px] font-medium"
                           >
-                            Reply to
+                            {t('Reply to')}
                           </Label>
                           <Input
                             id="reply-to"
@@ -276,7 +275,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                           <p className="text-[11px] text-muted-foreground">
-                            Optional. Email address where replies will be sent.
+                            {t('Optional. Email address where replies will be sent.')}
                           </p>
                         </div>
                       </div>
@@ -287,7 +286,7 @@ export function SMTP({ projectId }: SMTPProps) {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-[13px] font-medium text-foreground mb-3">
-                        Server configuration
+                        {t('Server configuration')}
                       </h4>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2 sm:col-span-2">
@@ -295,7 +294,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="host"
                             className="text-[12px] font-medium"
                           >
-                            Server host{' '}
+                            {t('Server host')}{' '}
                             <span className="text-destructive">*</span>
                           </Label>
                           <Input
@@ -313,7 +312,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="port"
                             className="text-[12px] font-medium"
                           >
-                            Server port{' '}
+                            {t('Server port')}{' '}
                             <span className="text-destructive">*</span>
                           </Label>
                           <Input
@@ -334,7 +333,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="secure"
                             className="text-[12px] font-medium"
                           >
-                            Secure protocol
+                            {t('Secure protocol')}
                           </Label>
                           <Select
                             value={secure}
@@ -347,12 +346,12 @@ export function SMTP({ projectId }: SMTPProps) {
                               id="secure"
                               className="h-9 text-[13px]"
                             >
-                              <SelectValue placeholder="Select protocol" />
+                              <SelectValue placeholder={t('Select protocol')} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="tls">TLS</SelectItem>
                               <SelectItem value="ssl">SSL</SelectItem>
-                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="none">{t('None')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -364,7 +363,7 @@ export function SMTP({ projectId }: SMTPProps) {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-[13px] font-medium text-foreground mb-3">
-                        Authentication
+                        {t('Authentication')}
                       </h4>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
@@ -372,7 +371,7 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="username"
                             className="text-[12px] font-medium"
                           >
-                            Username
+                            {t('Username')}
                           </Label>
                           <Input
                             id="username"
@@ -389,19 +388,19 @@ export function SMTP({ projectId }: SMTPProps) {
                             htmlFor="password"
                             className="text-[12px] font-medium"
                           >
-                            Password
+                            {t('Password')}
                           </Label>
                           <Input
                             id="password"
                             type="password"
-                            placeholder="Enter password"
+                            placeholder={t('Enter password')}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isSmtpBusy}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                           <p className="text-[11px] text-muted-foreground">
-                            Leave blank to keep current password unchanged.
+                            {t('Leave blank to keep current password unchanged.')}
                           </p>
                         </div>
                       </div>
@@ -422,7 +421,7 @@ export function SMTP({ projectId }: SMTPProps) {
                     !hasChanges || !supportsCustomSmtp || isSmtpBusy
                   }
                 >
-                  Update
+                  {t('Update')}
                 </Button>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -435,7 +434,7 @@ export function SMTP({ projectId }: SMTPProps) {
                         onClick={() => setTestDialogOpen(true)}
                         disabled={!canSendTest || isSmtpBusy}
                       >
-                        Send test email
+                        {t('Send test email')}
                       </Button>
                     </span>
                   </TooltipTrigger>

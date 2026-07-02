@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresCopyableFieldProps = {
   label: string
@@ -21,6 +22,7 @@ export function PostgresCopyableField({
   masked = false,
   isLoading = false,
 }: PostgresCopyableFieldProps) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
   const [revealed, setRevealed] = useState(false)
 
@@ -42,7 +44,7 @@ export function PostgresCopyableField({
       toast.success(`${label} copied`)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -68,7 +70,7 @@ export function PostgresCopyableField({
               type="button"
               onClick={() => setRevealed((current) => !current)}
               className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent"
-              aria-label={revealed ? 'Hide password' : 'Show password'}
+              aria-label={revealed ? t('Hide password') : t('Show password')}
             >
               {revealed ? (
                 <EyeOff className="h-4 w-4 text-muted-foreground" />

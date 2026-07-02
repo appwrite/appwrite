@@ -47,6 +47,7 @@ import { PostgresSchemaSelector } from './_components/PostgresSchemaSelector'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
 import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
+import { useT } from '@/lib/i18n/translate'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -65,6 +66,7 @@ export function SchemaTablesSidebar({
   selectedTableId,
   databaseTab,
 }: SchemaTablesSidebarProps) {
+  const t = useT()
   const { account } = useAuth()
   const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()
 
@@ -211,7 +213,7 @@ export function SchemaTablesSidebar({
         {panel === 'schemas' ? (
           showSchemasLoading ? (
             <p className="px-2 py-3 text-[12px] text-muted-foreground">
-              Loading schemas…
+              {t('Loading schemas…')}
             </p>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -240,9 +242,9 @@ export function SchemaTablesSidebar({
                     type="text"
                     value={tableSearch}
                     onChange={(event) => setTableSearch(event.target.value)}
-                    placeholder="Search tables"
+                    placeholder={t('Search tables')}
                     className="h-8 ps-8 pe-8 text-[13px]"
-                    aria-label="Search tables"
+                    aria-label={t('Search tables')}
                     disabled={!selectedSchema}
                   />
                   {tableSearch ? (
@@ -251,7 +253,7 @@ export function SchemaTablesSidebar({
                       variant="ghost"
                       size="icon"
                       className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
-                      aria-label="Clear table search"
+                      aria-label={t('Clear table search')}
                       onClick={() => setTableSearch('')}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -272,7 +274,7 @@ export function SchemaTablesSidebar({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 shrink-0"
-                            aria-label="Sort tables"
+                            aria-label={t('Sort tables')}
                             disabled={!selectedSchema}
                           >
                             <ArrowUpDown className="h-3.5 w-3.5" />
@@ -280,13 +282,13 @@ export function SchemaTablesSidebar({
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-xs">
-                        Sort tables
+                        {t('Sort tables')}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                      Sort tables
+                      {t('Sort tables')}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuRadioGroup
@@ -316,11 +318,11 @@ export function SchemaTablesSidebar({
               >
                 {!selectedSchema ? (
                   <p className="px-2 py-3 text-[12px] text-muted-foreground">
-                    Select a schema to browse tables.
+                    {t('Select a schema to browse tables.')}
                   </p>
                 ) : showTablesLoading ? (
                   <p className="px-2 py-3 text-[12px] text-muted-foreground">
-                    Loading tables…
+                    {t('Loading tables…')}
                   </p>
                 ) : displayedTables.length > 0 ? (
                   <div>
@@ -374,8 +376,8 @@ export function SchemaTablesSidebar({
                 ) : (
                   <p className="px-2 py-3 text-[12px] text-muted-foreground">
                     {hasActiveSearch
-                      ? 'No tables match your search.'
-                      : 'No tables in this schema.'}
+                      ? t('No tables match your search.')
+                      : t('No tables in this schema.')}
                   </p>
                 )}
                 {selectedSchema && tablesTotal > visibleTables.length ? (

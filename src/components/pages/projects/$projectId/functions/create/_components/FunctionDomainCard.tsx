@@ -12,6 +12,7 @@ import { useFunctionWizard } from '../WizardContext'
 import { Network, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const FUNCTION_DOMAINS_URL =
   '/docs/products/functions/domains'
@@ -36,6 +37,7 @@ export function FunctionDomainCard({
   domainValid: _domainValid,
   setDomainValid,
 }: FunctionDomainCardProps) {
+  const t = useT()
   const { endpointType, setEndpointType, baseDomain, region } =
     useFunctionWizard()
 
@@ -56,16 +58,19 @@ export function FunctionDomainCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Domain')}
+        </h3>
         <p className="text-[12px] text-muted-foreground mt-1">
-          Pick where your function runs. Both support custom domains after
-          deployment.{' '}
+          {t(
+            'Pick where your function runs. Both support custom domains after deployment.',
+          )}{' '}
           <DocsRouteLink className="link-neutral font-medium" href={NETWORK_REGIONS_URL}>
-            Region
+            {t('Region')}
           </DocsRouteLink>
           {' · '}
           <DocsRouteLink className="link-neutral font-medium" href={NETWORK_EDGES_URL}>
-            Edge
+            {t('Edge')}
           </DocsRouteLink>
         </p>
       </div>
@@ -86,9 +91,11 @@ export function FunctionDomainCard({
             )}
           >
             <Building2 className="h-5 w-5 text-muted-foreground mb-2" />
-            <div className="text-[13px] font-semibold">Region compute</div>
+            <div className="text-[13px] font-semibold">
+              {t('Region compute')}
+            </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Data sovereignty, compliance
+              {t('Data sovereignty, compliance')}
             </p>
             <code className="mt-2 block text-[11px] text-muted-foreground font-mono truncate">
               {regionUrl}
@@ -108,9 +115,11 @@ export function FunctionDomainCard({
             )}
           >
             <Network className="h-5 w-5 text-muted-foreground mb-2" />
-            <div className="text-[13px] font-semibold">Edge network</div>
+            <div className="text-[13px] font-semibold">
+              {t('Edge network')}
+            </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Geo-routed, lowest latency
+              {t('Geo-routed, lowest latency')}
             </p>
             <code className="mt-2 block text-[11px] text-muted-foreground font-mono truncate">
               {edgeUrl}
@@ -127,9 +136,9 @@ export function FunctionDomainCard({
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/20">
         <p className="text-[11px] text-muted-foreground">
-          Custom domain can be added in function settings.{' '}
+          {t('Custom domain can be added in function settings.')}{' '}
           <DocsRouteLink className="link-neutral font-medium" href={FUNCTION_DOMAINS_URL}>
-            Learn more
+            {t('Learn more')}
           </DocsRouteLink>
         </p>
       </div>

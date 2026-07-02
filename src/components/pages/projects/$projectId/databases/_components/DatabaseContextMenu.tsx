@@ -33,6 +33,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 type DatabaseContextMenuDatabase = {
   $id: string
@@ -58,6 +59,7 @@ export function DatabaseContextMenu({
   showInsights,
   children,
 }: DatabaseContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
 
   const databaseHref = buildConsoleUrl(
@@ -92,7 +94,7 @@ export function DatabaseContextMenu({
           }
         >
           <ContextMenuIcon icon={Table2} />
-          Tables
+          {t('Tables')}
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() =>
@@ -102,7 +104,7 @@ export function DatabaseContextMenu({
           }
         >
           <ContextMenuIcon icon={Workflow} />
-          Visualizer
+          {t('Visualizer')}
         </ContextMenuItem>
         {showMonitor && (
           <ContextMenuItem
@@ -113,7 +115,7 @@ export function DatabaseContextMenu({
             }
           >
             <ContextMenuIcon icon={Activity} />
-            Monitor
+            {t('Monitor')}
           </ContextMenuItem>
         )}
         {showSecuritySettings && (
@@ -125,7 +127,7 @@ export function DatabaseContextMenu({
             }
           >
             <ContextMenuIcon icon={Shield} />
-            Security
+            {t('Security')}
           </ContextMenuItem>
         )}
         {showInsights && (
@@ -137,7 +139,7 @@ export function DatabaseContextMenu({
             }
           >
             <ContextMenuIcon icon={BarChart3} />
-            Insights
+            {t('Insights')}
           </ContextMenuItem>
         )}
         {showBackups && (
@@ -149,7 +151,7 @@ export function DatabaseContextMenu({
             }
           >
             <ContextMenuIcon icon={Archive} />
-            Backups
+            {t('Backups')}
           </ContextMenuItem>
         )}
         <ContextMenuItem
@@ -160,7 +162,7 @@ export function DatabaseContextMenu({
           }
         >
           <ContextMenuIcon icon={ArrowRightLeft} />
-          Export / Import
+          {t('Export / Import')}
         </ContextMenuItem>
         {showSecuritySettings && (
           <ContextMenuItem
@@ -171,35 +173,35 @@ export function DatabaseContextMenu({
             }
           >
             <ContextMenuIcon icon={Settings} />
-            Settings
+            {t('Settings')}
           </ContextMenuItem>
         )}
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', database.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             {hasName && (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Name', database.name)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy name
+                {t('Copy name')}
               </ContextMenuItem>
             )}
             <ContextMenuItem
               onSelect={() => copyToClipboard('Link', databaseHref)}
             >
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -209,18 +211,18 @@ export function DatabaseContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(databaseHref)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(databaseHref)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

@@ -53,6 +53,7 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
+import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 
@@ -92,6 +93,7 @@ const MIN_SPACING = 240 // Base spacing between nodes
 const MIN_NODE_GAP = 15 // Minimum gap between nodes
 
 export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const navigate = useNavigate()
@@ -951,9 +953,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       link.download = `database-schema-${databaseId}.svg`
       link.click()
       URL.revokeObjectURL(url)
-      toast.success('Schema exported as SVG')
+      toast.success(t('Schema exported as SVG'))
     } catch {
-      toast.error('Failed to export SVG')
+      toast.error(t('Failed to export SVG'))
     }
   }
 
@@ -962,10 +964,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const url = window.location.href
       await navigator.clipboard.writeText(url)
       setCopiedLink(true)
-      toast.success('Link copied to clipboard')
+      toast.success(t('Link copied to clipboard'))
       setTimeout(() => setCopiedLink(false), 2000)
     } catch {
-      toast.error('Failed to copy link')
+      toast.error(t('Failed to copy link'))
     }
   }
 
@@ -980,21 +982,21 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   // Export handlers
   const handleExportJSON = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
       const json = formatSchemaAsJSON(databaseSchema)
       await navigator.clipboard.writeText(json)
-      toast.success('Schema copied to clipboard')
+      toast.success(t('Schema copied to clipboard'))
     } catch {
-      toast.error('Failed to copy schema')
+      toast.error(t('Failed to copy schema'))
     }
   }
 
   const handleCopyMarkdown = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
@@ -1002,16 +1004,16 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         await import('@/lib/utils/database-schema-export')
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
-      toast.success('Schema copied to clipboard')
+      toast.success(t('Schema copied to clipboard'))
     } catch {
-      toast.error('Failed to copy schema')
+      toast.error(t('Failed to copy schema'))
     }
   }
 
   // Open in AI tools using deep links
   const handleOpenInChatGPT = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
@@ -1022,15 +1024,15 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
-      toast.success('Opening ChatGPT with schema context...')
+      toast.success(t('Opening ChatGPT with schema context...'))
     } catch {
-      toast.error('Failed to open ChatGPT')
+      toast.error(t('Failed to open ChatGPT'))
     }
   }
 
   const handleOpenInClaude = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
@@ -1041,15 +1043,15 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
-      toast.success('Opening Claude with schema context...')
+      toast.success(t('Opening Claude with schema context...'))
     } catch {
-      toast.error('Failed to open Claude')
+      toast.error(t('Failed to open Claude'))
     }
   }
 
   const handleOpenInCursor = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
@@ -1062,18 +1064,18 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       // Try to open app protocol link, fallback to clipboard message
       try {
         window.location.href = deepLink
-        toast.success('Opening Cursor with schema context...')
+        toast.success(t('Opening Cursor with schema context...'))
       } catch {
-        toast.success('Schema copied to clipboard. Paste it in Cursor.')
+        toast.success(t('Schema copied to clipboard. Paste it in Cursor.'))
       }
     } catch {
-      toast.error('Failed to open Cursor')
+      toast.error(t('Failed to open Cursor'))
     }
   }
 
   const handleOpenInLovable = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
@@ -1084,9 +1086,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const json = formatSchemaAsJSON(databaseSchema)
       await navigator.clipboard.writeText(json)
       window.open(deepLink, '_blank')
-      toast.success('Opening Lovable with schema context...')
+      toast.success(t('Opening Lovable with schema context...'))
     } catch {
-      toast.error('Failed to open Lovable')
+      toast.error(t('Failed to open Lovable'))
     }
   }
 
@@ -1204,7 +1206,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading schema...</div>
+        <div className="text-muted-foreground">{t('Loading schema...')}</div>
       </div>
     )
   }
@@ -1254,7 +1256,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             <div className="flex items-center gap-2 border-b border-border/40 bg-muted/20 px-3 py-2">
               <Table2 className="h-4 w-4 shrink-0 text-muted-foreground/40" />
               <span className="truncate text-[13px] font-medium text-muted-foreground/40">
-                Table name
+                {t('Table name')}
               </span>
             </div>
 
@@ -1283,12 +1285,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <Table2 className="h-6 w-6 text-foreground" />
             </div>
             <h3 className="mb-2 text-base font-semibold text-foreground">
-              No tables found
+              {t('No tables found')}
             </h3>
             <p className="text-sm leading-relaxed text-foreground/80">
-              Create tables to visualize your database schema. Tables will
-              appear here as interactive nodes that you can drag, zoom, and
-              explore.
+              {t('Create tables to visualize your database schema. Tables will appear here as interactive nodes that you can drag, zoom, and explore.')}
             </p>
           </div>
         </div>
@@ -1340,16 +1340,16 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>Copy schema</TooltipContent>
+            <TooltipContent>{t('Copy schema')}</TooltipContent>
           </Tooltip>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={handleExportJSON}>
               <FileJson className="h-4 w-4 me-2" />
-              Copy as JSON
+              {t('Copy as JSON')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleCopyMarkdown}>
               <FileText className="h-4 w-4 me-2" />
-              Copy as Markdown
+              {t('Copy as Markdown')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1366,7 +1366,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <Download className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Export as SVG</TooltipContent>
+          <TooltipContent>{t('Export as SVG')}</TooltipContent>
         </Tooltip>
 
         {/* Open in dropdown */}
@@ -1383,7 +1383,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>Open in...</TooltipContent>
+            <TooltipContent>{t('Open in...')}</TooltipContent>
           </Tooltip>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={handleOpenInChatGPT}>
@@ -1581,7 +1581,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                         </span>
                         {!node.enabled && (
                           <span className="ms-auto text-[10px] text-muted-foreground">
-                            Disabled
+                            {t('Disabled')}
                           </span>
                         )}
                       </div>
@@ -1683,7 +1683,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                                 {expandedColumns.has(node.id) ? (
                                   <>
                                     <ChevronUp className="h-3 w-3" />
-                                    Show less
+                                    {t('Show less')}
                                   </>
                                 ) : (
                                   <>
@@ -1711,7 +1711,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                     }}
                   >
                     <Eye className="h-4 w-4 me-2" />
-                    View rows
+                    {t('View rows')}
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem
@@ -1721,7 +1721,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                     }}
                   >
                     <Settings className="h-4 w-4 me-2" />
-                    Table settings
+                    {t('Table settings')}
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
@@ -1736,7 +1736,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           <div className="absolute top-0 start-0 end-0 h-8 bg-muted/50 border-b border-border flex items-center justify-between px-3">
             <span className="text-[12px] font-medium text-foreground flex items-center gap-2 select-none">
               <MapIcon className="h-4 w-4" />
-              Overview
+              {t('Overview')}
             </span>
             <button
               onClick={() => setShowMinimap(false)}

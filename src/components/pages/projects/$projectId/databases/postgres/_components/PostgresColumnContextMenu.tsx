@@ -12,6 +12,7 @@ import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
+import { useT } from '@/lib/i18n/translate'
 
 interface PostgresColumnContextMenuProps {
   column: PostgresTableColumnRow
@@ -30,6 +31,7 @@ export function PostgresColumnContextMenu({
   onDelete,
   children,
 }: PostgresColumnContextMenuProps) {
+  const t = useT()
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -38,7 +40,7 @@ export function PostgresColumnContextMenu({
           <>
             <ContextMenuItem onSelect={() => onUpdate(column)}>
               <ContextMenuIcon icon={Pencil} />
-              Update
+              {t('Update')}
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -46,7 +48,7 @@ export function PostgresColumnContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
@@ -55,7 +57,7 @@ export function PostgresColumnContextMenu({
               }
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             {column.column_default ? (
               <ContextMenuItem
@@ -64,7 +66,7 @@ export function PostgresColumnContextMenu({
                 }
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy value
+                {t('Copy value')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
@@ -73,7 +75,7 @@ export function PostgresColumnContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -84,7 +86,7 @@ export function PostgresColumnContextMenu({
               onSelect={() => onDelete(column.column_name)}
             >
               <ContextMenuIcon icon={Trash2} />
-              Delete
+              {t('Delete')}
             </ContextMenuItem>
           </>
         ) : null}

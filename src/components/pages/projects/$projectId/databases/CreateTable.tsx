@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Validates Appwrite table ID: 1–36 chars, alphanumeric, underscore, hyphen, period.
@@ -53,6 +54,7 @@ export function CreateTable({
   isLoading = false,
   variant = 'tables',
 }: CreateTableProps) {
+  const t = useT()
   const [tableId, setTableId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
   const [dimension, setDimension] = useState<string>('384')
@@ -60,8 +62,8 @@ export function CreateTable({
 
   const isCollection = variant === 'documents' || variant === 'vectors'
   const resourceWord = isCollection ? 'collection' : 'table'
-  const title = isCollection ? 'Create collection' : 'Create table'
-  const idLabel = isCollection ? 'Collection ID' : 'Table ID'
+  const title = isCollection ? t('Create collection') : t('Create table')
+  const idLabel = isCollection ? t('Collection ID') : t('Table ID')
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isLoading) {
@@ -89,17 +91,19 @@ export function CreateTable({
     const newErrors: Record<string, string> = {}
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('Name is required')
     }
 
     if (tableId && tableId.length > 0 && !validateTableId(tableId)) {
-      newErrors.tableId = `${idLabel} must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.`
+      newErrors.tableId = `${idLabel} ${t('must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.')}`
     }
 
     if (variant === 'vectors') {
       const d = Number(dimension)
       if (!Number.isFinite(d) || d < 1 || !Number.isInteger(d)) {
-        newErrors.dimension = 'Embedding dimension must be a positive integer'
+        newErrors.dimension = t(
+          'Embedding dimension must be a positive integer',
+        )
       }
     }
 
@@ -127,14 +131,14 @@ export function CreateTable({
 
   const description =
     variant === 'vectors'
-      ? 'Create a collection with a fixed embedding dimension for vector similarity search.'
+      ? t('Create a collection with a fixed embedding dimension for vector similarity search.')
       : variant === 'documents'
-        ? 'Create a collection to store JSON documents with flexible schemas.'
-        : 'Create a new table to store structured data with columns and rows.'
+        ? t('Create a collection to store JSON documents with flexible schemas.')
+        : t('Create a new table to store structured data with columns and rows.')
 
   const namePlaceholder = isCollection
-    ? `Enter ${resourceWord} name`
-    : 'Enter table name'
+    ? t(`Enter ${resourceWord} name`)
+    : t('Enter table name')
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -151,7 +155,7 @@ export function CreateTable({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
@@ -175,7 +179,7 @@ export function CreateTable({
             {variant === 'vectors' && (
               <div className="space-y-2">
                 <Label htmlFor="dimension">
-                  Embedding dimension{' '}
+                  {t('Embedding dimension')}{' '}
                   <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -209,7 +213,7 @@ export function CreateTable({
                 onChange={setTableId}
                 maxLength={36}
                 disabled={isLoading}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
               />
               {errors.tableId && (
                 <p className="text-[12px] text-destructive">{errors.tableId}</p>
@@ -224,10 +228,10 @@ export function CreateTable({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim()}>
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>

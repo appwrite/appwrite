@@ -22,6 +22,7 @@ import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
 import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { useT } from '@/lib/i18n/translate'
 
 interface MessagesDataPoint {
   timestamp: string
@@ -42,6 +43,7 @@ const CustomTooltip = ({
   active?: boolean
   payload?: Array<{ value: number; payload: MessagesDataPoint }>
 }) => {
+  const t = useT()
   if (active && payload && payload.length) {
     const data = payload[0].payload
     return (
@@ -52,7 +54,7 @@ const CustomTooltip = ({
         <p className="text-[13px] font-medium text-foreground">
           {data.messagesPerMinute.toLocaleString()}{' '}
           <span className="text-muted-foreground font-normal">
-            messages/min
+            {t('messages/min')} {/* pragma: allowlist secret */}
           </span>
         </p>
       </div>
@@ -66,6 +68,7 @@ export function RealtimeMessagesChart({
   projectId,
   description = 'Messages per minute over time',
 }: RealtimeMessagesChartProps) {
+  const t = useT()
   const cardRef = useRef<HTMLDivElement>(null)
 
   const chartData = useMemo(() => {
@@ -162,10 +165,10 @@ export function RealtimeMessagesChart({
         <div className="flex h-64 items-center justify-center text-center p-4">
           <div>
             <p className="text-[13px] text-muted-foreground">
-              No data available
+              {t('No data available')}
             </p>
             <p className="mt-1 text-[12px] text-muted-foreground/70">
-              Select a date range to view messages data
+              {t('Select a date range to view messages data')} {/* pragma: allowlist secret */}
             </p>
           </div>
         </div>
@@ -183,7 +186,7 @@ export function RealtimeMessagesChart({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="text-[14px] font-medium text-foreground">
-              Messages Throughput
+              {t('Messages Throughput')} {/* pragma: allowlist secret */}
             </h3>
             <TooltipProvider delayDuration={0}>
               <UITooltip>
@@ -196,7 +199,7 @@ export function RealtimeMessagesChart({
                   side="top"
                   className="max-w-xs text-[12px] leading-relaxed"
                 >
-                  <p>{description}</p>
+                  <p>{t(description)}</p>
                 </TooltipContent>
               </UITooltip>
             </TooltipProvider>
@@ -208,7 +211,7 @@ export function RealtimeMessagesChart({
               {currentValue.toLocaleString()}
             </span>
             <span className="text-[13px] text-muted-foreground">
-              messages/min
+              {t('messages/min')} {/* pragma: allowlist secret */}
             </span>
           </div>
         </div>
@@ -222,7 +225,7 @@ export function RealtimeMessagesChart({
               size="sm"
               className="h-7 gap-1.5 text-[11px] text-muted-foreground hover:text-foreground"
             >
-              View messages
+              {t('View messages')} {/* pragma: allowlist secret */}
             </Button>
           </Link>
         )}
@@ -288,7 +291,7 @@ export function RealtimeMessagesChart({
       {/* Description */}
       <div className="border-t border-border bg-muted/30 px-4 py-3">
         <p className="text-[12px] leading-relaxed text-muted-foreground">
-          {description}
+          {t(description)}
         </p>
       </div>
     </div>

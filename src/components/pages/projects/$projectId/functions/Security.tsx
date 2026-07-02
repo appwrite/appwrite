@@ -12,8 +12,10 @@ import { toast } from 'sonner'
 import { PermissionsEditor } from '@/components/pages/projects/$projectId/auth/PermissionsEditor'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
@@ -45,13 +47,13 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Function updated successfully')
+      toast.success(t('Function updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
     },
     onError: (error: unknown) => {
-      toast.error(error.message || 'Failed to update function')
+      toast.error(error.message || t('Failed to update function'))
     },
   })
 
@@ -93,7 +95,7 @@ export function View() {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
         <p className="text-[13px] text-muted-foreground">
-          Loading security settings...
+          {t('Loading security settings...')}
         </p>
       </div>
     )
@@ -107,10 +109,10 @@ export function View() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Permissions
+                {t('Permissions')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Choose who can execute this function
+                {t('Choose who can execute this function')}
               </p>
             </div>
             <div className="border-t border-border" />
@@ -132,7 +134,7 @@ export function View() {
                 }
                 onClick={handleSaveExecute}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -141,14 +143,14 @@ export function View() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Scopes
+                {t('Scopes')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Select scopes to grant the dynamic key generated temporarily for
-                your function. It is best practice to allow only necessary
-                permissions.{' '}
+                {t(
+                  'Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.',
+                )}{' '}
                 <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/api-keys#scopes">
-                  Learn more
+                  {t('Learn more')}
                 </DocsRouteLink>
               </p>
             </div>
@@ -162,7 +164,7 @@ export function View() {
                 />
               ) : (
                 <p className="text-[13px] text-muted-foreground">
-                  Loading scopes...
+                  {t('Loading scopes...')}
                 </p>
               )}
             </div>
@@ -177,7 +179,7 @@ export function View() {
                 }
                 onClick={handleSaveScopes}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>

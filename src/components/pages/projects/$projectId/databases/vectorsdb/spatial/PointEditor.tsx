@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Point Editor Component
@@ -24,6 +25,7 @@ export function PointEditor({
   disabled = false,
   showNullCheckbox = true,
 }: PointEditorProps) {
+  const t = useT()
   const [longitude, setLongitude] = useState<string>(
     value ? String(value[0]) : '',
   )
@@ -70,7 +72,7 @@ export function PointEditor({
           [
         </span>
         <div className="flex-1 space-y-1.5">
-          <Label className="text-[11px] text-muted-foreground">Longitude</Label>
+          <Label className="text-[11px] text-muted-foreground">{t('Longitude')}</Label>
           <Input
             type="number"
             step="any"
@@ -85,7 +87,7 @@ export function PointEditor({
           ,
         </span>
         <div className="flex-1 space-y-1.5">
-          <Label className="text-[11px] text-muted-foreground">Latitude</Label>
+          <Label className="text-[11px] text-muted-foreground">{t('Latitude')}</Label>
           <Input
             type="number"
             step="any"
@@ -115,7 +117,7 @@ export function PointEditor({
             htmlFor="point-null"
             className="text-[11px] text-muted-foreground cursor-pointer select-none"
           >
-            Set to NULL
+            {t('Set to NULL')}
           </label>
         </div>
       )}

@@ -20,8 +20,10 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
@@ -55,7 +57,7 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Function updated successfully')
+      toast.success(t('Function updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -65,7 +67,7 @@ export function View() {
     },
     onError: (error: unknown) => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update function',
+        error instanceof Error ? error.message : t('Failed to update function'),
       )
     },
   })
@@ -81,7 +83,9 @@ export function View() {
   if (funcLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }
@@ -134,8 +138,10 @@ export function View() {
             },
             node: (
               <SpecificationTableCard
-                title="Specification"
-                description="CPU and memory available to each function execution at runtime."
+                title={t('Specification')}
+                description={t(
+                  'CPU and memory available to each function execution at runtime.',
+                )}
                 scope="runtime-function"
                 specs={specifications}
                 selectedSlug={runtimeSpecification}

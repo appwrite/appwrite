@@ -87,6 +87,7 @@ import {
 } from '@/lib/react-query/hooks/constants'
 import type { Models } from '@appwrite.io/console'
 import { Route } from '@/routes/_public/projects.$projectId.functions.templates'
+import { useT } from '@/lib/i18n/translate'
 
 /** Legacy 1-based page from URL (when `offset` is not used). */
 function parseTemplatesPage(value: unknown): number {
@@ -177,10 +178,11 @@ function UseCaseFilterTrigger({
 }: {
   selectedUseCases: string[]
 }) {
+  const t = useT()
   if (selectedUseCases.length === 0) {
     return (
       <span className="min-w-0 truncate text-[13px] text-muted-foreground">
-        All use cases
+        {t('All use cases')}
       </span>
     )
   }
@@ -194,7 +196,7 @@ function UseCaseFilterTrigger({
   }
   return (
     <span className="min-w-0 truncate text-[13px] text-foreground tabular-nums">
-      {selectedUseCases.length} selected
+      {selectedUseCases.length} {t('selected')}
     </span>
   )
 }
@@ -204,10 +206,11 @@ function RuntimeFilterTrigger({
 }: {
   selectedRuntimes: string[]
 }) {
+  const t = useT()
   if (selectedRuntimes.length === 0) {
     return (
       <span className="min-w-0 truncate text-[13px] text-muted-foreground">
-        All runtimes
+        {t('All runtimes')}
       </span>
     )
   }
@@ -239,7 +242,7 @@ function RuntimeFilterTrigger({
         ))}
       </span>
       <span className="min-w-0 truncate text-[13px] text-foreground tabular-nums">
-        {selectedRuntimes.length} selected
+        {selectedRuntimes.length} {t('selected')}
       </span>
     </span>
   )
@@ -260,6 +263,7 @@ function FilterDropdownToolbar({
   selectAllDisabled: boolean
   clearDisabled: boolean
 }) {
+  const t = useT()
   return (
     <div className="flex items-center justify-end gap-0.5 border-b border-border/50 px-2 py-0.5">
       <button
@@ -272,7 +276,7 @@ function FilterDropdownToolbar({
         }}
         className="rounded px-1 py-0.5 text-[11px] leading-none text-muted-foreground/80 transition-colors hover:bg-muted/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
       >
-        Select all
+        {t('Select all')}
       </button>
       <span
         className="select-none px-0.5 text-[9px] text-muted-foreground/30"
@@ -290,7 +294,7 @@ function FilterDropdownToolbar({
         }}
         className="rounded px-1 py-0.5 text-[11px] leading-none text-muted-foreground/80 transition-colors hover:bg-muted/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
       >
-        Clear
+        {t('Clear')}
       </button>
     </div>
   )
@@ -371,6 +375,7 @@ function FunctionTemplateDetailDrawer({
   projectId: string
   createBlockedTooltip?: string
 }) {
+  const tr = useT()
   if (!template) return null
 
   const t = asCatalogTemplate(template)
@@ -390,7 +395,7 @@ function FunctionTemplateDetailDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={t.name ?? 'Template'}
+      title={t.name ?? tr('Template')}
       maxWidth="sm:max-w-lg"
       contentClassName="overflow-hidden"
     >
@@ -435,13 +440,13 @@ function FunctionTemplateDetailDrawer({
             {hasSchedulingOrEvents && (
               <div className="space-y-3 border-t border-border pt-4">
                 <p className="text-[12px] font-medium text-foreground">
-                  Execution
+                  {tr('Execution')}
                 </p>
                 <div className="space-y-3">
                   {events.length > 0 && (
                     <div>
                       <p className="text-[10px] text-muted-foreground">
-                        Events
+                        {tr('Events')}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {events.map((ev) => (
@@ -470,7 +475,7 @@ function FunctionTemplateDetailDrawer({
             {t.instructions ? (
               <div className="border-t border-border pt-4">
                 <p className="mb-2 text-[12px] font-medium text-foreground">
-                  Documentation
+                  {tr('Documentation')}
                 </p>
                 <div
                   className="text-[13px] leading-relaxed text-muted-foreground prose-links-neutral"
@@ -492,7 +497,7 @@ function FunctionTemplateDetailDrawer({
                   <AccordionItem value="runtimes" className="border-border">
                     <AccordionTrigger className="cursor-pointer py-3 text-[12px] font-medium text-foreground hover:no-underline">
                       <span className="flex items-baseline gap-1.5">
-                        <span>Runtimes</span>
+                        <span>{tr('Runtimes')}</span>
                         <span className="font-normal tabular-nums text-muted-foreground">
                           ({runtimes.length})
                         </span>
@@ -503,13 +508,13 @@ function FunctionTemplateDetailDrawer({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Runtime
+                              {tr('Runtime')}
                             </TableHead>
                             <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Entrypoint
+                              {tr('Entrypoint')}
                             </TableHead>
                             <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Build
+                              {tr('Build')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -555,7 +560,7 @@ function FunctionTemplateDetailDrawer({
                   <AccordionItem value="env" className="border-border">
                     <AccordionTrigger className="cursor-pointer py-3 text-[12px] font-medium text-foreground hover:no-underline">
                       <span className="flex items-baseline gap-1.5">
-                        <span>Environment variables</span>
+                        <span>{tr('Environment variables')}</span>
                         <span className="font-normal tabular-nums text-muted-foreground">
                           ({variables.length})
                         </span>
@@ -577,11 +582,11 @@ function FunctionTemplateDetailDrawer({
                                   variant="warning"
                                   className="h-5 text-[9px] px-1"
                                 >
-                                  Req
+                                  {tr('Req')}
                                 </Badge>
                               ) : (
                                 <Badge variant="info" className="h-5 text-[9px] px-1">
-                                  Opt
+                                  {tr('Opt')}
                                 </Badge>
                               )}
                               {v.type ? (
@@ -612,7 +617,7 @@ function FunctionTemplateDetailDrawer({
                   <AccordionItem value="scopes" className="border-border">
                     <AccordionTrigger className="cursor-pointer py-3 text-[12px] font-medium text-foreground hover:no-underline">
                       <span className="flex items-baseline gap-1.5">
-                        <span>API scopes</span>
+                        <span>{tr('API scopes')}</span>
                         <span className="font-normal tabular-nums text-muted-foreground">
                           ({scopes.length})
                         </span>
@@ -623,7 +628,7 @@ function FunctionTemplateDetailDrawer({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Scope
+                              {tr('Scope')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -647,7 +652,7 @@ function FunctionTemplateDetailDrawer({
                   <AccordionItem value="permissions" className="border-border">
                     <AccordionTrigger className="cursor-pointer py-3 text-[12px] font-medium text-foreground hover:no-underline">
                       <span className="flex items-baseline gap-1.5">
-                        <span>Permissions</span>
+                        <span>{tr('Permissions')}</span>
                         <span className="font-normal tabular-nums text-muted-foreground">
                           ({permissions.length})
                         </span>
@@ -658,7 +663,7 @@ function FunctionTemplateDetailDrawer({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Permission
+                              {tr('Permission')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -691,7 +696,7 @@ function FunctionTemplateDetailDrawer({
                 rel="noreferrer noopener"
               >
                 <GitHubIcon className="h-4 w-4 shrink-0" />
-                View on GitHub
+                {tr('View on GitHub')}
                 <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-70" />
               </a>
             </Button>
@@ -706,7 +711,7 @@ function FunctionTemplateDetailDrawer({
                       disabled
                       type="button"
                     >
-                      Create from template
+                      {tr('Create from template')}
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -722,7 +727,7 @@ function FunctionTemplateDetailDrawer({
                   templateId: String(t.id ?? ''),
                 }}
               >
-                Create from template
+                {tr('Create from template')}
               </Link>
             </Button>
           )}
@@ -761,6 +766,7 @@ function TemplateCatalogFilters({
   onClearRuntimes: () => void
   className?: string
 }) {
+  const t = useT()
   const [useCaseOpen, setUseCaseOpen] = useState(false)
   const [runtimeOpen, setRuntimeOpen] = useState(false)
 
@@ -785,14 +791,14 @@ function TemplateCatalogFilters({
     >
       <section className="space-y-2">
         <label htmlFor="template-catalog-search" className="sr-only">
-          Search templates by name
+          {t('Search templates by name')}
         </label>
         <div className="relative w-full">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="template-catalog-search"
             type="search"
-            placeholder="Search by name…"
+            placeholder={t('Search by name…')}
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
             className="h-9 w-full border-border bg-background ps-9 pe-3 text-[13px] placeholder:text-muted-foreground"
@@ -803,7 +809,7 @@ function TemplateCatalogFilters({
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain">
         <section className="space-y-2">
-          <h3 className={filterSectionTitle}>Use case</h3>
+          <h3 className={filterSectionTitle}>{t('Use case')}</h3>
           <Popover open={useCaseOpen} onOpenChange={setUseCaseOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -824,7 +830,7 @@ function TemplateCatalogFilters({
             >
               <Command>
                 <CommandInput
-                  placeholder="Search use cases…"
+                  placeholder={t('Search use cases…')}
                   className="h-9 text-[13px]"
                 />
                 {catalogUseCases.length > 0 ? (
@@ -837,7 +843,7 @@ function TemplateCatalogFilters({
                 ) : null}
                 <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
                   <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
-                    No use cases match
+                    {t('No use cases match')}
                   </CommandEmpty>
                   <CommandGroup className="p-1">
                     {catalogUseCases.map((uc) => {
@@ -877,7 +883,7 @@ function TemplateCatalogFilters({
         </section>
 
         <section className="space-y-2">
-          <h3 className={filterSectionTitle}>Runtime</h3>
+          <h3 className={filterSectionTitle}>{t('Runtime')}</h3>
           <Popover open={runtimeOpen} onOpenChange={setRuntimeOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -898,7 +904,7 @@ function TemplateCatalogFilters({
             >
               <Command>
                 <CommandInput
-                  placeholder="Search runtimes…"
+                  placeholder={t('Search runtimes…')}
                   className="h-9 text-[13px]"
                 />
                 {catalogRuntimes.length > 0 ? (
@@ -911,7 +917,7 @@ function TemplateCatalogFilters({
                 ) : null}
                 <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
                   <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
-                    No runtimes match
+                    {t('No runtimes match')}
                   </CommandEmpty>
                   <CommandGroup className="p-1">
                     {catalogRuntimes.map((rt) => {
@@ -956,11 +962,11 @@ function TemplateCatalogFilters({
       </div>
 
       <div className="shrink-0 space-y-2 border-t border-border pt-4">
-        <h3 className={filterSectionTitle}>Contribute</h3>
+        <h3 className={filterSectionTitle}>{t('Contribute')}</h3>
         <p className="text-[12px] leading-relaxed text-muted-foreground">
-          This catalog is built from our public GitHub repository. Browse the
-          source, open issues, or submit a pull request if you want to add or
-          improve a template.
+          {t(
+            'This catalog is built from our public GitHub repository. Browse the source, open issues, or submit a pull request if you want to add or improve a template.',
+          )}
         </p>
         <a
           href="https://github.com/appwrite/templates"
@@ -978,6 +984,7 @@ function TemplateCatalogFilters({
 }
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const search = Route.useSearch()
@@ -1043,9 +1050,9 @@ export function View() {
   useEffect(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     searchDebounceRef.current = setTimeout(() => {
-      const t = searchInput.trim()
-      if (t === urlSearch) return
-      navigateCatalog({ search: t || undefined, offset: 0 })
+      const trimmed = searchInput.trim()
+      if (trimmed === urlSearch) return
+      navigateCatalog({ search: trimmed || undefined, offset: 0 })
     }, 300)
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
@@ -1211,9 +1218,9 @@ export function View() {
   const functionsLimit = organizationPlan?.functions ?? 0
   const noCreatePermission = !canCreateFunction(access, features)
   const createBlockedTooltip = noCreatePermission
-    ? "You don't have permission to create functions."
+    ? t("You don't have permission to create functions.")
     : functionsLimit > 0 && totalFunctionsCount >= functionsLimit
-      ? 'Function limit reached for your plan.'
+      ? t('Function limit reached for your plan.')
       : undefined
 
   useEffect(() => {
@@ -1226,18 +1233,18 @@ export function View() {
     () => [
       {
         id: 'functions',
-        label: 'Functions',
+        label: t('Functions'),
         to: '/projects/$projectId/functions/',
         params: { projectId: projectId as string },
       },
       {
         id: 'templates',
-        label: 'Templates',
+        label: t('Templates'),
         to: '/projects/$projectId/functions/templates',
         params: { projectId: projectId as string },
       },
     ],
-    [projectId],
+    [projectId, t],
   )
 
   const toggleUseCase = (value: string) => {
@@ -1321,7 +1328,7 @@ export function View() {
 
   return (
     <div className="flex flex-col">
-      <ServiceHeader title="Functions" tabs={tabs} activeTab="templates" fullWidthBorder />
+      <ServiceHeader title={t('Functions')} tabs={tabs} activeTab="templates" fullWidthBorder />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-4 px-4 pb-6 pt-6 sm:px-6 lg:gap-5">
         <aside className="hidden w-[15.5rem] shrink-0 lg:block">
@@ -1364,8 +1371,8 @@ export function View() {
           {listError ? (
             <EmptyState
               icon={AlertCircle}
-              title="Couldn't load templates"
-              description="Something went wrong. Please try again."
+              title={t("Couldn't load templates")}
+              description={t('Something went wrong. Please try again.')}
               isEmpty={false}
               hasFilters={false}
               variant="card"
@@ -1375,15 +1382,17 @@ export function View() {
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 <p className="text-[13px] text-muted-foreground">
-                  Loading templates...
+                  {t('Loading templates...')}
                 </p>
               </div>
             </EmptyState>
           ) : emptyCatalog ? (
             <EmptyState
               icon={LayoutTemplate}
-              title="No templates yet"
-              description="Function templates will appear here when they are available in the catalog."
+              title={t('No templates yet')}
+              description={t(
+                'Function templates will appear here when they are available in the catalog.',
+              )}
               isEmpty
               hasFilters={false}
               variant="card"
@@ -1394,15 +1403,17 @@ export function View() {
               isEmpty={false}
               hasFilters
               variant="card"
-              title="No templates match"
-              description="Try adjusting filters or search, or clear everything to see the full catalog."
+              title={t('No templates match')}
+              description={t(
+                'Try adjusting filters or search, or clear everything to see the full catalog.',
+              )}
               action={
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={clearFiltersAndSearch}
                 >
-                  Clear filters and search
+                  {t('Clear filters and search')}
                 </Button>
               }
             />

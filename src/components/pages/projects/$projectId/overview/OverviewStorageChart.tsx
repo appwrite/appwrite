@@ -3,6 +3,7 @@
 import { memo, useMemo } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useParams } from '@tanstack/react-router'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import type { OverviewStorageChartPoint } from '@/lib/usage/storage-usage'
 import { OVERVIEW_STORAGE_CHART_TITLE } from '@/lib/usage/storage-usage'
@@ -113,6 +114,7 @@ interface StorageTooltipProps {
 }
 
 function StorageTooltip({ active, payload }: StorageTooltipProps) {
+  const t = useT()
   if (!active || !payload?.length) return null
 
   const data = payload[0]?.payload
@@ -130,7 +132,7 @@ function StorageTooltip({ active, payload }: StorageTooltipProps) {
             className="flex items-center justify-between gap-6"
           >
             <span className="text-[11px] text-muted-foreground">
-              {series.label}
+              {t(series.label)}
             </span>
             <span className="text-[12px] font-medium text-foreground">
               <MetricValueWithUnit
@@ -142,7 +144,7 @@ function StorageTooltip({ active, payload }: StorageTooltipProps) {
           </div>
         ))}
         <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
-          <span className="text-[11px] text-muted-foreground">Total</span>
+          <span className="text-[11px] text-muted-foreground">{t('Total')}</span>
           <span className="text-[12px] font-medium text-foreground">
             <MetricValueWithUnit
               value={format(data.total)}
@@ -167,6 +169,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   onRetry,
   isPanelVisible = true,
 }: OverviewStorageChartProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
 
   const skeletonChartData = useMemo(
@@ -198,7 +201,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   return (
     <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
       <div className={overviewChartPanelHeaderClass}>
-        <span className="text-[13px] font-medium text-foreground">{title}</span>
+        <span className="text-[13px] font-medium text-foreground">{t(title)}</span>
         <div className={overviewChartPanelHeaderActionsClass}>
           {!showChartSkeleton && chartData.length > 0
             ? STORAGE_SERIES.map((series) => (
@@ -208,7 +211,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                     style={{ backgroundColor: series.color }}
                   />
                   <span className="text-[11px] text-muted-foreground">
-                    {series.label}
+                    {t(series.label)}
                   </span>
                 </div>
               ))
@@ -222,8 +225,8 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
           <OverviewChartPanelError
-            title={OVERVIEW_STORAGE_ERROR.title}
-            message={OVERVIEW_STORAGE_ERROR.message}
+            title={t(OVERVIEW_STORAGE_ERROR.title)}
+            message={t(OVERVIEW_STORAGE_ERROR.message)}
             onRetry={onRetry}
           />
         ) : (
@@ -234,11 +237,11 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
               showChartSkeleton && 'pointer-events-none',
             )}
             aria-busy={showChartSkeleton}
-            aria-label={showChartSkeleton ? 'Loading usage data' : undefined}
+            aria-label={showChartSkeleton ? t('Loading usage data') : undefined}
           >
             {showEmptyState ? (
               <div className={overviewChartPanelEmptyClass}>
-                No data for this date range
+                {t('No data for this date range')}
               </div>
             ) : null}
             {renderChart ? (

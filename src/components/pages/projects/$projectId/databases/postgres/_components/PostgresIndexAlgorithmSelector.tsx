@@ -23,6 +23,7 @@ import {
   type PostgresIndexAlgorithm,
 } from '@/lib/postgres-index-metadata'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresIndexAlgorithmSelectorProps = {
   value: PostgresIndexAlgorithm
@@ -33,6 +34,7 @@ export function PostgresIndexAlgorithmSelector({
   value,
   onChange,
 }: PostgresIndexAlgorithmSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const selected = getPostgresIndexAlgorithmDefinition(value)
 
@@ -65,12 +67,12 @@ export function PostgresIndexAlgorithmSelector({
           >
             <Command>
               <CommandInput
-                placeholder="Search algorithms..."
+                placeholder={t('Search algorithms...')}
                 className="h-9 text-[13px]"
               />
               <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain p-1">
                 <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                  No algorithms found
+                  {t('No algorithms found')}
                 </CommandEmpty>
                 <CommandGroup>
                   {POSTGRES_INDEX_ALGORITHMS.map((entry) => (
@@ -108,7 +110,7 @@ export function PostgresIndexAlgorithmSelector({
 
       <div className="rounded-lg border border-border bg-muted/20 px-3 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          About this algorithm
+          {t('About this algorithm')}
         </p>
         <p className="mt-2 text-[12px] font-medium text-foreground">
           {selected.label}

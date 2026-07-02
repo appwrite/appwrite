@@ -14,6 +14,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 function estimateRecipientTargets(
   message: Models.Message,
@@ -51,6 +52,7 @@ export function MessageSendDialog({
   topics: Models.Topic[]
   onSuccess: () => void
 }) {
+  const t = useT()
   const queryClient = useQueryClient()
   const totalTargets = useMemo(
     () => estimateRecipientTargets(message, topics),
@@ -85,13 +87,13 @@ export function MessageSendDialog({
         queryKey: ['messages', 'project', projectId],
       })
       toast.success(
-        `The message has been sent to an estimated ${totalTargets} targets.`,
+        `${t('The message has been sent to an estimated')} ${totalTargets} ${t('targets.')}`,
       )
       onOpenChange(false)
       onSuccess()
     },
     onError: (e: Error) => {
-      toast.error(getErrorMessage(e) || 'Failed to send message')
+      toast.error(getErrorMessage(e) || t('Failed to send message'))
     },
   })
 
@@ -101,14 +103,15 @@ export function MessageSendDialog({
         className="sm:max-w-md p-0"
 >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Confirm sending message</DialogTitle>
+          <DialogTitle>{t('Confirm sending message')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Please confirm you want to send this message now. It will be
-            delivered to an estimated{' '}
+            {t(
+              'Please confirm you want to send this message now. It will be delivered to an estimated',
+            )}{' '}
             <span className="font-medium text-foreground">{totalTargets}</span>{' '}
-            targets.
+            {t('targets.')}
             <span className="mt-3 block font-medium text-foreground">
-              This action cannot be undone.
+              {t('This action cannot be undone.')}
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -118,13 +121,13 @@ export function MessageSendDialog({
             onClick={() => onOpenChange(false)}
             disabled={sendMutation.isPending}
 >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={() => sendMutation.mutate()}
             disabled={sendMutation.isPending}
 >
-            Send
+            {t('Send')}
           </Button>
         </div>
       </DialogContent>
@@ -147,6 +150,7 @@ export function MessageScheduleDialog({
   topics: Models.Topic[]
   onSuccess: () => void
 }) {
+  const t = useT()
   const queryClient = useQueryClient()
   const totalTargets = useMemo(
     () => estimateRecipientTargets(message, topics),
@@ -206,24 +210,24 @@ export function MessageScheduleDialog({
         queryKey: ['messages', 'project', projectId],
       })
       toast.success(
-        `The message has been scheduled and will be sent to an estimated ${totalTargets} targets.`,
+        `${t('The message has been scheduled and will be sent to an estimated')} ${totalTargets} ${t('targets.')}`,
       )
       onOpenChange(false)
       onSuccess()
     },
     onError: (e: Error) => {
-      toast.error(getErrorMessage(e) || 'Failed to schedule message')
+      toast.error(getErrorMessage(e) || t('Failed to schedule message'))
     },
   })
 
   const handleSubmit = () => {
     const dt = new Date(localValue)
     if (Number.isNaN(dt.getTime())) {
-      toast.error('Enter a valid date and time')
+      toast.error(t('Enter a valid date and time'))
       return
     }
     if (dt.getTime() <= Date.now()) {
-      toast.error('Schedule a time in the future')
+      toast.error(t('Schedule a time in the future'))
       return
     }
     scheduleMutation.mutate(dt.toISOString())
@@ -235,17 +239,18 @@ export function MessageScheduleDialog({
         className="sm:max-w-md p-0"
 >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Schedule message</DialogTitle>
+          <DialogTitle>{t('Schedule message')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose when this message should be delivered. Time uses your local
-            timezone.
+            {t(
+              'Choose when this message should be delivered. Time uses your local timezone.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0 space-y-3">
           <div className="space-y-2">
             <Label htmlFor="schedule-local" className="text-[13px]">
-              Send at
+              {t('Send at')}
             </Label>
             <Input
               id="schedule-local"
@@ -262,13 +267,13 @@ export function MessageScheduleDialog({
             onClick={() => onOpenChange(false)}
             disabled={scheduleMutation.isPending}
 >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={scheduleMutation.isPending}
 >
-            Schedule
+            {t('Schedule')}
           </Button>
         </div>
       </DialogContent>
@@ -289,6 +294,7 @@ export function MessageCancelScheduleDialog({
   message: Models.Message
   onSuccess: () => void
 }) {
+  const t = useT()
   const queryClient = useQueryClient()
 
   const cancelMutation = useMutation({
@@ -318,12 +324,12 @@ export function MessageCancelScheduleDialog({
       await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
-      toast.success('The scheduling has been cancelled.')
+      toast.success(t('The scheduling has been cancelled.'))
       onOpenChange(false)
       onSuccess()
     },
     onError: (e: Error) => {
-      toast.error(getErrorMessage(e) || 'Failed to cancel scheduling')
+      toast.error(getErrorMessage(e) || t('Failed to cancel scheduling'))
     },
   })
 
@@ -332,7 +338,7 @@ export function MessageCancelScheduleDialog({
       ?.title ??
     (message.data as { subject?: string })?.subject ??
     (message.data as { content?: string })?.content ??
-    'Message'
+    t('Message')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -340,11 +346,11 @@ export function MessageCancelScheduleDialog({
         className="sm:max-w-md p-0"
 >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Cancel scheduling</DialogTitle>
+          <DialogTitle>{t('Cancel scheduling')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to cancel the scheduling of{' '}
-            <span className="font-medium text-foreground">{titleLabel}</span>?
-            The message returns to draft.
+            {t('Are you sure you want to cancel the scheduling of')}{' '}
+            <span className="font-medium text-foreground">{titleLabel}</span>?{' '}
+            {t('The message returns to draft.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -354,14 +360,14 @@ export function MessageCancelScheduleDialog({
             onClick={() => onOpenChange(false)}
             disabled={cancelMutation.isPending}
 >
-            Keep scheduled
+            {t('Keep scheduled')}
           </Button>
           <Button
             variant="secondary"
             onClick={() => cancelMutation.mutate()}
             disabled={cancelMutation.isPending}
 >
-            Cancel scheduling
+            {t('Cancel scheduling')}
           </Button>
         </div>
       </DialogContent>

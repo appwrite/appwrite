@@ -12,6 +12,7 @@ import { IdInput } from '@/components/ui/id-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 interface UploadFileDialogProps {
@@ -33,6 +34,7 @@ export function UploadFileDialog({
   bucket,
   isLoading = false,
 }: UploadFileDialogProps) {
+  const t = useT()
   const [fileId, setFileId] = useState<string | undefined>(undefined)
   const [files, setFiles] = useState<File[]>([])
   const [invalidFiles, setInvalidFiles] = useState<
@@ -80,7 +82,7 @@ export function UploadFileDialog({
         !fileExtension ||
         !bucket.allowedFileExtensions.includes(fileExtension)
       ) {
-        return `Only ${bucket.allowedFileExtensions.join(', ')} files allowed`
+        return `${t('Only')} ${bucket.allowedFileExtensions.join(', ')} ${t('files allowed')}`
       }
     }
 
@@ -90,7 +92,7 @@ export function UploadFileDialog({
       fileToValidate.size > bucket.maximumFileSize
     ) {
       const maxSizeMB = (bucket.maximumFileSize / (1000 * 1000)).toFixed(2)
-      return `File size exceeds maximum of ${maxSizeMB} MB`
+      return `${t('File size exceeds maximum of')} ${maxSizeMB} MB`
     }
 
     return null
@@ -156,7 +158,7 @@ export function UploadFileDialog({
     e.preventDefault()
 
     if (files.length === 0) {
-      setErrors({ file: 'Please select at least one file to upload' })
+      setErrors({ file: t('Please select at least one file to upload') })
       return
     }
 
@@ -179,10 +181,10 @@ export function UploadFileDialog({
       <DialogContent className="min-w-0 sm:max-w-md p-0 max-h-[85dvh] overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>
-            {files.length > 1 ? 'Create files' : 'Create file'}
+            {files.length > 1 ? t('Create files') : t('Create file')}
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Upload files to this bucket.
+            {t('Upload files to this bucket.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -192,7 +194,7 @@ export function UploadFileDialog({
             {/* File Upload */}
             <div className="min-w-0 space-y-2">
               <Label htmlFor="file-upload">
-                Files <span className="text-destructive">*</span>
+                {t('Files')} <span className="text-destructive">*</span>
               </Label>
               <div
                 ref={dropZoneRef}
@@ -228,20 +230,20 @@ export function UploadFileDialog({
                     }
                   >
                     {files.length === 0
-                      ? 'Click to upload or drag and drop'
+                      ? t('Click to upload or drag and drop')
                       : files.length === 1
                         ? files[0].name
-                        : `${files.length} files selected`}
+                        : `${files.length} ${t('files selected')}`}
                   </span>
                   {bucket?.allowedFileExtensions &&
                     bucket.allowedFileExtensions.length > 0 && (
                       <span className="text-[12px] text-muted-foreground">
-                        Allowed: {bucket.allowedFileExtensions.join(', ')}
+                        {t('Allowed:')} {bucket.allowedFileExtensions.join(', ')}
                       </span>
                     )}
                   {bucket?.maximumFileSize && (
                     <span className="text-[12px] text-muted-foreground">
-                      Max size: {formatFileSize(bucket.maximumFileSize)}
+                      {t('Max size:')} {formatFileSize(bucket.maximumFileSize)}
                     </span>
                   )}
                 </label>
@@ -286,13 +288,11 @@ export function UploadFileDialog({
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="text-[12px]">
-                    {`Skipped ${invalidFiles.length} file${
-                      invalidFiles.length > 1 ? 's' : ''
-                    }: ${invalidFiles
+                    {`${invalidFiles.length > 1 ? t('Skipped files:') : t('Skipped file:')} ${invalidFiles
                       .slice(0, 3)
                       .map((file) => `${file.name} (${file.reason})`)
                       .join(', ')}${
-                      invalidFiles.length > 3 ? ', and more.' : '.'
+                      invalidFiles.length > 3 ? `, ${t('and more.')}` : '.'
                     }`}
                   </AlertDescription>
                 </Alert>
@@ -310,20 +310,20 @@ export function UploadFileDialog({
             {/* File ID */}
             {files.length === 1 && (
               <div className="space-y-2">
-                <Label htmlFor="file-id">File ID</Label>
+                <Label htmlFor="file-id">{t('File ID')}</Label>
                 <IdInput
                   id="file-id"
                   value={fileId}
                   onChange={setFileId}
                   maxLength={36}
                   disabled={isLoading}
-                  placeholder="Leave blank to auto-generate"
+                  placeholder={t('Leave blank to auto-generate')}
                 />
               </div>
             )}
             {files.length > 1 && (
               <p className="border-t border-border pt-3 text-[12px] leading-relaxed text-muted-foreground">
-                File IDs will be auto-generated for bulk uploads.
+                {t('File IDs will be auto-generated for bulk uploads.')}
               </p>
             )}
           </div>
@@ -335,10 +335,10 @@ export function UploadFileDialog({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || files.length === 0}>
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>

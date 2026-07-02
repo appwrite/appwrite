@@ -25,6 +25,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
+import { useT } from '@/lib/i18n/translate'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -45,6 +46,7 @@ interface GitSettingsCardProps {
 }
 
 export function GitSettingsCard({ func }: GitSettingsCardProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
@@ -121,7 +123,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       )
     },
     onSuccess: () => {
-      toast.success('Function updated successfully')
+      toast.success(t('Function updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, func.$id],
       })
@@ -148,7 +150,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       }
     },
     onError: (error: unknown) => {
-      toast.error(error.message || 'Failed to update function')
+      toast.error(error.message || t('Failed to update function'))
     },
   })
 
@@ -173,7 +175,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       )
     },
     onSuccess: () => {
-      toast.success('Repository connected successfully')
+      toast.success(t('Repository connected successfully'))
       setConnectDialogOpen(false)
       setSelectedRepositoryId('')
       queryClient.invalidateQueries({
@@ -181,7 +183,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       })
     },
     onError: (error: unknown) => {
-      toast.error(error.message || 'Failed to connect repository')
+      toast.error(error.message || t('Failed to connect repository'))
     },
   })
 
@@ -202,7 +204,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       )
     },
     onSuccess: () => {
-      toast.success('Repository disconnected successfully')
+      toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
       setSelectedBranch('')
       setSelectedDir('')
@@ -211,7 +213,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       })
     },
     onError: (error: unknown) => {
-      toast.error(error.message || 'Failed to disconnect repository')
+      toast.error(error.message || t('Failed to disconnect repository'))
     },
   })
 
@@ -221,7 +223,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       selectedDir !== (func.providerRootDirectory || '')
 
     if (!hasChanges) {
-      toast.info('No changes to save')
+      toast.info(t('No changes to save'))
       return
     }
 
@@ -233,7 +235,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
   const handleConnectRepository = () => {
     if (!selectedInstallationId || !selectedRepositoryId) {
-      toast.error('Please select an installation and repository')
+      toast.error(t('Please select an installation and repository'))
       return
     }
     connectRepositoryMutation.mutate()
@@ -253,9 +255,9 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Repository</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t('Repository')}</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Connect your function to a Git repository for automatic deployments
+          {t('Connect your function to a Git repository for automatic deployments')}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -265,8 +267,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <EmptyState
               icon={GitBranch}
-              title="No repository connected"
-              description="Connect a repository to enable automatic deployments"
+              title={t('No repository connected')}
+              description={t('Connect a repository to enable automatic deployments')}
               isEmpty={true}
               iconSize="md"
             />
@@ -279,15 +281,16 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
             >
               <DialogTrigger asChild>
                 <Button size="sm" className="h-9 text-[13px] mt-4">
-                  Connect repository
+                  {t('Connect repository')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl p-0">
                 <DialogHeader className="px-6 pt-6 text-start">
-                  <DialogTitle>Connect repository</DialogTitle>
+                  <DialogTitle>{t('Connect repository')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Select a GitHub installation and repository to connect to
-                    this function
+                    {t(
+                      'Select a GitHub installation and repository to connect to this function',
+                    )}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="border-t border-border" />
@@ -314,7 +317,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                     onClick={() => setConnectDialogOpen(false)}
                     disabled={connectRepositoryMutation.isPending}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     size="sm"
@@ -326,7 +329,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       connectRepositoryMutation.isPending
                     }
                   >
-                    Connect
+                    {t('Connect')}
                   </Button>
                 </div>
               </DialogContent>
@@ -356,7 +359,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                   </div>
                   {repository.pushedAt && (
                     <p className="text-[12px] text-muted-foreground">
-                      Last updated <DateTooltip date={repository.pushedAt} />
+                      {t('Last updated')} <DateTooltip date={repository.pushedAt} />
                     </p>
                   )}
                 </div>
@@ -367,7 +370,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       size="sm"
                       className="h-8 w-8 p-0"
                       asChild
-                      aria-label="Open repository in new tab"
+                      aria-label={t('Open repository in new tab')}
                     >
                       <a href={repository.url} target="_blank" rel="noreferrer">
                         <ExternalLink className="h-4 w-4" />
@@ -385,20 +388,20 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                         className="h-8 text-[13px] text-foreground hover:text-foreground"
                       >
                         <X className="me-1.5 h-4 w-4" />
-                        Disconnect
+                        {t('Disconnect')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md p-0">
                       <DialogHeader className="px-6 pt-6 text-start">
-                        <DialogTitle>Disconnect Repository</DialogTitle>
+                        <DialogTitle>{t('Disconnect Repository')}</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to disconnect{' '}
+                          {t('Are you sure you want to disconnect')}{' '}
                           <span className="font-medium text-foreground">
                             {repository.organization}/{repository.name}
                           </span>{' '}
-                          from this function? This will remove all Git
-                          configuration and you will need to reconnect the
-                          repository to enable automatic deployments.
+                          {t(
+                            'from this function? This will remove all Git configuration and you will need to reconnect the repository to enable automatic deployments.',
+                          )}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -407,14 +410,14 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                           onClick={() => setDisconnectDialogOpen(false)}
                           disabled={disconnectRepositoryMutation.isPending}
                         >
-                          Cancel
+                          {t('Cancel')}
                         </Button>
                         <Button
                           variant="destructive"
                           onClick={handleDisconnectRepository}
                           disabled={disconnectRepositoryMutation.isPending}
                         >
-                          Disconnect
+                          {t('Disconnect')}
                         </Button>
                       </div>
                     </DialogContent>
@@ -425,7 +428,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
             <fieldset className="rounded-lg border border-border p-4 space-y-4">
               <legend className="text-[13px] font-medium text-foreground px-2">
-                Branch Settings
+                {t('Branch Settings')}
               </legend>
 
               {/* Branch selector */}
@@ -435,7 +438,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 providerRepositoryId={func.providerRepositoryId}
                 value={selectedBranch}
                 onChange={setSelectedBranch}
-                label="Production branch"
+                label={t('Production branch')}
               />
 
               {/* Root directory selector */}
@@ -446,8 +449,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 branch={selectedBranch || 'main'}
                 value={selectedDir}
                 onChange={setSelectedDir}
-                label="Root directory"
-                description="Choose the directory containing your function code"
+                label={t('Root directory')}
+                description={t('Choose the directory containing your function code')}
               />
             </fieldset>
           </div>
@@ -461,7 +464,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
             disabled={!hasChanges || updateFunctionMutation.isPending}
             onClick={handleSaveConfiguration}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       )}

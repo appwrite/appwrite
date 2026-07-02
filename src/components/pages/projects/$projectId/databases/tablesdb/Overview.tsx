@@ -127,6 +127,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useT } from '@/lib/i18n/translate'
 
 // Overview - database details with tabs (tables, backups, settings, …)
 export interface OverviewProps {
@@ -160,6 +161,7 @@ export function Overview({
   contentOnly = false,
   monitorEmbed,
 }: OverviewProps) {
+  const t = useT()
   const params = useParams({
     strict: false,
   })
@@ -258,44 +260,44 @@ export function Overview({
   // Export handlers
   const handleCopyJSON = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
       const json = formatSchemaAsJSON(databaseSchema)
       await navigator.clipboard.writeText(json)
-      toast.success('Schema copied to clipboard')
+      toast.success(t('Schema copied to clipboard'))
     } catch {
-      toast.error('Failed to copy schema')
+      toast.error(t('Failed to copy schema'))
     }
   }
 
   const handleCopyMarkdown = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
-      toast.success('Schema copied to clipboard')
+      toast.success(t('Schema copied to clipboard'))
     } catch {
-      toast.error('Failed to copy schema')
+      toast.error(t('Failed to copy schema'))
     }
   }
 
   const handleExportSVG = async () => {
     if (!databaseSchema) {
-      toast.error('Schema not loaded yet')
+      toast.error(t('Schema not loaded yet'))
       return
     }
     try {
       const svg = formatSchemaAsSVG(databaseSchema)
       const filename = `database-schema-${databaseId}.svg`
       downloadAsFile(svg, filename, 'image/svg+xml')
-      toast.success('Schema exported as SVG')
+      toast.success(t('Schema exported as SVG'))
     } catch {
-      toast.error('Failed to export SVG')
+      toast.error(t('Failed to export SVG'))
     }
   }
 
@@ -303,7 +305,7 @@ export function Overview({
   const handleOpenInChatGPT = async () => {
     if (!databaseSchema) {
       setExportDialogOpen(true)
-      toast.info('Loading schema...')
+      toast.info(t('Loading schema...'))
       return
     }
     try {
@@ -312,16 +314,16 @@ export function Overview({
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
-      toast.success('Opening ChatGPT with schema context...')
+      toast.success(t('Opening ChatGPT with schema context...'))
     } catch {
-      toast.error('Failed to open ChatGPT')
+      toast.error(t('Failed to open ChatGPT'))
     }
   }
 
   const handleOpenInClaude = async () => {
     if (!databaseSchema) {
       setExportDialogOpen(true)
-      toast.info('Loading schema...')
+      toast.info(t('Loading schema...'))
       return
     }
     try {
@@ -330,16 +332,16 @@ export function Overview({
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
-      toast.success('Opening Claude with schema context...')
+      toast.success(t('Opening Claude with schema context...'))
     } catch {
-      toast.error('Failed to open Claude')
+      toast.error(t('Failed to open Claude'))
     }
   }
 
   const handleOpenInCursor = async () => {
     if (!databaseSchema) {
       setExportDialogOpen(true)
-      toast.info('Loading schema...')
+      toast.info(t('Loading schema...'))
       return
     }
     try {
@@ -350,19 +352,19 @@ export function Overview({
       // Try to open app protocol link, fallback to clipboard message
       try {
         window.location.href = deepLink
-        toast.success('Opening Cursor with schema context...')
+        toast.success(t('Opening Cursor with schema context...'))
       } catch {
-        toast.success('Schema copied to clipboard. Paste it in Cursor.')
+        toast.success(t('Schema copied to clipboard. Paste it in Cursor.'))
       }
     } catch {
-      toast.error('Failed to open Cursor')
+      toast.error(t('Failed to open Cursor'))
     }
   }
 
   const handleOpenInLovable = async () => {
     if (!databaseSchema) {
       setExportDialogOpen(true)
-      toast.info('Loading schema...')
+      toast.info(t('Loading schema...'))
       return
     }
     try {
@@ -371,9 +373,9 @@ export function Overview({
       const json = formatSchemaAsJSON(databaseSchema)
       await navigator.clipboard.writeText(json)
       window.open(deepLink, '_blank')
-      toast.success('Opening Lovable with schema context...')
+      toast.success(t('Opening Lovable with schema context...'))
     } catch {
-      toast.error('Failed to open Lovable')
+      toast.error(t('Failed to open Lovable'))
     }
   }
 
@@ -419,7 +421,7 @@ export function Overview({
       queryClient.invalidateQueries({
         queryKey: ['databases', 'project', projectId],
       })
-      toast.success('Database name updated successfully')
+      toast.success(t('Database name updated successfully'))
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update database name')
@@ -473,7 +475,7 @@ export function Overview({
       await queryClient.refetchQueries({
         queryKey: ['databases', 'project', projectId],
       })
-      toast.success('Database deleted successfully')
+      toast.success(t('Database deleted successfully'))
 
       // Close the dialog and reset confirmation
       setDeleteDialogOpen(false)
@@ -771,7 +773,7 @@ export function Overview({
   if (databaseLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading database...</div>
+        <div className="text-muted-foreground">{t('Loading database...')}</div>
       </div>
     )
   }
@@ -781,10 +783,10 @@ export function Overview({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            Database not found
+            {t('Database not found')}
           </p>
           <Button variant="link" onClick={handleBack}>
-            Back to databases
+            {t('Back to databases')}
           </Button>
         </div>
       </div>
@@ -854,16 +856,16 @@ export function Overview({
                         </Button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">Copy schema</TooltipContent>
+                    <TooltipContent side="bottom">{t('Copy schema')}</TooltipContent>
                   </Tooltip>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={handleCopyJSON}>
                       <FileJson className="h-4 w-4 me-2" />
-                      Copy as JSON
+                      {t('Copy as JSON')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleCopyMarkdown}>
                       <FileText className="h-4 w-4 me-2" />
-                      Copy as Markdown
+                      {t('Copy as Markdown')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -880,7 +882,7 @@ export function Overview({
                       <Download className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Export as SVG</TooltipContent>
+                  <TooltipContent side="bottom">{t('Export as SVG')}</TooltipContent>
                 </Tooltip>
 
                 {/* Open in dropdown */}
@@ -897,7 +899,7 @@ export function Overview({
                         </Button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">Open in...</TooltipContent>
+                    <TooltipContent side="bottom">{t('Open in...')}</TooltipContent>
                   </Tooltip>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={handleOpenInChatGPT}>
@@ -974,13 +976,11 @@ export function Overview({
                     >
                       <AlertCircle className="h-4 w-4 text-amber-500" />
                       <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                        Database is disabled
+                        {t('Database is disabled')}
                       </AlertTitle>
                       <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                         <span className="inline">
-                          This database is disabled and not accessible to end
-                          users through the API. Console actions remain
-                          available.{' '}
+                          {t('This database is disabled and not accessible to end users through the API. Console actions remain available.')}{' '}
                           <Link
                             to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
                             params={{
@@ -990,7 +990,7 @@ export function Overview({
                             }}
                             className="font-medium underline hover:no-underline inline"
                           >
-                            Enable it in the Settings tab
+                            {t('Enable it in the Settings tab')}
                           </Link>{' '}
                           to make it available to end users.
                         </span>
@@ -1045,7 +1045,7 @@ export function Overview({
                           {dbLabels.recordPluralTitle}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                          Indexes
+                          {t('Indexes')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1130,7 +1130,7 @@ export function Overview({
                                       variant="error"
                                       className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
                                     >
-                                      Disabled
+                                      {t('Disabled')}
                                     </Badge>
                                   )}
                                 </div>
@@ -1216,7 +1216,7 @@ export function Overview({
                           onClick={() => setSelectedTables(new Set())}
                           className="h-8 text-xs"
                         >
-                          Cancel
+                          {t('Cancel')}
                         </Button>
                         <Button
                           variant="destructive"
@@ -1225,7 +1225,7 @@ export function Overview({
                           disabled={bulkDeleteTablesMutation.isPending}
                           className="h-8 gap-2"
                         >
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </div>
                     </div>
@@ -1257,14 +1257,14 @@ export function Overview({
                         onClick={() => setBulkDeleteDialogOpen(false)}
                         disabled={bulkDeleteTablesMutation.isPending}
                       >
-                        Cancel
+                        {t('Cancel')}
                       </Button>
                       <Button
                         variant="destructive"
                         onClick={confirmBulkDeleteTables}
                         disabled={bulkDeleteTablesMutation.isPending}
                       >
-                        Delete
+                        {t('Delete')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -1341,10 +1341,10 @@ export function Overview({
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Database analytics
+                      {t('Database analytics')}
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      View detailed metrics about your database performance
+                      {t('View detailed metrics about your database performance')}
                     </p>
                   </div>
                   <div className="border-t border-border" />
@@ -1359,7 +1359,7 @@ export function Overview({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Query performance
+                        {t('Query performance')}
                       </h3>
                     </div>
                     <div className="border-t border-border" />
@@ -1371,7 +1371,7 @@ export function Overview({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Usage patterns
+                        {t('Usage patterns')}
                       </h3>
                     </div>
                     <div className="border-t border-border" />
@@ -1392,17 +1392,13 @@ export function Overview({
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Permissions
+                    {t('Permissions')}
                   </h3>
                 </div>
                 <div className="border-t border-border" />
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    Permissions are configured at the table or row level. You
-                    can select the permission model for each table in its
-                    settings. When Row Level Security (RLS) is enabled, you can
-                    also modify permissions per row when updating individual
-                    rows.
+                    {t('Permissions are configured at the table or row level. You can select the permission model for each table in its settings. When Row Level Security (RLS) is enabled, you can also modify permissions per row when updating individual rows.')}
                   </p>
                 </div>
               </div>
@@ -1417,19 +1413,18 @@ export function Overview({
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Name
+                    {t('Name')}
                   </h3>
                 </div>
                 <div className="border-t border-border" />
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    Update your database's display name. This will be visible to
-                    all organization members.
+                    {t("Update your database's display name. This will be visible to all organization members.")}
                   </p>
                   <Input
                     value={databaseName}
                     onChange={(e) => setDatabaseName(e.target.value)}
-                    placeholder="Database name"
+                    placeholder={t('Database name')}
                     className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   />
                 </div>
@@ -1456,7 +1451,7 @@ export function Overview({
                       }
                     }}
                   >
-                    Update
+                    {t('Update')}
                   </Button>
                 </div>
               </div>
@@ -1529,7 +1524,7 @@ export function Overview({
                       }
                     }}
                   >
-                    Update
+                    {t('Update')}
                   </Button>
                 </div>
               </div>
@@ -1539,10 +1534,10 @@ export function Overview({
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Specification
+                      {t('Specification')}
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      Current tier: Serverless. Dedicated tiers are coming soon.
+                      {t('Current tier: Serverless. Dedicated tiers are coming soon.')}
                     </p>
                   </div>
                   <div className="border-t border-border" />
@@ -1552,19 +1547,19 @@ export function Overview({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Tier
+                              {t('Tier')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                               CPU
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Memory
+                              {t('Memory')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Connections
+                              {t('Connections')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[180px]">
-                              Price
+                              {t('Price')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -1591,7 +1586,7 @@ export function Overview({
                                         className="gap-1 text-[10px] shrink-0"
                                       >
                                         <CheckCircle2 className="h-3 w-3" />
-                                        Current
+                                        {t('Current')}
                                       </Badge>
                                     )}
                                     {locked && (
@@ -1599,7 +1594,7 @@ export function Overview({
                                         variant="inactive"
                                         className="text-[10px] shrink-0"
                                       >
-                                        Coming soon
+                                        {t('Coming soon')}
                                       </Badge>
                                     )}
                                   </span>
@@ -1645,7 +1640,7 @@ export function Overview({
                   <div className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Specification
+                        {t('Specification')}
                       </h3>
                       <DedicatedDatabaseRegionUnavailableBadge />
                     </div>
@@ -1660,7 +1655,7 @@ export function Overview({
               <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Delete database
+                    {t('Delete database')}
                   </h3>
                 </div>
                 <div className="border-t border-destructive/20" />
@@ -1702,12 +1697,12 @@ export function Overview({
                         size="sm"
                         className="h-9 text-[13px]"
                       >
-                        Delete database
+                        {t('Delete database')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md p-0">
                       <DialogHeader className="px-6 pt-6 text-start">
-                        <DialogTitle>Delete Database</DialogTitle>
+                        <DialogTitle>{t('Delete Database')}</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           Are you sure you want to delete{' '}
                           {database && (
@@ -1754,7 +1749,7 @@ export function Overview({
                           onChange={(e) =>
                             setDeleteConfirmation(e.target.value)
                           }
-                          placeholder="Enter database name"
+                          placeholder={t('Enter database name')}
                           className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
                         />
                       </div>
@@ -1769,7 +1764,7 @@ export function Overview({
                             setDeleteConfirmation('')
                           }}
                         >
-                          Cancel
+                          {t('Cancel')}
                         </Button>
                         <Button
                           variant="destructive"
@@ -1789,7 +1784,7 @@ export function Overview({
                             }
                           }}
                         >
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </div>
                     </DialogContent>

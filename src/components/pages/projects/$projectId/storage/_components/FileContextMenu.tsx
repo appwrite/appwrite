@@ -52,6 +52,7 @@ import {
   MenuItemIcon,
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { useT } from '@/lib/i18n/translate'
 
 export type FileContextMenuFile = {
   id: string
@@ -64,6 +65,7 @@ function useFileActions(
   bucketId: string,
   file: FileContextMenuFile,
 ) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -76,11 +78,11 @@ function useFileActions(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['files', 'project', projectId, 'bucket', bucketId]})
-      toast.success('File deleted')
+      toast.success(t('File deleted'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete file')
+      toast.error(getErrorMessage(error) || t('Failed to delete file'))
     }})
 
   const navigateToTab = (tab: 'overview' | 'permissions' | 'tokens') => {
@@ -120,14 +122,16 @@ function FileDeleteDialog({
   onOpenChange: (open: boolean) => void
   deleteMutation: ReturnType<typeof useFileActions>['deleteMutation']
 }) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Delete file</DialogTitle>
+          <DialogTitle>{t('Delete file')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete this file? This action cannot be
-            undone.
+            {t(
+              'Are you sure you want to delete this file? This action cannot be undone.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -136,14 +140,14 @@ function FileDeleteDialog({
             onClick={() => onOpenChange(false)}
             disabled={deleteMutation.isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={() => deleteMutation.mutate()}
             disabled={deleteMutation.isPending}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>
@@ -171,6 +175,7 @@ export function FileContextMenu({
     deleteDialogOpen,
     setDeleteDialogOpen,
     deleteMutation} = useFileActions(projectId, bucketId, file)
+  const t = useT()
 
   return (
     <>
@@ -179,40 +184,40 @@ export function FileContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={() => navigateToTab('overview')}>
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('permissions')}>
             <ContextMenuIcon icon={Shield} />
-            Permissions
+            {t('Permissions')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('tokens')}>
             <ContextMenuIcon icon={KeyRound} />
-            Tokens
+            {t('Tokens')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => copyToClipboard('ID', file.id)}>
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', file.name)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', fileHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -222,23 +227,23 @@ export function FileContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(fileHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(fileHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -271,6 +276,7 @@ export function FileRowActionsMenu({
     deleteDialogOpen,
     setDeleteDialogOpen,
     deleteMutation} = useFileActions(projectId, bucketId, file)
+  const t = useT()
 
   if (file.pending) {
     return null
@@ -289,7 +295,7 @@ export function FileRowActionsMenu({
               navigateToTab('overview')
             }}
           >
-            <MenuItemContent icon={LayoutList}>Overview</MenuItemContent>
+            <MenuItemContent icon={LayoutList}>{t('Overview')}</MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
@@ -297,7 +303,7 @@ export function FileRowActionsMenu({
               navigateToTab('permissions')
             }}
           >
-            <MenuItemContent icon={Shield}>Permissions</MenuItemContent>
+            <MenuItemContent icon={Shield}>{t('Permissions')}</MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
@@ -305,13 +311,13 @@ export function FileRowActionsMenu({
               navigateToTab('tokens')
             }}
           >
-            <MenuItemContent icon={KeyRound}>Tokens</MenuItemContent>
+            <MenuItemContent icon={KeyRound}>{t('Tokens')}</MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <MenuItemIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem
@@ -320,7 +326,7 @@ export function FileRowActionsMenu({
                   copyToClipboard('ID', file.id)
                 }}
               >
-                <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
+                <MenuItemContent icon={Copy}>{t('Copy ID')}</MenuItemContent>
               </DropdownMenuItem>
               {hasName && (
                 <DropdownMenuItem
@@ -329,7 +335,7 @@ export function FileRowActionsMenu({
                     copyToClipboard('Name', file.name)
                   }}
                 >
-                  <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
+                  <MenuItemContent icon={Copy}>{t('Copy name')}</MenuItemContent>
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
@@ -338,7 +344,7 @@ export function FileRowActionsMenu({
                   copyToClipboard('Link', fileHref)
                 }}
               >
-                <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
+                <MenuItemContent icon={Link2}>{t('Copy link')}</MenuItemContent>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -348,7 +354,7 @@ export function FileRowActionsMenu({
                   )
                 }}
               >
-                <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
+                <MenuItemContent icon={FileJson}>{t('Copy as JSON')}</MenuItemContent>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
@@ -359,7 +365,7 @@ export function FileRowActionsMenu({
               openInNewTab(fileHref)
             }}
           >
-            <MenuItemContent icon={ExternalLink}>Open in new tab</MenuItemContent>
+            <MenuItemContent icon={ExternalLink}>{t('Open in new tab')}</MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
@@ -367,7 +373,7 @@ export function FileRowActionsMenu({
               openInNewWindow(fileHref)
             }}
           >
-            <MenuItemContent icon={Square}>Open in new window</MenuItemContent>
+            <MenuItemContent icon={Square}>{t('Open in new window')}</MenuItemContent>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -376,7 +382,7 @@ export function FileRowActionsMenu({
               handleDeleteClick()
             }}
           >
-            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+            <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

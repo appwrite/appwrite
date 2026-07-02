@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { Download, FileJson, FileText, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
 import {
@@ -82,6 +83,7 @@ export function UsageBreakdownDrawer({
   storageLookup: storageLookupProp,
   tableLookup: tableLookupProp,
 }: UsageBreakdownDrawerProps) {
+  const t = useT()
   const { data: countriesData } = useCountries()
   const countryLookups = useMemo(
     () => buildCountryLookups(countriesData?.countries),
@@ -187,7 +189,7 @@ export function UsageBreakdownDrawer({
       storageLookup,
       tableLookup,
     )
-    toast.success('Exported as JSON')
+    toast.success(t('Exported as JSON'))
   }, [
     canExport,
     countryLookups,
@@ -200,6 +202,7 @@ export function UsageBreakdownDrawer({
     labelVariant,
     kind,
     title,
+    t,
   ])
 
   const handleExportCsv = useCallback(() => {
@@ -216,7 +219,7 @@ export function UsageBreakdownDrawer({
       storageLookup,
       tableLookup,
     )
-    toast.success('Exported as CSV')
+    toast.success(t('Exported as CSV'))
   }, [
     canExport,
     countryLookups,
@@ -229,14 +232,15 @@ export function UsageBreakdownDrawer({
     labelVariant,
     kind,
     title,
+    t,
   ])
 
   return (
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={title}
-      description={description ?? title}
+      title={t(title)}
+      description={description ? t(description) : t(title)}
       maxWidth="sm:max-w-md"
       headerActions={
         <DropdownMenu>
@@ -249,7 +253,7 @@ export function UsageBreakdownDrawer({
               disabled={!canExport}
             >
               <Download className="me-1.5 h-3.5 w-3.5" />
-              Export
+              {t('Export')}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
@@ -258,14 +262,14 @@ export function UsageBreakdownDrawer({
               onClick={handleExportJson}
             >
               <FileJson className="me-2 h-4 w-4" />
-              Export as JSON
+              {t('Export as JSON')}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={handleExportCsv}
             >
               <FileText className="me-2 h-4 w-4" />
-              Export as CSV
+              {t('Export as CSV')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -274,15 +278,15 @@ export function UsageBreakdownDrawer({
       <div className="flex min-h-0 flex-1 flex-col border-t border-border">
         {description ? (
           <p className="shrink-0 px-6 py-3 text-[12px] leading-relaxed text-muted-foreground">
-            {description}
+            {t(description)}
           </p>
         ) : null}
 
         {isError ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-8 text-center">
             <OverviewChartPanelError
-              title={errorMeta.title}
-              message={errorMeta.message}
+              title={t(errorMeta.title)}
+              message={t(errorMeta.message)}
               onRetry={() => void refetch()}
             />
           </div>
@@ -295,7 +299,7 @@ export function UsageBreakdownDrawer({
           </div>
         ) : showEmpty ? (
           <div className="flex flex-1 items-center justify-center px-6 py-8 text-center text-[13px] text-muted-foreground">
-            No data for this date range
+            {t('No data for this date range')}
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
@@ -318,7 +322,7 @@ export function UsageBreakdownDrawer({
         {!showLoading && !isError && items.length > 0 ? (
           <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-3">
             <p className="text-[11px] text-muted-foreground">
-              Showing up to {USAGE_BREAKDOWN_DRAWER_LIMIT} items
+              {t('Showing up to')} {USAGE_BREAKDOWN_DRAWER_LIMIT} {t('items')}
               {isFetching ? (
                 <Loader2
                   className="ms-1 inline h-3 w-3 animate-spin align-middle"

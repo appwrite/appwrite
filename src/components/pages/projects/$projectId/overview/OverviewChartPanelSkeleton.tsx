@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
   OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
@@ -20,12 +21,17 @@ export function OverviewChartPanelSkeleton({
   className,
   embedded = false,
 }: OverviewChartPanelSkeletonProps) {
+  const t = useT()
   const content =
     variant === 'storage' ? <StorageSkeleton /> : <ListSkeleton />
 
   if (embedded) {
     return (
-      <div className={className} aria-busy="true" aria-label="Loading usage data">
+      <div
+        className={className}
+        aria-busy="true"
+        aria-label={t('Loading usage data')}
+      >
         {content}
       </div>
     )
@@ -35,7 +41,7 @@ export function OverviewChartPanelSkeleton({
     <div
       className={cn(overviewChartPanelBodyClass, className)}
       aria-busy="true"
-      aria-label="Loading usage data"
+      aria-label={t('Loading usage data')}
     >
       {content}
     </div>

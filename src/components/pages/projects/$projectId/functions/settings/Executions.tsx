@@ -19,8 +19,10 @@ import {
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
@@ -59,11 +61,11 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Schedule updated successfully')
+      toast.success(t('Schedule updated successfully'))
       invalidateFunction()
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update schedule'))
+      toast.error(getErrorMessage(error, t('Failed to update schedule')))
     },
   })
 
@@ -77,11 +79,11 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Events updated successfully')
+      toast.success(t('Events updated successfully'))
       invalidateFunction()
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update events'))
+      toast.error(getErrorMessage(error, t('Failed to update events')))
     },
   })
 
@@ -91,7 +93,7 @@ export function View() {
 
   const handleSaveEvents = () => {
     if (events.length > 100) {
-      toast.error('Maximum 100 events allowed')
+      toast.error(t('Maximum 100 events allowed'))
       return
     }
     eventsMutation.mutate({ events })
@@ -119,7 +121,9 @@ export function View() {
   if (funcLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }
@@ -137,9 +141,11 @@ export function View() {
       node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Schedule</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Schedule')}
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Run this function on a schedule using cron expressions.
+            {t('Run this function on a schedule using cron expressions.')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -159,7 +165,7 @@ export function View() {
             }
             onClick={handleSaveSchedule}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </div>
@@ -175,11 +181,13 @@ export function View() {
       node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Events</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Events')}
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Events that trigger this function (maximum 100).{' '}
+            {t('Events that trigger this function (maximum 100).')}{' '}
             <DocsRouteLink className="link-neutral" href={EVENTS_DOCS_LINK}>
-              Learn more
+              {t('Learn more')}
             </DocsRouteLink>
           </p>
         </div>
@@ -195,7 +203,7 @@ export function View() {
               disabled={events.length >= 100 || executionsPending}
             >
               <Plus className="me-1.5 h-4 w-4" />
-              Add event
+              {t('Add event')}
             </Button>
             {events.length > 0 && (
               <div className="space-y-2">
@@ -211,7 +219,7 @@ export function View() {
                       className="h-7 w-7 p-0"
                       onClick={() => handleRemoveEvent(event)}
                       disabled={executionsPending}
-                      aria-label={`Remove event ${event}`}
+                      aria-label={`${t('Remove event')} ${event}`}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -221,14 +229,16 @@ export function View() {
             )}
             {events.length === 0 && (
               <p className="text-[13px] text-muted-foreground">
-                No events configured
+                {t('No events configured')}
               </p>
             )}
             <EventEditorModal
               open={eventDialogOpen}
               onOpenChange={setEventDialogOpen}
               onCreated={handleEventCreated}
-              description="Set the events that will trigger your function. Maximum 100 events allowed."
+              description={t(
+                'Set the events that will trigger your function. Maximum 100 events allowed.',
+              )}
               projectId={projectId}
             />
           </div>
@@ -243,7 +253,7 @@ export function View() {
             }
             onClick={handleSaveEvents}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </div>

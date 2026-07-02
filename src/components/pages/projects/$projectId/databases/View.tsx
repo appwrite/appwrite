@@ -129,6 +129,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useT } from '@/lib/i18n/translate'
 
 export type {
   OverviewContentTab,
@@ -142,6 +143,7 @@ export function View() {
   const { projectId } = useParams({
     from: '/_public/projects/$projectId/databases/',
   })
+  const t = useT()
   const navigate = useNavigate()
   const location = useLocation()
   const search = useSearch({ strict: false }) as {
@@ -533,13 +535,15 @@ export function View() {
         queryKey: ['databases', 'project', projectId],
       })
       toast.success(
-        `Successfully deleted ${selectedDatabases.size} database${selectedDatabases.size > 1 ? 's' : ''}`,
+        selectedDatabases.size === 1
+          ? t('Database deleted successfully')
+          : t('Databases deleted successfully'),
       )
       setSelectedDatabases(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete databases')
+      toast.error(error.message || t('Failed to delete databases'))
     },
   })
 
@@ -548,7 +552,7 @@ export function View() {
     mutationFn: (data: { databaseId?: string; name: string }) =>
       createProjectDatabase(projectId!, data),
     onSuccess: (database) => {
-      toast.success(`${database.name} has been created`)
+      toast.success(`${database.name} ${t('has been created')}`)
       queryClient.invalidateQueries({
         queryKey: ['databases', 'project', projectId],
       })
@@ -561,7 +565,7 @@ export function View() {
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to create database')
+      toast.error(getErrorMessage(error) || t('Failed to create database'))
     },
   })
 
@@ -669,11 +673,11 @@ export function View() {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Databases"
-        searchPlaceholder="Search databases..."
+        title={t('Databases')}
+        searchPlaceholder={t('Search databases...')}
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
-        createLabel="Create database"
+        createLabel={t('Create database')}
         onCreate={() =>
           useCreateDatabaseWizard
             ? navigate({
@@ -685,7 +689,7 @@ export function View() {
         createDisabled={isCreateDisabled}
         createDisabledTooltip={
           noCreateDbPermission
-            ? "You don't have permission to create databases."
+            ? t("You don't have permission to create databases.")
             : undefined
         }
         showFilters={true}
@@ -746,14 +750,16 @@ export function View() {
         <div className="mb-4">
           <h2 className="text-[15px] font-semibold text-foreground">TablesDB</h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Serverless and dedicated TablesDB databases for structured app data.
+            {t(
+              'Serverless and dedicated TablesDB databases for structured app data.',
+            )}
           </p>
         </div>
 
         {databasesListErrorMessage && paginatedDatabases.length > 0 ? (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Couldn&apos;t refresh databases</AlertTitle>
+            <AlertTitle>{t("Couldn't refresh databases")}</AlertTitle>
             <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[13px]">{databasesListErrorMessage}</p>
               <Button
@@ -764,7 +770,7 @@ export function View() {
                 onClick={() => void refetchDisplayedDatabases()}
                 disabled={displayedDatabasesFetching}
               >
-                Try again
+                {t('Try again')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -772,13 +778,15 @@ export function View() {
 
         {showLoading ? (
           <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <div className="text-muted-foreground">Loading databases...</div>
+            <div className="text-muted-foreground">
+              {t('Loading databases...')}
+            </div>
           </div>
         ) : databasesListErrorMessage && paginatedDatabases.length === 0 ? (
           <div className="rounded-lg border border-destructive/30 bg-card py-12 px-6 text-center">
             <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
             <h3 className="mt-4 text-[15px] font-semibold text-foreground">
-              Failed to load databases
+              {t('Failed to load databases')}
             </h3>
             <p className="mt-2 text-[13px] text-muted-foreground">
               {databasesListErrorMessage}
@@ -791,7 +799,7 @@ export function View() {
               onClick={() => void refetchDisplayedDatabases()}
               disabled={displayedDatabasesFetching}
             >
-              Try again
+              {t('Try again')}
             </Button>
           </div>
         ) : viewMode === 'list' ? (
@@ -811,21 +819,21 @@ export function View() {
                         />
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Database
+                        {t('Database')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                        Status
+                        {t('Status')}
                       </TableHead>
                       {features.databaseBackups && (
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                          Backups
+                          {t('Backups')}
                         </TableHead>
                       )}
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                        Created
+                        {t('Created')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                        Updated
+                        {t('Updated')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -906,14 +914,14 @@ export function View() {
                                   variant="error"
                                   className="text-[11px] font-medium border px-2 py-0.5"
                                 >
-                                  Disabled
+                                  {t('Disabled')}
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant="success"
                                   className="text-[11px] font-medium border px-2 py-0.5"
                                 >
-                                  Enabled
+                                  {t('Enabled')}
                                 </Badge>
                               )}
                             </div>
@@ -929,9 +937,9 @@ export function View() {
                                     <CheckCircle2 className="h-3 w-3" />
                                     {(db as DatabaseWithBackup)
                                       .backupPolicyCount > 0
-                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? t('policy') : t('policies')}`
                                       : (db as DatabaseWithBackup).backupPolicy
-                                          ?.name || 'Enabled'}
+                                          ?.name || t('Enabled')}
                                   </Badge>
                                 ) : (
                                   <Badge
@@ -939,7 +947,7 @@ export function View() {
                                     className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
                                   >
                                     <AlertCircle className="h-3 w-3" />
-                                    None
+                                    {t('None')}
                                   </Badge>
                                 )}
                               </div>
@@ -999,19 +1007,19 @@ export function View() {
                 pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel="databases"
+                itemLabel={t('databases')}
               />
             </>
           ) : (
             <EmptyState
               icon={TABLESDB_LIST_ICON}
               title={
-                urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'
+                urlSearch || filterMap.size > 0 ? undefined : t('No databases yet')
               }
               description={
                 urlSearch || filterMap.size > 0
                   ? undefined
-                  : 'Create your first database to get started'
+                  : t('Create your first database to get started')
               }
               isEmpty={!urlSearch && filterMap.size === 0}
               hasFilters={!!urlSearch || filterMap.size > 0}
@@ -1053,7 +1061,7 @@ export function View() {
                         iconColor="bg-muted text-muted-foreground"
                         status={db.enabled === false ? 'error' : undefined}
                         statusLabel={
-                          db.enabled === false ? 'Disabled' : undefined
+                          db.enabled === false ? t('Disabled') : undefined
                         }
                         metadata={
                           features.databaseBackups
@@ -1069,10 +1077,10 @@ export function View() {
                                       <CheckCircle2 className="h-3 w-3" />
                                       {(db as DatabaseWithBackup)
                                         .backupPolicyCount > 0
-                                        ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                        ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? t('policy') : t('policies')}`
                                         : (db as DatabaseWithBackup)
                                             .backupPolicy?.name ||
-                                          'Backup Enabled'}
+                                          t('Backup Enabled')}
                                     </Badge>
                                   ) : (
                                     <Badge
@@ -1080,7 +1088,7 @@ export function View() {
                                       className="gap-1.5 text-[11px] font-medium"
                                     >
                                       <AlertCircle className="h-3 w-3" />
-                                      No backup policies
+                                      {t('No backup policies')}
                                     </Badge>
                                   ),
                                 },
@@ -1100,12 +1108,12 @@ export function View() {
                     title={
                       urlSearch || filterMap.size > 0
                         ? undefined
-                        : 'No databases yet'
+                        : t('No databases yet')
                     }
                     description={
                       urlSearch || filterMap.size > 0
                         ? undefined
-                        : 'Create your first database to get started'
+                        : t('Create your first database to get started')
                     }
                     isEmpty={!urlSearch && filterMap.size === 0}
                     hasFilters={!!urlSearch || filterMap.size > 0}
@@ -1122,7 +1130,7 @@ export function View() {
                 pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel="databases"
+                itemLabel={t('databases')}
               />
             )}
           </>
@@ -1133,7 +1141,7 @@ export function View() {
             projectId={projectId}
             backend={ApiDatabaseType.Documentsdb}
             title="DocumentsDB"
-            description="Document-based databases with flexible schemas and dedicated compute."
+            description={t('Document-based databases with flexible schemas and dedicated compute.')}
             viewMode={viewMode}
             regionSupported={supportsDedicatedDatabaseCompute}
           />
@@ -1144,7 +1152,7 @@ export function View() {
             projectId={projectId}
             backend={ApiDatabaseType.Vectorsdb}
             title="VectorsDB"
-            description="Vector databases for embeddings, semantic search, and AI workloads."
+            description={t('Vector databases for embeddings, semantic search, and AI workloads.')}
             viewMode={viewMode}
             regionSupported={supportsDedicatedDatabaseCompute}
           />
@@ -1163,8 +1171,10 @@ export function View() {
           <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedDatabases.size} database
-                {selectedDatabases.size > 1 ? 's' : ''} selected
+                {selectedDatabases.size}{' '}
+                {selectedDatabases.size > 1
+                  ? t('databases selected')
+                  : t('database selected')}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -1173,7 +1183,7 @@ export function View() {
                   onClick={() => setSelectedDatabases(new Set())}
                   className="h-8 text-xs"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1182,7 +1192,7 @@ export function View() {
                   disabled={bulkDeleteMutation.isPending}
                   className="h-8 gap-2"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -1193,11 +1203,11 @@ export function View() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete Databases</DialogTitle>
+              <DialogTitle>{t('Delete Databases')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedDatabases.size}{' '}
-                database{selectedDatabases.size > 1 ? 's' : ''}? This action
-                cannot be undone.
+                {selectedDatabases.size > 1
+                  ? t('Are you sure you want to delete the selected databases? This action cannot be undone.')
+                  : t('Are you sure you want to delete this database? This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
 
@@ -1207,14 +1217,14 @@ export function View() {
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmBulkDelete}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>
@@ -1245,6 +1255,7 @@ interface DatabaseDetailLayoutProps {
 export function DatabaseDetailLayout({
   databaseId,
 }: DatabaseDetailLayoutProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const dbKind = (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
@@ -1266,7 +1277,7 @@ export function DatabaseDetailLayout({
     mutationFn: (data: { tableId?: string; name: string }) =>
       createProjectTable(projectId!, databaseId, data),
     onSuccess: async (table) => {
-      toast.success(`${table.name} has been created`)
+      toast.success(`${table.name} ${t('has been created')}`)
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
@@ -1283,7 +1294,7 @@ export function DatabaseDetailLayout({
     onError: (error: Error) => {
       toast.error(
         getErrorMessage(error) ||
-          `Failed to create ${dbLabels.containerSingular}`,
+          t(`Failed to create ${dbLabels.containerSingular}`),
       )
     },
   })
@@ -1304,10 +1315,10 @@ export function DatabaseDetailLayout({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            Database not found
+            {t('Database not found')}
           </p>
           <Button variant="link" onClick={handleBack}>
-            Back to databases
+            {t('Back to databases')}
           </Button>
         </div>
       </div>
@@ -1346,7 +1357,7 @@ export function DatabaseDetailLayout({
             )}
             <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="flex-1 text-[13px] font-medium">
-              {dbLabels.containerPluralTitle}
+              {t(dbLabels.containerPluralTitle)}
             </span>
             <span className="text-[11px] text-muted-foreground">
               {dbTables.length}
@@ -1421,7 +1432,7 @@ export function DatabaseDetailLayout({
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">{dbLabels.createContainer}</span>
+                <span className="text-[13px]">{t(dbLabels.createContainer)}</span>
               </button>
             </div>
           )}
@@ -1433,7 +1444,7 @@ export function DatabaseDetailLayout({
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Security</span>
+            <span className="text-[13px]">{t('Security')}</span>
           </Link>
 
           {features.dedicatedDbsTablesDB && (
@@ -1444,9 +1455,11 @@ export function DatabaseDetailLayout({
             >
               <Cpu className="h-3.5 w-3.5 shrink-0" />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-[13px]">Upgrade database specs</span>
+                <span className="text-[13px]">
+                  {t('Upgrade database specs')}
+                </span>
                 <span className="text-[11px] text-muted-foreground/80">
-                  Serverless
+                  {t('Serverless')}
                 </span>
               </span>
             </Link>
@@ -1457,9 +1470,9 @@ export function DatabaseDetailLayout({
               {/* Insights Link - Coming Soon */}
               <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground/50">
                 <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 text-[13px]">Insights</span>
+                <span className="flex-1 text-[13px]">{t('Insights')}</span>
                 <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Soon
+                  {t('Soon')}
                 </span>
               </span>
             </>
@@ -1482,7 +1495,7 @@ export function DatabaseDetailLayout({
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Settings</span>
+            <span className="text-[13px]">{t('Settings')}</span>
           </Link>
         </div>
       </div>
@@ -1493,7 +1506,7 @@ export function DatabaseDetailLayout({
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
               <p className="text-muted-foreground">
-                {dbLabels.selectContainerHint}
+                {t(dbLabels.selectContainerHint)}
               </p>
             </div>
           </div>
@@ -1501,8 +1514,8 @@ export function DatabaseDetailLayout({
           <div className="flex flex-1 items-center justify-center">
             <EmptyState
               icon={ContainerListIcon}
-              title={dbLabels.emptyContainersTitle}
-              description={dbLabels.emptyContainersDescription}
+              title={t(dbLabels.emptyContainersTitle)}
+              description={t(dbLabels.emptyContainersDescription)}
               isEmpty={true}
               iconSize="md"
             />
@@ -1531,6 +1544,7 @@ interface DatabaseEmptyStateProps {
 }
 
 export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
+  const t = useT()
   const params = useParams({
     strict: false,
   })
@@ -1552,7 +1566,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     mutationFn: (data: { tableId?: string; name: string }) =>
       createProjectTable(projectId!, databaseId!, data),
     onSuccess: async (table) => {
-      toast.success(`${table.name} has been created`)
+      toast.success(`${table.name} ${t('has been created')}`)
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
@@ -1569,7 +1583,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     onError: (error: Error) => {
       toast.error(
         getErrorMessage(error) ||
-          `Failed to create ${dbLabels.containerSingular}`,
+          t(`Failed to create ${dbLabels.containerSingular}`),
       )
     },
   })
@@ -1586,10 +1600,10 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            Database not found
+            {t('Database not found')}
           </p>
           <Button variant="link" onClick={handleBack}>
-            Back to databases
+            {t('Back to databases')}
           </Button>
         </div>
       </div>
@@ -1628,7 +1642,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             )}
             <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="flex-1 text-[13px] font-medium">
-              {dbLabels.containerPluralTitle}
+              {t(dbLabels.containerPluralTitle)}
             </span>
             <span className="text-[11px] text-muted-foreground">0</span>
           </button>
@@ -1641,7 +1655,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">{dbLabels.createContainer}</span>
+                <span className="text-[13px]">{t(dbLabels.createContainer)}</span>
               </button>
             </div>
           )}
@@ -1653,7 +1667,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Security</span>
+            <span className="text-[13px]">{t('Security')}</span>
           </Link>
 
           {features.dedicatedDbsTablesDB && (
@@ -1664,9 +1678,11 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             >
               <Cpu className="h-3.5 w-3.5 shrink-0" />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-[13px]">Upgrade database specs</span>
+                <span className="text-[13px]">
+                  {t('Upgrade database specs')}
+                </span>
                 <span className="text-[11px] text-muted-foreground/80">
-                  Serverless
+                  {t('Serverless')}
                 </span>
               </span>
             </Link>
@@ -1677,9 +1693,9 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               {/* Insights Link - Coming Soon */}
               <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground/50">
                 <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 text-[13px]">Insights</span>
+                <span className="flex-1 text-[13px]">{t('Insights')}</span>
                 <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Soon
+                  {t('Soon')}
                 </span>
               </span>
             </>
@@ -1702,7 +1718,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Settings</span>
+            <span className="text-[13px]">{t('Settings')}</span>
           </Link>
         </div>
       </div>
@@ -1715,15 +1731,15 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           className="flex cursor-pointer items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
         >
           <ChevronLeft className="h-4 w-4" />
-          Back to databases
+          {t('Back to databases')}
         </button>
 
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <EmptyState
               icon={ContainerListIcon}
-              title={dbLabels.emptyContainersTitle}
-              description={dbLabels.emptyContainersDescription}
+              title={t(dbLabels.emptyContainersTitle)}
+              description={t(dbLabels.emptyContainersDescription)}
               isEmpty={true}
               iconSize="md"
             />
@@ -1732,7 +1748,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               className="mt-4"
             >
               <Plus className="me-1.5 h-4 w-4" />
-              {dbLabels.createContainer}
+              {t(dbLabels.createContainer)}
             </Button>
           </div>
         </div>

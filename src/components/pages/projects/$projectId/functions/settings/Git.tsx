@@ -7,8 +7,10 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { GitSettingsCard } from '../GitSettingsCard'
 import { GitSilentModeCard } from '../GitSilentModeCard'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
 
@@ -51,7 +53,9 @@ export function View() {
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }

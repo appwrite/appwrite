@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import type { DatabaseSchema } from '@/lib/utils/database-schema-export'
+import { useT } from '@/lib/i18n/translate'
 import {
   formatSchemaAsJSON,
   formatSchemaAsMarkdown,
@@ -34,6 +35,7 @@ export function SchemaExportDialog({
   schema,
   isLoading,
 }: SchemaExportDialogProps) {
+  const t = useT()
   const [format, setFormat] = useState<ExportFormat>('json')
   const [copied, setCopied] = useState(false)
   const [exportContent, setExportContent] = useState<string>('')
@@ -66,10 +68,10 @@ export function SchemaExportDialog({
     try {
       await navigator.clipboard.writeText(exportContent)
       setCopied(true)
-      toast.success('Schema copied to clipboard')
+      toast.success(t('Schema copied to clipboard'))
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Failed to copy to clipboard')
+      toast.error(t('Failed to copy to clipboard'))
     }
   }
 
@@ -92,7 +94,7 @@ export function SchemaExportDialog({
     }
 
     downloadAsFile(exportContent, filename, mimeTypes[format])
-    toast.success('Schema downloaded')
+    toast.success(t('Schema downloaded'))
   }
 
   const formatLabels = {
@@ -105,10 +107,11 @@ export function SchemaExportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Export Database Schema</DialogTitle>
+          <DialogTitle>{t('Export Database Schema')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Export your database structure in a format suitable for AI agents
-            and IDEs like Cursor or Lovable.
+            {t(
+              'Export your database structure in a format suitable for AI agents and IDEs like Cursor or Lovable.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -116,12 +119,12 @@ export function SchemaExportDialog({
         <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-hidden flex flex-col">
           {isLoading ? (
             <div className="flex h-64 items-center justify-center">
-              <div className="text-muted-foreground">Loading schema...</div>
+              <div className="text-muted-foreground">{t('Loading schema...')}</div>
             </div>
           ) : !schema ? (
             <div className="flex h-64 items-center justify-center">
               <div className="text-muted-foreground">
-                No schema data available
+                {t('No schema data available')}
               </div>
             </div>
           ) : (
@@ -162,7 +165,7 @@ export function SchemaExportDialog({
                   <div className="space-y-3 flex-1 min-h-0 flex flex-col">
                     <div className="flex items-center justify-between">
                       <span className="text-[13px] text-muted-foreground">
-                        {formatLabels[format]} format
+                        {t(`${formatLabels[format]} format`)}
                       </span>
                       <div className="flex items-center gap-2">
                         <Button
@@ -175,12 +178,12 @@ export function SchemaExportDialog({
                           {copied ? (
                             <>
                               <Check className="h-3.5 w-3.5" />
-                              Copied
+                              {t('Copied')}
                             </>
                           ) : (
                             <>
                               <Copy className="h-3.5 w-3.5" />
-                              Copy
+                              {t('Copy')}
                             </>
                           )}
                         </Button>
@@ -192,7 +195,7 @@ export function SchemaExportDialog({
                           disabled={!exportContent}
                         >
                           <Download className="h-3.5 w-3.5" />
-                          Download
+                          {t('Download')}
                         </Button>
                       </div>
                     </div>
@@ -201,7 +204,7 @@ export function SchemaExportDialog({
                         value={exportContent}
                         readOnly
                         className="h-full font-mono text-[12px] resize-none overflow-auto"
-                        placeholder="Export content will appear here..."
+                        placeholder={t('Export content will appear here...')}
                       />
                     </div>
                   </div>
@@ -218,7 +221,7 @@ export function SchemaExportDialog({
             className="h-9 text-[13px]"
             onClick={() => onOpenChange(false)}
           >
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

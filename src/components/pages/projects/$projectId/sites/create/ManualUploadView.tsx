@@ -35,8 +35,10 @@ import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export function ManualUploadView() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -108,13 +110,13 @@ export function ManualUploadView() {
 
     const file = files[0]
     if (!file.name.endsWith('.tar.gz') && !file.name.endsWith('.tgz')) {
-      toast.error('Only .tar.gz files are supported')
+      toast.error(t('Only .tar.gz files are supported'))
       return
     }
 
     // Check file size (max 100MB)
     if (file.size > 100 * 1024 * 1024) {
-      toast.error('File size must be less than 100MB')
+      toast.error(t('File size must be less than 100MB'))
       return
     }
 
@@ -149,12 +151,12 @@ export function ManualUploadView() {
 
   const handleDeploy = async () => {
     if (!projectId || !siteName || !framework || !uploadFile) {
-      toast.error('Please fill in all required fields and upload a file')
+      toast.error(t('Please fill in all required fields and upload a file'))
       return
     }
 
     if (!domainValid) {
-      toast.error('Please enter a valid domain')
+      toast.error(t('Please enter a valid domain'))
       return
     }
 
@@ -234,7 +236,7 @@ export function ManualUploadView() {
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to create site')
+      toast.error(error.message || t('Failed to create site'))
       setIsDeploying(false)
     }
   }
@@ -249,7 +251,9 @@ export function ManualUploadView() {
               <FrameworkIcon framework={framework} size="md" />
             </div>
             <div>
-              <p className="text-[12px] text-muted-foreground">Framework</p>
+              <p className="text-[12px] text-muted-foreground">
+                {t('Framework')}
+              </p>
               <p className="text-[13px] font-medium text-foreground">
                 {frameworks.find((f) => f.key === framework)?.name || framework}
               </p>
@@ -261,7 +265,7 @@ export function ManualUploadView() {
       {/* Other options */}
       <div className="rounded-xl border border-border bg-card/50 p-4">
         <h3 className="text-[13px] font-semibold text-foreground mb-3">
-          Other options
+          {t('Other options')}
         </h3>
         <div className="space-y-2">
           <Link
@@ -270,7 +274,7 @@ export function ManualUploadView() {
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <GitBranch className="h-3.5 w-3.5" />
-            Import from Git
+            {t('Import from Git')}
           </Link>
           <Link
             to="/projects/$projectId/sites/create/templates"
@@ -278,7 +282,7 @@ export function ManualUploadView() {
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <LayoutTemplate className="h-3.5 w-3.5" />
-            Browse templates
+            {t('Browse templates')}
           </Link>
         </div>
       </div>
@@ -287,7 +291,7 @@ export function ManualUploadView() {
 
   return (
     <WizardLayout
-      title="Create site"
+      title={t('Create site')}
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
       maxWidth="max-w-[1400px]"
@@ -300,7 +304,7 @@ export function ManualUploadView() {
             onClick={() => window.history.back()}
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -313,7 +317,7 @@ export function ManualUploadView() {
               createSiteMutation.isPending
             }
           >
-            Deploy
+            {t('Deploy')}
           </Button>
         </>
       }
@@ -322,10 +326,10 @@ export function ManualUploadView() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Upload file
+            {t('Upload file')}
           </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Upload a .tar.gz file containing your site source code
+            {t('Upload a .tar.gz file containing your site source code')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -353,10 +357,10 @@ export function ManualUploadView() {
             >
               <Upload className="h-8 w-8 text-muted-foreground mb-3" />
               <p className="text-[13px] font-medium text-foreground">
-                Drop your file here or click to browse
+                {t('Drop your file here or click to browse')}
               </p>
               <p className="text-[12px] text-muted-foreground mt-1">
-                Only .tar.gz files up to 100MB
+                {t('Only .tar.gz files up to 100MB')}
               </p>
             </div>
           ) : (
@@ -388,38 +392,40 @@ export function ManualUploadView() {
       {/* Details section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           {/* Site name */}
           <div className="space-y-2">
             <Label htmlFor="site-name" className="text-[13px]">
-              Site name
+              {t('Site name')}
             </Label>
             <Input
               id="site-name"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
-              placeholder="My awesome site"
+              placeholder={t('My awesome site')}
               className="h-9 text-[13px]"
             />
           </div>
 
           {/* Site ID */}
           <div className="space-y-2">
-            <Label className="text-[13px]">Site ID</Label>
+            <Label className="text-[13px]">{t('Site ID')}</Label>
             <IdInput
               value={siteId}
               onChange={setSiteId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
 
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
-              Framework
+              {t('Framework')}
             </Label>
             <Select
               value={framework}
@@ -437,7 +443,7 @@ export function ManualUploadView() {
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
-                <SelectValue placeholder="Select framework" />
+                <SelectValue placeholder={t('Select framework')} />
               </SelectTrigger>
               <SelectContent>
                 {frameworks.map((f) => (
@@ -477,9 +483,11 @@ export function ManualUploadView() {
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Domain')}
+          </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Your site will be accessible at this URL
+            {t('Your site will be accessible at this URL')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -492,10 +500,11 @@ export function ManualUploadView() {
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a
-            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            {t(
+              'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
+            )}{' '}
             <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
-              Learn more →
+              {t('Learn more →')}
             </DocsRouteLink>
           </p>
         </div>

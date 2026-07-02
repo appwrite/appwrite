@@ -1,9 +1,11 @@
 import { Shield } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Sidebar for the platform step only. The connection diagram is shown on step 3 (setup).
  */
 export function ConfigureWizardAside() {
+  const t = useT()
   return (
     <div className="rounded-xl border border-border bg-card/50 p-5">
       <div className="flex items-start gap-3">
@@ -12,21 +14,21 @@ export function ConfigureWizardAside() {
         </div>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Why register an app?
+            {t('Why register an app?')}
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-            Apps tell Appwrite which origins or bundle IDs are allowed to call your project
-            API. Choose the kind of client you are building - you can register more apps
-            later.
+            {t(
+              'Apps tell Appwrite which origins or bundle IDs are allowed to call your project API. Choose the kind of client you are building - you can register more apps later.', // pragma: allowlist secret
+            )}
           </p>
           <ul className="mt-3 list-disc space-y-1.5 ps-4 text-[12px] leading-snug text-muted-foreground">
             <li>
-              <span className="font-medium text-foreground/90">Web</span> - allowed
-              hostnames (origins)
+              <span className="font-medium text-foreground/90">{t('Web')}</span> -{' '}
+              {t('allowed hostnames (origins)')}
             </li>
             <li>
-              <span className="font-medium text-foreground/90">Mobile &amp; desktop</span>{' '}
-              - bundle ID or package name
+              <span className="font-medium text-foreground/90">{t('Mobile & desktop')}</span>{' '}
+              - {t('bundle ID or package name')}
             </li>
           </ul>
         </div>

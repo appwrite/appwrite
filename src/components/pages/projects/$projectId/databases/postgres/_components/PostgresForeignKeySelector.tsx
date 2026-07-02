@@ -15,6 +15,7 @@ import {
   postgresSidebarTablesInfiniteQueryOptions,
   postgresTableColumnsQueryOptions,
 } from '@/lib/react-query/hooks/postgres-databases'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresForeignKeySelectorProps = {
   value: PostgresForeignKeyState
@@ -35,6 +36,7 @@ export function PostgresForeignKeySelector({
   active = true,
   hasMultipleForeignKeys = false,
 }: PostgresForeignKeySelectorProps) {
+  const t = useT()
   const [schemaSearch, setSchemaSearch] = useState('')
   const [tableSearch, setTableSearch] = useState('')
   const [debouncedSchemaSearch, setDebouncedSchemaSearch] = useState('')
@@ -135,12 +137,12 @@ export function PostgresForeignKeySelector({
           value: column.column_name,
           label: column.column_name,
           description: isPrimaryKey
-            ? 'Primary key'
+            ? t('Primary key')
             : formatPostgresColumnType(column),
           searchText: `${column.column_name} ${formatPostgresColumnType(column)}`,
         }
       }),
-    [columnsData?.columns],
+    [columnsData?.columns, t],
   )
 
   const selectedReference = postgresForeignKeyStateToReference(value)
@@ -187,10 +189,10 @@ export function PostgresForeignKeySelector({
             htmlFor="column-foreign-key-enabled"
             className="text-[12px] font-medium"
           >
-            Foreign key
+            {t('Foreign key')}
           </Label>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Reference a column in another table.
+            {t('Reference a column in another table.')}
           </p>
         </div>
         <Switch
@@ -202,27 +204,26 @@ export function PostgresForeignKeySelector({
 
       {hasMultipleForeignKeys ? (
         <p className="text-[11px] text-muted-foreground">
-          This column has multiple foreign keys. Saving replaces them with a
-          single foreign key.
+          {t('This column has multiple foreign keys. Saving replaces them with a single foreign key.')}
         </p>
       ) : null}
 
       {value.enabled ? (
         <div className="space-y-3 rounded-lg border border-border bg-muted/20 px-3 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Reference
+            {t('Reference')}
           </p>
           <div className="space-y-2">
             <Label htmlFor="foreign-key-schema" className="text-[12px] font-medium">
-              Schema
+              {t('Schema')}
             </Label>
             <SearchableSelect
               value={value.schema}
               onValueChange={handleSchemaChange}
               items={schemaItems}
-              placeholder={schemasLoading ? 'Loading schemas…' : 'Select schema'}
-              searchPlaceholder="Search schemas…"
-              emptyMessage="No schemas found"
+              placeholder={schemasLoading ? t('Loading schemas…') : t('Select schema')}
+              searchPlaceholder={t('Search schemas…')}
+              emptyMessage={t('No schemas found')}
               disabled={schemasLoading && schemaItems.length === 0}
               onSearchChange={setSchemaSearch}
               isFetching={schemasFetching}
@@ -238,7 +239,7 @@ export function PostgresForeignKeySelector({
           </div>
           <div className="space-y-2">
             <Label htmlFor="foreign-key-table" className="text-[12px] font-medium">
-              Table
+              {t('Table')}
             </Label>
             <SearchableSelect
               value={value.table}
@@ -246,13 +247,13 @@ export function PostgresForeignKeySelector({
               items={tableItems}
               placeholder={
                 !value.schema
-                  ? 'Select a schema first'
+                  ? t('Select a schema first')
                   : tablesLoading
-                    ? 'Loading tables…'
-                    : 'Select table'
+                    ? t('Loading tables…')
+                    : t('Select table')
               }
-              searchPlaceholder="Search tables…"
-              emptyMessage="No tables found"
+              searchPlaceholder={t('Search tables…')}
+              emptyMessage={t('No tables found')}
               disabled={!value.schema || (tablesLoading && tableItems.length === 0)}
               onSearchChange={setTableSearch}
               isFetching={tablesFetching}
@@ -268,7 +269,7 @@ export function PostgresForeignKeySelector({
           </div>
           <div className="space-y-2">
             <Label htmlFor="foreign-key-column" className="text-[12px] font-medium">
-              Column
+              {t('Column')}
             </Label>
             <SearchableSelect
               value={value.column}
@@ -276,13 +277,13 @@ export function PostgresForeignKeySelector({
               items={columnItems}
               placeholder={
                 !value.table
-                  ? 'Select a table first'
+                  ? t('Select a table first')
                   : columnsLoading
-                    ? 'Loading columns…'
-                    : 'Select column'
+                    ? t('Loading columns…')
+                    : t('Select column')
               }
-              searchPlaceholder="Search columns…"
-              emptyMessage="No columns found"
+              searchPlaceholder={t('Search columns…')}
+              emptyMessage={t('No columns found')}
               disabled={!value.table || (columnsLoading && columnItems.length === 0)}
             />
           </div>

@@ -24,6 +24,7 @@ import {
   getSpecOptionById,
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
+import { useT } from '@/lib/i18n/translate'
 
 export function getDefaultMonitorDateRange(): DateRange {
   return {
@@ -51,6 +52,7 @@ export function DatabaseMonitorHeaderActions({
   onRefresh,
   showSpecActions,
 }: DatabaseMonitorHeaderActionsProps) {
+  const t = useT()
   const { database } = useProjectDatabase(projectId, databaseId)
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -83,7 +85,7 @@ export function DatabaseMonitorHeaderActions({
           variant={serverless ? 'info' : 'success'}
           className="h-[22px] shrink-0 px-1.5 py-0 text-[10px] leading-none"
         >
-          {serverless ? 'Serverless' : 'Dedicated'}
+          {serverless ? t('Serverless') : t('Dedicated')}
         </Badge>
         <span className="hidden max-w-[180px] truncate text-[12px] leading-none text-muted-foreground @[480px]:inline">
           {specLabel}
@@ -99,7 +101,7 @@ export function DatabaseMonitorHeaderActions({
               to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
               params={{ projectId, dbKind, databaseId }}
             >
-              {serverless ? 'Upgrade' : 'Change spec'}
+              {serverless ? t('Upgrade') : t('Change spec')}
             </Link>
           </Button>
         ) : showUpgradeComingSoon ? (
@@ -113,7 +115,7 @@ export function DatabaseMonitorHeaderActions({
                     className="h-7 shrink-0 px-2 text-[12px]"
                     disabled
                   >
-                    {serverless ? 'Upgrade' : 'Change spec'}
+                    {serverless ? t('Upgrade') : t('Change spec')}
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -149,7 +151,7 @@ export function DatabaseMonitorHeaderActions({
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Refresh</TooltipContent>
+            <TooltipContent>{t('Refresh')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

@@ -25,6 +25,7 @@ import {
 } from '../../shared/DeploymentResourceStatusBadges'
 import { formatCronExpression } from '../CronScheduleEditor'
 import { FunctionContextMenu } from './FunctionContextMenu'
+import { useT } from '@/lib/i18n/translate'
 
 function formatRuntimeLabel(runtime: string) {
   if (!runtime) return 'Unknown runtime'
@@ -38,6 +39,7 @@ function FunctionListTriggers({
   schedule?: string
   eventCount: number
 }) {
+  const t = useT()
   if (!schedule && eventCount === 0) {
     return <span className="text-[12px] text-muted-foreground/50">-</span>
   }
@@ -54,7 +56,7 @@ function FunctionListTriggers({
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{formatCronExpression(schedule)}</p>
+              <p>{t(formatCronExpression(schedule))}</p>
             </TooltipContent>
           </Tooltip>
         ) : null}
@@ -69,8 +71,8 @@ function FunctionListTriggers({
             <TooltipContent>
               <p>
                 {eventCount === 1
-                  ? '1 event trigger'
-                  : `${eventCount} event triggers`}
+                  ? t('1 event trigger')
+                  : `${eventCount} ${t('event triggers')}`}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -94,6 +96,7 @@ export function FunctionsListTable({
   projectId,
   functions,
 }: FunctionsListTableProps) {
+  const t = useT()
   const navigate = useNavigate()
 
   return (
@@ -102,22 +105,22 @@ export function FunctionsListTable({
         <TableHeader>
           <TableRow className="border-b border-border hover:bg-transparent">
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Function
+              {t('Function')}
             </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Runtime
+              {t('Runtime')}
             </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Status
+              {t('Status')}
             </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Last deployed
+              {t('Last deployed')}
             </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Triggers
+              {t('Triggers')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Created
+              {t('Created')}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -160,7 +163,7 @@ export function FunctionsListTable({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13px] font-medium text-foreground">
-                            {func.name || 'Unnamed Function'}
+                            {func.name || t('Unnamed Function')}
                           </p>
                           <div className="mt-0.5">
                             <CopyableId id={func.$id} size="xs" />
@@ -171,7 +174,7 @@ export function FunctionsListTable({
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <span className="text-[12px] text-muted-foreground">
-                      {formatRuntimeLabel(func.runtime || '')}
+                      {t(formatRuntimeLabel(func.runtime || ''))}
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3">
@@ -186,7 +189,7 @@ export function FunctionsListTable({
                       />
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50">
-                        Never
+                        {t('Never')}
                       </span>
                     )}
                   </TableCell>

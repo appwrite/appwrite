@@ -4,6 +4,7 @@ import { getMCPIDEs } from '@/lib/config/ide'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export interface MCPSectionProps {
   /** When true, render without the outer card (e.g. inside a modal tab) */
@@ -15,17 +16,19 @@ export interface MCPSectionProps {
  * Reused in project settings Overview and Connect project modal (MCP tab).
  */
 export function MCPSection({ compact = false }: MCPSectionProps) {
+  const t = useT()
   const mcpIntegrations = useMemo(() => getMCPIDEs(), [])
 
   const description = (
     <p className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}>
-      Appwrite offers two MCP servers that allow LLMs to interact with
-      Appwrite's API and documentation. Deploy with a single click or view the{' '}
+      {t(
+        "Appwrite offers two MCP servers that allow LLMs to interact with Appwrite's API and documentation. Deploy with a single click or view the", // pragma: allowlist secret
+      )}{' '}
       <DocsRouteLink rel="noreferrer"
         className="text-foreground underline hover:no-underline" href="/docs/tooling/mcp">
-        docs
+        {t('docs')}
       </DocsRouteLink>{' '}
-      for instructions.
+      {t('for instructions.')}
     </p>
   )
 
@@ -39,13 +42,16 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
             <Code className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-foreground mb-1">
-                MCP for API
+                {t('MCP for API')}
               </p>
               <p className="text-[12px] text-muted-foreground mb-2">
-                Interact with your Appwrite project directly. Create users,
-                manage databases, and perform operations using natural language.
+                {t(
+                  'Interact with your Appwrite project directly. Create users, manage databases, and perform operations using natural language.', // pragma: allowlist secret
+                )}
               </p>
-              <span className="text-[12px] text-foreground">Learn more →</span>
+              <span className="text-[12px] text-foreground">
+                {t('Learn more')} →
+              </span>
             </div>
           </div>
         </DocsRouteLink>
@@ -56,13 +62,16 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
             <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-foreground mb-1">
-                MCP for Docs
+                {t('MCP for Docs')}
               </p>
               <p className="text-[12px] text-muted-foreground mb-2">
-                Access comprehensive Appwrite documentation. Get code examples,
-                troubleshooting help, and implementation guidance.
+                {t(
+                  'Access comprehensive Appwrite documentation. Get code examples, troubleshooting help, and implementation guidance.', // pragma: allowlist secret
+                )}
               </p>
-              <span className="text-[12px] text-foreground">Learn more →</span>
+              <span className="text-[12px] text-foreground">
+                {t('Learn more')} →
+              </span>
             </div>
           </div>
         </DocsRouteLink>
@@ -115,7 +124,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          MCP servers
+          {t('MCP servers')}
         </h3>
       </div>
       <div className="border-t border-border" />

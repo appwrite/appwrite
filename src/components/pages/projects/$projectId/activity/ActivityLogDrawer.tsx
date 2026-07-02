@@ -42,6 +42,7 @@ import {
   ListChecks,
 } from '@/lib/icons'
 import type { ActivityUiResourceType } from '@/lib/activity-resource-path'
+import { useT } from '@/lib/i18n/translate'
 
 type ActionType =
   | 'create'
@@ -125,6 +126,7 @@ function ActivityResourcePrimary({
   resourceId: string | null | undefined
   resourceLabel: string
 }) {
+  const t = useT()
   const primary = resourceId?.trim() || resourceLabel.trim() || '-'
   return (
     <div className="flex min-w-0 items-center gap-2.5">
@@ -136,7 +138,7 @@ function ActivityResourcePrimary({
           {primary}
         </p>
         <p className="text-[11px] capitalize text-muted-foreground">
-          {resourceType}
+          {t(resourceType)}
         </p>
       </div>
     </div>
@@ -229,6 +231,7 @@ export function ActivityLogDrawer({
   event,
   display,
 }: ActivityLogDrawerProps) {
+  const t = useT()
   const handleCopyActivityPermalink = useCallback(() => {
     const id = event?.$id
     if (!id) return
@@ -236,13 +239,13 @@ export function ActivityLogDrawer({
     url.searchParams.set('event', id)
     void navigator.clipboard.writeText(url.toString()).then(
       () => {
-        toast.success('Link to this activity copied')
+        toast.success(t('Link to this activity copied'))
       },
       () => {
-        toast.error('Could not copy link')
+        toast.error(t('Could not copy link'))
       },
     )
-  }, [event?.$id])
+  }, [event?.$id, t])
 
   if (!event || !display) return null
 
@@ -294,14 +297,14 @@ export function ActivityLogDrawer({
     ? `${event.countryName} flag`
     : countryCode
       ? `${countryCode.toUpperCase()} flag`
-      : 'Location unknown'
+      : t('Location unknown')
 
   return (
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Activity log"
-      description={`Details for activity ${event.$id}`}
+      title={t('Activity log')}
+      description={`${t('Details for activity')} ${event.$id}`}
       maxWidth="sm:max-w-xl"
       side="right"
       headerActions={
@@ -316,10 +319,12 @@ export function ActivityLogDrawer({
                 onClick={handleCopyActivityPermalink}
               >
                 <Link2 className="h-4 w-4" />
-                <span className="sr-only">Copy link to this activity</span>
+                <span className="sr-only">{t('Copy link to this activity')}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Copy link to this activity</TooltipContent>
+            <TooltipContent side="bottom">
+              {t('Copy link to this activity')}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       }
@@ -343,7 +348,7 @@ export function ActivityLogDrawer({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[16px] font-semibold tracking-tight text-foreground">
-                        {actionLabels[action]}
+                        {t(actionLabels[action])}
                       </span>
                       <span className="rounded-md border border-border bg-background/80 px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
                         {event.event}
@@ -363,7 +368,7 @@ export function ActivityLogDrawer({
                           badge.tone,
                         )}
                       >
-                        {badge.label}
+                        {t(badge.label)}
                       </span>
                       <span className="text-[12px] text-muted-foreground">
                         <DateTooltip
@@ -377,16 +382,16 @@ export function ActivityLogDrawer({
                 </div>
               </div>
 
-              <DetailSection title="Actor">
+              <DetailSection title={t('Actor')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label="Name">
+                  <DetailField label={t('Name')}>
                     <div className="flex items-center gap-3">
                       <UserTypeAvatar
                         actorType={event.actorType}
                         actorName={
                           event.actorName?.trim() ||
                           event.actorEmail?.trim() ||
-                          'Unknown'
+                          t('Unknown')
                         }
                       />
                       <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
@@ -394,7 +399,9 @@ export function ActivityLogDrawer({
                       </p>
                     </div>
                   </DetailField>
-                  <DetailField label={hasHumanEmail(event.actorType) ? 'Email' : 'Actor ID'}>
+                  <DetailField
+                    label={hasHumanEmail(event.actorType) ? t('Email') : t('Actor ID')}
+                  >
                     <p
                       className={cn(
                         'truncate text-[13px] text-muted-foreground',
@@ -404,7 +411,7 @@ export function ActivityLogDrawer({
                       {secondaryLine}
                     </p>
                   </DetailField>
-                  <DetailField label="Actor type">
+                  <DetailField label={t('Actor type')}>
                     <span
                       className={cn(
                         'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
@@ -414,7 +421,7 @@ export function ActivityLogDrawer({
                       {formatValue(event.actorType)}
                     </span>
                   </DetailField>
-                  <DetailField label="Actor ID">
+                  <DetailField label={t('Actor ID')}>
                     {event.actorId?.trim() ? (
                       <CopyableId id={event.actorId} size="xs" maxWidth={220} />
                     ) : (
@@ -426,9 +433,9 @@ export function ActivityLogDrawer({
                 </div>
               </DetailSection>
 
-              <DetailSection title="Resource">
+              <DetailSection title={t('Resource')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label="Resource" className="sm:col-span-2">
+                  <DetailField label={t('Resource')} className="sm:col-span-2">
                     <ActivityResourcePrimary
                       resourceType={resourceType}
                       resourceId={event.resourceId}
@@ -437,7 +444,7 @@ export function ActivityLogDrawer({
                   </DetailField>
                   {event.resourceType?.trim() ? (
                     <DetailField
-                      label="Resource type (API)"
+                      label={t('Resource type (API)')}
                       className="sm:col-span-2"
                     >
                       <p className="font-mono text-[12px] text-muted-foreground">
@@ -445,12 +452,12 @@ export function ActivityLogDrawer({
                       </p>
                     </DetailField>
                   ) : null}
-                  <DetailField label="Resource path" className="sm:col-span-2">
+                  <DetailField label={t('Resource path')} className="sm:col-span-2">
                     <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
                       {formatValue(event.resource)}
                     </p>
                   </DetailField>
-                  <DetailField label="Resource parent" className="sm:col-span-2">
+                  <DetailField label={t('Resource parent')} className="sm:col-span-2">
                     <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
                       {formatValue(event.resourceParent)}
                     </p>
@@ -458,9 +465,9 @@ export function ActivityLogDrawer({
                 </div>
               </DetailSection>
 
-              <DetailSection title="Request context">
+              <DetailSection title={t('Request context')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label="IP address">
+                  <DetailField label={t('IP address')}>
                     {event.ip?.trim() ? (
                       <CopyableId
                         id={event.ip.trim()}
@@ -476,7 +483,7 @@ export function ActivityLogDrawer({
                       <p className="font-mono text-[12px] text-foreground">-</p>
                     )}
                   </DetailField>
-                  <DetailField label="Hostname">
+                  <DetailField label={t('Hostname')}>
                     <div className="flex items-center gap-2">
                       <HostnameFaviconIcon hostname={event.hostname} size="md" />
                       <p className="min-w-0 break-all font-mono text-[12px] text-muted-foreground">
@@ -484,7 +491,7 @@ export function ActivityLogDrawer({
                       </p>
                     </div>
                   </DetailField>
-                  <DetailField label="User agent" className="sm:col-span-2">
+                  <DetailField label={t('User agent')} className="sm:col-span-2">
                     <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
                       {formatValue(event.userAgent)}
                     </p>
@@ -492,9 +499,9 @@ export function ActivityLogDrawer({
                 </div>
               </DetailSection>
 
-              <DetailSection title="Client & device">
+              <DetailSection title={t('Client & device')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label="Client">
+                  <DetailField label={t('Client')}>
                     <div className="flex items-start gap-2">
                       <ActivityBrowserIcon code={event.clientCode} />
                       <div className="min-w-0">
@@ -511,22 +518,22 @@ export function ActivityLogDrawer({
                       </div>
                     </div>
                   </DetailField>
-                  <DetailField label="Engine">
+                  <DetailField label={t('Engine')}>
                     <p className="font-mono text-[12px] text-muted-foreground">
                       {[event.clientEngine, event.clientEngineVersion]
                         .filter((s) => s?.trim())
                         .join(' ') || '-'}
                     </p>
                   </DetailField>
-                  <DetailField label="Operating system">
+                  <DetailField label={t('Operating system')}>
                     <p className="text-[13px] text-foreground">{osSummary || '-'}</p>
                   </DetailField>
-                  <DetailField label="Device">
+                  <DetailField label={t('Device')}>
                     <p className="text-[13px] text-foreground">
                       {deviceSummary || '-'}
                     </p>
                   </DetailField>
-                  <DetailField label="Location" className="sm:col-span-2">
+                  <DetailField label={t('Location')} className="sm:col-span-2">
                     <div className="flex items-start gap-2.5">
                       {flagUrl ? (
                         <div
@@ -555,21 +562,21 @@ export function ActivityLogDrawer({
                 </div>
               </DetailSection>
 
-              <DetailSection title="Scope">
+              <DetailSection title={t('Scope')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label="Project ID">
+                  <DetailField label={t('Project ID')}>
                     <CopyableId id={event.projectId} size="xs" maxWidth={220} />
                   </DetailField>
-                  <DetailField label="Team ID">
+                  <DetailField label={t('Team ID')}>
                     <CopyableId id={event.teamId} size="xs" maxWidth={220} />
                   </DetailField>
-                  <DetailField label="Event ID" className="sm:col-span-2">
+                  <DetailField label={t('Event ID')} className="sm:col-span-2">
                     <CopyableId id={event.$id} size="xs" maxWidth={280} />
                   </DetailField>
                 </div>
               </DetailSection>
 
-              <DetailSection title="Raw payload" bodyClassName="p-0">
+              <DetailSection title={t('Raw payload')} bodyClassName="p-0">
                 <CodeBlock
                   code={rawJson}
                   language="json"

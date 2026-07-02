@@ -1,6 +1,7 @@
 import type { Models } from '@appwrite.io/console'
 import { ScrollText } from 'lucide-react'
 import { formatDateTime } from '@/lib/date-utils'
+import { useT } from '@/lib/i18n/translate'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   Table,
@@ -20,12 +21,13 @@ export function MessagingLogsTable({
   logs,
   emptyLabel = 'No log entries.',
 }: MessagingLogsTableProps) {
+  const t = useT()
   if (!logs.length) {
     return (
       <EmptyState
         icon={ScrollText}
-        title="No log entries"
-        description={emptyLabel}
+        title={t('No log entries')}
+        description={t(emptyLabel)}
         variant="card"
         iconSize="md"
       />
@@ -38,13 +40,13 @@ export function MessagingLogsTable({
         <TableHeader>
           <TableRow className="hover:bg-transparent border-b border-border">
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Time
+              {t('Time')}
             </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Event
+              {t('Event')}
             </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Actor
+              {t('Actor')}
             </TableHead>
           </TableRow>
         </TableHeader>

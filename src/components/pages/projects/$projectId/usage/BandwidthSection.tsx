@@ -28,6 +28,7 @@ import {
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
+import { useT } from '@/lib/i18n/translate'
 import {
   formatBandwidthTotal,
   formatBandwidthValue,
@@ -107,21 +108,22 @@ function UsageBandwidthChartArea({ children }: { children: ReactNode }) {
 }
 
 function UsageBandwidthChartError({ onRetry }: { onRetry?: () => void }) {
+  const t = useT()
   return (
     <UsageBandwidthChartArea>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
         <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
         <div className="max-w-sm">
           <p className="text-[13px] font-medium text-foreground">
-            {OVERVIEW_BANDWIDTH_ERROR.title}
+            {t(OVERVIEW_BANDWIDTH_ERROR.title)}
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            {OVERVIEW_BANDWIDTH_ERROR.message}
+            {t(OVERVIEW_BANDWIDTH_ERROR.message)}
           </p>
         </div>
         {onRetry ? (
           <Button variant="outline" size="sm" onClick={onRetry}>
-            Try again
+            {t('Try again')}
           </Button>
         ) : null}
       </div>
@@ -146,6 +148,7 @@ function BandwidthChartCard({
   isError,
   onRetry,
 }: BandwidthChartCardProps) {
+  const t = useT()
   const { dateRange, chartInterval } = useUsageFilters()
   const chartData = useMemo(
     () =>
@@ -187,7 +190,7 @@ function BandwidthChartCard({
       <div className="shrink-0 flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <h3 className="text-[14px] font-medium text-foreground">
-            Bandwidth over time
+            {t('Bandwidth over time')}
           </h3>
 
           <div className={usageBandwidthMetricHeaderClass}>
@@ -207,14 +210,14 @@ function BandwidthChartCard({
                       changePercent === 0 && 'text-muted-foreground',
                     )}
                   >
-                    {changeLabel} vs previous period
+                    {changeLabel} {t('vs previous period')}
                   </span>
                 ) : !isLoading ? (
                   <span
                     className="invisible text-[12px] font-medium tabular-nums"
                     aria-hidden
                   >
-                    0% vs previous period
+                    0% {t('vs previous period')}
                   </span>
                 ) : null}
               </>
@@ -229,14 +232,14 @@ function BandwidthChartCard({
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: 'var(--chart-2)' }}
               />
-              <span className="text-[11px] text-muted-foreground">Inbound</span>
+              <span className="text-[11px] text-muted-foreground">{t('Inbound')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: 'var(--chart-brand)' }}
               />
-              <span className="text-[11px] text-muted-foreground">Outbound</span>
+              <span className="text-[11px] text-muted-foreground">{t('Outbound')}</span>
             </div>
           </div>
         ) : null}
@@ -250,7 +253,7 @@ function BandwidthChartCard({
         ) : chartData.length === 0 ? (
           <UsageBandwidthChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
-              No data for this date range
+              {t('No data for this date range')}
             </div>
           </UsageBandwidthChartArea>
         ) : (
@@ -322,19 +325,19 @@ function BandwidthChartCard({
                             <p className="text-[13px] font-medium text-foreground">
                               {formatBandwidthValue(data.inbound)}{' '}
                               <span className="font-normal text-muted-foreground">
-                                inbound
+                                {t('inbound')}
                               </span>
                             </p>
                             <p className="text-[13px] font-medium text-foreground">
                               {formatBandwidthValue(data.outbound)}{' '}
                               <span className="font-normal text-muted-foreground">
-                                outbound
+                                {t('outbound')}
                               </span>
                             </p>
                             <p className="border-t border-border pt-1 text-[13px] font-medium text-foreground">
                               {formatBandwidthValue(data.inbound + data.outbound)}{' '}
                               <span className="font-normal text-muted-foreground">
-                                total
+                                {t('total')}
                               </span>
                             </p>
                           </div>

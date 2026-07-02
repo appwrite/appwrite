@@ -67,6 +67,7 @@ import {
   X,
 } from 'lucide-react'
 import { copyToClipboard } from '@/lib/utils/context-menu'
+import { useT } from '@/lib/i18n/translate'
 
 type OAuth2ProviderRow = Models.ConsoleOAuth2Provider
 
@@ -116,6 +117,7 @@ function AppleP8KeyField({
   disabled,
   hint,
 }: AppleP8KeyFieldProps) {
+  const t = useT()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadError, setUploadError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -134,24 +136,26 @@ function AppleP8KeyField({
   const processFile = async (file: File) => {
     setUploadError('')
     if (!file.name.toLowerCase().endsWith('.p8')) {
-      setUploadError('Select a .p8 file downloaded from Apple Developer.')
+      setUploadError(t('Select a .p8 file downloaded from Apple Developer.'))
       return
     }
     if (file.size > APPLE_P8_MAX_FILE_BYTES) {
-      setUploadError('File is too large. Private key files are typically under 4 KB.')
+      setUploadError(
+        t('File is too large. Private key files are typically under 4 KB.'),
+      )
       return
     }
     try {
       const text = (await file.text()).trim()
       if (!text.includes('BEGIN PRIVATE KEY')) {
-        setUploadError('File does not contain a valid PEM private key.')
+        setUploadError(t('File does not contain a valid PEM private key.'))
         return
       }
       onChange(text)
       setUploadedFileName(file.name)
       setActiveTab('upload')
     } catch {
-      setUploadError('Failed to read file. Please try again.')
+      setUploadError(t('Failed to read file. Please try again.'))
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
@@ -177,9 +181,15 @@ function AppleP8KeyField({
       <Label htmlFor={`oauth2-${param.$id}`} className="text-[12px] font-medium">
         {param.name}
         {showOptional ? (
-          <span className="font-normal text-muted-foreground"> (optional)</span>
+          <span className="font-normal text-muted-foreground">
+            {' '}
+            {t('(optional)')}
+          </span>
         ) : showRequired ? (
-          <span className="font-normal text-muted-foreground"> (required)</span>
+          <span className="font-normal text-muted-foreground">
+            {' '}
+            {t('(required)')}
+          </span>
         ) : null}
       </Label>
 
@@ -190,10 +200,10 @@ function AppleP8KeyField({
       >
         <TabsList className="grid h-9 w-full grid-cols-2">
           <TabsTrigger value="upload" className="text-[13px]" disabled={disabled}>
-            Upload file
+            {t('Upload file')}
           </TabsTrigger>
           <TabsTrigger value="paste" className="text-[13px]" disabled={disabled}>
-            Paste key
+            {t('Paste key')}
           </TabsTrigger>
         </TabsList>
 
@@ -223,7 +233,9 @@ function AppleP8KeyField({
                     {uploadedFileName}
                   </p>
                   <p className="text-[12px] text-muted-foreground">
-                    Private key loaded. Upload another file or paste to replace.
+                    {t(
+                      'Private key loaded. Upload another file or paste to replace.',
+                    )}
                   </p>
                 </div>
                 {!disabled ? (
@@ -233,7 +245,7 @@ function AppleP8KeyField({
                     size="sm"
                     className="h-8 w-8 shrink-0 p-0 text-muted-foreground"
                     onClick={clearKey}
-                    aria-label="Remove private key"
+                    aria-label={t('Remove private key')}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -247,7 +259,7 @@ function AppleP8KeyField({
                   className="mt-3 h-9 text-[13px]"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Replace file
+                  {t('Replace file')}
                 </Button>
               ) : null}
             </div>
@@ -271,11 +283,11 @@ function AppleP8KeyField({
               <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
               <p className="mt-3 text-[13px] font-medium text-foreground">
                 {hasContent
-                  ? 'Upload a new .p8 file to replace the current key'
-                  : 'Drop your AuthKey .p8 file here'}
+                  ? t('Upload a new .p8 file to replace the current key')
+                  : t('Drop your AuthKey .p8 file here')}
               </p>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Download from Apple Developer → Keys → Download
+                {t('Download from Apple Developer → Keys → Download')}
               </p>
               {!disabled ? (
                 <Button
@@ -285,13 +297,14 @@ function AppleP8KeyField({
                   className="mt-4 h-9 text-[13px]"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Choose .p8 file
+                  {t('Choose .p8 file')}
                 </Button>
               ) : null}
               {hasContent && !uploadedFileName ? (
                 <p className="mt-3 text-[12px] text-emerald-600 dark:text-emerald-400">
-                  A private key is configured. Upload a file or use Paste key to
-                  replace it.
+                  {t(
+                    'A private key is configured. Upload a file or use Paste key to replace it.',
+                  )}
                 </p>
               ) : null}
             </div>
@@ -325,7 +338,7 @@ function AppleP8KeyField({
                 className="h-8 text-[12px] text-muted-foreground"
                 onClick={clearKey}
               >
-                Clear key
+                {t('Clear key')}
               </Button>
             </div>
           ) : null}
@@ -353,6 +366,7 @@ function OAuth2ParameterField({
   fieldsDisabled,
   hintOverride,
 }: OAuth2ParameterFieldProps) {
+  const t = useT()
   const isP8 = param.$id === 'p8File'
   const secretish = isOAuth2SecretParameter(param.$id)
   const Control = isP8 ? Textarea : Input
@@ -393,9 +407,15 @@ function OAuth2ParameterField({
       <Label htmlFor={`oauth2-${param.$id}`} className="text-[12px] font-medium">
         {param.name}
         {showOptional ? (
-          <span className="font-normal text-muted-foreground"> (optional)</span>
+          <span className="font-normal text-muted-foreground">
+            {' '}
+            {t('(optional)')}
+          </span>
         ) : showRequired ? (
-          <span className="font-normal text-muted-foreground"> (required)</span>
+          <span className="font-normal text-muted-foreground">
+            {' '}
+            {t('(required)')}
+          </span>
         ) : null}
       </Label>
       <Control
@@ -440,6 +460,7 @@ function OidcProviderFormFields({
   onAdvancedOpenChange,
   ...fieldProps
 }: OidcProviderFormFieldsProps) {
+  const t = useT()
   const wellKnownParam = parameters.find((p) => p.$id === OIDC_WELL_KNOWN_PARAM_ID)
   const credentialParams = parameters.filter(
     (p) => p.$id !== OIDC_WELL_KNOWN_PARAM_ID && !isOidcManualDiscoveryParam(p.$id),
@@ -466,7 +487,7 @@ function OidcProviderFormFields({
           key={wellKnownParam.$id}
           param={wellKnownParam}
           providerId="oidc"
-          hintOverride={OIDC_WELL_KNOWN_HINT}
+          hintOverride={t(OIDC_WELL_KNOWN_HINT)}
           {...fieldProps}
         />
       ) : null}
@@ -485,13 +506,14 @@ function OidcProviderFormFields({
                   advancedOpen && '-rotate-180',
                 )}
               />
-              Advanced configuration
+              {t('Advanced configuration')}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 pt-1">
             <p className="text-[12px] text-muted-foreground">
-              Set authorization, token, and user info URLs manually only when your
-              provider does not expose a well-known metadata URL.
+              {t(
+                'Set authorization, token, and user info URLs manually only when your provider does not expose a well-known metadata URL.',
+              )}
             </p>
             {advancedParams.map((param) => (
               <OAuth2ParameterField
@@ -515,6 +537,7 @@ function OAuth2RedirectUriCard({
   providerName: string
   redirectUri: string
 }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -530,26 +553,30 @@ function OAuth2RedirectUriCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Redirect URI</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Redirect URI')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Register this callback URL in the {providerName} developer console so
-          OAuth sign-in can return to this project.
+          {t('Register this callback URL in the')} {providerName}{' '}
+          {t('developer console so OAuth sign-in can return to this project.')}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
         <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal ps-4 [list-style-position:outside]">
           <li>
-            Open your {providerName} application in the provider&apos;s
-            developer console.
+            {t('Open your')} {providerName}{' '}
+            {t("application in the provider's developer console.")}
           </li>
           <li>
-            Find the allowed redirect URIs, callback URLs, or equivalent
-            authorized redirect field.
+            {t(
+              'Find the allowed redirect URIs, callback URLs, or equivalent authorized redirect field.',
+            )}
           </li>
           <li>
-            Paste the URI below exactly and save. Mismatched URLs will cause
-            sign-in to fail.
+            {t(
+              'Paste the URI below exactly and save. Mismatched URLs will cause sign-in to fail.',
+            )}
           </li>
         </ol>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -559,7 +586,7 @@ function OAuth2RedirectUriCard({
             readOnly
             disabled
             className="font-mono text-[13px] flex-1 cursor-default opacity-100 disabled:opacity-100"
-            aria-label="Redirect URI"
+            aria-label={t('Redirect URI')}
           />
           <Button
             type="button"
@@ -572,12 +599,12 @@ function OAuth2RedirectUriCard({
             {copied ? (
               <>
                 <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
-                Copied
+                {t('Copied')}
               </>
             ) : (
               <>
                 <Copy className="me-1.5 h-3.5 w-3.5" />
-                Copy
+                {t('Copy')}
               </>
             )}
           </Button>
@@ -614,6 +641,7 @@ export function OAuth2ProvidersSection({
   /** When true, render provider UI without the settings card wrapper. */
   bare?: boolean
 }) {
+  const t = useT()
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const projectEndpoint = useMemo(
     () => getApiEndpoint(projectData?.region),
@@ -662,7 +690,7 @@ export function OAuth2ProvidersSection({
     (providerId: string) => {
       if (!canUpdateProjectOAuth2Provider(providerId)) {
         toast.error(
-          `${getOAuth2ProviderDisplayName(providerId)} is not available on this server.`,
+          `${getOAuth2ProviderDisplayName(providerId)} ${t('is not available on this server.')}`,
         )
         return
       }
@@ -690,7 +718,7 @@ export function OAuth2ProvidersSection({
       setOidcAdvancedOpen(!wellKnownSet && hasManualDiscovery)
       setDrawerOpen(true)
     },
-    [catalogEntries, resolvedProviderList],
+    [catalogEntries, resolvedProviderList, t],
   )
 
   useEffect(() => {
@@ -842,7 +870,7 @@ export function OAuth2ProvidersSection({
       {
         onSuccess: () => {
           toast.success(
-            `${getOAuth2ProviderDisplayName(selectedProviderId)} has been updated`,
+            `${getOAuth2ProviderDisplayName(selectedProviderId)} ${t('has been updated')}`,
           )
           setDrawerOpen(false)
         },
@@ -850,7 +878,7 @@ export function OAuth2ProvidersSection({
           const message =
             error instanceof Error
               ? error.message
-              : 'Failed to update OAuth2 provider'
+              : t('Failed to update OAuth2 provider')
           setProviderError(message)
         },
       },
@@ -903,7 +931,7 @@ export function OAuth2ProvidersSection({
                   : 'bg-muted text-muted-foreground',
               )}
             >
-              {enabled ? 'enabled' : 'disabled'}
+              {enabled ? t('enabled') : t('disabled')}
             </Badge>
           </button>
         )
@@ -914,9 +942,9 @@ export function OAuth2ProvidersSection({
   const providersBody = (
     <>
       <p className="text-[13px] text-muted-foreground mb-4">
-        Enable OAuth 2 providers so users can sign in with external accounts.
-        Open a provider to set credentials, control availability for this
-        project, and copy the redirect URI for its developer console.
+        {t(
+          'Enable OAuth 2 providers so users can sign in with external accounts. Open a provider to set credentials, control availability for this project, and copy the redirect URI for its developer console.',
+        )}
       </p>
 
       <div className="mb-6">
@@ -924,7 +952,7 @@ export function OAuth2ProvidersSection({
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search providers..."
+            placeholder={t('Search providers...')}
             value={providerSearch}
             onChange={(e) => setProviderSearch(e.target.value)}
             className="ps-9 h-9 text-[13px]"
@@ -935,7 +963,7 @@ export function OAuth2ProvidersSection({
       {popularRows.length > 0 && (
         <div className="mb-6">
           <h4 className="text-[13px] font-medium text-foreground mb-3">
-            Popular
+            {t('Popular')}
           </h4>
           {renderProviderGrid(popularRows)}
         </div>
@@ -947,7 +975,7 @@ export function OAuth2ProvidersSection({
             <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
               <span className="font-medium text-foreground/80">
-                All providers
+                {t('All providers')}
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
@@ -959,7 +987,7 @@ export function OAuth2ProvidersSection({
       {filteredEntries.length === 0 && (
         <div className="text-center py-8">
           <p className="text-[13px] text-muted-foreground">
-            No providers match{' '}
+            {t('No providers match')}{' '}
             <span className="font-medium text-foreground">{providerSearch}</span>
           </p>
         </div>
@@ -975,7 +1003,7 @@ export function OAuth2ProvidersSection({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              OAuth2 providers
+              {t('OAuth2 providers')}
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -987,9 +1015,13 @@ export function OAuth2ProvidersSection({
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         title={
-          selectedName ? `${selectedName} OAuth2 settings` : 'OAuth2 settings'
+          selectedName
+            ? `${selectedName} ${t('OAuth2 settings')}`
+            : t('OAuth2 settings')
         }
-        description="Configure OAuth2 provider credentials and redirect URI for this project."
+        description={t(
+          'Configure OAuth2 provider credentials and redirect URI for this project.',
+        )}
         maxWidth="sm:max-w-lg"
         disableAutoFocus
       >
@@ -1001,8 +1033,12 @@ export function OAuth2ProvidersSection({
               <div className="px-6 py-6 space-y-5">
                 <p className="text-[13px] text-muted-foreground">
                   {selectedProviderId === 'oidc'
-                    ? 'Enter the client ID and secret from your OpenID provider, then the well-known metadata URL. Manual endpoint URLs are only needed under Advanced configuration.'
-                    : 'Use the field labels below as they appear in the provider dashboard when entering client credentials.'}
+                    ? t(
+                        'Enter the client ID and secret from your OpenID provider, then the well-known metadata URL. Manual endpoint URLs are only needed under Advanced configuration.',
+                      )
+                    : t(
+                        'Use the field labels below as they appear in the provider dashboard when entering client credentials.',
+                      )}
                 </p>
 
                 <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -1012,12 +1048,12 @@ export function OAuth2ProvidersSection({
                         htmlFor="oauth2-provider-enabled"
                         className="text-[13px] font-semibold text-foreground"
                       >
-                        {formEnabled ? 'Enabled' : 'Disabled'}
+                        {formEnabled ? t('Enabled') : t('Disabled')}
                       </Label>
                       <p className="text-[12px] text-muted-foreground">
                         {formEnabled
-                          ? 'This provider can be used for new sessions'
-                          : 'This provider is turned off for this project'}
+                          ? t('This provider can be used for new sessions')
+                          : t('This provider is turned off for this project')}
                       </p>
                     </div>
                     <Switch
@@ -1085,7 +1121,7 @@ export function OAuth2ProvidersSection({
                 onClick={validateAndSubmit}
                 disabled={updateMutation.isPending || !hasProviderChanges}
               >
-                Update
+                {t('Update')}
               </Button>
               <Button
                 type="button"
@@ -1095,7 +1131,7 @@ export function OAuth2ProvidersSection({
                 onClick={() => setDrawerOpen(false)}
                 disabled={updateMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
             </div>
           </div>

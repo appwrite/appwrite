@@ -8,6 +8,7 @@ import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
@@ -39,6 +40,7 @@ export function ApiKeyDrawer({
   onCopy,
   copiedField,
 }: ApiKeyDrawerProps) {
+  const t = useT()
   const [name, setName] = useState('')
   const [expire, setExpire] = useState('')
   const [scopes, setScopes] = useState<string[]>([])
@@ -115,7 +117,7 @@ export function ApiKeyDrawer({
     if (onCopy) {
       onCopy(secretToShow, copyFieldId)
     } else {
-      toast.success('Copied to clipboard')
+      toast.success(t('Copied to clipboard'))
     }
   }
 
@@ -156,15 +158,15 @@ export function ApiKeyDrawer({
     const newErrors: Record<string, string> = {}
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('Name is required')
     }
 
     if (expire) {
       const expireDate = new Date(expire)
       if (isNaN(expireDate.getTime())) {
-        newErrors.expire = 'Invalid date format'
+        newErrors.expire = t('Invalid date format')
       } else if (expireDate < new Date()) {
-        newErrors.expire = 'Expiration date must be in the future'
+        newErrors.expire = t('Expiration date must be in the future')
       }
     }
 
@@ -210,10 +212,10 @@ export function ApiKeyDrawer({
       onOpenChange={handleOpenChange}
       title={
         showCreatedKey
-          ? 'API key created'
+          ? t('API key created')
           : isEditing
-            ? 'Update API key'
-            : 'Create API key'
+            ? t('Update API key')
+            : t('Create API key')
       }
       maxWidth="sm:max-w-lg"
     >
@@ -227,11 +229,12 @@ export function ApiKeyDrawer({
               {showCreatedKey && secretToShow && (
                 <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
                   <p className="text-[13px] font-medium text-foreground mb-1">
-                    Your new API key
+                    {t('Your new API key')}
                   </p>
                   <p className="text-[12px] text-muted-foreground mb-3">
-                    Copy and store it securely. You can view the full key anytime
-                    from the API keys list.
+                    {t(
+                      'Copy and store it securely. You can view the full key anytime from the API keys list.',
+                    )}
                   </p>
                   <div className="flex gap-2">
                     <textarea
@@ -264,12 +267,12 @@ export function ApiKeyDrawer({
                 <div className="space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="name">
-                      Name <span className="text-destructive">*</span>
+                      {t('Name')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="name"
                       type="text"
-                      placeholder="Enter API key name"
+                      placeholder={t('Enter API key name')}
                       value={name}
                       onChange={(e) => {
                         setName(e.target.value)
@@ -290,13 +293,13 @@ export function ApiKeyDrawer({
                   {isEditing && apiKey && (
                     <div className="space-y-1">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                        Last used
+                        {t('Last used')}
                       </p>
                       <p className="text-[13px] text-foreground">
                         {apiKey.accessedAt?.trim() ? (
                           <DateTooltip date={apiKey.accessedAt} />
                         ) : (
-                          'Never'
+                          t('Never')
                         )}
                       </p>
                     </div>
@@ -305,7 +308,9 @@ export function ApiKeyDrawer({
                   {/* View/copy key in edit mode when secret is available */}
                   {isEditing && (
                     <div className="space-y-2">
-                      <Label className="text-[12px] font-medium">API key</Label>
+                      <Label className="text-[12px] font-medium">
+                        {t('API key')}
+                      </Label>
                       {canCopyKey ? (
                         <div className="flex gap-2">
                           <Input
@@ -324,8 +329,10 @@ export function ApiKeyDrawer({
                             size="icon"
                             className="h-9 w-9 shrink-0"
                             onClick={() => setKeyRevealed((v) => !v)}
-                            title={keyRevealed ? 'Hide key' : 'Show key'}
-                            aria-label={keyRevealed ? 'Hide key' : 'Show key'}
+                            title={keyRevealed ? t('Hide key') : t('Show key')}
+                            aria-label={
+                              keyRevealed ? t('Hide key') : t('Show key')
+                            }
                           >
                             {keyRevealed ? (
                               <EyeOff className="h-4 w-4" />
@@ -339,8 +346,8 @@ export function ApiKeyDrawer({
                             size="icon"
                             className="h-9 w-9 shrink-0"
                             onClick={handleCopyKey}
-                            title="Copy key"
-                            aria-label="Copy key"
+                            title={t('Copy key')}
+                            aria-label={t('Copy key')}
                           >
                             {isCopied ? (
                               <Check className="h-4 w-4 text-emerald-500" />
@@ -351,15 +358,16 @@ export function ApiKeyDrawer({
                         </div>
                       ) : (
                         <p className="text-[12px] text-muted-foreground">
-                          The full key value isn&apos;t shown here. Find this key
-                          in the API keys list to view and copy it.
+                          {t(
+                            "The full key value isn't shown here. Find this key in the API keys list to view and copy it.",
+                          )}
                         </p>
                       )}
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label>Expiration date</Label>
+                    <Label>{t('Expiration date')}</Label>
                     <RadioGroup
                       value={expiryOption}
                       defaultValue="never"
@@ -400,7 +408,7 @@ export function ApiKeyDrawer({
                                 isLoading && 'cursor-not-allowed opacity-50',
                               )}
                             >
-                              {option.label}
+                              {t(option.label)}
                             </Label>
                           </div>
                         )
@@ -438,16 +446,16 @@ export function ApiKeyDrawer({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Scopes</Label>
+                    <Label>{t('Scopes')}</Label>
                     <ScopeEditor
                       value={scopes}
                       onChange={setScopes}
                       disabled={isLoading}
                     />
                     <p className="text-[12px] text-muted-foreground">
-                      Select the scopes this API key will have access to.{' '}
+                      {t('Select the scopes this API key will have access to.')}{' '}
                       <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/api-keys">
-                        Learn more about API key scopes
+                        {t('Learn more about API key scopes')}
                       </DocsRouteLink>
                       .
                     </p>
@@ -460,12 +468,12 @@ export function ApiKeyDrawer({
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             {showCreatedKey ? (
               <Button type="button" onClick={() => handleOpenChange(false)}>
-                Done
+                {t('Done')}
               </Button>
             ) : (
               <>
                 <Button type="submit" disabled={isLoading}>
-                  {isEditing ? 'Update API key' : 'Create API key'}
+                  {isEditing ? t('Update API key') : t('Create API key')}
                 </Button>
                 <Button
                   type="button"
@@ -473,7 +481,7 @@ export function ApiKeyDrawer({
                   onClick={() => handleOpenChange(false)}
                   disabled={isLoading}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               </>
             )}

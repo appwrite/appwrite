@@ -23,6 +23,7 @@ import {
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 export function AddDomainWizard({
@@ -30,6 +31,7 @@ export function AddDomainWizard({
 }: {
   initialDomain?: string
 } = {}) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -55,11 +57,11 @@ export function AddDomainWizard({
     const d = domain.trim().toLowerCase()
     setError('')
     if (!d) {
-      setError('Required')
+      setError(t('Required'))
       return
     }
     if (!isValidDomain(d)) {
-      setError('Invalid format')
+      setError(t('Invalid format'))
       return
     }
 
@@ -70,7 +72,7 @@ export function AddDomainWizard({
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error('Failed to register domain')
+        toast.error(t('Failed to register domain'))
         return
       }
     }
@@ -81,7 +83,7 @@ export function AddDomainWizard({
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
         })
-        toast.success('Domain verified successfully')
+        toast.success(t('Domain verified successfully'))
         navigate({
           to: '/projects/$projectId/settings/domains',
           params: { projectId: projectId! },
@@ -90,7 +92,7 @@ export function AddDomainWizard({
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
         })
-        toast.success('Verification in progress')
+        toast.success(t('Verification in progress'))
         navigate({
           to: '/projects/$projectId/settings/domains',
           params: { projectId: projectId! },
@@ -99,7 +101,7 @@ export function AddDomainWizard({
         setRule(created)
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add domain')
+      toast.error(err instanceof Error ? err.message : t('Failed to add domain'))
     }
   }
 
@@ -112,7 +114,7 @@ export function AddDomainWizard({
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
         })
-        toast.success('Domain verified successfully')
+        toast.success(t('Domain verified successfully'))
         navigate({
           to: '/projects/$projectId/settings/domains',
           params: { projectId: projectId! },
@@ -121,19 +123,19 @@ export function AddDomainWizard({
         updated.status === 'created' ||
         updated.status === 'unverified'
       ) {
-        setVerificationError('Verification failed. Check DNS and retry.')
+        setVerificationError(t('Verification failed. Check DNS and retry.'))
       } else {
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
         })
-        toast.success('Verification in progress')
+        toast.success(t('Verification in progress'))
         navigate({
           to: '/projects/$projectId/settings/domains',
           params: { projectId: projectId! },
         })
       }
     } catch {
-      setVerificationError('Failed to verify domain')
+      setVerificationError(t('Failed to verify domain'))
     }
   }
 
@@ -144,7 +146,7 @@ export function AddDomainWizard({
       await deleteMutation.mutateAsync(rule.$id)
       setRule(null)
     } catch {
-      toast.error('Failed to remove domain')
+      toast.error(t('Failed to remove domain'))
     }
   }
 
@@ -152,7 +154,7 @@ export function AddDomainWizard({
   if (rule) {
     return (
       <WizardLayout
-        title="Verify domain"
+        title={t('Verify domain')}
         fallbackPath={fallbackPath}
         fullscreen
         useSidebar={false}
@@ -164,10 +166,10 @@ export function AddDomainWizard({
               onClick={handleChange}
               disabled={isPending}
             >
-              Change
+              {t('Change')}
             </Button>
             <Button onClick={handleVerify} disabled={isPending}>
-              Verify
+              {t('Verify')}
             </Button>
           </div>
         }
@@ -184,7 +186,7 @@ export function AddDomainWizard({
   // Step 1: Configure domain
   return (
     <WizardLayout
-      title="Add API domain"
+      title={t('Add API domain')}
       fallbackPath={fallbackPath}
       fullscreen
       useSidebar={false}
@@ -201,10 +203,10 @@ export function AddDomainWizard({
             }
             disabled={isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !domain.trim()}>
-            Add
+            {t('Add')}
           </Button>
         </div>
       }
@@ -213,13 +215,13 @@ export function AddDomainWizard({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Domain
+              {t('Domain')}
             </h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <Label htmlFor="domain" className="text-[12px] font-medium">
-              Domain name
+              {t('Domain name')}
             </Label>
             <Input
               id="domain"

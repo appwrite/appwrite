@@ -52,8 +52,10 @@ import { BucketSecurity } from './BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
 import { StorageFilePreviewThumb } from '@/components/global/shared/StorageFilePreviewThumb'
+import { useT } from '@/lib/i18n/translate'
 
 export function BucketDetailView() {
+  const t = useT()
   const { projectId, bucketId } = useParams({
     strict: false,
   })
@@ -129,7 +131,7 @@ export function BucketDetailView() {
     const base: Tab[] = [
       {
         id: 'files',
-        label: 'Files',
+        label: t('Files'),
         to: '/projects/$projectId/storage/$bucketId/',
         params: {
           projectId: projectId as string,
@@ -140,7 +142,7 @@ export function BucketDetailView() {
         ? [
             {
               id: 'security' as const,
-              label: 'Security',
+              label: t('Security'),
               to: '/projects/$projectId/storage/$bucketId/security',
               params: {
                 projectId: projectId as string,
@@ -149,7 +151,7 @@ export function BucketDetailView() {
             },
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/storage/$bucketId/settings',
               params: {
                 projectId: projectId as string,
@@ -160,7 +162,7 @@ export function BucketDetailView() {
         : []),
     ]
     return base
-  }, [projectId, bucketId, showSecuritySettings])
+  }, [projectId, bucketId, showSecuritySettings, t])
 
   // Handle file upload - queues in background
   const handleFileUpload = async (data: {
@@ -222,13 +224,15 @@ export function BucketDetailView() {
         queryKey: Dependencies.FILES,
       })
       toast.success(
-        `Successfully deleted ${selectedFiles.size} file${selectedFiles.size > 1 ? 's' : ''}`,
+        selectedFiles.size > 1
+          ? `${t('Successfully deleted')} ${selectedFiles.size} ${t('files')}`
+          : `${t('Successfully deleted')} ${selectedFiles.size} ${t('file')}`,
       )
       setSelectedFiles(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete files')
+      toast.error(getErrorMessage(error) || t('Failed to delete files'))
     },
   })
 
@@ -319,7 +323,7 @@ export function BucketDetailView() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span className="truncate">{bucket?.name || 'Bucket'}</span>
+            <span className="truncate">{bucket?.name || t('Bucket')}</span>
             {bucket?.$id ? (
               <CopyableId id={bucket.$id} size="xs" className="shrink-0" />
             ) : null}
@@ -328,11 +332,11 @@ export function BucketDetailView() {
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'files' ? 'Search files...' : undefined
+          activeTab === 'files' ? t('Search files...') : undefined
         }
         searchValue={activeTab === 'files' ? searchValue : ''}
         onSearchChange={activeTab === 'files' ? handleSearchChange : undefined}
-        createLabel={activeTab === 'files' ? 'Create file' : undefined}
+        createLabel={activeTab === 'files' ? t('Create file') : undefined}
         onCreate={
           activeTab === 'files'
             ? () => setUploadFileDialogOpen(true)
@@ -351,20 +355,21 @@ export function BucketDetailView() {
                 >
                   <AlertCircle className="h-4 w-4 text-amber-500" />
                   <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                    Bucket is disabled
+                    {t('Bucket is disabled')}
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                     <span className="inline">
-                      This bucket is disabled and not accessible to end users
-                      through the API. Console actions remain available.{' '}
+                      {t(
+                        'This bucket is disabled and not accessible to end users through the API. Console actions remain available.',
+                      )}{' '}
                       <Link
                         to="/projects/$projectId/storage/$bucketId/settings"
                         params={{ projectId: projectId!, bucketId: bucketId! }}
                         className="font-medium underline hover:no-underline inline"
                       >
-                        Enable it in the Settings tab
+                        {t('Enable it in the Settings tab')}
                       </Link>{' '}
-                      to make it available to end users.
+                      {t('to make it available to end users.')}
                     </span>
                   </AlertDescription>
                 </Alert>
@@ -381,7 +386,7 @@ export function BucketDetailView() {
               {filesLoading ? (
                 <div className="rounded-lg border border-border bg-card py-12 text-center">
                   <p className="text-[13px] text-muted-foreground">
-                    Loading files...
+                    {t('Loading files...')}
                   </p>
                 </div>
               ) : viewMode === 'list' ? (
@@ -404,19 +409,19 @@ export function BucketDetailView() {
                               />
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]">
-                              Preview
+                              {t('Preview')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              File
+                              {t('File')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Type
+                              {t('Type')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                              Size
+                              {t('Size')}
                             </TableHead>
                             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                              Created
+                              {t('Created')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -517,7 +522,7 @@ export function BucketDetailView() {
                                         variant="secondary"
                                         className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
                                       >
-                                        Pending
+                                        {t('Pending')}
                                       </Badge>
                                     </div>
                                   ) : (
@@ -612,14 +617,14 @@ export function BucketDetailView() {
                       pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
-                      itemLabel="files"
+                      itemLabel={t('files')}
                     />
                   </>
                 ) : (
                   <EmptyState
                     icon={File}
-                    title="No files found"
-                    description="Upload your first file to this bucket"
+                    title={t('No files found')}
+                    description={t('Upload your first file to this bucket')}
                     isEmpty={!searchValue}
                     hasFilters={!!searchValue}
                     variant="card"
@@ -684,7 +689,7 @@ export function BucketDetailView() {
                                       variant="secondary"
                                       className="text-[10px]"
                                     >
-                                      Pending
+                                      {t('Pending')}
                                     </Badge>
                                   </>
                                 )}
@@ -700,13 +705,13 @@ export function BucketDetailView() {
                         icon={File}
                         title={
                           searchValue
-                            ? `Sorry, we couldn't find '${searchValue}'`
-                            : 'No files found'
+                            ? `${t("Sorry, we couldn't find")} '${searchValue}'`
+                            : t('No files found')
                         }
                         description={
                           searchValue
-                            ? 'Try adjusting your search'
-                            : 'Create your first file to start storing files'
+                            ? t('Try adjusting your search')
+                            : t('Create your first file to start storing files')
                         }
                         isEmpty={!searchValue}
                         hasFilters={!!searchValue}
@@ -719,7 +724,7 @@ export function BucketDetailView() {
                             size="sm"
                             onClick={() => setSearchValue('')}
                           >
-                            Clear search
+                            {t('Clear search')}
                           </Button>
                         </div>
                       )}
@@ -733,7 +738,7 @@ export function BucketDetailView() {
                       pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
-                      itemLabel="files"
+                      itemLabel={t('files')}
                     />
                   )}
 
@@ -742,8 +747,10 @@ export function BucketDetailView() {
                     <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                       <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                         <Badge variant="secondary" className="h-6 px-2.5">
-                          {selectedFiles.size} file
-                          {selectedFiles.size > 1 ? 's' : ''} selected
+                          {selectedFiles.size}{' '}
+                          {selectedFiles.size > 1
+                            ? t('files selected')
+                            : t('file selected')}
                         </Badge>
                         <div className="flex items-center gap-2">
                           <Button
@@ -752,7 +759,7 @@ export function BucketDetailView() {
                             onClick={() => setSelectedFiles(new Set())}
                             className="h-8 text-xs"
                           >
-                            Cancel
+                            {t('Cancel')}
                           </Button>
                           <Button
                             variant="destructive"
@@ -761,7 +768,7 @@ export function BucketDetailView() {
                             disabled={bulkDeleteMutation.isPending}
                             className="h-8 gap-2"
                           >
-                            Delete
+                            {t('Delete')}
                           </Button>
                         </div>
                       </div>
@@ -775,11 +782,12 @@ export function BucketDetailView() {
                   >
                     <DialogContent className="sm:max-w-md p-0">
                       <DialogHeader className="px-6 pt-6 text-start">
-                        <DialogTitle>Delete Files</DialogTitle>
+                        <DialogTitle>{t('Delete Files')}</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to delete {selectedFiles.size}{' '}
-                          file{selectedFiles.size > 1 ? 's' : ''}? This action
-                          cannot be undone.
+                          {t('Are you sure you want to delete')}{' '}
+                          {selectedFiles.size}{' '}
+                          {selectedFiles.size > 1 ? t('files') : t('file')}?{' '}
+                          {t('This action cannot be undone.')}
                         </DialogDescription>
                       </DialogHeader>
 
@@ -789,14 +797,14 @@ export function BucketDetailView() {
                           onClick={() => setDeleteDialogOpen(false)}
                           disabled={bulkDeleteMutation.isPending}
                         >
-                          Cancel
+                          {t('Cancel')}
                         </Button>
                         <Button
                           variant="destructive"
                           onClick={confirmBulkDelete}
                           disabled={bulkDeleteMutation.isPending}
                         >
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </div>
                     </DialogContent>

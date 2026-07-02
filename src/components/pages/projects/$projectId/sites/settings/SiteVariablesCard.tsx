@@ -13,6 +13,7 @@ import {
   useProjectVariables,
 } from '@/lib/react-query/hooks'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteVariablesCardProps {
   projectId: string | null | undefined
@@ -23,6 +24,7 @@ export function SiteVariablesCard({
   projectId,
   siteId,
 }: SiteVariablesCardProps) {
+  const t = useT()
   const {
     variables: siteVariables,
     total,
@@ -41,18 +43,20 @@ export function SiteVariablesCard({
 
   return (
     <VariablesSettingsCard
-      title="Environment variables"
-      description="Configure environment variables for your site deployments. Site-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this site during deployment."
+      title={t('Environment variables')}
+      description={t(
+        'Configure environment variables for your site deployments. Site-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this site during deployment.',
+      )}
       variables={siteVariables}
       total={total}
       isLoading={isLoading}
       createMutation={createMutation}
       updateMutation={updateMutation}
       deleteMutation={deleteMutation}
-      scopeLabel="Site"
+      scopeLabel={t('Site')}
       isVariableEditable={(v) => !globalVariableKeys.has(v.key)}
       getVariableBadge={(v) =>
-        globalVariableKeys.has(v.key) ? 'Global' : undefined
+        globalVariableKeys.has(v.key) ? t('Global') : undefined
       }
       projectVariableKeysForWarning={globalVariableKeys}
     />

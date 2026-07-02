@@ -22,11 +22,13 @@ import { formatDateTime } from '@/lib/date-utils'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
 
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 export function ProviderDetailView() {
+  const t = useT()
   const { projectId, providerId } = useParams({
     strict: false,
   })
@@ -69,11 +71,11 @@ export function ProviderDetailView() {
       await queryClient.refetchQueries({
         queryKey: ['provider', 'project', projectId, providerId],
       })
-      toast.success('Provider status updated successfully')
+      toast.success(t('Provider status updated successfully'))
       setEnabled(enabledValue)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update provider status')
+      toast.error(getErrorMessage(error) || t('Failed to update provider status'))
     },
   })
 
@@ -94,10 +96,10 @@ export function ProviderDetailView() {
       queryClient.invalidateQueries({
         queryKey: ['provider', 'project', projectId, providerId],
       })
-      toast.success('Provider name updated successfully')
+      toast.success(t('Provider name updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update provider name')
+      toast.error(getErrorMessage(error) || t('Failed to update provider name'))
     },
   })
 
@@ -171,11 +173,11 @@ export function ProviderDetailView() {
       queryClient.invalidateQueries({
         queryKey: ['provider', 'project', projectId, providerId],
       })
-      toast.success('Provider settings updated successfully')
+      toast.success(t('Provider settings updated successfully'))
     },
     onError: (error: Error) => {
       toast.error(
-        getErrorMessage(error) || 'Failed to update provider settings',
+        getErrorMessage(error) || t('Failed to update provider settings'),
       )
     },
   })
@@ -193,14 +195,14 @@ export function ProviderDetailView() {
       queryClient.invalidateQueries({
         queryKey: ['providers', 'project', projectId],
       })
-      toast.success('Provider deleted successfully')
+      toast.success(t('Provider deleted successfully'))
       navigate({
         to: '/projects/$projectId/messaging/providers',
         params: { projectId: projectId! },
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete provider')
+      toast.error(getErrorMessage(error) || t('Failed to delete provider'))
     },
   })
 
@@ -216,7 +218,7 @@ export function ProviderDetailView() {
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading provider...
+            {t('Loading provider...')}
           </p>
         </div>
       </div>
@@ -228,7 +230,7 @@ export function ProviderDetailView() {
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Provider not found
+            {t('Provider not found')}
           </p>
         </div>
       </div>
@@ -297,20 +299,21 @@ export function ProviderDetailView() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Name
+                {t('Name')}
               </h3>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
               <p className="text-[13px] text-muted-foreground">
-                Update your provider's display name. This will be visible to all
-                organization members.
+                {t(
+                  "Update your provider's display name. This will be visible to all organization members.",
+                )}
               </p>
               <Input
                 id="provider-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Provider name"
+                placeholder={t('Provider name')}
                 className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
               />
             </div>
@@ -325,7 +328,7 @@ export function ProviderDetailView() {
                 }
                 onClick={() => updateNameMutation.mutate(name)}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -351,26 +354,26 @@ export function ProviderDetailView() {
                     htmlFor="toggle"
                     className="text-[13px] text-foreground"
                   >
-                    {enabled ? 'Enabled' : 'Disabled'}
+                    {enabled ? t('Enabled') : t('Disabled')}
                   </Label>
                 </div>
               </div>
               <div className="mt-4 space-y-1">
                 <p className="text-[13px] text-muted-foreground">
-                  Provider ID:{' '}
+                  {t('Provider ID:')}{' '}
                   <span className="ms-1.5">
                     <CopyableId id={provider.$id} size="sm" />
                   </span>
                 </p>
                 <p className="text-[13px] text-muted-foreground">
-                  Type:{' '}
+                  {t('Type:')}{' '}
                   <span className="text-foreground capitalize">
                     {provider.type}
                   </span>
                 </p>
                 {provider.$createdAt && (
                   <p className="text-[13px] text-muted-foreground">
-                    Created:{' '}
+                    {t('Created:')}{' '}
                     <DateTooltip
                       date={provider.$createdAt}
                       showFormattedDate
@@ -379,7 +382,7 @@ export function ProviderDetailView() {
                   </p>
                 )}
                 <p className="text-[13px] text-muted-foreground">
-                  Last updated:{' '}
+                  {t('Last updated:')}{' '}
                   <DateTooltip
                     date={provider.$updatedAt || provider.$createdAt}
                     showFormattedDate
@@ -401,7 +404,7 @@ export function ProviderDetailView() {
                   }
                 }}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -410,7 +413,7 @@ export function ProviderDetailView() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Settings
+                {t('Settings')}
               </h3>
             </div>
             <div className="border-t border-border" />
@@ -423,7 +426,7 @@ export function ProviderDetailView() {
                         htmlFor="from-email"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        From Email
+                        {t('From Email')}
                       </Label>
                       <Input
                         id="from-email"
@@ -437,13 +440,13 @@ export function ProviderDetailView() {
                         htmlFor="from-name"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        From Name
+                        {t('From Name')}
                       </Label>
                       <Input
                         id="from-name"
                         defaultValue={providerSettings.fromName}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        placeholder="Sender Name"
+                        placeholder={t('Sender Name')}
                       />
                     </div>
                     <div>
@@ -451,7 +454,7 @@ export function ProviderDetailView() {
                         htmlFor="reply-to-email"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Reply To Email
+                        {t('Reply To Email')}
                       </Label>
                       <Input
                         id="reply-to-email"
@@ -465,13 +468,13 @@ export function ProviderDetailView() {
                         htmlFor="reply-to-name"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Reply To Name
+                        {t('Reply To Name')}
                       </Label>
                       <Input
                         id="reply-to-name"
                         defaultValue={providerSettings.replyToName}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        placeholder="Reply Name"
+                        placeholder={t('Reply Name')}
                       />
                     </div>
                   </>
@@ -482,7 +485,7 @@ export function ProviderDetailView() {
                       htmlFor="service-account-json"
                       className="text-[13px] font-medium text-foreground"
                     >
-                      Service Account JSON
+                      {t('Service Account JSON')}
                     </Label>
                     <Textarea
                       id="service-account-json"
@@ -500,13 +503,13 @@ export function ProviderDetailView() {
                         htmlFor="auth-key"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Auth Key
+                        {t('Auth Key')}
                       </Label>
                       <Input
                         id="auth-key"
                         defaultValue={providerSettings.authKey}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        placeholder="Auth key"
+                        placeholder={t('Auth key')}
                       />
                     </div>
                     <div>
@@ -514,13 +517,13 @@ export function ProviderDetailView() {
                         htmlFor="auth-key-id"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Auth Key ID
+                        {t('Auth Key ID')}
                       </Label>
                       <Input
                         id="auth-key-id"
                         defaultValue={providerSettings.authKeyId}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        placeholder="Auth key ID"
+                        placeholder={t('Auth key ID')}
                       />
                     </div>
                     <div>
@@ -528,13 +531,13 @@ export function ProviderDetailView() {
                         htmlFor="team-id"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Team ID
+                        {t('Team ID')}
                       </Label>
                       <Input
                         id="team-id"
                         defaultValue={providerSettings.teamId}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        placeholder="Team ID"
+                        placeholder={t('Team ID')}
                       />
                     </div>
                     <div>
@@ -542,13 +545,13 @@ export function ProviderDetailView() {
                         htmlFor="bundle-id"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Bundle ID
+                        {t('Bundle ID')}
                       </Label>
                       <Input
                         id="bundle-id"
                         defaultValue={providerSettings.bundleId}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        placeholder="Bundle ID"
+                        placeholder={t('Bundle ID')}
                       />
                     </div>
                   </>
@@ -561,11 +564,11 @@ export function ProviderDetailView() {
                 className="h-9 text-[13px]"
                 onClick={() => {
                   // TODO: Collect form values and call updateSettingsMutation
-                  toast.info('Settings update functionality coming soon')
+                  toast.info(t('Settings update functionality coming soon'))
                 }}
                 disabled={updateSettingsMutation.isPending}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -574,7 +577,7 @@ export function ProviderDetailView() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Overview
+                {t('Overview')}
               </h3>
             </div>
             <div className="border-t border-border" />
@@ -583,7 +586,7 @@ export function ProviderDetailView() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Provider ID
+                      {t('Provider ID')}
                     </p>
                     <CopyableId id={provider.$id} size="sm" />
                   </div>
@@ -591,7 +594,7 @@ export function ProviderDetailView() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Created
+                      {t('Created')}
                     </p>
                     {provider.$createdAt ? (
                       <DateTooltip
@@ -607,7 +610,7 @@ export function ProviderDetailView() {
                   </div>
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Updated
+                      {t('Updated')}
                     </p>
                     <DateTooltip
                       date={provider.$updatedAt || provider.$createdAt}
@@ -624,11 +627,12 @@ export function ProviderDetailView() {
           <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Delete provider
+                {t('Delete provider')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                The provider's instance will be permanently deleted. This action
-                is irreversible.
+                {t(
+                  "The provider's instance will be permanently deleted. This action is irreversible.",
+                )}
               </p>
             </div>
             <div className="border-t border-red-500/20" />
@@ -649,7 +653,7 @@ export function ProviderDetailView() {
                   </p>
                   {provider.$updatedAt && (
                     <p className="text-[12px] text-muted-foreground">
-                      Last updated: {formatDateTime(provider.$updatedAt)}
+                      {t('Last updated:')} {formatDateTime(provider.$updatedAt)}
                     </p>
                   )}
                 </div>
@@ -664,7 +668,7 @@ export function ProviderDetailView() {
                 disabled={deleteProviderMutation.isPending}
               >
                 <Trash2 className="me-1.5 h-4 w-4" />
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -674,10 +678,10 @@ export function ProviderDetailView() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete Provider</DialogTitle>
+              <DialogTitle>{t('Delete Provider')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {provider.name} from '
-                {project?.name || projectId}'?
+                {t('Are you sure you want to delete')} {provider.name}{' '}
+                {t('from')} '{project?.name || projectId}'?
               </DialogDescription>
             </DialogHeader>
 
@@ -687,14 +691,14 @@ export function ProviderDetailView() {
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={deleteProviderMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => deleteProviderMutation.mutate()}
                 disabled={deleteProviderMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>

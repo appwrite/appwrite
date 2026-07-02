@@ -32,6 +32,7 @@ import {
 import { useFunctionWizard } from './WizardContext'
 import { ExternalLink, Play, GitBranch } from 'lucide-react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -49,6 +50,7 @@ export function DeployingView({
   functionId,
   deploymentId,
 }: DeployingViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { formData, resetFormData } = useFunctionWizard()
@@ -97,14 +99,14 @@ export function DeployingView({
     onSuccess: () => {
       setCancelBuildDialogOpen(false)
       resetFormData()
-      toast.success('Deployment cancelled')
+      toast.success(t('Deployment cancelled'))
       navigate({
         to: '/projects/$projectId/functions',
         params: { projectId: projectId! },
       })
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel deployment')
+      toast.error(error.message || t('Failed to cancel deployment'))
     },
   })
 
@@ -205,7 +207,7 @@ export function DeployingView({
                     const StatusIcon = statusBadge.icon
                     return <StatusIcon className="h-3.5 w-3.5" />
                   })()}
-                  {statusBadge.label}
+                  {t(statusBadge.label)}
                 </Badge>
               )}
             </div>
@@ -217,7 +219,7 @@ export function DeployingView({
   return (
     <>
       <WizardLayout
-        title="Create function"
+        title={t('Create function')}
         fallbackPath={`/projects/${projectId}/functions`}
         fullscreen
         maxWidth="max-w-[1400px]"
@@ -231,14 +233,14 @@ export function DeployingView({
                 onClick={handleCancelDeployment}
                 disabled={cancelDeploymentMutation.isPending}
               >
-                Cancel deployment
+                {t('Cancel deployment')}
               </Button>
             )}
             <Button
               variant={status === 'ready' ? 'default' : 'outline'}
               onClick={handleGoToFunction}
             >
-              Go to function
+              {t('Go to function')}
             </Button>
           </div>
         }
@@ -285,7 +287,7 @@ export function DeployingView({
                             className="mt-2 flex items-center gap-1 link-neutral text-[12px]"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
-                            {primaryDomain || 'Function URL'}
+                            {primaryDomain || t('Function URL')}
                           </a>
                         )}
                       </div>
@@ -298,7 +300,7 @@ export function DeployingView({
                           rel="noopener noreferrer"
                         >
                           <ExternalLink className="me-1.5 h-4 w-4" />
-                          Open URL
+                          {t('Open URL')}
                         </a>
                       </Button>
                     )}
@@ -310,10 +312,12 @@ export function DeployingView({
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Next steps
+                    {t('Next steps')}
                   </h3>
                   <p className="text-[13px] text-muted-foreground mt-2">
-                    Run your function or connect a repository for deployments
+                    {t(
+                      'Run your function or connect a repository for deployments',
+                    )}
                   </p>
                 </div>
                 <div className="border-t border-border" />
@@ -331,10 +335,10 @@ export function DeployingView({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">
-                        Create execution
+                        {t('Create execution')}
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Run your function manually
+                        {t('Run your function manually')}
                       </p>
                     </div>
                   </Link>
@@ -352,10 +356,10 @@ export function DeployingView({
                       </div>
                       <div className="min-w-0">
                         <p className="text-[13px] font-medium text-foreground">
-                          Connect repository
+                          {t('Connect repository')}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Link Git for automatic deployments
+                          {t('Link Git for automatic deployments')}
                         </p>
                       </div>
                     </Link>
@@ -374,9 +378,9 @@ export function DeployingView({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Cancel build</DialogTitle>
+            <DialogTitle>{t('Cancel build')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Stop the current deployment? You can deploy again later.
+              {t('Stop the current deployment? You can deploy again later.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -391,7 +395,7 @@ export function DeployingView({
               onClick={() => setCancelBuildDialogOpen(false)}
               className="h-9 text-[13px]"
             >
-              Keep building
+              {t('Keep building')}
             </Button>
             <Button
               variant="destructive"
@@ -399,7 +403,7 @@ export function DeployingView({
               disabled={cancelDeploymentMutation.isPending}
               className="h-9 text-[13px]"
             >
-              Cancel build
+              {t('Cancel build')}
             </Button>
           </div>
         </DialogContent>

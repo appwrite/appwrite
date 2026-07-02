@@ -1,4 +1,5 @@
 import { cn, truncateMiddle } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { ReactNode } from 'react'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
 import {
@@ -149,6 +150,7 @@ export function TopRequests({
   errorTitle = OVERVIEW_BANDWIDTH_ERROR.title,
   errorMessage = OVERVIEW_BANDWIDTH_ERROR.message,
 }: TopRequestsProps) {
+  const t = useT()
   const usesLiveItems = items !== undefined
   const requestItems = usesLiveItems ? items : topRequests
   const maxCount = Math.max(...requestItems.map((r) => r.count), 1)
@@ -184,7 +186,7 @@ export function TopRequests({
               headerAddon && 'truncate',
             )}
           >
-            {displayTitle}
+            {t(displayTitle)}
           </h3>
           {showUnitInfo ? (
             <TooltipProvider delayDuration={0}>
@@ -197,7 +199,7 @@ export function TopRequests({
         ) : (
           <div className={overviewChartPanelHeaderActionsClass}>
             <button className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
-              View all
+              {t('View all')}
             </button>
           </div>
         )}
@@ -206,8 +208,8 @@ export function TopRequests({
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
           <OverviewChartPanelError
-            title={errorTitle}
-            message={errorMessage}
+            title={t(errorTitle)}
+            message={t(errorMessage)}
             onRetry={onRetry}
           />
         ) : isLoading ? (
@@ -216,7 +218,7 @@ export function TopRequests({
           <div className={overviewTopBreakdownListClass}>
             {showEmptyOverlay && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
-                No data for this date range
+                {t('No data for this date range')}
               </div>
             )}
             {itemSlots.map((request, index) =>
@@ -279,7 +281,7 @@ export function TopRequests({
                         return (
                           <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
                             <span className="shrink-0 text-[11px] text-muted-foreground">
-                              {typeLabel}
+                              {t(typeLabel)}
                             </span>
                             <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/70" />
                             <Link

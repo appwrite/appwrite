@@ -23,6 +23,7 @@ import {
 } from '@/lib/frameworks'
 import { StartCommandLabel } from '../_components/StartCommandLabel'
 import { useWizard } from './WizardContext'
+import { useT } from '@/lib/i18n/translate'
 
 interface BuildSettingsProps {
   installCommand: string
@@ -53,6 +54,7 @@ export function BuildSettings({
   className,
   defaultOpen = false,
 }: BuildSettingsProps) {
+  const t = useT()
   const { getFramework, getFrameworkDefaults } = useWizard()
   const framework = frameworkKey ? getFramework(frameworkKey) : undefined
   const showStartCommand = frameworkHasSsrAdapter(framework)
@@ -115,7 +117,7 @@ export function BuildSettings({
       <AccordionItem value="build-settings" className="border-none">
         <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
           <span className="text-[15px] font-semibold text-foreground">
-            Build
+            {t('Build')}
           </span>
         </AccordionTrigger>
         <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
@@ -124,7 +126,7 @@ export function BuildSettings({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="install-command" className="text-[13px]">
-                  Install command
+                  {t('Install command')}
                 </Label>
                 {isInstallModified && (
                   <Button
@@ -136,7 +138,7 @@ export function BuildSettings({
                     className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   >
                     <RotateCcw className="me-1 h-3 w-3" />
-                    Reset
+                    {t('Reset')}
                   </Button>
                 )}
               </div>
@@ -154,7 +156,7 @@ export function BuildSettings({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="build-command" className="text-[13px]">
-                  Build command
+                  {t('Build command')}
                 </Label>
                 {isBuildModified && (
                   <Button
@@ -166,7 +168,7 @@ export function BuildSettings({
                     className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   >
                     <RotateCcw className="me-1 h-3 w-3" />
-                    Reset
+                    {t('Reset')}
                   </Button>
                 )}
               </div>
@@ -195,7 +197,7 @@ export function BuildSettings({
                         className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                       >
                         <RotateCcw className="me-1 h-3 w-3" />
-                        Reset
+                        {t('Reset')}
                       </Button>
                     ) : undefined
                   }
@@ -205,7 +207,7 @@ export function BuildSettings({
                   value={startCommand}
                   onChange={(e) => onStartCommandChange(e.target.value)}
                   placeholder={
-                    ssrDefaults.startCommand || 'Enter start command'
+                    ssrDefaults.startCommand || t('Enter start command')
                   }
                   disabled={disabled}
                   className="h-9 font-mono text-[13px]"
@@ -217,7 +219,7 @@ export function BuildSettings({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="output-directory" className="text-[13px]">
-                  Output directory
+                  {t('Output directory')}
                 </Label>
                 {isOutputModified && (
                   <Button
@@ -229,7 +231,7 @@ export function BuildSettings({
                     className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   >
                     <RotateCcw className="me-1 h-3 w-3" />
-                    Reset
+                    {t('Reset')}
                   </Button>
                 )}
               </div>

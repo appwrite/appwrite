@@ -76,6 +76,7 @@ import { PostgresMetricChart } from './_components/PostgresMetricChart'
 import { PostgresMetricRankedList } from './_components/PostgresMetricRankedList'
 import { PostgresMetricKpiCard } from './_components/PostgresMetricKpiCard'
 import { PostgresMetricsBentoCard } from './_components/PostgresMetricsBentoCard'
+import { useT } from '@/lib/i18n/translate'
 
 type MonitorNavItem = { id: string; label: string; icon: LucideIcon }
 type MonitorNavGroup = { id: string; label: string; items: MonitorNavItem[] }
@@ -151,9 +152,10 @@ function PostgresMonitorNav({
   activeSectionId: string
   onNavigate: (id: string) => void
 }) {
+  const t = useT()
   return (
     <>
-      <div className="space-y-2 lg:hidden" aria-label="Monitor metrics">
+      <div className="space-y-2 lg:hidden" aria-label={t('Monitor metrics')}>
         <Select value={activeSectionId} onValueChange={onNavigate}>
           <SelectTrigger size="sm" className="h-9 w-full text-[13px]">
             <SelectValue />
@@ -162,7 +164,7 @@ function PostgresMonitorNav({
             {navGroups.map((group) => (
               <SelectGroup key={group.id}>
                 <SelectLabel className="text-[11px] uppercase tracking-wider">
-                  {group.label}
+                  {t(group.label)}
                 </SelectLabel>
                 {group.items.map((item) => {
                   const Icon = item.icon
@@ -174,7 +176,7 @@ function PostgresMonitorNav({
                     >
                       <span className="flex items-center gap-2">
                         <Icon className="h-4 w-4 shrink-0" />
-                        {item.label}
+                        {t(item.label)}
                       </span>
                     </SelectItem>
                   )
@@ -187,12 +189,12 @@ function PostgresMonitorNav({
 
       <nav
         className="hidden w-[220px] shrink-0 flex-col gap-5 lg:sticky lg:top-4 lg:flex lg:self-start"
-        aria-label="Monitor metrics"
+        aria-label={t('Monitor metrics')}
       >
         {navGroups.map((group) => (
           <div key={group.id}>
             <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {group.label}
+              {t(group.label)}
             </p>
             <div className="flex flex-col gap-0.5">
               {group.items.map((item) => {
@@ -207,7 +209,7 @@ function PostgresMonitorNav({
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate">{t(item.label)}</span>
                   </button>
                 )
               })}
@@ -225,6 +227,7 @@ type MonitorProps = {
 }
 
 export function View({ projectId, databaseId }: MonitorProps) {
+  const t = useT()
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultMonitorDateRange)
   const [activeSectionId, setActiveSectionId] = useState('connections')
   const { fromMs, toMs } = useMemo(
@@ -613,7 +616,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Refresh metrics</TooltipContent>
+                <TooltipContent>{t('Refresh metrics')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -625,7 +628,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
           {metricsError ? (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load metrics</AlertTitle>
+              <AlertTitle>{t('Failed to load metrics')}</AlertTitle>
               <AlertDescription className="text-[13px]">
                 {getErrorMessage(metricsError)}
               </AlertDescription>
@@ -642,18 +645,16 @@ export function View({ projectId, databaseId }: MonitorProps) {
             <div className="min-w-0 flex-1 space-y-10">
               <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
-                  Metrics are collected from live PostgreSQL statistics via the
-                  SQL API. Time-series charts use samples gathered while this
-                  view is open across {rangeLabel.toLowerCase()}.
+                  {t('Metrics are collected from live PostgreSQL statistics via the SQL API. Time-series charts use samples gathered while this view is open across the selected range.')}
                 </p>
               </div>
 
               <section className="space-y-6">
-                <MonitorSectionHeading title="Overview" />
+                <MonitorSectionHeading title={t('Overview')} />
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <PostgresMetricKpiCard
-                    label="Connections"
+                    label={t('Connections')}
                     value={
                       snapshot
                         ? String(snapshot.totalConnections)
@@ -664,12 +665,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     subValue={
                       maxConnections != null ? `/ ${maxConnections}` : undefined
                     }
-                    description="Active client sessions connected to this database."
+                    description={t('Active client sessions connected to this database.')}
                     progress={connectionUsagePercent}
                     progressTone={getUsageTone(connectionUsagePercent)}
                   />
                   <PostgresMetricKpiCard
-                    label="Storage used"
+                    label={t('Storage used')}
                     value={
                       snapshot
                         ? formatCompactBytes(snapshot.databaseSizeBytes)
@@ -686,7 +687,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           }`
                         : undefined
                     }
-                    description="On-disk database size compared to provisioned storage for this instance."
+                    description={t('On-disk database size compared to provisioned storage for this instance.')}
                     progress={storageUsagePercent}
                     progressTone={getUsageTone(storageUsagePercent)}
                     progressCaption={
@@ -700,7 +701,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     }
                   />
                   <PostgresMetricKpiCard
-                    label="Cache hit ratio"
+                    label={t('Cache hit ratio')}
                     value={
                       snapshot
                         ? `${snapshot.cacheHitRatio.toFixed(1)}%`
@@ -708,7 +709,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           ? '—'
                           : '0%'
                     }
-                    description="Share of blocks served from memory instead of disk."
+                    description={t('Share of blocks served from memory instead of disk.')}
                     progress={snapshot?.cacheHitRatio ?? null}
                     progressTone={getCacheHitTone(
                       snapshot?.cacheHitRatio ?? null,
@@ -727,7 +728,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     className={MONITOR_SCROLL_MARGIN}
                   >
                     <PostgresMetricsBentoCard
-                      title="Database health"
+                      title={t('Database health')}
                       columns={4}
                       tiles={[
                         {
@@ -765,7 +766,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           subValue:
                             rollbackRatio != null
                               ? `${rollbackRatio.toFixed(1)}% of transactions`
-                              : 'since stats reset',
+                              : t('since stats reset'),
                           description:
                             'Rolled back transactions since PostgreSQL statistics were last reset.',
                         },
@@ -807,12 +808,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
               </section>
 
               <section className="space-y-6">
-                <MonitorSectionHeading title="Compute" />
+                <MonitorSectionHeading title={t('Compute')} />
 
                 <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="info" className="text-[10px] shrink-0">
-                      Sample data
+                      {t('Sample data')}
                     </Badge>
                     <p className="text-[12px] leading-relaxed text-muted-foreground">
                       {POSTGRES_USAGE_PLACEHOLDER_NOTE}
@@ -823,31 +824,31 @@ export function View({ projectId, databaseId }: MonitorProps) {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <PostgresMetricKpiCard
                     className="border-dashed"
-                    label="CPU usage"
+                    label={t('CPU usage')}
                     value={
                       mockCpuPercent != null
                         ? `${mockCpuPercent.toFixed(1)}%`
                         : '—'
                     }
-                    description="Average CPU utilization for this database instance."
+                    description={t('Average CPU utilization for this database instance.')}
                     progress={mockCpuPercent}
                     progressTone={getUsageTone(mockCpuPercent)}
                   />
                   <PostgresMetricKpiCard
                     className="border-dashed"
-                    label="Memory usage"
+                    label={t('Memory usage')}
                     value={
                       mockMemoryPercent != null
                         ? `${mockMemoryPercent.toFixed(1)}%`
                         : '—'
                     }
-                    description="Memory utilization relative to provisioned RAM."
+                    description={t('Memory utilization relative to provisioned RAM.')}
                     progress={mockMemoryPercent}
                     progressTone={getUsageTone(mockMemoryPercent)}
                   />
                   <PostgresMetricKpiCard
                     className="border-dashed"
-                    label="Disk I/O"
+                    label={t('Disk I/O')}
                     value={
                       mockDiskReadMbps != null
                         ? `${mockDiskReadMbps.toFixed(1)} MB/s`
@@ -858,11 +859,11 @@ export function View({ projectId, databaseId }: MonitorProps) {
                         ? `${mockDiskWriteMbps.toFixed(1)} MB/s writes`
                         : undefined
                     }
-                    description="Combined read and write throughput for instance storage."
+                    description={t('Combined read and write throughput for instance storage.')}
                   />
                   <PostgresMetricKpiCard
                     className="border-dashed"
-                    label="Network"
+                    label={t('Network')}
                     value={
                       mockNetworkIngressMbps != null
                         ? `${mockNetworkIngressMbps.toFixed(1)} MB/s`
@@ -873,15 +874,15 @@ export function View({ projectId, databaseId }: MonitorProps) {
                         ? `${mockNetworkEgressMbps.toFixed(1)} MB/s egress`
                         : undefined
                     }
-                    description="Ingress and egress throughput for this database instance."
+                    description={t('Ingress and egress throughput for this database instance.')}
                   />
                 </div>
 
                 <div className="space-y-6">
                   <PostgresMetricChart
                     id="cpu"
-                    title="CPU usage"
-                    description="Average CPU utilization for this database instance."
+                    title={t('CPU usage')}
+                    description={t('Average CPU utilization for this database instance.')}
                     unit=""
                     data={cpuPlaceholderSeries}
                     formatY={(value) => `${value.toFixed(1)}%`}
@@ -893,8 +894,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                   <PostgresMetricChart
                     id="memory"
-                    title="Memory usage"
-                    description="Memory utilization relative to provisioned RAM."
+                    title={t('Memory usage')}
+                    description={t('Memory utilization relative to provisioned RAM.')}
                     unit=""
                     data={memoryPlaceholderSeries}
                     formatY={(value) => `${value.toFixed(1)}%`}
@@ -906,8 +907,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                   <PostgresMetricChart
                     id="disk-io"
-                    title="Disk I/O"
-                    description="Read and write throughput for instance storage."
+                    title={t('Disk I/O')}
+                    description={t('Read and write throughput for instance storage.')}
                     unit="MB/s reads"
                     secondaryLabel="Writes"
                     secondaryUnit="MB/s"
@@ -919,8 +920,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                   <PostgresMetricChart
                     id="network"
-                    title="Network throughput"
-                    description="Ingress and egress for this database instance."
+                    title={t('Network throughput')}
+                    description={t('Ingress and egress for this database instance.')}
                     unit="MB/s ingress"
                     secondaryLabel="Egress"
                     secondaryUnit="MB/s"
@@ -933,15 +934,15 @@ export function View({ projectId, databaseId }: MonitorProps) {
               </section>
 
               <section className="space-y-6">
-                <MonitorSectionHeading title="Connections" />
+                <MonitorSectionHeading title={t('Connections')} />
 
                 <div className="space-y-6">
                   <PostgresMetricChart
                     id="connections"
-                    title="Connections"
-                    description="Total client sessions and active queries sampled from pg_stat_activity."
+                    title={t('Connections')}
+                    description={t('Total client sessions and active queries sampled from pg_stat_activity.')}
                     unit="connections"
-                    secondaryLabel="Active queries"
+                    secondaryLabel={t('Active queries')}
                     data={connectionsSeries}
                     formatY={(value) => Math.round(value).toLocaleString()}
                     emptyMessage={`Collecting connection samples for ${rangeLabel.toLowerCase()}. Samples refresh automatically every minute.`}
@@ -949,27 +950,27 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                   <PostgresMetricRankedList
                     id="connection-states"
-                    title="Connection states"
-                    description="Current session states from pg_stat_activity."
+                    title={t('Connection states')}
+                    description={t('Current session states from pg_stat_activity.')}
                     items={connectionStateBars}
                     formatValue={(value) => Math.round(value).toLocaleString()}
                     emptyMessage={
                       connectionStatesLoading
-                        ? 'Loading connection states...'
-                        : 'No active client sessions.'
+                        ? t('Loading connection states...')
+                        : t('No active client sessions.')
                     }
                   />
 
                   <PostgresMetricRankedList
                     id="connection-apps"
-                    title="Connections by app"
-                    description="Client sessions grouped by application_name from pg_stat_activity."
+                    title={t('Connections by app')}
+                    description={t('Client sessions grouped by application_name from pg_stat_activity.')}
                     items={connectionAppBars}
                     formatValue={(value) => Math.round(value).toLocaleString()}
                     emptyMessage={
                       connectionAppsLoading
-                        ? 'Loading connection apps...'
-                        : 'No active client sessions.'
+                        ? t('Loading connection apps...')
+                        : t('No active client sessions.')
                     }
                   />
 
@@ -979,22 +980,24 @@ export function View({ projectId, databaseId }: MonitorProps) {
                       className={MONITOR_SCROLL_MARGIN}
                     >
                       <PostgresMetricsBentoCard
-                        title="Session signals"
+                        title={t('Session signals')}
                         tiles={[
                           {
                             id: 'idle-in-transaction',
-                            label: 'Idle in transaction',
+                            label: t('Idle in transaction'),
                             value: String(snapshot.idleInTransaction),
-                            description:
+                            description: t(
                               'Sessions holding an open transaction without running a query. These can block vacuum and hold locks.',
+                            ),
                           },
                           {
                             id: 'long-running',
-                            label: 'Long-running queries',
+                            label: t('Long-running queries'),
                             value: String(snapshot.longRunningQueries),
-                            subValue: 'active over 10s',
-                            description:
+                            subValue: t('active over 10s'),
+                            description: t(
                               'Currently active queries that have been running for more than 10 seconds.',
+                            ),
                           },
                         ]}
                       />
@@ -1004,13 +1007,13 @@ export function View({ projectId, databaseId }: MonitorProps) {
               </section>
 
               <section className="space-y-6">
-                <MonitorSectionHeading title="Storage" />
+                <MonitorSectionHeading title={t('Storage')} />
 
                 <div className="space-y-6">
                   <PostgresMetricChart
                     id="storage"
-                    title="Storage usage"
-                    description="Database size over time from pg_database_size, relative to provisioned storage."
+                    title={t('Storage usage')}
+                    description={t('Database size over time from pg_database_size, relative to provisioned storage.')}
                     unit=""
                     data={storageSeries}
                     formatY={(value) => formatCompactBytes(value)}
@@ -1020,51 +1023,51 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                   <PostgresMetricRankedList
                     id="tables"
-                    title="Largest tables"
-                    description="Top tables by on-disk size, including indexes and TOAST data."
+                    title={t('Largest tables')}
+                    description={t('Top tables by on-disk size, including indexes and TOAST data.')}
                     items={tableSizeBars}
                     emptyMessage={
                       tableActivityLoading
-                        ? 'Loading table activity...'
-                        : 'No user tables found in this database.'
+                        ? t('Loading table activity...')
+                        : t('No user tables found in this database.')
                     }
                   />
 
                   <PostgresMetricRankedList
                     id="table-bloat"
-                    title="Dead tuples"
-                    description="Tables with the most dead rows waiting for vacuum. High dead tuple ratios can slow scans and waste space."
+                    title={t('Dead tuples')}
+                    description={t('Tables with the most dead rows waiting for vacuum. High dead tuple ratios can slow scans and waste space.')}
                     items={tableBloatBars}
                     formatValue={(value) => formatCompactCount(value)}
                     emptyMessage={
                       tableActivityLoading
-                        ? 'Loading table activity...'
-                        : 'No dead tuples found across user tables.'
+                        ? t('Loading table activity...')
+                        : t('No dead tuples found across user tables.')
                     }
                   />
 
                   <PostgresMetricRankedList
                     id="sequential-scans"
-                    title="Sequential scans"
-                    description="Tables with the most sequential scans since statistics were reset. Compare with index scans to spot missing or unused indexes."
+                    title={t('Sequential scans')}
+                    description={t('Tables with the most sequential scans since statistics were reset. Compare with index scans to spot missing or unused indexes.')}
                     items={sequentialScanBars}
                     formatValue={(value) => formatCompactCount(value)}
                     emptyMessage={
                       tableActivityLoading
-                        ? 'Loading table activity...'
-                        : 'No sequential scans recorded on user tables.'
+                        ? t('Loading table activity...')
+                        : t('No sequential scans recorded on user tables.')
                     }
                   />
                 </div>
               </section>
 
               <section className="space-y-6">
-                <MonitorSectionHeading title="Workload" />
+                <MonitorSectionHeading title={t('Workload')} />
 
                 <PostgresMetricChart
                   id="transactions"
-                  title="Transaction rate"
-                  description="Commits and rollbacks per minute, derived from pg_stat_database counters."
+                  title={t('Transaction rate')}
+                  description={t('Commits and rollbacks per minute, derived from pg_stat_database counters.')}
                   unit="commits / min"
                   secondaryLabel="Rollbacks"
                   secondaryUnit="/ min"
@@ -1077,8 +1080,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                 <PostgresMetricChart
                   id="tuples"
-                  title="Tuple operations"
-                  description="Read and write tuple throughput per minute from pg_stat_database."
+                  title={t('Tuple operations')}
+                  description={t('Read and write tuple throughput per minute from pg_stat_database.')}
                   unit="reads / min"
                   secondaryLabel="Writes"
                   secondaryUnit="/ min"
@@ -1091,8 +1094,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                 <PostgresMetricChart
                   id="disk-reads"
-                  title="Disk block reads"
-                  description="Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure."
+                  title={t('Disk block reads')}
+                  description={t('Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure.')}
                   unit="blocks / min"
                   data={diskReadsSeries}
                   formatY={(value) => Math.round(value).toLocaleString()}
@@ -1100,8 +1103,8 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
                 <PostgresMetricChart
                   id="cache"
-                  title="Cache hit ratio"
-                  description="Buffer cache effectiveness from pg_stat_database block reads and hits."
+                  title={t('Cache hit ratio')}
+                  description={t('Buffer cache effectiveness from pg_stat_database block reads and hits.')}
                   unit=""
                   data={cacheSeries}
                   formatY={(value) => `${value.toFixed(1)}%`}

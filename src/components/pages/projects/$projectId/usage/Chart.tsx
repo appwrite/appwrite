@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
   createCompactCountAxisTickFormatter,
@@ -20,6 +21,7 @@ interface UsageChartProps {
 }
 
 export function UsageChart({ className }: UsageChartProps) {
+  const t = useT()
   const chartAxisMax = useMemo(
     () =>
       getChartSeriesMax(
@@ -38,16 +40,16 @@ export function UsageChart({ className }: UsageChartProps) {
     <div className={cn('rounded-lg border border-border bg-card', className)}>
       <div className="flex flex-col gap-2 border-b border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
         <h3 className="text-[13px] font-medium text-foreground">
-          API Requests
+          {t('API Requests')}
         </h3>
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-1.5">
             <div className="h-1.5 w-1.5 rounded-full bg-chart-brand" />
-            <span className="text-[11px] text-muted-foreground">Requests</span>
+            <span className="text-[11px] text-muted-foreground">{t('Requests')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-            <span className="text-[11px] text-muted-foreground">Bandwidth</span>
+            <span className="text-[11px] text-muted-foreground">{t('Bandwidth')}</span>
           </div>
         </div>
       </div>

@@ -64,6 +64,7 @@ import {
 import { DeploymentResourceStatusBadges, resourceHasVisibleStatus } from '../shared/DeploymentResourceStatusBadges'
 import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useT } from '@/lib/i18n/translate'
 
 function getFunctionsServiceTabs(projectId: string): Tab[] {
   return [
@@ -96,6 +97,7 @@ function formatRuntimeLabel(runtime: string) {
 }
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -484,15 +486,15 @@ export function View() {
             <Link
               to="/projects/$projectId/functions/editor"
               params={{ projectId: projectId as string }}
-              aria-label="Local editor"
+              aria-label={t('Local editor')}
             >
               <FileCode className="h-4 w-4 shrink-0" />
-              <span className="hidden @[640px]:inline">Local editor</span>
+              <span className="hidden @[640px]:inline">{t('Local editor')}</span>
             </Link>
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          <p>Edit code locally and prepare gzip for deployment</p>
+          <p>{t('Edit code locally and prepare gzip for deployment')}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -529,10 +531,10 @@ export function View() {
       } else if (to === 'cover') {
         // Redirect to function creation page
         // TODO: Implement function creation modal/page
-        toast.info('Function creation coming soon')
+        toast.info(t('Function creation coming soon'))
       }
     }
-  }, [location.search, navigate, projectId])
+  }, [location.search, navigate, projectId, t])
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value)
@@ -549,8 +551,12 @@ export function View() {
   }
 
   const functionsTabs: Tab[] = useMemo(
-    () => getFunctionsServiceTabs(projectId as string),
-    [projectId],
+    () =>
+      getFunctionsServiceTabs(projectId as string).map((tab) => ({
+        ...tab,
+        label: t(tab.label),
+      })),
+    [projectId, t],
   )
 
   // Use displayed data for empty states so we don't flash "No results" before syncing
@@ -573,18 +579,18 @@ export function View() {
     return (
       <div className="flex flex-col">
         <ServiceHeader
-          title="Functions"
+          title={t('Functions')}
           tabs={functionsTabs}
           activeTab="functions"
-          searchPlaceholder="Search functions..."
+          searchPlaceholder={t('Search functions...')}
           searchValue={searchInput}
           onSearchChange={handleSearchChange}
-          createLabel="Create function"
+          createLabel={t('Create function')}
           onCreate={handleCreateFunction}
           createDisabled={isCreateDisabled}
           createDisabledTooltip={
             noCreatePermission
-              ? "You don't have permission to create functions."
+              ? t("You don't have permission to create functions.")
               : undefined
           }
           fullWidthBorder
@@ -633,7 +639,7 @@ export function View() {
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="text-sm text-muted-foreground">
-              Failed to load functions. Please try again.
+              {t('Failed to load functions. Please try again.')}
             </p>
           </div>
         </div>
@@ -644,18 +650,18 @@ export function View() {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Functions"
+        title={t('Functions')}
         tabs={functionsTabs}
         activeTab="functions"
-        searchPlaceholder="Search functions..."
+        searchPlaceholder={t('Search functions...')}
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
-        createLabel="Create function"
+        createLabel={t('Create function')}
         onCreate={handleCreateFunction}
         createDisabled={isCreateDisabled}
         createDisabledTooltip={
           noCreatePermission
-            ? "You don't have permission to create functions."
+            ? t("You don't have permission to create functions.")
             : undefined
         }
         fullWidthBorder
@@ -724,7 +730,7 @@ export function View() {
             {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
-                  Loading functions...
+                  {t('Loading functions...')}
                 </p>
               </div>
             ) : noSearchResults ? (
@@ -737,11 +743,13 @@ export function View() {
             ) : !hasFunctions ? (
               <EmptyState
                 icon={Play}
-                title={hasFilters ? undefined : 'No functions yet'}
+                title={hasFilters ? undefined : t('No functions yet')}
                 description={
                   hasFilters
                     ? undefined
-                    : 'Create your first function to deploy and manage serverless functions'
+                    : t(
+                        'Create your first function to deploy and manage serverless functions',
+                      )
                 }
                 isEmpty={true}
                 hasFilters={hasFilters}
@@ -774,8 +782,8 @@ export function View() {
                             }}
                           >
                             <ResourceCard
-                              title={func.name || 'Unnamed Function'}
-                              subtitle={formatRuntimeLabel(func.runtime || '')}
+                              title={func.name || t('Unnamed Function')}
+                              subtitle={t(formatRuntimeLabel(func.runtime || ''))}
                               resourceId={func.$id}
                               customIcon={
                                 <RuntimeIcon
@@ -799,7 +807,7 @@ export function View() {
                                     ]
                                   : []),
                                 {
-                                  label: 'Deployed',
+                                  label: t('Deployed'),
                                   value: activeDeploymentCreatedAt ? (
                                     <DateTooltip
                                       date={activeDeploymentCreatedAt}
@@ -807,7 +815,7 @@ export function View() {
                                       className="text-[12px] font-medium text-muted-foreground"
                                     />
                                   ) : (
-                                    'Never'
+                                    t('Never')
                                   ),
                                 },
                               ]}

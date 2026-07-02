@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import {
   AppwriteMigrationResource,
   SupabaseMigrationResource,
@@ -122,6 +123,7 @@ const PROVIDER_DISPLAY_LABELS: Record<ImportProvider, string> = {
 }
 
 export function ImportWizardView() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const pid = projectId as string
@@ -321,7 +323,7 @@ export function ImportWizardView() {
     try {
       if (provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') {
         if (!endpoint.trim() || !projectID.trim() || !apiKey.trim()) {
-          toast.error('Please fill endpoint, project ID, and API key')
+          toast.error(t('Please fill endpoint, project ID, and API key'))
           return
         }
         const report = await fetchAppwriteReport(
@@ -341,7 +343,7 @@ export function ImportWizardView() {
           !databaseHost.trim() ||
           !supabasePassword.trim()
         ) {
-          toast.error('Please fill required Supabase fields')
+          toast.error(t('Please fill required Supabase fields'))
           return
         }
         const report = await fetchSupabaseReport(
@@ -359,13 +361,13 @@ export function ImportWizardView() {
         setReportData(report)
       } else if (provider === 'Firebase') {
         if (!serviceAccount.trim()) {
-          toast.error('Please paste the service account JSON')
+          toast.error(t('Please paste the service account JSON'))
           return
         }
         try {
           JSON.parse(serviceAccount)
         } catch {
-          toast.error('Service account must be valid JSON')
+          toast.error(t('Service account must be valid JSON'))
           return
         }
         const report = await fetchFirebaseReport(
@@ -381,7 +383,7 @@ export function ImportWizardView() {
           !adminSecret.trim() ||
           !nhostPassword.trim()
         ) {
-          toast.error('Please fill required NHost fields')
+          toast.error(t('Please fill required NHost fields'))
           return
         }
         const report = await fetchNHostReport(
@@ -402,7 +404,7 @@ export function ImportWizardView() {
       setStep(3)
       selectAll()
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Failed to load report'
+      const msg = e instanceof Error ? e.message : t('Failed to load report')
       setReportError(msg)
       toast.error(msg)
     } finally {
@@ -412,7 +414,7 @@ export function ImportWizardView() {
 
   const handleCreate = async () => {
     if (!hasSelection) {
-      toast.error('Select at least one resource')
+      toast.error(t('Select at least one resource'))
       return
     }
     try {
@@ -455,13 +457,13 @@ export function ImportWizardView() {
           port: parseInt(nhostPort, 10) || undefined,
         })
       }
-      toast.success('Migration started')
+      toast.success(t('Migration started'))
       navigate({
         to: '/projects/$projectId/settings/migrations',
         params: { projectId: pid },
       })
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Failed to start migration')
+      toast.error(e instanceof Error ? e.message : t('Failed to start migration'))
     }
   }
 
@@ -476,8 +478,9 @@ export function ImportWizardView() {
       {step === 1 && (
         <>
           <p className="text-[13px] text-muted-foreground">
-            Migrations import users, databases, and storage from an external
-            platform into this project. Data is not deleted from the source.
+            {t(
+              'Migrations import users, databases, and storage from an external platform into this project. Data is not deleted from the source.',
+            )}
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {providers.map((p) => (
@@ -515,7 +518,7 @@ export function ImportWizardView() {
             </div>
             <div className="relative flex justify-center">
               <span className="bg-background px-3 text-[12px] font-medium text-muted-foreground">
-                Or
+                {t('Or')}
               </span>
             </div>
           </div>
@@ -527,11 +530,12 @@ export function ImportWizardView() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Transfer between organizations
+                    {t('Transfer between organizations')}
                   </h3>
                   <p className="text-[13px] text-muted-foreground mt-2">
-                    Move this project to another organization in your account.
-                    Ownership updates immediately; no data is imported.
+                    {t(
+                      'Move this project to another organization in your account. Ownership updates immediately; no data is imported.',
+                    )}
                   </p>
                 </div>
               </div>
@@ -550,7 +554,7 @@ export function ImportWizardView() {
                   })
                 }
               >
-                Transfer project
+                {t('Transfer project')}
               </Button>
             </div>
           </div>
@@ -562,19 +566,23 @@ export function ImportWizardView() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Credentials
+                {t('Credentials')}
               </h3>
               <p className="text-[12px] text-muted-foreground mt-1">
                 {provider === 'AppwriteSelfHosted'
-                  ? 'Import from a self-hosted Appwrite instance. Enter the endpoint, project ID, and a server API key with read scopes for the resources you want to migrate.'
-                  : 'Import from Appwrite Cloud. Enter the endpoint (with region), project ID, and a server API key with read scopes for the resources you want to migrate.'}
+                  ? t(
+                      'Import from a self-hosted Appwrite instance. Enter the endpoint, project ID, and a server API key with read scopes for the resources you want to migrate.', // pragma: allowlist secret
+                    )
+                  : t(
+                      'Import from Appwrite Cloud. Enter the endpoint (with region), project ID, and a server API key with read scopes for the resources you want to migrate.', // pragma: allowlist secret
+                    )}
               </p>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="appwrite-endpoint" className="text-[13px]">
-                  Endpoint
+                  {t('Endpoint')}
                 </Label>
                 <Input
                   id="appwrite-endpoint"
@@ -590,20 +598,20 @@ export function ImportWizardView() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="appwrite-project-id" className="text-[13px]">
-                  Project ID
+                  {t('Project ID')}
                 </Label>
                 <Input
                   id="appwrite-project-id"
                   value={projectID}
                   onChange={(e) => setProjectID(e.target.value)}
-                  placeholder="Source project ID"
+                  placeholder={t('Source project ID')}
                   className="h-9 text-[13px]"
                 />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <Label htmlFor="appwrite-api-key" className="text-[13px]">
-                    API key
+                    {t('API key')}
                   </Label>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
@@ -611,9 +619,9 @@ export function ImportWizardView() {
                         <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[240px]">
-                        Server API key with read scopes for users, databases,
-                        storage, etc. The source project must be reachable from
-                        the internet.
+                        {t(
+                          'Server API key with read scopes for users, databases, storage, etc. The source project must be reachable from the internet.',
+                        )}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -623,13 +631,14 @@ export function ImportWizardView() {
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Server API key with read scopes"
+                  placeholder={t('Server API key with read scopes')}
                   className="h-9 text-[13px]"
                 />
               </div>
               <p className="text-[11px] text-muted-foreground pt-1">
-                Migrations are non-destructive. $createdAt and $updatedAt may be
-                set to the migration date.
+                {t(
+                  'Migrations are non-destructive. $createdAt and $updatedAt may be set to the migration date.',
+                )}
               </p>
             </div>
           </div>
@@ -639,20 +648,21 @@ export function ImportWizardView() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Credentials
+              {t('Credentials')}
             </h3>
             <p className="text-[12px] text-muted-foreground mt-1">
-              In Supabase: <strong>Project Settings → Database</strong> (Host,
-              Port, Username, Password) and{' '}
-              <strong>Project Settings → API</strong> (Endpoint and API key).
-              Use the <strong>service_role</strong> key for the API key.
+              {t('In Supabase:')} <strong>{t('Project Settings → Database')}</strong>{' '}
+              {t('(Host, Port, Username, Password) and')}{' '}
+              <strong>{t('Project Settings → API')}</strong>{' '}
+              {t('(Endpoint and API key). Use the')}{' '}
+              <strong>service_role</strong> {t('key for the API key.')}
             </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="supabase-endpoint" className="text-[13px]">
-                Supabase endpoint
+                {t('Supabase endpoint')}
               </Label>
               <Input
                 id="supabase-endpoint"
@@ -664,7 +674,7 @@ export function ImportWizardView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="supabase-api-key" className="text-[13px]">
-                API key
+                {t('API key')}
               </Label>
               <Input
                 id="supabase-api-key"
@@ -676,7 +686,7 @@ export function ImportWizardView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="supabase-db-host" className="text-[13px]">
-                Database host
+                {t('Database host')}
               </Label>
               <Input
                 id="supabase-db-host"
@@ -689,7 +699,7 @@ export function ImportWizardView() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="supabase-username" className="text-[13px]">
-                  Username
+                  {t('Username')}
                 </Label>
                 <Input
                   id="supabase-username"
@@ -700,7 +710,7 @@ export function ImportWizardView() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="supabase-port" className="text-[13px]">
-                  Port
+                  {t('Port')}
                 </Label>
                 <Input
                   id="supabase-port"
@@ -712,7 +722,7 @@ export function ImportWizardView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="supabase-password" className="text-[13px]">
-                Password
+                {t('Password')}
               </Label>
               <Input
                 id="supabase-password"
@@ -723,8 +733,9 @@ export function ImportWizardView() {
               />
             </div>
             <p className="text-[11px] text-muted-foreground pt-1">
-              Some PostgreSQL features are not migrated. OAuth users and
-              functions are not migrated automatically.
+              {t(
+                'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.',
+              )}
             </p>
           </div>
         </div>
@@ -734,32 +745,32 @@ export function ImportWizardView() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Credentials
+              {t('Credentials')}
             </h3>
             <p className="text-[12px] text-muted-foreground mt-1">
-              Use a service account JSON key. In Firebase Console: Project
-              Settings → Service Accounts → Create service account, then add
-              keys and create a new JSON key. Required roles: Firebase Viewer
-              (Database and Storage), Identity Toolkit Viewer (users).
+              {t(
+                'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="firebase-service-account" className="text-[13px]">
-                Service account JSON
+                {t('Service account JSON')}
               </Label>
               <Textarea
                 id="firebase-service-account"
                 className="font-mono text-[12px] min-h-[200px]"
-                placeholder="Paste the full service account JSON object..."
+                placeholder={t('Paste the full service account JSON object...')}
                 value={serviceAccount}
                 onChange={(e) => setServiceAccount(e.target.value)}
               />
             </div>
             <p className="text-[11px] text-muted-foreground pt-1">
-              Only Firestore is supported; Realtime Database is not. OAuth users
-              and functions are not migrated automatically.
+              {t(
+                'Only Firestore is supported; Realtime Database is not. OAuth users and functions are not migrated automatically.',
+              )}
             </p>
           </div>
         </div>
@@ -769,13 +780,14 @@ export function ImportWizardView() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Credentials
+              {t('Credentials')}
             </h3>
             <p className="text-[12px] text-muted-foreground mt-1">
-              Find these in your NHost project:{' '}
-              <strong>Environment variables</strong> (Region, Subdomain, Admin
-              Secret) and <strong>Database settings</strong> (Database name,
-              Username, Password). Admin Secret is used for files.
+              {t('Find these in your NHost project:')}{' '}
+              <strong>{t('Environment variables')}</strong>{' '}
+              {t('(Region, Subdomain, Admin Secret) and')}{' '}
+              <strong>{t('Database settings')}</strong>{' '}
+              {t('(Database name, Username, Password). Admin Secret is used for files.')}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -783,7 +795,7 @@ export function ImportWizardView() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="nhost-subdomain" className="text-[13px]">
-                  Subdomain
+                  {t('Subdomain')}
                 </Label>
                 <Input
                   id="nhost-subdomain"
@@ -794,7 +806,7 @@ export function ImportWizardView() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nhost-region" className="text-[13px]">
-                  Region
+                  {t('Region')}
                 </Label>
                 <Input
                   id="nhost-region"
@@ -807,7 +819,7 @@ export function ImportWizardView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="nhost-admin-secret" className="text-[13px]">
-                Admin secret
+                {t('Admin secret')}
               </Label>
               <Input
                 id="nhost-admin-secret"
@@ -819,20 +831,20 @@ export function ImportWizardView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="nhost-database" className="text-[13px]">
-                Database (optional)
+                {t('Database (optional)')}
               </Label>
               <Input
                 id="nhost-database"
                 value={nhostDatabase}
                 onChange={(e) => setNhostDatabase(e.target.value)}
-                placeholder="Defaults to subdomain"
+                placeholder={t('Defaults to subdomain')}
                 className="h-9 text-[13px]"
               />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="nhost-username" className="text-[13px]">
-                  Username
+                  {t('Username')}
                 </Label>
                 <Input
                   id="nhost-username"
@@ -843,7 +855,7 @@ export function ImportWizardView() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nhost-port" className="text-[13px]">
-                  Port
+                  {t('Port')}
                 </Label>
                 <Input
                   id="nhost-port"
@@ -855,7 +867,7 @@ export function ImportWizardView() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="nhost-password" className="text-[13px]">
-                Password
+                {t('Password')}
               </Label>
               <Input
                 id="nhost-password"
@@ -866,8 +878,9 @@ export function ImportWizardView() {
               />
             </div>
             <p className="text-[11px] text-muted-foreground pt-1">
-              PostgreSQL-specific features are not migrated. OAuth users and
-              functions are not migrated automatically.
+              {t(
+                'PostgreSQL-specific features are not migrated. OAuth users and functions are not migrated automatically.',
+              )}
             </p>
           </div>
         </div>
@@ -878,9 +891,9 @@ export function ImportWizardView() {
           {(provider === 'AppwriteSelfHosted' ||
             provider === 'AppwriteCloud') && (
             <div className="rounded-lg border border-border bg-card/50 px-4 py-3 space-y-2">
-              <Label className="text-[13px] font-medium">Duplicate rows</Label>
+              <Label className="text-[13px] font-medium">{t('Duplicate rows')}</Label>
               <p className="text-[12px] text-muted-foreground">
-                When a row with an existing ID is encountered during import.
+                {t('When a row with an existing ID is encountered during import.')}
               </p>
               <div className="flex flex-wrap gap-2">
                 {(
@@ -898,17 +911,16 @@ export function ImportWizardView() {
                     className="h-8 text-[13px]"
                     onClick={() => setOnDuplicate(value)}
                   >
-                    {label}
+                    {t(label)}
                   </Button>
                 ))}
               </div>
             </div>
           )}
           <p className="text-[13px] text-muted-foreground">
-            Choose which resources to migrate. You do not need to keep the
-            Console open; the migration continues in the background. After
-            migrating, add platforms in Overview → Integrations → Platforms and
-            set permissions on migrated resources.
+            {t(
+              'Choose which resources to migrate. You do not need to keep the Console open; the migration continues in the background. After migrating, add platforms in Overview → Integrations → Platforms and set permissions on migrated resources.',
+            )}
           </p>
           {reportError && (
             <Alert variant="destructive">
@@ -924,7 +936,7 @@ export function ImportWizardView() {
                   size="sm"
                   onClick={selectAll}
                 >
-                  Select all
+                  {t('Select all')}
                 </Button>
                 <Button
                   type="button"
@@ -932,7 +944,7 @@ export function ImportWizardView() {
                   size="sm"
                   onClick={selectNone}
                 >
-                  Deselect all
+                  {t('Deselect all')}
                 </Button>
               </div>
               <div className="space-y-2">
@@ -957,7 +969,7 @@ export function ImportWizardView() {
                           htmlFor={`res-${group}-root`}
                           className="flex-1 cursor-pointer text-[13px] font-medium"
                         >
-                          Storage
+                          {t('Storage')}
                         </Label>
                         <span className="text-[12px] text-muted-foreground tabular-nums">
                           {countLabel}
@@ -984,7 +996,7 @@ export function ImportWizardView() {
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <span className="text-[13px] font-medium">
-                                Users
+                                {t('Users')}
                               </span>
                               <span className="text-[12px] text-muted-foreground tabular-nums">
                                 {countLabel}
@@ -1004,12 +1016,13 @@ export function ImportWizardView() {
                                 htmlFor="users-teams"
                                 className="cursor-pointer text-[13px] font-normal"
                               >
-                                Include teams
+                                {t('Include teams')}
                               </Label>
                             </div>
                             <p className="mt-1 ps-6 text-[11px] text-muted-foreground">
-                              Import all teams and the team memberships of your
-                              users.
+                              {t(
+                                'Import all teams and the team memberships of your users.',
+                              )}
                             </p>
                           </AccordionContent>
                         </AccordionItem>
@@ -1038,7 +1051,7 @@ export function ImportWizardView() {
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <span className="text-[13px] font-medium">
-                                Databases
+                                {t('Databases')}
                               </span>
                               <span className="text-[12px] text-muted-foreground tabular-nums">
                                 {countLabel}
@@ -1058,11 +1071,11 @@ export function ImportWizardView() {
                                 htmlFor="databases-rows"
                                 className="cursor-pointer text-[13px] font-normal"
                               >
-                                Include rows
+                                {t('Include rows')}
                               </Label>
                             </div>
                             <p className="mt-1 ps-6 text-[11px] text-muted-foreground">
-                              Import all rows inside tables.
+                              {t('Import all rows inside tables.')}
                             </p>
                           </AccordionContent>
                         </AccordionItem>
@@ -1091,7 +1104,7 @@ export function ImportWizardView() {
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <span className="text-[13px] font-medium">
-                                Functions
+                                {t('Functions')}
                               </span>
                               <span className="text-[12px] text-muted-foreground tabular-nums">
                                 {countLabel}
@@ -1111,11 +1124,11 @@ export function ImportWizardView() {
                                 htmlFor="functions-env"
                                 className="cursor-pointer text-[13px] font-normal"
                               >
-                                Include environment variables
+                                {t('Include environment variables')}
                               </Label>
                             </div>
                             <p className="ps-6 text-[11px] text-muted-foreground">
-                              Import all environment variables.
+                              {t('Import all environment variables.')}
                             </p>
                             <div className="flex items-center gap-2 ps-6">
                               <Checkbox
@@ -1133,12 +1146,13 @@ export function ImportWizardView() {
                                 htmlFor="functions-inactive"
                                 className="cursor-pointer text-[13px] font-normal"
                               >
-                                Include inactive deployments
+                                {t('Include inactive deployments')}
                               </Label>
                             </div>
                             <p className="ps-6 text-[11px] text-muted-foreground">
-                              Import all deployments that are not currently
-                              active.
+                              {t(
+                                'Import all deployments that are not currently active.',
+                              )}
                             </p>
                           </AccordionContent>
                         </AccordionItem>
@@ -1164,7 +1178,7 @@ export function ImportWizardView() {
           onClick={() => setStep((s) => s - 1)}
           disabled={loadingReport || isCreatePending}
         >
-          Back
+          {t('Back')}
         </Button>
       )}
       {step === 2 && (
@@ -1173,7 +1187,7 @@ export function ImportWizardView() {
           disabled={loadingReport}
           onClick={handleFetchReport}
         >
-          Continue
+          {t('Continue')}
         </Button>
       )}
       {step === 3 && (
@@ -1182,7 +1196,7 @@ export function ImportWizardView() {
           disabled={!hasSelection || isCreatePending}
           onClick={handleCreate}
         >
-          {isCreatePending ? 'Starting...' : 'Start migration'}
+          {isCreatePending ? t('Starting...') : t('Start migration')}
         </Button>
       )}
     </div>
@@ -1190,8 +1204,8 @@ export function ImportWizardView() {
 
   const wizardTitle =
     step > 1 && provider
-      ? `Import from ${PROVIDER_DISPLAY_LABELS[provider]}`
-      : 'Import data'
+      ? `${t('Import from')} ${PROVIDER_DISPLAY_LABELS[provider]}`
+      : t('Import data')
 
   return (
     <WizardLayout

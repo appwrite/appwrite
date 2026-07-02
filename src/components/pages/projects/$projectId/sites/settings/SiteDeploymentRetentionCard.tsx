@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
 import { getDeploymentRetention } from '@/lib/deployment-retention'
 import { DeploymentRetentionCard } from '../../shared/DeploymentRetentionCard'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteDeploymentRetentionCardProps {
   projectId: string | null | undefined
@@ -18,6 +19,7 @@ export function SiteDeploymentRetentionCard({
   siteId,
   site,
 }: SiteDeploymentRetentionCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
 
   const updateSiteMutation = useMutation({
@@ -30,7 +32,7 @@ export function SiteDeploymentRetentionCard({
       )
     },
     onSuccess: () => {
-      toast.success('Retention has been updated')
+      toast.success(t('Retention has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -39,9 +41,7 @@ export function SiteDeploymentRetentionCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(error, 'Failed to update retention'),
-      )
+      toast.error(getErrorMessage(error, t('Failed to update retention')))
     },
   })
 

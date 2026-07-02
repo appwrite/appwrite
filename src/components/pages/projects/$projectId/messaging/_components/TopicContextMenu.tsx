@@ -20,6 +20,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export function TopicContextMenu({
   topic,
   children,
 }: TopicContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -72,11 +74,11 @@ export function TopicContextMenu({
       await queryClient.refetchQueries({
         queryKey: ['topics', 'project', projectId],
       })
-      toast.success('Topic deleted')
+      toast.success(t('Topic deleted'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete topic')
+      toast.error(getErrorMessage(error) || t('Failed to delete topic'))
     },
   })
 
@@ -114,40 +116,40 @@ export function TopicContextMenu({
             onSelect={() => navigateToTab('overview')}
 >
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => navigateToTab('settings')}
 >
             <ContextMenuIcon icon={Settings} />
-            Settings
+            {t('Settings')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', topic.$id)}
 >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', topic.name)}
 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', topicHref)}
 >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -157,7 +159,7 @@ export function TopicContextMenu({
                 }
 >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -166,20 +168,20 @@ export function TopicContextMenu({
             onSelect={() => openInNewTab(topicHref)}
 >
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => openInNewWindow(topicHref)}
 >
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
             onSelect={handleDeleteClick}
 >
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -189,10 +191,11 @@ export function TopicContextMenu({
           className="sm:max-w-md p-0"
 >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete topic</DialogTitle>
+            <DialogTitle>{t('Delete topic')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this topic? This action cannot be
-              undone.
+              {t(
+                'Are you sure you want to delete this topic? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -201,14 +204,14 @@ export function TopicContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
 >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
 >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

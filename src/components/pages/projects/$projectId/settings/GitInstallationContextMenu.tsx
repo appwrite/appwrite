@@ -15,6 +15,7 @@ import {
   copyToClipboard,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface GitInstallationContextMenuProps {
   installation: Models.Installation
@@ -36,6 +37,7 @@ export function GitInstallationContextMenu({
   onDisconnect,
   children,
 }: GitInstallationContextMenuProps) {
+  const t = useT()
   const providerUrl = getProviderUrl(
     installation.provider,
     installation.organization,
@@ -49,20 +51,20 @@ export function GitInstallationContextMenu({
           onSelect={() => window.open(configureHref, '_blank', 'noreferrer')}
         >
           <ContextMenuIcon icon={Settings} />
-          Configure
+          {t('Configure')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', installation.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -70,14 +72,14 @@ export function GitInstallationContextMenu({
               }
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             {providerUrl ? (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', providerUrl)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
@@ -88,14 +90,14 @@ export function GitInstallationContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => onDisconnect(installation)}>
           <ContextMenuIcon icon={Trash2} />
-          Disconnect
+          {t('Disconnect')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

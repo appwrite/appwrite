@@ -12,6 +12,7 @@ import {
   buildSiteUpdateParams,
   useSiteFrameworks,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteBuildCommandsCardProps {
   projectId: string | null | undefined
@@ -24,6 +25,7 @@ export function SiteBuildCommandsCard({
   siteId,
   site,
 }: SiteBuildCommandsCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: frameworksData } = useSiteFrameworks(projectId)
 
@@ -62,7 +64,7 @@ export function SiteBuildCommandsCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Build commands updated successfully')
+      toast.success(t('Build commands updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -71,7 +73,7 @@ export function SiteBuildCommandsCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update build commands'))
+      toast.error(getErrorMessage(error, t('Failed to update build commands')))
     },
   })
 
@@ -89,38 +91,39 @@ export function SiteBuildCommandsCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Commands</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Commands')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Shell commands run on the build worker (defaults follow your
-          framework).
+          {t('Shell commands run on the build worker (defaults follow your framework).')}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
         <div>
           <Label htmlFor="install-command" className="text-[13px]">
-            Install command
+            {t('Install command')}
           </Label>
           <Input
             id="install-command"
             value={installCommand}
             onChange={(e) => setInstallCommand(e.target.value)}
             placeholder={
-              adapterDefaults.installCommand || 'Enter install command'
+              adapterDefaults.installCommand || t('Enter install command')
             }
             className="mt-2 h-9 font-mono text-[13px]"
           />
         </div>
         <div>
           <Label htmlFor="build-command" className="text-[13px]">
-            Build command
+            {t('Build command')}
           </Label>
           <Input
             id="build-command"
             value={buildCommand}
             onChange={(e) => setBuildCommand(e.target.value)}
             placeholder={
-              adapterDefaults.buildCommand || 'Enter build command'
+              adapterDefaults.buildCommand || t('Enter build command')
             }
             className="mt-2 h-9 font-mono text-[13px]"
           />
@@ -133,7 +136,7 @@ export function SiteBuildCommandsCard({
           disabled={!hasChanges || updateSiteMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

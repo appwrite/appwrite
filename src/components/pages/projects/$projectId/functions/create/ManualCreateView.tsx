@@ -41,12 +41,14 @@ import { useFunctionWizard } from './WizardContext'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
+import { useT } from '@/lib/i18n/translate'
 
 interface ManualCreateViewProps {
   runtimeFromSearch?: string
 }
 
 export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const { project } = useProject(projectId)
   const navigate = useNavigate()
@@ -98,15 +100,15 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   const handleDeploy = async () => {
     if (!projectId) return
     if (!functionName || !runtime) {
-      toast.error('Please fill in function name and runtime')
+      toast.error(t('Please fill in function name and runtime'))
       return
     }
     if (!domain.trim()) {
-      toast.error('Please enter a domain')
+      toast.error(t('Please enter a domain'))
       return
     }
     if (!file) {
-      toast.error('Please upload a .tar.gz file')
+      toast.error(t('Please upload a .tar.gz file'))
       return
     }
 
@@ -166,16 +168,16 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         search: { functionId: finalFunctionId, deploymentId: deployment.$id },
       })
     } catch (err: unknown) {
-      toast.error(err?.message || 'Failed to create function')
+      toast.error(err?.message || t('Failed to create function'))
       setIsDeploying(false)
     }
   }
 
   return (
     <WizardLayout
-      title="Create function"
+      title={t('Create function')}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       fallbackPath={`/projects/${projectId}/functions`}
       onClose={() =>
         navigate({
@@ -204,7 +206,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
             }
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -217,42 +219,44 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
               !file
             }
           >
-            Create and deploy
+            {t('Create and deploy')}
           </Button>
         </>
       }
     >
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="function-name" className="text-[13px]">
-              Function name
+              {t('Function name')}
             </Label>
             <Input
               id="function-name"
               value={functionName}
               onChange={(e) => setFunctionName(e.target.value)}
-              placeholder="My function"
+              placeholder={t('My function')}
               className="h-9 text-[13px]"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Function ID</Label>
+            <Label className="text-[13px]">{t('Function ID')}</Label>
             <IdInput
               value={functionId}
               onChange={setFunctionId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Runtime</Label>
+            <Label className="text-[13px]">{t('Runtime')}</Label>
             <Select value={runtime} onValueChange={setRuntime}>
               <SelectTrigger className="h-9 text-[13px]">
-                <SelectValue placeholder="Select runtime" />
+                <SelectValue placeholder={t('Select runtime')} />
               </SelectTrigger>
               <SelectContent>
                 {runtimes.map((r) => (
@@ -268,7 +272,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="entrypoint" className="text-[13px]">
-              Entrypoint
+              {t('Entrypoint')}
             </Label>
             <Input
               id="entrypoint"
@@ -280,7 +284,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="commands" className="text-[13px]">
-              Build commands
+              {t('Build commands')}
             </Label>
             <Input
               id="commands"
@@ -292,9 +296,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-[13px]">Public</Label>
+              <Label className="text-[13px]">{t('Public')}</Label>
               <p className="text-[11px] text-muted-foreground">
-                Allow anyone to execute this function (execute role: any)
+                {t('Allow anyone to execute this function (execute role: any)')}
               </p>
             </div>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
@@ -302,14 +306,14 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
           {specifications.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="specification" className="text-[13px]">
-                Compute
+                {t('Compute')}
               </Label>
               <Select
                 value={specification || undefined}
                 onValueChange={setSpecification}
               >
                 <SelectTrigger id="specification" className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select specification" />
+                  <SelectValue placeholder={t('Select specification')} />
                 </SelectTrigger>
                 <SelectContent>
                   {specifications
@@ -326,12 +330,12 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Runtime specification for your function
+                {t('Runtime specification for your function')}
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
-                  additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} />{' '}
+                  {t('to unlock additional specifications.')}
                 </p>
               )}
             </div>
@@ -349,10 +353,10 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Upload code
+            {t('Upload code')}
           </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Upload a .tar.gz archive containing your function code
+            {t('Upload a .tar.gz archive containing your function code')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -371,7 +375,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="h-4 w-4" />
-            {file ? file.name : 'Choose .tar.gz file'}
+            {file ? file.name : t('Choose .tar.gz file')}
           </Button>
         </div>
       </div>

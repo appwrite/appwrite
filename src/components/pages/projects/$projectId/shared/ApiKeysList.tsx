@@ -19,6 +19,7 @@ import {
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { ApiKeyContextMenu } from '../api-keys/_components/ApiKeyContextMenu'
+import { useT } from '@/lib/i18n/translate'
 
 export interface ApiKey {
   id: string
@@ -66,6 +67,7 @@ export function ApiKeysList({
   copiedField,
   showActions = true,
   projectId}: ApiKeysListProps) {
+  const t = useT()
   const [viewingKeyId, setViewingKeyId] = useState<string | null>(null)
 
   const maskKey = (key: string) => {
@@ -93,7 +95,9 @@ export function ApiKeysList({
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading API keys...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading API keys...')}
+        </p>
       </div>
     )
   }
@@ -102,8 +106,10 @@ export function ApiKeysList({
     return (
       <EmptyState
         icon={Key}
-        title="No API keys found"
-        description="Create your first API key to authenticate your applications"
+        title={t('No API keys found')}
+        description={t(
+          'Create your first API key to authenticate your applications',
+        )}
         isEmpty={true}
         variant="card"
       />
@@ -145,17 +151,17 @@ export function ApiKeysList({
                     </p>
                     {expirationStatus?.isExpired ? (
                       <Badge variant="error" className="text-[10px] shrink-0">
-                        Expired
+                        {t('Expired')}
                       </Badge>
                     ) : expirationStatus?.isExpiringSoon ? (
                       <Badge variant="warning" className="text-[10px] shrink-0">
-                        Expires soon
+                        {t('Expires soon')}
                       </Badge>
                     ) : null}
                     <Badge variant="info" className="text-[10px] shrink-0">
                       {apiKey.scopes.length === 0
-                        ? 'No scopes'
-                        : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
+                        ? t('No scopes')
+                        : `${apiKey.scopes.length} ${apiKey.scopes.length !== 1 ? t('scopes') : t('scope')}`}
                     </Badge>
                   </div>
                   <div className="mt-1.5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -171,7 +177,7 @@ export function ApiKeysList({
                           handleView(apiKey.id)
                         }}
                         className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
-                        title="View key"
+                        title={t('View key')}
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </button>
@@ -183,7 +189,7 @@ export function ApiKeysList({
                           handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
                         }}
                         className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
-                        title="Copy key"
+                        title={t('Copy key')}
                       >
                         {copiedField === `apiKey-${apiKey.id}` ? (
                           <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -194,14 +200,14 @@ export function ApiKeysList({
                     </div>
                     <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-x-2 sm:w-auto sm:gap-x-3">
                       <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden sm:inline">
-                        Created{' '}
+                        {t('Created')}{' '}
                         <DateTooltip
                           date={apiKey.createdAt}
                           className="text-[12px] text-muted-foreground"
                         />
                       </span>
                       <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden md:inline">
-                        Last used{' '}
+                        {t('Last used')}{' '}
                         {apiKey.lastUsed ? (
                           <DateTooltip
                             date={apiKey.lastUsed}
@@ -209,7 +215,7 @@ export function ApiKeysList({
                           />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            Never
+                            {t('Never')}
                           </span>
                         )}
                       </span>
@@ -217,15 +223,15 @@ export function ApiKeysList({
                         {apiKey.expire ? (
                           <>
                             {expirationStatus?.isExpired
-                              ? 'Expired'
-                              : 'Expires'}{' '}
+                              ? t('Expired')
+                              : t('Expires')}{' '}
                             <DateTooltip
                               date={apiKey.expire}
                               className="text-[12px] text-muted-foreground"
                             />
                           </>
                         ) : (
-                          'No expiration'
+                          t('No expiration')
                         )}
                       </span>
                     </div>
@@ -242,12 +248,16 @@ export function ApiKeysList({
                       <DropdownMenuContent align="end">
                         {onUpdate && (
                           <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
-                            <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                            <MenuItemContent icon={Pencil}>
+                              {t('Update')}
+                            </MenuItemContent>
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
                           <DropdownMenuItem onClick={() => onDelete(apiKey.id)}>
-                            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                            <MenuItemContent icon={Trash2}>
+                              {t('Delete')}
+                            </MenuItemContent>
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -285,10 +295,11 @@ export function ApiKeysList({
       >
         <DialogContent className="sm:max-w-[600px] p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>{viewingKey?.name || 'API Key'}</DialogTitle>
+            <DialogTitle>{viewingKey?.name || t('API Key')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Copy the full API key below. Keep it secure and never share it
-              publicly.
+              {t(
+                'Copy the full API key below. Keep it secure and never share it publicly.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -297,14 +308,14 @@ export function ApiKeysList({
             {viewingKey && (
               <div className="mb-4 flex w-full flex-wrap items-center justify-end gap-x-2 sm:gap-x-3 text-[12px] text-muted-foreground">
                 <span className="whitespace-nowrap">
-                  Created{' '}
+                  {t('Created')}{' '}
                   <DateTooltip
                     date={viewingKey.createdAt}
                     className="text-[12px] text-muted-foreground"
                   />
                 </span>
                 <span className="whitespace-nowrap">
-                  Last used{' '}
+                  {t('Last used')}{' '}
                   {viewingKey.lastUsed ? (
                     <DateTooltip
                       date={viewingKey.lastUsed}
@@ -312,7 +323,7 @@ export function ApiKeysList({
                     />
                   ) : (
                     <span className="text-[12px] text-muted-foreground">
-                      Never
+                      {t('Never')}
                     </span>
                   )}
                 </span>
@@ -320,22 +331,22 @@ export function ApiKeysList({
                   {viewingKey.expire ? (
                     <>
                       {getExpirationStatus(viewingKey.expire)?.isExpired
-                        ? 'Expired'
-                        : 'Expires'}{' '}
+                        ? t('Expired')
+                        : t('Expires')}{' '}
                       <DateTooltip
                         date={viewingKey.expire}
                         className="text-[12px] text-muted-foreground"
                       />
                     </>
                   ) : (
-                    'No expiration'
+                    t('No expiration')
                   )}
                 </span>
               </div>
             )}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                API Key
+                {t('API Key')}
               </label>
               <textarea
                 readOnly
@@ -348,7 +359,7 @@ export function ApiKeysList({
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setViewingKeyId(null)}>
-              Close
+              {t('Close')}
             </Button>
             <Button
               variant="outline"
@@ -362,12 +373,12 @@ export function ApiKeysList({
               {copiedField === 'apiKeyModal' ? (
                 <>
                   <Check className="h-4 w-4" />
-                  Copied
+                  {t('Copied')}
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4" />
-                  Copy
+                  {t('Copy')}
                 </>
               )}
             </Button>

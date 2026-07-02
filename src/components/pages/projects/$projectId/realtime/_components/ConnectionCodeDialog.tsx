@@ -16,6 +16,7 @@ import {
   type RealtimeSnippetSdkId,
 } from '@/lib/realtime/connection-snippets'
 import type { RealtimeConfiguredSubscription } from '@/lib/realtime/debugger-prefs'
+import { useT } from '@/lib/i18n/translate'
 
 type ConnectionCodeDialogProps = {
   open: boolean
@@ -30,6 +31,7 @@ export function ConnectionCodeDialog({
   projectId,
   subscriptions,
 }: ConnectionCodeDialogProps) {
+  const t = useT()
   const snippets = useMemo(
     () =>
       buildRealtimeConnectionSnippets({
@@ -58,36 +60,38 @@ export function ConnectionCodeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Realtime connection code</DialogTitle>
+          <DialogTitle>{t('Realtime connection code')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {subscriptionCount > 0 ? (
               <>
-                One subscribe call per configured subscription
+                {t('One subscribe call per configured subscription')}
                 {subscriptionCount === 1 ? (
                   <>
                     {' '}
-                    for{' '}
+                    {t('for')}{' '}
                     <code className="font-mono text-[12px]">
                       {subscriptions[0]?.channel}
                     </code>
                   </>
                 ) : (
-                  <> ({subscriptionCount} total)</>
+                  <> ({subscriptionCount} {t('total')})</>
                 )}
                 {queryCount > 0 ? (
                   <>
-                    . Query filters are included per subscription where configured.
+                    . {t('Query filters are included per subscription where configured.')}
                   </>
                 ) : (
                   <>.</>
                 )}{' '}
-                Authenticated channels require an active session or JWT on the
-                client.
+                {t(
+                  'Authenticated channels require an active session or JWT on the client.',
+                )}
               </>
             ) : (
               <>
-                Add a subscription in the debugger to generate channel-specific
-                subscribe calls. Add query filters on each subscription as needed.
+                {t(
+                  'Add a subscription in the debugger to generate channel-specific subscribe calls. Add query filters on each subscription as needed.',
+                )}
               </>
             )}
           </DialogDescription>
@@ -115,7 +119,7 @@ export function ConnectionCodeDialog({
 
         <div className="border-t border-border bg-muted/30 px-6 py-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

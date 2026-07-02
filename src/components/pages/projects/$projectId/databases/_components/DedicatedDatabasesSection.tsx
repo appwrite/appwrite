@@ -36,6 +36,7 @@ import {
   DedicatedDatabaseRegionUnavailableBadge,
   DedicatedDatabaseRegionUnavailableCard,
 } from './DedicatedDatabaseRegionUnavailableCard'
+import { useT } from '@/lib/i18n/translate'
 
 type DedicatedDatabasesSectionProps = {
   projectId: string
@@ -149,16 +150,17 @@ export function DedicatedDatabasesSection({
   viewMode,
   regionSupported = true,
 }: DedicatedDatabasesSectionProps) {
+  const t = useT()
   if (!regionSupported) {
     return (
       <section className="mt-10">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <h2 className="text-[15px] font-semibold text-foreground">
-            Dedicated databases
+            {t('Dedicated databases')}
           </h2>
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">
-            Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.
+            {t('Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.')}
           </p>
         </div>
         <DedicatedDatabaseRegionUnavailableCard icon={Cpu} />
@@ -178,6 +180,7 @@ function DedicatedDatabasesSectionContent({
   projectId,
   viewMode,
 }: Omit<DedicatedDatabasesSectionProps, 'regionSupported'>) {
+  const t = useT()
   const {
     databases,
     isLoading,
@@ -212,10 +215,10 @@ function DedicatedDatabasesSectionContent({
     <section className="mt-10">
       <div className="mb-4">
         <h2 className="text-[15px] font-semibold text-foreground">
-          Dedicated databases
+          {t('Dedicated databases')}
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.
+          {t('Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.')}
         </p>
       </div>
 
@@ -223,14 +226,14 @@ function DedicatedDatabasesSectionContent({
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
           <p className="mt-3 text-[13px] text-muted-foreground">
-            Loading dedicated databases...
+            {t('Loading dedicated databases...')}
           </p>
         </div>
       ) : errorMessage && databases.length === 0 ? (
         <div className="rounded-lg border border-destructive/30 bg-card py-10 px-6 text-center">
           <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
           <h3 className="mt-4 text-[15px] font-semibold text-foreground">
-            Failed to load dedicated databases
+            {t('Failed to load dedicated databases')}
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">{errorMessage}</p>
           <Button
@@ -241,7 +244,7 @@ function DedicatedDatabasesSectionContent({
             onClick={() => void refetch()}
             disabled={isFetching}
           >
-            Try again
+            {t('Try again')}
           </Button>
         </div>
       ) : viewMode === 'list' ? (
@@ -250,7 +253,7 @@ function DedicatedDatabasesSectionContent({
             {errorMessage ? (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Couldn&apos;t refresh dedicated databases</AlertTitle>
+                <AlertTitle>{t("Couldn't refresh dedicated databases")}</AlertTitle>
                 <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-[13px]">{errorMessage}</p>
                   <Button
@@ -261,7 +264,7 @@ function DedicatedDatabasesSectionContent({
                     onClick={() => void refetch()}
                     disabled={isFetching}
                   >
-                    Try again
+                    {t('Try again')}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -271,22 +274,22 @@ function DedicatedDatabasesSectionContent({
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Database
+                      {t('Database')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Engine
+                      {t('Engine')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Tier
+                      {t('Tier')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                      Status
+                      {t('Status')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Replicas
+                      {t('Replicas')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Created
+                      {t('Created')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -356,8 +359,8 @@ function DedicatedDatabasesSectionContent({
         ) : (
           <EmptyState
             icon={Cpu}
-            title="No dedicated databases yet"
-            description="Create a PostgreSQL or MySQL database to get started with dedicated compute."
+            title={t('No dedicated databases yet')}
+            description={t('Create a PostgreSQL or MySQL database to get started with dedicated compute.')}
             isEmpty
             variant="card"
           />
@@ -367,7 +370,7 @@ function DedicatedDatabasesSectionContent({
           {errorMessage ? (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Couldn&apos;t refresh dedicated databases</AlertTitle>
+              <AlertTitle>{t("Couldn't refresh dedicated databases")}</AlertTitle>
               <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[13px]">{errorMessage}</p>
                 <Button
@@ -378,7 +381,7 @@ function DedicatedDatabasesSectionContent({
                   onClick={() => void refetch()}
                   disabled={isFetching}
                 >
-                  Try again
+                  {t('Try again')}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -396,8 +399,8 @@ function DedicatedDatabasesSectionContent({
               <div className="col-span-full">
                 <EmptyState
                   icon={Cpu}
-                  title="No dedicated databases yet"
-                  description="Create a PostgreSQL or MySQL database to get started with dedicated compute."
+                  title={t('No dedicated databases yet')}
+                  description={t('Create a PostgreSQL or MySQL database to get started with dedicated compute.')}
                   isEmpty
                   variant="card"
                 />

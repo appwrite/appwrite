@@ -11,6 +11,7 @@ import {
   getUsageChartIntervalDisabledReason,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const TOGGLE_ITEM_CLASS =
@@ -31,6 +32,7 @@ export function UsageChartIntervalToggle({
   dateRange,
   className,
 }: UsageChartIntervalToggleProps) {
+  const t = useT()
   const optionCount = USAGE_CHART_INTERVAL_OPTIONS.length
 
   return (
@@ -49,7 +51,7 @@ export function UsageChartIntervalToggle({
           }
         }}
         className={cn('h-9 w-fit shrink-0 gap-0', className)}
-        aria-label="Chart interval"
+        aria-label={t('Chart interval')}
       >
         {USAGE_CHART_INTERVAL_OPTIONS.map((option, index) => {
           const isFirst = index === 0

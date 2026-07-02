@@ -3,12 +3,14 @@ import { useParams, useLocation } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { RulesTab } from './Rules'
 import { AnalyticsTab } from './Analytics'
 import { LogsTab } from './Logs'
 
 export function View() {
+  const t = useT()
   const params = useParams({ strict: false })
   const location = useLocation()
   const projectId = params.projectId as string
@@ -36,24 +38,24 @@ export function View() {
     () => [
       {
         id: 'rules',
-        label: 'Rules',
+        label: t('Rules'),
         to: '/projects/$projectId/firewall',
         params: { projectId: projectId as string },
       },
       {
         id: 'analytics',
-        label: 'Analytics',
+        label: t('Analytics'),
         to: '/projects/$projectId/firewall/analytics',
         params: { projectId: projectId as string },
       },
       {
         id: 'logs',
-        label: 'Logs',
+        label: t('Logs'),
         to: '/projects/$projectId/firewall/logs',
         params: { projectId: projectId as string },
       },
     ],
-    [projectId],
+    [projectId, t],
   )
 
   const { project } = useProject(projectId)
@@ -65,14 +67,14 @@ export function View() {
   const hasSearch = activeTab === 'rules' || activeTab === 'logs'
   const searchPlaceholder = hasSearch
     ? activeTab === 'rules'
-      ? 'Search rules...'
-      : 'Search logs...'
+      ? t('Search rules...')
+      : t('Search logs...')
     : undefined
 
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Firewall"
+        title={t('Firewall')}
         tabs={tabs}
         activeTab={activeTab}
         showFilters={false}
@@ -80,7 +82,7 @@ export function View() {
         searchPlaceholder={searchPlaceholder}
         searchValue={hasSearch ? searchValue : undefined}
         onSearchChange={hasSearch ? setSearchValue : undefined}
-        createLabel={activeTab === 'rules' ? 'Create rule' : undefined}
+        createLabel={activeTab === 'rules' ? t('Create rule') : undefined}
         onCreate={
           activeTab === 'rules'
             ? () => {
@@ -94,7 +96,7 @@ export function View() {
         createDisabled={noCreatePermission}
         createDisabledTooltip={
           noCreatePermission
-            ? "You don't have permission to create firewall rules."
+            ? t("You don't have permission to create firewall rules.")
             : undefined
         }
         showRefresh={activeTab === 'analytics'}

@@ -22,6 +22,7 @@ import {
 } from '@/lib/database-row-inline-edits'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 
 type TableRowsEditSessionContextValue = {
   canWrite: boolean
@@ -72,6 +73,7 @@ export function TableRowsEditSessionProvider({
   canWrite = true,
   children,
 }: TableRowsEditSessionProviderProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [pendingEdits, setPendingEdits] = useState<
     Map<string, PendingRowCellEdit>
@@ -315,7 +317,7 @@ export function TableRowsEditSessionProvider({
                 disabled={commitMutation.isPending}
                 className="h-8 text-xs"
               >
-                Discard
+                {t('Discard')}
               </Button>
               <Button
                 size="sm"
@@ -323,7 +325,7 @@ export function TableRowsEditSessionProvider({
                 disabled={commitMutation.isPending || !canWrite}
                 className="h-8"
               >
-                Commit changes
+                {t('Commit changes')}
               </Button>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildFunctionUpdateParams } from '@/lib/react-query/hooks'
 import { getDeploymentRetention } from '@/lib/deployment-retention'
 import { DeploymentRetentionCard } from '../../shared/DeploymentRetentionCard'
+import { useT } from '@/lib/i18n/translate'
 
 interface FunctionDeploymentRetentionCardProps {
   projectId: string | null | undefined
@@ -18,6 +19,7 @@ export function FunctionDeploymentRetentionCard({
   functionId,
   func,
 }: FunctionDeploymentRetentionCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
 
   const updateFunctionMutation = useMutation({
@@ -30,7 +32,7 @@ export function FunctionDeploymentRetentionCard({
       )
     },
     onSuccess: () => {
-      toast.success('Retention has been updated')
+      toast.success(t('Retention has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -39,9 +41,7 @@ export function FunctionDeploymentRetentionCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(error, 'Failed to update retention'),
-      )
+      toast.error(getErrorMessage(error, t('Failed to update retention')))
     },
   })
 

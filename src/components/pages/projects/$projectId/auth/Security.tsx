@@ -46,6 +46,7 @@ import {
   type TimeUnit,
   type TimeUnitPair,
 } from '@/lib/utils/time-unit-converter'
+import { useT } from '@/lib/i18n/translate'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const SESSION_LENGTH_UNITS: TimeUnit[] = [
@@ -75,6 +76,7 @@ export function UsersLimitCard({
   projectId: string
   currentLimit: number
 }) {
+  const t = useT()
   const [isUnlimited, setIsUnlimited] = useState(currentLimit === 0)
   const [limit, setLimit] = useState(currentLimit === 0 ? 1000 : currentLimit)
   const mutation = useUpdateAuthLimit(projectId)
@@ -112,11 +114,11 @@ export function UsersLimitCard({
     lastSubmittedValue.current = newLimit
     mutation.mutate(newLimit, {
       onSuccess: () => {
-        toast.success('Updated project users limit successfully')
+        toast.success(t('Updated project users limit successfully'))
         // Track analytics: Submit.AuthLimitUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update users limit')
+        toast.error(error.message || t('Failed to update users limit'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthLimitUpdate)
@@ -130,12 +132,12 @@ export function UsersLimitCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Users limit
+              {t('Users limit')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Limit new users from signing up for your project, regardless of
-              authentication method. You can still create users and team
-              memberships from your Appwrite console.
+              {t(
+                'Limit new users from signing up for your project, regardless of authentication method. You can still create users and team memberships from your Appwrite console.', // pragma: allowlist secret
+              )}
             </p>
           </div>
         </div>
@@ -154,13 +156,13 @@ export function UsersLimitCard({
               htmlFor="users-limit-unlimited"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Allow unlimited users (Recommended)
+              {t('Allow unlimited users (Recommended)')}
             </Label>
           </div>
           {!isUnlimited && (
             <div className="space-y-2">
               <Label htmlFor="users-limit-value" className="text-[13px]">
-                Maximum number of users
+                {t('Maximum number of users')}
               </Label>
               <Input
                 id="users-limit-value"
@@ -182,7 +184,8 @@ export function UsersLimitCard({
                 className="max-w-[200px]"
               />
               <p className="text-[12px] text-muted-foreground">
-                Between 1 and {MAX_AUTH_POLICY_TOTAL.toLocaleString()} users
+                {t('Between 1 and')} {MAX_AUTH_POLICY_TOTAL.toLocaleString()}{' '}
+                {t('users')}
               </p>
             </div>
           )}
@@ -195,7 +198,7 @@ export function UsersLimitCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -209,6 +212,7 @@ export function SessionLengthCard({
   projectId: string
   currentDuration: number
 }) {
+  const t = useT()
   const MAX_DURATION_SECONDS = 31_536_000 // 1 year in seconds (365 days)
 
   const getInitialPair = (seconds: number): TimeUnitPair =>
@@ -288,7 +292,7 @@ export function SessionLengthCard({
 
   const handleSubmit = () => {
     if (exceedsMax) {
-      toast.error(`Session length cannot exceed 365 days (1 year)`)
+      toast.error(t('Session length cannot exceed 365 days (1 year)'))
       return
     }
 
@@ -300,11 +304,11 @@ export function SessionLengthCard({
     )
     mutation.mutate(clampedDuration, {
       onSuccess: () => {
-        toast.success('Updated session length successfully')
+        toast.success(t('Updated session length successfully'))
         // Track analytics: Submit.SessionsLengthUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update session length')
+        toast.error(error.message || t('Failed to update session length'))
         // Track analytics: trackError(error, Submit.SessionsLengthUpdate)
       },
     })
@@ -316,11 +320,12 @@ export function SessionLengthCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Session length
+              {t('Session length')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              If you reduce the limit, users who are currently logged in will be
-              logged out of the application.
+              {t(
+                'If you reduce the limit, users who are currently logged in will be logged out of the application.',
+              )}
             </p>
           </div>
         </div>
@@ -330,7 +335,7 @@ export function SessionLengthCard({
         <div className="flex gap-3">
           <div className="space-y-2 flex-1 max-w-[200px]">
             <Label htmlFor="session-length-value" className="text-[13px]">
-              Length
+              {t('Length')}
             </Label>
             <div className="space-y-1">
               <Input
@@ -352,19 +357,20 @@ export function SessionLengthCard({
               />
               {exceedsMax && (
                 <p className="text-[12px] text-destructive">
-                  Maximum is {maxValueForUnit} {unit} (365 days)
+                  {t('Maximum is')} {maxValueForUnit} {t(unit)}{' '}
+                  {t('(365 days)')}
                 </p>
               )}
               {!exceedsMax && (
                 <p className="text-[12px] text-muted-foreground">
-                  Maximum: {maxValueForUnit} {unit} (365 days)
+                  {t('Maximum:')} {maxValueForUnit} {t(unit)} {t('(365 days)')}
                 </p>
               )}
             </div>
           </div>
           <div className="space-y-2 flex-1 max-w-[200px]">
             <Label htmlFor="session-length-unit" className="text-[13px]">
-              Time period
+              {t('Time period')}
             </Label>
             <Select
               value={unit}
@@ -375,11 +381,11 @@ export function SessionLengthCard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="seconds">Seconds</SelectItem>
-                <SelectItem value="minutes">Minutes</SelectItem>
-                <SelectItem value="hours">Hours</SelectItem>
-                <SelectItem value="days">Days</SelectItem>
-                <SelectItem value="weeks">Weeks</SelectItem>
+                <SelectItem value="seconds">{t('Seconds')}</SelectItem>
+                <SelectItem value="minutes">{t('Minutes')}</SelectItem>
+                <SelectItem value="hours">{t('Hours')}</SelectItem>
+                <SelectItem value="days">{t('Days')}</SelectItem>
+                <SelectItem value="weeks">{t('Weeks')}</SelectItem>
               </SelectContent>
             </Select>
             {/* Spacer to match the height of helper text in the value field */}
@@ -394,7 +400,7 @@ export function SessionLengthCard({
           disabled={!hasChanges || mutation.isPending || exceedsMax}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -408,6 +414,7 @@ export function SessionsLimitCard({
   projectId: string
   currentLimit: number
 }) {
+  const t = useT()
   const [isUnlimited, setIsUnlimited] = useState(currentLimit === 0)
   const [limit, setLimit] = useState(
     currentLimit === 0 ? DEFAULT_AUTH_SECURITY.authSessionsLimit : currentLimit,
@@ -447,11 +454,11 @@ export function SessionsLimitCard({
     lastSubmittedValue.current = newLimit
     mutation.mutate(newLimit, {
       onSuccess: () => {
-        toast.success('Sessions limit has been updated')
+        toast.success(t('Sessions limit has been updated'))
         // Track analytics: Submit.SessionsLimitUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update sessions limit')
+        toast.error(error.message || t('Failed to update sessions limit'))
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.SessionsLimitUpdate)
       },
@@ -464,10 +471,10 @@ export function SessionsLimitCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Sessions limit
+              {t('Sessions limit')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Maximum number of active sessions allowed per user.
+              {t('Maximum number of active sessions allowed per user.')}
             </p>
           </div>
         </div>
@@ -486,13 +493,13 @@ export function SessionsLimitCard({
               htmlFor="sessions-limit-unlimited"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Allow unlimited sessions per user
+              {t('Allow unlimited sessions per user')}
             </Label>
           </div>
           {!isUnlimited && (
             <div className="space-y-2 max-w-[200px]">
               <Label htmlFor="sessions-limit-value" className="text-[13px]">
-                Limit
+                {t('Limit')}
               </Label>
               <Input
                 id="sessions-limit-value"
@@ -513,7 +520,8 @@ export function SessionsLimitCard({
                 disabled={mutation.isPending}
               />
               <p className="text-[12px] text-muted-foreground">
-                Between 1 and {MAX_AUTH_POLICY_TOTAL.toLocaleString()} sessions
+                {t('Between 1 and')} {MAX_AUTH_POLICY_TOTAL.toLocaleString()}{' '}
+                {t('sessions')}
               </p>
             </div>
           )}
@@ -526,7 +534,7 @@ export function SessionsLimitCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -540,6 +548,7 @@ export function PasswordHistoryCard({
   projectId: string
   currentLimit: number
 }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(currentLimit > 0)
   const [limit, setLimit] = useState(currentLimit > 0 ? currentLimit : 5)
   const mutation = useUpdateAuthPasswordHistory(projectId)
@@ -577,11 +586,11 @@ export function PasswordHistoryCard({
     lastSubmittedValue.current = newLimit
     mutation.mutate(newLimit, {
       onSuccess: () => {
-        toast.success('Updated password history limit.')
+        toast.success(t('Updated password history limit.'))
         // Track analytics: Submit.AuthPasswordHistoryUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update password history')
+        toast.error(error.message || t('Failed to update password history'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthPasswordHistoryUpdate)
@@ -595,12 +604,12 @@ export function PasswordHistoryCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              History
+              {t('History')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Set the maximum number of passwords saved per user. Enabling this
-              option prevents users from reusing recent passwords by comparing
-              the new password with their password history.
+              {t(
+                'Set the maximum number of passwords saved per user. Enabling this option prevents users from reusing recent passwords by comparing the new password with their password history.',
+              )}
             </p>
           </div>
         </div>
@@ -619,13 +628,13 @@ export function PasswordHistoryCard({
               htmlFor="password-history-enabled"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Deny password reuse
+              {t('Deny password reuse')}
             </Label>
           </div>
           {enabled && (
             <div className="space-y-2 max-w-[200px]">
               <Label htmlFor="password-history-limit" className="text-[13px]">
-                Limit
+                {t('Limit')}
               </Label>
               <Input
                 id="password-history-limit"
@@ -646,7 +655,8 @@ export function PasswordHistoryCard({
                 disabled={mutation.isPending}
               />
               <p className="text-[12px] text-muted-foreground">
-                Between 1 and {MAX_AUTH_POLICY_TOTAL.toLocaleString()} passwords
+                {t('Between 1 and')} {MAX_AUTH_POLICY_TOTAL.toLocaleString()}{' '}
+                {t('passwords')}
               </p>
             </div>
           )}
@@ -659,7 +669,7 @@ export function PasswordHistoryCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -673,6 +683,7 @@ export function PasswordDictionaryCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(currentEnabled)
   const mutation = useUpdateAuthPasswordDictionary(projectId)
   const lastSubmittedValue = useRef<boolean | null>(null)
@@ -704,11 +715,11 @@ export function PasswordDictionaryCard({
     lastSubmittedValue.current = enabled
     mutation.mutate(enabled, {
       onSuccess: () => {
-        toast.success('Updated password dictionary check.')
+        toast.success(t('Updated password dictionary check.'))
         // Track analytics: Submit.AuthPasswordDictionaryUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update password dictionary')
+        toast.error(error.message || t('Failed to update password dictionary'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthPasswordDictionaryUpdate)
@@ -722,18 +733,19 @@ export function PasswordDictionaryCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Dictionary
+              {t('Dictionary')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Enabling this option prevents users from setting insecure
-              passwords by comparing the user's password with the{' '}
+              {t(
+                "Enabling this option prevents users from setting insecure passwords by comparing the user's password with the",
+              )}{' '}
               <a
                 href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="link-neutral"
               >
-                10k most commonly used passwords
+                {t('10k most commonly used passwords')}
               </a>
               .
             </p>
@@ -753,7 +765,7 @@ export function PasswordDictionaryCard({
             htmlFor="password-dictionary-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Deny common passwords
+            {t('Deny common passwords')}
           </Label>
         </div>
       </div>
@@ -764,7 +776,7 @@ export function PasswordDictionaryCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -778,6 +790,7 @@ export function PersonalDataCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(currentEnabled)
   const mutation = useUpdatePersonalDataCheck(projectId)
   const lastSubmittedValue = useRef<boolean | null>(null)
@@ -809,11 +822,11 @@ export function PersonalDataCard({
     lastSubmittedValue.current = enabled
     mutation.mutate(enabled, {
       onSuccess: () => {
-        toast.success('Toggled personal data checks for passwords')
+        toast.success(t('Toggled personal data checks for passwords'))
         // Track analytics: Submit.AuthPersonalDataCheckUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update personal data check')
+        toast.error(error.message || t('Failed to update personal data check'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthPersonalDataCheckUpdate)
@@ -827,11 +840,12 @@ export function PersonalDataCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Personal data
+              {t('Personal data')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Do not allow passwords that contain any part of the user's
-              personal data. This includes the user's{' '}
+              {t(
+                "Do not allow passwords that contain any part of the user's personal data. This includes the user's",
+              )}{' '}
               <code className="text-[12px] bg-muted px-1 py-0.5 rounded">
                 name
               </code>
@@ -839,7 +853,7 @@ export function PersonalDataCard({
               <code className="text-[12px] bg-muted px-1 py-0.5 rounded">
                 email
               </code>
-              , or{' '}
+              , {t('or')}{' '}
               <code className="text-[12px] bg-muted px-1 py-0.5 rounded">
                 phone
               </code>
@@ -861,7 +875,7 @@ export function PersonalDataCard({
             htmlFor="personal-data-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Deny personal data in passwords
+            {t('Deny personal data in passwords')}
           </Label>
         </div>
       </div>
@@ -872,7 +886,7 @@ export function PersonalDataCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -886,6 +900,7 @@ export function SessionAlertsCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(currentEnabled)
   const mutation = useUpdateSessionAlerts(projectId)
   const lastSubmittedValue = useRef<boolean | null>(null)
@@ -917,11 +932,11 @@ export function SessionAlertsCard({
     lastSubmittedValue.current = enabled
     mutation.mutate(enabled, {
       onSuccess: () => {
-        toast.success('Updated session alerts.')
+        toast.success(t('Updated session alerts.'))
         // Track analytics: Submit.AuthSessionAlertsUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update session alerts')
+        toast.error(error.message || t('Failed to update session alerts'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthSessionAlertsUpdate)
@@ -935,11 +950,12 @@ export function SessionAlertsCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Session alerts
+              {t('Session alerts')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Enabling this option will send an email to the users when a new
-              session is created.
+              {t(
+                'Enabling this option will send an email to the users when a new session is created.',
+              )}
             </p>
           </div>
         </div>
@@ -957,7 +973,7 @@ export function SessionAlertsCard({
             htmlFor="session-alerts-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Allow session alerts
+            {t('Allow session alerts')}
           </Label>
         </div>
       </div>
@@ -968,7 +984,7 @@ export function SessionAlertsCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -982,6 +998,7 @@ export function InvalidateSessionsCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(currentEnabled)
   const mutation = useUpdateSessionInvalidation(projectId)
   const lastSubmittedValue = useRef<boolean | null>(null)
@@ -1013,11 +1030,11 @@ export function InvalidateSessionsCard({
     lastSubmittedValue.current = enabled
     mutation.mutate(enabled, {
       onSuccess: () => {
-        toast.success('Updated session invalidation check.')
+        toast.success(t('Updated session invalidation check.'))
         // Track analytics: Submit.AuthInvalidateSesssion
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update session invalidation')
+        toast.error(error.message || t('Failed to update session invalidation'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthInvalidateSesssion)
@@ -1031,11 +1048,12 @@ export function InvalidateSessionsCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Invalidate sessions
+              {t('Invalidate sessions')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Enabling this option will clear all existing sessions when the
-              user changes their password.
+              {t(
+                'Enabling this option will clear all existing sessions when the user changes their password.',
+              )}
             </p>
           </div>
         </div>
@@ -1053,7 +1071,7 @@ export function InvalidateSessionsCard({
             htmlFor="invalidate-sessions-enabled"
             className="text-[13px] text-foreground cursor-pointer"
           >
-            Allow invalidation on password change
+            {t('Allow invalidation on password change')}
           </Label>
         </div>
       </div>
@@ -1064,7 +1082,7 @@ export function InvalidateSessionsCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -1096,6 +1114,7 @@ export function MockPhoneNumbersCard({
   projectId: string
   currentNumbers: Array<{ phone: string; otp: string }>
 }) {
+  const t = useT()
   const [numbers, setNumbers] = useState(() =>
     mockNumbersFromCurrent(currentNumbers),
   )
@@ -1204,11 +1223,11 @@ export function MockPhoneNumbersCard({
     lastSubmittedSnapshot.current = serializeMockNumbers(numbersToSubmit)
     mutation.mutate(numbersToSubmit, {
       onSuccess: () => {
-        toast.success('Mock phone numbers have been updated')
+        toast.success(t('Mock phone numbers have been updated'))
         // Track analytics: Submit.AuthMockNumbersUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update mock phone numbers')
+        toast.error(error.message || t('Failed to update mock phone numbers'))
         lastSubmittedSnapshot.current = null
         // Track analytics: trackError(error, Submit.AuthMockNumbersUpdate)
       },
@@ -1221,14 +1240,15 @@ export function MockPhoneNumbersCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Mock phone numbers
+              {t('Mock phone numbers')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Generate <strong>fictional</strong> numbers to simulate phone
-              verification when testing demo accounts for submitting your
-              application to the App Store or Google Play.{' '}
+              {t('Generate')} <strong>{t('fictional')}</strong>{' '}
+              {t(
+                'numbers to simulate phone verification when testing demo accounts for submitting your application to the App Store or Google Play.',
+              )}{' '}
               <DocsRouteLink className="link-neutral" href="/docs/products/auth/security#mock-phone-numbers">
-                Learn more
+                {t('Learn more')}
               </DocsRouteLink>
               .
             </p>
@@ -1239,14 +1259,16 @@ export function MockPhoneNumbersCard({
       <UpgradeCurtain
         isLocked={!supportsMockNumbers}
         orgId={orgId}
-        message="Mock phone numbers are available on Appwrite Cloud Pro and higher plans."
+        message={t(
+          'Mock phone numbers are available on Appwrite Cloud Pro and higher plans.', // pragma: allowlist secret
+        )}
       >
         <div>
           <div className="px-4 py-4 sm:px-6">
             {numbers.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-[13px] text-muted-foreground mb-4">
-                  No mock phone numbers configured
+                  {t('No mock phone numbers configured')}
                 </p>
                 <Button
                   size="sm"
@@ -1255,7 +1277,7 @@ export function MockPhoneNumbersCard({
                   disabled={mutation.isPending}
                 >
                   <Plus className="h-4 w-4 me-2" />
-                  Generate number
+                  {t('Generate number')}
                 </Button>
               </div>
             ) : (
@@ -1267,7 +1289,9 @@ export function MockPhoneNumbersCard({
                   >
                     <div className="min-w-0 space-y-3">
                       <div className="space-y-2">
-                        <Label className="text-[12px]">Phone number</Label>
+                        <Label className="text-[12px]">
+                          {t('Phone number')}
+                        </Label>
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <Input
                             type="tel"
@@ -1290,7 +1314,7 @@ export function MockPhoneNumbersCard({
                               }
                               disabled={mutation.isPending}
                               className="h-9 w-9 p-0"
-                              title="Copy phone number"
+                              title={t('Copy phone number')}
                             >
                               {copiedItem?.id === number.id &&
                               copiedItem?.type === 'phone' ? (
@@ -1305,7 +1329,7 @@ export function MockPhoneNumbersCard({
                               onClick={() => handleRegeneratePhone(number.id)}
                               disabled={mutation.isPending}
                               className="h-9 w-9 p-0"
-                              title="Regenerate phone number"
+                              title={t('Regenerate phone number')}
                             >
                               <RefreshCw className="h-4 w-4" />
                             </Button>
@@ -1313,7 +1337,9 @@ export function MockPhoneNumbersCard({
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[12px]">Verification code</Label>
+                        <Label className="text-[12px]">
+                          {t('Verification code')}
+                        </Label>
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <InputOTP
                             maxLength={6}
@@ -1343,7 +1369,7 @@ export function MockPhoneNumbersCard({
                               }
                               disabled={mutation.isPending}
                               className="h-9 w-9 p-0"
-                              title="Copy verification code"
+                              title={t('Copy verification code')}
                             >
                               {copiedItem?.id === number.id &&
                               copiedItem?.type === 'otp' ? (
@@ -1358,7 +1384,7 @@ export function MockPhoneNumbersCard({
                               onClick={() => handleRegenerateOTP(number.id)}
                               disabled={mutation.isPending}
                               className="h-9 w-9 p-0"
-                              title="Regenerate verification code"
+                              title={t('Regenerate verification code')}
                             >
                               <RefreshCw className="h-4 w-4" />
                             </Button>
@@ -1372,7 +1398,7 @@ export function MockPhoneNumbersCard({
                       onClick={() => handleDeleteNumber(number.id)}
                       disabled={mutation.isPending}
                       className="absolute end-1 top-1 h-8 w-8 shrink-0 p-0"
-                      aria-label="Remove mock phone number"
+                      aria-label={t('Remove mock phone number')}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -1387,7 +1413,7 @@ export function MockPhoneNumbersCard({
                     className="w-full"
                   >
                     <Plus className="h-4 w-4 me-2" />
-                    Add number
+                    {t('Add number')}
                   </Button>
                 )}
               </div>
@@ -1400,7 +1426,7 @@ export function MockPhoneNumbersCard({
               disabled={!hasChanges || mutation.isPending}
               onClick={handleSubmit}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -1422,6 +1448,7 @@ export function PrivacyCard({
     userPhone?: boolean
   }
 }) {
+  const t = useT()
   const [privacy, setPrivacy] = useState(currentPrivacy)
   const mutation = useUpdateMembershipsPrivacy(projectId)
   const lastSubmittedValue = useRef<string | null>(null)
@@ -1468,11 +1495,11 @@ export function PrivacyCard({
       },
       {
       onSuccess: () => {
-        toast.success('Updated privacy')
+        toast.success(t('Updated privacy'))
         // Track analytics: Submit.AuthMembershipPrivacyUpdate
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update privacy')
+        toast.error(error.message || t('Failed to update privacy'))
         // Revert on error
         lastSubmittedValue.current = null
         // Track analytics: trackError(error, Submit.AuthMembershipPrivacyUpdate)
@@ -1486,15 +1513,14 @@ export function PrivacyCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Privacy
+              {t('Privacy')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Choose which membership details stay private in team workflows.
-              Many apps do not need other members to see names, emails, or MFA
-              status - private fields stay hidden without affecting auth or team
-              features.{' '}
+              {t(
+                'Choose which membership details stay private in team workflows. Many apps do not need other members to see names, emails, or MFA status - private fields stay hidden without affecting auth or team features.',
+              )}{' '}
               <DocsRouteLink className="link-neutral" href="/docs/products/auth/security#memberships-privacy">
-                Learn more
+                {t('Learn more')}
               </DocsRouteLink>
               .
             </p>
@@ -1504,8 +1530,9 @@ export function PrivacyCard({
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <p className="text-[12px] text-muted-foreground mb-4">
-          Checked fields are private and hidden from other team members unless
-          your app explicitly needs them.
+          {t(
+            'Checked fields are private and hidden from other team members unless your app explicitly needs them.',
+          )}
         </p>
         <div className="space-y-4">
           <div className="flex items-start gap-3">
@@ -1523,10 +1550,10 @@ export function PrivacyCard({
                 htmlFor="privacy-user-name"
                 className="text-[13px] font-medium text-foreground cursor-pointer"
               >
-                Name
+                {t('Name')}
               </Label>
               <p className="text-[12px] text-muted-foreground mt-0.5">
-                Hide member display names in team and membership views.
+                {t('Hide member display names in team and membership views.')}
               </p>
             </div>
           </div>
@@ -1545,11 +1572,12 @@ export function PrivacyCard({
                 htmlFor="privacy-user-email"
                 className="text-[13px] font-medium text-foreground cursor-pointer"
               >
-                Email
+                {t('Email')}
               </Label>
               <p className="text-[12px] text-muted-foreground mt-0.5">
-                Hide email addresses so members cannot see each other&apos;s
-                contact details.
+                {t(
+                  "Hide email addresses so members cannot see each other's contact details.",
+                )}
               </p>
             </div>
           </div>
@@ -1568,10 +1596,12 @@ export function PrivacyCard({
                 htmlFor="privacy-mfa"
                 className="text-[13px] font-medium text-foreground cursor-pointer"
               >
-                MFA status
+                {t('MFA status')}
               </Label>
               <p className="text-[12px] text-muted-foreground mt-0.5">
-                Hide whether a member has multi-factor authentication enabled.
+                {t(
+                  'Hide whether a member has multi-factor authentication enabled.',
+                )}
               </p>
             </div>
           </div>
@@ -1584,7 +1614,7 @@ export function PrivacyCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

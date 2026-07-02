@@ -33,6 +33,7 @@ import {
   useRef,
   type MouseEvent,
 } from 'react'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresRowsSpreadsheetProps = {
   databaseId: string
@@ -69,6 +70,7 @@ export function PostgresRowsSpreadsheet({
   onPageSizeChange,
   onPaginationInteract,
 }: PostgresRowsSpreadsheetProps) {
+  const t = useT()
   const editSession = usePostgresRowsEditSession()
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const drawerOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -142,13 +144,13 @@ export function PostgresRowsSpreadsheet({
       >
         {isLoading && rows.length === 0 ? (
           <div className="flex h-full min-h-[12rem] items-center justify-center text-[13px] text-muted-foreground">
-            Loading rows…
+            {t('Loading rows…')}
           </div>
         ) : showEmptyTable ? (
           <div className="flex h-full min-h-[12rem] items-center justify-center px-4">
             {emptyContent ?? (
               <p className="text-[13px] text-muted-foreground">
-                No rows to display.
+                {t('No rows to display.')}
               </p>
             )}
           </div>
@@ -247,7 +249,7 @@ export function PostgresRowsSpreadsheet({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent side="top">
-                                Primary key
+                                {t('Primary key')}
                               </TooltipContent>
                             </Tooltip>
                           ) : null}

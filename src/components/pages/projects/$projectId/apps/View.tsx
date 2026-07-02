@@ -27,6 +27,7 @@ import {
 } from '@/lib/utils/platform'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type AppsInitialData = {
   platforms: ProjectPlatform[]
@@ -47,6 +48,7 @@ const supportedPlatforms = [
 ] as const
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
@@ -100,16 +102,16 @@ export function View({ initialData }: ViewProps = {}) {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Apps"
-        searchPlaceholder="Search apps..."
+        title={t('Apps')}
+        searchPlaceholder={t('Search apps...')}
         searchValue={searchValue}
         onSearchChange={setSearchValue}
-        createLabel="Add app"
+        createLabel={t('Add app')}
         onCreate={() => goToAddAppWizard()}
         createDisabled={noCreatePermission}
         createDisabledTooltip={
           noCreatePermission
-            ? "You don't have permission to add apps."
+            ? t("You don't have permission to add apps.")
             : undefined
         }
         showFilters={false}
@@ -142,16 +144,17 @@ export function View({ initialData }: ViewProps = {}) {
                   <Plug2 className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  No apps connected
+                  {t('No apps connected')}
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Connect your first app to start building with Appwrite. Add
-                  web apps, mobile apps, or server SDKs to get started.
+                  {t(
+                    'Connect your first app to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.', // pragma: allowlist secret
+                  )}
                 </p>
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />
                   <span className="font-medium text-foreground/80">
-                    Connect with your stack
+                    {t('Connect with your stack')}
                   </span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
@@ -176,8 +179,8 @@ export function View({ initialData }: ViewProps = {}) {
               variant="card"
               isEmpty={false}
               hasFilters={true}
-              title="No apps match your search"
-              description="Try a different search term."
+              title={t('No apps match your search')}
+              description={t('Try a different search term.')}
             />
           )
         ) : (

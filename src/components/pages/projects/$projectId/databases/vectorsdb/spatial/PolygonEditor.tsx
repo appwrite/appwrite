@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Polygon Editor Component
@@ -26,6 +27,7 @@ export function PolygonEditor({
   disabled = false,
   showNullCheckbox = true,
 }: PolygonEditorProps) {
+  const t = useT()
   const rings = value || []
 
   const updatePoint = (
@@ -70,7 +72,7 @@ export function PolygonEditor({
     const newRings = rings.map((ring, ri) => {
       if (ri !== ringIndex) return ring
       if (ring.length <= 3) {
-        toast.error('Ring must have at least 3 points')
+        toast.error(t('Ring must have at least 3 points'))
         return ring
       }
       const newRing = ring.filter((_, pi) => pi !== pointIndex)
@@ -103,7 +105,7 @@ export function PolygonEditor({
   return (
     <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between">
-        <Label className="text-[12px] font-medium">Rings</Label>
+        <Label className="text-[12px] font-medium">{t('Rings')}</Label>
         <Button
           type="button"
           variant="outline"
@@ -113,13 +115,12 @@ export function PolygonEditor({
           className="h-7 text-[11px]"
         >
           <Plus className="h-3 w-3 me-1" />
-          Add Ring
+          {t('Add Ring')}
         </Button>
       </div>
       {rings.length === 0 ? (
         <p className="text-[12px] text-muted-foreground py-2 text-center">
-          No rings. Click "Add Ring" to add a ring (minimum 3 points per ring
-          required).
+          {t('No rings. Click "Add Ring" to add a ring (minimum 3 points per ring required).')}
         </p>
       ) : (
         <div className="space-y-4">
@@ -130,7 +131,7 @@ export function PolygonEditor({
             >
               <div className="flex items-center justify-between">
                 <Label className="text-[11px] font-medium">
-                  Ring {ringIndex + 1}
+                  {t('Ring')} {ringIndex + 1}
                 </Label>
                 <div className="flex items-center gap-2">
                   <Button
@@ -142,7 +143,7 @@ export function PolygonEditor({
                     className="h-6 text-[10px]"
                   >
                     <Plus className="h-3 w-3 me-1" />
-                    Add Point
+                    {t('Add Point')}
                   </Button>
                   {rings.length > 1 && (
                     <Button
@@ -152,7 +153,7 @@ export function PolygonEditor({
                       className="h-6 w-6"
                       onClick={() => removeRing(ringIndex)}
                       disabled={disabled}
-                      aria-label="Remove ring"
+                      aria-label={t('Remove ring')}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -161,7 +162,7 @@ export function PolygonEditor({
               </div>
               {ring.length === 0 ? (
                 <p className="text-[11px] text-muted-foreground py-1 text-center">
-                  No points. Add at least 3 points to form a ring.
+                  {t('No points. Add at least 3 points to form a ring.')}
                 </p>
               ) : (
                 <div className="space-y-2 rounded-md border border-border/50 bg-muted/10 p-2">
@@ -182,7 +183,7 @@ export function PolygonEditor({
                           </span>
                           <div className="flex-1 space-y-1">
                             <Label className="text-[10px] text-muted-foreground">
-                              Lon
+                              {t('Lon')}
                             </Label>
                             <Input
                               type="number"
@@ -208,7 +209,7 @@ export function PolygonEditor({
                           </span>
                           <div className="flex-1 space-y-1">
                             <Label className="text-[10px] text-muted-foreground">
-                              Lat
+                              {t('Lat')}
                             </Label>
                             <Input
                               type="number"
@@ -237,7 +238,7 @@ export function PolygonEditor({
                         {isLastPoint && isFirstPoint ? (
                           <div className="flex items-center px-2">
                             <span className="text-[10px] text-muted-foreground">
-                              (closed)
+                              {t('(closed)')}
                             </span>
                           </div>
                         ) : (
@@ -250,7 +251,7 @@ export function PolygonEditor({
                               removePointFromRing(ringIndex, pointIndex)
                             }
                             disabled={disabled || ring.length <= 3}
-                            aria-label="Remove point"
+                            aria-label={t('Remove point')}
                           >
                             <X className="h-3.5 w-3.5" />
                           </Button>
@@ -263,7 +264,7 @@ export function PolygonEditor({
                   </div>
                   {ring.length < 3 && (
                     <p className="text-[10px] text-amber-600 dark:text-amber-400">
-                      Ring must have at least 3 points
+                      {t('Ring must have at least 3 points')}
                     </p>
                   )}
                 </div>
@@ -298,7 +299,7 @@ export function PolygonEditor({
             htmlFor="polygon-null"
             className="text-[11px] text-muted-foreground cursor-pointer select-none"
           >
-            Set to NULL
+            {t('Set to NULL')}
           </label>
         </div>
       )}

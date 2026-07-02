@@ -33,6 +33,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 const DELIMITERS = [
   { value: ',', label: 'Comma' },
@@ -60,6 +61,7 @@ export function ExportCsv({
   onOpenChange,
   onSuccess,
 }: ExportCsvProps) {
+  const t = useT()
   const { table } = useProjectTable(projectId, databaseId, tableId)
   const { columns: apiColumns } = useProjectTableColumns(
     projectId,
@@ -132,7 +134,9 @@ export function ExportCsv({
       onOpenChange(false)
       onSuccess?.()
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to start CSV export')
+      toast.error(
+        e instanceof Error ? e.message : t('Failed to start CSV export'),
+      )
     }
   }
 
@@ -149,10 +153,11 @@ export function ExportCsv({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90dvh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
-          <DialogTitle>Export CSV</DialogTitle>
+          <DialogTitle>{t('Export CSV')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose columns and options for the export. The file will be prepared
-            in the background and you can download it when ready.
+            {t(
+              'Choose columns and options for the export. The file will be prepared in the background and you can download it when ready.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border overflow-y-auto flex-1 min-h-0 px-6 py-4">
@@ -161,10 +166,10 @@ export function ExportCsv({
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-4 py-3">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Columns
+                  {t('Columns')}
                 </h3>
                 <p className="text-[13px] text-muted-foreground mt-1">
-                  At least one column is required.
+                  {t('At least one column is required.')}
                 </p>
               </div>
               <div className="border-t border-border px-4 py-3">
@@ -175,7 +180,7 @@ export function ExportCsv({
                     className="h-8 text-[13px]"
                     onClick={selectAll}
                   >
-                    Select all
+                    {t('Select all')}
                   </Button>
                   <Button
                     variant="outline"
@@ -183,7 +188,7 @@ export function ExportCsv({
                     className="h-8 text-[13px]"
                     onClick={deselectAll}
                   >
-                    Deselect all
+                    {t('Deselect all')}
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -209,7 +214,7 @@ export function ExportCsv({
                     className="mt-2 h-8 text-[13px] text-muted-foreground"
                     onClick={() => setShowMoreColumns(!showMoreColumns)}
                   >
-                    {showMoreColumns ? 'Show less' : 'Show more'}
+                    {showMoreColumns ? t('Show less') : t('Show more')}
                   </Button>
                 )}
               </div>
@@ -219,7 +224,7 @@ export function ExportCsv({
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-4 py-3">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Export options
+                  {t('Export options')}
                 </h3>
               </div>
               <div className="border-t border-border px-4 py-3 space-y-4">
@@ -228,12 +233,12 @@ export function ExportCsv({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <label className="text-[13px] font-medium text-foreground block mb-1.5 cursor-help">
-                          Delimiter
+                          {t('Delimiter')}
                         </label>
                       </TooltipTrigger>
                       <TooltipContent side="top">
                         <p className="max-w-[240px]">
-                          Define how to separate values in the exported file.
+                          {t('Define how to separate values in the exported file.')}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -245,7 +250,7 @@ export function ExportCsv({
                     <SelectContent>
                       {DELIMITERS.map((d) => (
                         <SelectItem key={d.value} value={d.value}>
-                          {d.label}
+                          {t(d.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -258,7 +263,7 @@ export function ExportCsv({
                     className="mt-0.5"
                   />
                   <span className="text-[13px] text-foreground">
-                    Include header row - Column names as the first row.
+                    {t('Include header row - Column names as the first row.')}
                   </span>
                 </label>
                 <label className="flex items-start gap-2 cursor-pointer">
@@ -269,13 +274,12 @@ export function ExportCsv({
                     className="mt-0.5"
                   />
                   <span className="text-[13px] text-foreground">
-                    Export with filters - Export rows matching current table
-                    filters.
+                    {t('Export with filters - Export rows matching current table filters.')}
                   </span>
                 </label>
                 {!hasActiveFilters && (
                   <p className="text-[12px] text-muted-foreground">
-                    No active filters on the table.
+                    {t('No active filters on the table.')}
                   </p>
                 )}
               </div>
@@ -288,10 +292,10 @@ export function ExportCsv({
             onClick={() => handleOpenChange(false)}
             disabled={createExport.isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleExport} disabled={!canExport}>
-            Export
+            {t('Export')}
           </Button>
         </div>
       </DialogContent>

@@ -3,12 +3,14 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useT } from '@/lib/i18n/translate'
 
 type MembershipsProps = {
   projectId: string
 }
 
 export function MembershipsPolicies({ projectId }: MembershipsProps) {
+  const t = useT()
   const security = useAuthSecuritySnapshot(projectId)
   const membershipsPrivacy = security.membershipsPrivacy ?? {
     userName: true,
@@ -34,5 +36,7 @@ export function MembershipsPolicies({ projectId }: MembershipsProps) {
     },
   ]
 
-  return <SettingsCardsList cards={cards} emptyMessage="No matching policies" />
+  return (
+    <SettingsCardsList cards={cards} emptyMessage={t('No matching policies')} />
+  )
 }

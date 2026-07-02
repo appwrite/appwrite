@@ -5,6 +5,7 @@ import {
 } from './files-documents-layout'
 import { FileInspectorPanel, type FileInspectorPanelProps } from './FileInspectorPanel'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type FileInspectorDrawerProps = {
   open: boolean
@@ -26,13 +27,14 @@ export function FileInspectorDrawer({
   fileId,
   panelTab,
 }: FileInspectorDrawerProps) {
+  const t = useT()
   return (
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
       side="bottom"
-      title="File preview"
-      description="View and manage the selected storage file"
+      title={t('File preview')}
+      description={t('View and manage the selected storage file')}
       maxWidth="w-full"
       contentClassName={cn(
         'w-full max-w-none sm:max-w-none rounded-t-xl border-t p-0',

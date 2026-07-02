@@ -3,6 +3,7 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { cn } from '@/lib/utils'
 import type { WebFrameworkKey } from '@/lib/add-app-wizard/types'
+import { useT } from '@/lib/i18n/translate'
 
 type ConnectionAsideProps = {
   /** For web, pass framework key for FrameworkIcon */
@@ -17,17 +18,19 @@ export function ConnectionAside({
   platformSlug,
   pingReceived,
 }: ConnectionAsideProps) {
+  const t = useT()
   const connected = pingReceived
   const waiting = !pingReceived
 
   return (
     <div className="rounded-xl border border-border bg-card/50 p-5">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Connection
+        {t('Connection')}
       </p>
       <p className="mt-1 text-[13px] text-muted-foreground">
-        Your app talks to Appwrite from the hostname or bundle you register, using the
-        project API endpoint.
+        {t(
+          'Your app talks to Appwrite from the hostname or bundle you register, using the project API endpoint.', // pragma: allowlist secret
+        )}
       </p>
 
       <div className="mt-6 flex flex-col items-center gap-3">
@@ -76,19 +79,20 @@ export function ConnectionAside({
             waiting && 'border-primary/30 bg-primary/5 text-foreground',
           )}
         >
-          {waiting && <span>Waiting for your app to ping Appwrite…</span>}
+          {waiting && <span>{t('Waiting for your app to ping Appwrite…')}</span>} {/* pragma: allowlist secret */}
           {connected && (
             <span className="inline-flex items-center justify-center gap-2 font-medium">
               <Check className="h-3.5 w-3.5 shrink-0" />
-              Connected - your SDK reached this project.
+              {t('Connected - your SDK reached this project.')}
             </span>
           )}
         </div>
       </div>
 
       <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
-        Keep this tab open while your app is running so Appwrite can confirm the
-        connection.
+        {t(
+          'Keep this tab open while your app is running so Appwrite can confirm the connection.', // pragma: allowlist secret
+        )}
       </p>
     </div>
   )

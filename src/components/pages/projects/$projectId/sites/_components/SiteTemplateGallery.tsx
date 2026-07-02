@@ -33,6 +33,7 @@ import {
   buildSiteTemplateFrameworkOptions,
 } from '@/lib/sites/site-template-wizard'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [9, 12, 18, 36] as const
 
@@ -65,6 +66,7 @@ export function SiteTemplateGallery({
   maintainGridHeight = false,
   className,
 }: SiteTemplateGalleryProps) {
+  const t = useT()
   const { theme, resolvedTheme } = useTheme()
 
   const [templateSearch, setTemplateSearch] = useState('')
@@ -155,8 +157,8 @@ export function SiteTemplateGallery({
   const showFixedHeightGrid =
     maintainGridHeight && !showTemplatesLoading
   const emptyMessage = templateSearch
-    ? 'No templates found'
-    : 'No templates available'
+    ? t('No templates found')
+    : t('No templates available')
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -169,7 +171,7 @@ export function SiteTemplateGallery({
           <Input
             value={templateSearch}
             onChange={(event) => setTemplateSearch(event.target.value)}
-            placeholder="Search templates..."
+            placeholder={t('Search templates...')}
             className="h-9 ps-9 text-[13px]"
           />
         </div>
@@ -183,17 +185,22 @@ export function SiteTemplateGallery({
               aria-expanded={useCaseOpen}
               className="h-9 w-[150px] justify-between text-[13px] font-normal"
             >
-              {SITE_TEMPLATE_USE_CASE_OPTIONS.find(
-                (option) => option.value === selectedUseCase,
-              )?.label || 'All use cases'}
+              {t(
+                SITE_TEMPLATE_USE_CASE_OPTIONS.find(
+                  (option) => option.value === selectedUseCase,
+                )?.label || 'All use cases',
+              )}
               <ChevronsUpDown className="ms-2 size-3.5 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[200px] p-0" align="start" sideOffset={4}>
             <Command>
-              <CommandInput placeholder="Search use cases..." className="h-9" />
+              <CommandInput
+                placeholder={t('Search use cases...')}
+                className="h-9"
+              />
               <CommandList>
-                <CommandEmpty>No use case found.</CommandEmpty>
+                <CommandEmpty>{t('No use case found.')}</CommandEmpty>
                 <CommandGroup>
                   {SITE_TEMPLATE_USE_CASE_OPTIONS.map((option) => (
                     <CommandItem
@@ -206,7 +213,7 @@ export function SiteTemplateGallery({
                         setUseCaseOpen(false)
                       }}
                     >
-                      {option.label}
+                      {t(option.label)}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -229,8 +236,11 @@ export function SiteTemplateGallery({
                   <FrameworkIcon framework={selectedFramework} size="sm" />
                 ) : null}
                 <span className="truncate capitalize">
-                  {frameworkOptions.find((option) => option.value === selectedFramework)
-                    ?.label || 'All frameworks'}
+                  {selectedFramework === 'all'
+                    ? t('All frameworks')
+                    : frameworkOptions.find(
+                        (option) => option.value === selectedFramework,
+                      )?.label || t('All frameworks')}
                 </span>
               </span>
               <ChevronsUpDown className="ms-2 size-3.5 shrink-0 opacity-50" />
@@ -238,9 +248,12 @@ export function SiteTemplateGallery({
           </PopoverTrigger>
           <PopoverContent className="w-[220px] p-0" align="start" sideOffset={4}>
             <Command>
-              <CommandInput placeholder="Search frameworks..." className="h-9" />
+              <CommandInput
+                placeholder={t('Search frameworks...')}
+                className="h-9"
+              />
               <CommandList>
-                <CommandEmpty>No framework found.</CommandEmpty>
+                <CommandEmpty>{t('No framework found.')}</CommandEmpty>
                 <CommandGroup>
                   {frameworkOptions.map((option) => (
                     <CommandItem
@@ -260,7 +273,9 @@ export function SiteTemplateGallery({
                           className="me-2"
                         />
                       ) : null}
-                      <span className="capitalize">{option.label}</span>
+                      <span className="capitalize">
+                        {option.value === 'all' ? t(option.label) : option.label}
+                      </span>
                     </CommandItem>
                   ))}
                 </CommandGroup>

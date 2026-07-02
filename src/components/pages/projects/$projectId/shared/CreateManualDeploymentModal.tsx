@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Upload, Loader2, FileArchive } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export type CreateManualDeploymentResourceType = 'function' | 'site'
@@ -47,6 +48,7 @@ export function CreateManualDeploymentModal({
   onSuccess,
   maxFileSizeBytes = DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES,
 }: CreateManualDeploymentModalProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -69,11 +71,11 @@ export function CreateManualDeploymentModal({
 
   const validateFile = (f: File): string | null => {
     if (!isTarGzFile(f)) {
-      return 'Only .tar.gz files are allowed.'
+      return t('Only .tar.gz files are allowed.')
     }
     if (f.size > maxFileSizeBytes) {
       const mb = (maxFileSizeBytes / (1024 * 1024)).toFixed(0)
-      return `File size exceeds ${mb}MB.`
+      return `${t('File size exceeds')} ${mb}MB.`
     }
     return null
   }
@@ -140,19 +142,19 @@ export function CreateManualDeploymentModal({
           queryKey: ['site', 'project', projectId, resourceId],
         })
       }
-      toast.success('Deployment created successfully')
+      toast.success(t('Deployment created successfully'))
       handleClose(false)
       onSuccess?.()
     },
     onError: (err: Error) => {
-      toast.error(err?.message ?? 'Failed to create deployment')
+      toast.error(err?.message ?? t('Failed to create deployment'))
       setUploadProgress(null)
     },
   })
 
   const handleSubmit = () => {
     if (!file) {
-      setValidationError('Please select a .tar.gz file.')
+      setValidationError(t('Please select a .tar.gz file.'))
       return
     }
     const err = validateFile(file)
@@ -169,9 +171,10 @@ export function CreateManualDeploymentModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Create manual deployment</DialogTitle>
+          <DialogTitle>{t('Create manual deployment')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Upload a .tar.gz archive of your code. Maximum file size is {maxMb}
+            {t('Upload a .tar.gz archive of your code. Maximum file size is')}{' '}
+            {maxMb}
             MB.
           </DialogDescription>
         </DialogHeader>
@@ -202,7 +205,7 @@ export function CreateManualDeploymentModal({
               <>
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
                 <p className="text-[13px] text-muted-foreground text-center">
-                  Click to select a .tar.gz file
+                  {t('Click to select a .tar.gz file')}
                 </p>
               </>
             )}
@@ -216,7 +219,7 @@ export function CreateManualDeploymentModal({
             <div className="mt-3 flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               <span className="text-[13px] text-muted-foreground">
-                Uploading… {uploadProgress}%
+                {t('Uploading…')} {uploadProgress}%
               </span>
             </div>
           )}
@@ -228,14 +231,14 @@ export function CreateManualDeploymentModal({
             disabled={mutation.isPending}
             className="h-9 text-[13px]"
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!file || mutation.isPending}
             className="h-9 text-[13px]"
           >
-            Create deployment
+            {t('Create deployment')}
           </Button>
         </div>
       </DialogContent>

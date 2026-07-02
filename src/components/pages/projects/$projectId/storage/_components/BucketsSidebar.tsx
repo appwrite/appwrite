@@ -57,12 +57,14 @@ import type { Models } from '@appwrite.io/console'
 import { BucketContextMenu } from './BucketContextMenu'
 import { CreateBucket } from './CreateBucket'
 import { S3ConnectionCard } from './S3ConnectionCard'
+import { useT } from '@/lib/i18n/translate'
 
 const SIDEBAR_PAGE_SIZE = 100
 
 type SortBy = 'name' | '$createdAt' | '$updatedAt'
 
 export function BucketsSidebar() {
+  const t = useT()
   const { projectId, bucketId: activeBucketId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -74,8 +76,11 @@ export function BucketsSidebar() {
   const [createOpen, setCreateOpen] = useState(false)
 
   useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timer)
   }, [search])
 
   useEffect(() => {
@@ -125,8 +130,9 @@ export function BucketsSidebar() {
     noCreatePermission ||
     (bucketsLimit > 0 && totalBucketsCount >= bucketsLimit)
 
-  const createPermissionTooltip =
-    "You don't have permission to perform this action."
+  const createPermissionTooltip = t(
+    "You don't have permission to perform this action.",
+  )
 
   const createBucketMutation = useMutation({
     mutationFn: async (data: { bucketId?: string; name: string }) => {
@@ -139,7 +145,7 @@ export function BucketsSidebar() {
       })
     },
     onSuccess: (bucket) => {
-      toast.success(`${bucket.name} has been created`)
+      toast.success(`${bucket.name} ${t('has been created')}`)
       void queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
       setCreateOpen(false)
       navigate({
@@ -166,12 +172,12 @@ export function BucketsSidebar() {
               })
             }
             className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Back to project"
+            aria-label={t('Back to project')}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="text-[13px] font-medium text-foreground">
-            Storage
+            {t('Storage')}
           </span>
         </div>
       </div>
@@ -183,7 +189,7 @@ export function BucketsSidebar() {
               <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search buckets…"
+                placeholder={t('Search buckets…')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-8 ps-8 pe-2 text-[13px]"
@@ -198,20 +204,20 @@ export function BucketsSidebar() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 shrink-0"
-                        aria-label="Sort buckets"
+                        aria-label={t('Sort buckets')}
                       >
                         <ArrowUpDown className="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    Sort by attribute and direction
+                    {t('Sort by attribute and direction')}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Sort buckets
+                  {t('Sort buckets')}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
@@ -232,22 +238,22 @@ export function BucketsSidebar() {
                   }}
                 >
                   <DropdownMenuRadioItem value="name-asc">
-                    Name (A → Z)
+                    {t('Name (A → Z)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="name-desc">
-                    Name (Z → A)
+                    {t('Name (Z → A)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$createdAt-asc">
-                    Created (oldest first)
+                    {t('Created (oldest first)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$createdAt-desc">
-                    Created (newest first)
+                    {t('Created (newest first)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$updatedAt-asc">
-                    Updated (oldest first)
+                    {t('Updated (oldest first)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$updatedAt-desc">
-                    Updated (newest first)
+                    {t('Updated (newest first)')}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -268,7 +274,7 @@ export function BucketsSidebar() {
                     disabled
                   >
                     <Plus className="h-4 w-4" />
-                    Create bucket
+                    {t('Create bucket')}
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -284,7 +290,7 @@ export function BucketsSidebar() {
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4" />
-              Create bucket
+              {t('Create bucket')}
             </Button>
           )}
         </div>
@@ -292,15 +298,15 @@ export function BucketsSidebar() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isFetching && buckets.length === 0 ? (
             <div className="p-2 text-center text-[12px] text-muted-foreground">
-              Loading…
+              {t('Loading…')}
             </div>
           ) : (
             <div className="space-y-0.5 px-2.5 py-2.5">
               {buckets.length === 0 ? (
                 <div className="px-1 py-2 text-center text-[12px] text-muted-foreground">
                   {debouncedSearch
-                    ? 'No buckets match your search.'
-                    : 'No buckets yet.'}
+                    ? t('No buckets match your search.')
+                    : t('No buckets yet.')}
                 </div>
               ) : (
                 buckets.map((bucket) => {
@@ -347,8 +353,8 @@ export function BucketsSidebar() {
           <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
             <span className="shrink-0 tabular-nums">
               {total === 0
-                ? '0 buckets'
-                : `${(page - 1) * SIDEBAR_PAGE_SIZE + 1}-${Math.min(page * SIDEBAR_PAGE_SIZE, total)} of ${total.toLocaleString()} buckets`}
+                ? `0 ${t('buckets')}`
+                : `${(page - 1) * SIDEBAR_PAGE_SIZE + 1}-${Math.min(page * SIDEBAR_PAGE_SIZE, total)} ${t('of')} ${total.toLocaleString()} ${t('buckets')}`}
             </span>
             {total > SIDEBAR_PAGE_SIZE ? (
               <div className="flex items-center gap-0.5">
@@ -359,7 +365,7 @@ export function BucketsSidebar() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  aria-label="Previous page"
+                  aria-label={t('Previous page')}
                 >
                   <ChevronLeft className="h-3 w-3" />
                 </Button>
@@ -370,7 +376,7 @@ export function BucketsSidebar() {
                   type="button"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= totalPages}
-                  aria-label="Next page"
+                  aria-label={t('Next page')}
                 >
                   <ChevronRight className="h-3 w-3" />
                 </Button>

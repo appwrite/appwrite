@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/lib/i18n/translate'
 
 type BadgeVariant = React.ComponentProps<typeof Badge>['variant']
 
@@ -30,19 +31,21 @@ function fallback(status: string): { label: string; variant: BadgeVariant } {
 }
 
 export function BuildStatusBadge({ status }: { status: string }) {
+  const t = useT()
   const { label, variant } = BUILD_STATUS[status] ?? fallback(status)
   return (
     <Badge variant={variant} className="text-[10px] shrink-0">
-      {label}
+      {t(label)}
     </Badge>
   )
 }
 
 export function SubmissionStatusBadge({ status }: { status: string }) {
+  const t = useT()
   const { label, variant } = SUBMISSION_STATUS[status] ?? fallback(status)
   return (
     <Badge variant={variant} className="text-[10px] shrink-0">
-      {label}
+      {t(label)}
     </Badge>
   )
 }

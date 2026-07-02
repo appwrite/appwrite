@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
+import { useT } from '@/lib/i18n/translate'
 
 export type PostgresMetricRankedItem = {
   label: string
@@ -36,6 +37,7 @@ export function PostgresMetricRankedList({
   emptyMessage = 'No data available yet.',
   className,
 }: PostgresMetricRankedListProps) {
+  const t = useT()
   const rankedItems = useMemo(() => {
     const sorted = [...items].sort((a, b) => b.value - a.value)
     const maxValue = sorted[0]?.value ?? 0
@@ -86,7 +88,7 @@ export function PostgresMetricRankedList({
         {rankedItems.length === 0 ? (
           <div className="flex min-h-[180px] items-center justify-center rounded-md border border-dashed border-border bg-muted/20 px-6 text-center">
             <p className="max-w-sm text-[12px] leading-relaxed text-muted-foreground">
-              {emptyMessage}
+              {t(emptyMessage)}
             </p>
           </div>
         ) : (

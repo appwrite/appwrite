@@ -30,6 +30,7 @@ import {
 import { tablesQueryOptions } from '@/lib/react-query/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const DEFAULT_LIMIT = 15
 
@@ -76,6 +77,7 @@ export function TableSelector({
   createDisabled = false,
   createDisabledTooltip = "You don't have permission to create tables.",
 }: TableSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -164,7 +166,7 @@ export function TableSelector({
           <Command shouldFilter={false}>
             <div className="relative">
               <CommandInput
-                placeholder="Search"
+                placeholder={t('Search')}
                 value={search}
                 onValueChange={setSearch}
                 className={cn('h-9', isFetching && 'pe-8')}

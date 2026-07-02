@@ -42,6 +42,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useWizard } from './WizardContext'
+import { useT } from '@/lib/i18n/translate'
 
 interface FinishViewProps {
   siteId?: string
@@ -49,6 +50,7 @@ interface FinishViewProps {
 }
 
 export function FinishView({ siteId, deploymentId }: FinishViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { theme, resolvedTheme } = useTheme()
@@ -144,10 +146,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
           <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
           <div>
             <p className="text-[14px] font-semibold text-green-600 dark:text-green-400">
-              Deployment successful!
+              {t('Deployment successful!')}
             </p>
             <p className="text-[12px] text-muted-foreground mt-0.5">
-              Your site is now live
+              {t('Your site is now live')}
             </p>
           </div>
         </div>
@@ -158,13 +160,15 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
   return (
     <>
     <WizardLayout
-      title="Create site"
+      title={t('Create site')}
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
       maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
-      footer={<Button onClick={handleGoToDashboard}>Go to dashboard</Button>}
+      footer={
+        <Button onClick={handleGoToDashboard}>{t('Go to dashboard')}</Button>
+      }
     >
       {/* Site preview card */}
       {site && (
@@ -174,7 +178,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             <div className="aspect-video w-full overflow-hidden bg-muted">
               <img
                 src={screenshotUrl}
-                alt={`${site.name} preview`}
+                alt={`${site.name} ${t('preview')}`}
                 className="h-full w-full object-cover object-top"
               />
             </div>
@@ -217,7 +221,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
                 <Button asChild>
                   <a href={siteUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="me-1.5 h-4 w-4" />
-                    Visit site
+                    {t('Visit site')}
                   </a>
                 </Button>
               )}
@@ -230,7 +234,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Next steps
+            {t('Next steps')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -247,10 +251,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
               </div>
               <div className="flex-1">
                 <p className="text-[13px] font-medium text-foreground">
-                  Add repository
+                  {t('Add repository')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  Connect a Git repository for automatic deployments
+                  {t('Connect a Git repository for automatic deployments')}
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -268,10 +272,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             </div>
             <div className="flex-1">
               <p className="text-[13px] font-medium text-foreground">
-                Add custom domain
+                {t('Add custom domain')}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Configure your own domain name
+                {t('Configure your own domain name')}
               </p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -291,10 +295,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             </div>
             <div className="flex-1">
               <p className="text-[13px] font-medium text-foreground">
-                Copy site URL
+                {t('Copy site URL')}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Copy the site URL to clipboard
+                {t('Copy the site URL to clipboard')}
               </p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -305,7 +309,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             type="button"
             onClick={() => {
               if (!siteUrl) {
-                toast.error('Site URL is not available yet')
+                toast.error(t('Site URL is not available yet'))
                 return
               }
               setQrDialogOpen(true)
@@ -317,10 +321,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             </div>
             <div className="flex-1">
               <p className="text-[13px] font-medium text-foreground">
-                Open on mobile
+                {t('Open on mobile')}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Scan QR code to view on your phone
+                {t('Scan QR code to view on your phone')}
               </p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -335,9 +339,9 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
         overlayClassName="z-[9999]"
       >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>View on mobile</DialogTitle>
+          <DialogTitle>{t('View on mobile')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Scan this QR code to open your site on a mobile device
+            {t('Scan this QR code to open your site on a mobile device')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -346,19 +350,19 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             <div className="p-4 bg-white rounded-lg">
               <img
                 src={qrImageUrl}
-                alt="QR code to open site on mobile"
+                alt={t('QR code to open site on mobile')}
                 className="h-48 w-48 rounded"
               />
             </div>
           ) : (
             <p className="text-[13px] text-muted-foreground text-center px-4">
-              QR code could not be generated. Try again in a moment.
+              {t('QR code could not be generated. Try again in a moment.')}
             </p>
           )}
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
           <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

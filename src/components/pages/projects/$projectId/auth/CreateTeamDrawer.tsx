@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateTeamDrawerProps {
   open: boolean
@@ -18,6 +19,7 @@ export function CreateTeamDrawer({
   onCreate,
   isLoading = false,
 }: CreateTeamDrawerProps) {
+  const t = useT()
   const [teamId, setTeamId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
 
@@ -52,7 +54,7 @@ export function CreateTeamDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title="Create Team"
+      title={t('Create Team')}
       maxWidth="sm:max-w-lg"
     >
       <>
@@ -63,25 +65,25 @@ export function CreateTeamDrawer({
             <div className="px-6 py-6">
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="team-id">Team ID</Label>
+                  <Label htmlFor="team-id">{t('Team ID')}</Label>
                   <IdInput
                     id="team-id"
                     value={teamId}
                     onChange={setTeamId}
                     maxLength={36}
                     disabled={isLoading}
-                    placeholder="Leave blank to auto-generate"
+                    placeholder={t('Leave blank to auto-generate')}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    Name <span className="text-destructive">*</span>
+                    {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="My Team"
+                    placeholder={t('My Team')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isLoading}
@@ -95,7 +97,7 @@ export function CreateTeamDrawer({
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button type="submit" disabled={isLoading || !name.trim()}>
-              Create Team
+              {t('Create Team')}
             </Button>
             <Button
               type="button"
@@ -103,7 +105,7 @@ export function CreateTeamDrawer({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

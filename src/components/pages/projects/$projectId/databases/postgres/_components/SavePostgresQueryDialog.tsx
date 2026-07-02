@@ -24,6 +24,7 @@ import {
 } from '@/lib/react-query/hooks/postgres-databases'
 import { queryPreviewLabel, usePostgresSidebar } from './PostgresSidebarContext'
 import { MAX_SAVED_POSTGRES_QUERY_NAME_LENGTH } from '@/lib/user-prefs-keys'
+import { useT } from '@/lib/i18n/translate'
 
 type SavePostgresQueryDialogProps = {
   open: boolean
@@ -44,6 +45,7 @@ export function SavePostgresQueryDialog({
   teamId,
   canSaveTeam,
 }: SavePostgresQueryDialogProps) {
+  const t = useT()
   const [name, setName] = useState('')
   const [level, setLevel] = useState<PostgresSavedQueryLevel>('user')
   const { setPanel, setSavedQueryLevel, selectSavedQuery, savedQueryLevel } =
@@ -95,16 +97,16 @@ export function SavePostgresQueryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Save query</DialogTitle>
+          <DialogTitle>{t('Save query')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Save this SQL query to reopen it later from the Queries panel.
+            {t('Save this SQL query to reopen it later from the Queries panel.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="space-y-4 px-6 py-4">
           {hasTeamLevel ? (
             <div className="space-y-2">
-              <Label className="text-[13px]">Save for</Label>
+              <Label className="text-[13px]">{t('Save for')}</Label>
               <div className="flex overflow-hidden rounded-md border border-border">
                 <button
                   type="button"
@@ -117,7 +119,7 @@ export function SavePostgresQueryDialog({
                   )}
                   aria-pressed={level === 'user'}
                 >
-                  For me
+                  {t('For me')}
                 </button>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -133,12 +135,12 @@ export function SavePostgresQueryDialog({
                       )}
                       aria-pressed={level === 'team'}
                     >
-                      For team
+                      {t('For team')}
                     </button>
                   </TooltipTrigger>
                   {!canSaveTeam ? (
                     <TooltipContent side="top" sideOffset={4}>
-                      Only owners and developers can save team queries.
+                      {t('Only owners and developers can save team queries.')}
                     </TooltipContent>
                   ) : null}
                 </Tooltip>
@@ -147,7 +149,7 @@ export function SavePostgresQueryDialog({
           ) : null}
           <div className="space-y-2">
             <Label htmlFor="postgres-query-name" className="text-[13px]">
-              Query name
+              {t('Query name')}
             </Label>
             <Input
               id="postgres-query-name"
@@ -172,14 +174,14 @@ export function SavePostgresQueryDialog({
             onClick={() => onOpenChange(false)}
             disabled={isAdding}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
             onClick={() => void handleSave()}
             disabled={!name.trim() || isAdding}
           >
-            Save
+            {t('Save')}
           </Button>
         </div>
       </DialogContent>

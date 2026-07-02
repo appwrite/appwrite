@@ -47,6 +47,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 // Helper function to mask secret (compact hint of prefix / suffix)
 function maskSecret(secret: string): string {
@@ -136,6 +137,7 @@ export function FileSecurity({
     bucketId?: string
     fileId?: string
   }
+  const t = useT()
   const projectId = projectIdProp ?? params.projectId
   const bucketId = bucketIdProp ?? params.bucketId
   const fileId = fileIdProp ?? params.fileId
@@ -226,7 +228,7 @@ export function FileSecurity({
         permissions})
     },
     onSuccess: () => {
-      toast.success('File permissions have been updated')
+      toast.success(t('File permissions have been updated'))
       queryClient.invalidateQueries({ queryKey: Dependencies.FILE })
     },
     onError: (error) => {
@@ -252,7 +254,7 @@ export function FileSecurity({
         expire: expiration || undefined})
     },
     onSuccess: () => {
-      toast.success('Token has been created')
+      toast.success(t('Token has been created'))
       queryClient.invalidateQueries({ queryKey: Dependencies.FILE_TOKENS })
       setCreateTokenDialogOpen(false)
       setTokenExpiration('')
@@ -272,7 +274,7 @@ export function FileSecurity({
       return await projectSdk.tokens.delete({ tokenId })
     },
     onSuccess: () => {
-      toast.success('Token has been deleted')
+      toast.success(t('Token has been deleted'))
       queryClient.invalidateQueries({ queryKey: Dependencies.FILE_TOKENS })
     },
     onError: (error) => {
@@ -289,7 +291,7 @@ export function FileSecurity({
       tokenExpiration.trim() &&
       expiration === undefined
     ) {
-      toast.error('Invalid expiration date')
+      toast.error(t('Invalid expiration date'))
       return
     }
     createTokenMutation.mutate(expiration)
@@ -306,12 +308,12 @@ export function FileSecurity({
       setCopiedField(field)
       setTimeout(() => setCopiedField(null), 2000)
     } else {
-      toast.success('Copied to clipboard')
+      toast.success(t('Copied to clipboard'))
     }
   }
 
   const viewingToken = tokens.find(
-    (t: Models.ResourceToken) => t.$id === viewingTokenId,
+    (item: Models.ResourceToken) => item.$id === viewingTokenId,
   )
 
   // Build file URL with token (public REST URL - must include `project` query param)
@@ -357,7 +359,9 @@ export function FileSecurity({
           !cardlessPanel && 'rounded-lg border border-border bg-card',
         )}
       >
-        <p className="text-[13px] text-muted-foreground">File not found</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('File not found')}
+        </p>
       </div>
     )
   }
@@ -383,9 +387,9 @@ export function FileSecurity({
           afterHeading && (variant === 'panel' || cardlessPanel ? 'mt-1' : 'mt-2'),
         )}
       >
-        Choose who can access this file.{' '}
+        {t('Choose who can access this file.')}{' '}
         <DocsRouteLink className="link-neutral" href="/docs/permissions">
-          Learn more
+          {t('Learn more')}
         </DocsRouteLink>
         .
       </p>
@@ -400,7 +404,7 @@ export function FileSecurity({
           variant === 'panel' || cardlessPanel ? 'text-[14px]' : 'text-[15px]',
         )}
       >
-        Permissions
+        {t('Permissions')}
       </h3>
       {renderPermissionsDescription({ afterHeading: true })}
     </>
@@ -416,12 +420,11 @@ export function FileSecurity({
           afterHeading && 'mt-2',
         )}
       >
-        File tokens allow you to share files publicly with anyone without
-        configuring bucket or file permissions. They work around browser
-        restrictions on third-party cookies and can be set to expire on a
-        specific date or work indefinitely.{' '}
+        {t(
+          'File tokens allow you to share files publicly with anyone without configuring bucket or file permissions. They work around browser restrictions on third-party cookies and can be set to expire on a specific date or work indefinitely.',
+        )}{' '}
         <DocsRouteLink className="link-neutral" href="/docs/products/storage/file-tokens">
-          Learn more
+          {t('Learn more')}
         </DocsRouteLink>
         .
       </p>
@@ -437,7 +440,7 @@ export function FileSecurity({
         onClick={() => setCreateTokenDialogOpen(true)}
       >
         <Plus className="h-3.5 w-3.5 me-1.5" />
-        Create token
+        {t('Create token')}
       </Button>
     </div>
   )
@@ -458,7 +461,7 @@ export function FileSecurity({
             variant === 'panel' || cardlessPanel ? 'text-[14px]' : 'text-[15px]',
           )}
         >
-          Tokens
+          {t('Tokens')}
         </h3>
         {renderTokensDescription({ afterHeading: true })}
       </div>
@@ -470,7 +473,7 @@ export function FileSecurity({
         onClick={() => setCreateTokenDialogOpen(true)}
       >
         <Plus className="h-3.5 w-3.5 me-1.5" />
-        Create token
+        {t('Create token')}
       </Button>
     </div>
   )
@@ -497,7 +500,7 @@ export function FileSecurity({
       }
       onClick={handleFilePermissionsUpdate}
     >
-      Update
+      {t('Update')}
     </Button>
   )
 
@@ -529,7 +532,7 @@ export function FileSecurity({
                   type="button"
                   onClick={() => setViewingTokenId(token.$id)}
                   className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  title="View token"
+                  title={t('View token')}
                 >
                   <Eye className="h-3.5 w-3.5" />
                 </button>
@@ -539,7 +542,7 @@ export function FileSecurity({
                     copyToClipboard(token.secret, `token-secret-${token.$id}`)
                   }
                   className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  title="Copy secret"
+                  title={t('Copy secret')}
                 >
                   {copiedField === `token-secret-${token.$id}` ? (
                     <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -558,17 +561,17 @@ export function FileSecurity({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground"
-                  aria-label="Copy URL"
+                  aria-label={t('Copy URL')}
                   onClick={() => handleOpenCopyDialog(token)}
                 >
                   <Link2 className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Copy URL</TooltipContent>
+              <TooltipContent>{t('Copy URL')}</TooltipContent>
             </Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <RowActionsMenuTrigger aria-label="Token actions" />
+                <RowActionsMenuTrigger aria-label={t('Token actions')} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
@@ -579,7 +582,9 @@ export function FileSecurity({
                   <MenuItemContent
                     icon={copiedField === `token-id-${token.$id}` ? Check : Copy}
                   >
-                    {copiedField === `token-id-${token.$id}` ? 'Copied' : 'Copy ID'}
+                    {copiedField === `token-id-${token.$id}`
+                      ? t('Copied')
+                      : t('Copy ID')}
                   </MenuItemContent>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -588,7 +593,9 @@ export function FileSecurity({
                     setDeleteTokenDialogOpen(true)
                   }}
                 >
-                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                  <MenuItemContent icon={Trash2}>
+                    {t('Delete')}
+                  </MenuItemContent>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -603,7 +610,7 @@ export function FileSecurity({
             )}
           >
             <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
-              <span>Created</span>
+              <span>{t('Created')}</span>
               <DateTooltip
                 date={token.$createdAt}
                 className={cn(
@@ -619,7 +626,7 @@ export function FileSecurity({
               ·
             </span>
             <span className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
-              <span>Expires</span>
+              <span>{t('Expires')}</span>
               {token.expire ? (
                 <>
                   <DateTooltip
@@ -631,16 +638,16 @@ export function FileSecurity({
                   />
                   {isExpired ? (
                     <Badge variant="error" className="text-[10px] shrink-0">
-                      Expired
+                      {t('Expired')}
                     </Badge>
                   ) : isExpiringSoon ? (
                     <Badge variant="warning" className="text-[10px] shrink-0">
-                      Expires soon
+                      {t('Expires soon')}
                     </Badge>
                   ) : null}
                 </>
               ) : (
-                <span className="text-foreground">Never</span>
+                <span className="text-foreground">{t('Never')}</span>
               )}
             </span>
             <span
@@ -650,7 +657,7 @@ export function FileSecurity({
               ·
             </span>
             <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
-              <span>Accessed</span>
+              <span>{t('Accessed')}</span>
               {token.accessedAt ? (
                 <DateTooltip
                   date={token.accessedAt}
@@ -660,7 +667,7 @@ export function FileSecurity({
                   )}
                 />
               ) : (
-                <span className="text-foreground">Never</span>
+                <span className="text-foreground">{t('Never')}</span>
               )}
             </span>
           </div>
@@ -696,7 +703,7 @@ export function FileSecurity({
                   setTokensPageSize(size)
                   setTokensPage(1)
                 }}
-                itemLabel="tokens"
+                itemLabel={t('tokens')}
                 className="py-0"
               />
             </div>
@@ -710,7 +717,7 @@ export function FileSecurity({
           )}
         >
           <p className="text-[13px] text-muted-foreground">
-            No tokens found. Create a token to share this file publicly.
+            {t('No tokens found. Create a token to share this file publicly.')}
           </p>
         </div>
       )}
@@ -774,10 +781,11 @@ export function FileSecurity({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Create file token</DialogTitle>
+            <DialogTitle>{t('Create file token')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Create a token to share this file publicly. Choose when the token
-              should expire.
+              {t(
+                'Create a token to share this file publicly. Choose when the token should expire.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -785,7 +793,7 @@ export function FileSecurity({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[13px] font-medium text-foreground">
-                  Expiration
+                  {t('Expiration')}
                 </Label>
                 <RadioGroup
                   value={tokenExpiryOption}
@@ -822,7 +830,7 @@ export function FileSecurity({
                               'cursor-not-allowed opacity-50',
                           )}
                         >
-                          {option.label}
+                          {t(option.label)}
                         </Label>
                       </div>
                     )
@@ -834,7 +842,7 @@ export function FileSecurity({
                       htmlFor="file-token-expiration-custom"
                       className="text-[12px] font-medium text-muted-foreground"
                     >
-                      Date and time
+                      {t('Date and time')}
                     </Label>
                     <Input
                       id="file-token-expiration-custom"
@@ -849,7 +857,7 @@ export function FileSecurity({
                     />
                     {createTokenExpiryInvalid && (
                       <p className="text-[12px] text-destructive mt-1">
-                        Enter a valid date and time
+                        {t('Enter a valid date and time')}
                       </p>
                     )}
                   </div>
@@ -867,7 +875,7 @@ export function FileSecurity({
               }}
               disabled={createTokenMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               onClick={handleCreateToken}
@@ -875,7 +883,7 @@ export function FileSecurity({
                 createTokenMutation.isPending || createTokenExpiryInvalid
               }
             >
-              Create token
+              {t('Create token')}
             </Button>
           </div>
         </DialogContent>
@@ -888,10 +896,11 @@ export function FileSecurity({
       >
         <DialogContent className="sm:max-w-[600px] p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>File Token</DialogTitle>
+            <DialogTitle>{t('File Token')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Copy the full token below. Keep it secure and never share it
-              publicly.
+              {t(
+                'Copy the full token below. Keep it secure and never share it publicly.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -899,7 +908,7 @@ export function FileSecurity({
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Token
+                {t('Token')}
               </label>
               <textarea
                 readOnly
@@ -912,7 +921,7 @@ export function FileSecurity({
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setViewingTokenId(null)}>
-              Close
+              {t('Close')}
             </Button>
             <Button
               variant="outline"
@@ -926,12 +935,12 @@ export function FileSecurity({
               {copiedField === 'tokenModal' ? (
                 <>
                   <Check className="h-4 w-4" />
-                  Copied
+                  {t('Copied')}
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4" />
-                  Copy
+                  {t('Copy')}
                 </>
               )}
             </Button>
@@ -951,10 +960,11 @@ export function FileSecurity({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete token</DialogTitle>
+            <DialogTitle>{t('Delete token')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this token? This action cannot be
-              undone.
+              {t(
+                'Are you sure you want to delete this token? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -967,7 +977,7 @@ export function FileSecurity({
               }}
               disabled={deleteTokenMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -982,7 +992,7 @@ export function FileSecurity({
               }}
               disabled={deleteTokenMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -1000,9 +1010,9 @@ export function FileSecurity({
       >
         <DialogContent className="sm:max-w-[600px] p-0 max-h-[90dvh] overflow-hidden flex flex-col">
           <DialogHeader className="px-6 pt-6 text-start shrink-0">
-            <DialogTitle>Copy File URL</DialogTitle>
+            <DialogTitle>{t('Copy File URL')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Use the token-based URL below to access this file securely.
+              {t('Use the token-based URL below to access this file securely.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border shrink-0" />
@@ -1012,7 +1022,7 @@ export function FileSecurity({
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <Label className="text-sm font-medium text-foreground">
-                    URL
+                    {t('URL')}
                   </Label>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
@@ -1033,12 +1043,12 @@ export function FileSecurity({
                       copyUrlMode === 'preview' ? (
                         <>
                           <Check className="h-3 w-3 me-1 text-emerald-500" />
-                          Copied
+                          {t('Copied')}
                         </>
                       ) : (
                         <>
                           <Copy className="h-3 w-3 me-1" />
-                          Preview
+                          {t('Preview')}
                         </>
                       )}
                     </Button>
@@ -1059,12 +1069,12 @@ export function FileSecurity({
                       {copiedField === 'copyUrl' && copyUrlMode === 'view' ? (
                         <>
                           <Check className="h-3 w-3 me-1 text-emerald-500" />
-                          Copied
+                          {t('Copied')}
                         </>
                       ) : (
                         <>
                           <Copy className="h-3 w-3 me-1" />
-                          View
+                          {t('View')}
                         </>
                       )}
                     </Button>
@@ -1086,12 +1096,12 @@ export function FileSecurity({
                       copyUrlMode === 'download' ? (
                         <>
                           <Check className="h-3 w-3 me-1 text-emerald-500" />
-                          Copied
+                          {t('Copied')}
                         </>
                       ) : (
                         <>
                           <Copy className="h-3 w-3 me-1" />
-                          Download
+                          {t('Download')}
                         </>
                       )}
                     </Button>
@@ -1109,11 +1119,17 @@ export function FileSecurity({
                 />
                 <p className="text-[11px] text-muted-foreground">
                   {copyUrlMode === 'preview' &&
-                    'Apply transformations or filters. Good for thumbnails or previews.'}
+                    t(
+                      'Apply transformations or filters. Good for thumbnails or previews.',
+                    )}
                   {copyUrlMode === 'view' &&
-                    'Display the file in the browser. Good for images and documents.'}
+                    t(
+                      'Display the file in the browser. Good for images and documents.',
+                    )}
                   {copyUrlMode === 'download' &&
-                    'Download the file directly. Good for files that need to be saved.'}
+                    t(
+                      'Download the file directly. Good for files that need to be saved.',
+                    )}
                 </p>
               </div>
 
@@ -1124,8 +1140,10 @@ export function FileSecurity({
                 >
                   <AlertCircle className="h-4 w-4 text-destructive" />
                   <AlertDescription className="text-[12px] text-destructive">
-                    <span className="font-semibold">No expiration date.</span>{' '}
-                    This token doesn't expire. Be cautious when sharing links.
+                    <span className="font-semibold">
+                      {t('No expiration date.')}
+                    </span>{' '}
+                    {t("This token doesn't expire. Be cautious when sharing links.")}
                   </AlertDescription>
                 </Alert>
               )}
@@ -1140,7 +1158,7 @@ export function FileSecurity({
                 setTokenForCopy(null)
               }}
             >
-              Close
+              {t('Close')}
             </Button>
           </div>
         </DialogContent>

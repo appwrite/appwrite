@@ -39,8 +39,10 @@ import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useT } from '@/lib/i18n/translate'
 
 export function SiteDomainsView() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { project } = useProject(projectId)
@@ -103,7 +105,9 @@ export function SiteDomainsView() {
   if (domainsLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading domains...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading domains...')}
+        </p>
       </div>
     )
   }
@@ -119,16 +123,16 @@ export function SiteDomainsView() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Domain
+                      {t('Domain')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Type
+                      {t('Type')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status
+                      {t('Status')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Created
+                      {t('Created')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
                   </TableRow>
@@ -165,14 +169,16 @@ export function SiteDomainsView() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                           {ruleData.redirectUrl ? (
-                            <span>Redirect to {ruleData.redirectUrl}</span>
+                            <span>
+                              {t('Redirect to')} {ruleData.redirectUrl}
+                            </span>
                           ) : ruleData.deploymentVcsProviderBranch ? (
                             <span>
-                              Deployed from{' '}
+                              {t('Deployed from')}{' '}
                               {ruleData.deploymentVcsProviderBranch}
                             </span>
                           ) : (
-                            <span>Active deployment</span>
+                            <span>{t('Active deployment')}</span>
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
@@ -182,14 +188,16 @@ export function SiteDomainsView() {
                               className="text-[10px] shrink-0 gap-1.5"
                               title={
                                 ruleData.status === 'verifying'
-                                  ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
+                                  ? t(
+                                      'SSL certificate is being issued. This usually takes a couple of minutes.',
+                                    )
                                   : undefined
                               }
                             >
                               {ruleData.status === 'verifying' && (
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               )}
-                              {statusConfig.label}
+                              {t(statusConfig.label)}
                             </Badge>
                             {ruleData.status !== 'verified' && (
                               <Button
@@ -198,7 +206,7 @@ export function SiteDomainsView() {
                                 className="h-auto p-0 text-[13px]"
                                 onClick={() => handleViewLogs(ruleData)}
                               >
-                                View logs
+                                {t('View logs')}
                               </Button>
                             )}
                             {(ruleData.status === 'created' ||
@@ -209,7 +217,7 @@ export function SiteDomainsView() {
                                 className="h-auto p-0 text-[13px]"
                                 onClick={() => handleRetry(ruleData)}
                               >
-                                Retry
+                                {t('Retry')}
                               </Button>
                             )}
                           </div>
@@ -228,7 +236,9 @@ export function SiteDomainsView() {
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(ruleData)}
                                   >
-                                    <MenuItemContent icon={FileText}>Logs</MenuItemContent>
+                                    <MenuItemContent icon={FileText}>
+                                      {t('Logs')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 {(ruleData.status === 'created' ||
@@ -236,7 +246,9 @@ export function SiteDomainsView() {
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(ruleData)}
                                   >
-                                    <MenuItemContent icon={RefreshCw}>Retry</MenuItemContent>
+                                    <MenuItemContent icon={RefreshCw}>
+                                      {t('Retry')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -265,12 +277,16 @@ export function SiteDomainsView() {
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={Globe}>Records</MenuItemContent>
+                                  <MenuItemContent icon={Globe}>
+                                    {t('Records')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(ruleData)}
                                 >
-                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -294,16 +310,18 @@ export function SiteDomainsView() {
                 setPageSize(size)
                 setCurrentPage(0)
               }}
-              itemLabel="domains"
+              itemLabel={t('domains')}
             />
           </>
         ) : (
           <EmptyState
-            title={searchValue ? undefined : 'No domains yet'}
+            title={searchValue ? undefined : t('No domains yet')}
             description={
               searchValue
                 ? undefined
-                : 'Connect a custom domain to your site for a branded experience'
+                : t(
+                    'Connect a custom domain to your site for a branded experience',
+                  )
             }
             isEmpty={!searchValue}
             hasFilters={!!searchValue}
@@ -337,7 +355,7 @@ export function SiteDomainsView() {
             region={project?.region}
             rule={selectedRule}
             onDeleteSuccess={() => {
-              toast.success('Domain has been deleted')
+              toast.success(t('Domain has been deleted'))
               setDeleteDomainOpen(false)
               setSelectedRule(null)
             }}

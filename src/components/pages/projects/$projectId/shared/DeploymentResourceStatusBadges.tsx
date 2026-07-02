@@ -4,6 +4,7 @@ import {
   getDeploymentStatusBadge,
   isDeploymentInProgress,
 } from '@/lib/utils/deployment-status'
+import { useT } from '@/lib/i18n/translate'
 
 export type DeploymentResourceListItem = {
   enabled?: boolean
@@ -55,12 +56,13 @@ export function DeploymentResourceStatusBadges({
 }: {
   resource: DeploymentResourceListItem
 }) {
+  const t = useT()
   const badgeClassName = 'gap-1.5 text-[11px] font-medium border px-2 py-0.5'
 
   if (resource.enabled === false) {
     return (
       <Badge variant="error" className={badgeClassName}>
-        Disabled
+        {t('Disabled')}
       </Badge>
     )
   }
@@ -87,7 +89,7 @@ export function DeploymentResourceStatusBadges({
           className={badgeClassName}
         >
           <StatusIcon className="h-3 w-3" />
-          {deploymentBadge.label}
+          {t(deploymentBadge.label)}
         </Badge>,
       )
     }
@@ -96,7 +98,7 @@ export function DeploymentResourceStatusBadges({
   if (!resource.live) {
     badges.push(
       <Badge key="redeploy" variant="warning" className={badgeClassName}>
-        Redeploy
+        {t('Redeploy')}
       </Badge>,
     )
   }

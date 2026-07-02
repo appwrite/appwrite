@@ -27,11 +27,13 @@ import {
 } from '@/components/ui/table'
 
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 
 export function TopicDetailView() {
+  const t = useT()
   const { projectId, topicId } = useParams({
     strict: false,
   })
@@ -121,14 +123,14 @@ export function TopicDetailView() {
       queryClient.invalidateQueries({
         queryKey: ['topics', 'project', projectId],
       })
-      toast.success('Topic deleted successfully')
+      toast.success(t('Topic deleted successfully'))
       navigate({
         to: '/projects/$projectId/messaging/topics',
         params: { projectId: projectId! },
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete topic')
+      toast.error(getErrorMessage(error) || t('Failed to delete topic'))
     },
   })
 
@@ -160,7 +162,7 @@ export function TopicDetailView() {
     () => [
       {
         id: 'subscribers',
-        label: 'Subscribers',
+        label: t('Subscribers'),
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: {
           projectId: projectId as string,
@@ -171,7 +173,7 @@ export function TopicDetailView() {
         ? [
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/messaging/topics/$topicId/settings',
               params: {
                 projectId: projectId as string,
@@ -181,7 +183,7 @@ export function TopicDetailView() {
           ]
         : []),
     ],
-    [projectId, topicId, showSettingsTab],
+    [projectId, topicId, showSettingsTab, t],
   )
 
   const getTypeIcon = (type: string) => {
@@ -195,7 +197,7 @@ export function TopicDetailView() {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading topic...</p>
+          <p className="text-[13px] text-muted-foreground">{t('Loading topic...')}</p>
         </div>
       </div>
     )
@@ -205,7 +207,7 @@ export function TopicDetailView() {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Topic not found</p>
+          <p className="text-[13px] text-muted-foreground">{t('Topic not found')}</p>
         </div>
       </div>
     )
@@ -231,7 +233,7 @@ export function TopicDetailView() {
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'subscribers' ? 'Search subscribers...' : undefined
+          activeTab === 'subscribers' ? t('Search subscribers...') : undefined
         }
         searchValue={activeTab === 'subscribers' ? searchValue : undefined}
         onSearchChange={
@@ -242,12 +244,12 @@ export function TopicDetailView() {
               }
             : undefined
         }
-        createLabel={activeTab === 'subscribers' ? 'Add subscriber' : undefined}
+        createLabel={activeTab === 'subscribers' ? t('Add subscriber') : undefined}
         onCreate={
           activeTab === 'subscribers'
             ? () => {
                 // TODO: Implement add subscriber dialog
-                toast.info('Add subscriber functionality coming soon')
+                toast.info(t('Add subscriber functionality coming soon'))
               }
             : undefined
         }
@@ -260,7 +262,7 @@ export function TopicDetailView() {
             {subscribersLoading || usersLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
-                  Loading subscribers...
+                  {t('Loading subscribers...')}
                 </p>
               </div>
             ) : subscribers.length > 0 ? (
@@ -270,22 +272,22 @@ export function TopicDetailView() {
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Subscriber ID
+                          {t('Subscriber ID')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Name
+                          {t('Name')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Target ID
+                          {t('Target ID')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Target
+                          {t('Target')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Type
+                          {t('Type')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                          Created
+                          {t('Created')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -356,14 +358,14 @@ export function TopicDetailView() {
                     setPageSize(size)
                     setCurrentPage(1)
                   }}
-                  itemLabel="subscribers"
+                  itemLabel={t('subscribers')}
                 />
               </>
             ) : (
               <EmptyState
                 icon={Hash}
-                title="No subscribers found"
-                description="Add subscribers to this topic"
+                title={t('No subscribers found')}
+                description={t('Add subscribers to this topic')}
                 isEmpty={!searchValue}
                 hasFilters={!!searchValue}
                 variant="card"
@@ -373,7 +375,7 @@ export function TopicDetailView() {
         ) : (
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="text-[13px] text-muted-foreground">
-              Settings tab coming soon
+              {t('Settings tab coming soon')}
             </p>
           </div>
         )}

@@ -34,6 +34,7 @@ import {
   type MouseEvent,
 } from 'react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 type InlineTableCellProps = {
   tableId: string
@@ -74,6 +75,7 @@ export function InlineTableCell({
   display,
   isNull,
 }: InlineTableCellProps) {
+  const t = useT()
   const editSession = useTableRowsEditSession()
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -320,7 +322,7 @@ export function InlineTableCell({
             className="ms-auto text-[11px] font-medium text-primary"
             onClick={commitLocalEdit}
           >
-            Done
+            {t('Done')}
           </button>
         </div>
       )

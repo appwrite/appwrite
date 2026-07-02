@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { BuildLogsCard } from '@/components/global/shared/BuildLogsCard'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 function normalizeLogs(logs: unknown): string {
@@ -26,13 +27,14 @@ export function ViewLogsDialog({
   onOpenChange,
   rule,
 }: ViewLogsDialogProps) {
+  const t = useT()
   const buildLogs = normalizeLogs(rule.logs)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0 max-h-[90dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
-          <DialogTitle>View logs</DialogTitle>
+          <DialogTitle>{t('View logs')}</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
 
@@ -43,14 +45,13 @@ export function ViewLogsDialog({
               className="border-blue-500/30 bg-blue-500/5"
             >
               <AlertDescription className="text-[13px] text-muted-foreground">
-                SSL certificate is being issued. This usually takes a couple of
-                minutes - no action needed on your end.
+                {t('SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.')}
               </AlertDescription>
             </Alert>
           )}
           <BuildLogsCard
             buildLogs={buildLogs}
-            emptyMessage="No logs available"
+            emptyMessage={t('No logs available')}
             hideTitle
             downloadFilename={`verification-logs-${rule.domain.replace(/\./g, '-')}.txt`}
             hideWhenEmpty={false}
@@ -63,7 +64,7 @@ export function ViewLogsDialog({
             size="sm"
             onClick={() => onOpenChange(false)}
           >
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

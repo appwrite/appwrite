@@ -11,6 +11,7 @@ import {
   useUpdateDenyCorporateEmailPolicy,
 } from '@/lib/react-query/hooks/auth'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const EMAIL_POLICIES_DOCS_URL =
   '/docs/products/auth/email-policies'
@@ -36,6 +37,7 @@ function EmailPolicyCard({
   successMessage,
   errorMessage,
 }: EmailPolicyCardProps) {
+  const t = useT()
   const [enabled, setEnabled] = useState(currentEnabled)
   const lastSubmittedValue = useRef<boolean | null>(null)
 
@@ -101,7 +103,7 @@ function EmailPolicyCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -115,29 +117,29 @@ export function DenyFreeEmailCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const mutation = useUpdateDenyFreeEmailPolicy(projectId)
 
   return (
     <EmailPolicyCard
       currentEnabled={currentEnabled}
-      title="Free emails"
+      title={t('Free emails')}
       description={
         <>
-          Reject sign-ups and email updates from free providers such as Gmail,
-          Yahoo, and Outlook. Useful when seats should tie to a work
-          organization. Applies at sign-up and email change only - not to existing
-          sessions.{' '}
+          {t(
+            'Reject sign-ups and email updates from free providers such as Gmail, Yahoo, and Outlook. Useful when seats should tie to a work organization. Applies at sign-up and email change only - not to existing sessions.',
+          )}{' '}
           <DocsRouteLink className="link-neutral" href={EMAIL_POLICIES_DOCS_URL}>
-            Learn more
+            {t('Learn more')}
           </DocsRouteLink>
           .
         </>
       }
       switchId="deny-free-email-enabled"
-      switchLabel="Deny free emails"
+      switchLabel={t('Deny free emails')}
       mutation={mutation}
-      successMessage="Updated deny free emails policy"
-      errorMessage="Failed to update deny free emails policy"
+      successMessage={t('Updated deny free emails policy')}
+      errorMessage={t('Failed to update deny free emails policy')}
     />
   )
 }
@@ -149,18 +151,21 @@ export function DenyAliasedEmailCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const mutation = useUpdateDenyAliasedEmailPolicy(projectId)
 
   return (
     <EmailPolicyCard
       currentEnabled={currentEnabled}
-      title="Aliased emails"
-      description="Reject sign-ups and email updates that use subaddresses, tags, or other provider-specific variations of the same inbox (e.g. user+folder@outlook.com, user+tag@yahoo.com)."
+      title={t('Aliased emails')}
+      description={t(
+        'Reject sign-ups and email updates that use subaddresses, tags, or other provider-specific variations of the same inbox (e.g. user+folder@outlook.com, user+tag@yahoo.com).',
+      )}
       switchId="deny-aliased-email-enabled"
-      switchLabel="Deny aliased emails"
+      switchLabel={t('Deny aliased emails')}
       mutation={mutation}
-      successMessage="Updated deny aliased emails policy"
-      errorMessage="Failed to update deny aliased emails policy"
+      successMessage={t('Updated deny aliased emails policy')}
+      errorMessage={t('Failed to update deny aliased emails policy')}
     />
   )
 }
@@ -172,18 +177,21 @@ export function DenyDisposableEmailCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const mutation = useUpdateDenyDisposableEmailPolicy(projectId)
 
   return (
     <EmailPolicyCard
       currentEnabled={currentEnabled}
-      title="Disposable emails"
-      description="Reject sign-ups and email updates that use disposable or temporary inbox providers (e.g. Mailinator). Appwrite validates each address against a provider database maintained by the Appwrite team, built from public blocklists and other trusted online sources, and refreshed on a regular cadence."
+      title={t('Disposable emails')}
+      description={t(
+        'Reject sign-ups and email updates that use disposable or temporary inbox providers (e.g. Mailinator). Appwrite validates each address against a provider database maintained by the Appwrite team, built from public blocklists and other trusted online sources, and refreshed on a regular cadence.', // pragma: allowlist secret
+      )}
       switchId="deny-disposable-email-enabled"
-      switchLabel="Deny disposable emails"
+      switchLabel={t('Deny disposable emails')}
       mutation={mutation}
-      successMessage="Updated deny disposable emails policy"
-      errorMessage="Failed to update deny disposable emails policy"
+      successMessage={t('Updated deny disposable emails policy')}
+      errorMessage={t('Failed to update deny disposable emails policy')}
     />
   )
 }
@@ -195,18 +203,21 @@ export function DenyCorporateEmailCard({
   projectId: string
   currentEnabled: boolean
 }) {
+  const t = useT()
   const mutation = useUpdateDenyCorporateEmailPolicy(projectId)
 
   return (
     <EmailPolicyCard
       currentEnabled={currentEnabled}
-      title="Corporate emails"
-      description="Reject sign-ups and email updates that use corporate or organization-managed domains. Useful when your project should only accept personal email addresses."
+      title={t('Corporate emails')}
+      description={t(
+        'Reject sign-ups and email updates that use corporate or organization-managed domains. Useful when your project should only accept personal email addresses.',
+      )}
       switchId="deny-corporate-email-enabled"
-      switchLabel="Deny corporate emails"
+      switchLabel={t('Deny corporate emails')}
       mutation={mutation}
-      successMessage="Updated deny corporate emails policy"
-      errorMessage="Failed to update deny corporate emails policy"
+      successMessage={t('Updated deny corporate emails policy')}
+      errorMessage={t('Failed to update deny corporate emails policy')}
     />
   )
 }

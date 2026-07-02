@@ -28,6 +28,7 @@ import {
   type TriggerValidationIssue,
 } from '@/lib/git-build-triggers'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 interface BuildTriggersCardProps {
   kind: TriggerResourceKind
@@ -51,6 +52,7 @@ function FieldLabel({
   children: string
   tooltip: string
 }) {
+  const t = useT()
   return (
     <Label htmlFor={htmlFor} className="text-[13px] mb-2 block">
       {children}
@@ -59,7 +61,7 @@ function FieldLabel({
           <button
             type="button"
             className="inline-flex ms-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-            aria-label="More info"
+            aria-label={t('More info')}
           >
             <Info className="h-3.5 w-3.5" />
           </button>
@@ -81,6 +83,7 @@ function PatternExamples({
   disabled?: boolean
   onPick: (pattern: string) => void
 }) {
+  const t = useT()
   if (examples.length === 0) return null
 
   return (
@@ -96,7 +99,7 @@ function PatternExamples({
               disabled={disabled}
               onClick={() => onPick(example.pattern)}
             >
-              {example.label}
+              {t(example.label)}
             </Button>
           </TooltipTrigger>
           <TooltipContent
@@ -131,6 +134,7 @@ export function BuildTriggersCard({
   onSave,
   isSaving = false,
 }: BuildTriggersCardProps) {
+  const t = useT()
   const isConfigured = hasGitRepository(resource)
   const productionBranch = resource.providerBranch?.trim() || 'main'
   const pathRootNote = getPathFilterRootNote(resource.providerRootDirectory)
@@ -212,12 +216,14 @@ export function BuildTriggersCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Triggers</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Triggers')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Limit which pushes trigger deployments. Use globs; prefix with{' '}
-          <span className="font-mono">!</span> to exclude.{' '}
+          {t('Limit which pushes trigger deployments. Use globs; prefix with')}{' '}
+          <span className="font-mono">!</span> {t('to exclude.')}{' '}
           <DocsRouteLink href={docsLink} className="link-neutral">
-            Learn more
+            {t('Learn more')}
           </DocsRouteLink>
         </p>
       </div>
@@ -227,13 +233,13 @@ export function BuildTriggersCard({
           {!isConfigured ? (
             <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
               <p className="text-[12px] text-muted-foreground">
-                Connect a repository in{' '}
+                {t('Connect a repository in')}{' '}
                 <Link
                   to={gitSettingsTo}
                   params={gitSettingsParams}
                   className="link-neutral"
                 >
-                  Git settings
+                  {t('Git settings')}
                 </Link>
                 .
               </p>
@@ -243,7 +249,7 @@ export function BuildTriggersCard({
               <div className="rounded-lg border border-border bg-muted/30 overflow-hidden">
                 <div className="border-b border-border bg-muted/40 px-3.5 py-2">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {hasChanges ? 'Preview' : 'Current behavior'}
+                    {hasChanges ? t('Preview') : t('Current behavior')}
                   </span>
                 </div>
                 <div className="space-y-3 px-3.5 py-3">
@@ -251,7 +257,7 @@ export function BuildTriggersCard({
                     {behaviorSummary}
                   </p>
                   <p className="border-t border-border pt-3 text-[12px] text-muted-foreground">
-                    Production{' '}
+                    {t('Production')}{' '}
                     <code className="font-mono text-foreground">
                       {productionBranch}
                     </code>
@@ -290,9 +296,9 @@ export function BuildTriggersCard({
           <div>
             <FieldLabel
               htmlFor="provider-branches"
-              tooltip="Empty = all branches. ! excludes."
+              tooltip={t('Empty = all branches. ! excludes.')}
             >
-              Branch filters
+              {t('Branch filters')}
             </FieldLabel>
             <PatternExamples
               examples={branchExamples}
@@ -322,9 +328,9 @@ export function BuildTriggersCard({
           <div>
             <FieldLabel
               htmlFor="provider-paths"
-              tooltip="Empty = all file changes. ! excludes."
+              tooltip={t('Empty = all file changes. ! excludes.')}
             >
-              Path filters
+              {t('Path filters')}
             </FieldLabel>
             <PatternExamples
               examples={pathExamples}
@@ -370,7 +376,7 @@ export function BuildTriggersCard({
           }
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
         <Button
           type="button"
@@ -380,7 +386,7 @@ export function BuildTriggersCard({
           disabled={fieldsDisabled || !hasAnyPatterns}
           onClick={handleClearAll}
         >
-          Clear all
+          {t('Clear all')}
         </Button>
       </div>
     </div>

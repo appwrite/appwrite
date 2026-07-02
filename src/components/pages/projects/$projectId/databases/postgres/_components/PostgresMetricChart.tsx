@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
+import { useT } from '@/lib/i18n/translate'
 
 export type PostgresMetricSeriesPoint = {
   timestamp: number
@@ -132,6 +133,7 @@ export function PostgresMetricChart({
   placeholderNote = POSTGRES_USAGE_PLACEHOLDER_NOTE,
   className,
 }: PostgresMetricChartProps) {
+  const t = useT()
   const gradientId = `postgres-metric-gradient-${id}`
   const secondaryGradientId = `postgres-metric-gradient-secondary-${id}`
   const hasSecondary = data.some((point) => point.secondaryValue != null)
@@ -201,7 +203,7 @@ export function PostgresMetricChart({
             <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
             {isPlaceholder ? (
               <Badge variant="info" className="text-[10px] shrink-0">
-                Sample data
+                {t('Sample data')}
               </Badge>
             ) : null}
             <TooltipProvider delayDuration={0}>
@@ -263,7 +265,7 @@ export function PostgresMetricChart({
         {showEmpty ? (
           <div className="flex h-[180px] items-center justify-center rounded-md border border-dashed border-border bg-muted/20 px-6 text-center">
             <p className="max-w-sm text-[12px] leading-relaxed text-muted-foreground">
-              {emptyMessage}
+              {t(emptyMessage)}
             </p>
           </div>
         ) : (

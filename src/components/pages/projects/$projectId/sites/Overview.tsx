@@ -58,6 +58,7 @@ import {
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -67,6 +68,7 @@ function formatDuration(seconds: number): string {
 }
 
 export function View() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { data: site, isLoading: siteLoading } = useProjectSite(
@@ -191,9 +193,9 @@ export function View() {
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download source code')
+      toast.error(t('Failed to download source code'))
     }
   }
 
@@ -208,9 +210,9 @@ export function View() {
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download build output')
+      toast.error(t('Failed to download build output'))
     }
   }
 
@@ -233,11 +235,11 @@ export function View() {
       await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
-      toast.success('Deployment rebuild started')
+      toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to redeploy')
+      toast.error(error.message || t('Failed to redeploy'))
     },
   })
 
@@ -260,11 +262,11 @@ export function View() {
       await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
-      toast.success('Deployment activated successfully')
+      toast.success(t('Deployment activated successfully'))
       setActivateDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to activate deployment')
+      toast.error(error.message || t('Failed to activate deployment'))
     },
   })
 
@@ -275,7 +277,9 @@ export function View() {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       throw new Error(
-        'Cannot delete the active deployment. Please activate another deployment first.',
+        t(
+          'Cannot delete the active deployment. Please activate another deployment first.',
+        ),
       )
     },
     onSuccess: async () => {
@@ -285,18 +289,18 @@ export function View() {
       await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
-      toast.success('Deployment deleted successfully')
+      toast.success(t('Deployment deleted successfully'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete deployment')
+      toast.error(error.message || t('Failed to delete deployment'))
     },
   })
 
   if (siteLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">Loading site...</p>
+        <p className="text-muted-foreground">{t('Loading site...')}</p>
       </div>
     )
   }
@@ -310,14 +314,14 @@ export function View() {
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4 flex items-center gap-2">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Active deployment
+                  {t('Active deployment')}
                 </h3>
                 {isBuilding && (
                   <Badge
                     variant="deploymentBuilding"
                     className="text-[10px] shrink-0"
                   >
-                    Building
+                    {t('Building')}
                   </Badge>
                 )}
               </div>
@@ -327,7 +331,7 @@ export function View() {
                   {/* Deployed */}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Deployed
+                      {t('Deployed')}
                     </div>
                     <div className="text-[13px] text-foreground">
                       <DateTooltip
@@ -344,7 +348,7 @@ export function View() {
                     ) && (
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Build duration
+                          {t('Build duration')}
                         </div>
                         <div className="text-[13px] text-foreground">
                           {formatDuration(productionDeployment.buildDuration)}
@@ -356,7 +360,7 @@ export function View() {
                   {productionDeployment?.totalSize && (
                     <div>
                       <div className="text-[12px] text-muted-foreground mb-1.5">
-                        Total size
+                        {t('Total size')}
                       </div>
                       <div className="text-[13px] text-foreground">
                         {formatBytes(productionDeployment.totalSize)}
@@ -367,7 +371,7 @@ export function View() {
                   {/* Domains */}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Domains
+                      {t('Domains')}
                     </div>
                     <div className="text-[13px] text-foreground">
                       {activeDomains.length > 0 ? (
@@ -388,7 +392,7 @@ export function View() {
                             {hasMoreDomains && (
                               <span className="text-[11px] text-muted-foreground">
                                 +{totalActiveDomains - activeDomains.length}{' '}
-                                more
+                                {t('more')}
                               </span>
                             )}
                           </div>
@@ -411,7 +415,7 @@ export function View() {
                                   siteId: siteId!,
                                 }}
                               >
-                                View all domains
+                                {t('View all domains')}
                                 {hasMoreDomains && (
                                   <Badge
                                     variant="secondary"
@@ -436,7 +440,7 @@ export function View() {
                                   siteId: siteId!,
                                 }}
                               >
-                                Add domain
+                                {t('Add domain')}
                               </Link>
                             </Button>
                           </div>
@@ -461,7 +465,7 @@ export function View() {
                                 siteId: siteId!,
                               }}
                             >
-                              View all domains
+                              {t('View all domains')}
                             </Link>
                           </Button>
                           <span className="text-muted-foreground/60">·</span>
@@ -478,7 +482,7 @@ export function View() {
                                 siteId: siteId!,
                               }}
                             >
-                              Add domain
+                              {t('Add domain')}
                             </Link>
                           </Button>
                         </div>
@@ -496,14 +500,14 @@ export function View() {
                       className="h-9 text-[13px]"
                     >
                       <Download className="me-1.5 h-4 w-4" />
-                      Download
+                      {t('Download')}
                       <ChevronDown className="ms-auto sm:ms-1.5 h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
                       <FileCode className="me-2 h-4 w-4" />
-                      Source code
+                      {t('Source code')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
@@ -516,12 +520,14 @@ export function View() {
                         !isDeploymentCompleted(
                           activeDeploymentForCard?.status,
                         )
-                          ? 'Build output is available after the deployment has completed.'
+                          ? t(
+                              'Build output is available after the deployment has completed.',
+                            )
                           : undefined
                       }
                     >
                       <Package className="me-2 h-4 w-4" />
-                      Build output
+                      {t('Build output')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -533,7 +539,7 @@ export function View() {
                   className="h-9 text-[13px]"
                 >
                   <RefreshCw className="me-1.5 h-4 w-4" />
-                  Redeploy
+                  {t('Redeploy')}
                 </Button>
                 <Link
                   to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
@@ -549,7 +555,7 @@ export function View() {
                     className="h-9 text-[13px]"
                   >
                     <ScrollText className="me-1.5 h-4 w-4" />
-                    Build logs
+                    {t('Build logs')}
                   </Button>
                 </Link>
                 {activeDomains.length > 0 && (
@@ -561,14 +567,14 @@ export function View() {
                         className="h-9 text-[13px]"
                       >
                         <Globe className="me-1.5 h-4 w-4" />
-                        Visit
+                        {t('Visit')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="z-[200] w-80">
                       <div className="space-y-3">
                         <div>
                           <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                            Domains
+                            {t('Domains')}
                           </h4>
                           <div className="space-y-1.5">
                             {activeDomains.map((rule) => (
@@ -600,14 +606,14 @@ export function View() {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4 flex items-center justify-between">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Recent deployments
+                {t('Recent deployments')}
               </h3>
               <Link
                 to="/projects/$projectId/sites/$siteId/deployments"
                 params={{ projectId: projectId!, siteId: siteId! }}
                 className="link-neutral text-[13px]"
               >
-                View all
+                {t('View all')}
               </Link>
             </div>
             <div className="border-t border-border" />
@@ -648,7 +654,7 @@ export function View() {
                               className="gap-1.5 text-[11px] font-medium shrink-0"
                             >
                               <StatusIcon className="h-3 w-3" />
-                              {isActive ? 'Active' : statusBadge.label}
+                              {isActive ? t('Active') : t(statusBadge.label)}
                             </Badge>
                             <div className="min-w-0 flex-1">
                               <CopyableId
@@ -673,8 +679,8 @@ export function View() {
             ) : (
               <div className="px-6 py-4">
                 <EmptyState
-                  title="No deployments yet"
-                  description="Deployments will appear here when available"
+                  title={t('No deployments yet')}
+                  description={t('Deployments will appear here when available')}
                   isEmpty={true}
                 />
               </div>
@@ -688,13 +694,14 @@ export function View() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Delete deployment</DialogTitle>
+              <DialogTitle>{t('Delete deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action
-                cannot be undone.
+                {t(
+                  'Are you sure you want to delete this deployment? This action cannot be undone.',
+                )}
               </DialogDescription>
               <DeploymentInfo
                 deployment={activeDeploymentForCard}
@@ -707,7 +714,7 @@ export function View() {
                 onClick={() => setDeleteDialogOpen(false)}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -715,7 +722,7 @@ export function View() {
                 disabled={deleteMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>
@@ -727,14 +734,14 @@ export function View() {
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Redeploy deployment</DialogTitle>
+              <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the
-                current site configuration. The original deployment's code will
-                be preserved and used for the new build.
+                {t(
+                  "This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.",
+                )}
               </DialogDescription>
               <DeploymentInfo
                 deployment={activeDeploymentForCard}
@@ -748,7 +755,7 @@ export function View() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="default"
@@ -756,7 +763,7 @@ export function View() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Redeploy
+                {t('Redeploy')}
               </Button>
             </div>
           </DialogContent>
@@ -768,13 +775,14 @@ export function View() {
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Activate deployment</DialogTitle>
+              <DialogTitle>{t('Activate deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic
-                will be routed to this deployment once activated.
+                {t(
+                  'This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.',
+                )}
               </DialogDescription>
               <DeploymentInfo
                 deployment={activeDeploymentForCard}
@@ -788,7 +796,7 @@ export function View() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="default"
@@ -796,7 +804,7 @@ export function View() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Activate
+                {t('Activate')}
               </Button>
             </div>
           </DialogContent>

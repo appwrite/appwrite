@@ -39,6 +39,7 @@ import {
   type StorageInspectorPreviewDefaults,
 } from './transform-image-wizard-state'
 import type { SavedImageTransformPreset } from '@/lib/user-prefs-keys'
+import { useT } from '@/lib/i18n/translate'
 
 function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   const copy = [...list]
@@ -70,6 +71,7 @@ function BuiltinTransformPresetRow({
   label: string
   onApply: () => void
 }) {
+  const t = useT()
   return (
     <div
       className="group flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-2 py-1.5 transition-colors"
@@ -89,7 +91,7 @@ function BuiltinTransformPresetRow({
           onApply()
         }}
       >
-        Apply
+        {t('Apply')}
       </Button>
     </div>
   )
@@ -112,6 +114,7 @@ export function TransformImagePresetsPopover({
   setState,
   recordUndoPoint,
 }: TransformImagePresetsPopoverProps) {
+  const t = useT()
   const { account } = useAuth()
   const { project } = useProject(projectId)
   const teamId = project?.teamId ?? null
@@ -166,7 +169,7 @@ export function TransformImagePresetsPopover({
       const preset = IMAGE_TRANSFORM_PRESETS.find((x) => x.id === p.id)
       if (!preset) return
       setState(() => applyImageTransformPreset(preset, preferAvif, previewDefaults))
-      toast.message(`Applied preset: ${preset.label}`)
+      toast.message(`${t('Applied preset:')} ${preset.label}`)
       return
     }
     setState((base) => {
@@ -175,10 +178,10 @@ export function TransformImagePresetsPopover({
         queueMicrotask(() => toast.error(r.error))
         return base
       }
-      queueMicrotask(() => toast.message(`Applied preset: ${p.label}`))
+      queueMicrotask(() => toast.message(`${t('Applied preset:')} ${p.label}`))
       return r.state
     })
-  }, [pending, preferAvif, previewDefaults, recordUndoPoint, setState])
+  }, [pending, preferAvif, previewDefaults, recordUndoPoint, setState, t])
 
   const handleSaveCurrent = useCallback(async () => {
     const json = transformStateToJsonCompact(state)
@@ -188,7 +191,7 @@ export function TransformImagePresetsPopover({
       return
     }
     if (saveLevel === 'team' && (!teamId || !canTeamPresets)) {
-      toast.error("You don't have permission to save team presets.")
+      toast.error(t("You don't have permission to save team presets."))
       return
     }
     try {
@@ -198,7 +201,7 @@ export function TransformImagePresetsPopover({
         level: saveLevel,
       })
       toast.success(
-        saveLevel === 'team' ? 'Preset saved for team' : 'Preset saved',
+        saveLevel === 'team' ? t('Preset saved for team') : t('Preset saved'),
       )
       setSaveName('')
     } catch (e) {
@@ -213,25 +216,26 @@ export function TransformImagePresetsPopover({
     saveName,
     state,
     teamId,
+    t,
   ])
 
   const handleDelete = useCallback(
     async (id: string, level: ImageTransformSavedPresetLevel) => {
       if (level === 'team' && !canTeamPresets) {
-        toast.error("You don't have permission to remove team presets.")
+        toast.error(t("You don't have permission to remove team presets."))
         return
       }
       try {
         setDeletingId(id)
         await deletePreset(id, level)
-        toast.message('Preset removed')
+        toast.message(t('Preset removed'))
       } catch (e) {
         toast.error(getErrorMessage(e))
       } finally {
         setDeletingId(null)
       }
     },
-    [canTeamPresets, deletePreset],
+    [canTeamPresets, deletePreset, t],
   )
 
   const handlePresetDragStart = (
@@ -296,15 +300,15 @@ export function TransformImagePresetsPopover({
     if (pending.kind === 'builtin') {
       const preset = IMAGE_TRANSFORM_PRESETS.find((x) => x.id === pending.id)
       return {
-        title: 'Apply preset?',
-        description: `Applying “${preset?.label ?? 'this preset'}” updates your transform parameters. You can use Undo afterward. Continue?`,
+        title: t('Apply preset?'),
+        description: `${t('Applying')} “${preset?.label ?? t('this preset')}” ${t('updates your transform parameters. You can use Undo afterward. Continue?')}`,
       }
     }
     return {
-      title: 'Apply saved preset?',
-      description: `Applying “${pending.label}” merges saved parameters into your current transform. You can use Undo afterward. Continue?`,
+      title: t('Apply saved preset?'),
+      description: `${t('Applying')} “${pending.label}” ${t('merges saved parameters into your current transform. You can use Undo afterward. Continue?')}`,
     }
-  }, [pending])
+  }, [pending, t])
 
   return (
     <>
@@ -317,7 +321,7 @@ export function TransformImagePresetsPopover({
             className="h-8 shrink-0 gap-1.5 px-2.5 text-[12px]"
           >
             <Filter className="h-3.5 w-3.5 shrink-0" />
-            Presets
+            {t('Presets')}
             {savedCount > 0 ? (
               <span className="flex size-4 min-w-4 items-center justify-center rounded-full bg-muted text-[10px] font-medium tabular-nums text-muted-foreground">
                 {savedCount}
@@ -333,7 +337,9 @@ export function TransformImagePresetsPopover({
           collisionPadding={16}
         >
           <div className="shrink-0 border-b border-border px-4 py-3">
-            <p className="text-[13px] font-semibold text-foreground">Presets</p>
+            <p className="text-[13px] font-semibold text-foreground">
+              {t('Presets')}
+            </p>
           </div>
           <Tabs
             value={browseTab}
@@ -346,21 +352,21 @@ export function TransformImagePresetsPopover({
                   value="builtin"
                   className="gap-1 px-1.5 text-[11px] sm:text-[12px]"
                 >
-                  <span className="truncate">Built-in</span>
+                  <span className="truncate">{t('Built-in')}</span>
                   {tabCountBadge(IMAGE_TRANSFORM_PRESETS.length)}
                 </TabsTrigger>
                 <TabsTrigger
                   value="user"
                   className="gap-1 px-1.5 text-[11px] sm:text-[12px]"
                 >
-                  <span className="truncate">Mine</span>
+                  <span className="truncate">{t('Mine')}</span>
                   {tabCountBadge(userPresets.length)}
                 </TabsTrigger>
                 <TabsTrigger
                   value="team"
                   className="gap-1 px-1.5 text-[11px] sm:text-[12px]"
                 >
-                  <span className="truncate">Team</span>
+                  <span className="truncate">{t('Team')}</span>
                   {tabCountBadge(teamPresets.length)}
                 </TabsTrigger>
               </TabsList>
@@ -374,7 +380,7 @@ export function TransformImagePresetsPopover({
                   {IMAGE_TRANSFORM_PRESETS.map((preset) => (
                     <BuiltinTransformPresetRow
                       key={preset.id}
-                      label={preset.label}
+                      label={t(preset.label)}
                       onApply={() =>
                         requestApply({ kind: 'builtin', id: preset.id })
                       }
@@ -425,11 +431,11 @@ export function TransformImagePresetsPopover({
                   </div>
                 ) : (
                   <p className="text-[12px] leading-relaxed text-muted-foreground">
-                    You have not saved any presets yet. Use{' '}
+                    {t('You have not saved any presets yet. Use')}{' '}
                     <span className="font-medium text-foreground">
-                      Save preset
+                      {t('Save preset')}
                     </span>{' '}
-                    below to store your current transform parameters.
+                    {t('below to store your current transform parameters.')}
                   </p>
                 )}
               </TabsContent>
@@ -439,8 +445,9 @@ export function TransformImagePresetsPopover({
               >
                 {!hasTeamLevel ? (
                   <p className="text-[12px] leading-relaxed text-muted-foreground">
-                    Team presets are available when the project belongs to an
-                    organization.
+                    {t(
+                      'Team presets are available when the project belongs to an organization.',
+                    )}
                   </p>
                 ) : teamPresets.length > 0 ? (
                   <div className="space-y-1">
@@ -481,12 +488,13 @@ export function TransformImagePresetsPopover({
                   </div>
                 ) : (
                   <p className="text-[12px] leading-relaxed text-muted-foreground">
-                    No team presets yet. Owners and developers can add presets
-                    for everyone in the organization using{' '}
+                    {t(
+                      'No team presets yet. Owners and developers can add presets for everyone in the organization using',
+                    )}{' '}
                     <span className="font-medium text-foreground">
-                      For team
+                      {t('For team')}
                     </span>{' '}
-                    below.
+                    {t('below.')}
                   </p>
                 )}
               </TabsContent>
@@ -498,12 +506,12 @@ export function TransformImagePresetsPopover({
               htmlFor="transform-preset-save-name"
               className="text-[12px] text-muted-foreground"
             >
-              Save current parameters
+              {t('Save current parameters')}
             </Label>
             <div className="mt-2 flex gap-2">
               <Input
                 id="transform-preset-save-name"
-                placeholder="Preset name"
+                placeholder={t('Preset name')}
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 className="h-9 flex-1 text-[13px]"
@@ -520,17 +528,18 @@ export function TransformImagePresetsPopover({
               >
                 <TabsList className="grid h-9 w-full grid-cols-2">
                   <TabsTrigger value="user" className="text-[12px]">
-                    For me
+                    {t('For me')}
                   </TabsTrigger>
                   <TabsTrigger value="team" className="text-[12px]">
-                    For team
+                    {t('For team')}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
             ) : (
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Saved to your account. Team presets require owner or developer
-                access.
+                {t(
+                  'Saved to your account. Team presets require owner or developer access.',
+                )}
               </p>
             )}
             <Button
@@ -543,7 +552,7 @@ export function TransformImagePresetsPopover({
               {isAdding ? (
                 <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
               ) : null}
-              Save preset
+              {t('Save preset')}
             </Button>
           </div>
         </PopoverContent>
@@ -577,10 +586,10 @@ export function TransformImagePresetsPopover({
                 setAlertOpen(false)
               }}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="button" onClick={() => runApply()}>
-              Apply preset
+              {t('Apply preset')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -9,6 +9,7 @@ import {
 import type { ImperativePanelHandle } from 'react-resizable-panels'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
+import { useT } from '@/lib/i18n/translate'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { monacoSyntaxHighlightRules } from '@/lib/code-syntax-theme'
 import Editor from '@monaco-editor/react'
@@ -436,6 +437,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
 }
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const { resolvedTheme } = useTheme()
   const isDark = isResolvedThemeDarkChrome(resolvedTheme)
@@ -1786,10 +1788,10 @@ export function View() {
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setAddFileOpen(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button onClick={addFile} disabled={!newFilePath.trim()}>
-              Add file
+              {t('Add file')}
             </Button>
           </div>
         </DialogContent>
@@ -1802,10 +1804,10 @@ export function View() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Remove file</DialogTitle>
+            <DialogTitle>{t('Remove file')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Remove &quot;{deleteConfirmPath}&quot; from the project? This
-              cannot be undone.
+              {t('Remove')} &quot;{deleteConfirmPath}&quot;{' '}
+              {t('from the project? This cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1814,13 +1816,13 @@ export function View() {
               variant="outline"
               onClick={() => setDeleteConfirmPath(null)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteConfirmPath && deleteFile(deleteConfirmPath)}
             >
-              Remove
+              {t('Remove')}
             </Button>
           </div>
         </DialogContent>

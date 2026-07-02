@@ -4,10 +4,12 @@ import { useProjectSite, useSiteLogs } from '@/lib/react-query/hooks'
 import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.sites.$siteId.logs'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
+import { useT } from '@/lib/i18n/translate'
 
 const LOGS_PER_PAGE = 25
 
 export function SiteLogsView() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -25,7 +27,7 @@ export function SiteLogsView() {
 
   const refreshContext = useRefreshOptional()
 
-  const { isLoading: siteLoading } = useProjectSite(projectId, siteId)
+  useProjectSite(projectId, siteId)
 
   // Sync requested page with URL when it changes externally (e.g., browser back/forward)
   useEffect(() => {
@@ -144,9 +146,11 @@ export function SiteLogsView() {
       projectId={projectId}
       resourceVariant="site"
       resourceId={siteId}
-      emptyStateTitle="No executions yet"
-      emptyStateDescription="Executions will appear here when your site runs."
-      itemLabel="logs"
+      emptyStateTitle={t('No executions yet')}
+      emptyStateDescription={t(
+        'Executions will appear here when your site runs.',
+      )}
+      itemLabel={t('logs')}
     />
   )
 }

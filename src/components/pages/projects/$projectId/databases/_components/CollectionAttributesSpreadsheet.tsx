@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 type CollectionAttributesSpreadsheetProps = {
   table: Models.Collection | { $id: string; name?: string }
@@ -31,6 +32,7 @@ function getAttributeType(attr: Record<string, unknown>): string {
 export function CollectionAttributesSpreadsheet({
   table,
 }: CollectionAttributesSpreadsheetProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
@@ -53,7 +55,7 @@ export function CollectionAttributesSpreadsheet({
   if (isLoading && attributes.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-[13px] text-muted-foreground">
-        Loading attributes…
+        {t('Loading attributes…')}
       </div>
     )
   }
@@ -62,8 +64,8 @@ export function CollectionAttributesSpreadsheet({
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         <EmptyState
-          title="No attributes yet"
-          description="Define attributes when creating a collection, or store flexible fields on documents without a fixed schema."
+          title={t('No attributes yet')}
+          description={t('Define attributes when creating a collection, or store flexible fields on documents without a fixed schema.')}
         />
       </div>
     )
@@ -76,16 +78,16 @@ export function CollectionAttributesSpreadsheet({
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Key
+                {t('Key')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Type
+                {t('Type')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Required
+                {t('Required')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Status
+                {t('Status')}
               </TableHead>
             </TableRow>
           </TableHeader>

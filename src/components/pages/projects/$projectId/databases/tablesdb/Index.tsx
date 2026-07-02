@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner'
 import { X, Plus } from 'lucide-react'
 import { Calendar, Hash } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 export type IndexType = 'key' | 'unique' | 'fulltext' | 'spatial'
 
@@ -77,6 +78,7 @@ export function IndexDrawer({
   existingIndexes = [],
   isLoading = false,
 }: IndexDrawerProps) {
+  const t = useT()
   const isEditMode = !!index
   const [formData, setFormData] = useState<IndexFormData>({
     key: '',
@@ -277,8 +279,8 @@ export function IndexDrawer({
       if (!(index as unknown)?.isSuggestion) {
         toast.success(
           isEditMode
-            ? 'Index updated successfully'
-            : 'Index created successfully',
+            ? t('Index updated successfully')
+            : t('Index created successfully'),
         )
       }
     } catch (error) {
@@ -290,13 +292,13 @@ export function IndexDrawer({
 
   const addColumn = () => {
     if (formData.type === 'spatial') {
-      toast.error('Spatial indexes can only have one column')
+      toast.error(t('Spatial indexes can only have one column'))
       return
     }
 
     const lastColumn = formData.columns[formData.columns.length - 1]
     if (!lastColumn.column || !lastColumn.order) {
-      toast.error('Please complete the current column before adding another')
+      toast.error(t('Please complete the current column before adding another'))
       return
     }
 
@@ -308,7 +310,7 @@ export function IndexDrawer({
 
   const removeColumn = (index: number) => {
     if (formData.columns.length === 1) {
-      toast.error('At least one column is required')
+      toast.error(t('At least one column is required'))
       return
     }
     setFormData((prev) => ({
@@ -352,7 +354,7 @@ export function IndexDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title={isEditMode ? 'Update Index' : 'Create Index'}
+      title={isEditMode ? t('Update Index') : t('Create Index')}
       maxWidth="sm:max-w-2xl"
     >
       <>
@@ -371,7 +373,7 @@ export function IndexDrawer({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, key: e.target.value }))
                 }
-                placeholder="Enter Key"
+                placeholder={t('Enter Key')}
                 disabled={isLoading}
                 pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
                 className={errors.key ? 'border-destructive' : ''}
@@ -394,7 +396,7 @@ export function IndexDrawer({
                 </p>
               )}
               <p className="text-[11px] text-muted-foreground">
-                Allowed characters: a-z, A-Z, 0-9, -, ., _
+                {t('Allowed characters: a-z, A-Z, 0-9, -, ., _')}
               </p>
             </div>
 
@@ -424,7 +426,7 @@ export function IndexDrawer({
                 <SelectContent>
                   {INDEX_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {t(type.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -444,7 +446,7 @@ export function IndexDrawer({
                   <div className="flex-1 space-y-3">
                     <div className="space-y-2">
                       <Label className="text-[11px] text-muted-foreground">
-                        Column
+                        {t('Column')}
                       </Label>
                       <Select
                         value={columnEntry.column}
@@ -456,7 +458,7 @@ export function IndexDrawer({
                         <SelectTrigger
                           className={errors.columns ? 'border-destructive' : ''}
                         >
-                          <SelectValue placeholder="Select column" />
+                          <SelectValue placeholder={t('Select column')} />
                         </SelectTrigger>
                         <SelectContent>
                           {filteredColumns.map((col) => (
@@ -471,7 +473,7 @@ export function IndexDrawer({
                     {!isSpatial && (
                       <div className="space-y-2">
                         <Label className="text-[11px] text-muted-foreground">
-                          Order
+                          {t('Order')}
                         </Label>
                         <Select
                           value={columnEntry.order || 'ASC'}
@@ -485,7 +487,7 @@ export function IndexDrawer({
                           disabled={isLoading}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select order" />
+                            <SelectValue placeholder={t('Select order')} />
                           </SelectTrigger>
                           <SelectContent>
                             {ORDER_OPTIONS.map((opt) => (
@@ -501,7 +503,7 @@ export function IndexDrawer({
                     {isSpatial && (
                       <div className="space-y-2">
                         <Label className="text-[11px] text-muted-foreground">
-                          Order (Optional)
+                          {t('Order (Optional)')}
                         </Label>
                         <Select
                           value={columnEntry.order || 'NONE'}
@@ -515,7 +517,7 @@ export function IndexDrawer({
                           disabled={isLoading}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select order" />
+                            <SelectValue placeholder={t('Select order')} />
                           </SelectTrigger>
                           <SelectContent>
                             {ORDER_OPTIONS_WITH_NONE.map((opt) => (
@@ -545,7 +547,7 @@ export function IndexDrawer({
                         return (
                           <div className="space-y-2">
                             <Label className="text-[11px] text-muted-foreground">
-                              Length (Optional)
+                              {t('Length (Optional)')}
                             </Label>
                             <Input
                               type="number"
@@ -557,13 +559,13 @@ export function IndexDrawer({
                                     : parseInt(e.target.value)
                                 updateColumn(index, 'length', value)
                               }}
-                              placeholder="Max 767"
+                              placeholder={t('Max 767')}
                               max={767}
                               min={1}
                               disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                              Only applicable to string and varchar columns
+                              {t('Only applicable to string and varchar columns')}
                             </p>
                           </div>
                         )
@@ -578,7 +580,7 @@ export function IndexDrawer({
                       className="h-9 w-9 shrink-0 mt-6"
                       onClick={() => removeColumn(index)}
                       disabled={isLoading}
-                      aria-label="Remove column"
+                      aria-label={t('Remove column')}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -600,7 +602,7 @@ export function IndexDrawer({
                   className="w-full"
                 >
                   <Plus className="h-3.5 w-3.5 me-1.5" />
-                  Add column
+                  {t('Add column')}
                 </Button>
               )}
             </div>
@@ -616,7 +618,7 @@ export function IndexDrawer({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

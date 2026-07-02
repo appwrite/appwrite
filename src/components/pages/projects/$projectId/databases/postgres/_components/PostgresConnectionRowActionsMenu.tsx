@@ -21,6 +21,7 @@ import {
   isPostgresClientBackend,
   type PostgresActiveConnectionRow,
 } from '@/lib/postgres-metrics'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresConnectionRowActionsMenuProps = {
   connection: PostgresActiveConnectionRow
@@ -45,6 +46,7 @@ export function PostgresConnectionRowActionsMenu({
   onCancelQuery,
   onTerminateConnection,
 }: PostgresConnectionRowActionsMenuProps) {
+  const t = useT()
   const query = normalizeQuery(connection.query)
   const isClient = isPostgresClientBackend(connection)
   const canCancel = isClient && connection.state?.toLowerCase() === 'active'
@@ -64,7 +66,7 @@ export function PostgresConnectionRowActionsMenu({
             onOpenDetails()
           }}
         >
-          <MenuItemContent icon={LayoutList}>Overview</MenuItemContent>
+          <MenuItemContent icon={LayoutList}>{t('Overview')}</MenuItemContent>
         </DropdownMenuItem>
         {query ? (
           <>
@@ -75,7 +77,7 @@ export function PostgresConnectionRowActionsMenu({
               }}
             >
               <MenuItemContent icon={SearchCode}>
-                Open in SQL editor
+                {t('Open in SQL editor')}
               </MenuItemContent>
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -84,7 +86,7 @@ export function PostgresConnectionRowActionsMenu({
                 void copyToClipboard('Query', query)
               }}
             >
-              <MenuItemContent icon={Copy}>Copy query</MenuItemContent>
+              <MenuItemContent icon={Copy}>{t('Copy query')}</MenuItemContent>
             </DropdownMenuItem>
           </>
         ) : null}
@@ -98,7 +100,7 @@ export function PostgresConnectionRowActionsMenu({
                 onCancelQuery()
               }}
             >
-              <MenuItemContent icon={StopCircle}>Cancel query</MenuItemContent>
+              <MenuItemContent icon={StopCircle}>{t('Cancel query')}</MenuItemContent>
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={!canManageConnections || !canTerminate}
@@ -108,7 +110,7 @@ export function PostgresConnectionRowActionsMenu({
               }}
             >
               <MenuItemContent icon={Unplug}>
-                Terminate connection
+                {t('Terminate connection')}
               </MenuItemContent>
             </DropdownMenuItem>
           </>

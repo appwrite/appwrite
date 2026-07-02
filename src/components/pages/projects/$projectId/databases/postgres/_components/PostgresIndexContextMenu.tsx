@@ -12,6 +12,7 @@ import { Copy, FileJson, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import type { PostgresTableIndexRow } from '@/lib/postgres-sql'
+import { useT } from '@/lib/i18n/translate'
 
 interface PostgresIndexContextMenuProps {
   index: PostgresTableIndexRow
@@ -26,6 +27,7 @@ export function PostgresIndexContextMenu({
   onDelete,
   children,
 }: PostgresIndexContextMenuProps) {
+  const t = useT()
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -33,14 +35,14 @@ export function PostgresIndexContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Name', index.index_name)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -48,7 +50,7 @@ export function PostgresIndexContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -57,7 +59,7 @@ export function PostgresIndexContextMenu({
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={() => onDelete(index.index_name)}>
               <ContextMenuIcon icon={Trash2} />
-              Delete
+              {t('Delete')}
             </ContextMenuItem>
           </>
         ) : null}

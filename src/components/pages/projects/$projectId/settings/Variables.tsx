@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
+import { useT } from '@/lib/i18n/translate'
 import {
   useProject,
   useProjectVariables,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/react-query/hooks'
 
 export function Variables() {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const [page, setPage] = useState(0)
@@ -30,15 +32,15 @@ export function Variables() {
     <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6">
       <div className="space-y-6">
         <VariablesSettingsCard
-          title="Global variables"
-          description="Set the environment variables or secret keys that will be passed to all Functions and Sites within your project."
+          title={t('Global variables')}
+          description={t('Set the environment variables or secret keys that will be passed to all Functions and Sites within your project.')}
           variables={variables}
           total={total}
           isLoading={isLoading}
           createMutation={createMutation}
           updateMutation={updateMutation}
           deleteMutation={deleteMutation}
-          scopeLabel={`${project?.name || 'Project'} global`}
+          scopeLabel={`${project?.name || t('Project')} ${t('global')}`}
           page={page}
           limit={limit}
           onPageChange={setPage}
@@ -46,7 +48,7 @@ export function Variables() {
             setLimit(newLimit)
             setPage(0)
           }}
-          itemLabel="variables"
+          itemLabel={t('variables')}
         />
       </div>
     </div>

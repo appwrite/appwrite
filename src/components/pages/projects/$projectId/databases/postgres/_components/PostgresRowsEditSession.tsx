@@ -18,6 +18,7 @@ import type { RowCellValue } from '@/lib/database-row-inline-edits'
 import { useCommitPostgresRowEdits } from '@/lib/react-query/hooks'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresRowsEditSessionContextValue = {
   canWrite: boolean
@@ -69,6 +70,7 @@ export function PostgresRowsEditSessionProvider({
   canWrite = true,
   children,
 }: PostgresRowsEditSessionProviderProps) {
+  const t = useT()
   const [pendingEdits, setPendingEdits] = useState<
     Map<string, PendingPostgresRowCellEdit>
   >(() => new Map())
@@ -208,13 +210,13 @@ export function PostgresRowsEditSessionProvider({
     commitMutation.mutate(edits, {
       onSuccess: () => {
         setPendingEdits(new Map())
-        toast.success('Changes saved')
+        toast.success(t('Changes saved'))
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error) ?? 'Failed to save changes')
+        toast.error(getErrorMessage(error) ?? t('Failed to save changes'))
       },
     })
-  }, [canWrite, commitMutation, pendingEdits])
+  }, [canWrite, commitMutation, pendingEdits, t])
 
   const pendingRowCount = useMemo(() => {
     const rowKeys = new Set<string>()
@@ -276,7 +278,7 @@ export function PostgresRowsEditSessionProvider({
             onClick={discardAll}
             disabled={commitMutation.isPending}
           >
-            Discard
+            {t('Discard')}
           </Button>
           <Button
             size="sm"
@@ -284,7 +286,7 @@ export function PostgresRowsEditSessionProvider({
             onClick={commit}
             disabled={commitMutation.isPending}
           >
-            Commit changes
+            {t('Commit changes')}
           </Button>
         </div>
       ) : null}

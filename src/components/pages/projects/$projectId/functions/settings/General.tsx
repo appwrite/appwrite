@@ -30,8 +30,10 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -64,7 +66,7 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Function updated successfully')
+      toast.success(t('Function updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -74,7 +76,7 @@ export function View() {
     },
     onError: (error: unknown) => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update function',
+        error instanceof Error ? error.message : t('Failed to update function'),
       )
     },
   })
@@ -89,7 +91,11 @@ export function View() {
       )
     },
     onSuccess: (_, nextEnabled) => {
-      toast.success(`Function has been ${nextEnabled ? 'enabled' : 'disabled'}`)
+      toast.success(
+        nextEnabled
+          ? t('Function has been enabled')
+          : t('Function has been disabled'),
+      )
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -107,7 +113,7 @@ export function View() {
 
   const handleSaveName = () => {
     if (!name.trim()) {
-      toast.error('Function name is required')
+      toast.error(t('Function name is required'))
       return
     }
     updateFunctionMutation.mutate({ name })
@@ -117,7 +123,7 @@ export function View() {
     if (!functionId) return
     deleteFunctionMutation.mutate(functionId, {
       onSuccess: () => {
-        toast.success('Function deleted successfully')
+        toast.success(t('Function deleted successfully'))
         navigate({
           to: '/projects/$projectId/functions',
           params: { projectId: projectId! },
@@ -125,7 +131,9 @@ export function View() {
       },
       onError: (error: unknown) => {
         toast.error(
-          error instanceof Error ? error.message : 'Failed to delete function',
+          error instanceof Error
+            ? error.message
+            : t('Failed to delete function'),
         )
       },
     })
@@ -135,7 +143,9 @@ export function View() {
   if (funcLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }
@@ -153,21 +163,23 @@ export function View() {
       node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Identifiers and timestamps for this function.
+            {t('Identifiers and timestamps for this function.')}
           </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-1">
           <p className="text-[13px] text-muted-foreground">
-            Function ID:{' '}
+            {t('Function ID:')}{' '}
             <span className="ms-1.5">
               <CopyableId id={func.$id} size="sm" />
             </span>
           </p>
           <p className="text-[13px] text-muted-foreground">
-            Created:{' '}
+            {t('Created:')}{' '}
             <DateTooltip
               date={new Date(func.$createdAt)}
               showFormattedDate
@@ -175,7 +187,7 @@ export function View() {
             />
           </p>
           <p className="text-[13px] text-muted-foreground">
-            Last updated:{' '}
+            {t('Last updated:')}{' '}
             <DateTooltip
               date={new Date(func.$updatedAt || func.$createdAt)}
               showFormattedDate
@@ -196,9 +208,11 @@ export function View() {
       node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Name')}
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Function name used for identification
+            {t('Function name used for identification')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -206,7 +220,7 @@ export function View() {
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter function name"
+            placeholder={t('Enter function name')}
             className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
           />
         </div>
@@ -221,7 +235,7 @@ export function View() {
             }
             onClick={handleSaveName}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </div>
@@ -237,9 +251,11 @@ export function View() {
       node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Status</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Status')}
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Enable or disable this function without deleting it.
+            {t('Enable or disable this function without deleting it.')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -256,7 +272,7 @@ export function View() {
                 htmlFor="toggle-enabled"
                 className="text-[13px] text-foreground"
               >
-                {enabled ? 'Enabled' : 'Disabled'}
+                {enabled ? t('Enabled') : t('Disabled')}
               </Label>
             </div>
           </div>
@@ -275,7 +291,7 @@ export function View() {
               }
             }}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </div>
@@ -291,14 +307,15 @@ export function View() {
       <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Delete function
+            {t('Delete function')}
           </h3>
         </div>
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Permanently delete this function and all its data. This action cannot
-            be undone.
+            {t(
+              'Permanently delete this function and all its data. This action cannot be undone.',
+            )}
           </p>
           <div className="flex items-center gap-3 mt-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
@@ -310,10 +327,10 @@ export function View() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-foreground truncate">
-                {func.name || 'Unnamed Function'}
+                {func.name || t('Unnamed Function')}
               </p>
               <p className="text-[12px] text-muted-foreground">
-                {func.runtime || 'No runtime'}
+                {func.runtime || t('No runtime')}
               </p>
             </div>
           </div>
@@ -328,18 +345,18 @@ export function View() {
                 disabled={deleteFunctionMutation.isPending}
               >
                 <Trash2 className="me-1.5 h-4 w-4" />
-                Delete function
+                {t('Delete function')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Delete function</DialogTitle>
+                <DialogTitle>{t('Delete function')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete{' '}
+                  {t('Are you sure you want to delete')}{' '}
                   <span className="font-medium text-foreground">
-                    {func.name || 'this function'}
+                    {func.name || t('this function')}
                   </span>{' '}
-                  and all its data? This action cannot be undone.
+                  {t('and all its data? This action cannot be undone.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -348,14 +365,14 @@ export function View() {
                   onClick={() => setDeleteDialogOpen(false)}
                   disabled={deleteFunctionMutation.isPending}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={handleDeleteFunction}
                   disabled={deleteFunctionMutation.isPending}
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </DialogContent>

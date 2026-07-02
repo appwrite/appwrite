@@ -7,6 +7,7 @@ import { buildFunctionUpdateParams } from '@/lib/react-query/hooks'
 import { describeTriggerBehavior, normalizeTriggerPatterns } from '@/lib/git-build-triggers'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { BuildTriggersCard } from '../shared/BuildTriggersCard'
+import { useT } from '@/lib/i18n/translate'
 
 const FUNCTIONS_BUILD_TRIGGERS_DOCS =
   '/docs/products/functions/deploy-from-git#build-triggers'
@@ -18,6 +19,7 @@ interface FunctionBuildTriggersCardProps {
 export function FunctionBuildTriggersCard({
   func,
 }: FunctionBuildTriggersCardProps) {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
@@ -38,7 +40,7 @@ export function FunctionBuildTriggersCard({
         variables.providerBranches,
         variables.providerPaths,
       )
-      toast.success(`Triggers updated. ${summary}`)
+      toast.success(`${t('Triggers updated.')} ${summary}`)
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, func.$id],
       })
@@ -47,7 +49,7 @@ export function FunctionBuildTriggersCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update triggers'))
+      toast.error(getErrorMessage(error, t('Failed to update triggers')))
     },
   })
 

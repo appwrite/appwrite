@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Loader2, Mail, Key, Smartphone, UserPlus, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import {
   MockPhoneNumbersCard,
@@ -60,6 +61,7 @@ const AUTH_METHODS = [
 ] as const
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const security = useAuthSecuritySnapshot(projectId)
@@ -117,11 +119,15 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         onSuccess: () => {
           const methodLabel =
             AUTH_METHODS.find((m) => m.key === method)?.label || method
-          toast.success(`${methodLabel} authentication has been updated`)
+          toast.success(
+            `${t('Authentication method updated:')} ${t(methodLabel)}`,
+          )
           queryClient.invalidateQueries({ queryKey: ['project', projectId] })
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update authentication method')
+          toast.error(
+            error.message || t('Failed to update authentication method'),
+          )
           setOptimisticAuthMethods((prev) => {
             const next = { ...prev }
             delete next[method]
@@ -143,13 +149,13 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Auth methods
+            {t('Auth methods')}
           </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
-            Enable the authentication methods you wish to use.
+            {t('Enable the authentication methods you wish to use.')}
           </p>
           <div className={RESOURCE_CARD_GRID_CLASSNAME}>
             {AUTH_METHODS.map((method) => {
@@ -173,7 +179,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                         htmlFor={method.key}
                         className="text-[13px] font-medium text-foreground cursor-pointer shrink-0"
                       >
-                        {method.label}
+                        {t(method.label)}
                       </Label>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">

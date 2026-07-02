@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 
 interface StatsCardProps {
@@ -16,6 +17,7 @@ export function StatsCard({
   icon,
   className,
 }: StatsCardProps) {
+  const t = useT()
   const isPositive = change && change > 0
   const isNegative = change && change < 0
 
@@ -55,7 +57,7 @@ export function StatsCard({
                   {typeof change === 'number' ? change.toFixed(2) : change}%
                 </span>
                 <span className="text-[10px] text-muted-foreground/70 sm:text-[11px]">
-                  vs last week
+                  {t('vs last week')}
                 </span>
               </div>
             )}

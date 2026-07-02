@@ -66,6 +66,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useT } from '@/lib/i18n/translate'
 
 /** Layout box for inspector preview; `object-contain` preserves aspect ratio */
 const INSPECTOR_PREVIEW_MAX_WIDTH_CSS = 'min(100%, 28rem)'
@@ -98,6 +99,7 @@ export function FileInspectorPanel({
   onClose,
   presentation = 'inline',
 }: FileInspectorPanelProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const avifSupported = useAvifSupport()
@@ -246,7 +248,7 @@ export function FileInspectorPanel({
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: Dependencies.FILES })
-      toast.success('File has been deleted')
+      toast.success(t('File has been deleted'))
       setDeleteDialogOpen(false)
       navigate({
         to: '/projects/$projectId/storage/$bucketId',
@@ -303,7 +305,7 @@ export function FileInspectorPanel({
       size="icon"
       className="h-6 w-6"
       onClick={onClose}
-      aria-label="Close file preview"
+      aria-label={t('Close file preview')}
     >
       <X className="h-3.5 w-3.5" />
     </Button>
@@ -320,18 +322,19 @@ export function FileInspectorPanel({
         <div className={STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS}>
           <PanelRight className="h-4 w-4 text-muted-foreground" />
           <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-            File
+            {t('File')}
           </span>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5 py-8 text-center">
           <FileText className="h-10 w-10 text-muted-foreground/45" />
           <div className="space-y-1.5">
             <p className="text-[14px] font-medium text-foreground">
-              No file selected
+              {t('No file selected')}
             </p>
             <p className="max-w-sm text-[13px] leading-relaxed text-muted-foreground">
-              Select a row in the table to view preview and metadata, or use
-              Create file in the header to upload.
+              {t(
+                'Select a row in the table to view preview and metadata, or use Create file in the header to upload.',
+              )}
             </p>
           </div>
         </div>
@@ -358,7 +361,7 @@ export function FileInspectorPanel({
               <div className="flex items-center gap-2">
                 <PanelRight className="h-4 w-4 text-muted-foreground" />
                 <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  File
+                  {t('File')}
                 </span>
               </div>
               <Tooltip>
@@ -369,20 +372,20 @@ export function FileInspectorPanel({
                     size="icon"
                     className="h-6 w-6"
                     onClick={handleCopyFileViewUrl}
-                    aria-label="Copy file view URL"
+                    aria-label={t('Copy file view URL')}
                   >
                     <Link2 className="h-3.5 w-3.5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
-                  Copy view URL
+                  {t('Copy view URL')}
                 </TooltipContent>
               </Tooltip>
               {closePreviewButton}
             </div>
             <div className="flex flex-1 items-center justify-center px-4">
               <p className="text-[12px] text-muted-foreground">
-                Loading file…
+                {t('Loading file…')}
               </p>
             </div>
           </aside>
@@ -406,7 +409,7 @@ export function FileInspectorPanel({
             <div className="flex items-center gap-2">
               <PanelRight className="h-4 w-4 text-muted-foreground" />
               <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                File
+                {t('File')}
               </span>
             </div>
             <Tooltip>
@@ -417,20 +420,20 @@ export function FileInspectorPanel({
                   size="icon"
                   className="h-6 w-6"
                   onClick={handleCopyFileViewUrl}
-                  aria-label="Copy file view URL"
+                  aria-label={t('Copy file view URL')}
                 >
                   <Link2 className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                Copy view URL
+                {t('Copy view URL')}
               </TooltipContent>
             </Tooltip>
             {closePreviewButton}
           </div>
           <div className="flex flex-1 items-center justify-center px-4">
             <p className="text-[12px] text-muted-foreground">
-              {isError ? 'Could not load file' : 'File not found'}
+              {isError ? t('Could not load file') : t('File not found')}
             </p>
           </div>
         </aside>
@@ -443,7 +446,7 @@ export function FileInspectorPanel({
 
   const compressionLabel =
     file.compression === 'none' || !file.compression
-      ? 'None'
+      ? t('None')
       : file.compression === 'gzip'
         ? 'Gzip'
         : file.compression === 'zstd'
@@ -460,7 +463,7 @@ export function FileInspectorPanel({
     <div className={inspectorTabContentClass}>
       {isPending ? (
         <Badge variant="warning" className="text-[10px] shrink-0">
-          Pending upload
+          {t('Pending upload')}
         </Badge>
       ) : null}
 
@@ -476,8 +479,9 @@ export function FileInspectorPanel({
                 <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center">
                   <PreviewPlaceholderIcon className="h-10 w-10 shrink-0 text-muted-foreground/70" />
                   <p className="max-w-[240px] text-[12px] leading-snug text-muted-foreground">
-                    This video could not be played inline. Try Open preview or
-                    Download.
+                    {t(
+                      'This video could not be played inline. Try Open preview or Download.',
+                    )}
                   </p>
                 </div>
               ) : (
@@ -493,7 +497,7 @@ export function FileInspectorPanel({
                   playsInline
                   preload="auto"
                   src={videoSourceUrl}
-                  aria-label={`Video preview: ${file.name}`}
+                  aria-label={`${t('Video preview:')} ${file.name}`}
                   onLoadedMetadata={onVideoLoadedMetadata}
                   onLoadedData={onVideoLoadedData}
                   onError={() => setVideoPlaybackError(true)}
@@ -546,7 +550,7 @@ export function FileInspectorPanel({
                 onClick={() => setTransformWizardOpen(true)}
               >
                 <Wand2 className="h-3.5 w-3.5 shrink-0" />
-                Transform
+                {t('Transform')}
               </Button>
             </div>
           </div>
@@ -567,7 +571,7 @@ export function FileInspectorPanel({
       <div className="space-y-3">
         <div>
           <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            MIME type
+            {t('MIME type')}
           </Label>
           <p className="mt-1 break-all font-mono text-[12px] text-foreground/90">
             {file.mimeType || '-'}
@@ -575,7 +579,7 @@ export function FileInspectorPanel({
         </div>
         <div>
           <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Size
+            {t('Size')}
           </Label>
           <p className="mt-1 font-mono text-[12px] text-foreground/90">
             {formatBytes(file.sizeOriginal)}
@@ -584,7 +588,7 @@ export function FileInspectorPanel({
         <div className="grid grid-cols-1 gap-3">
           <div>
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Created
+              {t('Created')}
             </Label>
             <div className="mt-1">
               <DateTooltip
@@ -595,7 +599,7 @@ export function FileInspectorPanel({
           </div>
           <div>
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Updated
+              {t('Updated')}
             </Label>
             <div className="mt-1">
               <DateTooltip
@@ -608,15 +612,15 @@ export function FileInspectorPanel({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Encryption
+              {t('Encryption')}
             </Label>
             <p className="mt-1 text-[12px] text-muted-foreground">
-              {file.encryption === true ? 'Enabled' : 'Disabled'}
+              {file.encryption === true ? t('Enabled') : t('Disabled')}
             </p>
           </div>
           <div>
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Compression
+              {t('Compression')}
             </Label>
             <p className="mt-1 text-[12px] text-muted-foreground">
               {compressionLabel}
@@ -626,7 +630,7 @@ export function FileInspectorPanel({
         {file.signature ? (
           <div>
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              MD5 signature
+              {t('MD5 signature')}
             </Label>
             <div className="mt-1">
               <CopyableId id={file.signature} size="sm" maxWidth={200} />
@@ -636,10 +640,11 @@ export function FileInspectorPanel({
         {isPending ? (
           <div>
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Upload progress
+              {t('Upload progress')}
             </Label>
             <p className="mt-1 text-[12px] text-muted-foreground">
-              {file.chunksUploaded} of {file.chunksTotal} chunks uploaded
+              {file.chunksUploaded} {t('of')} {file.chunksTotal}{' '}
+              {t('chunks uploaded')}
             </p>
           </div>
         ) : null}
@@ -648,10 +653,10 @@ export function FileInspectorPanel({
       <div className="rounded-lg border border-red-500/30 bg-card/50 overflow-hidden">
         <div className="border-b border-red-500/20 px-4 py-3">
           <h3 className="text-[14px] font-semibold text-red-600 dark:text-red-400">
-            Delete file
+            {t('Delete file')}
           </h3>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Permanently delete this file. This action cannot be undone.
+            {t('Permanently delete this file. This action cannot be undone.')}
           </p>
         </div>
         <div className="px-4 py-3">
@@ -663,15 +668,16 @@ export function FileInspectorPanel({
                 className="h-8 text-[12px]"
               >
                 <Trash2 className="me-1.5 h-3.5 w-3.5" />
-                Delete
+                {t('Delete')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Delete file</DialogTitle>
+                <DialogTitle>{t('Delete file')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete{' '}
-                  <strong>{file.name}</strong>? This action cannot be undone.
+                  {t('Are you sure you want to delete')}{' '}
+                  <strong>{file.name}</strong>?{' '}
+                  {t('This action cannot be undone.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
@@ -682,7 +688,7 @@ export function FileInspectorPanel({
                   onClick={() => setDeleteDialogOpen(false)}
                   disabled={deleteFileMutation.isPending}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -691,7 +697,7 @@ export function FileInspectorPanel({
                   disabled={deleteFileMutation.isPending}
                   onClick={() => deleteFileMutation.mutate(file.$id)}
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </DialogContent>
@@ -707,18 +713,19 @@ export function FileInspectorPanel({
         <Alert variant="default" className="border-amber-500/30 bg-amber-500/5">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle className="text-[12px] font-medium text-amber-600 dark:text-amber-400">
-            File level security is disabled
+            {t('File level security is disabled')}
           </AlertTitle>
           <AlertDescription className="text-[11px] text-amber-600/80 dark:text-amber-400/80">
-            File-level permissions only apply when file level security is enabled
-            on the bucket.{' '}
+            {t(
+              'File-level permissions only apply when file level security is enabled on the bucket.',
+            )}{' '}
             <span className="whitespace-nowrap">
               <Link
                 to="/projects/$projectId/storage/$bucketId/security"
                 params={{ projectId, bucketId }}
                 className="font-medium underline hover:no-underline"
               >
-                Enable in bucket Security
+                {t('Enable in bucket Security')}
               </Link>
               .
             </span>
@@ -779,13 +786,13 @@ export function FileInspectorPanel({
                   size="icon"
                   className="h-6 w-6"
                   onClick={handleCopyFileViewUrl}
-                  aria-label="Copy file view URL"
+                  aria-label={t('Copy file view URL')}
                 >
                   <Link2 className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                Copy view URL
+                {t('Copy view URL')}
               </TooltipContent>
             </Tooltip>
             {!isPending ? (
@@ -798,13 +805,13 @@ export function FileInspectorPanel({
                       size="icon"
                   className="h-6 w-6"
                   onClick={handleDownload}
-                      aria-label="Download"
+                      aria-label={t('Download')}
                     >
                       <Download className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">
-                    Download
+                    {t('Download')}
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>
@@ -815,13 +822,13 @@ export function FileInspectorPanel({
                       size="icon"
                   className="h-6 w-6"
                   onClick={handlePreview}
-                      aria-label="Open preview"
+                      aria-label={t('Open preview')}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">
-                    Open preview
+                    {t('Open preview')}
                   </TooltipContent>
                 </Tooltip>
               </>
@@ -856,13 +863,13 @@ export function FileInspectorPanel({
             <div className="shrink-0 border-b border-border px-3 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-4">
               <TabsList className="grid h-9 w-full grid-cols-3">
                 <TabsTrigger value="overview" className="text-[12px] sm:text-[13px]">
-                  Overview
+                  {t('Overview')}
                 </TabsTrigger>
                 <TabsTrigger value="permissions" className="text-[12px] sm:text-[13px]">
-                  Permissions
+                  {t('Permissions')}
                 </TabsTrigger>
                 <TabsTrigger value="tokens" className="text-[12px] sm:text-[13px]">
-                  Tokens
+                  {t('Tokens')}
                 </TabsTrigger>
               </TabsList>
             </div>

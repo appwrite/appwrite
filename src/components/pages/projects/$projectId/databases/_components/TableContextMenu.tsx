@@ -43,6 +43,7 @@ import {
   usesCollectionsPath,
 } from '@/lib/database-routes'
 import { CreateTableSimilar } from './CreateTableSimilar'
+import { useT } from '@/lib/i18n/translate'
 
 interface TableContextMenuProps {
   projectId: string
@@ -87,6 +88,7 @@ export function TableContextMenu({
   onDeleted,
   showSecuritySettings = true,
 }: TableContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [createSimilarOpen, setCreateSimilarOpen] = useState(false)
@@ -111,7 +113,7 @@ export function TableContextMenu({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${table.name ?? table.$id} has been deleted`)
+      toast.success(`${table.name ?? table.$id} ${t('has been deleted')}`)
       navigate({
         ...nav.dataGrid({
           projectId,
@@ -124,7 +126,7 @@ export function TableContextMenu({
       onDeleted?.()
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) ?? 'Failed to delete table')
+      toast.error(getErrorMessage(error) ?? t('Failed to delete table'))
     },
   })
 
@@ -139,18 +141,18 @@ export function TableContextMenu({
   const handleCopyId = async () => {
     try {
       await navigator.clipboard.writeText(table.$id)
-      toast.success('ID copied to clipboard')
+      toast.success(t('ID copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(tableHref)
-      toast.success('Link copied to clipboard')
+      toast.success(t('Link copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -217,7 +219,7 @@ export function TableContextMenu({
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Icon className="size-4" />
               </span>
-              {label}
+              {t(label)}
             </ContextMenuItem>
           ))}
           <ContextMenuSeparator />
@@ -225,7 +227,7 @@ export function TableContextMenu({
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <CopyPlus className="size-4" />
             </span>
-            Duplicate structure
+            {t('Duplicate structure')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
@@ -233,26 +235,26 @@ export function TableContextMenu({
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Copy className="size-4" />
               </span>
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={handleCopyId}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Copy className="size-4" />
                 </span>
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyLink}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Link2 className="size-4" />
                 </span>
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyAsJson}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <FileJson className="size-4" />
                 </span>
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -261,20 +263,20 @@ export function TableContextMenu({
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <ExternalLink className="size-4" />
             </span>
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleOpenInNewWindow}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Square className="size-4" />
             </span>
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Trash2 className="size-4" />
             </span>
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -282,11 +284,11 @@ export function TableContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete table</DialogTitle>
+            <DialogTitle>{t('Delete table')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>{table.name ?? table.$id}</strong>? All rows and data will
-              be permanently removed. This action cannot be undone.
+              {t('Are you sure you want to delete')}{' '}
+              <strong>{table.name ?? table.$id}</strong>?{' '}
+              {t('All rows and data will be permanently removed. This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -295,14 +297,14 @@ export function TableContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteTableMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteTableMutation.mutate()}
               disabled={deleteTableMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

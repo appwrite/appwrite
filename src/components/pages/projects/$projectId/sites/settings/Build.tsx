@@ -9,8 +9,10 @@ import { SiteBuildCommandsCard } from './SiteBuildCommandsCard'
 import { SiteBuildSpecificationCard } from './SiteBuildSpecificationCard'
 import { SiteDeploymentRetentionCard } from './SiteDeploymentRetentionCard'
 import { SiteBuildTriggersCard } from './SiteBuildTriggersCard'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const { data: site, isLoading } = useProjectSite(projectId, siteId)
   const isCloud = true
@@ -18,7 +20,9 @@ export function View() {
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }

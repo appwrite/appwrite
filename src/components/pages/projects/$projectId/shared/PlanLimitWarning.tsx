@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface PlanLimitWarningProps {
   /** The current count of resources */
@@ -27,6 +28,7 @@ export function PlanLimitWarning({
   orgId,
   fullWidth = true,
 }: PlanLimitWarningProps) {
+  const t = useT()
   // If limit is null, undefined, or 0, it means unlimited - no warning needed
   if (!limit || limit === 0) {
     return null
@@ -56,14 +58,30 @@ export function PlanLimitWarning({
             <div className="flex-1 min-w-0">
               <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
                 {isAtLimit
-                  ? `You've reached the limit of ${limit} ${resourceName}`
-                  : `Approaching ${resourceName} limit`}
+                  ? `${t("You've reached the limit of")} ${limit} ${t(resourceName)}`
+                  : `${t('Approaching the limit for')} ${t(resourceName)}`}
               </AlertTitle>
               <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                 <span className="inline">
                   {isAtLimit ? (
                     <>
-                      Your {planName} plan includes up to {limit} {resourceName}
+                      {t('Your plan')} ({planName}) {t('includes up to')}{' '}
+                      {limit} {t(resourceName)}.{' '}
+                      {orgId && (
+                        <Link
+                          to="/upgrade"
+                          search={{ orgId }}
+                          className="font-medium underline hover:no-underline"
+                        >
+                          {t('Upgrade')}
+                        </Link>
+                      )}{' '}
+                      {t('to unlock more capacity.')}
+                    </>
+                  ) : (
+                    <>
+                      {t('Your plan')} ({planName}) {t('includes up to')}{' '}
+                      {limit} {t(resourceName)}. {t('Remaining:')} {remaining}
                       .{' '}
                       {orgId && (
                         <Link
@@ -71,25 +89,10 @@ export function PlanLimitWarning({
                           search={{ orgId }}
                           className="font-medium underline hover:no-underline"
                         >
-                          Upgrade
+                          {t('Upgrade')}
                         </Link>
                       )}{' '}
-                      to unlock more capacity.
-                    </>
-                  ) : (
-                    <>
-                      Your {planName} plan includes up to {limit} {resourceName}
-                      . You have {remaining} remaining.{' '}
-                      {orgId && (
-                        <Link
-                          to="/upgrade"
-                          search={{ orgId }}
-                          className="font-medium underline hover:no-underline"
-                        >
-                          Upgrade
-                        </Link>
-                      )}{' '}
-                      to unlock more capacity.
+                      {t('to unlock more capacity.')}
                     </>
                   )}
                 </span>
@@ -102,7 +105,7 @@ export function PlanLimitWarning({
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
               >
                 <Link to="/upgrade" search={{ orgId }}>
-                  Upgrade
+                  {t('Upgrade')}
                 </Link>
               </Button>
             )}

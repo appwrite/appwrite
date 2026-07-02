@@ -44,6 +44,7 @@ import { useFunctionWizard } from './WizardContext'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
+import { useT } from '@/lib/i18n/translate'
 
 function parseRepo(repo?: string): { owner: string; name: string } | null {
   if (!repo?.trim()) return null
@@ -73,6 +74,7 @@ export function DeployFromUrlView({
   installFromSearch,
   rootDirFromSearch,
 }: DeployFromUrlViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const { project } = useProject(projectId)
   const navigate = useNavigate()
@@ -125,15 +127,15 @@ export function DeployFromUrlView({
   const handleDeploy = async () => {
     if (!projectId) return
     if (!parsed) {
-      toast.error('Repository URL or owner/name is required')
+      toast.error(t('Repository URL or owner/name is required'))
       return
     }
     if (!functionName || !runtime) {
-      toast.error('Please fill in function name and runtime')
+      toast.error(t('Please fill in function name and runtime'))
       return
     }
     if (!domain.trim()) {
-      toast.error('Please enter a domain')
+      toast.error(t('Please enter a domain'))
       return
     }
 
@@ -196,7 +198,7 @@ export function DeployFromUrlView({
       })
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : 'Failed to create function',
+        err instanceof Error ? err.message : t('Failed to create function'),
       )
       setIsDeploying(false)
     }
@@ -204,9 +206,9 @@ export function DeployFromUrlView({
 
   return (
     <WizardLayout
-      title="Create function"
+      title={t('Create function')}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       fallbackPath={`/projects/${projectId}/functions`}
       onClose={() =>
         navigate({
@@ -235,7 +237,7 @@ export function DeployFromUrlView({
             }
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -248,7 +250,7 @@ export function DeployFromUrlView({
               !domainValid
             }
           >
-            Create and deploy
+            {t('Create and deploy')}
           </Button>
         </>
       }
@@ -256,8 +258,9 @@ export function DeployFromUrlView({
       {!parsed && (
         <div className="rounded-xl border border-border bg-card/50 p-6 mb-6">
           <p className="text-[13px] text-muted-foreground">
-            Add a repository URL or owner/name in the address bar, e.g.{' '}
-            <code className="bg-muted px-1 rounded">?repo=owner/repo</code> or{' '}
+            {t('Add a repository URL or owner/name in the address bar, e.g.')}{' '}
+            <code className="bg-muted px-1 rounded">?repo=owner/repo</code>{' '}
+            {t('or')}{' '}
             <code className="bg-muted px-1 rounded">
               ?repository=owner/repo
             </code>
@@ -268,35 +271,37 @@ export function DeployFromUrlView({
 
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="function-name" className="text-[13px]">
-              Function name
+              {t('Function name')}
             </Label>
             <Input
               id="function-name"
               value={functionName}
               onChange={(e) => setFunctionName(e.target.value)}
-              placeholder="My function"
+              placeholder={t('My function')}
               className="h-9 text-[13px]"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Function ID</Label>
+            <Label className="text-[13px]">{t('Function ID')}</Label>
             <IdInput
               value={functionId}
               onChange={setFunctionId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Runtime</Label>
+            <Label className="text-[13px]">{t('Runtime')}</Label>
             <Select value={runtime} onValueChange={setRuntime}>
               <SelectTrigger className="h-9 text-[13px]">
-                <SelectValue placeholder="Select runtime" />
+                <SelectValue placeholder={t('Select runtime')} />
               </SelectTrigger>
               <SelectContent>
                 {runtimes.map((r) => (
@@ -312,7 +317,7 @@ export function DeployFromUrlView({
           </div>
           <div className="space-y-2">
             <Label htmlFor="entrypoint" className="text-[13px]">
-              Entrypoint
+              {t('Entrypoint')}
             </Label>
             <Input
               id="entrypoint"
@@ -324,7 +329,7 @@ export function DeployFromUrlView({
           </div>
           <div className="space-y-2">
             <Label htmlFor="commands" className="text-[13px]">
-              Build commands
+              {t('Build commands')}
             </Label>
             <Input
               id="commands"
@@ -336,7 +341,7 @@ export function DeployFromUrlView({
           </div>
           <div className="space-y-2">
             <Label htmlFor="root-dir" className="text-[13px]">
-              Root directory
+              {t('Root directory')}
             </Label>
             <Input
               id="root-dir"
@@ -348,7 +353,7 @@ export function DeployFromUrlView({
           </div>
           <div className="space-y-2">
             <Label htmlFor="reference" className="text-[13px]">
-              Branch or tag
+              {t('Branch or tag')}
             </Label>
             <Input
               id="reference"
@@ -360,9 +365,9 @@ export function DeployFromUrlView({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-[13px]">Public</Label>
+              <Label className="text-[13px]">{t('Public')}</Label>
               <p className="text-[11px] text-muted-foreground">
-                Allow anyone to execute this function (execute role: any)
+                {t('Allow anyone to execute this function (execute role: any)')}
               </p>
             </div>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
@@ -370,14 +375,14 @@ export function DeployFromUrlView({
           {specifications.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="specification" className="text-[13px]">
-                Compute
+                {t('Compute')}
               </Label>
               <Select
                 value={specification || undefined}
                 onValueChange={setSpecification}
               >
                 <SelectTrigger id="specification" className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select specification" />
+                  <SelectValue placeholder={t('Select specification')} />
                 </SelectTrigger>
                 <SelectContent>
                   {specifications
@@ -394,12 +399,12 @@ export function DeployFromUrlView({
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Runtime specification for your function
+                {t('Runtime specification for your function')}
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
-                  additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} />{' '}
+                  {t('to unlock additional specifications.')}
                 </p>
               )}
             </div>

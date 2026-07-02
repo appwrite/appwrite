@@ -35,6 +35,7 @@ import {
   createProjectTableRow,
   fetchProjectTableRow,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 /** Minimal row shape for context menu (matches RowData from View) */
 export interface RowContextMenuRow {
@@ -92,6 +93,7 @@ export function RowContextMenu({
   queryKey,
   onRowDeleted,
 }: RowContextMenuProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
@@ -101,11 +103,11 @@ export function RowContextMenu({
     onSuccess: async () => {
       setDeleteDialogOpen(false)
       await queryClient.refetchQueries({ queryKey: [...queryKey] })
-      toast.success('Row deleted')
+      toast.success(t('Row deleted'))
       onRowDeleted?.(row.$id)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) ?? 'Failed to delete row')
+      toast.error(getErrorMessage(error) ?? t('Failed to delete row'))
     },
   })
 
@@ -124,19 +126,19 @@ export function RowContextMenu({
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: [...queryKey] })
-      toast.success('Row duplicated')
+      toast.success(t('Row duplicated'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) ?? 'Failed to duplicate row')
+      toast.error(getErrorMessage(error) ?? t('Failed to duplicate row'))
     },
   })
 
   const handleCopyId = async () => {
     try {
       await navigator.clipboard.writeText(row.$id)
-      toast.success('ID copied to clipboard')
+      toast.success(t('ID copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -160,9 +162,9 @@ export function RowContextMenu({
     try {
       const value = getCellValue(row, contextColumnKey)
       await navigator.clipboard.writeText(formatCellValueForCopy(value))
-      toast.success('Value copied')
+      toast.success(t('Value copied'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -171,9 +173,9 @@ export function RowContextMenu({
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(rowHref)
-      toast.success('Link copied to clipboard')
+      toast.success(t('Link copied to clipboard'))
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -195,34 +197,34 @@ export function RowContextMenu({
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Copy className="size-4" />
               </span>
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={handleCopyId}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Copy className="size-4" />
                 </span>
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyLink}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <Link2 className="size-4" />
                 </span>
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               {contextColumnKey != null && contextColumnKey !== '' && (
                 <ContextMenuItem onSelect={handleCopyValue}>
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                     <Copy className="size-4" />
                   </span>
-                  Copy value
+                  {t('Copy value')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem onSelect={handleCopyAsJson}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <FileJson className="size-4" />
                 </span>
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -233,27 +235,27 @@ export function RowContextMenu({
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <CopyPlus className="size-4" />
             </span>
-            Duplicate
+            {t('Duplicate')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleOpenInNewTab}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <ExternalLink className="size-4" />
             </span>
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleOpenInNewWindow}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Square className="size-4" />
             </span>
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <Trash2 className="size-4" />
             </span>
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -261,10 +263,9 @@ export function RowContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete row</DialogTitle>
+            <DialogTitle>{t('Delete row')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this row? This action cannot be
-              undone.
+              {t('Are you sure you want to delete this row? This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -273,14 +274,14 @@ export function RowContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

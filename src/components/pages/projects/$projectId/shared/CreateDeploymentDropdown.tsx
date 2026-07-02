@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 export interface CreateDeploymentDropdownProps {
   onSelectGit: () => void
@@ -37,6 +38,7 @@ export function CreateDeploymentDropdown({
   disabledTooltip,
   className,
 }: CreateDeploymentDropdownProps) {
+  const t = useT()
   const trigger = (
     <Button
       variant="brandCta"
@@ -45,7 +47,7 @@ export function CreateDeploymentDropdown({
       className={`h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed ${className ?? ''}`}
     >
       <Plus className="h-4 w-4" />
-      Create deployment
+      {t('Create deployment')}
       <ChevronDown className="h-4 w-4" />
     </Button>
   )
@@ -76,7 +78,7 @@ export function CreateDeploymentDropdown({
           <GitBranch className="h-4 w-4" />
           <span>Git</span>
           <span className="ms-auto text-[11px] text-muted-foreground">
-            Recommended
+            {t('Recommended')}
           </span>
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -91,7 +93,7 @@ export function CreateDeploymentDropdown({
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
         >
           <Upload className="h-4 w-4" />
-          <span>Manual</span>
+          <span>{t('Manual')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

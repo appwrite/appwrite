@@ -23,12 +23,14 @@ import {
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useDistributionApps } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { CreateApp } from './_components/CreateApp'
 import { PlatformIcons, frameworkLabel } from './_components/platform'
 
 const MIN_SEARCH_LENGTH = 2
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { viewMode, setViewMode } = useServiceListViewMode('stores')
@@ -66,27 +68,29 @@ export function View() {
     () => (
       <EmptyState
         icon={Package}
-        title="No distribution apps yet"
-        description="Create an app to build and submit to Google Play, the App Store, and the Microsoft Store."
+        title={t('No distribution apps yet')}
+        description={t(
+          'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.',
+        )}
         isEmpty={!hasFilters}
         hasFilters={hasFilters}
         variant="card"
       />
     ),
-    [hasFilters],
+    [hasFilters, t],
   )
 
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Distribution"
-        searchPlaceholder="Search apps..."
+        title={t('Distribution')}
+        searchPlaceholder={t('Search apps...')}
         searchValue={searchInput}
         onSearchChange={(value) => {
           setSearchInput(value)
           setPage(1)
         }}
-        createLabel="Create app"
+        createLabel={t('Create app')}
         onCreate={() => setCreateOpen(true)}
         fullWidthBorder
         rightContent={
@@ -100,7 +104,9 @@ export function View() {
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {showLoading ? (
           <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-[13px] text-muted-foreground">Loading apps...</p>
+            <p className="text-[13px] text-muted-foreground">
+              {t('Loading apps...')}
+            </p>
           </div>
         ) : apps.length === 0 ? (
           emptyState
@@ -111,16 +117,16 @@ export function View() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      App
+                      {t('App')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Platforms
+                      {t('Platforms')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Identifier
+                      {t('Identifier')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Updated
+                      {t('Updated')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -183,7 +189,7 @@ export function View() {
               onPageChange={setPage}
               onPageSizeChange={() => setPage(1)}
               showPageSizeSelector={false}
-              itemLabel="apps"
+              itemLabel={t('apps')}
             />
           </>
         ) : (
@@ -249,7 +255,7 @@ export function View() {
               onPageChange={setPage}
               onPageSizeChange={() => setPage(1)}
               showPageSizeSelector={false}
-              itemLabel="apps"
+              itemLabel={t('apps')}
             />
           </>
         )}

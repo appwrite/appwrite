@@ -20,6 +20,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export function ProviderContextMenu({
   provider,
   children,
 }: ProviderContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -72,11 +74,11 @@ export function ProviderContextMenu({
       await queryClient.refetchQueries({
         queryKey: ['providers', 'project', projectId],
       })
-      toast.success('Provider deleted')
+      toast.success(t('Provider deleted'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete provider')
+      toast.error(getErrorMessage(error) || t('Failed to delete provider'))
     },
   })
 
@@ -119,40 +121,40 @@ export function ProviderContextMenu({
             onSelect={navigateToOverview}
 >
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={navigateToSettings}
 >
             <ContextMenuIcon icon={Settings} />
-            Settings
+            {t('Settings')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', provider.$id)}
 >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', provider.name)}
 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', providerHref)}
 >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -162,7 +164,7 @@ export function ProviderContextMenu({
                 }
 >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -171,20 +173,20 @@ export function ProviderContextMenu({
             onSelect={() => openInNewTab(providerHref)}
 >
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => openInNewWindow(providerHref)}
 >
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
             onSelect={handleDeleteClick}
 >
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -194,10 +196,11 @@ export function ProviderContextMenu({
           className="sm:max-w-md p-0"
 >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete provider</DialogTitle>
+            <DialogTitle>{t('Delete provider')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this provider? This action cannot
-              be undone.
+              {t(
+                'Are you sure you want to delete this provider? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -206,14 +209,14 @@ export function ProviderContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
 >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
 >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

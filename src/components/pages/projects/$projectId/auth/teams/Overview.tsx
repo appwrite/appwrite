@@ -22,8 +22,10 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Trash2 } from 'lucide-react'
 import { useHashScroll } from '@/lib/hooks/useHashScroll'
+import { useT } from '@/lib/i18n/translate'
 
 export function TeamOverview() {
+  const t = useT()
   const { projectId, teamId } = useParams({
     strict: false,
   })
@@ -89,16 +91,16 @@ export function TeamOverview() {
 
   const handleUpdateName = async () => {
     if (!teamName.trim()) {
-      toast.error('Team name is required')
+      toast.error(t('Team name is required'))
       return
     }
 
     try {
       await updateNameMutation.mutateAsync(teamName.trim())
-      toast.success('Name has been updated')
+      toast.success(t('Name has been updated'))
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update name',
+        error instanceof Error ? error.message : t('Failed to update name'),
       )
     }
   }
@@ -117,10 +119,12 @@ export function TeamOverview() {
 
     try {
       await updatePrefsMutation.mutateAsync(prefs)
-      toast.success('Preferences have been updated')
+      toast.success(t('Preferences have been updated'))
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update preferences',
+        error instanceof Error
+          ? error.message
+          : t('Failed to update preferences'),
       )
     }
   }
@@ -130,14 +134,14 @@ export function TeamOverview() {
 
     try {
       await deleteTeamMutation.mutateAsync(teamId)
-      toast.success('Team deleted successfully')
+      toast.success(t('Team deleted successfully'))
       navigate({
         to: '/projects/$projectId/auth/teams',
         params: { projectId: projectId as string },
       })
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to delete team',
+        error instanceof Error ? error.message : t('Failed to delete team'),
       )
       setDeleteDialogOpen(false)
     }
@@ -173,7 +177,7 @@ export function TeamOverview() {
   if (isLoading || !team) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading team...</div>
+        <div className="text-muted-foreground">{t('Loading team...')}</div>
       </div>
     )
   }
@@ -186,7 +190,9 @@ export function TeamOverview() {
       {/* Team Status Card */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Status</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Status')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
@@ -201,12 +207,13 @@ export function TeamOverview() {
               <div className="space-y-1 text-[13px] text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <span>
-                    {totalMembers} member{totalMembers !== 1 ? 's' : ''}
+                    {totalMembers}{' '}
+                    {totalMembers !== 1 ? t('members') : t('member')}
                   </span>
                 </div>
                 {team.$createdAt && (
                   <div className="flex items-center gap-1.5">
-                    <span>Created:</span>
+                    <span>{t('Created:')}</span>
                     <DateTooltip date={new Date(team.$createdAt)} />
                   </div>
                 )}
@@ -223,10 +230,10 @@ export function TeamOverview() {
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Update name
+            {t('Update name')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Update the team's display name.
+            {t("Update the team's display name.")}
           </p>
         </div>
         <form
@@ -238,11 +245,11 @@ export function TeamOverview() {
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <div className="space-y-2">
-              <Label htmlFor="team-name">Name</Label>
+              <Label htmlFor="team-name">{t('Name')}</Label>
               <Input
                 id="team-name"
                 type="text"
-                placeholder="Enter team name"
+                placeholder={t('Enter team name')}
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
                 disabled={updateNameMutation.isPending}
@@ -260,7 +267,7 @@ export function TeamOverview() {
                 !nameChanged || !teamName.trim() || updateNameMutation.isPending
               }
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </form>
@@ -273,10 +280,10 @@ export function TeamOverview() {
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Update preferences
+            {t('Update preferences')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Update team preferences as key-value pairs.
+            {t('Update team preferences as key-value pairs.')}
           </p>
         </div>
         <form
@@ -292,7 +299,7 @@ export function TeamOverview() {
                 <div key={index} className="flex items-center gap-2">
                   <Input
                     type="text"
-                    placeholder="Key"
+                    placeholder={t('Key')}
                     value={pref.key}
                     onChange={(e) =>
                       handlePreferenceChange(index, 'key', e.target.value)
@@ -302,7 +309,7 @@ export function TeamOverview() {
                   />
                   <Input
                     type="text"
-                    placeholder="Value"
+                    placeholder={t('Value')}
                     value={pref.value}
                     onChange={(e) =>
                       handlePreferenceChange(index, 'value', e.target.value)
@@ -335,7 +342,7 @@ export function TeamOverview() {
                 disabled={!lastPrefComplete || updatePrefsMutation.isPending}
               >
                 <Plus className="me-1.5 h-3.5 w-3.5" />
-                Add preference
+                {t('Add preference')}
               </Button>
             </div>
           </div>
@@ -350,7 +357,7 @@ export function TeamOverview() {
                 updatePrefsMutation.isPending
               }
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </form>
@@ -360,14 +367,15 @@ export function TeamOverview() {
       <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Delete team
+            {t('Delete team')}
           </h3>
         </div>
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Permanently delete this team from the project. This action cannot be
-            undone.
+            {t(
+              'Permanently delete this team from the project. This action cannot be undone.',
+            )}
           </p>
 
           {/* Team Info Summary */}
@@ -380,12 +388,12 @@ export function TeamOverview() {
               <p className="text-[12px] text-muted-foreground">
                 {(() => {
                   const parts = [
-                    `${totalMembers} member${totalMembers !== 1 ? 's' : ''}`,
+                    `${totalMembers} ${totalMembers !== 1 ? t('members') : t('member')}`,
                   ]
                   if (team.$createdAt) {
                     parts.push(
                       <>
-                        Created:{' '}
+                        {t('Created:')}{' '}
                         <DateTooltip date={new Date(team.$createdAt)} />
                       </>,
                     )
@@ -409,15 +417,16 @@ export function TeamOverview() {
                 size="sm"
                 className="h-9 text-[13px]"
               >
-                Delete team
+                {t('Delete team')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Delete team</DialogTitle>
+                <DialogTitle>{t('Delete team')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete <strong>{team.name}</strong>?
-                  This action cannot be undone.
+                  {t('Are you sure you want to delete')}{' '}
+                  <strong>{team.name}</strong>?{' '}
+                  {t('This action cannot be undone.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -428,7 +437,7 @@ export function TeamOverview() {
                   className="h-9 text-[13px]"
                   onClick={() => setDeleteDialogOpen(false)}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="button"
@@ -438,7 +447,7 @@ export function TeamOverview() {
                   onClick={handleDeleteTeam}
                   disabled={deleteTeamMutation.isPending}
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </DialogContent>

@@ -63,6 +63,7 @@ import {
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import {
   WizardProgress,
   type WizardStage,
@@ -119,6 +120,7 @@ function normalizeConfigureStep(
 }
 
 export function View({ projectId, search }: ViewProps) {
+  const t = useT()
   const navigate = useNavigate()
   const step = search.step ?? 'configure'
   const kind = normalizeKind(search.kind)
@@ -367,17 +369,17 @@ APPWRITE_ENDPOINT="${endpoint}"`
     if (!mayCreate || !project?.$id) return
 
     const trimmedName = name.trim()
-    const nextNameError = trimmedName ? null : 'Enter an app name'
+    const nextNameError = trimmedName ? null : t('Enter an app name')
     const nextHostnameError =
       variantNeedsHostname(resolvedVariant) && !isValidHostname(hostname)
-        ? 'Enter a valid hostname (e.g. localhost or app.example.com)'
+        ? t('Enter a valid hostname (e.g. localhost or app.example.com)')
         : null
     const nextKeyError =
       variantNeedsKey(resolvedVariant) &&
       !isValidKeyForVariant(resolvedVariant, key)
         ? resolvedVariant.includes('apple')
-          ? 'Enter a valid bundle ID (e.g. com.example.app)'
-          : 'Enter a valid package name (e.g. com.example.app)'
+          ? t('Enter a valid bundle ID (e.g. com.example.app)')
+          : t('Enter a valid package name (e.g. com.example.app)')
         : null
 
     setNameError(nextNameError)
@@ -414,7 +416,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
           })
         },
         onError: (err: Error) => {
-          setCreateError(getErrorMessage(err) || 'Failed to register app')
+          setCreateError(getErrorMessage(err) || t('Failed to register app'))
         },
       },
     )
@@ -448,9 +450,9 @@ APPWRITE_ENDPOINT="${endpoint}"`
     kind === 'flutter' ? (
       <section className="space-y-3">
         <div>
-          <h3 className="text-[15px] font-semibold text-foreground">Choose target</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">{t('Choose target')}</h3>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Where this Flutter app runs.
+            {t('Where this Flutter app runs.')}
           </p>
         </div>
         <VariantTargetCards
@@ -465,9 +467,9 @@ APPWRITE_ENDPOINT="${endpoint}"`
     ) : kind === 'apple' ? (
       <section className="space-y-3">
         <div>
-          <h3 className="text-[15px] font-semibold text-foreground">Choose target</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">{t('Choose target')}</h3>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Which Apple platform you are building for.
+            {t('Which Apple platform you are building for.')}
           </p>
         </div>
         <VariantTargetCards
@@ -482,9 +484,9 @@ APPWRITE_ENDPOINT="${endpoint}"`
     ) : kind === 'react-native' ? (
       <section className="space-y-3">
         <div>
-          <h3 className="text-[15px] font-semibold text-foreground">Choose target</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">{t('Choose target')}</h3>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Android or iOS for this React Native app.
+            {t('Android or iOS for this React Native app.')}
           </p>
         </div>
         <VariantTargetCards
@@ -515,7 +517,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
 
   return (
     <WizardLayout
-      title="Connect your app"
+      title={t('Connect your app')}
       headerBottom={<WizardProgress stage={wizardStage} />}
       fallbackPath={`/projects/${projectId}/apps`}
       fullscreen
@@ -544,7 +546,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
               )
             }}
           >
-            Continue
+            {t('Continue')}
           </Button>
         ) : step === 'configure' && configureStep === 'details' ? (
           <Button
@@ -553,7 +555,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
             form="add-app-configure"
             disabled={createMutation.isPending}
           >
-            Register and continue
+            {t('Register and continue')}
           </Button>
         ) : (
           <>
@@ -576,7 +578,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                 })
               }
             >
-              Add another app
+              {t('Add another app')}
             </Button>
             <Button
               key="wizard-step-setup-done"
@@ -585,7 +587,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                 navigate({ to: '/projects/$projectId/apps', params: { projectId } })
               }
             >
-              Done
+              {t('Done')}
             </Button>
           </>
         )
@@ -596,10 +598,10 @@ APPWRITE_ENDPOINT="${endpoint}"`
           <section className="space-y-3">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Choose your platform
+                {t('Choose your platform')}
               </h3>
               <p className="mt-1 text-[13px] text-muted-foreground">
-                Web, mobile, or desktop - pick what matches your project.
+                {t('Web, mobile, or desktop - pick what matches your project.')}
               </p>
             </div>
             <PlatformKindCards
@@ -615,10 +617,12 @@ APPWRITE_ENDPOINT="${endpoint}"`
               <section className="space-y-3">
                 <div>
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Choose a web framework
+                    {t('Choose a web framework')}
                   </h3>
                   <p className="mt-1 text-[13px] text-muted-foreground">
-                    We match starters and AI prompts to the framework you pick.
+                    {t(
+                      'We match starters and AI prompts to the framework you pick.',
+                    )}
                   </p>
                 </div>
                 <WebFrameworkCards
@@ -657,10 +661,12 @@ APPWRITE_ENDPOINT="${endpoint}"`
             <section className="space-y-4">
               <div>
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  App details
+                  {t('App details')}
                 </h3>
                 <p className="mt-1 text-[13px] text-muted-foreground">
-                  These values are sent to Appwrite when you register this app.
+                  {t(
+                    'These values are sent to Appwrite when you register this app.', // pragma: allowlist secret
+                  )}
                 </p>
               </div>
 
@@ -670,7 +676,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                   required
                   tooltip={getNameTooltip()}
                 >
-                  Name
+                  {t('Name')}
                 </FieldLabelWithInfo>
                 <Input
                   id="add-app-name"
@@ -696,7 +702,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                     required
                     tooltip={getHostnameTooltip(resolvedVariant)}
                   >
-                    Hostname
+                    {t('Hostname')}
                   </FieldLabelWithInfo>
                   <Input
                     id="add-app-hostname"
@@ -713,8 +719,9 @@ APPWRITE_ENDPOINT="${endpoint}"`
                     <p className="text-[12px] text-destructive">{hostnameError}</p>
                   ) : (
                     <p className="text-[12px] text-muted-foreground">
-                      Origin your app will call Appwrite from (no protocol or port). Use
-                      localhost for local development.
+                      {t(
+                        'Origin your app will call Appwrite from (no protocol or port). Use localhost for local development.', // pragma: allowlist secret
+                      )}
                     </p>
                   )}
                 </div>
@@ -728,8 +735,8 @@ APPWRITE_ENDPOINT="${endpoint}"`
                     tooltip={getKeyTooltip(resolvedVariant)}
                   >
                     {resolvedVariant.includes('apple')
-                      ? 'Bundle ID'
-                      : 'Package name'}
+                      ? t('Bundle ID')
+                      : t('Package name')}
                   </FieldLabelWithInfo>
                   <Input
                     id="add-app-key"
@@ -766,10 +773,10 @@ APPWRITE_ENDPOINT="${endpoint}"`
               </span>
               <div className="min-w-0 flex-1">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  App registered
+                  {t('App registered')}
                 </h3>
                 <p className="mt-1 text-[13px] text-muted-foreground">
-                  Your project is ready to accept traffic from this app.
+                  {t('Your project is ready to accept traffic from this app.')}
                 </p>
               </div>
             </div>
@@ -779,15 +786,16 @@ APPWRITE_ENDPOINT="${endpoint}"`
             <div className="px-6 py-4">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Set up with AI
+                  {t('Set up with AI')}
                 </h3>
                 <Badge variant="success" className="text-[10px]">
-                  Recommended
+                  {t('Recommended')}
                 </Badge>
               </div>
               <p className="mt-2 text-[13px] text-muted-foreground">
-                Hand off a ready-made prompt with your endpoint and project ID to
-                your favourite AI tool, or copy it anywhere.
+                {t(
+                  'Hand off a ready-made prompt with your endpoint and project ID to your favourite AI tool, or copy it anywhere.',
+                )}
               </p>
             </div>
             <div className="border-t border-border" />
@@ -800,7 +808,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                 onClick={() => void handleCopyPrompt()}
               >
                 {copied ? <Check /> : <Copy />}
-                Copy prompt
+                {t('Copy prompt')}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -812,7 +820,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                     disabled={!promptText}
                   >
                     <BrainCircuit />
-                    Open in tool
+                    {t('Open in tool')}
                     <ChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -830,7 +838,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                         alt={ide.name}
                         className="h-4 w-4"
                       />
-                      <span className="ms-2">Prompt {ide.name}</span>
+                      <span className="ms-2">{t('Prompt')} {ide.name}</span>
                       <ExternalLink
                         className="ms-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
                         strokeWidth={1.25}
@@ -845,30 +853,31 @@ APPWRITE_ENDPOINT="${endpoint}"`
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Manual setup
+                {t('Manual setup')}
               </h3>
               <p className="mt-2 text-[13px] text-muted-foreground">
-                Clone the starter, drop in your credentials, then run the app and
-                send a ping to confirm the link.
+                {t(
+                  'Clone the starter, drop in your credentials, then run the app and send a ping to confirm the link.',
+                )}
               </p>
             </div>
             <div className="border-t border-border" />
             <div className="space-y-5 px-6 py-5">
-              <SetupStep number={1} label="Clone starter">
+              <SetupStep number={1} label={t('Clone starter')}>
                 <CodeBlock
                   code={manualBlocks.clone}
                   language={manualBlocks.cloneLang}
                   copyInside
                 />
               </SetupStep>
-              <SetupStep number={2} label={manualBlocks.configLabel}>
+              <SetupStep number={2} label={t(manualBlocks.configLabel)}>
                 <CodeBlock
                   code={manualBlocks.config}
                   language={manualBlocks.configLang}
                   copyInside
                 />
               </SetupStep>
-              <SetupStep number={3} label="Install and run">
+              <SetupStep number={3} label={t('Install and run')}>
                 <CodeBlock
                   code={manualBlocks.installRun}
                   language="bash"
@@ -876,7 +885,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                 />
                 {manualBlocks.port > 0 && (
                   <p className="text-[12px] text-muted-foreground">
-                    Demo URL:{' '}
+                    {t('Demo URL')}:{' '}
                     <a
                       href={`http://localhost:${manualBlocks.port}`}
                       target="_blank"
@@ -892,7 +901,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                   </p>
                 )}
               </SetupStep>
-              <SetupStep number={4} label="Send a ping">
+              <SetupStep number={4} label={t('Send a ping')}>
                 <div
                   className={cn(
                     'flex items-center gap-2 rounded-md border px-3 py-2 text-[13px]',
@@ -913,8 +922,8 @@ APPWRITE_ENDPOINT="${endpoint}"`
                   )}
                   <span className={cn(pingReceived && 'font-medium')}>
                     {pingReceived
-                      ? 'Ping received - your SDK reached Appwrite.'
-                      : 'Waiting for client.ping() from your app...'}
+                      ? t('Ping received - your SDK reached Appwrite.') // pragma: allowlist secret
+                      : t('Waiting for client.ping() from your app...')}
                   </span>
                 </div>
               </SetupStep>

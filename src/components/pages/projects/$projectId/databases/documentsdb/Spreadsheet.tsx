@@ -173,6 +173,7 @@ import { PointEditor, LineEditor, PolygonEditor } from './spatial'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 
@@ -341,6 +342,7 @@ function RowEditArraySortableRow({
   index: number
   children: ReactNode
 }) {
+  const t = useT()
   const {
     attributes,
     listeners,
@@ -372,7 +374,7 @@ function RowEditArraySortableRow({
       <button
         type="button"
         className="flex w-8 shrink-0 cursor-grab touch-none items-center justify-center border-e border-foreground/10 bg-muted/30 text-muted-foreground hover:bg-muted/45 active:cursor-grabbing"
-        aria-label="Drag to reorder"
+        aria-label={t('Drag to reorder')}
         {...attributes}
         {...listeners}
       >
@@ -548,6 +550,7 @@ function RelationshipField({
   isSaving,
   onChange,
 }: RelationshipFieldProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string | undefined
   const databaseId = params.databaseId as string | undefined
@@ -596,7 +599,7 @@ function RelationshipField({
     return (
       <div className="rounded-lg border border-border bg-muted/30 p-3">
         <p className="text-[12px] text-muted-foreground">
-          This relationship is missing its related table metadata.
+          {t('This relationship is missing its related table metadata.')}
         </p>
       </div>
     )
@@ -620,7 +623,7 @@ function RelationshipField({
           placeholder={
             relatedRowsLoading ? 'Loading related rows…' : 'Add related row'
           }
-          searchPlaceholder="Search related rows…"
+          searchPlaceholder={t('Search related rows…')}
           emptyMessage={
             relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
           }
@@ -649,7 +652,7 @@ function RelationshipField({
                       onChange(selectedValues.filter((item) => item !== value))
                     }
                   >
-                    Remove
+                    {t('Remove')}
                   </Button>
                 </div>
               )
@@ -657,7 +660,7 @@ function RelationshipField({
           </div>
         ) : (
           <p className="text-[12px] text-muted-foreground">
-            No related rows selected.
+            {t('No related rows selected.')}
           </p>
         )}
         {!isRequired && selectedValues.length > 0 && (
@@ -669,7 +672,7 @@ function RelationshipField({
             disabled={isSaving}
             onClick={() => onChange([])}
           >
-            Clear
+            {t('Clear')}
           </Button>
         )}
       </div>
@@ -685,7 +688,7 @@ function RelationshipField({
         placeholder={
           relatedRowsLoading ? 'Loading related rows…' : 'Select related row'
         }
-        searchPlaceholder="Search related rows…"
+        searchPlaceholder={t('Search related rows…')}
         emptyMessage={
           relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
         }
@@ -700,7 +703,7 @@ function RelationshipField({
           disabled={isSaving}
           onClick={() => onChange(null)}
         >
-          Clear
+          {t('Clear')}
         </Button>
       )}
     </div>
@@ -718,6 +721,7 @@ function RowEditDrawer({
   isSaving = false,
   presentation = 'drawer',
 }: RowEditDrawerProps) {
+  const t = useT()
   const isMobileViewport = useIsMobile()
   const useCompactInlineJsonToolbar =
     presentation === 'inline' && isMobileViewport
@@ -1078,7 +1082,7 @@ function RowEditDrawer({
       const parsed = JSON.parse(documentJsonText.trim() || '{}')
       setDocumentJsonText(JSON.stringify(parsed, null, 2))
     } catch {
-      toast.error('Invalid JSON')
+      toast.error(t('Invalid JSON'))
     }
   }
 
@@ -1089,7 +1093,7 @@ function RowEditDrawer({
     void navigator.clipboard.writeText(u.toString())
     setDocumentViewLinkCopied(true)
     setTimeout(() => setDocumentViewLinkCopied(false), 2000)
-    toast.success('Link copied')
+    toast.success(t('Link copied'))
   }
 
   const handleCopyDocumentJson = async () => {
@@ -1097,9 +1101,9 @@ function RowEditDrawer({
       await navigator.clipboard.writeText(documentJsonText)
       setDocumentJsonCopied(true)
       setTimeout(() => setDocumentJsonCopied(false), 2000)
-      toast.success('JSON copied to clipboard')
+      toast.success(t('JSON copied to clipboard'))
     } catch {
-      toast.error('Failed to copy JSON')
+      toast.error(t('Failed to copy JSON'))
     }
   }
 
@@ -1206,7 +1210,7 @@ function RowEditDrawer({
       try {
         parsed = JSON.parse(documentJsonText.trim() || '{}')
       } catch {
-        toast.error('Invalid JSON')
+        toast.error(t('Invalid JSON'))
         return
       }
       if (
@@ -1214,7 +1218,7 @@ function RowEditDrawer({
         typeof parsed !== 'object' ||
         Array.isArray(parsed)
       ) {
-        toast.error('Document data must be a JSON object')
+        toast.error(t('Document data must be a JSON object'))
         return
       }
       const fromJson = parsed as Record<string, unknown>
@@ -1401,10 +1405,10 @@ function RowEditDrawer({
           <div className="shrink-0 border-b border-border px-3 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-4">
             <TabsList className="w-full grid grid-cols-2 h-9">
               <TabsTrigger value="data" className="text-[13px]">
-                Data
+                {t('Data')}
               </TabsTrigger>
               <TabsTrigger value="permissions" className="text-[13px]">
-                Permissions
+                {t('Permissions')}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -1453,7 +1457,7 @@ function RowEditDrawer({
                               size="sm"
                               className="h-8 w-8 cursor-pointer rounded-none p-0"
                               disabled={isSaving || !jsonEditorCanUndo}
-                              aria-label="Undo"
+                              aria-label={t('Undo')}
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={handleDocumentJsonUndo}
                             >
@@ -1461,7 +1465,7 @@ function RowEditDrawer({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side={jsonToolbarTooltipSide}>
-                            <p>Undo</p>
+                            <p>{t('Undo')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -1474,7 +1478,7 @@ function RowEditDrawer({
                               size="sm"
                               className="h-8 w-8 cursor-pointer rounded-none p-0"
                               disabled={isSaving || !jsonEditorCanRedo}
-                              aria-label="Redo"
+                              aria-label={t('Redo')}
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={handleDocumentJsonRedo}
                             >
@@ -1482,7 +1486,7 @@ function RowEditDrawer({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side={jsonToolbarTooltipSide}>
-                            <p>Redo</p>
+                            <p>{t('Redo')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -1496,13 +1500,13 @@ function RowEditDrawer({
                               className="h-8 w-8 cursor-pointer rounded-none p-0"
                               onClick={handlePrettifyDocumentJson}
                               disabled={isSaving}
-                              aria-label="Prettify JSON"
+                              aria-label={t('Prettify JSON')}
                             >
                               <Braces className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side={jsonToolbarTooltipSide}>
-                            <p>Prettify JSON</p>
+                            <p>{t('Prettify JSON')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -1516,7 +1520,7 @@ function RowEditDrawer({
                               className="h-8 w-8 cursor-pointer rounded-none p-0"
                               onClick={() => void handleCopyDocumentJson()}
                               disabled={isSaving}
-                              aria-label="Copy JSON"
+                              aria-label={t('Copy JSON')}
                             >
                               {documentJsonCopied ? (
                                 <Check className="h-4 w-4 text-emerald-500" />
@@ -1529,7 +1533,7 @@ function RowEditDrawer({
                             <p>
                               {documentJsonCopied
                                 ? 'Copied!'
-                                : 'Copy JSON'}
+                                : t('Copy JSON')}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -1544,7 +1548,7 @@ function RowEditDrawer({
                               className="h-8 w-8 cursor-pointer rounded-none p-0"
                               onClick={handleCopyDocumentViewLink}
                               disabled={isSaving || !row}
-                              aria-label="Copy link to document"
+                              aria-label={t('Copy link to document')}
                             >
                               {documentViewLinkCopied ? (
                                 <Check className="h-4 w-4 text-emerald-500" />
@@ -1556,8 +1560,8 @@ function RowEditDrawer({
                           <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>
                               {documentViewLinkCopied
-                                ? 'Link copied!'
-                                : 'Copy link to document'}
+                                ? t('Link copied!')
+                                : t('Copy link to document')}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -1599,7 +1603,7 @@ function RowEditDrawer({
                         {!hideSequenceInEditor ? (
                           <div>
                             <Label className="text-[11px] text-muted-foreground">
-                              Row #
+                              {t('Row #')}
                             </Label>
                             <div className="mt-1">
                               <CopyableId
@@ -1628,7 +1632,7 @@ function RowEditDrawer({
                         onChange={setCustomRowId}
                         maxLength={36}
                         disabled={isSaving}
-                        placeholder="Leave blank to auto-generate"
+                        placeholder={t('Leave blank to auto-generate')}
                       />
                     </div>
                   )}
@@ -1636,7 +1640,7 @@ function RowEditDrawer({
                   {/* Editable fields */}
                   <div className="space-y-3">
                     <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Row Data
+                      {t('Row Data')}
                     </h4>
                     <div className="space-y-4">
                       {dataTabFieldKeys.map((key) => {
@@ -1691,7 +1695,7 @@ function RowEditDrawer({
                               {isRequired && (
                                 <span
                                   className="text-destructive text-[12px] font-semibold ms-0.5"
-                                  aria-label="Required field"
+                                  aria-label={t('Required field')}
                                 >
                                   *
                                 </span>
@@ -2153,7 +2157,7 @@ function RowEditDrawer({
                                                         className="h-3 w-3 cursor-pointer"
                                                         disabled={false}
                                                       />
-                                                      Null
+                                                      {t('Null')}
                                                     </label>
                                                   )}
                                                 </div>
@@ -2184,7 +2188,7 @@ function RowEditDrawer({
                                   <div className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
                                     <Brackets className="h-4 w-4 text-muted-foreground/60" />
                                     <p className="text-[12px] text-muted-foreground">
-                                      No items in this array yet
+                                      {t('No items in this array yet')}
                                     </p>
                                   </div>
                                 )}
@@ -2196,7 +2200,7 @@ function RowEditDrawer({
                                   className="h-9 w-full cursor-pointer justify-center rounded-none border-t border-foreground/10 bg-muted/30 text-[12px] text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 >
                                   <Plus className="me-1.5 h-3.5 w-3.5" />
-                                  Add item
+                                  {t('Add item')}
                                 </Button>
                               </div>
                             ) : fieldType === 'datetime' ? (
@@ -2211,7 +2215,7 @@ function RowEditDrawer({
                                 clearable={!isRequired}
                                 placeholder={
                                   isRequired
-                                    ? 'Select date & time'
+                                    ? t('Select date & time')
                                     : 'NULL'
                                 }
                               />
@@ -2458,7 +2462,7 @@ function RowEditDrawer({
                                               htmlFor={`${key}-null`}
                                               className="text-[11px] text-muted-foreground cursor-pointer select-none"
                                             >
-                                              Null
+                                              {t('Null')}
                                             </label>
                                           </div>
                                         )}
@@ -2486,12 +2490,11 @@ function RowEditDrawer({
                 <div className="space-y-5">
                   <div className="space-y-3">
                     <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Permissions
+                      {t('Permissions')}
                     </h4>
                     <div className="rounded-lg border border-border bg-muted/30 p-4">
                       <p className="text-[13px] text-muted-foreground">
-                        Configure row-level access permissions to control who
-                        can read, write, and delete this row.
+                        {t('Configure row-level access permissions to control who can read, write, and delete this row.')}
                       </p>
                     </div>
                   </div>
@@ -2512,9 +2515,9 @@ function RowEditDrawer({
                   <Badge variant="secondary" className="h-6 w-fit shrink-0 px-2.5">
                     {isCreateMode
                       ? inlineDocumentDirty
-                        ? 'Unsaved changes'
-                        : 'New document'
-                      : 'Unsaved changes'}
+                        ? t('Unsaved changes')
+                        : t('New document')
+                      : t('Unsaved changes')}
                   </Badge>
                   <div className="flex shrink-0 items-center justify-end gap-2">
                     <Button
@@ -2524,7 +2527,7 @@ function RowEditDrawer({
                       disabled={isSaving}
                       className="h-8 text-xs"
                     >
-                      Cancel
+                      {t('Cancel')}
                     </Button>
                     <Button
                       size="sm"
@@ -2551,7 +2554,7 @@ function RowEditDrawer({
               onClick={() => onOpenChange(false)}
               disabled={isSaving}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         ) : null}
@@ -2588,6 +2591,7 @@ export function DocumentsRowCreateBridge({
   table: Collection,
   onCreateRowReady?: (openCreateDrawer: () => void) => void
 }) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
@@ -2651,8 +2655,8 @@ export function DocumentsRowCreateBridge({
       })
       toast.success(
         variables.rowId
-          ? 'Row updated successfully'
-          : 'Row created successfully',
+          ? t('Row updated successfully')
+          : t('Row created successfully'),
       )
       setEditDrawerOpen(false)
       setSelectedRowForEdit(null)
@@ -2772,6 +2776,7 @@ export function RowsSpreadsheet({
   rowsSortOrder = 'desc',
   onNavigateToRowsList,
 }: SpreadsheetProps) {
+  const t = useT()
   const params = useParams({
     strict: false,
   })
@@ -3938,7 +3943,7 @@ export function RowsSpreadsheet({
                       </Card>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      You don't have permission to perform this action.
+                      {t("You don't have permission to perform this action.")}
                     </TooltipContent>
                   </Tooltip>
                 ) : (
@@ -3983,8 +3988,7 @@ export function RowsSpreadsheet({
                     </Card>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-xs">
-                    This console does not create collection attributes from the
-                    grid. Use the Appwrite Documents API or your preferred SDK.
+                    {t('This console does not create collection attributes from the grid. Use the Appwrite Documents API or your preferred SDK.')} {/* pragma: allowlist secret */}
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -4000,16 +4004,16 @@ export function RowsSpreadsheet({
                           </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="text-sm font-medium text-foreground">
-                              Generate sample data
+                              {t('Generate sample data')}
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Generate data for testing
+                              {t('Generate data for testing')}
                             </p>
                           </div>
                         </div>
                       </Card>
                     </TooltipTrigger>
-                    <TooltipContent>Create columns first</TooltipContent>
+                    <TooltipContent>{t('Create columns first')}</TooltipContent>
                   </Tooltip>
                 ) : (
                   <Card
@@ -4027,10 +4031,10 @@ export function RowsSpreadsheet({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-medium text-foreground">
-                          Generate sample data
+                          {t('Generate sample data')}
                         </h3>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Generate data for testing
+                          {t('Generate data for testing')}
                         </p>
                       </div>
                     </div>
@@ -4049,10 +4053,10 @@ export function RowsSpreadsheet({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-medium text-foreground">
-                      Documentation
+                      {t('Documentation')}
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Read the Appwrite docs
+                      {t('Read the Appwrite docs')} {/* pragma: allowlist secret */}
                     </p>
                   </div>
                 </div>
@@ -4103,7 +4107,7 @@ export function RowsSpreadsheet({
             }
             description={
               documentsPaneHasFilters
-                ? 'Try adjusting or clearing filters.'
+                ? t('Try adjusting or clearing filters.')
                 : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
             }
             isEmpty={!documentsPaneHasFilters}
@@ -4159,7 +4163,7 @@ export function RowsSpreadsheet({
                 }
                 description={
                   documentsPaneHasFilters
-                    ? 'Try adjusting or clearing filters.'
+                    ? t('Try adjusting or clearing filters.')
                     : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
                 }
                 isEmpty={!documentsPaneHasFilters}
@@ -4254,7 +4258,7 @@ export function RowsSpreadsheet({
                     <SequenceHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <button
                       type="button"
-                      aria-label="Copy column name: $sequence"
+                      aria-label={t('Copy column name: $sequence')}
                       onClick={() => void copyColumnHeaderName('$sequence')}
                       className="group inline-flex min-w-0 flex-1 items-center gap-0.5 rounded px-0.5 -mx-0.5 py-0 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
@@ -4279,7 +4283,7 @@ export function RowsSpreadsheet({
                   <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <button
                     type="button"
-                    aria-label="Copy column name: $id"
+                    aria-label={t('Copy column name: $id')}
                     onClick={() => void copyColumnHeaderName('$id')}
                     className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
@@ -4384,12 +4388,12 @@ export function RowsSpreadsheet({
                   <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <button
                     type="button"
-                    aria-label="Copy column name: $createdAt"
+                    aria-label={t('Copy column name: $createdAt')}
                     onClick={() => void copyColumnHeaderName('$createdAt')}
                     className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 truncate">
-                      $createdAt
+                      {'$createdAt'}
                     </span>
                     {copiedColumnHeaderKey === '$createdAt' ? (
                       <Check
@@ -4425,12 +4429,12 @@ export function RowsSpreadsheet({
                   <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <button
                     type="button"
-                    aria-label="Copy column name: $updatedAt"
+                    aria-label={t('Copy column name: $updatedAt')}
                     onClick={() => void copyColumnHeaderName('$updatedAt')}
                     className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-start text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 truncate">
-                      $updatedAt
+                      {'$updatedAt'}
                     </span>
                     {copiedColumnHeaderKey === '$updatedAt' ? (
                       <Check
@@ -4486,8 +4490,7 @@ export function RowsSpreadsheet({
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-xs">
-                    Collection attributes are not created from this view. Use the
-                    Documents API or SDK.
+                    {t('Collection attributes are not created from this view. Use the Documents API or SDK.')}
                   </TooltipContent>
                 </Tooltip>
               </th>
@@ -4717,7 +4720,7 @@ export function RowsSpreadsheet({
                               })
                             }}
                           >
-                            <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                            <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => {
@@ -4726,7 +4729,7 @@ export function RowsSpreadsheet({
                             }}
                             disabled={duplicateRowMutation.isPending}
                           >
-                            <MenuItemContent icon={Copy}>Duplicate</MenuItemContent>
+                            <MenuItemContent icon={Copy}>{t('Duplicate')}</MenuItemContent>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => {
@@ -4735,7 +4738,7 @@ export function RowsSpreadsheet({
                               setDeleteDialogOpen(true)
                             }}
                           >
-                            <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                            <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -4794,7 +4797,7 @@ export function RowsSpreadsheet({
         {useInlineDocumentPane && !isDocumentsStackedLayout ? (
           <button
             type="button"
-            aria-label="Resize table and document preview"
+            aria-label={t('Resize table and document preview')}
             aria-orientation="vertical"
             role="separator"
             tabIndex={0}
@@ -4869,7 +4872,7 @@ export function RowsSpreadsheet({
                 onClick={() => setSelectedRows(new Set())}
                 className="h-8 text-xs"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -4878,7 +4881,7 @@ export function RowsSpreadsheet({
                 disabled={bulkDeleteMutation.isPending}
                 className="h-8 gap-2"
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -4914,13 +4917,13 @@ export function RowsSpreadsheet({
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span className="hidden @[500px]:inline">
-                          Sample data
+                          {t('Sample data')}
                         </span>
-                        <span className="@[500px]:hidden">Sample</span>
+                        <span className="@[500px]:hidden">{t('Sample')}</span>
                       </Button>
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>Create columns first</TooltipContent>
+                  <TooltipContent>{t('Create columns first')}</TooltipContent>
                 </Tooltip>
               ) : (
                 <Button
@@ -4931,8 +4934,8 @@ export function RowsSpreadsheet({
                   className="h-8 gap-2 text-[12px] font-medium"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span className="hidden @[500px]:inline">Sample data</span>
-                  <span className="@[500px]:hidden">Sample</span>
+                  <span className="hidden @[500px]:inline">{t('Sample data')}</span>
+                  <span className="@[500px]:hidden">{t('Sample')}</span>
                 </Button>
               )}
             </div>
@@ -4980,14 +4983,14 @@ export function RowsSpreadsheet({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={bulkDeleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmBulkDelete}
               disabled={bulkDeleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -5008,6 +5011,7 @@ export function RowsSpreadsheet({
 
 // Table Security
 export function TableSecurity({ table }: SpreadsheetProps) {
+  const t = useT()
   const params = useParams({
     strict: false,
   })
@@ -5072,7 +5076,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
       queryClient.invalidateQueries({
         queryKey: ['table', 'project', projectId, databaseId, tableId],
       })
-      toast.success('Permissions have been updated')
+      toast.success(t('Permissions have been updated'))
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update permissions')
@@ -5094,7 +5098,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
       queryClient.invalidateQueries({
         queryKey: ['table', 'project', projectId, databaseId, tableId],
       })
-      toast.success('Security has been updated')
+      toast.success(t('Security has been updated'))
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update security')
@@ -5104,7 +5108,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
   if (tableLoading || !tableData) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('Loading...')}</div>
       </div>
     )
   }
@@ -5116,12 +5120,12 @@ export function TableSecurity({ table }: SpreadsheetProps) {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Permissions
+              {t('Permissions')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
               Choose who can access your tables and rows.{' '}
               <DocsRouteLink className="link-neutral" href="/docs/products/databases/permissions">
-                Learn more
+                {t('Learn more')}
               </DocsRouteLink>
               .
             </p>
@@ -5147,7 +5151,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
                 updatePermissionsMutation.mutate(tablePermissions)
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -5156,7 +5160,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Row level security (RLS)
+              {t('Row level security (RLS)')}
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -5172,25 +5176,24 @@ export function TableSecurity({ table }: SpreadsheetProps) {
                   htmlFor="security"
                   className="text-[13px] text-foreground"
                 >
-                  Row level security (RLS)
+                  {t('Row level security (RLS)')}
                 </Label>
               </div>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-[13px] text-muted-foreground">
-                When row security is enabled, users need{' '}
-                <strong>both table permissions and row permissions</strong> to
-                access rows. Row permissions are an additional layer, not an
-                alternative to table permissions.
+                {t('When row security is enabled, users need')}{' '}
+                <strong>{t('both table permissions and row permissions')}</strong>{' '}
+                {t('to access rows. Row permissions are an additional layer, not an alternative to table permissions.')}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                <strong>Create operations</strong> always require table-level
-                permissions, regardless of row security settings.
+                <strong>{t('Create operations')}</strong>{' '}
+                {t('always require table-level permissions, regardless of row security settings.')}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                If row security is disabled, users can access rows{' '}
-                <strong>only if they have table permissions</strong>. Row
-                permissions will be ignored.
+                {t('If row security is disabled, users can access rows')}{' '}
+                <strong>{t('only if they have table permissions')}</strong>.{' '}
+                {t('Row permissions will be ignored.')}
               </p>
             </div>
           </div>
@@ -5211,7 +5214,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -5224,6 +5227,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
 export function TableSettings({
   table,
 }: Pick<SpreadsheetProps, 'table'>) {
+  const t = useT()
   const params = useParams({
     strict: false,
   })
@@ -5343,7 +5347,7 @@ export function TableSettings({
       queryClient.invalidateQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success('Name has been updated')
+      toast.success(t('Name has been updated'))
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update name')
@@ -5370,7 +5374,7 @@ export function TableSettings({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', 'console'] })
-      toast.success('Display names have been updated')
+      toast.success(t('Display names have been updated'))
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update display names')
@@ -5449,7 +5453,7 @@ export function TableSettings({
   if (tableLoading || !tableData) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('Loading...')}</div>
       </div>
     )
   }
@@ -5549,7 +5553,7 @@ export function TableSettings({
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -5557,7 +5561,7 @@ export function TableSettings({
         {/* Update Name */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+            <h3 className="text-[15px] font-semibold text-foreground">{t('Name')}</h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
@@ -5565,7 +5569,7 @@ export function TableSettings({
               id="name"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
-              placeholder="Enter name"
+              placeholder={t('Enter name')}
               autoComplete="off"
               className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
             />
@@ -5585,7 +5589,7 @@ export function TableSettings({
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -5594,12 +5598,10 @@ export function TableSettings({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Display name
+              {t('Display name')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Select up to 5 string columns to display as row names in the
-              Appwrite console. These help identify rows in places like
-              relationships.
+              {t('Select up to 5 string columns to display as row names in the Appwrite console. These help identify rows in places like relationships.')} {/* pragma: allowlist secret */}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -5633,7 +5635,7 @@ export function TableSettings({
                       }
                     >
                       <SelectTrigger className="h-9 w-[200px] border-border bg-background text-[13px]">
-                        <SelectValue placeholder="Select column" />
+                        <SelectValue placeholder={t('Select column')} />
                       </SelectTrigger>
                       <SelectContent>
                         {getDisplayNameOptions(index).map(
@@ -5651,7 +5653,7 @@ export function TableSettings({
                       className="h-9 w-9 p-0"
                       onClick={() => handleRemoveDisplayNameColumn(index)}
                       disabled={displayNames.length === 1}
-                      aria-label="Remove display name column"
+                      aria-label={t('Remove display name column')}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -5670,7 +5672,7 @@ export function TableSettings({
                   disabled={displayNames[displayNames.length - 1] === ''}
                 >
                   <Plus className="h-4 w-4 me-1.5" />
-                  Add column
+                  {t('Add column')}
                 </Button>
               )}
           </div>
@@ -5702,7 +5704,7 @@ export function TableSettings({
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -5711,11 +5713,10 @@ export function TableSettings({
         <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-red-600 dark:text-red-400">
-              Delete table
+              {t('Delete table')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              The table will be permanently deleted, including all the rows
-              within it. This action is irreversible.
+              {t('The table will be permanently deleted, including all the rows within it. This action is irreversible.')}
             </p>
           </div>
           <div className="border-t border-red-500/20" />
@@ -5747,12 +5748,12 @@ export function TableSettings({
                   size="sm"
                   className="h-9 text-[13px]"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md p-0">
                 <DialogHeader className="px-6 pt-6 text-start">
-                  <DialogTitle>Delete table</DialogTitle>
+                  <DialogTitle>{t('Delete table')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Are you sure you want to delete{' '}
                     <strong>{tableData.name}</strong>? This action cannot be
@@ -5777,7 +5778,7 @@ export function TableSettings({
                     }}
                     disabled={deleteTableMutation.isPending}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -5788,7 +5789,7 @@ export function TableSettings({
                     }}
                     disabled={deleteTableMutation.isPending}
                   >
-                    Delete
+                    {t('Delete')}
                   </Button>
                 </div>
               </DialogContent>

@@ -44,8 +44,10 @@ import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -150,11 +152,13 @@ export function View() {
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
         <EmptyState
           icon={Globe}
-          title={hasFilters ? undefined : 'No domains yet'}
+          title={hasFilters ? undefined : t('No domains yet')}
           description={
             hasFilters
               ? undefined
-              : 'Connect a custom domain to your function for a branded experience'
+              : t(
+                  'Connect a custom domain to your function for a branded experience',
+                )
           }
           isEmpty={!hasFilters}
           hasFilters={hasFilters}
@@ -170,16 +174,16 @@ export function View() {
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Domain
+                    {t('Domain')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Type
+                    {t('Type')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Status
+                    {t('Status')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Created
+                    {t('Created')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
                 </TableRow>
@@ -213,13 +217,16 @@ export function View() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px]">
                           {rule.redirectUrl ? (
-                            <span>Redirect to {rule.redirectUrl}</span>
+                            <span>
+                              {t('Redirect to')} {rule.redirectUrl}
+                            </span>
                           ) : rule.deploymentVcsProviderBranch ? (
                             <span>
-                              Deployed from {rule.deploymentVcsProviderBranch}
+                              {t('Deployed from')}{' '}
+                              {rule.deploymentVcsProviderBranch}
                             </span>
                           ) : (
-                            <span>Active deployment</span>
+                            <span>{t('Active deployment')}</span>
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
@@ -229,14 +236,16 @@ export function View() {
                               className="text-[10px] shrink-0 gap-1.5"
                               title={
                                 rule.status === 'verifying'
-                                  ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
+                                  ? t(
+                                      'SSL certificate is being issued. This usually takes a couple of minutes.',
+                                    )
                                   : undefined
                               }
                             >
                               {rule.status === 'verifying' && (
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               )}
-                              {statusConfig.label}
+                              {t(statusConfig.label)}
                             </Badge>
                             {rule.status !== 'verified' && (
                               <Button
@@ -245,7 +254,7 @@ export function View() {
                                 className="h-auto p-0 text-[13px]"
                                 onClick={() => handleViewLogs(rule)}
                               >
-                                View logs
+                                {t('View logs')}
                               </Button>
                             )}
                             {(rule.status === 'created' ||
@@ -256,7 +265,7 @@ export function View() {
                                 className="h-auto p-0 text-[13px]"
                                 onClick={() => handleRetry(rule)}
                               >
-                                Retry
+                                {t('Retry')}
                               </Button>
                             )}
                           </div>
@@ -278,7 +287,7 @@ export function View() {
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
-                                    <MenuItemContent icon={FileText}>Logs</MenuItemContent>
+                                    <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 {(rule.status === 'created' ||
@@ -286,7 +295,7 @@ export function View() {
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
-                                    <MenuItemContent icon={RefreshCw}>Retry</MenuItemContent>
+                                    <MenuItemContent icon={RefreshCw}>{t('Retry')}</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -315,12 +324,12 @@ export function View() {
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={Globe}>Records</MenuItemContent>
+                                  <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(rule)}
                                 >
-                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                  <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -379,7 +388,7 @@ export function View() {
             region={project?.region}
             rule={selectedRule}
             onDeleteSuccess={() => {
-              toast.success('Domain has been deleted')
+              toast.success(t('Domain has been deleted'))
               setDeleteDomainOpen(false)
               setSelectedRule(null)
             }}

@@ -56,6 +56,7 @@ import {
   copyToClipboard,
   openInNewTab,
   openInNewWindow} from '@/lib/utils/context-menu'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 interface WebhooksProps {
@@ -66,6 +67,7 @@ interface WebhooksProps {
 export function Webhooks({
   projectId,
   searchValue: searchValueProp = ''}: WebhooksProps) {
+  const t = useT()
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -138,12 +140,12 @@ export function Webhooks({
 
     deleteMutation.mutate(webhookToDelete.$id, {
       onSuccess: () => {
-        toast.success('Webhook has been deleted')
+        toast.success(t('Webhook has been deleted'))
         setWebhookToDelete(null)
         setSelectedWebhook(null)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete webhook')
+        toast.error(getErrorMessage(error) || t('Failed to delete webhook'))
       }})
   }
 
@@ -161,11 +163,11 @@ export function Webhooks({
       ) : paginatedWebhooks.length === 0 ? (
         <EmptyState
           icon={WebhookIcon}
-          title={searchValueProp ? undefined : 'No webhooks yet'}
+          title={searchValueProp ? undefined : t('No webhooks yet')}
           description={
             searchValueProp
               ? undefined
-              : 'Set up webhooks to receive real-time notifications about events in your project'
+              : t('Set up webhooks to receive real-time notifications about events in your project')
           }
           isEmpty={!searchValueProp}
           hasFilters={!!searchValueProp}
@@ -178,25 +180,25 @@ export function Webhooks({
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Webhook ID
+                    {t('Webhook ID')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Name
+                    {t('Name')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Events
+                    {t('Events')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     URL
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Enabled
+                    {t('Enabled')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                    Created
+                    {t('Created')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                    Updated
+                    {t('Updated')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]" />
                 </TableRow>
@@ -222,7 +224,7 @@ export function Webhooks({
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Badge variant="info" className="text-[10px] shrink-0">
-                        {webhook.events?.length || 0} events
+                        {webhook.events?.length || 0} {t('events')}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3">
@@ -236,14 +238,14 @@ export function Webhooks({
                           variant="success"
                           className="text-[10px] shrink-0"
                         >
-                          Enabled
+                          {t('Enabled')}
                         </Badge>
                       ) : (
                         <Badge
                           variant="inactive"
                           className="text-[10px] shrink-0"
                         >
-                          Disabled
+                          {t('Disabled')}
                         </Badge>
                       )}
                     </TableCell>
@@ -261,20 +263,20 @@ export function Webhooks({
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <RowActionsMenuTrigger
-                              aria-label={`Actions for ${webhook.name}`}
+                              aria-label={`${t('Actions for')} ${webhook.name}`}
                             />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuItem
                               onClick={() => handleUpdate(webhook)}
                             >
-                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                              <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger>
                                 <MenuItemIcon icon={Copy} />
-                                Copy
+                                {t('Copy')}
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent>
                                 <DropdownMenuItem
@@ -283,7 +285,7 @@ export function Webhooks({
                                   }
                                 >
                                   <MenuItemContent icon={Copy}>
-                                    Copy ID
+                                    {t('Copy ID')}
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -292,7 +294,7 @@ export function Webhooks({
                                   }
                                 >
                                   <MenuItemContent icon={Copy}>
-                                    Copy name
+                                    {t('Copy name')}
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -304,7 +306,7 @@ export function Webhooks({
                                   }
                                 >
                                   <MenuItemContent icon={Link2}>
-                                    Copy link
+                                    {t('Copy link')}
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -318,7 +320,7 @@ export function Webhooks({
                                   }
                                 >
                                   <MenuItemContent icon={FileJson}>
-                                    Copy as JSON
+                                    {t('Copy as JSON')}
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuSubContent>
@@ -330,7 +332,7 @@ export function Webhooks({
                               }
                             >
                               <MenuItemContent icon={ExternalLink}>
-                                Open in new tab
+                                {t('Open in new tab')}
                               </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -339,14 +341,14 @@ export function Webhooks({
                               }
                             >
                               <MenuItemContent icon={Square}>
-                                Open in new window
+                                {t('Open in new window')}
                               </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => requestDelete(webhook)}
                             >
-                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                              <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -370,7 +372,7 @@ export function Webhooks({
                 setPageSize(size)
                 setCurrentPage(1)
               }}
-              itemLabel="webhooks"
+              itemLabel={t('webhooks')}
             />
           )}
         </>
@@ -393,12 +395,11 @@ export function Webhooks({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete webhook</DialogTitle>
+            <DialogTitle>{t('Delete webhook')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>{webhookToDelete?.name || 'this webhook'}</strong>? It
-              will stop receiving events immediately. This action cannot be
-              undone.
+              {t('Are you sure you want to delete')}{' '}
+              <strong>{webhookToDelete?.name || t('this webhook')}</strong>?{' '}
+              {t('It will stop receiving events immediately. This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -410,7 +411,7 @@ export function Webhooks({
               onClick={() => setWebhookToDelete(null)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="button"
@@ -420,7 +421,7 @@ export function Webhooks({
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

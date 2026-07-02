@@ -40,6 +40,7 @@ import {
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { useT } from '@/lib/i18n/translate'
 
 const APPWRITE_DOCS_URL = '/docs'
 const APPWRITE_CLI_INSTALL_URL =
@@ -1298,6 +1299,7 @@ export function ConnectProject({
   initialSdk = 'web',
   initialConnectTab = 'app',
 }: ConnectProjectProps) {
+  const t = useT()
   const navigate = useNavigate()
   const [sdkId, setSdkId] = useState(() => {
     const inClient = CLIENT_SDK_OPTIONS.some((o) => o.id === initialSdk)
@@ -1388,7 +1390,7 @@ export function ConnectProject({
     if (!selectedFile) return
     navigator.clipboard.writeText(selectedFile.code)
     setCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
   }
   const installInstructions = useMemo(
@@ -1409,7 +1411,7 @@ export function ConnectProject({
   const handleCopyCliLogin = () => {
     navigator.clipboard.writeText(cliLoginCommand)
     setCliLoginCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     setTimeout(() => setCliLoginCopied(false), 2000)
   }
 
@@ -1419,7 +1421,7 @@ export function ConnectProject({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-6xl h-[70dvh] max-h-[70dvh] p-0 gap-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Connect to your project</DialogTitle>
+          <DialogTitle>{t('Connect to your project')}</DialogTitle>
         </DialogHeader>
         <Tabs
           value={connectTab}
@@ -1475,7 +1477,7 @@ export function ConnectProject({
             <div className="shrink-0 flex flex-wrap items-end gap-4 pt-4 pb-4 border-b border-border">
               <div className="min-w-[160px]">
                 <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                  SDK / Platform
+                  {t('SDK / Platform')}
                 </label>
                 <Select
                   value={
@@ -1493,7 +1495,7 @@ export function ConnectProject({
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Client
+                        {t('Client')}
                       </SelectLabel>
                       {CLIENT_SDK_OPTIONS.map((opt) => (
                         <SelectItem
@@ -1510,7 +1512,7 @@ export function ConnectProject({
                     </SelectGroup>
                     <SelectGroup>
                       <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Server
+                        {t('Server')}
                       </SelectLabel>
                       {SERVER_SDK_OPTIONS.map((opt) => (
                         <SelectItem
@@ -1531,7 +1533,7 @@ export function ConnectProject({
               {frameworks.length > 1 && (
                 <div className="min-w-[120px]">
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                    Framework
+                    {t('Framework')}
                   </label>
                   <Select value={frameworkId} onValueChange={setFrameworkId}>
                     <SelectTrigger className="w-full h-9 text-[13px]">
@@ -1557,7 +1559,7 @@ export function ConnectProject({
               {usingVariants && usingVariants.length > 1 && (
                 <div className="min-w-[140px]">
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                    Using
+                    {t('Using')}
                   </label>
                   <Select value={usingId} onValueChange={setUsingId}>
                     <SelectTrigger className="w-full h-9 text-[13px]">
@@ -1580,7 +1582,7 @@ export function ConnectProject({
               {packageManagers && packageManagers.length > 1 && (
                 <div className="min-w-[100px]">
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                    Package manager
+                    {t('Package manager')}
                   </label>
                   <Select
                     value={packageManagerId}
@@ -1616,7 +1618,7 @@ export function ConnectProject({
               <div className="space-y-4 min-w-0 min-h-0 overflow-y-auto">
                 <div className="space-y-4">
                   <h4 className="text-[13px] font-semibold text-foreground">
-                    {installInstructions.title}
+                    {t(installInstructions.title)}
                   </h4>
                   <div className="space-y-4">
                     {installInstructions.options.map((option, i) => (
@@ -1634,13 +1636,14 @@ export function ConnectProject({
                   <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
                     <div className="px-4 py-3 border-b border-border">
                       <h4 className="text-[13px] font-semibold text-foreground">
-                        API keys
+                        {t('API keys')}
                       </h4>
                     </div>
                     <div className="px-4 py-3 space-y-3">
                       <p className="text-[13px] text-muted-foreground">
-                        Server and backend code need an API key with the right
-                        scopes. Create and manage keys in your project.
+                        {t(
+                          'Server and backend code need an API key with the right scopes. Create and manage keys in your project.',
+                        )}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
                         <Button
@@ -1650,13 +1653,13 @@ export function ConnectProject({
                           onClick={handleViewApiKeys}
                         >
                           <Key className="h-4 w-4" />
-                          View API keys
+                          {t('View API keys')}
                         </Button>
                         <DocsRouteLink
                           href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
                           className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                         >
-                          Server setup guide
+                          {t('Server setup guide')}
                           <ExternalLink className="h-3.5 w-3.5" />
                         </DocsRouteLink>
                       </div>
@@ -1667,7 +1670,7 @@ export function ConnectProject({
                   href={APPWRITE_DOCS_URL}
                   className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                 >
-                  Read the docs
+                  {t('Read the docs')}
                   <ExternalLink className="h-3.5 w-3.5" />
                 </DocsRouteLink>
               </div>
@@ -1707,7 +1710,7 @@ export function ConnectProject({
                       ) : (
                         <Copy className="h-3.5 w-3.5" />
                       )}
-                      Copy
+                      {t('Copy')}
                     </Button>
                   )}
                 </div>
@@ -1728,12 +1731,13 @@ export function ConnectProject({
           >
             <div className="space-y-4 pt-4">
               <p className="text-[13px] text-muted-foreground">
-                Use the Appwrite CLI to manage your project from the terminal.
-                Install the CLI, log in, then point it at this project.
+                {t(
+                  'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.', // pragma: allowlist secret
+                )}
               </p>
               <div className="space-y-3">
                 <h4 className="text-[13px] font-semibold text-foreground">
-                  1. Install the CLI
+                  1. {t('Install the CLI')}
                 </h4>
                 <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-1 w-fit mb-4">
                   {(['macos', 'windows', 'linux'] as const).map((os) => (
@@ -1774,7 +1778,7 @@ export function ConnectProject({
                       <CodeBlock
                         code="curl -sL https://appwrite.io/cli/install.sh | bash"
                         language="bash"
-                        label="Install script"
+                        label={t('Install script')}
                         showCopy
                       />
                     </>
@@ -1812,7 +1816,7 @@ export function ConnectProject({
                       <CodeBlock
                         code="curl -sL https://appwrite.io/cli/install.sh | bash"
                         language="bash"
-                        label="Install script"
+                        label={t('Install script')}
                         showCopy
                       />
                     </>
@@ -1822,18 +1826,18 @@ export function ConnectProject({
                   href={APPWRITE_CLI_INSTALL_URL}
                   className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                 >
-                  Full installation guide
+                  {t('Full installation guide')}
                   <ExternalLink className="h-3.5 w-3.5" />
                 </DocsRouteLink>
               </div>
               <div className="space-y-3">
                 <h4 className="text-[13px] font-semibold text-foreground">
-                  2. Log in
+                  2. {t('Log in')}
                 </h4>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Terminal
+                      {t('Terminal')}
                     </span>
                     <Button
                       variant="ghost"
@@ -1846,7 +1850,7 @@ export function ConnectProject({
                       ) : (
                         <Copy className="h-3.5 w-3.5" />
                       )}
-                      Copy
+                      {t('Copy')}
                     </Button>
                   </div>
                   <div
@@ -1862,7 +1866,7 @@ export function ConnectProject({
                         appwrite login --email{' '}
                         <span
                           className="blur-[5px] select-none"
-                          title="Your email (blurred)"
+                          title={t('Your email (blurred)')}
                         >
                           {userEmail || 'your@email.com'}
                         </span>{' '}
@@ -1874,27 +1878,27 @@ export function ConnectProject({
               </div>
               <div className="space-y-3">
                 <h4 className="text-[13px] font-semibold text-foreground">
-                  3. Connect to this project
+                  3. {t('Connect to this project')}
                 </h4>
                 <CodeBlock
                   code={`appwrite client --endpoint ${endpoint ?? getBaseEndpoint()} --project-id ${projectId ?? 'YOUR_PROJECT_ID'}`}
                   language="bash"
-                  label="Terminal"
+                  label={t('Terminal')}
                   showCopy
                 />
                 <p className="text-[13px] text-muted-foreground">
-                  For non-interactive use (CI/CD), add{' '}
+                  {t('For non-interactive use (CI/CD), add')}{' '}
                   <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
                     --key YOUR_API_KEY
                   </code>
-                  . Create API keys in your project settings.
+                  . {t('Create API keys in your project settings.')}
                 </p>
               </div>
               <DocsRouteLink
                 href={APPWRITE_CLI_DOCS_URL}
                 className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
               >
-                CLI commands
+                {t('CLI commands')}
                 <ExternalLink className="h-3.5 w-3.5" />
               </DocsRouteLink>
             </div>
@@ -1913,13 +1917,12 @@ export function ConnectProject({
               {/* Left: description + supported SDKs as flowing text */}
               <div className="min-w-0 min-h-0 overflow-y-auto">
                 <p className="text-[13px] text-muted-foreground">
-                  Give your AI agent accurate Appwrite SDK context-method
-                  signatures, patterns, and best practices for your language.
-                  Install once per project or globally; works in Cursor, Claude
-                  Code, and other compatible tools.
+                  {t(
+                    'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.', // pragma: allowlist secret
+                  )}
                 </p>
                 <p className="text-[13px] text-muted-foreground mt-3">
-                  Skills are available for{' '}
+                  {t('Skills are available for')}{' '}
                   {[
                     'CLI',
                     'TypeScript',
@@ -1939,14 +1942,14 @@ export function ConnectProject({
                       {i < 9 ? ', ' : ''}
                     </span>
                   ))}{' '}
-                  - pick what you use during setup.
+                  - {t('pick what you use during setup.')}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
                   <DocsRouteLink
                     href={APPWRITE_SKILLS_DOCS_URL}
                     className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
                   >
-                    Docs
+                    {t('Docs')}
                     <ExternalLink className="h-3.5 w-3.5" />
                   </DocsRouteLink>
                 </div>
@@ -1956,48 +1959,48 @@ export function ConnectProject({
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-4 py-3 border-b border-border">
                     <h4 className="text-[13px] font-semibold text-foreground">
-                      Install command
+                      {t('Install command')}
                     </h4>
                     <p className="text-[12px] text-muted-foreground mt-1">
-                      Run in project root. You’ll pick SDKs, tools, and scope.
+                      {t("Run in project root. You'll pick SDKs, tools, and scope.")}
                     </p>
                   </div>
                   <div className="px-4 py-3">
                     <CodeBlock
                       code="npx skills add appwrite/agent-skills"
                       language="bash"
-                      label="Terminal"
+                      label={t('Terminal')}
                       showCopy={true}
                     />
                   </div>
                   <div className="px-4 py-2.5 border-t border-border">
                     <p className="text-[12px] font-medium text-foreground mb-1.5">
-                      Then the CLI will ask:
+                      {t('Then the CLI will ask:')}
                     </p>
                     <ul className="text-[12px] text-muted-foreground space-y-1">
                       <li>
                         <span className="text-foreground font-medium">
-                          Skills
+                          {t('Skills')}
                         </span>{' '}
-                        - which SDKs to install (e.g. TypeScript, Go).
+                        - {t('which SDKs to install (e.g. TypeScript, Go).')}
                       </li>
                       <li>
                         <span className="text-foreground font-medium">
-                          Tools
+                          {t('Tools')}
                         </span>{' '}
-                        - which AI tools use them (Cursor, Claude, etc.).
+                        - {t('which AI tools use them (Cursor, Claude, etc.).')}
                       </li>
                       <li>
                         <span className="text-foreground font-medium">
-                          Scope
+                          {t('Scope')}
                         </span>{' '}
-                        - project (this repo) or global.
+                        - {t('project (this repo) or global.')}
                       </li>
                       <li>
                         <span className="text-foreground font-medium">
-                          Method
+                          {t('Method')}
                         </span>{' '}
-                        - prefer symlink so skills stay up to date.
+                        - {t('prefer symlink so skills stay up to date.')}
                       </li>
                     </ul>
                   </div>
@@ -2032,13 +2035,12 @@ export function ConnectProject({
           >
             <div className="space-y-3 pt-4">
               <p className="text-[13px] leading-relaxed text-muted-foreground">
-                Use a project-scoped HTTPS endpoint with SigV4-compatible
-                signing to attach Storage to rclone, IaC, or custom pipelines.
-                Copyable endpoint, access key, and secret will appear here when
-                the integration is ready.
+                {t(
+                  'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.',
+                )}
               </p>
               <p className="text-[13px] leading-relaxed text-muted-foreground">
-                Work in progress - nothing to copy yet.
+                {t('Work in progress - nothing to copy yet.')}
               </p>
             </div>
           </TabsContent>
@@ -2049,7 +2051,7 @@ export function ConnectProject({
             size="sm"
             onClick={() => onOpenChange(false)}
           >
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

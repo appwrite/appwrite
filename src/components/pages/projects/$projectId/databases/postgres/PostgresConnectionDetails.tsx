@@ -71,6 +71,7 @@ import { PostgresConnectionDrawer } from './_components/PostgresConnectionDrawer
 import { PostgresConnectionContextMenu } from './_components/PostgresConnectionContextMenu'
 import { PostgresConnectionRowActionsMenu } from './_components/PostgresConnectionRowActionsMenu'
 import { PostgresSegmentedToggle } from './_components/PostgresSegmentedToggle'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresConnectionDetailsProps = {
   projectId: string
@@ -131,6 +132,7 @@ function ConnectionsTableColGroup() {
 }
 
 function ConnectionsTableHead() {
+  const t = useT()
   return (
     <TableHeader>
       <TableRow className="border-b border-border hover:bg-transparent">
@@ -138,34 +140,34 @@ function ConnectionsTableHead() {
           PID
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Type
+          {t('Type')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          User
+          {t('User')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Database
+          {t('Database')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Application
+          {t('Application')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Client
+          {t('Client')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          State
+          {t('State')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Duration
+          {t('Duration')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Wait
+          {t('Wait')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Query
+          {t('Query')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Started
+          {t('Started')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 w-[100px] bg-background px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]" />
       </TableRow>
@@ -229,6 +231,7 @@ export function PostgresConnectionDetails({
   databaseId,
   centerInPanel = false,
 }: PostgresConnectionDetailsProps) {
+  const t = useT()
   const { openQueryTab } = usePostgresSidebar()
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
@@ -390,7 +393,7 @@ export function PostgresConnectionDetails({
       onClick={() => setPendingAction({ type: 'terminate-idle' })}
     >
       <Unplug className="me-1.5 h-3.5 w-3.5" />
-      Terminate idle in transaction
+      {t('Terminate idle in transaction')}
     </Button>
   )
 
@@ -411,7 +414,7 @@ export function PostgresConnectionDetails({
           <div className="shrink-0 px-4 pb-4 pt-4 sm:px-6">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load connections</AlertTitle>
+              <AlertTitle>{t('Failed to load connections')}</AlertTitle>
               <AlertDescription className="text-[13px]">
                 {errorMessage}
               </AlertDescription>
@@ -492,7 +495,7 @@ export function PostgresConnectionDetails({
                     isFetching && 'animate-spin',
                   )}
                 />
-                Refresh
+                {t('Refresh')}
               </Button>
             </div>
           </div>
@@ -505,7 +508,7 @@ export function PostgresConnectionDetails({
               role="status"
               aria-live="polite"
               aria-busy="true"
-              aria-label="Loading connections"
+              aria-label={t('Loading connections')}
             >
               <Table withScrollContainer={false} className={connectionsTableClassName}>
                 <ConnectionsTableColGroup />
@@ -672,7 +675,7 @@ export function PostgresConnectionDetails({
                                   variant="warning"
                                   className="shrink-0 text-[10px]"
                                 >
-                                  Long-running
+                                  {t('Long-running')}
                                 </Badge>
                               ) : null}
                             </div>
@@ -759,7 +762,7 @@ export function PostgresConnectionDetails({
                       : `${filteredConnections.length} of ${scopedConnections.length} connections`}
                   </p>
                   <p className="text-[12px] text-muted-foreground">
-                    Refreshes every 30 seconds
+                    {t('Refreshes every 30 seconds')}
                   </p>
                 </div>
               </div>
@@ -771,26 +774,26 @@ export function PostgresConnectionDetails({
                 backendScope === 'clients' &&
                 clientConnectionCount === 0 &&
                 backendConnectionCount > 0
-                  ? 'No client connections'
+                  ? t('No client connections')
                   : backendScope === 'backends' &&
                       backendConnectionCount === 0 &&
                       clientConnectionCount > 0
-                    ? 'No system backends'
+                    ? t('No system backends')
                     : stateFilter === 'all' && backendScope === 'clients'
-                      ? 'No active connections'
+                      ? t('No active connections')
                       : undefined
               }
               description={
                 backendScope === 'clients' &&
                 clientConnectionCount === 0 &&
                 backendConnectionCount > 0
-                  ? 'Only PostgreSQL system backends are running. Switch to Backends to inspect them.'
+                  ? t('Only PostgreSQL system backends are running. Switch to Backends to inspect them.')
                   : backendScope === 'backends' &&
                       backendConnectionCount === 0 &&
                       clientConnectionCount > 0
-                    ? 'Switch to Clients to inspect application sessions.'
+                    ? t('Switch to Clients to inspect application sessions.')
                     : stateFilter === 'all' && backendScope === 'clients'
-                      ? 'Client sessions will appear here when applications connect to this instance.'
+                      ? t('Client sessions will appear here when applications connect to this instance.')
                       : undefined
               }
               isEmpty={
@@ -845,39 +848,43 @@ export function PostgresConnectionDetails({
           <AlertDialogHeader>
             <AlertDialogTitle>
               {pendingAction?.type === 'cancel'
-                ? 'Cancel query?'
+                ? t('Cancel query?')
                 : pendingAction?.type === 'terminate'
-                  ? 'Terminate connection?'
-                  : 'Terminate idle in transaction connections?'}
+                  ? t('Terminate connection?')
+                  : t('Terminate idle in transaction connections?')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[13px]">
               {pendingAction?.type === 'cancel' ? (
                 <>
-                  Cancel the active query for PID{' '}
+                  {t('Cancel the active query for PID')}{' '}
                   <span className="font-mono">
                     {pendingAction.connection.pid}
                   </span>
-                  . The client session will stay connected.
+                  {'. '}
+                  {t('The client session will stay connected.')}
                 </>
               ) : pendingAction?.type === 'terminate' ? (
                 <>
-                  Terminate the client session for PID{' '}
+                  {t('Terminate the client session for PID')}{' '}
                   <span className="font-mono">
                     {pendingAction.connection.pid}
                   </span>
-                  . The client will need to reconnect.
+                  {'. '}
+                  {t('The client will need to reconnect.')}
                 </>
               ) : (
                 <>
-                  Terminate {idleInTransactionCount} connection
-                  {idleInTransactionCount === 1 ? '' : 's'} currently idle in
-                  transaction. Open transactions will be rolled back.
+                  {t('Terminate')} {idleInTransactionCount}{' '}
+                  {idleInTransactionCount === 1
+                    ? t('connection currently idle in transaction.')
+                    : t('connections currently idle in transaction.')}{' '}
+                  {t('Open transactions will be rolled back.')}
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={actionPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={actionPending}>{t('Cancel')}</AlertDialogCancel>
             <Button
               disabled={actionPending}
               onClick={() => void runPendingAction()}
@@ -885,12 +892,12 @@ export function PostgresConnectionDetails({
               {pendingAction?.type === 'cancel' ? (
                 <>
                   <StopCircle className="me-1.5 h-3.5 w-3.5" />
-                  Cancel query
+                  {t('Cancel query')}
                 </>
               ) : (
                 <>
                   <Unplug className="me-1.5 h-3.5 w-3.5" />
-                  Terminate
+                  {t('Terminate')}
                 </>
               )}
             </Button>

@@ -65,6 +65,7 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { useT } from '@/lib/i18n/translate'
 import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 
@@ -119,29 +120,30 @@ function ActivityLogsTableColGroup() {
 }
 
 function ActivityLogsTableHead() {
+  const t = useT()
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider ps-6 sm:ps-8 shadow-[inset_0_-1px_0_var(--border)]">
-          Event
+          {t('Event')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
-          Actor
+          {t('Actor')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
-          Type
+          {t('Type')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
-          Resource
+          {t('Resource')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
-          IP address
+          {t('IP address')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
-          Country
+          {t('Country')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pe-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pe-8 shadow-[inset_0_-1px_0_var(--border)]">
-          Time
+          {t('Time')}
         </TableHead>
       </TableRow>
     </TableHeader>
@@ -219,6 +221,7 @@ function ActivityLogsPaginationSkeleton() {
 
 /** Table skeleton while the activity list query is fetching — matches ServiceHeader refresh spin. */
 function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
+  const t = useT()
   const rows = Math.min(rowCount, ACTIVITY_TABLE_SKELETON_ROWS_CAP)
   return (
     <>
@@ -227,7 +230,7 @@ function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
         role="status"
         aria-live="polite"
         aria-busy="true"
-        aria-label="Loading activities"
+        aria-label={t('Loading activities')}
       >
         <div
           className="pointer-events-none absolute end-4 top-2.5 z-20 sm:end-6"
@@ -468,6 +471,7 @@ interface ViewProps {
 }
 
 export function View({ projectId, plan = 'pro' }: ViewProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const navigate = activityRouteApi.useNavigate()
   const { event: eventIdFromUrl, query: queryFromSearch } =
@@ -739,12 +743,12 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
 
   useEffect(() => {
     if (!eventIdFromUrl || !singleEventError) return
-    toast.error('Activity log not found or unavailable.')
+    toast.error(t('Activity log not found or unavailable.'))
     navigate({
       search: (prev) => ({ ...prev, event: undefined }),
       replace: true,
     })
-  }, [eventIdFromUrl, singleEventError, navigate])
+  }, [eventIdFromUrl, singleEventError, navigate, t])
 
   // Browser back/forward: closing `event` in the URL closes the drawer.
   useEffect(() => {
@@ -818,7 +822,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     <div className="flex flex-col h-full min-h-0">
       <div className="sticky top-0 z-20 bg-background shrink-0">
         <ServiceHeader
-          title="Activity"
+          title={t('Activity')}
           showFilters
           filterTrigger={
             <div className="flex shrink-0 items-center gap-2">
@@ -830,7 +834,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 onRemoveFilter={removeFilter}
                 onClearAll={clearAllFilters}
                 onApplyFilter={applyFilter}
-                resourceLabel="activities"
+                resourceLabel={t('activities')}
                 filterScope="activity"
                 onApplyQuery={(queryParam) => {
                   navigate({
@@ -874,9 +878,11 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 >
                   <Clock className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                   <span className="min-w-0 truncate text-[11px] leading-tight">
-                    <span className="text-muted-foreground">Retention </span>
+                    <span className="text-muted-foreground">
+                      {t('Retention')}{' '}
+                    </span>
                     <span className="font-medium text-foreground">
-                      {planLimit.label}
+                      {t(planLimit.label)}
                     </span>
                   </span>
                 </button>
@@ -886,7 +892,9 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 align="end"
                 className="max-w-sm text-[12px] leading-snug text-balance"
               >
-                <p className="font-medium text-background">Activity retention</p>
+                <p className="font-medium text-background">
+                  {t('Activity retention')}
+                </p>
                 <p className="mt-1.5 text-background/85">
                   Your{' '}
                   <span className="font-medium capitalize text-background">
@@ -900,7 +908,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                   {plan === 'free' && (
                     <>
                       {' '}
-                      Upgrade or contact sales for longer retention.
+                      {t('Upgrade or contact sales for longer retention.')}
                     </>
                   )}
                 </p>
@@ -928,11 +936,12 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <div className="flex-1">
               <p className="text-[13px] font-medium text-amber-800 dark:text-amber-200">
-                Limited activity history
+                {t('Limited activity history')}
               </p>
               <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-300">
-                Free plans only show the last hour of activity. Upgrade to Pro
-                for 30 days of history, or Scale/Enterprise for longer retention.
+                {t(
+                  'Free plans only show the last hour of activity. Upgrade to Pro for 30 days of history, or Scale/Enterprise for longer retention.',
+                )}
               </p>
             </div>
             <Button
@@ -940,7 +949,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               size="sm"
               className="h-7 shrink-0 text-[12px]"
             >
-              Upgrade
+              {t('Upgrade')}
             </Button>
           </div>
         )}
@@ -998,7 +1007,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                               ? 'selected'
                               : undefined
                           }
-                          aria-label={`Open activity details: ${activity.rawEvent}`}
+                          aria-label={`${t('Open activity details')}: ${activity.rawEvent}`}
                           className={cn(
                             'cursor-pointer',
                             drawerOpen &&
@@ -1026,7 +1035,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                               'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
                               actionColors[activity.action],
                             )}
-                            title={actionLabels[activity.action]}
+                            title={t(actionLabels[activity.action])}
                           >
                             {actionIcons[activity.action]}
                           </div>
@@ -1076,7 +1085,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                                 badge.tone,
                               )}
                             >
-                              {badge.label}
+                              {t(badge.label)}
                             </span>
                           )
                         })()}
@@ -1094,7 +1103,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                               {resourceDisplay}
                             </p>
                             <p className="text-[11px] capitalize text-muted-foreground">
-                              {activity.resourceType}
+                              {t(activity.resourceType)}
                             </p>
                           </div>
                         </div>
@@ -1156,7 +1165,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                         end: (currentPage - 1) * pageSize + events.length,
                       }
                 }
-                itemLabel="activities"
+                itemLabel={t('activities')}
                 className="h-full min-h-0 border-0 mt-0 py-0"
               />
             </div>
@@ -1165,12 +1174,12 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           <EmptyState
             icon={Activity}
             title={
-              filterMap.size > 0 ? undefined : 'No activities yet'
+              filterMap.size > 0 ? undefined : t('No activities yet')
             }
             description={
               filterMap.size > 0
                 ? undefined
-                : 'Activity will appear here as you use your project'
+                : t('Activity will appear here as you use your project')
             }
             isEmpty={filterMap.size === 0}
             hasFilters={filterMap.size > 0}

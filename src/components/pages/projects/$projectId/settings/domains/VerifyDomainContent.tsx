@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
@@ -64,18 +65,19 @@ function DnsRecordsTable({
   copiedField: string | null
   showTtl: boolean
 }) {
+  const t = useT()
   return (
     <Table>
       <TableHeader>
         <TableRow className="hover:bg-transparent border-b border-border">
           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Type
+            {t('Type')}
           </TableHead>
           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Name
+            {t('Name')}
           </TableHead>
           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Value
+            {t('Value')}
           </TableHead>
           {showTtl && (
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
@@ -141,6 +143,7 @@ export function VerifyDomainContent({
   isChanging,
   verificationError,
 }: VerifyDomainContentProps) {
+  const t = useT()
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const {
     cname: rawCname,
@@ -181,7 +184,7 @@ export function VerifyDomainContent({
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    toast.success('Copied')
+    toast.success(t('Copied'))
     setTimeout(() => setCopiedField(null), 2000)
   }
 
@@ -211,15 +214,17 @@ export function VerifyDomainContent({
   if (error || tabOptions.length === 0) {
     return (
       <p className="text-[13px] text-destructive">
-        Failed to load DNS instructions. Please try again.
+        {t('Failed to load DNS instructions. Please try again.')}
       </p>
     )
   }
 
-  const recordNote =
-    'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.'
-  const nameserverNote =
-    'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.'
+  const recordNote = t(
+    'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
+  )
+  const nameserverNote = t(
+    'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
+  )
 
   const isApex = useMemo(() => {
     const apex = getApexDomain(rule.domain)
@@ -234,17 +239,23 @@ export function VerifyDomainContent({
       <Info className="h-4 w-4" />
       <AlertDescription className="text-[13px] text-muted-foreground">
         <p className="leading-relaxed">
-          Since{' '}
+          {t('Since')}{' '}
           <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             {rule.domain}
           </code>{' '}
-          is an apex domain, CNAME records are not supported by every DNS
-          provider. If yours supports{' '}
-          <span className="font-medium text-foreground">CNAME flattening</span>{' '}
-          (also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53),
-          you can keep the CNAME above. Otherwise, please verify using
-          {hasNameservers ? ' nameservers ' : ' an A or AAAA record '}
-          instead.
+          {t(
+            'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports',
+          )}{' '}
+          <span className="font-medium text-foreground">
+            {t('CNAME flattening')}
+          </span>{' '}
+          {t(
+            '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using',
+          )}
+          {hasNameservers
+            ? ` ${t('nameservers')} `
+            : ` ${t('an A or AAAA record')} `}
+          {t('instead.')}
         </p>
       </AlertDescription>
     </Alert>
@@ -284,7 +295,7 @@ export function VerifyDomainContent({
         <>
           <div className={`${padX} ${padY}`}>
             <h3 className="text-[15px] font-semibold text-foreground">
-              Verification
+              {t('Verification')}
             </h3>
             <p className="text-[13px] text-muted-foreground font-mono mt-2">
               {rule.domain}
@@ -409,9 +420,9 @@ export function VerifyDomainContent({
       {!noCard && <div className="border-t border-border" />}
       <div className={noCard ? '' : `${padX} ${padY}`}>
         <p className="text-[13px] text-muted-foreground">
-          A list of domain providers and their DNS settings is available{' '}
+          {t('A list of domain providers and their DNS settings is available')}{' '}
           <DocsRouteLink className="inline-flex items-center gap-0.5 font-medium text-foreground underline hover:no-underline" href={DNS_PROVIDERS_LINK}>
-            here
+            {t('here')}
             <ExternalLink className="h-3 w-3 shrink-0" />
           </DocsRouteLink>
           .
@@ -430,8 +441,9 @@ export function VerifyDomainContent({
       {rule.status === 'verifying' && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
           <AlertDescription className="text-[13px] text-muted-foreground">
-            SSL certificate is being issued. This usually takes a couple of
-            minutes - no action needed on your end.
+            {t(
+              'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.',
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -449,7 +461,7 @@ export function VerifyDomainContent({
               onClick={onChange}
               disabled={isVerifying || isChanging}
             >
-              Change
+              {t('Change')}
             </Button>
           )}
           <Button
@@ -457,7 +469,7 @@ export function VerifyDomainContent({
             onClick={onVerify}
             disabled={isVerifying || isChanging}
           >
-            Verify
+            {t('Verify')}
           </Button>
         </div>
       )}

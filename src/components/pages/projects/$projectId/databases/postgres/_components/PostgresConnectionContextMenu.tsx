@@ -23,6 +23,7 @@ import {
   serializePostgresActiveConnectionJson,
   type PostgresActiveConnectionRow,
 } from '@/lib/postgres-metrics'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresConnectionContextMenuProps = {
   connection: PostgresActiveConnectionRow
@@ -49,6 +50,7 @@ export function PostgresConnectionContextMenu({
   onTerminateConnection,
   children,
 }: PostgresConnectionContextMenuProps) {
+  const t = useT()
   const query = normalizeQuery(connection.query)
   const isClient = isPostgresClientBackend(connection)
   const canCancel = isClient && connection.state?.toLowerCase() === 'active'
@@ -60,13 +62,13 @@ export function PostgresConnectionContextMenu({
       <ContextMenuContent className="w-52">
         <ContextMenuItem onSelect={() => onOpenDetails()}>
           <ContextMenuIcon icon={LayoutList} />
-          Overview
+          {t('Overview')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
@@ -75,14 +77,14 @@ export function PostgresConnectionContextMenu({
               }
             >
               <ContextMenuIcon icon={Copy} />
-              Copy PID
+              {t('Copy PID')}
             </ContextMenuItem>
             {query ? (
               <ContextMenuItem
                 onSelect={() => void copyToClipboard('Query', query)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy query
+                {t('Copy query')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
@@ -94,7 +96,7 @@ export function PostgresConnectionContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -103,7 +105,7 @@ export function PostgresConnectionContextMenu({
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={() => onOpenInSqlEditor(query)}>
               <ContextMenuIcon icon={SearchCode} />
-              Open in SQL editor
+              {t('Open in SQL editor')}
             </ContextMenuItem>
           </>
         ) : null}
@@ -115,14 +117,14 @@ export function PostgresConnectionContextMenu({
               onSelect={() => onCancelQuery()}
             >
               <ContextMenuIcon icon={StopCircle} />
-              Cancel query
+              {t('Cancel query')}
             </ContextMenuItem>
             <ContextMenuItem
               disabled={!canManageConnections || !canTerminate}
               onSelect={() => onTerminateConnection()}
             >
               <ContextMenuIcon icon={Unplug} />
-              Terminate connection
+              {t('Terminate connection')}
             </ContextMenuItem>
           </>
         ) : null}

@@ -10,6 +10,7 @@ import { RealtimeConcurrencyChart } from './charts/ConcurrencyChart'
 import { RealtimeMessagesChart } from './charts/MessagesChart'
 import { RealtimeChannelsChart } from './charts/ChannelsChart'
 import { useRealtimeStats } from '@/lib/react-query/hooks/realtime'
+import { useT } from '@/lib/i18n/translate'
 
 interface RealtimeOverviewProps {
   projectId: string | null | undefined
@@ -44,6 +45,7 @@ function useRealtimeOverviewState(projectId: string | null | undefined) {
 }
 
 export function RealtimeOverviewKPIs({ projectId }: RealtimeOverviewProps) {
+  const t = useT()
   const { stats, isLoading } = useRealtimeOverviewState(projectId)
 
   const kpis = useMemo(() => {
@@ -87,7 +89,7 @@ export function RealtimeOverviewKPIs({ projectId }: RealtimeOverviewProps) {
           {kpis.map((kpi) => (
             <StatsCard
               key={kpi.title}
-              title={kpi.title}
+              title={t(kpi.title)}
               value={kpi.value}
               change={kpi.change}
             />
@@ -101,6 +103,7 @@ export function RealtimeOverviewKPIs({ projectId }: RealtimeOverviewProps) {
 export function RealtimeOverviewControlsAndCharts({
   projectId,
 }: RealtimeOverviewProps) {
+  const t = useT()
   const {
     dateRange,
     setDateRange,
@@ -147,7 +150,7 @@ export function RealtimeOverviewControlsAndCharts({
             data={stats?.concurrencyData || []}
             dateRange={dateRange}
             projectId={projectId}
-            description="Real-time connection count over time. Shows the number of active WebSocket connections at any given moment."
+            description={t('Real-time connection count over time. Shows the number of active WebSocket connections at any given moment.')}
           />
 
           {/* Messages Throughput Chart */}
@@ -155,7 +158,7 @@ export function RealtimeOverviewControlsAndCharts({
             data={stats?.messagesData || []}
             dateRange={dateRange}
             projectId={projectId}
-            description="Messages per minute over time. Tracks the rate at which realtime messages are being sent through the system."
+            description={t('Messages per minute over time. Tracks the rate at which realtime messages are being sent through the system.') /* pragma: allowlist secret */}
           />
 
           {/* Channels Chart */}
@@ -163,7 +166,7 @@ export function RealtimeOverviewControlsAndCharts({
             data={stats?.channelsData || []}
             dateRange={dateRange}
             projectId={projectId}
-            description="Number of active channels over time. Displays how many different realtime channels are currently being listened to."
+            description={t('Number of active channels over time. Displays how many different realtime channels are currently being listened to.')}
           />
         </div>
       )}
