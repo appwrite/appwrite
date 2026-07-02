@@ -846,4 +846,62 @@ export const heDatabasesDictionary: Record<string, string> = {
   'You don\'t have permission to perform this action.': 'אין לכם הרשאה לבצע פעולה זו.',
   'You have reached the maximum self-serve replica count. Contact sales if you need a custom high availability configuration.': 'הגעתם למספר הרפליקות המרבי בשירות עצמי. פנו למכירות אם אתם זקוקים לתצורת זמינות גבוהה מותאמת אישית.',
   'Your plan only supports the daily preset policy. Upgrade to create custom policies.': 'התוכנית שלכם תומכת רק במדיניות היומית המוכנה מראש. שדרגו כדי ליצור מדיניויות מותאמות אישית.',
+  // Column drawer (tablesdb)
+  'Key is required': 'יש להזין מפתח',
+  'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _':
+    'פורמט מפתח לא חוקי. מותר: a-z, A-Z, 0-9, -, ., _',
+  'Column with this key already exists': 'עמודה עם המפתח הזה כבר קיימת',
+  'Size is required and must be at least 1':
+    'גודל הוא שדה חובה וחייב להיות לפחות 1',
+  'Encrypted string columns require a minimum size of 150':
+    'עמודות מחרוזת מוצפנות דורשות גודל מינימלי של 150',
+  'Size is required and must be between': 'גודל הוא שדה חובה וחייב להיות בין',
+  'Encrypted varchar columns require a minimum size of 150':
+    'עמודות varchar מוצפנות דורשות גודל מינימלי של 150',
+  'This column exceeds the remaining row space. Consider using text, mediumtext, or longtext instead.':
+    'העמודה הזו חורגת ממקום השורה שנותר. שקלו להשתמש ב-text, ב-mediumtext או ב-longtext במקום.',
+  'At least one element is required': 'נדרש לפחות ערך אחד',
+  'Related table is required': 'יש לבחור טבלה מקושרת',
+  'Relationship type is required': 'יש לבחור סוג קשר',
+  'On delete action is required': 'יש לבחור פעולת מחיקה',
+  'Two-way key is required': 'יש להזין מפתח דו-כיווני',
+  'Must be a signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807':
+    'חייב להיות מספר שלם בן 64 סיביות עם סימן, בין ‎-9,223,372,036,854,775,808 ל-9,223,372,036,854,775,807',
+  'Max must be greater than or equal to min':
+    'הערך המרבי חייב להיות גדול מהערך המזערי או שווה לו',
+  'Failed to save column': 'שמירת העמודה נכשלה',
+  'Current table': 'הטבלה הנוכחית',
+  'Related table': 'טבלה מקושרת',
+  'Column key': 'מפתח עמודה',
+  'Column key (related table)': 'מפתח עמודה (טבלה מקושרת)',
+  'can contain one': 'יכולה להכיל רשומה אחת של',
+  'can contain many': 'יכולה להכיל רשומות רבות של',
+  'can belong to one': 'יכולה להשתייך לרשומה אחת של',
+  'can belong to many': 'יכולה להשתייך לרשומות רבות של',
+  Mediumtext: 'Mediumtext',
+  Longtext: 'Longtext',
+  Varchar: 'Varchar',
+  Bigint: 'Bigint',
+  Enum: 'Enum',
+  'One to one': 'אחד לאחד',
+  'One to many': 'אחד לרבים',
+  'Many to one': 'רבים לאחד',
+  'Many to many': 'רבים לרבים',
+  'Set NULL - set row ID as NULL in all related rows':
+    'הגדרת NULL - קביעת מזהה השורה כ-NULL בכל השורות המקושרות',
+  'Cascade - delete all related rows': 'מחיקה משורשרת - מחיקת כל השורות המקושרות',
+  'Restrict - row can not be deleted': 'הגבלה - לא ניתן למחוק את השורה',
+  'Values are encrypted at rest (AES-128-GCM). No plain text is stored. Encrypted columns cannot be used in filters or queries.':
+    'הערכים מוצפנים במנוחה (AES-128-GCM). לא נשמר טקסט גלוי. לא ניתן להשתמש בעמודות מוצפנות בסינון או בשאילתות.',
+  // Index drawer (tablesdb)
+  'Index with this key already exists': 'אינדקס עם המפתח הזה כבר קיים',
+  'Spatial index requires exactly one spatial column':
+    'אינדקס מרחבי דורש בדיוק עמודה מרחבית אחת',
+  'Selected column must be a spatial type (point, linestring, or polygon)':
+    'העמודה שנבחרה חייבת להיות מסוג מרחבי (point, linestring או polygon)',
+  'All columns must have a value and order selected':
+    'לכל העמודות חייבים להיות ערך וסדר מיון שנבחרו',
+  'Failed to save index': 'שמירת האינדקס נכשלה',
+  'Index Key': 'מפתח אינדקס',
+  'Index Type': 'סוג אינדקס',
 }

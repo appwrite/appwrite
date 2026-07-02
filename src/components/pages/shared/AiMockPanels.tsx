@@ -7,6 +7,7 @@ import {
   AiTileSoftLight,
   type AiTileSoftLightTone,
 } from '@/components/pages/home/HomeSoftLights'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 export const AI_SKILL_TAGS = [
@@ -81,14 +82,16 @@ export function AiMockTypingInput({
   typeDelayMs?: number
   leadingIcon?: ReactNode
 }) {
-  const cursorDelay = typeDelayMs + typedText.length * 55
+  const t = useT()
+  const translatedTypedText = t(typedText)
+  const cursorDelay = typeDelayMs + translatedTypedText.length * 55
 
   return (
     <div className="flex items-center gap-2 rounded-md border border-border bg-background/80 px-3 py-2 text-[10px] sm:text-[11px]">
       {leadingIcon}
       <div className="relative min-w-0 flex-1">
         <span className="text-muted-foreground transition-opacity duration-200 group-hover/visual:opacity-0 motion-reduce:group-hover/visual:opacity-100">
-          {placeholder}
+          {t(placeholder)}
         </span>
         <span className="absolute inset-0 flex items-center opacity-0 group-hover/visual:opacity-100 motion-reduce:opacity-100">
           <span className="inline-flex max-w-full items-center overflow-hidden whitespace-nowrap text-muted-foreground">
@@ -96,7 +99,7 @@ export function AiMockTypingInput({
               className="inline-block max-w-0 overflow-hidden whitespace-nowrap group-hover/visual:animate-[ai-mock-type-reveal_1.7s_steps(24,end)_forwards] motion-reduce:max-w-none motion-reduce:group-hover/visual:animate-none"
               style={{ animationDelay: `${typeDelayMs}ms` }}
             >
-              {typedText}
+              {translatedTypedText}
             </span>
             <span
               className="ms-px inline-block h-3 w-px shrink-0 bg-muted-foreground opacity-0 group-hover/visual:animate-[ai-mock-cursor-blink_1s_step-end_infinite] motion-reduce:opacity-100 motion-reduce:group-hover/visual:animate-none"
@@ -110,6 +113,7 @@ export function AiMockTypingInput({
 }
 
 export function AiMcpMockVisual() {
+  const t = useT()
   return (
     <div className="group/visual relative min-h-[14rem] flex-1 overflow-hidden rounded-lg border border-border bg-muted/25">
       <div className="absolute inset-y-0 start-0 w-[38%] border-e border-border/80 bg-background/40 p-3">
@@ -132,7 +136,7 @@ export function AiMcpMockVisual() {
             className="ms-auto max-w-[92%] rounded-lg border border-border bg-background/90 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground opacity-90 group-hover/visual:animate-[ai-mock-fade-in_0.45s_ease-out] motion-reduce:group-hover/visual:animate-none sm:text-[11px]"
             style={{ animationDelay: '80ms' }}
           >
-            Create a collection for user profiles
+            {t('Create a collection for user profiles')}
           </div>
           <div
             className="max-w-[92%] rounded-lg border border-border bg-background/90 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground group-hover/visual:animate-[ai-mock-fade-in_0.55s_ease-out] motion-reduce:group-hover/visual:animate-none sm:text-[11px]"
@@ -153,9 +157,11 @@ export function AiMcpMockVisual() {
               />
             </span>
             <span className="hidden group-hover/visual:inline motion-reduce:inline">
-              Setting up collection with email and name attributes.
+              {t('Setting up collection with email and name attributes.')}
             </span>
-            <span className="group-hover/visual:hidden motion-reduce:hidden">Thinking...</span>
+            <span className="group-hover/visual:hidden motion-reduce:hidden">
+              {t('Thinking...')}
+            </span>
           </div>
         </div>
         <AiMockTypingInput
@@ -198,6 +204,7 @@ export function AiSkillsMockVisual() {
 }
 
 export function AiPromptsMockVisual() {
+  const t = useT()
   const prompts = [
     'Scaffold auth for React',
     'Add file upload to my app',
@@ -213,7 +220,7 @@ export function AiPromptsMockVisual() {
             className="rounded-md border border-border bg-background/80 px-3 py-2 text-[10px] text-muted-foreground opacity-70 transition-opacity group-hover/visual:opacity-100 group-hover/visual:animate-[ai-mock-fade-in_0.45s_ease-out] motion-reduce:group-hover/visual:animate-none motion-reduce:opacity-100 sm:text-[11px]"
             style={{ animationDelay: `${120 + index * 160}ms` }}
           >
-            {prompt}
+            {t(prompt)}
           </div>
         ))}
       </div>

@@ -642,4 +642,30 @@ export const heFunctionsDictionary: Record<string, string> = {
     'עדכנתם את הגדרות הפונקציה, אך הן לא ייכנסו לתוקף עד שתפרסו מחדש. הפריסה הנוכחית עדיין רצה עם ההגדרות הקודמות.',
   'Your function is currently being redeployed.':
     'הפונקציה שלכם נפרסת מחדש כעת.',
+  'Downloaded function.tar.gz': 'הקובץ function.tar.gz הורד',
+  occurrence: 'מופע',
+  Request: 'בקשה',
+  Parameters: 'פרמטרים',
+  Key: 'מפתח',
+  Value: 'ערך',
+  Errors: 'שגיאות',
+  'No parameters found.': 'לא נמצאו פרמטרים.',
+  'No headers found.': 'לא נמצאו כותרות.',
+  'No logs found.': 'לא נמצאו יומנים.',
+  'No errors found.': 'לא נמצאו שגיאות.',
+  'Missing headers?': 'חסרות כותרות?',
+  'Check the docs': 'עיינו בתיעוד',
+  'to see the supported data and how to log it.':
+    'כדי לראות אילו נתונים נתמכים וכיצד לתעד אותם ביומן.',
+  'Logging is disabled for this function. Enable logging in settings to view execution logs.':
+    'רישום היומנים מושבת עבור הפונקציה הזו. הפעילו רישום יומנים בהגדרות כדי לצפות ביומני ההרצה.',
+  'Logging is disabled for this function. Enable logging in settings to view execution errors.':
+    'רישום היומנים מושבת עבור הפונקציה הזו. הפעילו רישום יומנים בהגדרות כדי לצפות בשגיאות ההרצה.',
+  'Search logs...': 'חיפוש ביומנים...',
+  'Search errors...': 'חיפוש בשגיאות...',
+  'Search body...': 'חיפוש בגוף התגובה...',
+  'Copy logs': 'העתקת יומנים',
+  'Copy errors': 'העתקת שגיאות',
+  "Body data is not captured by Appwrite for your user's security and privacy. To display body data in the Logs tab, use": // pragma: allowlist secret
+    'נתוני גוף התגובה אינם נשמרים על ידי Appwrite לשם אבטחת המשתמשים ופרטיותם. כדי להציג נתוני גוף בלשונית היומנים, השתמשו ב', // pragma: allowlist secret
 }

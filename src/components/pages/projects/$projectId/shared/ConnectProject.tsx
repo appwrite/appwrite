@@ -1626,7 +1626,7 @@ export function ConnectProject({
                         key={i}
                         code={option.code}
                         language={option.language ?? 'plaintext'}
-                        label={option.label}
+                        label={t(option.label)}
                         showCopy={true}
                       />
                     ))}
@@ -1691,7 +1691,7 @@ export function ConnectProject({
                               : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
                           )}
                         >
-                          {file.label}
+                          {t(file.label)}
                         </button>
                       ))}
                     </div>

@@ -1210,4 +1210,90 @@ export const heMarketingDictionary: Record<string, string> = {
   'Skills': 'Skills',
   'Welcome to Acme': 'ברוכים הבאים ל-Acme',
   "What's new in Acme this week": 'מה חדש ב-Acme השבוע',
+  'Access key': 'מפתח גישה',
+  'Add avatar field to profiles': 'הוסיפו שדה אווטאר לפרופילים',
+  'Add file upload to my app': 'הוסיפו העלאת קבצים לאפליקציה שלי',
+  'announcement blog': 'ההכרזה בבלוג שלנו',
+  'Appwrite currently supports': 'Appwrite תומכת כיום באפשרות של', // pragma: allowlist secret
+  'Appwrite logo besides a generic logo': 'לוגו Appwrite לצד לוגו גנרי', // pragma: allowlist secret
+  'Appwrite logo with black text': 'לוגו Appwrite עם טקסט שחור', // pragma: allowlist secret
+  'Appwrite logo with white text': 'לוגו Appwrite עם טקסט לבן', // pragma: allowlist secret
+  'Appwrite logomark': 'סמל הלוגו של Appwrite', // pragma: allowlist secret
+  'Appwrite logomark on dark background': 'סמל הלוגו של Appwrite על רקע כהה', // pragma: allowlist secret
+  'Appwrite Pink': 'ורוד Appwrite', // pragma: allowlist secret
+  'Are you a founder looking to build with Appwrite? Learn more about our Startups program on our Startups': // pragma: allowlist secret
+    'אתם מייסדים שרוצים לבנות עם Appwrite? למדו עוד על תוכנית הסטארטאפים שלנו בעמוד', // pragma: allowlist secret
+  'Ask anything...': 'שאלו כל דבר...',
+  'Auth settings': 'הגדרות אימות',
+  'Block aliased emails': 'חסימת כתובות אימייל עם כינוי',
+  'Block disposable emails': 'חסימת אימיילים חד-פעמיים',
+  'Block free providers': 'חסימת ספקים חינמיים',
+  'budget cap': 'תקרת תקציב',
+  'Build messaging with email and push': 'בנו הודעות עם אימייל ופוש',
+  'Business Associate Agreement': 'הסכם Business Associate',
+  'Choose a method': 'בחרו שיטה',
+  'Common questions about pricing, support, compliance, and getting started.': 'שאלות נפוצות על תמחור, תמיכה, תאימות וצעדים ראשונים.',
+  'Concurrent sessions per user.': 'סשנים מקבילים לכל משתמש.',
+  'Create a collection for user profiles': 'צרו אוסף לפרופילי משתמשים',
+  'Create a teams table': 'צרו טבלת צוותים',
+  'credit and debit card payments': 'תשלומים בכרטיסי אשראי וכרטיסי חיוב',
+  'Dark background': 'רקע כהה',
+  'Describe a feature...': 'תארו יכולת...',
+  'Describe your use case and how our Enterprise plan can support it': 'תארו את תרחיש השימוש שלכם וכיצד תוכנית ה-Enterprise שלנו יכולה לתמוך בו',
+  'Dictionary check': 'בדיקת מילון',
+  'documentation': 'התיעוד',
+  'Email / Password': 'אימייל / סיסמה',
+  'Enterprise FAQ': 'שאלות נפוצות על Enterprise',
+  'Everything in Pro, plus enterprise capabilities': 'כל מה שיש ב-Pro, בתוספת יכולות ארגוניות',
+  'Extra verification before account changes': 'אימות נוסף לפני שינויים בחשבון',
+  'fra · region cache': 'fra · מטמון אזורי',
+  'From global enterprises to fast-growing product companies, teams rely on Appwrite to ship secure applications.': // pragma: allowlist secret
+    'מארגונים גלובליים ועד חברות מוצר צומחות, צוותים סומכים על Appwrite כדי לשחרר אפליקציות מאובטחות.', // pragma: allowlist secret
+  'Give your developers a complete backend platform so they can focus on product innovation instead of infrastructure glue code.':
+    'תנו למפתחים שלכם פלטפורמת backend שלמה כדי שיוכלו להתמקד בחדשנות המוצר במקום בקוד תשתית מקשר.',
+  'in case this is an issue for you.': 'אם זה מהווה בעיה עבורכם.',
+  'landing page': 'הנחיתה',
+  'Learn more in our docs': 'למדו עוד בתיעוד שלנו',
+  'Light background': 'רקע בהיר',
+  'List files in my bucket': 'הציגו את הקבצים בבאקט שלי',
+  'Local dev': 'פיתוח מקומי',
+  'Logomark cobrand example': 'דוגמה לסמל לוגו בשיתוף מותגים',
+  'Notify on new sign-in.': 'התראה על התחברות חדשה.',
+  'on your organization.': 'על הארגון שלכם.',
+  'Operational and pricing features for teams that need more than standard Pro limits.': 'יכולות תפעול ותמחור לצוותים שצריכים יותר ממגבלות Pro הסטנדרטיות.',
+  'Optional fallback': 'גיבוי אופציונלי',
+  'Personal data check': 'בדיקת מידע אישי',
+  'Pull request': 'Pull request',
+  'Ready to explore a custom plan? Share your requirements and one of our experts will follow up with a tailored proposal.':
+    'מוכנים לבחון תוכנית מותאמת? שתפו את הדרישות שלכם ואחד המומחים שלנו יחזור אליכם עם הצעה מותאמת.',
+  'Rendering modes': 'מצבי רינדור',
+  'Require MFA for sensitive actions': 'דרישת MFA לפעולות רגישות',
+  'Revoke after password change.': 'ביטול לאחר שינוי סיסמה.',
+  'Scaffold auth for React': 'הקימו אימות ל-React',
+  'Secret key': 'מפתח סודי',
+  'See who is working together': 'ראו מי עובד יחד',
+  'Select size': 'בחירת גודל',
+  'Select timeline': 'בחירת לוח זמנים',
+  'Server-side session': 'סשן בצד השרת',
+  'Session validity duration.': 'משך תוקף הסשן.',
+  'Setting up collection with email and name attributes.': 'מגדיר אוסף עם מאפייני אימייל ושם.',
+  'Static and SSR hosting': 'אירוח סטטי ו-SSR',
+  'Storage delivery': 'אספקת אחסון',
+  'Talk to our enterprise team': 'דברו עם צוות ה-Enterprise שלנו',
+  'Team workspace': 'סביבת עבודה צוותית',
+  'Thank you for your submission': 'תודה על הפנייה',
+  'The OSS program is exclusively for active open-source maintainers using Appwrite Cloud. You can find more information on how to join the program in our': // pragma: allowlist secret
+    'תוכנית ה-OSS מיועדת בלעדית למתחזקי קוד פתוח פעילים שמשתמשים ב-Appwrite Cloud. תוכלו למצוא מידע נוסף על ההצטרפות לתוכנית בפוסט', // pragma: allowlist secret
+  'The Reserve Bank of India (RBI) mandates additional security measures for recurring payments on Indian cards. Appwrite is obligated to ask for verification before billing your card. Appwrite asks for verification for up to $150 in case you use add-ons, but will not charge more than the actual amount used or your budget cap. If you need higher limits,': // pragma: allowlist secret
+    'הבנק המרכזי של הודו (RBI) מחייב אמצעי אבטחה נוספים לתשלומים חוזרים בכרטיסים הודיים. Appwrite מחויבת לבקש אימות לפני חיוב הכרטיס. Appwrite מבקשת אימות של עד 150 דולר למקרה שתשתמשו בתוספים, אך לא תחייב יותר מהסכום שנוצל בפועל או מתקרת התקציב שלכם. אם אתם זקוקים למגבלות גבוהות יותר,', // pragma: allowlist secret
+  'Trusted by teams at scale': 'זוכה לאמון צוותים בקנה מידה גדול',
+  'We are actively working on adding support for more methods. Please': 'אנחנו עובדים באופן פעיל על הוספת תמיכה באמצעי תשלום נוספים. אנא',
+  'Why enterprise teams choose Appwrite': 'למה צוותי ארגון בוחרים ב-Appwrite', // pragma: allowlist secret
+  'Yes, you can sign a BAA with Appwrite. Learn more about our security and compliance in our': // pragma: allowlist secret
+    'כן, אפשר לחתום על BAA עם Appwrite. למדו עוד על האבטחה והתאימות שלנו בעמוד', // pragma: allowlist secret
+  'Your details have been sent successfully. Our team will get back to you as soon as possible.': 'הפרטים שלכם נשלחו בהצלחה. הצוות שלנו יחזור אליכם בהקדם האפשרי.',
+  'Your project will continue to run, and additional charges will apply. You can find the costs for additional resources in the pricing plans comparison below. We will also send you email reminders when you hit 75% and 100% of your resource limits. To avoid unexpected payments, you can set up a':
+    'הפרויקט שלכם ימשיך לפעול, ויחולו חיובים נוספים. את העלויות של משאבים נוספים תוכלו למצוא בהשוואת תוכניות התמחור למטה. נשלח לכם גם תזכורות באימייל כשתגיעו ל-75% ול-100% ממגבלות המשאבים שלכם. כדי להימנע מתשלומים בלתי צפויים, תוכלו להגדיר',
+  'Your project will freeze, and Appwrite Console will continue running in read-only mode. You need to upgrade to Pro, remove resources that exceed their limit, or wait for the next billing cycle, which resets usage limits.': // pragma: allowlist secret
+    'הפרויקט שלכם יוקפא, וקונסולת Appwrite תמשיך לפעול במצב קריאה בלבד. תצטרכו לשדרג ל-Pro, להסיר משאבים שחורגים מהמגבלה, או להמתין למחזור החיוב הבא, שמאפס את מגבלות השימוש.', // pragma: allowlist secret
 }

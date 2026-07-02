@@ -15,14 +15,18 @@ export function AuthPasswordlessVisual() {
   const t = useT()
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <ProductFeatureVisualFrame title="Auth settings" contentClassName="space-y-2">
-        <MockSwitchRow label="Magic URL" checked highlightOnHover />
-        <MockSwitchRow label="Email OTP" checked highlightOnHover />
-        <MockSwitchRow label="Phone SMS" checked highlightOnHover />
-        <MockSwitchRow label="Email / Password" description="Optional fallback" />
+      <ProductFeatureVisualFrame title={t('Auth settings')} contentClassName="space-y-2">
+        <MockSwitchRow label={t('Magic URL')} checked highlightOnHover />
+        <MockSwitchRow label={t('Email OTP')} checked highlightOnHover />
+        <MockSwitchRow label={t('Phone SMS')} checked highlightOnHover />
+        <MockSwitchRow label={t('Email / Password')} description={t('Optional fallback')} />
       </ProductFeatureVisualFrame>
 
-      <ProductFeatureVisualFrame eyebrow="Sign in" title="Choose a method" contentClassName="space-y-3">
+      <ProductFeatureVisualFrame
+        eyebrow={t('Sign in')}
+        title={t('Choose a method')}
+        contentClassName="space-y-3"
+      >
         <div className="space-y-2">
           {PASSWORDLESS_METHODS.map((method, index) => {
             const Icon = method.icon

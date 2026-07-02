@@ -9,34 +9,16 @@ import { useDebugOverrides, type DebugLanguageOverride } from '@/lib/debug-overr
 import { enCatalog, type EnCatalog } from '@/lib/i18n/messages/en' // pragma: allowlist secret
 
 import { heCatalog } from '@/lib/i18n/messages/he' // pragma: allowlist secret
+import {
+  resolveLanguagePreference,
+  type SupportedLanguage,
+} from '@/lib/i18n/active-language'
 
-export type SupportedLanguage = 'en' | 'he'
+export type { SupportedLanguage }
 
 const LANGUAGE_CATALOGS: Record<SupportedLanguage, EnCatalog> = {
   en: enCatalog,
   he: heCatalog,
-}
-
-function resolveLanguagePreference(
-  preference: DebugLanguageOverride,
-): SupportedLanguage {
-  if (preference === 'en' || preference === 'he') return preference
-
-  if (typeof navigator === 'undefined') return 'en'
-
-  const browserLocales =
-    navigator.languages && navigator.languages.length > 0
-      ? navigator.languages
-      : [navigator.language]
-  const prefersHebrew = browserLocales.some(
-    (locale) => typeof locale === 'string' && locale.toLowerCase().startsWith('he'),
-  )
-
-  if (prefersHebrew) {
-    return 'he'
-  }
-
-  return 'en'
 }
 
 type I18nContextValue = {

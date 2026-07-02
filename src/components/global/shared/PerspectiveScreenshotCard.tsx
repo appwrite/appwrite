@@ -244,7 +244,7 @@ export function PerspectiveScreenshotCard({
         ) : (
           placeholder ?? (
             <div className="flex h-full w-full items-center justify-center text-[13px] text-white/45">
-              Screenshot preview
+              {t('Screenshot preview')}
             </div>
           )
         )}

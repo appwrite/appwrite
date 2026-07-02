@@ -724,7 +724,7 @@ export function ProjectSelector({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <h2 className="text-[15px] font-semibold text-foreground">
-                Select project
+                {t('Select project')}
               </h2>
               <button
                 onClick={() => setOpen(false)}
@@ -988,12 +988,12 @@ function ProjectSelectorContent({
           {/* Organizations List - scrollable */}
           <div className="min-h-[180px] max-h-[240px] flex-1 overflow-y-auto p-1.5">
             <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground">
-              Organizations
+              {t('Organizations')}
             </p>
             <div className="space-y-0.5">
               {filteredTeams.length === 0 ? (
                 <p className="px-2 py-4 text-center text-[12px] text-muted-foreground">
-                  No organizations found
+                  {t('No organizations found')}
                 </p>
               ) : (
                 filteredTeams.map((team) => {
@@ -1084,7 +1084,7 @@ function ProjectSelectorContent({
           className="min-h-[180px] max-h-[240px] flex-1 overflow-y-auto p-1.5"
         >
           <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground">
-            Projects
+            {t('Projects')}
           </p>
           <div className="space-y-0.5">
             {displayProjects.length === 0 ? (
@@ -1126,7 +1126,7 @@ function ProjectSelectorContent({
                               variant="outline"
                               className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
-                              Current
+                              {t('Current')}
                             </Badge>
                           )}
                           {project.paused && (
@@ -1134,7 +1134,7 @@ function ProjectSelectorContent({
                               variant="outline"
                               className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
-                              Paused
+                              {t('Paused')}
                             </Badge>
                           )}
                         </span>
@@ -1157,7 +1157,7 @@ function ProjectSelectorContent({
                 {/* Loading indicator when fetching next page */}
                 {isFetchingNextPage && (
                   <div className="px-2 py-2 text-center text-[11px] text-muted-foreground">
-                    Loading more...
+                    {t('Loading more...')}
                   </div>
                 )}
               </>
@@ -1273,7 +1273,7 @@ function MobileProjectSelectorContent({
                 : 'text-muted-foreground',
             )}
           >
-            Organizations
+            {t('Organizations')}
           </button>
           <button
             onClick={() => setActiveTab('projects')}
@@ -1284,7 +1284,7 @@ function MobileProjectSelectorContent({
                 : 'text-muted-foreground',
             )}
           >
-            Projects
+            {t('Projects')}
           </button>
         </div>
       )}
@@ -1308,7 +1308,7 @@ function MobileProjectSelectorContent({
             <div className="space-y-0.5">
               {filteredTeams.length === 0 ? (
                 <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-                  No organizations found
+                  {t('No organizations found')}
                 </p>
               ) : (
                 filteredTeams.map((team) => {
@@ -1381,7 +1381,7 @@ function MobileProjectSelectorContent({
           {supportsMultiTenancy && (
             <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-2">
               <span className="text-[12px] text-muted-foreground">
-                Organization:
+                {t('Organization:')}
               </span>
               <span className="text-[12px] font-medium text-foreground">
                 {selectedTeam.name}
@@ -1390,7 +1390,7 @@ function MobileProjectSelectorContent({
                 onClick={() => setActiveTab('teams')}
                 className="ms-auto cursor-pointer link-neutral text-[12px] dark:text-muted-foreground"
               >
-                Change
+                {t('Change')}
               </button>
             </div>
           )}
@@ -1452,7 +1452,7 @@ function MobileProjectSelectorContent({
                                 variant="outline"
                                 className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                               >
-                                Current
+                                {t('Current')}
                               </Badge>
                             )}
                             {project.paused && (
@@ -1460,7 +1460,7 @@ function MobileProjectSelectorContent({
                                 variant="outline"
                                 className="ms-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                               >
-                                Paused
+                                {t('Paused')}
                               </Badge>
                             )}
                           </span>
@@ -1486,7 +1486,7 @@ function MobileProjectSelectorContent({
                   {/* Loading indicator when fetching next page */}
                   {isFetchingNextPage && (
                     <div className="px-3 py-3 text-center text-[12px] text-muted-foreground">
-                      Loading more...
+                      {t('Loading more...')}
                     </div>
                   )}
                 </>

@@ -30,6 +30,7 @@ import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 // Expose Prism so prismjs language components can register themselves
 if (typeof globalThis !== 'undefined') {
@@ -302,6 +303,7 @@ export function CodeBlock({
   showFullscreen = false,
   wrapLines = false,
 }: CodeBlockProps) {
+  const t = useT()
   const resolvedSurface = resolveCodeBlockSurface(surface, transparentBackground)
   const [copied, setCopied] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
@@ -359,7 +361,7 @@ export function CodeBlock({
   const handleCopy = () => {
     navigator.clipboard.writeText(displayCode)
     setCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -387,7 +389,7 @@ export function CodeBlock({
         size="sm"
         className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
         onClick={handleCopy}
-        aria-label="Copy code"
+        aria-label={t('Copy code')}
       >
         {copied ? (
           <Check className="h-3.5 w-3.5" />
@@ -529,7 +531,7 @@ export function CodeBlock({
       </div>
       {showFullscreen && isFullscreenOpen && (
         <WizardLayout
-          title={`${getCodeLanguageLabel(language)} example`}
+          title={`${getCodeLanguageLabel(language)} ${t('example')}`}
           fullscreen
           useSidebar={false}
           constrainWidth={false}

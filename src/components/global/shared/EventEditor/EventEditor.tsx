@@ -133,8 +133,8 @@ export function EventEditor({
                 onChange={(e) => builder.setCustomInput(e.target.value)}
                 placeholder={
                   channelMode
-                    ? 'e.g. account or databases.*.tables.*.rows.*'
-                    : 'e.g. databases.*.tables.*.rows.*.create'
+                    ? t('e.g. account or databases.*.tables.*.rows.*')
+                    : t('e.g. databases.*.tables.*.rows.*.create')
                 }
                 className="font-mono text-[13px]"
                 autoFocus

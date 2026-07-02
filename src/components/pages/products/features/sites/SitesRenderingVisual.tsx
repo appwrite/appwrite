@@ -23,7 +23,7 @@ const MODES = [
 export function SitesRenderingVisual() {
   const t = useT()
   return (
-    <ProductFeatureVisualFrame eyebrow="Rendering modes" title="Static and SSR hosting">
+    <ProductFeatureVisualFrame eyebrow={t('Rendering modes')} title={t('Static and SSR hosting')}>
       <div className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2">
           {MODES.map((mode) => (

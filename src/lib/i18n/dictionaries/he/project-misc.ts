@@ -1892,4 +1892,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'You don\'t have permission to add domains.': 'אין לכם הרשאה להוסיף דומיינים.',
   'You don\'t have permission to create migrations.': 'אין לכם הרשאה ליצור מיגרציות.',
   'You don\'t have permission to create webhooks.': 'אין לכם הרשאה ליצור webhooks.',
+  // Project selector
+  Organizations: 'ארגונים',
+  'Organization:': 'ארגון:',
+  'Loading more...': 'טוען עוד...',
+  // Connect to your project (install labels)
+  Install: 'התקנה',
+  'Import from JSR': 'ייבוא מ-JSR',
+  '1. Add to pubspec.yaml': '1. הוסיפו ל-pubspec.yaml',
+  '2. Install packages': '2. התקינו את החבילות',
+  '1. Add to build.gradle.kts (module)': '1. הוסיפו ל-build.gradle.kts (מודול)',
+  '2. Sync project': '2. סנכרנו את הפרויקט',
+  'Add to pubspec.yaml': 'הוספה ל-pubspec.yaml',
+  'Add to build.gradle.kts': 'הוספה ל-build.gradle.kts',
+  'Config (env or xcconfig)': 'הגדרות (env או xcconfig)',
+  '.env or launchSettings': '.env או launchSettings',
+  '.env or xcconfig': '.env או xcconfig',
+  '.env or env vars': '.env או משתני סביבה',
+  'Build config / env': 'הגדרות build / סביבה',
 }

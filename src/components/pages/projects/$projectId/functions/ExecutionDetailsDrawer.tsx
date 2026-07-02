@@ -703,7 +703,7 @@ export function ExecutionDetailsDrawer({
               {/* Request Section */}
               <AccordionItem value="request" className="border-none">
                 <AccordionTrigger className="text-[16px] font-medium py-2 cursor-pointer hover:no-underline">
-                  Request
+                  {t('Request')}
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 overflow-visible">
                   <div className="-mx-1.5 px-1.5">
@@ -716,7 +716,7 @@ export function ExecutionDetailsDrawer({
                     >
                       <TabsList className="w-full grid grid-cols-2 h-9">
                         <TabsTrigger value="parameters" className="text-[13px]">
-                          Parameters
+                          {t('Parameters')}
                           {queryParams.length > 0 && (
                             <span className="ms-1.5 text-muted-foreground">
                               ({queryParams.length})
@@ -724,7 +724,7 @@ export function ExecutionDetailsDrawer({
                           )}
                         </TabsTrigger>
                         <TabsTrigger value="headers" className="text-[13px]">
-                          Headers
+                          {t('Headers')}
                           {execution.requestHeaders &&
                             execution.requestHeaders.length > 0 && (
                               <span className="ms-1.5 text-muted-foreground">
@@ -742,10 +742,10 @@ export function ExecutionDetailsDrawer({
                                 <TableHeader>
                                   <TableRow className="hover:bg-transparent border-b border-border">
                                     <TableHead className="w-[35%] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                      Key
+                                      {t('Key')}
                                     </TableHead>
                                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                      Value
+                                      {t('Value')}
                                     </TableHead>
                                   </TableRow>
                                 </TableHeader>
@@ -766,7 +766,7 @@ export function ExecutionDetailsDrawer({
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">
                               <code className="text-[13px] text-muted-foreground">
-                                No parameters found.
+                                {t('No parameters found.')}
                               </code>
                             </div>
                           )}
@@ -783,10 +783,10 @@ export function ExecutionDetailsDrawer({
                                   <TableHeader>
                                     <TableRow className="hover:bg-transparent border-b border-border">
                                       <TableHead className="w-[35%] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Key
+                                        {t('Key')}
                                       </TableHead>
                                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Value
+                                        {t('Value')}
                                       </TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -807,17 +807,17 @@ export function ExecutionDetailsDrawer({
                                 </Table>
                               </div>
                               <p className="text-[12px] text-muted-foreground mt-4">
-                                Missing headers?{' '}
+                                {t('Missing headers?')}{' '}
                                 <DocsRouteLink className="link-neutral" href="/docs">
-                                  Check the docs
+                                  {t('Check the docs')}
                                 </DocsRouteLink>{' '}
-                                to see the supported data and how to log it.
+                                {t('to see the supported data and how to log it.')}
                               </p>
                             </>
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">
                               <code className="text-[13px] text-muted-foreground">
-                                No headers found.
+                                {t('No headers found.')}
                               </code>
                             </div>
                           )}
@@ -831,7 +831,7 @@ export function ExecutionDetailsDrawer({
               {/* Response Section */}
               <AccordionItem value="response" className="border-none">
                 <AccordionTrigger className="text-[16px] font-medium py-2 cursor-pointer hover:no-underline">
-                  Response
+                  {t('Response')}
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 overflow-visible">
                   <div className="-mx-1.5 px-1.5">
@@ -846,13 +846,13 @@ export function ExecutionDetailsDrawer({
                     >
                       <TabsList className="w-full grid grid-cols-4 h-9">
                         <TabsTrigger value="logs" className="text-[13px]">
-                          Logs
+                          {t('Logs')}
                         </TabsTrigger>
                         <TabsTrigger value="errors" className="text-[13px]">
-                          Errors
+                          {t('Errors')}
                         </TabsTrigger>
                         <TabsTrigger value="headers" className="text-[13px]">
-                          Headers
+                          {t('Headers')}
                           {execution.responseHeaders &&
                             execution.responseHeaders.length > 0 && (
                               <span className="ms-1.5 text-muted-foreground">
@@ -861,7 +861,7 @@ export function ExecutionDetailsDrawer({
                             )}
                         </TabsTrigger>
                         <TabsTrigger value="body" className="text-[13px]">
-                          Body
+                          {t('Body')}
                         </TabsTrigger>
                       </TabsList>
 
@@ -870,11 +870,12 @@ export function ExecutionDetailsDrawer({
                           {func?.logging === false ? (
                             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
                               <p className="text-[13px] text-foreground mb-2">
-                                Logging is disabled for this function. Enable
-                                logging in settings to view execution logs.
+                                {t(
+                                  'Logging is disabled for this function. Enable logging in settings to view execution logs.',
+                                )}
                               </p>
                               <DocsRouteLink className="link-neutral text-[12px]" href="/docs">
-                                Learn more →
+                                {t('Learn more')} →
                               </DocsRouteLink>
                             </div>
                           ) : execution.logs ? (
@@ -884,7 +885,7 @@ export function ExecutionDetailsDrawer({
                                   <div className="relative flex-1 min-w-0 -mx-1 px-1">
                                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                      placeholder="Search logs..."
+                                      placeholder={t('Search logs...')}
                                       value={logsSearch}
                                       onChange={(e) =>
                                         setLogsSearch(e.target.value)
@@ -902,7 +903,7 @@ export function ExecutionDetailsDrawer({
                                           onClick={handleCopyLogs}
                                           disabled={!executionLogsText}
                                           className="h-9 w-9 shrink-0 p-0"
-                                          aria-label="Copy logs"
+                                          aria-label={t('Copy logs')}
                                         >
                                           {copiedLogs ? (
                                             <Check className="h-4 w-4 text-emerald-500" />
@@ -912,7 +913,7 @@ export function ExecutionDetailsDrawer({
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Copy logs</p>
+                                        <p>{t('Copy logs')}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -929,7 +930,7 @@ export function ExecutionDetailsDrawer({
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">
                               <code className="text-[13px] text-muted-foreground">
-                                No logs found.
+                                {t('No logs found.')}
                               </code>
                             </div>
                           )}
@@ -941,11 +942,12 @@ export function ExecutionDetailsDrawer({
                           {func?.logging === false ? (
                             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
                               <p className="text-[13px] text-foreground mb-2">
-                                Logging is disabled for this function. Enable
-                                logging in settings to view execution errors.
+                                {t(
+                                  'Logging is disabled for this function. Enable logging in settings to view execution errors.',
+                                )}
                               </p>
                               <DocsRouteLink className="link-neutral text-[12px]" href="/docs">
-                                Learn more →
+                                {t('Learn more')} →
                               </DocsRouteLink>
                             </div>
                           ) : execution.errors ? (
@@ -955,7 +957,7 @@ export function ExecutionDetailsDrawer({
                                   <div className="relative min-w-0 flex-1 -mx-1 px-1">
                                     <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
-                                      placeholder="Search errors..."
+                                      placeholder={t('Search errors...')}
                                       value={errorsSearch}
                                       onChange={(e) =>
                                         setErrorsSearch(e.target.value)
@@ -973,7 +975,7 @@ export function ExecutionDetailsDrawer({
                                           onClick={handleCopyErrors}
                                           disabled={!executionErrorsText}
                                           className="h-9 w-9 shrink-0 p-0"
-                                          aria-label="Copy errors"
+                                          aria-label={t('Copy errors')}
                                         >
                                           {copiedErrors ? (
                                             <Check className="h-4 w-4 text-emerald-500" />
@@ -983,7 +985,7 @@ export function ExecutionDetailsDrawer({
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Copy errors</p>
+                                        <p>{t('Copy errors')}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -1000,7 +1002,7 @@ export function ExecutionDetailsDrawer({
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">
                               <code className="text-[13px] text-muted-foreground">
-                                No errors found.
+                                {t('No errors found.')}
                               </code>
                             </div>
                           )}
@@ -1017,10 +1019,10 @@ export function ExecutionDetailsDrawer({
                                   <TableHeader>
                                     <TableRow className="hover:bg-transparent border-b border-border">
                                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                                        Key
+                                        {t('Key')}
                                       </TableHead>
                                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Value
+                                        {t('Value')}
                                       </TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -1041,17 +1043,17 @@ export function ExecutionDetailsDrawer({
                                 </Table>
                               </div>
                               <p className="text-[12px] text-muted-foreground mt-4">
-                                Missing headers?{' '}
+                                {t('Missing headers?')}{' '}
                                 <DocsRouteLink className="link-neutral" href="/docs">
-                                  Check the docs
+                                  {t('Check the docs')}
                                 </DocsRouteLink>{' '}
-                                to see the supported data and how to log it.
+                                {t('to see the supported data and how to log it.')}
                               </p>
                             </>
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">
                               <code className="text-[13px] text-muted-foreground">
-                                No headers found.
+                                {t('No headers found.')}
                               </code>
                             </div>
                           )}
@@ -1065,7 +1067,7 @@ export function ExecutionDetailsDrawer({
                               <div className="relative -mx-1 px-1">
                                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                  placeholder="Search body..."
+                                  placeholder={t('Search body...')}
                                   value={bodySearch}
                                   onChange={(e) =>
                                     setBodySearch(e.target.value)
@@ -1107,15 +1109,15 @@ export function ExecutionDetailsDrawer({
                           ) : (
                             <div className="rounded-lg border border-border bg-card p-3">
                               <p className="text-[13px] text-foreground">
-                                Body data is not captured by Appwrite for your
-                                user's security and privacy. To display body
-                                data in the Logs tab, use{' '}
+                                {t(
+                                  "Body data is not captured by Appwrite for your user's security and privacy. To display body data in the Logs tab, use", // pragma: allowlist secret
+                                )}{' '}
                                 <code className="px-1.5 py-0.5 bg-muted rounded text-[12px]">
                                   context.log()
                                 </code>
                                 .{' '}
                                 <DocsRouteLink className="link-neutral" href="/docs">
-                                  Learn more
+                                  {t('Learn more')}
                                 </DocsRouteLink>
                                 .
                               </p>

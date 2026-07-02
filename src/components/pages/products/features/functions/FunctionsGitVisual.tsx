@@ -38,11 +38,11 @@ export function FunctionsGitVisual() {
           </Badge>
         </div>
 
-        <MockField label="Repository" value="appwrite/backend" />
+        <MockField label={t('Repository')} value="appwrite/backend" /> {/* pragma: allowlist secret */}
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <MockField label="Production branch" value="main" />
-          <MockField label="Root directory" value="functions/stripe-webhook" />
+          <MockField label={t('Production branch')} value="main" />
+          <MockField label={t('Root directory')} value="functions/stripe-webhook" />
         </div>
 
         <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">

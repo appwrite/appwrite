@@ -1287,4 +1287,5 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'במהלך סקירת ספקים, הערכת אבטחה או רכש ארגוני',
   'When pay-as-you-go plans do not meet your support or billing needs':
     'כשתוכניות תשלום לפי שימוש אינן עונות על צורכי התמיכה או החיוב שלכם',
+  'Payment setup did not complete': 'הגדרת התשלום לא הושלמה',
 }

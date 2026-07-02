@@ -1558,7 +1558,7 @@ export function DeploymentDetailView({
   if (isLoading) {
     return (
       <WizardLayout
-        title="Deployment details"
+        title={t('Deployment details')}
         fullscreen
         useSidebar={false}
         fallbackPath={fallbackPath}
@@ -1577,7 +1577,7 @@ export function DeploymentDetailView({
   if (!deployment) {
     return (
       <WizardLayout
-        title="Deployment details"
+        title={t('Deployment details')}
         fullscreen
         useSidebar={false}
         fallbackPath={fallbackPath}

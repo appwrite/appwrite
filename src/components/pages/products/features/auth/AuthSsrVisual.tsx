@@ -13,7 +13,7 @@ const FRAMEWORKS = [
 export function AuthSsrVisual() {
   const t = useT()
   return (
-    <ProductFeatureVisualFrame title="Server-side session" eyebrow="SSR">
+    <ProductFeatureVisualFrame title={t('Server-side session')} eyebrow="SSR">
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {FRAMEWORKS.map((framework) => (

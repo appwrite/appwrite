@@ -24,6 +24,7 @@ import {
   isStaleChunkLoadError,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Extracts resource IDs from URL pathname for error context
@@ -136,6 +137,7 @@ export function ErrorComponent({
   /** When true, used for debug preview: skips Sentry and parent postMessage. */
   preview?: boolean
 }) {
+  const t = useT()
   const randomErrorId = useRef<string>(
     Math.random().toString(36).substring(2, 15),
   )
@@ -365,7 +367,7 @@ export function ErrorComponent({
 
     await navigator.clipboard.writeText(errorText)
     setCopied(true)
-    toast.success('Error details copied to clipboard')
+    toast.success(t('Error details copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -388,24 +390,24 @@ export function ErrorComponent({
         </div>
 
         <div className="space-y-3 text-center">
-          <h1 className="text-2xl font-semibold">{formattedError.title}</h1>
+          <h1 className="text-2xl font-semibold">{t(formattedError.title)}</h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            {formattedError.message}
+            {t(formattedError.message)}
           </p>
         </div>
 
         {isConnectivityError ? (
           <p className="text-muted-foreground text-[13px] leading-relaxed text-center -mt-4">
-            If your connection looks fine, check our{' '}
+            {t('If your connection looks fine, check our')}{' '}
             <a
               href="https://status.appwrite.online"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
             >
-              status page
+              {t('status page')}
             </a>{' '}
-            for service updates.
+            {t('for service updates.')}
           </p>
         ) : null}
 
@@ -417,7 +419,7 @@ export function ErrorComponent({
                 className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-start"
                 style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
               >
-                {error.message || 'No error details available'}
+                {error.message || t('No error details available')}
               </div>
             </div>
             <Button
@@ -425,7 +427,7 @@ export function ErrorComponent({
               size="sm"
               className="absolute top-2 end-2 h-7 w-7 p-0 shrink-0"
               onClick={handleCopy}
-              aria-label="Copy error details"
+              aria-label={t('Copy error details')}
             >
               {copied ? (
                 <Check className="h-4 w-4 text-emerald-500" />
@@ -439,18 +441,18 @@ export function ErrorComponent({
         {showSupportBlurb ? (
           <div className="w-full border-t border-border pt-6">
             <p className="text-muted-foreground text-[13px] leading-relaxed text-center">
-              We’ve already logged it to our error system and will probably spin
-              up a super agent any minute to hunt this bug down. If you think
-              this might be more than a client-side hiccup, check our{' '}
+              {t(
+                'We’ve already logged it to our error system and will probably spin up a super agent any minute to hunt this bug down. If you think this might be more than a client-side hiccup, check our',
+              )}{' '}
               <a
                 href="https://status.appwrite.online"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
               >
-                status page
+                {t('status page')}
               </a>
-              . Until then - try again or head home. You’ve got this.
+              . {t('Until then - try again or head home. You’ve got this.')}
             </p>
           </div>
         ) : null}
@@ -464,7 +466,7 @@ export function ErrorComponent({
               className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium"
             >
               <RefreshCw className="h-4 w-4" />
-              Reload page
+              {t('Reload page')}
             </Button>
           </div>
         ) : isConnectivityError ? (
@@ -476,7 +478,7 @@ export function ErrorComponent({
               className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium"
             >
               <RefreshCw className="h-4 w-4" />
-              Try again
+              {t('Try again')}
             </Button>
             <div className="flex flex-col gap-3 sm:flex-row">
               {canGoBack ? (
@@ -486,7 +488,7 @@ export function ErrorComponent({
                   className="w-full shrink-0 sm:flex-1 min-h-9"
                 >
                   <ArrowLeft className="me-1.5 h-4 w-4" />
-                  Go back
+                  {t('Go back')}
                 </Button>
               ) : null}
               <Button
@@ -498,7 +500,7 @@ export function ErrorComponent({
                 )}
               >
                 <Home className="me-1.5 h-4 w-4" />
-                Go home
+                {t('Go home')}
               </Button>
             </div>
           </div>
@@ -510,7 +512,7 @@ export function ErrorComponent({
               className="w-full shrink-0 sm:flex-1 min-h-9"
             >
               <Home className="me-1.5 h-4 w-4" />
-              Go home
+              {t('Go home')}
             </Button>
             <Button
               variant="brandCta"
@@ -519,7 +521,7 @@ export function ErrorComponent({
               className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium sm:flex-1"
             >
               <RefreshCw className="h-4 w-4" />
-              Try again
+              {t('Try again')}
             </Button>
           </div>
         )}

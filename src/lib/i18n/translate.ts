@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useI18n, type SupportedLanguage } from '@/lib/i18n'
+import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { heDictionary } from '@/lib/i18n/dictionaries/he'
 
 const LANGUAGE_DICTIONARIES: Partial<
@@ -33,4 +34,12 @@ export type Translator = (text: string) => string
 export function useT(): Translator {
   const { language } = useI18n()
   return useCallback((text: string) => translateText(text, language), [language])
+}
+
+/**
+ * Translate outside React (toasts fired from utilities, error formatting, etc.).
+ * Resolves the active language on each call.
+ */
+export function translate(text: string): string {
+  return translateText(text, getActiveLanguage())
 }

@@ -3,6 +3,31 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heSharedUiDictionary: Record<string, string> = {
+  // Error formatting (toast titles and static messages) // pragma: allowlist secret
+  Error: 'שגיאה',
+  'Not Found': 'לא נמצא',
+  'Access Denied': 'הגישה נדחתה',
+  Forbidden: 'אסור',
+  'Invalid Request': 'בקשה לא תקינה',
+  'Server Error': 'שגיאת שרת',
+  'Connection Error': 'שגיאת חיבור',
+  'Request Timeout': 'תם זמן הבקשה',
+  'Something went wrong. Please try again.': 'משהו השתבש. נסו שוב.',
+  'The requested resource could not be found. It may have been deleted or you may not have permission to access it.':
+    'המשאב המבוקש לא נמצא. ייתכן שהוא נמחק או שאין לכם הרשאה לגשת אליו.',
+  'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.':
+    'אין לכם הרשאה לבצע פעולה זו. פנו למנהל המערכת אם לדעתכם מדובר בטעות.',
+  'You do not have permission to access this resource.':
+    'אין לכם הרשאה לגשת למשאב זה.',
+  'The request is invalid. Please check your input and try again.':
+    'הבקשה אינה תקינה. בדקו את הקלט ונסו שוב.',
+  'An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.':
+    'אירעה שגיאה בשרת. נסו שוב בעוד מספר רגעים. אם הבעיה נמשכת, פנו לתמיכה.',
+  'Unable to connect to the server. Please check your internet connection and try again.':
+    'לא ניתן להתחבר לשרת. בדקו את חיבור האינטרנט ונסו שוב.',
+  'The request took too long to complete. Please try again.':
+    'הבקשה ארכה זמן רב מדי. נסו שוב.',
+
   // Punctuated fragments and short segments
   '(Paused)': '(מושהה)',
   '(Shift for range, ⌘/Ctrl to toggle)': '(Shift לטווח, ⌘/Ctrl להחלפה)',
@@ -928,4 +953,84 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Open a new SQL editor tab': 'פתיחת לשונית חדשה בעורך ה-SQL',
   'Close the current SQL editor tab': 'סגירת הלשונית הנוכחית בעורך ה-SQL',
   'Pick a SQL editor tab to open': 'בחירת לשונית לפתיחה בעורך ה-SQL',
+
+  // Event editor
+  'All databases': 'כל מסדי הנתונים',
+  'All buckets': 'כל הדליים',
+  'All functions': 'כל הפונקציות',
+  'All teams': 'כל הצוותים',
+  'All topics': 'כל הנושאים',
+  'All tables': 'כל הטבלאות',
+  'All files': 'כל הקבצים',
+  'All rows': 'כל השורות',
+  'All columns': 'כל העמודות',
+  'All indexes': 'כל האינדקסים',
+  'Edit channel': 'עריכת ערוץ',
+  'Create channel': 'יצירת ערוץ',
+  'Edit event': 'עריכת אירוע',
+  'Create event': 'יצירת אירוע',
+  'Build a Realtime channel to subscribe to. Use wildcards (*) to match multiple resources.':
+    'בנו ערוץ Realtime להרשמה. השתמשו בתווים כלליים (*) כדי להתאים למספר משאבים.',
+  'Select events that will trigger your function or webhook.':
+    'בחרו אירועים שיפעילו את הפונקציה או ה-webhook שלכם.',
+  Service: 'שירות',
+  'Bucket (optional)': 'דלי (אופציונלי)',
+  'Function (optional)': 'פונקציה (אופציונלי)',
+  'Team (optional)': 'צוות (אופציונלי)',
+  'User (optional)': 'משתמש (אופציונלי)',
+  'Topic (optional)': 'נושא (אופציונלי)',
+  'Provider (optional)': 'ספק (אופציונלי)',
+  'Resource (optional)': 'משאב (אופציונלי)',
+  'Table (optional)': 'טבלה (אופציונלי)',
+  'File (optional)': 'קובץ (אופציונלי)',
+  'Row (optional)': 'שורה (אופציונלי)',
+  'Column (optional)': 'עמודה (אופציונלי)',
+  'Index (optional)': 'אינדקס (אופציונלי)',
+  'Action (optional)': 'פעולה (אופציונלי)',
+  'Attribute (optional)': 'מאפיין (אופציונלי)',
+  'e.g. account or databases.*.tables.*.rows.*':
+    'לדוגמה: account או databases.*.tables.*.rows.*',
+  'e.g. databases.*.tables.*.rows.*.create':
+    'לדוגמה: databases.*.tables.*.rows.*.create',
+
+  // Deployment detail, keyboard visualizer, code block
+  'Deployment details': 'פרטי פריסה',
+  'Keyboard layout': 'פריסת מקלדת',
+  'Press keys in order': 'לחצו על המקשים לפי הסדר',
+  example: 'דוגמה',
+
+  // Error pages
+  'Project Not Found': 'הפרויקט לא נמצא',
+  'This project could not be found or you do not have access to view it.':
+    'הפרויקט לא נמצא או שאין לכם גישה לצפות בו.',
+  'You do not have permission to access this project. Please contact your administrator if you believe this is an error.':
+    'אין לכם הרשאה לגשת לפרויקט הזה. פנו למנהל המערכת אם לדעתכם מדובר בטעות.',
+  'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.': // pragma: allowlist secret
+    'הדף הזה זקוק לחיבור ל-Appwrite. התחברו מחדש לאינטרנט ונסו שוב, נטען מחדש אוטומטית כשתחזרו להיות מקוונים.', // pragma: allowlist secret
+  'Update available': 'עדכון זמין',
+  'A newer version of the console was deployed while you had this tab open. Reload the page to continue.':
+    'גרסה חדשה יותר של הקונסולה נפרסה בזמן שהלשונית הזו הייתה פתוחה. טענו מחדש את הדף כדי להמשיך.',
+  'An unexpected error occurred.': 'אירעה שגיאה בלתי צפויה.',
+  'Error details copied to clipboard': 'פרטי השגיאה הועתקו ללוח',
+  'If your connection looks fine, check our': 'אם החיבור שלכם נראה תקין, בדקו את',
+  'status page': 'דף הסטטוס שלנו',
+  'for service updates.': 'לעדכוני שירות.',
+  'No error details available': 'אין פרטי שגיאה זמינים',
+  'Copy error details': 'העתקת פרטי השגיאה',
+  'We’ve already logged it to our error system and will probably spin up a super agent any minute to hunt this bug down. If you think this might be more than a client-side hiccup, check our':
+    'כבר תיעדנו את זה במערכת השגיאות שלנו, וכנראה שבכל רגע יופעל סוכן-על שיצא לצוד את הבאג הזה. אם לדעתכם מדובר ביותר מתקלה רגעית בצד הלקוח, בדקו את',
+  'Until then - try again or head home. You’ve got this.':
+    'עד אז, נסו שוב או חזרו לדף הבית. אתם על זה.',
+  'Reload page': 'טעינת הדף מחדש',
+  'Try again': 'ניסיון חוזר',
+  'Go back': 'חזרה אחורה',
+  'Go home': 'חזרה לדף הבית',
+  'Page not found': 'הדף לא נמצא',
+  'The page you requested does not exist, may have been moved, or is temporarily unavailable.':
+    'הדף שביקשתם אינו קיים, ייתכן שהועבר או שאינו זמין באופן זמני.',
+  'Looking for product docs?': 'מחפשים את תיעוד המוצר?',
+  'Browse documentation': 'עיון בתיעוד',
+
+  // Screenshot frames (cover generator, perspective cards)
+  'Screenshot preview': 'תצוגה מקדימה של צילום מסך',
 }

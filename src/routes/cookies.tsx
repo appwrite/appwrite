@@ -5,6 +5,7 @@ import cookiesContent from '@/content/legal/cookies.md?raw'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { useT } from '@/lib/i18n/translate'
 
 export const Route = createFileRoute('/cookies')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -23,10 +24,11 @@ export const Route = createFileRoute('/cookies')({
 })
 
 function CookiesPage() {
+  const t = useT()
   return (
     <MarketingPageShell>
       <LegalPolicyView
-        title="Cookies Policy"
+        title={t('Cookies Policy')}
         content={cookiesContent}
         currentPolicy="cookies"
       />

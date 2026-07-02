@@ -30,7 +30,7 @@ const DELIVERY_STEPS = [
 export function StorageCdnVisual() {
   const t = useT()
   return (
-    <ProductFeatureVisualFrame eyebrow="Network" title="Storage delivery">
+    <ProductFeatureVisualFrame eyebrow={t('Network')} title={t('Storage delivery')}>
       <div className="space-y-4">
         <div className="rounded-lg border border-border bg-muted/15 px-3 py-2.5">
           <p className="text-[12px] font-medium leading-6 text-foreground">

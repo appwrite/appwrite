@@ -145,7 +145,7 @@ export function PostgresTableContextMenu({
   const handleDelete = async () => {
     try {
       await executeSql.mutateAsync(buildPostgresDropTableSql(tableId))
-      toast.success(`${tableName} has been deleted`)
+      toast.success(`${tableName} ${t('has been deleted')}`)
       setDeleteDialogOpen(false)
       navigate({
         ...postgresNav({ projectId, databaseId }).sql(),
@@ -153,7 +153,7 @@ export function PostgresTableContextMenu({
       })
       onDeleted?.()
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to delete table')
+      toast.error(getErrorMessage(error) ?? t('Failed to delete table'))
     }
   }
 
@@ -167,7 +167,7 @@ export function PostgresTableContextMenu({
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Icon className="size-4" />
               </span>
-              {label}
+              {t(label)}
             </ContextMenuItem>
           ))}
           <ContextMenuSeparator />
@@ -252,9 +252,11 @@ export function PostgresTableContextMenu({
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete table')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete <strong>{tableName}</strong>? All
-              rows and data will be permanently removed. This action cannot be
-              undone.
+              {t('Are you sure you want to delete')}{' '}
+              <strong>{tableName}</strong>?{' '}
+              {t(
+                'All rows and data will be permanently removed. This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

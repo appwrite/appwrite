@@ -17,6 +17,7 @@ import { AlertTriangle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useDeletePaymentMethod } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 interface DeletePaymentMethodModalProps {
@@ -34,6 +35,7 @@ export function DeletePaymentMethodModal({
   linkedOrganizations,
   onSuccess,
 }: DeletePaymentMethodModalProps) {
+  const t = useT()
   const deletePaymentMethodMutation = useDeletePaymentMethod()
 
   const handleDelete = async () => {
@@ -42,14 +44,14 @@ export function DeletePaymentMethodModal({
         paymentMethodId: paymentMethod.$id,
       })
 
-      toast.success('Payment method deleted')
+      toast.success(t('Payment method deleted'))
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to delete payment method',
+          : t('Failed to delete payment method'),
       )
     }
   }
@@ -61,11 +63,13 @@ export function DeletePaymentMethodModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Delete payment method</DialogTitle>
+          <DialogTitle>{t('Delete payment method')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {isLinked
-              ? `This payment method is linked to ${linkedOrganizations.length} organization${linkedOrganizations.length > 1 ? 's' : ''}. Deleting it will remove it from those organizations.`
-              : 'Are you sure you want to delete this payment method? This action cannot be undone.'}
+              ? `${t('This payment method is linked to')} ${linkedOrganizations.length} ${linkedOrganizations.length > 1 ? t('organizations') : t('organization')}. ${t('Deleting it will remove it from those organizations.')}`
+              : t(
+                  'Are you sure you want to delete this payment method? This action cannot be undone.',
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -75,7 +79,7 @@ export function DeletePaymentMethodModal({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-[12px] mt-2">
                 <div className="space-y-1">
-                  <p className="font-medium">Linked to:</p>
+                  <p className="font-medium">{t('Linked to:')}</p>
                   <ul className="list-disc list-inside space-y-0.5">
                     {linkedOrganizations.map((org) => (
                       <li key={org.$id}>
@@ -103,7 +107,7 @@ export function DeletePaymentMethodModal({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -111,7 +115,7 @@ export function DeletePaymentMethodModal({
             onClick={handleDelete}
             disabled={isLoading}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>

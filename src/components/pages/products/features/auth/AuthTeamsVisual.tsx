@@ -11,9 +11,9 @@ export function AuthTeamsVisual() {
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'users', label: 'Users' },
-        { id: 'teams', label: 'Teams', active: true },
-        { id: 'security', label: 'Security' },
+        { id: 'users', label: t('Users') },
+        { id: 'teams', label: t('Teams'), active: true },
+        { id: 'security', label: t('Security') },
       ]}
     >
       <div className="space-y-4">
