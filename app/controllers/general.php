@@ -228,7 +228,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             - If user is not member of team of this deployment -> not authorized
             - If not authorized, redirect to Console redirect UI
             - If authorized, continue as if auth was not required
-         */
+        */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');

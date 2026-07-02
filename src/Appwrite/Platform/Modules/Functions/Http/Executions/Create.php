@@ -241,12 +241,10 @@ class Create extends Base
         $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
 
-        if (!empty($ip)) {
-            $eu = Config::getParam('locale-eu');
-
+        if (!empty($ip) && !$geoRecord->isEmpty()) {
             $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
             $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
-            $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord->getCountryCode()), $eu)) ? 'true' : 'false';
+            $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
         }
 
         $headersFiltered = [];
