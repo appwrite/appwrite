@@ -1656,12 +1656,27 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
-            // If user is not found, check if there is a user with the same email (canonical if enabled)
+            // If user is not found, check if there is a user with the same email.
+            // Prefer an exact match on the provider email first, then fall back to the
+            // canonical form so accounts stored with the raw email (e.g. created before
+            // canonical validation was enabled, or imported) are still matched instead
+            // of being attached to a different account or duplicated.
             if ($user->isEmpty()) {
-                $searchEmail = $isCanonicalEnabled ? $emailMetadata['emailCanonical'] : $email;
                 $userWithEmail = $dbForProject->findOne('users', [
-                    Query::equal('email', [$searchEmail]),
+                    Query::equal('email', [$email]),
                 ]);
+
+                if (
+                    $userWithEmail->isEmpty()
+                    && $isCanonicalEnabled
+                    && $emailMetadata['emailCanonical'] !== null
+                    && $emailMetadata['emailCanonical'] !== $email
+                ) {
+                    $userWithEmail = $dbForProject->findOne('users', [
+                        Query::equal('email', [$emailMetadata['emailCanonical']]),
+                    ]);
+                }
+
                 if (!$userWithEmail->isEmpty()) {
                     if (!$isVerified) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
@@ -1744,17 +1759,27 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                     $user->removeAttribute('$sequence');
                     $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
-                    $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $userDoc->getId(),
-                        'userInternalId' => $userDoc->getSequence(),
-                        'providerType' => MESSAGE_TYPE_EMAIL,
-                        'identifier' => $creationEmail,
-                    ]));
+
+                    try {
+                        $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $userDoc->getId(),
+                            'userInternalId' => $userDoc->getSequence(),
+                            'providerType' => MESSAGE_TYPE_EMAIL,
+                            'identifier' => $creationEmail,
+                        ]));
+                    } catch (Duplicate) {
+                        // The canonical identifier may already exist as a target while no matching
+                        // user row was found above. Roll back the user we just created so the
+                        // callback doesn't leave a partial OAuth account that blocks future
+                        // sign-ins with the same canonical email.
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('users', $userDoc->getId()));
+                        $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    }
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1866,7 +1891,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        try {
+            $dbForProject->updateDocument('users', $user->getId(), $user);
+        } catch (Duplicate) {
+            // Backfilling an empty-email user with a canonical address can collide with the
+            // unique users.email index (e.g. foo+bar@gmail.com canonicalizes to foo@gmail.com).
+            // Fail cleanly instead of surfacing a raw database error after the identity exists.
+            $failureRedirect(Exception::USER_ALREADY_EXISTS);
+        }
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
