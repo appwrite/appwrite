@@ -264,7 +264,6 @@ trait Base
     public const string GET_CACHE_HEALTH = 'get_cache_health';
     public const string GET_TIME_HEALTH = 'get_time_health';
     public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public const string GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
     public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
     public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
     public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
@@ -2448,12 +2447,6 @@ trait Base
             case self::GET_WEBHOOKS_QUEUE_HEALTH:
                 return 'query getWebhooksQueueHealth {
                     healthGetQueueWebhooks {
-                        size
-                    }
-                }';
-            case self::GET_LOGS_QUEUE_HEALTH:
-                return 'query getLogsQueueHealth {
-                    healthGetQueueLogs {
                         size
                     }
                 }';

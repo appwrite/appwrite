@@ -15,7 +15,6 @@ use Appwrite\Platform\Modules\Health\Http\Health\Queue\Databases\Get as GetQueue
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Deletes\Get as GetQueueDeletes;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed\Get as GetFailedJobs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Functions\Get as GetQueueFunctions;
-use Appwrite\Platform\Modules\Health\Http\Health\Queue\Logs\Get as GetQueueLogs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Mails\Get as GetQueueMails;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Messaging\Get as GetQueueMessaging;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations\Get as GetQueueMigrations;
@@ -49,7 +48,6 @@ class Http extends Service
 
         $this->addAction(GetQueueAudits::getName(), new GetQueueAudits());
         $this->addAction(GetQueueWebhooks::getName(), new GetQueueWebhooks());
-        $this->addAction(GetQueueLogs::getName(), new GetQueueLogs());
         $this->addAction(GetQueueCertificates::getName(), new GetQueueCertificates());
         $this->addAction(GetQueueBuilds::getName(), new GetQueueBuilds());
         $this->addAction(GetQueueDatabases::getName(), new GetQueueDatabases());
