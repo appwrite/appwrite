@@ -144,6 +144,24 @@ final class BuildsTest extends TestCase
         $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
     }
 
+    public function testTruncateBuildLogsKeepsShortLogsUnchanged(): void
+    {
+        $logs = "Build finished.\n";
+
+        $this->assertSame($logs, $this->callBuilds('truncateBuildLogs', $logs));
+    }
+
+    public function testTruncateBuildLogsTrimsOversizedLogsToLimitKeepingTail(): void
+    {
+        $oversized = \str_repeat('a', APP_LOG_LENGTH_LIMIT + 5000) . 'TAIL_MARKER';
+
+        $result = (string) $this->callBuilds('truncateBuildLogs', $oversized);
+
+        $this->assertLessThanOrEqual(APP_LOG_LENGTH_LIMIT, \strlen($result));
+        $this->assertStringContainsString('[WARNING] Logs truncated.', $result);
+        $this->assertStringEndsWith('TAIL_MARKER', $result);
+    }
+
     private function callBuilds(string $method, mixed ...$arguments): mixed
     {
         return (new ReflectionMethod($this->builds, $method))->invoke($this->builds, ...$arguments);

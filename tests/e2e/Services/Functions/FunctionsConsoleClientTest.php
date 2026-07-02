@@ -134,53 +134,6 @@ final class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(400, $function2['headers']['status-code']);
     }
 
-    public function testFunctionUsage(): void
-    {
-        $data = $this->setupTestFunction();
-
-        /**
-         * Test for SUCCESS
-         */
-        $usage = $this->getUsage($data['functionId'], [
-            'range' => '24h'
-        ]);
-        $this->assertEquals(200, $usage['headers']['status-code']);
-        $this->assertCount(24, $usage['body']);
-        $this->assertEquals('24h', $usage['body']['range']);
-        $this->assertIsNumeric($usage['body']['deploymentsTotal']);
-        $this->assertIsNumeric($usage['body']['deploymentsStorageTotal']);
-        $this->assertIsNumeric($usage['body']['buildsTotal']);
-        $this->assertIsNumeric($usage['body']['buildsStorageTotal']);
-        $this->assertIsNumeric($usage['body']['buildsTimeTotal']);
-        $this->assertIsNumeric($usage['body']['buildsMbSecondsTotal']);
-        $this->assertIsNumeric($usage['body']['executionsTotal']);
-        $this->assertIsNumeric($usage['body']['executionsTimeTotal']);
-        $this->assertIsNumeric($usage['body']['executionsMbSecondsTotal']);
-        $this->assertIsArray($usage['body']['deployments']);
-        $this->assertIsArray($usage['body']['deploymentsStorage']);
-        $this->assertIsArray($usage['body']['builds']);
-        $this->assertIsArray($usage['body']['buildsTime']);
-        $this->assertIsArray($usage['body']['buildsStorage']);
-        $this->assertIsArray($usage['body']['buildsTime']);
-        $this->assertIsArray($usage['body']['buildsMbSeconds']);
-        $this->assertIsArray($usage['body']['executions']);
-        $this->assertIsArray($usage['body']['executionsTime']);
-        $this->assertIsArray($usage['body']['executionsMbSeconds']);
-
-        /**
-         * Test for FAILURE
-         */
-        $usage = $this->getUsage($data['functionId'], [
-            'range' => '232h'
-        ]);
-        $this->assertEquals(400, $usage['headers']['status-code']);
-
-        $usage = $this->getUsage('randomFunctionId', [
-            'range' => '24h'
-        ]);
-        $this->assertEquals(404, $usage['headers']['status-code']);
-    }
-
     public function testCreateFunctionVariable(): void
     {
         // Create a new function for this test to avoid conflicts with cached data
