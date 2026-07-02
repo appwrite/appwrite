@@ -480,6 +480,7 @@ Checklist (in this order):
 ### Copy
 
 - **No em dashes** - Do not use em dashes (`—`) in user-facing copy, labels, descriptions, or empty states. Use a period, comma, colon, or parentheses instead.
+- **All copy must be translatable** - Wrap every new user-facing string in `t('...')` and add its Hebrew dictionary entry. See "Internationalization (i18n)" for the full workflow, style guide, and what not to wrap.
 
 ### Visual Design
 
@@ -1089,6 +1090,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Row actions menu (⋯)   | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                   |
 | Delete styling         | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                        |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
+| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add a Hebrew entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/he/*.ts` file. English inline is the source of truth. See "Internationalization (i18n)".                                    |
 
 ---
 
@@ -1344,6 +1346,71 @@ Console uses **team** (organization) and **user** (account) preferences to store
 - **Per resource** (unique structure per resource): include resource type and id in the scope so each resource has its own saved filters.
   - Examples: `databases.rows.<databaseId>.<tableId>`, `databases.columns.<databaseId>.<tableId>`, `databases.indexes.<databaseId>.<tableId>` (each table has its own columns/attributes).
   - Files use shared scope `storage.files` (same filter structure across buckets).
+
+---
+
+## Internationalization (i18n)
+
+All user-facing copy in the app and website is translatable. **English is the only source of truth**; other languages (currently Hebrew) are translated from English. Blog content, changelog content, docs content, and legal document bodies are **not** translated.
+
+### Architecture (two layers)
+
+1. **Structured catalog** (`src/lib/i18n/messages/en.ts` + `he.ts`): typed nested catalogs for the global shell (header, footer, sidebar, home page, product navigation, debug menu). Access via `useI18n().catalog`. Use this only for shell-level copy that benefits from a typed structure. <!-- pragma: allowlist secret -->
+2. **`t()` API** (`src/lib/i18n/translate.ts`) - the default for everything else:
+   - Components keep their English copy **inline** as the source of truth, wrapped in `t('...')`.
+   - `useT()` is a React hook returning `t(text) => string`; call it at the top level of function components only.
+   - `translate(text)` is the non-React variant for utilities (e.g. toast/error formatting in `src/lib/utils/error-formatting.ts`).
+   - Translations live in per-domain dictionaries at `src/lib/i18n/dictionaries/he/*.ts`, keyed by the **exact English string**. Unknown strings fall back to English, so partial coverage never breaks the UI.
+
+Language selection: debug menu (press `.`) → Settings → Language (Auto / English / Hebrew). Hebrew automatically enables the RTL page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
+
+**SDK locale**: `src/lib/appwrite/sdk.ts` calls `client.setLocale(activeLanguage)` on all clients and re-applies it on language change, so server-provided content matches the UI language. Keep this wiring intact when touching SDK client creation. <!-- pragma: allowlist secret -->
+
+### Adding new copy (required workflow)
+
+1. Write the English copy inline and wrap it: `{t('Create bucket')}`, `placeholder={t('Search files...')}`, `toast.success(t('Bucket created'))`.
+2. Add a Hebrew entry to the **matching domain dictionary** (`databases.ts`, `sites.ts`, `functions.ts`, `auth-storage.ts`, `project-misc.ts`, `organizations.ts`, `account-global.ts`, `shared-ui.ts`, `marketing.ts`). The key must match the wrapped English string **character for character**. No duplicate keys within a file (TS error).
+3. For module-level constant arrays with labels, do NOT move them into the catalog - wrap at the render site (`{t(item.label)}`) and add each possible value to the dictionary.
+4. Components that render user-facing text props (title, description, label, emptyMessage) should wrap them at the render site (`{t(title)}`); unknown strings pass through, so this gives free coverage for all callers.
+
+### What NOT to wrap
+
+Code snippets/samples, URLs, IDs, CSS classes, query keys, analytics event names, `console.*` messages, values sent to APIs, enum values used in logic, SQL keywords (CHECK, GROUP BY), cron expressions, HTTP methods, file extensions, MIME types, keyboard key names, date format strings, mock/sample data (person names like "John Doe", company names like "Acme"), terminal output that mimics real CLI output, and **dynamic API error messages** (translate only static fallback copy). <!-- pragma: allowlist secret -->
+
+### Interpolated strings
+
+Never produce broken grammar by naive word-splitting. Either:
+
+- Split at natural sentence boundaries into full translatable segments,
+- Reword so the dynamic value sits between complete segments (`{t('Delete')} "{name}"? {t('This action cannot be undone.')}`),
+- Or leave the string in English. Broken sentences are worse than English fallbacks.
+
+Watch RTL flow when sentences are assembled from fragments - read the composed Hebrew sentence end to end.
+
+### One key, one meaning (context collisions)
+
+The Hebrew dictionaries are merged into a single map, so an English key can only have **one** translation app-wide. If the same English word is used with two meanings (e.g. `State` = US state vs process state, `Check` = verb vs SQL keyword, `Timeout` = status vs setting):
+
+1. Prefer rewording the **English source** to be unambiguous (e.g. `State` → `Connection state` for the Postgres label). This improves the English too.
+2. Unwrap strings that should never have been translated (SQL keywords, code).
+3. Never solve a collision by giving the shared key a compromise translation that is wrong in one of the contexts.
+
+When two dictionaries define the same key, the merge order in `src/lib/i18n/dictionaries/he/index.ts` decides the winner - keep values for shared keys **identical across files** so the result is deterministic.
+
+### Hebrew style guide (max quality for new translations)
+
+- **Appwrite product and feature names stay in English (Latin script)**: Appwrite, Appwrite Cloud/Network, Auth, Databases, Storage, Functions, Messaging, Sites, Realtime, Firewall, Advisor, Explorer, Distribution, TablesDB/DocumentsDB/VectorsDB, Magic URL, Email OTP, Presences, Agent Skills, AI Arena, Command Center, and plan names (Free, Pro, Scale, Enterprise). Generic sentence usage stays Hebrew ("מסדי הנתונים שלכם" for "your databases"); names/nav items/section titles stay English. <!-- pragma: allowlist secret -->
+- **Technical terms Israeli developers keep in English**: API, SDK, CLI, OAuth, MFA, TOTP, JWT, SSR, CSR, CDN, DNS, TLS, WAF, DDoS, REST, GraphQL, Webhook, Endpoint, Serverless, Cron, Git, Branch, Build, Timeout, SQL, JSON, CSV, framework and runtime names.
+- **Terminology standards** (do not deviate): Bucket = 'באקט' (never 'דלי'), Session = 'סשן' (never 'הפעלות'), Token = 'טוקן' (never 'אסימון'), Logs = 'לוגים' (never 'יומנים'), Deployment = 'פריסה', Migrations = 'מיגרציות', Certificate = 'תעודה', Expired = 'פג תוקף', Timeout = 'Timeout' or 'חריגת זמן' (never 'פג תוקף'), Production = 'פרודקשן', Scale (growth) = 'צמיחה'/'קנה מידה' (never 'סקייל'), Members = 'חברים', Billing = 'חיוב', 'Open in new tab' = 'פתיחה בכרטיסייה חדשה'.
+- **Filter operators** follow standard Hebrew filter UI: 'שווה ל-', 'שונה מ-', 'מכיל', 'מתחיל ב-', 'ריק'/'אינו ריק'.
+- **Voice and register**: address users in plural (בחרו, נסו שוב, הזינו); buttons use nominal form (יצירת פרויקט, מחיקה, שמירה, ביטול, עדכון); drop 'אנא' from validation messages; confident, concise product Hebrew - never literal word-for-word calques (bad: 'הצפנה במנוחה' for "at rest"; good: 'הצפנה במצב מנוחה'). <!-- pragma: allowlist secret -->
+- **Grammatical gender**: match the noun the string describes (table = feminine: 'נמחקה'; database = masculine: 'נמחק'). For statuses shown next to mixed-gender nouns, prefer neutral nouns over gendered verbs.
+- **Check the render context before translating**: a one-word key can be a status badge, a button, a column header, or a chart label - grep the key in `src/components` and read the render site. Statuses use standard Hebrew (נכשל, מוכן, בעיבוד, בבנייה, פעיל, בוטל).
+- No em dashes, no niqqud.
+
+### Verifying coverage
+
+Every wrapped English string must have a dictionary entry. To verify, bundle the merged dictionary (`esbuild src/lib/i18n/dictionaries/he/index.ts --bundle`) and diff its keys against all `t('...')` literals in `src`; the missing count must be 0. Also run the dev server and spot-check pages in Hebrew via the debug menu.
 
 ---
 
