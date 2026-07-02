@@ -554,8 +554,13 @@ final class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertEquals('b', $webhook['data']['a']);
+        $this->assertSame(
+           empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''),
+           ('server' === $this->getSide())
+        );
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($id, $webhook['data']['$id']);
+        $this->assertEquals(['a' => 'b'], $webhook['data']['prefs']);
     }
 
     public function testUpdateUserStatus(): void
