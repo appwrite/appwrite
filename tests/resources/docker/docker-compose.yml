@@ -66,6 +66,7 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_TARGET
@@ -244,6 +245,29 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-notifications:
+    entrypoint: worker-notifications
+    container_name: appwrite-worker-notifications
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - maildev
+    environment:
+      - _APP_ENV
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST

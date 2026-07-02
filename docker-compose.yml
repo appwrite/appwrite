@@ -99,6 +99,7 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_TRUSTED_PROJECTS
@@ -711,6 +712,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -733,6 +735,48 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
 
+  appwrite-worker-notifications:
+    entrypoint: worker-notifications
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-notifications
+    restart: unless-stopped
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-mariadb}
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-messaging:
     entrypoint: worker-messaging
     logging:
