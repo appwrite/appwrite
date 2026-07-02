@@ -357,6 +357,7 @@ class Create extends Action
         $type = $indexDef['type'];
         $indexAttributes = $indexDef['attributes'];
         $orders = $indexDef['orders'] ?? [];
+        $orders = \array_map(fn ($order) => \is_string($order) ? \strtoupper($order) : $order, $orders);
         $lengths = $indexDef['lengths'] ?? [];
 
         $attrKeys = array_map(fn ($a) => $a->getAttribute('key'), $attributeDocuments);

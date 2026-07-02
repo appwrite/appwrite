@@ -62,7 +62,7 @@ class Create extends IndexCreate
             ->param('key', null, new Key(), 'Index Key.')
             ->param('type', null, new WhiteList([Database::INDEX_HNSW_EUCLIDEAN,Database::INDEX_HNSW_DOT, Database::INDEX_HNSW_COSINE, Database::INDEX_OBJECT, Database::INDEX_KEY, Database::INDEX_UNIQUE]), 'Index type.', enum: new Enum(name: 'VectorsDBIndexType'))
             ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
-            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
+            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC', 'asc', 'desc'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')

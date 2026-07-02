@@ -447,6 +447,8 @@ class Databases extends Action
         $attributes = $index->getAttribute('attributes', []);
         $lengths = $index->getAttribute('lengths', []);
         $orders = $index->getAttribute('orders', []);
+        $orders = \array_map(fn ($order) => \is_string($order) ? \strtoupper($order) : $order, $orders);
+        $index->setAttribute('orders', $orders);
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
